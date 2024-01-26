@@ -6,7 +6,6 @@
 // ---------------------------------------------------------------------------------------------------
 
 using LinqToDB;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 
 #pragma warning disable 1573, 1591
@@ -27,8 +26,8 @@ namespace Cli.Default.Access.Odbc
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
-			: base(options)
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 		}

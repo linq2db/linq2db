@@ -6,14 +6,15 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
-	using LinqToDB.SqlProvider;
+	using Common.Internal;
+	using SqlProvider;
 	using SqlQuery;
 
 	partial class Sql
 	{
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class TableFunctionAttribute : Attribute
+		public class TableFunctionAttribute : MappingAttribute
 		{
 			public TableFunctionAttribute()
 			{
@@ -43,7 +44,6 @@ namespace LinqToDB
 				ArgIndices    = argIndices;
 			}
 
-			public string? Configuration { get; set; }
 			public string? Name          { get; set; }
 			public string? Schema        { get; set; }
 			public string? Database      { get; set; }
@@ -51,12 +51,12 @@ namespace LinqToDB
 			public string? Package       { get; set; }
 			public int[]?  ArgIndices    { get; set; }
 
-			public virtual void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public virtual void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				table.SqlTableType = SqlTableType.Function;
 				var expressionStr  = table.Expression = Name ?? methodCall.Method.Name!;
 
-				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
+				ExpressionAttribute.PrepareParameterValues(context, mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
@@ -69,6 +69,11 @@ namespace LinqToDB
 					Package : Package  ?? table.TableName.Package);
 
 				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter);
+			}
+
+			public override string GetObjectID()
+			{
+				return $".{Configuration}.{Name}.{Schema}.{Database}.{Server}.{Package}.{IdentifierBuilder.GetObjectID(ArgIndices)}.";
 			}
 		}
 	}

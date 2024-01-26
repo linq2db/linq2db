@@ -3,16 +3,18 @@ using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Linq.Expressions;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Expressions
 {
 	using Common;
 	using Common.Internal;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Linq;
 	using Reflection;
 	using Mapping;
 
-	class ConvertFromDataReaderExpression : Expression
+	sealed class ConvertFromDataReaderExpression : Expression
 	{
 		public ConvertFromDataReaderExpression(Type type, int idx, IValueConverter? converter, Expression dataReaderParam)
 		{
@@ -61,7 +63,9 @@ namespace LinqToDB.Expressions
 
 		public Expression Reduce(IDataContext dataContext, DbDataReader dataReader)
 		{
-			dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dataReader) ?? dataReader;
+			if (dataContext.UnwrapDataObjectInterceptor is {} interceptor)
+				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+					dataReader = interceptor.UnwrapDataReader(dataContext, dataReader);
 
 			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, _dataReaderParam, forceNullCheck: false);
 		}
@@ -89,6 +93,10 @@ namespace LinqToDB.Expressions
 			var toType = type.ToNullableUnderlying();
 
 			Expression ex;
+			Type? mapType = null;
+
+			if (toType.IsEnum)
+				mapType = ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, toType);
 
 			if (converter != null)
 			{
@@ -97,7 +105,7 @@ namespace LinqToDB.Expressions
 			}
 			else
 			{
-				ex = dataContext.GetReaderExpression(dataReader, idx, dataReaderExpr, toType);
+				ex = dataContext.GetReaderExpression(dataReader, idx, dataReaderExpr, mapType?.ToNullableUnderlying() ?? toType);
 			}
 
 			if (ex.NodeType == ExpressionType.Lambda)
@@ -117,6 +125,9 @@ namespace LinqToDB.Expressions
 				//
 				var expectedType = converter.FromProviderExpression.Parameters[0].Type;
 
+				if (expectedType != ex.Type)
+					ex = ConvertExpressionToType(ex, expectedType, mappingSchema);
+
 				if (converter.HandlesNulls)
 				{
 					ex = Condition(
@@ -125,27 +136,20 @@ namespace LinqToDB.Expressions
 						ex);
 				}
 
-				if (expectedType != ex.Type)
-				{
-					ex = ConvertExpressionToType(ex, expectedType, mappingSchema);
-				}
-
 				ex = InternalExtensions.ApplyLambdaToExpression(converter.FromProviderExpression, ex);
 				if (toType != ex.Type && toType.IsAssignableFrom(ex.Type))
 				{
 					ex = Convert(ex, toType);
 				}
-
 			}
 			else if (toType.IsEnum)
 			{
-				var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, toType)!;
-
 				if (mapType != ex.Type)
 				{
 					// Use only defined convert
-					var econv = mappingSchema.GetConvertExpression(ex.Type, type,    false, false) ??
-					            mappingSchema.GetConvertExpression(ex.Type, mapType, false)!;
+					var econv =
+						mappingSchema.GetConvertExpression(ex.Type, type,     false, false) ??
+						mappingSchema.GetConvertExpression(ex.Type, mapType!, false)!;
 
 					ex = InternalExtensions.ApplyLambdaToExpression(econv, ex);
 				}
@@ -164,8 +168,7 @@ namespace LinqToDB.Expressions
 			// Microsoft.Data.SQLite
 			// Oracle (group by columns)
 			// MySql.Data and some other providers enforce null check in IsDBNullAllowed implementation
-			if (converter?.HandlesNulls != true &&
-			    (forceNullCheck || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)))
+			if (converter?.HandlesNulls != true && (forceNullCheck || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)))
 			{
 				ex = Condition(
 					Call(dataReaderExpr, Methods.ADONet.IsDBNull, ExpressionInstances.Int32Array(idx)),
@@ -176,7 +179,7 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
-		internal class ColumnReader
+		internal sealed class ColumnReader
 		{
 			public ColumnReader(IDataContext dataContext, MappingSchema mappingSchema, Type columnType, int columnIndex, IValueConverter? converter, bool slowMode)
 			{

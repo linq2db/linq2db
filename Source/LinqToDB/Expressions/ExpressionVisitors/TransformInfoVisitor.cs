@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 
 	readonly struct TransformInfoVisitor<TContext>
 	{
@@ -43,7 +43,7 @@ namespace LinqToDB.Expressions
 			return new TransformInfoVisitor<TContext>(context, func);
 		}
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public Expression? Transform(Expression? expr)
 		{
 			if (expr == null)
@@ -354,7 +354,7 @@ namespace LinqToDB.Expressions
 				Transform(cs.Body));
 		}
 
-		IEnumerable<T> Transform<T>(IList<T> source, Func<T, T> func)
+		static IEnumerable<T> Transform<T>(IList<T> source, Func<T, T> func)
 			where T : class
 		{
 			List<T>? list = null;

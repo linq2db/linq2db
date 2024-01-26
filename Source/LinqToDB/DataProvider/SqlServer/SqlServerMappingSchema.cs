@@ -4,18 +4,18 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
-using System.Runtime.CompilerServices;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Expressions;
-	using Metadata;
-	using Mapping;
-	using SqlQuery;
 	using Extensions;
+	using Mapping;
+	using Metadata;
+	using SqlQuery;
 
 	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
@@ -167,18 +167,22 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
 			AddScalarType(typeof(DateTime),  DataType.DateTime2);
-			AddScalarType(typeof(DateTime?), DataType.DateTime2);
 
 			SqlServerTypes.Configure(this);
 
-			SetValueToSqlConverter(typeof(string),         (sb,dt,v) => ConvertStringToSql(sb, dt.Type.DataType, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),           (sb,dt,v) => ConvertCharToSql  (sb, dt, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),         (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),         (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string), (sb,dt,_,v) => ConvertStringToSql(sb, dt.Type.DataType, v.ToString()!));
+			SetValueToSqlConverter(typeof(char),   (sb,dt,_,v) => ConvertCharToSql  (sb, dt, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
 
-			AddMetadataReader(new SystemDataSqlServerAttributeReader());
+			if (SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider != null)
+				AddMetadataReader(SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider);
+			if (SystemDataSqlServerAttributeReader.MicrosoftDataSqlClientProvider != null)
+				AddMetadataReader(SystemDataSqlServerAttributeReader.MicrosoftDataSqlClientProvider);
+			if (SystemDataSqlServerAttributeReader.MicrosoftSqlServerServerProvider != null)
+				AddMetadataReader(SystemDataSqlServerAttributeReader.MicrosoftSqlServerServerProvider);
 		}
 
 		static SqlServerMappingSchema Instance = new ();
@@ -258,8 +262,18 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (dt.Type.DataType, v2008plus, supportsFromParts)
 			{
+				case (DataType.Text, _, _) or (DataType.Char, _, _) or (DataType.VarChar, _, _)
+					when value.Hour == 0 && value.Minute == 0 && value.Second == 0 && value.Millisecond == 0 :
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+					break;
 				case (DataType.Text, _, _) or (DataType.Char, _, _) or (DataType.VarChar, _, _):
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
+					break;
+
+				case (DataType.NText, _, _) or (DataType.NChar, _, _) or (DataType.NVarChar, _, _)
+					when value.Hour == 0 && value.Minute == 0 && value.Second == 0 && value.Millisecond == 0 :
+					stringBuilder.Append('N');
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 					break;
 				case (DataType.NText, _, _) or (DataType.NChar, _, _) or (DataType.NVarChar, _, _):
 					stringBuilder.Append('N');
@@ -497,12 +511,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				AddScalarType(typeof(DateTime) , DataType.DateTime);
 				AddScalarType(typeof(DateTime?), DataType.DateTime);
 
-				SetValueToSqlConverter(typeof(TimeSpan)      , (sb, dt, v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , false, false));
-				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, false, false));
-				SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , false, false));
-				SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , false, false));
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , false, false));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, false, false));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , false, false));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , false, false));
 #if NET6_0_OR_GREATER
-				SetValueToSqlConverter(typeof(DateOnly)      , (sb, dt, v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , false, false));
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , false, false));
 #endif
 			}
 
@@ -518,13 +532,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-				SetValueToSqlConverter(typeof(TimeSpan)      , (sb, dt, v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, false));
-				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, false));
-				SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, false));
-				SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, false));
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, false));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, false));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, false));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, false));
 
 #if NET6_0_OR_GREATER
-				SetValueToSqlConverter(typeof(DateOnly)      , (sb, dt, v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, false));
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, false));
 #endif
 			}
 
@@ -540,13 +554,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-				SetValueToSqlConverter(typeof(TimeSpan)      , (sb, dt, v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
-				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
-				SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
-				SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
 #if NET6_0_OR_GREATER
-				SetValueToSqlConverter(typeof(DateOnly)      , (sb, dt, v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
 #endif
 			}
 
@@ -562,13 +576,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-				SetValueToSqlConverter(typeof(TimeSpan)      , (sb, dt, v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
-				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
-				SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
-				SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
 #if NET6_0_OR_GREATER
-				SetValueToSqlConverter(typeof(DateOnly)      , (sb, dt, v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
 #endif
 			}
 
@@ -584,13 +598,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-				SetValueToSqlConverter(typeof(TimeSpan)      , (sb, dt, v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
-				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
-				SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
-				SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
 #if NET6_0_OR_GREATER
-				SetValueToSqlConverter(typeof(DateOnly)      , (sb, dt, v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
 #endif
 			}
 
@@ -606,13 +620,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-				SetValueToSqlConverter(typeof(TimeSpan)      , (sb, dt, v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
-				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
-				SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
-				SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
 #if NET6_0_OR_GREATER
-				SetValueToSqlConverter(typeof(DateOnly)      , (sb, dt, v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
 #endif
 			}
 
@@ -628,13 +642,35 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-				SetValueToSqlConverter(typeof(TimeSpan)      , (sb, dt, v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
-				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
-				SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
-				SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
 #if NET6_0_OR_GREATER
-				SetValueToSqlConverter(typeof(DateOnly)      , (sb, dt, v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+#endif
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+		}
+
+		public sealed class SqlServer2022MappingSchema : LockedMappingSchema
+		{
+			public SqlServer2022MappingSchema() : base(ProviderName.SqlServer2022, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+
+#if NET6_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
 #endif
 			}
 

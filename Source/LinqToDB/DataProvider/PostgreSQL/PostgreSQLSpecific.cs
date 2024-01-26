@@ -1,11 +1,11 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 	}
 
-	class PostgreSQLSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IPostgreSQLSpecificTable<TSource>, ITable
+	sealed class PostgreSQLSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IPostgreSQLSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public PostgreSQLSpecificTable(ITable<TSource> table) : base(table)
@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 	}
 
-	class PostgreSQLSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IPostgreSQLSpecificQueryable<TSource>, ITable
+	sealed class PostgreSQLSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IPostgreSQLSpecificQueryable<TSource>, ITable
 	{
 		public PostgreSQLSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{
@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	public static partial class PostgreSQLTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IPostgreSQLSpecificQueryable<TSource> AsPostgreSQL<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull

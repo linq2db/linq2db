@@ -63,18 +63,20 @@ namespace LinqToDB.DataProvider.SqlCe
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlCe, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlCeSpecificTable<TSource> TableHint<TSource>(this ISqlCeSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new SqlCeSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -86,7 +88,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlCe, Sql.QueryExtensionScope.TableHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlCeSpecificTable<TSource> TableHint<TSource,TParam>(
@@ -95,12 +97,14 @@ namespace LinqToDB.DataProvider.SqlCe
 			[SqlQueryDependent] TParam            hintParameter)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
-				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
+					table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter))
+			);
 
-			return table;
+			return new SqlCeSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -112,7 +116,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlCe, Sql.QueryExtensionScope.TableHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlCeSpecificTable<TSource> TableHint<TSource,TParam>(
@@ -121,14 +125,16 @@ namespace LinqToDB.DataProvider.SqlCe
 			[SqlQueryDependent] params TParam[]   hintParameters)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))))
+			);
 
-			return table;
+			return new SqlCeSpecificTable<TSource>(newTable);
 		}
 
 		#endregion
@@ -142,7 +148,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlCe, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		public static ISqlCeSpecificQueryable<TSource> TablesInScopeHint<TSource>(
@@ -168,7 +174,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlCe, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		public static ISqlCeSpecificQueryable<TSource> TablesInScopeHint<TSource,TParam>(
@@ -194,7 +200,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlCe, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		public static ISqlCeSpecificQueryable<TSource> TablesInScopeHint<TSource>(

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -15,11 +14,13 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Reflection;
+	using SqlQuery;
+	using Tools;
 
-	partial class ExpressionBuilder
+
+	sealed partial class ExpressionBuilder
 	{
 		#region Sequence
 
@@ -117,6 +118,8 @@ namespace LinqToDB.Linq.Builder
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
 
+		public readonly DataOptions DataOptions;
+
 		public ExpressionBuilder(
 			Query                             query,
 			ExpressionTreeOptimizationContext optimizationContext,
@@ -129,9 +132,10 @@ namespace LinqToDB.Linq.Builder
 
 			CollectQueryDepended(expression);
 
-			CompiledParameters   = compiledParameters;
-			DataContext          = dataContext;
-			OriginalExpression   = expression;
+			CompiledParameters = compiledParameters;
+			DataContext        = dataContext;
+			DataOptions        = dataContext.Options;
+			OriginalExpression = expression;
 
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
@@ -152,23 +156,10 @@ namespace LinqToDB.Linq.Builder
 		public readonly List<IBuildContext>    Contexts = new ();
 
 		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
-		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
 		public        readonly ParameterExpression DataReaderLocal;
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
-
-		static bool _isDataContextParamInitialized;
-
-		public static ParameterExpression GetDataContextParam()
-		{
-			if (!_isDataContextParamInitialized)
-			{
-				_isDataContextParamInitialized = true;
-			}
-
-			return DataContextParam;
-		}
 
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
@@ -176,16 +167,26 @@ namespace LinqToDB.Linq.Builder
 
 		#region Builder SQL
 
+		internal bool DisableDefaultIfEmpty;
+
 		public Query<T> Build<T>()
 		{
+			using var m = ActivityService.Start(ActivityID.Build);
+
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));
 
 			if (_reorder)
+			{
+				using var mr = ActivityService.Start(ActivityID.ReorderBuilders);
+
 				lock (_sync)
 				{
-					_reorder = false;
+					_reorder          = false;
 					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToArray();
 				}
+			}
+
+			using var mq = ActivityService.Start(ActivityID.BuildQuery);
 
 			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
 
@@ -200,14 +201,23 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(BuildInfo buildInfo)
 		{
+			using var m = ActivityService.Start(ActivityID.BuildSequence);
+
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
 			var n = _builders[0].BuildCounter;
 
 			foreach (var builder in _builders)
 			{
-				if (builder.CanBuild(this, buildInfo))
+				bool canBuild;
+
+				using (ActivityService.Start(ActivityID.BuildSequenceCanBuild))
+					canBuild = builder.CanBuild(this, buildInfo);
+
+				if (canBuild)
 				{
+					using var mb = ActivityService.Start(ActivityID.BuildSequenceBuild);
+
 					var sequence = builder.BuildSequence(this, buildInfo);
 
 					lock (builder)
@@ -355,25 +365,17 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertParameters(Expression expression)
 		{
+			if (CompiledParameters == null) return expression;
+
 			return expression.Transform(CompiledParameters, static(compiledParameters, expr) =>
 			{
-				switch (expr.NodeType)
+				if (expr.NodeType == ExpressionType.Parameter)
 				{
-					case ExpressionType.Parameter:
-						if (compiledParameters != null)
-						{
-							var idx = Array.IndexOf(compiledParameters, (ParameterExpression)expr);
-
-							if (idx > 0)
-								return
-									Expression.Convert(
-										Expression.ArrayIndex(
-											ParametersParam,
-											ExpressionInstances.Int32(idx)),
-										expr.Type);
-						}
-
-						break;
+					var idx = Array.IndexOf(compiledParameters, (ParameterExpression)expr);
+					if (idx >= 0)
+						return Expression.Convert(
+							Expression.ArrayIndex(ParametersParam, ExpressionInstances.Int32(idx)),
+							expr.Type);
 				}
 
 				return expr;
@@ -518,7 +520,7 @@ namespace LinqToDB.Linq.Builder
 
 									mc = mc.Update(mc.Object, args);
 									return new TransformInfo(mc, true);
-								};
+								}
 							}
 						}
 
@@ -733,7 +735,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertGroupBy
 
-		public class GroupSubQuery<TKey,TElement>
+		public sealed class GroupSubQuery<TKey,TElement>
 		{
 			public TKey     Key     = default!;
 			public TElement Element = default!;
@@ -753,7 +755,7 @@ namespace LinqToDB.Linq.Builder
 			Expression WrapInSubQueryResultE();
 		}
 
-		class GroupByHelper<TSource,TKey,TElement,TResult> : IGroupByHelper
+		sealed class GroupByHelper<TSource,TKey,TElement,TResult> : IGroupByHelper
 		{
 			bool              _wrapInSubQuery;
 			Expression        _sourceExpression = null!;
@@ -1067,7 +1069,7 @@ namespace LinqToDB.Linq.Builder
 			Expression AddElementSelectorE();
 		}
 
-		class SelectManyHelper<TSource,TCollection> : ISelectManyHelper
+		sealed class SelectManyHelper<TSource,TCollection> : ISelectManyHelper
 		{
 			Expression       _sourceExpression = null!;
 			LambdaExpression _colSelector = null!;
@@ -1367,6 +1369,13 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
 			{
+				if (expression.NodeType == ExpressionType.Call)
+				{
+					var mc = (MethodCallExpression)expression;
+					if (mc.Method.DeclaringType != null && MappingSchema.HasAttribute<Sql.QueryExtensionAttribute>(mc.Method.DeclaringType, mc.Method))
+						return mc;
+				}
+
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
 				var expr = _parametersContext.ReplaceParameter(exas, expression, forceConstant: false, null).ValueExpression;
@@ -1392,7 +1401,7 @@ namespace LinqToDB.Linq.Builder
 								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
 							if (CanBeCompiled(callExpression))
 							{
-								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
+								if (!(callExpression.EvaluateExpression(DataContext) is IQueryable appliedQuery))
 									throw new LinqToDBException($"Method call '{expression}' returned null value.");
 								var newExpression = appliedQuery.Expression.Replace(fakeQuery.Expression, firstArgument);
 								return newExpression;
@@ -1486,8 +1495,7 @@ namespace LinqToDB.Linq.Builder
 					var parameters = call.Method.GetParameters();
 					for (int i = 0; i < parameters.Length; i++)
 					{
-						var attr = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>()
-							.FirstOrDefault();
+						var attr = parameters[i].GetAttribute<SqlQueryDependentAttribute>();
 						if (attr != null)
 							query.AddQueryDependedObject(call.Arguments[i], attr);
 					}
@@ -1506,7 +1514,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		MethodInfo GetQueryableMethodInfo<TContext>(TContext context, MethodCallExpression method, [InstantHandle] Func<TContext,MethodInfo, bool,bool> predicate)
+		static MethodInfo GetQueryableMethodInfo<TContext>(TContext context, MethodCallExpression method, [InstantHandle] Func<TContext,MethodInfo, bool,bool> predicate)
 		{
 			if (method.Method.DeclaringType == typeof(Enumerable))
 			{
@@ -1530,7 +1538,7 @@ namespace LinqToDB.Linq.Builder
 			throw new InvalidOperationException("Sequence contains no elements");
 		}
 
-		MethodInfo GetMethodInfo(MethodCallExpression method, string name)
+		static MethodInfo GetMethodInfo(MethodCallExpression method, string name)
 		{
 			if (method.Method.DeclaringType == typeof(Enumerable))
 			{
@@ -1598,7 +1606,7 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, Expression>? _rootExpressions;
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public Expression? GetRootObject(Expression? expr)
 		{
 			if (expr == null)

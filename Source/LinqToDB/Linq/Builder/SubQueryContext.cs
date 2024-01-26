@@ -42,9 +42,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			expression = SequenceHelper.CorrectExpression(expression, this, Context);
 
-			var indexes = SubQuery
-				.ConvertToIndex(expression, level, flags)
-				.ToArray();
+			var indexes = SubQuery.ConvertToIndex(expression, level, flags);
 
 			var result = indexes
 				.Select(idx => new SqlInfo(idx.MemberChain, idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index], idx.Index))

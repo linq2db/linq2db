@@ -11,7 +11,7 @@ namespace LinqToDB.Mapping
 	using Metadata;
 	using SqlQuery;
 
-	class MappingSchemaInfo
+	class MappingSchemaInfo : IConfigurationID
 	{
 		public MappingSchemaInfo(string configuration)
 		{
@@ -22,9 +22,10 @@ namespace LinqToDB.Mapping
 		}
 
 		public  string           Configuration;
-		private IMetadataReader? _metadataReader;
+		private MetadataReader? _metadataReader;
+		readonly object         _syncRoot = new();
 
-		public IMetadataReader? MetadataReader
+		public MetadataReader? MetadataReader
 		{
 			get => _metadataReader;
 			set
@@ -46,16 +47,16 @@ namespace LinqToDB.Mapping
 			return _defaultValues.TryGetValue(type, out var o) ? Option<object?>.Some(o) : Option<object?>.None;
 		}
 
-		public void SetDefaultValue(Type type, object? value)
+		public void SetDefaultValue(Type type, object? value, bool resetId = true)
 		{
 			if (_defaultValues == null)
-				lock (this)
-					if (_defaultValues == null)
-						_defaultValues = new ();
+				lock (_syncRoot)
+					_defaultValues ??= new ();
 
 			_defaultValues[type] = value;
 
-			ResetID();
+			if (resetId)
+				ResetID();
 		}
 
 		#endregion
@@ -72,16 +73,16 @@ namespace LinqToDB.Mapping
 			return _canBeNull.TryGetValue(type, out var o) ? Option<bool>.Some(o) : Option<bool>.None;
 		}
 
-		public void SetCanBeNull(Type type, bool value)
+		public void SetCanBeNull(Type type, bool value, bool resetId = true)
 		{
 			if (_canBeNull == null)
-				lock (this)
-					if (_canBeNull == null)
-						_canBeNull = new ();
+				lock (_syncRoot)
+					_canBeNull ??= new ();
 
 			_canBeNull[type] = value;
 
-			ResetID();
+			if (resetId)
+				ResetID();
 		}
 
 		#endregion
@@ -133,9 +134,8 @@ namespace LinqToDB.Mapping
 		public void SetGenericConvertProvider(Type type)
 		{
 			if (_genericConvertProviders == null)
-				lock (this)
-					if (_genericConvertProviders == null)
-						_genericConvertProviders = new Dictionary<Type,List<Type[]>>();
+				lock (_syncRoot)
+					_genericConvertProviders ??= new Dictionary<Type,List<Type[]>>();
 
 			if (!_genericConvertProviders.ContainsKey(type))
 				lock (_genericConvertProviders)
@@ -149,12 +149,13 @@ namespace LinqToDB.Mapping
 
 		ConvertInfo? _convertInfo;
 
-		public void SetConvertInfo(DbDataType from, DbDataType to, ConvertInfo.LambdaInfo expr)
+		public void SetConvertInfo(DbDataType from, DbDataType to, ConvertInfo.LambdaInfo expr, bool resetId = true)
 		{
 			_convertInfo ??= new ();
 			_convertInfo.Set(from, to, expr);
 
-			ResetID();
+			if (resetId)
+				ResetID();
 		}
 
 		public void SetConvertInfo(Type from, Type to, ConvertInfo.LambdaInfo expr)
@@ -187,9 +188,8 @@ namespace LinqToDB.Mapping
 		public void SetScalarType(Type type, bool isScalarType = true)
 		{
 			if (_scalarTypes == null)
-				lock (this)
-					if (_scalarTypes == null)
-						_scalarTypes = new ();
+				lock (_syncRoot)
+					_scalarTypes ??= new ();
 
 			_scalarTypes[type] = isScalarType;
 
@@ -221,9 +221,8 @@ namespace LinqToDB.Mapping
 		public void SetDataType(Type type, SqlDataType dataType)
 		{
 			if (_dataTypes == null)
-				lock (this)
-					if (_dataTypes == null)
-						_dataTypes = new ();
+				lock (_syncRoot)
+					_dataTypes ??= new ();
 
 			_dataTypes[type] = dataType;
 
@@ -263,9 +262,8 @@ namespace LinqToDB.Mapping
 		public void SetDefaultFromEnumType(Type enumType, Type defaultFromType)
 		{
 			if (_defaultFromEnumTypes == null)
-				lock (this)
-					if (_defaultFromEnumTypes == null)
-						_defaultFromEnumTypes = new ();
+				lock (_syncRoot)
+					_defaultFromEnumTypes ??= new ();
 
 			_defaultFromEnumTypes[enumType] = defaultFromType;
 
@@ -282,23 +280,7 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
-		public Type[] GetRegisteredTypes()
-		{
-			switch (MetadataReader)
-			{
-				case FluentMetadataReader fr :
-					return fr.GetRegisteredTypes();
-				case MetadataReader mr :
-					return
-					(
-						from f in mr.Readers.OfType<FluentMetadataReader>()
-						from t in f.GetRegisteredTypes()
-						select t
-					)
-					.ToArray();
-				default : return Array<Type>.Empty;
-			}
-		}
+		public IEnumerable<Type> GetRegisteredTypes() => MetadataReader?.GetRegisteredTypes() ?? Array<Type>.Empty;
 
 		#endregion
 
@@ -316,15 +298,15 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Unique schema configuration identifier. For internal use only.
 		/// </summary>
-		internal int ConfigurationID
+		public int ConfigurationID
 		{
-			get => _configurationID ??= GenerateID();
-			set => _configurationID = value;
+			get          => _configurationID ??= GenerateID();
+			internal set => _configurationID = value;
 		}
 
 		protected virtual int GenerateID()
 		{
-			var idBuilder = new IdentifierBuilder(Configuration);
+			using var idBuilder = new IdentifierBuilder(Configuration);
 
 			ProcessDictionary(_defaultValues);
 			ProcessDictionary(_canBeNull);
@@ -349,34 +331,6 @@ namespace LinqToDB.Mapping
 							.Add(IdentifierBuilder.GetObjectID(value))
 							;
 					}
-				}
-			}
-
-			var list = new List<FluentMetadataReader>();
-
-			switch (MetadataReader)
-			{
-				case FluentMetadataReader fr :
-					list.Add(fr);
-					break;
-				case MetadataReader mr :
-					foreach (var r in mr.Readers)
-						if (r is FluentMetadataReader fr)
-							list.Add(fr);
-					break;
-			}
-
-			idBuilder.Add(list.Count);
-
-			if (list.Count > 0)
-			{
-				foreach (var id in
-					from id in list
-					from a in id.GetObjectIDs()
-					orderby a
-					select a)
-				{
-					idBuilder.Add(id);
 				}
 			}
 

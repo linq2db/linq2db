@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class TruncateBuilder : MethodCallBuilder
+	sealed class TruncateBuilder : MethodCallBuilder
 	{
 		#region TruncateBuilder
 
@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 			var arg   = methodCall.Arguments[1].Unwrap();
 
 			if (arg.Type == typeof(bool))
-				reset = (bool)arg.EvaluateExpression()!;
+				reset = (bool)arg.EvaluateExpression(builder.DataContext)!;
 
 			sequence.Statement = new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset };
 
@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region TruncateContext
 
-		class TruncateContext : SequenceContextBase
+		sealed class TruncateContext : SequenceContextBase
 		{
 			public TruncateContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)

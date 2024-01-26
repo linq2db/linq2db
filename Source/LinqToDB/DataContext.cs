@@ -8,15 +8,17 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB
 {
 #if !NATIVE_ASYNC
 	using Async;
 #endif
-	using Configuration;
 	using Data;
 	using DataProvider;
 	using Linq;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 	using SqlProvider;
 
@@ -26,16 +28,13 @@ namespace LinqToDB
 	[PublicAPI]
 	public partial class DataContext : IDataContext
 	{
-		private          LinqToDBConnectionOptions        _prebuiltOptions;
-		private readonly LinqToDBConnectionOptionsBuilder _optionsBuilder = new ();
-
-		private bool _disposed;
+		bool _disposed;
 
 		/// <summary>
 		/// Creates data context using default database configuration.
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </summary>
-		public DataContext() : this(DataConnection.DefaultConfiguration)
+		public DataContext() : this(DataConnection.DefaultDataOptions)
 		{
 		}
 
@@ -47,11 +46,9 @@ namespace LinqToDB
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
 		public DataContext(string? configurationString)
-			: this(new LinqToDBConnectionOptionsBuilder()
-				.UseConfigurationString(
-					configurationString ?? DataConnection.DefaultConfiguration
-						?? throw new ArgumentNullException($"Neither {nameof(configurationString)} nor {nameof(DataConnection)}.{DataConnection.DefaultConfiguration} specified"))
-				.Build())
+			: this(configurationString == null
+				? DataConnection.DefaultDataOptions
+				: DataConnection.ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(ConfigurationString : configurationString))))
 		{
 		}
 
@@ -61,11 +58,10 @@ namespace LinqToDB
 		/// <param name="dataProvider">Database provider implementation.</param>
 		/// <param name="connectionString">Database connection string.</param>
 		public DataContext(IDataProvider dataProvider, string connectionString)
-			: this(new LinqToDBConnectionOptionsBuilder()
+			: this(new DataOptions()
 				.UseConnectionString(
 					dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider)),
-					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
-				.Build())
+					connectionString ?? throw new ArgumentNullException(nameof(connectionString))))
 		{
 		}
 
@@ -75,99 +71,75 @@ namespace LinqToDB
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		public DataContext( string providerName, string connectionString)
-			: this(new LinqToDBConnectionOptionsBuilder()
+			: this(new DataOptions()
 				.UseConnectionString(
 					providerName     ?? throw new ArgumentNullException(nameof(providerName)),
-					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
-				.Build())
+					connectionString ?? throw new ArgumentNullException(nameof(connectionString))))
 		{
 		}
 
 		/// <summary>
-		/// Creates database context object that uses a <see cref="LinqToDBConnectionOptions"/> to configure the connection.
+		/// Creates database context object that uses a <see cref="DataOptions"/> to configure the connection.
 		/// </summary>
 		/// <param name="options">Options, setup ahead of time.</param>
-		public DataContext(LinqToDBConnectionOptions options)
+#pragma warning disable CS8618
+		public DataContext(DataOptions options)
 		{
-			// reveng options back to builder
-
-			// shared options
-			if (options.OnTrace       != null) _optionsBuilder.WithTracing     (options.OnTrace);
-			if (options.TraceLevel    != null) _optionsBuilder.WithTraceLevel  (options.TraceLevel.Value);
-			if (options.WriteTrace    != null) _optionsBuilder.WriteTraceWith  (options.WriteTrace);
-
-			var dataProvider = options.DataProvider;
-
-			if (dataProvider == null)
-			{
-				if (options.ProviderName != null && options.ConnectionString != null)
-				{
-					dataProvider = DataConnection.GetDataProvider(options.ProviderName, options.ConnectionString)
-					  ?? throw new LinqToDBException($"DataProvider '{options.ProviderName}' not found.");
-				}
-				else if (options.ConfigurationString != null)
-					dataProvider = DataConnection.GetDataProvider(options.ConfigurationString);
-			}
-
-			if (dataProvider == null)
-				throw new LinqToDBException($"DataProvider not specified.");
-
-			_optionsBuilder.UseDataProvider (dataProvider);
-			_optionsBuilder.UseMappingSchema(options.MappingSchema ?? dataProvider.MappingSchema);
-
-			// setup type-dependent
-			if      (options.DbTransaction       != null) _optionsBuilder.UseTransaction        (dataProvider, options.DbTransaction);
-			else if (options.ConnectionFactory   != null) _optionsBuilder.UseConnectionFactory  (dataProvider, options.ConnectionFactory);
-			else if (options.ConfigurationString != null) _optionsBuilder.UseConfigurationString(options.ConfigurationString);
-			else if (options.DbConnection        != null) _optionsBuilder.UseConnection         (dataProvider, options.DbConnection, options.DisposeConnection);
-			else if (options.ConnectionString    != null) _optionsBuilder.UseConnectionString   (dataProvider, options.ConnectionString);
-
-			// interceptors magic
-			// as we need to aggregate interceptors, we don't pass them as-is from options to builder but manage separately
-			if (options.Interceptors != null)
-			{
-				foreach (var interceptor in options.Interceptors)
-					AddInterceptor(interceptor);
-			}
-
-			// rebuild options instead of saving parameter directly (to have aggregated interceptors there)
-			_prebuiltOptions = _optionsBuilder.Build();
-
-			ContextID   = dataProvider.ID;
-			ContextName = dataProvider.Name;
+			(Options = options).Apply(this);
 		}
+#pragma warning restore CS8618
 
+		/// <summary>
+		/// Current DataContext options
+		/// </summary>
+		public DataOptions   Options             { get; private set; }
 		/// <summary>
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
-		public string?       ConfigurationString => _optionsBuilder.ConfigurationString;
+		public string?       ConfigurationString { get; private set; }
 		/// <summary>
 		/// Gets initial value for database connection string.
 		/// </summary>
-		public string?       ConnectionString    => _optionsBuilder.ConnectionString;
+		public string?       ConnectionString    { get; private set; }
 		/// <summary>
 		/// Gets database provider implementation.
 		/// </summary>
-		public IDataProvider DataProvider        => _optionsBuilder.DataProvider!;
-
+		public IDataProvider DataProvider        { get; private set; }
 		/// <summary>
 		/// Gets or sets context identifier. Uses provider's name by default.
 		/// </summary>
-		public string        ContextName         { get; private set; }
+		public string        ContextName         => DataProvider.Name;
 
-		public int           ContextID           { get; private set; }
+		int  _msID;
+		int? _configurationID;
+		/// <summary>
+		/// Gets or sets ContextID.
+		/// </summary>
+		public int           ConfigurationID
+		{
+			// can we just delegate it to underlying DataConnection?
+			get
+			{
+				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
+						// GetDataConnection :-/
+						.Add(ConfigurationString ?? ConnectionString ?? GetDataConnection().Connection.ConnectionString)
+						.Add(Options)
+						.Add(GetType())
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
+
 		/// <summary>
 		/// Gets or sets mapping schema. Uses provider's mapping schema by default.
 		/// </summary>
-		public MappingSchema MappingSchema
-		{
-			get => _optionsBuilder.MappingSchema!;
-			set
-			{
-				_optionsBuilder.UseMappingSchema(value ?? throw new ArgumentNullException(nameof(value)));
-				_prebuiltOptions = _optionsBuilder.Build();
-			}
-		}
+		public MappingSchema MappingSchema       { get; private set; }
 		/// <summary>
 		/// Gets or sets option to force inline parameter values as literals into command text. If parameter inlining not supported
 		/// for specific value type, it will be used as parameter.
@@ -292,13 +264,15 @@ namespace LinqToDB
 		/// <summary>
 		/// Underlying active database connection.
 		/// </summary>
+#pragma warning disable CA2213 // Disposable fields should be disposed : disposed using DisposeCommand[Async] call from Dispose[Async]
 		DataConnection? _dataConnection;
+#pragma warning restore CA2213 // Disposable fields should be disposed
 
 		/// <summary>
 		/// Creates instance of <see cref="DataConnection"/> class, used by context internally.
 		/// </summary>
 		/// <returns>New <see cref="DataConnection"/> instance.</returns>
-		protected virtual DataConnection CreateDataConnection(LinqToDBConnectionOptions options) => new (options);
+		protected virtual DataConnection CreateDataConnection(DataOptions options) => new(options);
 
 		/// <summary>
 		/// Returns associated database connection <see cref="DataConnection"/> or create new connection, if connection
@@ -311,7 +285,7 @@ namespace LinqToDB
 
 			if (_dataConnection == null)
 			{
-				_dataConnection = CreateDataConnection(_prebuiltOptions);
+				_dataConnection = CreateDataConnection(Options);
 
 				if (_commandTimeout != null)
 					_dataConnection.CommandTimeout = CommandTimeout;
@@ -330,12 +304,14 @@ namespace LinqToDB
 
 				if (OnTraceConnection != null)
 					_dataConnection.OnTraceConnection = OnTraceConnection;
+
+				_dataConnection.OnRemoveInterceptor += RemoveInterceptor;
 			}
 
 			return _dataConnection;
 		}
 
-		private void AssertDisposed()
+		void AssertDisposed()
 		{
 			if (_disposed)
 				// GetType().FullName to support inherited types
@@ -355,9 +331,10 @@ namespace LinqToDB
 
 				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
-					if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new List<string>()).AddRange(_dataConnection.QueryHints);
-					if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new List<string>()).AddRange(_dataConnection.NextQueryHints);
+					if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new()).AddRange(_dataConnection.QueryHints);
+					if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new()).AddRange(_dataConnection.NextQueryHints);
 
+					_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 					_dataConnection.Dispose();
 					_dataConnection = null;
 				}
@@ -380,58 +357,53 @@ namespace LinqToDB
 					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints!);
 					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
 
+					_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 					await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					_dataConnection = null;
 				}
 			}
 		}
 
-		Func<ISqlBuilder>   IDataContext.CreateSqlProvider     => () => DataProvider.CreateSqlBuilder(MappingSchema);
-		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer       => DataProvider.GetSqlOptimizer;
-		Type                IDataContext.DataReaderType        => DataProvider.DataReaderType;
-		SqlProviderFlags    IDataContext.SqlProviderFlags      => DataProvider.SqlProviderFlags;
-		TableOptions        IDataContext.SupportedTableOptions => DataProvider.SupportedTableOptions;
+		Func<ISqlBuilder>               IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
+		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer       => DataProvider.GetSqlOptimizer;
+		Type                            IDataContext.DataReaderType        => DataProvider.DataReaderType;
+		SqlProviderFlags                IDataContext.SqlProviderFlags      => DataProvider.SqlProviderFlags;
+		TableOptions                    IDataContext.SupportedTableOptions => DataProvider.SupportedTableOptions;
 
 		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
-		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx) => DataProvider.IsDBNullAllowed(reader, idx);
+		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx) => DataProvider.IsDBNullAllowed(Options, reader, idx);
 
 		/// <summary>
 		/// Creates instance of <see cref="DataConnection"/> class, attached to same database connection/transaction passed in options.
 		/// Used by <see cref="IDataContext.Clone(bool)"/> API only if <see cref="DataConnection.IsMarsEnabled"/>
 		/// is <c>true</c> and there is an active connection associated with current context.
 		/// <param name="currentConnection"><see cref="DataConnection"/> instance, used by current context instance.</param>
-		/// <param name="options">Connection options, will have <see cref="LinqToDBConnectionOptions.DbConnection"/> or <see cref="LinqToDBConnectionOptions.DbTransaction"/> set.</param>
+		/// <param name="options">Connection options, will have <see cref="DbConnection"/> or <see cref="DbTransaction"/> set.</param>
 		/// <returns>New <see cref="DataConnection"/> instance.</returns>
 		/// </summary>
-		protected virtual DataConnection CloneDataConnection(DataConnection currentConnection, LinqToDBConnectionOptions options) => new (options);
+		protected virtual DataConnection CloneDataConnection(DataConnection currentConnection, DataOptions options) => new(options);
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
 			AssertDisposed();
 
-			var dc = new DataContext(_prebuiltOptions)
+			var dc = new DataContext(Options)
 			{
 				KeepConnectionAlive = KeepConnectionAlive,
-				ContextName         = ContextName,
-				ContextID           = ContextID,
 				InlineParameters    = InlineParameters
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
 			{
-				var builderClone       = _optionsBuilder.Clone();
-				builderClone.SetupType = ConnectionSetupType.DefaultConfiguration;
+				var options = _dataConnection.TransactionAsync != null
+					? Options.WithOptions<ConnectionOptions>(o => o with { DbTransaction = _dataConnection.TransactionAsync.Transaction  })
+					: Options.WithOptions<ConnectionOptions>(o => o with { DbConnection  = _dataConnection.EnsureConnection().Connection });
 
-				if (_dataConnection.TransactionAsync != null)
-					builderClone.UseTransaction(builderClone.DataProvider!, _dataConnection.TransactionAsync.Transaction);
-				else
-					builderClone.UseConnection(builderClone.DataProvider!, _dataConnection.EnsureConnection().Connection);
-
-				dc._dataConnection = CloneDataConnection(_dataConnection, builderClone.Build());
+				dc._dataConnection = CloneDataConnection(_dataConnection, options);
 			}
 
 			dc.QueryHints.    AddRange(QueryHints);
@@ -482,36 +454,46 @@ namespace LinqToDB
 
 		void IDataContext.Close()
 		{
-			_dataContextInterceptor?.OnClosing(new (this));
+			if (_dataContextInterceptor != null)
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosing))
+					_dataContextInterceptor.OnClosing(new(this));
 
 			if (_dataConnection != null)
 			{
 				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
 				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
+				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 				_dataConnection.Dispose();
 				_dataConnection = null;
 			}
 
-			_dataContextInterceptor?.OnClosed(new (this));
+			if (_dataContextInterceptor != null)
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosed))
+					_dataContextInterceptor.OnClosed(new (this));
 		}
 
 		async Task IDataContext.CloseAsync()
 		{
 			if (_dataContextInterceptor != null)
-				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
+					await _dataContextInterceptor.OnClosingAsync(new(this))
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (_dataConnection != null)
 			{
 				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
 				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
+				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				_dataConnection = null;
 			}
 
 			if (_dataContextInterceptor != null)
-				await _dataContextInterceptor.OnClosedAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
+					await _dataContextInterceptor.OnClosedAsync(new (this))
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -579,12 +561,7 @@ namespace LinqToDB
 			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters, preambles));
 		}
 
-		public FluentMappingBuilder GetFluentMappingBuilder()
-		{
-			return MappingSchema.GetFluentMappingBuilder();
-		}
-
-		class QueryRunner : IQueryRunner
+		sealed class QueryRunner : IQueryRunner
 		{
 			public QueryRunner(DataContext dataContext, IQueryRunner queryRunner)
 			{
@@ -658,6 +635,89 @@ namespace LinqToDB
 			public Expression?  MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }
 			public int          RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
 			public int          QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
+		}
+
+		internal static class ConfigurationApplier
+		{
+			public static void Apply(DataContext dataContext, ConnectionOptions options)
+			{
+				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory(options);
+
+				switch (
+				          options.ConfigurationString,
+				                           options.ConnectionString,
+				                                                dataProvider,
+				                                                             options.ProviderName)
+				{
+					case (_,               {} connectionString, {} provider, _) :
+					{
+						dataContext.DataProvider     = provider;
+						dataContext.ConnectionString = connectionString;
+						dataContext.MappingSchema    = provider.MappingSchema;
+
+						break;
+					}
+					case (_,               {} connectionString, _,           {} providerName) :
+					{
+						dataContext.DataProvider     = DataConnection.GetDataProviderEx(providerName, connectionString);
+						dataContext.ConnectionString = connectionString;
+						dataContext.MappingSchema    = dataContext.DataProvider.MappingSchema;
+
+						break;
+					}
+					case (_,               _,                   {} provider, _) :
+					{
+						dataContext.DataProvider  = provider;
+						dataContext.MappingSchema = provider.MappingSchema;
+						break;
+					}
+					case ({} configString, _,                   _,           _) :
+					{
+						dataContext.ConfigurationString = configString;
+
+						var ci = DataConnection.GetConfigurationInfo(configString);
+
+						dataContext.DataProvider     = ci.DataProvider;
+						dataContext.ConnectionString = ci.ConnectionString;
+						dataContext.MappingSchema    = ci.DataProvider.MappingSchema;
+
+						break;
+					}
+					case (null,            _,                   _,           _)
+						when DataConnection.DefaultConfiguration != null :
+					{
+						dataContext.ConfigurationString = DataConnection.DefaultConfiguration;
+
+						var ci = DataConnection.GetConfigurationInfo(DataConnection.DefaultConfiguration);
+
+						dataContext.DataProvider     = ci.DataProvider;
+						dataContext.ConnectionString = ci.ConnectionString;
+						dataContext.MappingSchema    = ci.DataProvider.MappingSchema;
+
+						break;
+					}
+					default :
+						throw new LinqToDBException("Invalid configuration. Configuration string or DataProvider is not provided.");
+				}
+
+				if (options.MappingSchema != null)
+				{
+					dataContext.MappingSchema = options.MappingSchema;
+				}
+				else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
+				{
+					dataContext.MappingSchema = new (dataContext.MappingSchema);
+				}
+			}
+
+			public static void Apply(DataContext dataContext, DataContextOptions options)
+			{
+				dataContext._commandTimeout = options.CommandTimeout;
+
+				if (options.Interceptors != null)
+					foreach (var interceptor in options.Interceptors)
+						dataContext.AddInterceptor(interceptor, false);
+			}
 		}
 	}
 }

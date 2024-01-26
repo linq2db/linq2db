@@ -36,6 +36,7 @@ namespace LinqToDB
 			{
 			}
 
+			// TODO: V5 consider removal of Name+Expression
 			protected new string? Name => base.Name;
 
 			public string? Expression
@@ -44,12 +45,12 @@ namespace LinqToDB
 				set => base.Name = value;
 			}
 
-			public override void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				table.SqlTableType = SqlTableType.Expression;
 				var expressionStr  = table.Expression = Expression ?? methodCall.Method.Name!;
 
-				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes);
+				ExpressionAttribute.PrepareParameterValues(context, mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");

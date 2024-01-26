@@ -530,13 +530,13 @@ namespace LinqToDB.DataProvider.SQLite
 		public static void FTS5Delete<TEntity>(this DataConnection dc, ITable<TEntity> table, int rowid, TEntity record)
 			where TEntity : class
 		{
-			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(TEntity));
+			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(TEntity), dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			var columns = new string[ed.Columns.Count];
 			var parameterTokens = new string[ed.Columns.Count];
 			var parameters = new DataParameter[ed.Columns.Count];
 
-			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema);
+			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
 
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{

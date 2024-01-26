@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -117,18 +118,24 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (provider == SqlServerProvider.SystemDataSqlClient)
 			{
 				if (_systemAdapter == null)
+				{
 					lock (_sysSyncRoot)
-						if (_systemAdapter == null)
-							_systemAdapter = CreateAdapter(SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_systemAdapter ??= CreateAdapter(SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _systemAdapter;
 			}
 			else
 			{
 				if (_microsoftAdapter == null)
+				{
 					lock (_msSyncRoot)
-						if (_microsoftAdapter == null)
-							_microsoftAdapter = CreateAdapter(MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_microsoftAdapter ??= CreateAdapter(MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _microsoftAdapter;
 			}
@@ -232,7 +239,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region SqlException
 		[Wrapper]
-		internal class SqlException : TypeWrapper
+		internal sealed class SqlException : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -249,7 +256,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		internal class SqlErrorCollection : TypeWrapper
+		internal sealed class SqlErrorCollection : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -280,7 +287,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		internal class SqlError : TypeWrapper
+		internal sealed class SqlError : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -298,7 +305,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#endregion
 
 		[Wrapper]
-		private class SqlParameter
+		private sealed class SqlParameter
 		{
 			// string return type is correct, TypeName and UdtTypeName return empty string instead of null
 			public string    UdtTypeName { get; set; } = null!;
@@ -332,10 +339,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		public class SqlConnection : TypeWrapper, IDisposable
+		public class SqlConnection : TypeWrapper, IConnectionWrapper
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
+			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get ServerVersion
 				(Expression<Func<SqlConnection, string>>   )((SqlConnection this_) => this_.ServerVersion),
@@ -357,6 +363,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			public DbCommand CreateCommand() => ((Func<SqlConnection, DbCommand>)CompiledWrappers[1])(this);
 			public void      Open()          => ((Action<SqlConnection>)CompiledWrappers[2])(this);
 			public void      Dispose()       => ((Action<SqlConnection>)CompiledWrappers[3])(this);
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		[Wrapper]
@@ -522,6 +530,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		#endregion
+
 		#endregion
 	}
 }

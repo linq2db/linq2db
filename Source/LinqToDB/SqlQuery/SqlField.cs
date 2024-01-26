@@ -5,6 +5,7 @@ using System.Text;
 namespace LinqToDB.SqlQuery
 {
 	using Common;
+	using Common.Internal;
 	using Mapping;
 
 	public class SqlField : ISqlExpression
@@ -109,7 +110,8 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			using var sb = Pools.StringBuilder.Allocate();
+			return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
 		}
 
 //#endif

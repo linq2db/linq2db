@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
@@ -11,8 +13,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Linq.Expressions;
-	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -231,10 +231,10 @@ namespace Tests.Linq
 					await db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>().ToListAsync());
 		}
 
-		class ParentEx : Parent
+		sealed class ParentEx : Parent
 		{
 			[NotColumn]
-			protected bool Field1;
+			public bool Field1;
 
 			public static void Test(InheritanceTests inheritance, string context)
 			{
@@ -252,7 +252,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
-		class PersonEx : Person
+		sealed class PersonEx : Person
 		{
 		}
 
@@ -403,7 +403,7 @@ namespace Tests.Linq
 		}
 
 		[Table(Name="Child")]
-		class ChildTest14 : IChildTest14
+		sealed class ChildTest14 : IChildTest14
 		{
 			[PrimaryKey] public int ChildID { get; set; }
 
@@ -629,6 +629,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void InheritanceAssociationTest([DataSources] string context)
 		{
@@ -779,6 +780,108 @@ namespace Tests.Linq
 				Assert.AreEqual(1, derivedTableRecord?.Id);
 				Assert.AreEqual(100, derivedTableRecord?.Value * -1);
 			}
+		}
+		#endregion
+
+		#region issue4280
+
+		[InheritanceMapping(Code = "DISPLAY", Type = typeof(Issue4280T1))]
+		[InheritanceMapping(Code = "TV", Type = typeof(Issue4280T2))]
+		[Table("Issue4280")]
+		public abstract class Issue4280Base
+		{
+			[PrimaryKey                    ] public          int     Id           { get; set; }
+			[Column                        ] public          string? SerialNumber { get; set; }
+			[Column(IsDiscriminator = true)] public abstract string  DeviceType   { get; set; }
+		}
+
+		public class Issue4280T1 : Issue4280Base
+		{
+			public override string DeviceType { get; set; } = "DISPLAY";
+		}
+
+		public class Issue4280T2 : Issue4280Base
+		{
+			public override string DeviceType { get; set; } = "TV";
+
+			[Column]
+			public string? Location { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4280")]
+		public void TestIssue4280AsBase([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4280Base>();
+
+			var displayDevice = new Issue4280T1 { Id = 1, SerialNumber = "Disp00001" };
+			var tvDevice      = new Issue4280T2 { Id = 2, SerialNumber = "TV00001", Location = "Something" };
+
+			db.Insert<Issue4280Base>(tvDevice);
+			db.Insert<Issue4280Base>(displayDevice);
+
+			var data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.AreEqual(2          , data.Length);
+			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
+			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
+			Assert.AreEqual("Disp00001", data[0].SerialNumber);
+			Assert.AreEqual("TV00001"  , data[1].SerialNumber);
+			Assert.AreEqual("Something", ((Issue4280T2)data[1]).Location);
+
+			displayDevice.SerialNumber = "Disp00002";
+			tvDevice.SerialNumber      = "TV00002";
+			tvDevice.Location          = "Anything";
+
+			db.Update<Issue4280Base>(tvDevice);
+			db.Update<Issue4280Base>(displayDevice);
+
+			data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.AreEqual(2          , data.Length);
+			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
+			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
+			Assert.AreEqual("Disp00002", data[0].SerialNumber);
+			Assert.AreEqual("TV00002"  , data[1].SerialNumber);
+			Assert.AreEqual("Anything" , ((Issue4280T2)data[1]).Location);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4280")]
+		public void TestIssue4280AsIs([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4280Base>();
+
+			var displayDevice = new Issue4280T1 { Id = 1, SerialNumber = "Disp00001" };
+			var tvDevice      = new Issue4280T2 { Id = 2, SerialNumber = "TV00001", Location = "Something" };
+
+			db.Insert(tvDevice);
+			db.Insert(displayDevice);
+
+			var data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.AreEqual(2          , data.Length);
+			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
+			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
+			Assert.AreEqual("Disp00001", data[0].SerialNumber);
+			Assert.AreEqual("TV00001"  , data[1].SerialNumber);
+			Assert.AreEqual("Something", ((Issue4280T2)data[1]).Location);
+
+			displayDevice.SerialNumber = "Disp00002";
+			tvDevice.SerialNumber      = "TV00002";
+			tvDevice.Location          = "Anything";
+
+			db.Update(tvDevice);
+			db.Update(displayDevice);
+
+			data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.AreEqual(2          , data.Length);
+			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
+			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
+			Assert.AreEqual("Disp00002", data[0].SerialNumber);
+			Assert.AreEqual("TV00002"  , data[1].SerialNumber);
+			Assert.AreEqual("Anything" , ((Issue4280T2)data[1]).Location);
 		}
 		#endregion
 	}

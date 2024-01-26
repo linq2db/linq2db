@@ -4,19 +4,18 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using System.Data.Common;
-	using System.Globalization;
 	using Common;
 	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
 
-	class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
-	class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
+	sealed class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
+	sealed class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
 
 	public abstract class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
@@ -39,9 +38,7 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
 			SqlProviderFlags.IsUpdateFromSupported             = Adapter.SupportsUpdateFrom;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
@@ -189,9 +186,9 @@ namespace LinqToDB.DataProvider.SQLite
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new SQLiteSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SQLiteSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance
@@ -204,19 +201,19 @@ namespace LinqToDB.DataProvider.SQLite
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SQLiteSchemaProvider();
 		}
 
-		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
-			if (SQLiteTools.AlwaysCheckDbNull)
+			if (options.FindOrDefault(SQLiteOptions.Default).AlwaysCheckDbNull)
 				return true;
 
-			return base.IsDBNullAllowed(reader, idx);
+			return base.IsDBNullAllowed(options, reader, idx);
 		}
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
@@ -260,7 +257,7 @@ namespace LinqToDB.DataProvider.SQLite
 				value     = d.ToDateTime(TimeOnly.MinValue);
 				if (dataType.DataType == DataType.Date)
 				{
-					value = ((DateTime)value).ToString(SQLiteMappingSchema.DATE_FORMAT_RAW, CultureInfo.InvariantCulture);
+					value = ((DateTime)value).ToString(SQLiteMappingSchema.DATE_FORMAT_RAW, System.Globalization.CultureInfo.InvariantCulture);
 					if (Name == ProviderName.SQLiteClassic)
 						dataType = dataType.WithDataType(DataType.VarChar);
 				}
@@ -284,21 +281,24 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
 			return new SQLiteBulkCopy().BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SQLiteOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new SQLiteBulkCopy().BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SQLiteOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
@@ -306,11 +306,13 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new SQLiteBulkCopy().BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SQLiteOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,

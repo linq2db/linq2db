@@ -1,23 +1,22 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
+	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Reflection;
+	using SqlQuery;
 
-	class MethodChainBuilder : MethodCallBuilder
+	sealed class MethodChainBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
-			return functions.Any();
+			return functions.Length > 0;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -29,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 			// evaluating IQueryableContainer
 			while (root.NodeType == ExpressionType.Constant && typeof(Sql.IQueryableContainer).IsSameOrParentOf(root.Type))
 			{
-				root = ((Sql.IQueryableContainer)root.EvaluateExpression()!).Query.Expression;
+				root = root.EvaluateExpression<Sql.IQueryableContainer>(builder.DataContext)!.Query.Expression;
 				root = root.SkipMethodChain(builder.MappingSchema);
 			}
 
@@ -57,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		internal class ChainContext : SequenceContextBase
+		internal sealed class ChainContext : SequenceContextBase
 		{
 			public ChainContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)

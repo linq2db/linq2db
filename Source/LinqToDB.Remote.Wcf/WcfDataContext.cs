@@ -12,28 +12,33 @@ namespace LinqToDB.Remote.Wcf
 		#region Init
 
 		// clone constructor
-		private WcfDataContext()
+		WcfDataContext() : base(new DataOptions())
 		{
 		}
 
-		public WcfDataContext(string endpointConfigurationName)
+		WcfDataContext(DataOptions options) : base(options)
+		{
+		}
+
+		public WcfDataContext(string endpointConfigurationName) : this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 		}
 
-		public WcfDataContext(string endpointConfigurationName, string remoteAddress)
+		public WcfDataContext(string endpointConfigurationName, string remoteAddress) : this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 			_remoteAddress             = remoteAddress             ?? throw new ArgumentNullException(nameof(remoteAddress));
 		}
 
-		public WcfDataContext(string endpointConfigurationName, EndpointAddress endpointAddress)
+		public WcfDataContext(string endpointConfigurationName, EndpointAddress endpointAddress) : this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 			_endpointAddress           = endpointAddress           ?? throw new ArgumentNullException(nameof(endpointAddress));
 		}
 
-		public WcfDataContext(Binding binding, EndpointAddress endpointAddress)
+		public WcfDataContext(Binding binding, EndpointAddress endpointAddress, Func<DataOptions,DataOptions>? optionBuilder = null)
+			: this(optionBuilder == null ? new() : optionBuilder(new()))
 		{
 			Binding          = binding         ?? throw new ArgumentNullException(nameof(binding));
 			_endpointAddress = endpointAddress ?? throw new ArgumentNullException(nameof(endpointAddress));
@@ -45,9 +50,9 @@ namespace LinqToDB.Remote.Wcf
 
 		public Binding? Binding { get; private set; }
 
-#endregion
+		#endregion
 
-#region Overrides
+		#region Overrides
 
 		protected override ILinqService GetClient()
 		{
@@ -68,7 +73,7 @@ namespace LinqToDB.Remote.Wcf
 			return new WcfDataContext()
 			{
 				MappingSchema              = MappingSchema,
-				Configuration              = Configuration,
+				ConfigurationString        = ConfigurationString,
 				Binding                    = Binding,
 				_endpointConfigurationName = _endpointConfigurationName,
 				_remoteAddress             = _remoteAddress,
@@ -78,6 +83,6 @@ namespace LinqToDB.Remote.Wcf
 
 		protected override string ContextIDPrefix => "WcfRemoteLinqService";
 
-#endregion
+		#endregion
 	}
 }

@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class TakeSkipBuilder : MethodCallBuilder
+	sealed class TakeSkipBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "Skip", "Take" };
 
@@ -18,11 +18,12 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-
-			var arg = methodCall.Arguments[1].Unwrap();
+			var arg      = methodCall.Arguments[1].Unwrap();
 
 			ISqlExpression expr;
-			var parameterize = Common.Configuration.Linq.ParameterizeTakeSkip;
+
+			var linqOptions  = builder.DataContext.Options.LinqOptions;
+			var parameterize = linqOptions.ParameterizeTakeSkip;
 
 			if (arg.NodeType == ExpressionType.Lambda)
 			{
@@ -48,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				TakeHints? hints = null;
 				if (methodCall.Arguments.Count == 3 && methodCall.Arguments[2].Type == typeof(TakeHints))
-					hints = (TakeHints)methodCall.Arguments[2].EvaluateExpression()!;
+					hints = (TakeHints)methodCall.Arguments[2].EvaluateExpression(builder.DataContext)!;
 
 				BuildTake(builder, sequence, expr, hints);
 			}

@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.CodeModel;
-using LinqToDB.Data;
-using LinqToDB.Scaffold;
-using LinqToDB.SchemaProvider;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {
+	using CodeModel;
+	using Data;
+	using Scaffold;
+	using SchemaProvider;
+	using SqlQuery;
+
 	// Because linq2db schema API is quite an abomination, created to leverage T4 functionality and includes not
 	// only schema but also names generation for generated code and type mapping of database types to .net types.
 	// To not work with this API directly, we introduced schema provider interface and perform conversion of data
@@ -155,7 +156,8 @@ namespace LinqToDB.Schema
 
 			if (!proc.IsFunction)
 			{
-				_procedures.Add(new StoredProcedure(dbName, description, parameters, schemaError, resultSet != null ? new [] { resultSet } : null, result));
+				if (_options.LoadStoredProcedure(new SqlObjectName(proc.ProcedureName, Schema: proc.SchemaName, Package: proc.PackageName)))
+					_procedures.Add(new StoredProcedure(dbName, description, parameters, schemaError, resultSet != null ? new [] { resultSet } : null, result));
 			}
 			else if (proc.IsTableFunction)
 			{
@@ -167,11 +169,13 @@ namespace LinqToDB.Schema
 				if (result is not ScalarResult scalarResult)
 					throw new InvalidOperationException($"Unsupported result type for aggregate function {dbName}");
 
-				_aggregateFunctions.Add(new AggregateFunction(dbName, description, parameters, scalarResult));
+				if (_options.LoadAggregateFunction(new SqlObjectName(proc.ProcedureName, Schema: proc.SchemaName, Package: proc.PackageName)))
+					_aggregateFunctions.Add(new AggregateFunction(dbName, description, parameters, scalarResult));
 			}
 			else
 			{
-				_scalarFunctions.Add(new ScalarFunction(dbName, description, parameters, result));
+				if (_options.LoadScalarFunction(new SqlObjectName(proc.ProcedureName, Schema: proc.SchemaName, Package: proc.PackageName)))
+					_scalarFunctions.Add(new ScalarFunction(dbName, description, parameters, result));
 			}
 		}
 
@@ -393,9 +397,9 @@ namespace LinqToDB.Schema
 
 			if (hasPrimaryKey)
 			{
-				var pkColumns = table.Columns.Where(c => c.IsPrimaryKey);
+				var pkColumns = table.Columns.Where(c => c.IsPrimaryKey).ToList();
 
-				if (pkColumns.Count() != pkColumns.Select(c => c.PrimaryKeyOrder).Distinct().Count())
+				if (pkColumns.Count != pkColumns.Select(c => c.PrimaryKeyOrder).Distinct().Count())
 					throw new InvalidOperationException($"Primary key columns have duplicate ordinals on table {tableName}");
 
 				primaryKey = new PrimaryKey(null, table.Columns.Where(c => c.IsPrimaryKey).OrderBy(c => c.PrimaryKeyOrder).Select(c => c.ColumnName).ToList());
@@ -459,7 +463,7 @@ namespace LinqToDB.Schema
 		{
 			// debug asserts
 			if (string.IsNullOrWhiteSpace(column.ColumnName))
-				throw new InvalidOperationException($"ColumnName not provided by schema for table {tableName}");
+				throw new InvalidOperationException($"ColumnName not provided by schema for column in table {tableName}");
 			if (string.IsNullOrWhiteSpace(column.ColumnType))
 			{
 				// sqlite schema provider could return column without type
@@ -470,10 +474,11 @@ namespace LinqToDB.Schema
 					column.ColumnType = "NUMERIC";
 				}
 				else
-					throw new InvalidOperationException($"ColumnType not provided by schema for table {tableName}");
+					// TODO: use logger
+					Console.Error.WriteLine($"ColumnType not provided by schema for column {tableName}.{column.ColumnName}");
 			}
 
-			var type = new DatabaseType(column.ColumnType!, column.Length, column.Precision, column.Scale);
+			var type = new DatabaseType(column.ColumnType, column.Length, column.Precision, column.Scale);
 			
 			RegisterType(type, column.DataType, column.SystemType, column.ProviderSpecificType);
 
@@ -483,7 +488,8 @@ namespace LinqToDB.Schema
 				type,
 				column.IsNullable,
 				!column.SkipOnInsert,
-				!column.SkipOnUpdate);
+				!column.SkipOnUpdate,
+				column.Ordinal);
 		}
 
 		/// <summary>
@@ -521,6 +527,8 @@ namespace LinqToDB.Schema
 					case "NpgsqlCircle"  : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCircle"  , true); break;
 					case "NpgsqlLine"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlLine"    , true); break;
 					case "NpgsqlInet"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInet"    , true); break;
+					case "NpgsqlCidr"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCidr"    , true); break;
+					case "NpgsqlInterval": type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInterval", true); break;
 
 					// SQL Server spatial types
 					case "Microsoft.SqlServer.Types.SqlHierarchyId": type = WellKnownTypes.Microsoft.SqlServer.Types.SqlHierarchyId; break;
@@ -686,16 +694,20 @@ namespace LinqToDB.Schema
 			{
 				var name = new SqlObjectName(p.ProcedureName, Schema: p.SchemaName, Package: p.PackageName);
 				if (!p.IsFunction)
-					return options.LoadProceduresSchema && options.LoadProcedureSchema(name);
-
-				if (p.IsTableFunction)
+					return options.LoadStoredProcedure(name) && options.LoadProceduresSchema && options.LoadProcedureSchema(name);
+				else if (p.IsTableFunction)
 					return options.LoadTableFunction(name);
+				else if (p.IsAggregateFunction)
+					return options.LoadAggregateFunction(name);
+				else
+					return options.LoadScalarFunction(name);
 
 				throw new InvalidOperationException($"{nameof(GetSchemaOptions)}.{nameof(GetSchemaOptions.LoadProcedure)} called for non-table returning object {p.ProcedureName}");
 			};
 
-			legacyOptions.LoadTable     = t => options.LoadTableOrView(new SqlObjectName(t.Name, Schema: t.Schema), t.IsView);
-			legacyOptions.UseSchemaOnly = options.UseSafeSchemaLoad;
+			legacyOptions.LoadTable                 = t => options.LoadTableOrView(new SqlObjectName(t.Name, Schema: t.Schema), t.IsView);
+			legacyOptions.UseSchemaOnly             = options.UseSafeSchemaLoad;
+			legacyOptions.IgnoreSystemHistoryTables = options.IgnoreSystemHistoryTables;
 
 			return legacyOptions;
 		}
@@ -709,11 +721,12 @@ namespace LinqToDB.Schema
 		IEnumerable<View>              ISchemaProvider.GetViews             (                                    ) => _views;
 		IEnumerable<ForeignKey>        ISchemaProvider.GetForeignKeys       (                                    ) => _foreignKeys;
 
-		ISet<string> ISchemaProvider.GetDefaultSchemas() => _defaultSchemas;
+		ISet<string> ISchemaProvider.GetDefaultSchemas() => _options.DefaultSchemas ??  _defaultSchemas;
 
-		string? ISchemaProvider.DatabaseName  => _databaseName;
-		string? ISchemaProvider.ServerVersion => _serverVersion;
-		string? ISchemaProvider.DataSource    => _dataSource;
+		string?         ISchemaProvider.DatabaseName    => _databaseName;
+		string?         ISchemaProvider.ServerVersion   => _serverVersion;
+		string?         ISchemaProvider.DataSource      => _dataSource;
+		DatabaseOptions ISchemaProvider.DatabaseOptions => _isSqlServer ? SqlServerDatabaseOptions.Instance : DatabaseOptions.Default;
 		#endregion
 
 		#region ITypeMappingProvider

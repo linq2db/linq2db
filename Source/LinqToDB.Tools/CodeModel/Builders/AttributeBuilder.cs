@@ -32,7 +32,7 @@
 		/// <param name="property">Attribute property name.</param>
 		/// <param name="value">Parameter value.</param>
 		/// <returns>Builder instance.</returns>
-		public AttributeBuilder Parameter(CodeIdentifier property, ICodeExpression value)
+		public AttributeBuilder Parameter(CodeReference property, ICodeExpression value)
 		{
 			Attribute.AddNamedParameter(property, value);
 			return this;

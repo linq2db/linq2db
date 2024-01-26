@@ -5,18 +5,20 @@ using System.Text;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
-
 namespace LinqToDB.Tools
 {
+	using Extensions;
+	using Mapping;
+	using Reflection;
+
 	public static class EnumerableExtensions
 	{
-		class ValueHolder<T>
+		sealed class ValueHolder<T>
 		{
 			[UsedImplicitly] public T Value = default!;
 		}
+
+		private static readonly string[] _nullItem = new[] { "<NULL>" };
 
 		/// <summary>
 		/// Returns well formatted text.
@@ -68,7 +70,7 @@ namespace LinqToDB.Tools
 				}
 				else
 				{
-					itemValues.Add(item == null ? new[] { "<NULL>" } : new[] { item.ToString() ?? string.Empty });
+					itemValues.Add(item == null ? _nullItem : new[] { item.ToString() ?? string.Empty });
 				}
 			}
 

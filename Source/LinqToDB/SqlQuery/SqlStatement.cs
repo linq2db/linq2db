@@ -7,15 +7,20 @@ using System.Linq;
 namespace LinqToDB.SqlQuery
 {
 	using Common;
+	using Common.Internal;
 	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
 	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable, IQueryExtendible
 	{
-		public string SqlText =>
-			((IQueryElement)this)
-				.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-				.ToString();
+		public string SqlText
+		{
+			get
+			{
+				using var sb = Pools.StringBuilder.Allocate();
+				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			}
+		}
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		protected string DebugSqlText => Tools.ToDebugDisplay(SqlText);
@@ -29,6 +34,8 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public SqlStatement? ParentStatement { get; set; }
 
+		// TODO: V6: used by tests only -> move to test helpers
+		[Obsolete("API will be removed in future versions")]
 		public SqlParameter[] CollectParameters()
 		{
 			var parametersHash = new HashSet<SqlParameter>();
@@ -77,29 +84,14 @@ namespace LinqToDB.SqlQuery
 
 		#region Aliases
 
-		static string? NormalizeParameterName(string? name)
-		{
-			if (string.IsNullOrEmpty(name))
-				return name;
-
-			name = name!.Replace(' ', '_');
-			const string vbPrefix = "$VB$";
-			if (name.StartsWith(vbPrefix))
-				name = name.Substring(vbPrefix.Length, name.Length - vbPrefix.Length);
-
-			return name;
-		}
-
-		private class PrepareQueryAndAliasesContext
+		private sealed class PrepareQueryAndAliasesContext
 		{
 			public PrepareQueryAndAliasesContext(AliasesContext? prevAliasContext)
 			{
 				PrevAliasContext = prevAliasContext;
 			}
 
-			public HashSet<SqlParameter>?   ParamsVisited;
 			public HashSet<SqlTableSource>? TablesVisited;
-			public HashSet<string>?         AllParameterNames;
 
 			public readonly AliasesContext? PrevAliasContext;
 			public readonly AliasesContext  NewAliases = new ();
@@ -127,15 +119,6 @@ namespace LinqToDB.SqlQuery
 						var alias = ((SqlTableSource)expr).Alias;
 						if (!string.IsNullOrEmpty(alias))
 							context.AllAliases.Add(alias!);
-					}
-					else if (expr.ElementType == QueryElementType.SqlParameter)
-					{
-						var alias = ((SqlParameter)expr).Name;
-						if (!string.IsNullOrEmpty(alias))
-						{
-							context.AllParameterNames ??= new (StringComparer.OrdinalIgnoreCase);
-							context.AllParameterNames.Add(alias!);
-						}
 					}
 
 					return;
@@ -215,18 +198,6 @@ namespace LinqToDB.SqlQuery
 
 							break;
 						}
-					case QueryElementType.SqlParameter:
-						{
-							var p = (SqlParameter)expr;
-							if ((context.ParamsVisited ??= new ()).Add(p))
-							{
-								p.Name = NormalizeParameterName(p.Name);
-							}
-
-							context.NewAliases.RegisterAliased(expr);
-
-							break;
-						}
 					case QueryElementType.TableSource:
 						{
 							var table = (SqlTableSource)expr;
@@ -256,20 +227,6 @@ namespace LinqToDB.SqlQuery
 						var a = ts.Alias;
 						return string.IsNullOrEmpty(a) ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 					},
-					StringComparer.OrdinalIgnoreCase);
-			}
-
-			if (ctx.ParamsVisited != null)
-			{
-				Utils.MakeUniqueNames(
-					ctx.ParamsVisited,
-					ctx.AllParameterNames,
-					(n, a) => a?.Contains(n) != true && !ReservedWords.IsReserved(n), p => p.Name, (p, n, a) =>
-					{
-						p.Name = n;
-					},
-					p => string.IsNullOrEmpty(p.Name) ? "p_1" :
-						char.IsDigit(p.Name![p.Name.Length - 1]) ? p.Name : p.Name + "_1",
 					StringComparer.OrdinalIgnoreCase);
 			}
 

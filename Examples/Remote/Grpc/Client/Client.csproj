@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\..\linq2db.Examples.props" />
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net7.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>

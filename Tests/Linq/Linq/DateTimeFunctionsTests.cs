@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -8,7 +9,6 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
-	using System.Collections.Generic;
 
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
@@ -69,6 +69,7 @@ namespace Tests.Linq
 			public int GetHashCode(DateTime obj) => 0;
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void GetDate([DataSources] string context)
 		{
@@ -116,14 +117,18 @@ namespace Tests.Linq
 					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)),
 					$"{now}, {dbUtcNow}, {delta}");
 
-				// we don't set kind
-				Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
+				// we don't set kind and rely on provider's behavior
+				// Most providers return Unspecified, but at least it shouldn't be Local
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient))
+					Assert.AreEqual(DateTimeKind.Utc, dbUtcNow.Kind);
+				else
+					Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
 			}
 		}
 
 		[Test]
 		public void CurrentTzTimestamp(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -141,7 +146,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
-			[IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllFirebird, ProviderName.SqlCe)]
+			[IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllFirebird, ProviderName.SqlCe, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -152,8 +157,12 @@ namespace Tests.Linq
 				var delta = dbUtcNow - DateTime.UtcNow;
 				Assert.IsTrue(delta.Between(TimeSpan.FromSeconds(-5), TimeSpan.FromSeconds(5)));
 
-				// we don't set kind
-				Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
+				// we don't set kind and rely on provider's behavior
+				// Most providers return Unspecified, but at least it shouldn't be Local
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient))
+					Assert.AreEqual(DateTimeKind.Utc, dbUtcNow.Kind);
+				else
+					Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
 			}
 		}
 
@@ -574,12 +583,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay2([IncludeDataSources(TestProvName.AllMySqlServer57Plus)] string context)
+		public void TimeOfDay2([IncludeDataSources(TestProvName.AllMySqlServer57Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
-					from t in db.Types select TruncMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
+					from t in db.Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
 		}
 
 		#endregion
@@ -676,6 +685,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue))!.Value.Second);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddMillisecond([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
@@ -740,6 +750,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddSeconds(-35)).Second);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddMilliseconds([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
@@ -990,6 +1001,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, part1 + part2, t.DateTimeValue))!.Value.Second);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddMillisecondExpression([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
@@ -1075,6 +1087,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddSeconds(part1 - part2)).Second);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddMillisecondsExpression([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)

@@ -5,7 +5,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
-	class SingleExpressionContext : IBuildContext
+	sealed class SingleExpressionContext : IBuildContext
 	{
 		public SingleExpressionContext(IBuildContext? parent, ExpressionBuilder builder, SqlField sqlExpression, SelectQuery selectQuery)
 		{
@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 		public SqlStatement?      Statement     { get; set; }
 		Expression? IBuildContext.Expression    => null;
 
-		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
 			var expr   = BuildExpression(null, 0, false);
 			var mapper = Builder.BuildMapper<T>(expr);
@@ -61,17 +61,9 @@ namespace LinqToDB.Linq.Builder
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
-			if (requestFlag != RequestFor.Field)
+			if (requestFlag != RequestFor.Field || expression == null)
 			{
 				return IsExpressionResult.False;
-			}
-
-			if (expression != null)
-			{
-				if (expression is ParameterExpression)
-				{
-					throw new NotImplementedException();
-				}
 			}
 
 			throw new NotImplementedException();
@@ -82,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		public virtual SqlStatement GetResultStatement()
+		public SqlStatement GetResultStatement()
 		{
 			throw new NotImplementedException();
 		}
@@ -91,16 +83,16 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-		public virtual int ConvertToParentIndex(int index, IBuildContext context)
+		public int ConvertToParentIndex(int index, IBuildContext context)
 		{
 			return Parent?.ConvertToParentIndex(index, this) ?? index;
 		}
 
-		public virtual void SetAlias(string? alias)
+		public void SetAlias(string? alias)
 		{
 		}
 
-		public virtual ISqlExpression? GetSubQuery(IBuildContext context)
+		public ISqlExpression? GetSubQuery(IBuildContext context)
 		{
 			return null;
 		}

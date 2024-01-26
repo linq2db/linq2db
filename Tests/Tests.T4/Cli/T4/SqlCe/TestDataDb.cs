@@ -6,11 +6,9 @@
 // ---------------------------------------------------------------------------------------------------
 
 using LinqToDB;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 #pragma warning disable 1573, 1591
@@ -31,14 +29,14 @@ namespace Cli.T4.SqlCe
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
-			: base(options)
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 		}
@@ -212,7 +210,7 @@ namespace Cli.T4.SqlCe
 		/// <summary>
 		/// FK_Issue695_Parent
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(ID) + "," + nameof(ID), OtherKey = nameof(Issue695Parent.ID) + "," + nameof(ID))]
+		[Association(CanBeNull = false, ThisKey = nameof(ID), OtherKey = nameof(Issue695Parent.ID))]
 		public Issue695Parent Parent { get; set; } = null!;
 		#endregion
 	}
@@ -226,8 +224,8 @@ namespace Cli.T4.SqlCe
 		/// <summary>
 		/// FK_Issue695_Parent backreference
 		/// </summary>
-		[Association(ThisKey = nameof(ID) + "," + nameof(ID), OtherKey = nameof(Issue695.ID) + "," + nameof(ID))]
-		public IEnumerable<Issue695> Issue695Parents { get; set; } = null!;
+		[Association(ThisKey = nameof(ID), OtherKey = nameof(SqlCe.Issue695.ID))]
+		public Issue695? Issue695 { get; set; }
 		#endregion
 	}
 

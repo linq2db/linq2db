@@ -7,8 +7,8 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 	using Common;
 	using Mapping;
@@ -177,7 +177,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				switch (levelExpression.NodeType)
-				{
+				{	
 					case ExpressionType.MemberAccess :
 						{
 							var memberInfo = ((MemberExpression)levelExpression).Member;
@@ -352,7 +352,7 @@ namespace LinqToDB.Linq.Builder
 												var memberExpression = GetMemberExpression(
 															member, levelExpression == expression, levelExpression.Type, expression);
 
-												var ed = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!);
+												var ed = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 												var descriptor = ed.FindColumnDescriptor(member);
 
 												sql = ConvertExpressions(memberExpression, flags, descriptor).Clone(member);
@@ -375,7 +375,7 @@ namespace LinqToDB.Linq.Builder
 														ColumnDescriptor? descriptor = null;
 														if (mex is MemberExpression ma)
 														{
-															var ed     = context.context.Builder.MappingSchema.GetEntityDescriptor(ma.Expression!.Type);
+															var ed     = context.context.Builder.MappingSchema.GetEntityDescriptor(ma.Expression!.Type, context.context.Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 															descriptor = ed.FindColumnDescriptor(ma.Member);
 														}
 														return context.context.ConvertExpressions(buildExpression, context.flags, descriptor);
@@ -426,7 +426,7 @@ namespace LinqToDB.Linq.Builder
 
 		SqlInfo[] ConvertMember(MemberInfo member, Expression expression, ConvertFlags flags)
 		{
-			var ed         = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!);
+			var ed         = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			var descriptor = ed.FindColumnDescriptor(member);
 
 			return ConvertExpressions(expression, flags, descriptor).Clone(member);
@@ -478,7 +478,7 @@ namespace LinqToDB.Linq.Builder
 
 		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new ();
 
-		class SqlData
+		sealed class SqlData
 		{
 			public SqlInfo[]  Sql    = null!;
 			public MemberInfo Member = null!;
@@ -537,17 +537,17 @@ namespace LinqToDB.Linq.Builder
 							{
 								var p = Expression.Parameter(Body.Type, "p");
 
-								var list = new List<SqlInfo>();
+								List<SqlInfo>? list = null;
 								foreach (var m in Members)
 								{
 									if (!(m.Key is MethodInfo || flags == ConvertFlags.Key && EagerLoading.IsDetailsMember(this, m.Value)))
 									{
 										foreach (var si in ConvertToIndex(Expression.MakeMemberAccess(p, m.Key), 1, flags))
-											list.Add(si.Clone(m.Key));
+											(list ??= new()).Add(si.Clone(m.Key));
 									}
 								}
 
-								return list.ToArray();
+								return list?.ToArray() ?? Array<SqlInfo>.Empty;
 							}
 					}
 				}
@@ -814,6 +814,9 @@ namespace LinqToDB.Linq.Builder
 
 								case ExpressionType.Parameter    :
 									{
+										if (levelExpression == ExpressionConstants.DataContextParam && requestFlag == RequestFor.Field)
+											return IsExpressionResult.False;
+
 										var sequence  = GetSequence(expression, level);
 
 										if (sequence == null)
@@ -923,7 +926,10 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Parameter    :
 						{
-							var sequence  = GetSequence(expression, level)!;
+							if (levelExpression == ExpressionConstants.DataContextParam)
+								break;
+
+							var sequence   = GetSequence(expression, level)!;
 							var paramIndex = Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence);
 							var parameter  = paramIndex >= 0 ? Lambda.Parameters[paramIndex] : null;
 
@@ -1344,7 +1350,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (Body.NodeType == ExpressionType.MemberInit)
 					{
-						var ed = Builder.MappingSchema.GetEntityDescriptor(Body.Type);
+						var ed = Builder.MappingSchema.GetEntityDescriptor(Body.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 						if (ed.Aliases != null)
 						{

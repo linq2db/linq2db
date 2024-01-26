@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Data
 {
-	using System.Data.Common;
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Linq.Builder;
-	using LinqToDB.Common;
+	using Common;
 	using Mapping;
 	using Reflection;
 
-	class RecordReaderBuilder
+	sealed class RecordReaderBuilder
 	{
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader),  "rd");
 		public        readonly ParameterExpression DataReaderLocal;
@@ -51,14 +52,12 @@ namespace LinqToDB.Data
 			if (buildBlock && _variable != null)
 				return _variable;
 
-			var entityDescriptor = MappingSchema.GetEntityDescriptor(objectType);
+			var entityDescriptor = MappingSchema.GetEntityDescriptor(objectType, DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
-			var recordType = RecordsHelper.GetRecordType(MappingSchema, objectType);
+			var recordType = RecordsHelper.GetRecordType(objectType);
 			var expr = recordType == RecordType.NotRecord
 				? BuildDefaultConstructor(entityDescriptor, objectType)
 				: BuildRecordConstructor (entityDescriptor, objectType, recordType);
-
-			expr = ProcessExpression(expr);
 
 			if (!buildBlock)
 				return expr;
@@ -68,8 +67,7 @@ namespace LinqToDB.Data
 
 		private ParameterExpression BuildVariable(Expression expr, string? name = null)
 		{
-			if (name == null)
-				name = expr.Type.Name + ++_varIndex;
+			name ??= expr.Type.Name + ++_varIndex;
 
 			var variable = Expression.Variable(
 				expr.Type,
@@ -123,17 +121,24 @@ namespace LinqToDB.Data
 
 		Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType)
 		{
-			var members = new List<(ColumnDescriptor column, ConvertFromDataReaderExpression expr)>();
+			var members = new List<(ColumnDescriptor column, MemberInfo storage, ConvertFromDataReaderExpression expr)>();
 			foreach (var info in GetReadIndexes(entityDescriptor))
 			{
-				if (info.Column.Storage != null ||
-					  info.Column.MemberAccessor.MemberInfo is not PropertyInfo pi ||
-					  pi.GetSetMethod(true) != null)
+				var cd              = info.Column;
+				MemberInfo? storage = null;
+
+				if (cd.Storage != null || cd.MemberAccessor.MemberInfo is not PropertyInfo pi)
+					storage = cd.StorageInfo;
+				else if (objectType.HasSetter(ref pi))
 				{
-					members.Add((
-						info.Column,
-						new ConvertFromDataReaderExpression(info.Column.StorageType, info.ReaderIndex, info.Column.ValueConverter, DataReaderLocal, DataContext)));
+					if (cd.MemberAccessor.MemberInfo == cd.StorageInfo && cd.MemberAccessor.MemberInfo != pi)
+						storage = pi;
+					else
+						storage = cd.StorageInfo;
 				}
+
+				if (storage != null)
+					members.Add((cd, storage, new ConvertFromDataReaderExpression(cd.StorageType, info.ReaderIndex, cd.ValueConverter, DataReaderLocal, DataContext)));
 			}
 
 			var initExpr = Expression.MemberInit(
@@ -141,7 +146,7 @@ namespace LinqToDB.Data
 				members
 					// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
 					.Where (static m => !m.column.MemberAccessor.IsComplex)
-					.Select(static m => (MemberBinding)Expression.Bind(m.column.StorageInfo, m.expr)));
+					.Select(static m => (MemberBinding)Expression.Bind(m.storage, m.expr)));
 
 			Expression expr = initExpr;
 
@@ -157,7 +162,7 @@ namespace LinqToDB.Data
 				{
 					if (m.column.MemberAccessor.IsComplex)
 					{
-						exprs.Add(m.column.MemberAccessor.SetterExpression.GetBody(obj, m.expr));
+						exprs.Add(m.column.MemberAccessor.GetSetterExpression(obj, m.expr));
 					}
 				}
 
@@ -169,7 +174,7 @@ namespace LinqToDB.Data
 			return expr;
 		}
 
-		class ColumnInfo
+		sealed class ColumnInfo
 		{
 			public bool       IsComplex;
 			public string     Name       = null!;
@@ -184,7 +189,7 @@ namespace LinqToDB.Data
 				members = new List<MemberAccessor>();
 				foreach (var member in typeAccessor.Members)
 				{
-					if (-1 != RecordsHelper.GetFSharpRecordMemberSequence(MappingSchema, typeAccessor.Type, member.MemberInfo))
+					if (-1 != RecordsHelper.GetFSharpRecordMemberSequence(member.MemberInfo))
 						members.Add(member);
 				}
 			}
@@ -230,7 +235,7 @@ namespace LinqToDB.Data
 						}
 
 						var typeAcc          = TypeAccessor.GetAccessor(member.Type);
-						var memberRecordType = RecordsHelper.GetRecordType(MappingSchema, member.Type);
+						var memberRecordType = RecordsHelper.GetRecordType(member.Type);
 
 						var exprs = GetExpressions(typeAcc, memberRecordType, cols).ToList();
 
@@ -305,12 +310,7 @@ namespace LinqToDB.Data
 			return expr;
 		}
 
-		protected virtual Expression ProcessExpression(Expression expression)
-		{
-			return expression;
-		}
-
-		class ReadColumnInfo
+		sealed class ReadColumnInfo
 		{
 			public int              ReaderIndex;
 			public ColumnDescriptor Column = null!;
@@ -336,7 +336,7 @@ namespace LinqToDB.Data
 				return new ConvertFromDataReaderExpression(ObjectType, 0, null, DataReaderLocal, DataContext);
 			}
 
-			var entityDescriptor   = MappingSchema.GetEntityDescriptor(ObjectType);
+			var entityDescriptor   = MappingSchema.GetEntityDescriptor(ObjectType, DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var inheritanceMapping = entityDescriptor.InheritanceMapping;
 
 			if (inheritanceMapping.Count == 0)
@@ -380,7 +380,7 @@ namespace LinqToDB.Data
 				if (mapping.m == defaultMapping)
 					continue;
 
-				var ed     = MappingSchema.GetEntityDescriptor(mapping.m.Type);
+				var ed     = MappingSchema.GetEntityDescriptor(mapping.m.Type, DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 				var dindex = GetReaderIndex(ed, null, mapping.m.DiscriminatorName);
 
 				if (dindex >= 0)

@@ -4,15 +4,15 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Extensions;
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
-	using LinqToDB.Extensions;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
-		public SQLiteSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SQLiteSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.SQLite
 			if (statement is SqlTruncateTableStatement trun)
 			{
 				StringBuilder.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME=");
-				MappingSchema.ConvertToSqlValue(StringBuilder, null, trun.Table!.TableName.Name);
+				MappingSchema.ConvertToSqlValue(StringBuilder, null, DataOptions, trun.Table!.TableName.Name);
 			}
 			else
 			{
@@ -97,12 +97,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return sb.Append(value);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
-				case DataType.Int32 : StringBuilder.Append("INTEGER");                      break;
-				default             : base.BuildDataTypeFromDataType(type, forCreateTable); break;
+				case DataType.Int32 : StringBuilder.Append("INTEGER");                                 break;
+				default             : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}
 		}
 
@@ -128,7 +128,7 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			// either "temp", "main" or attached db name supported
 			if (tableOptions.IsTemporaryOptionSet())

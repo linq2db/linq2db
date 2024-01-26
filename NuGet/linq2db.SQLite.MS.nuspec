@@ -13,13 +13,13 @@
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework=".NETFramework4.5.1">
-				<dependency id="linq2db"                version="4.0.0" />
-				<dependency id="Microsoft.Data.Sqlite"  version="1.1.1"  />
+			<group targetFramework="net451">
+				<dependency id="linq2db"                version="5.0.0" />
+				<dependency id="Microsoft.Data.Sqlite"  version="1.1.1" />
 			</group>
 			<group targetFramework="netstandard2.0">
-				<dependency id="linq2db"                version="4.0.0" />
-				<dependency id="Microsoft.Data.Sqlite"  version="6.0.6"  />
+				<dependency id="linq2db"                version="5.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="7.0.11" />
 			</group>
 		</dependencies>
 		<contentFiles>
@@ -28,7 +28,6 @@
 	</metadata>
 	<files>
 		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
-		<file src="..\Nuget\readme.T4.txt"                                           target="readme.txt"                                                                                         />
 
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />

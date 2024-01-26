@@ -24,13 +24,13 @@ namespace Cli.Default.Informix
 		/// <summary>
 		/// FK_testfkunique_testunique
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Id1) + "," + nameof(Id1), OtherKey = nameof(Informix.Testunique.Id1) + "," + nameof(Id1))]
+		[Association(CanBeNull = false, ThisKey = nameof(Id1) + "," + nameof(Id2), OtherKey = nameof(Informix.Testunique.Id1) + "," + nameof(Informix.Testunique.Id2))]
 		public Testunique Testunique { get; set; } = null!;
 
 		/// <summary>
 		/// FK_testfkunique_testunique_1
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Id3) + "," + nameof(Id3), OtherKey = nameof(Informix.Testunique.Id3) + "," + nameof(Id3))]
+		[Association(CanBeNull = false, ThisKey = nameof(Id3) + "," + nameof(Id4), OtherKey = nameof(Informix.Testunique.Id3) + "," + nameof(Informix.Testunique.Id4))]
 		public Testunique Testunique1 { get; set; } = null!;
 		#endregion
 	}

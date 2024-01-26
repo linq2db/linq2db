@@ -18,8 +18,7 @@ namespace Tests.Linq
 	using LinqToDB.Data;
 	using Model;
 
-	// TODO: add more base types tests
-	// TODO: and more type test cases
+	// TODO: delete this test when we implement type tests for all databases similar to CLickHouse tests
 	[TestFixture]
 	public class DataTypesTests : TestBase
 	{
@@ -47,7 +46,7 @@ namespace Tests.Linq
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
-			TestType<GuidTable, Guid>(db, GuidTable.Data);
+			TestType<GuidTable, Guid>(db, GuidTable.Data, context);
 		}
 		#endregion
 
@@ -67,7 +66,7 @@ namespace Tests.Linq
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
-			TestType<ByteTable, byte>(db, ByteTable.Data);
+			TestType<ByteTable, byte>(db, ByteTable.Data, context);
 		}
 		#endregion
 
@@ -78,7 +77,7 @@ namespace Tests.Linq
 		{
 			public static DateOnlyTable[] Data = new[]
 			{
-				new DateOnlyTable() { Id = 1, Column = new DateOnly(1900, 1, 1), ColumnNullable = null },
+				new DateOnlyTable() { Id = 1, Column = new DateOnly(1950, 1, 1), ColumnNullable = null },
 				new DateOnlyTable() { Id = 2, Column = new DateOnly(2020, 2, 29), ColumnNullable = new DateOnly(2200, 1, 1) },
 			};
 		}
@@ -88,7 +87,7 @@ namespace Tests.Linq
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
-			TestType<DateOnlyTable, DateOnly>(db, DateOnlyTable.Data);
+			TestType<DateOnlyTable, DateOnly>(db, DateOnlyTable.Data, context);
 		}
 #endif
 		#endregion
@@ -104,6 +103,7 @@ namespace Tests.Linq
 			};
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestBoolean([DataSources(false)] string context)
 		{
@@ -116,7 +116,7 @@ namespace Tests.Linq
 				data = data.Select(r => new BooleanTable() { Id = r.Id, Column = r.Column, ColumnNullable = r.ColumnNullable ?? false }).ToArray();
 			}
 
-			TestType<BooleanTable, bool>(db, data);
+			TestType<BooleanTable, bool>(db, data, context);
 		}
 		#endregion
 
@@ -142,7 +142,7 @@ namespace Tests.Linq
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
-			TestType<IntEnumTable, IntEnum>(db, IntEnumTable.Data);
+			TestType<IntEnumTable, IntEnum>(db, IntEnumTable.Data, context);
 		}
 		#endregion
 
@@ -168,7 +168,7 @@ namespace Tests.Linq
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
-			TestType<StringEnumTable, StringEnum>(db, StringEnumTable.Data);
+			TestType<StringEnumTable, StringEnum>(db, StringEnumTable.Data, context);
 		}
 		#endregion
 
@@ -176,17 +176,19 @@ namespace Tests.Linq
 		[Sql.Expression("{0} = {1}", IsPredicate = true)]
 		private static bool Equality(object? x, object? y) => throw new NotImplementedException();
 
-		private void TestType<TTable, TType>(DataConnection db, TTable[] data)
+		private void TestType<TTable, TType>(DataConnection db, TTable[] data, string context)
 			where TTable: TypeTable<TType>
 			where TType: struct
 		{
+			var supportsParameters = !context.IsAnyOf(TestProvName.AllClickHouse);
+
 			using var table = db.CreateLocalTable(data);
 
 			// test parameter
 			db.InlineParameters = false;
 			db.OnNextCommandInitialized((_, cmd) =>
 			{
-				Assert.AreEqual(2, cmd.Parameters.Count);
+				Assert.AreEqual(supportsParameters ? 2 : 0, cmd.Parameters.Count);
 				return cmd;
 			});
 
@@ -216,17 +218,20 @@ namespace Tests.Linq
 			db.InlineParameters = false;
 
 			// test bulk copy
-			TestBulkCopy<TTable, TType>(db, data, table, BulkCopyType.RowByRow);
-			TestBulkCopy<TTable, TType>(db, data, table, BulkCopyType.MultipleRows);
-			TestBulkCopy<TTable, TType>(db, data, table, BulkCopyType.ProviderSpecific);
+			TestBulkCopy<TTable, TType>(db, context, data, table, BulkCopyType.RowByRow);
+			TestBulkCopy<TTable, TType>(db, context, data, table, BulkCopyType.MultipleRows);
+			TestBulkCopy<TTable, TType>(db, context, data, table, BulkCopyType.ProviderSpecific);
 		}
 
-		private static void TestBulkCopy<TTable, TType>(DataConnection db, TTable[] data, TempTable<TTable> table, BulkCopyType bulkCopyType)
+		private void TestBulkCopy<TTable, TType>(DataConnection db, string context, TTable[] data, TempTable<TTable> table, BulkCopyType bulkCopyType)
 			where TTable : TypeTable<TType>
 			where TType : struct
 		{
 			table.Delete();
-			db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bulkCopyType }, data);
+
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = bulkCopyType };
+
+			db.BulkCopy(options, data);
 			var records = table.OrderBy(r => r.Id).ToArray();
 			Assert.AreEqual(2, records.Length);
 			Assert.AreEqual(data[0].Id, records[0].Id);

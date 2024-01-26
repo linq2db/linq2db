@@ -193,14 +193,14 @@ namespace Tests.Linq
 	public class DynamicWindowFunctionsTests : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int Id     { get; set; }
 			[Column] public int Value1 { get; set; }
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

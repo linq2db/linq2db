@@ -33,18 +33,19 @@ namespace Tests.Samples
 				MappingSchema = mappingSchema;
 			}
 
-			public string              ContextName           => _context.ContextName;
-			public int                 ContextID             => _context.ContextID;
-			public Func<ISqlOptimizer> GetSqlOptimizer       => _context.GetSqlOptimizer;
-			public Type                DataReaderType        => _context.DataReaderType;
-			public Func<ISqlBuilder>   CreateSqlProvider     => _context.CreateSqlProvider;
-			public List<string>        NextQueryHints        => _context.NextQueryHints;
-			public List<string>        QueryHints            => _context.QueryHints;
-			public SqlProviderFlags    SqlProviderFlags      => _context.SqlProviderFlags;
-			public TableOptions        SupportedTableOptions => _context.SupportedTableOptions;
+			public string                          ContextName           => _context.ContextName;
+			public int                             ConfigurationID       => _context.ConfigurationID;
+			public Func<DataOptions,ISqlOptimizer> GetSqlOptimizer       => _context.GetSqlOptimizer;
+			public Type                            DataReaderType        => _context.DataReaderType;
+			public Func<ISqlBuilder>               CreateSqlProvider     => _context.CreateSqlProvider;
+			public List<string>                    NextQueryHints        => _context.NextQueryHints;
+			public List<string>                    QueryHints            => _context.QueryHints;
+			public SqlProviderFlags                SqlProviderFlags      => _context.SqlProviderFlags;
+			public TableOptions                    SupportedTableOptions => _context.SupportedTableOptions;
+			public string?                         ConfigurationString   => _context.ConfigurationString;
 
-			public MappingSchema       MappingSchema { get; }
-			public bool                CloseAfterUse { get; set; }
+			public MappingSchema MappingSchema { get; }
+			public bool          CloseAfterUse { get; set; }
 
 			public bool InlineParameters
 			{
@@ -82,6 +83,8 @@ namespace Tests.Samples
 				return _context.GetQueryRunner(query, queryNumber, expression, parameters, preambles);
 			}
 
+			public DataOptions Options => _context.Options;
+
 			public Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 			{
 				return _context.GetReaderExpression(reader, idx, readerExpression, toType);
@@ -92,13 +95,10 @@ namespace Tests.Samples
 				return _context.IsDBNullAllowed(reader, idx);
 			}
 
-			public void AddInterceptor(IInterceptor interceptor) => _context.AddInterceptor(interceptor);
+			public void AddInterceptor   (IInterceptor interceptor) => _context.AddInterceptor(interceptor);
+			public void RemoveInterceptor(IInterceptor interceptor) => _context.RemoveInterceptor(interceptor);
 
 			public IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
-			public FluentMappingBuilder          GetFluentMappingBuilder()
-			{
-				return MappingSchema.GetFluentMappingBuilder();
-			}
 		}
 
 		public class Entity
@@ -113,12 +113,13 @@ namespace Tests.Samples
 			using (var db = new DataConnection())
 			{
 				var ms = new MappingSchema();
-				var b  = ms.GetFluentMappingBuilder();
-				var dc = new DataContextDecorator(db, ms);
+				var b  = new FluentMappingBuilder(ms);
+				using var dc = new DataContextDecorator(db, ms);
 
 				b.Entity<Entity>()
 					.Property(_ => _.Id  ).HasColumnName("EntityId")
-					.Property(_ => _.Name).HasColumnName("EntityName");
+					.Property(_ => _.Name).HasColumnName("EntityName")
+					.Build();
 
 				var q1 = db.GetTable<Entity>().Select(_ => _).ToString();
 				var q2 = dc.GetTable<Entity>().Select(_ => _).ToString()!;

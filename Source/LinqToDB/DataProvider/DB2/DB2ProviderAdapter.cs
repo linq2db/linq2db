@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using Common;
 	using Expressions;
+	using Extensions;
 	using Mapping;
 
 	public class DB2ProviderAdapter : IDynamicProviderAdapter
@@ -19,7 +20,9 @@ namespace LinqToDB.DataProvider.DB2
 #if NETFRAMEWORK
 		public const string AssemblyName         = "IBM.Data.DB2";
 		public const string ClientNamespace      = "IBM.Data.DB2";
+		[Obsolete("Unused. Will be removed in v6")]
 		public const string? AssemblyNameOld     = null;
+		[Obsolete("Unused. Will be removed in v6")]
 		public const string? ClientNamespaceOld  = null;
 #else
 		// note that we try new assembly name (IBM.Data.Db2) which available since net5.0 even for older
@@ -35,17 +38,19 @@ namespace LinqToDB.DataProvider.DB2
 			var clientNamespace = ClientNamespace;
 			var assembly        = Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 
-			if (assembly == null && AssemblyNameOld != null)
+#if !NETFRAMEWORK
+			if (assembly == null)
 			{
 				assembly = Tools.TryLoadAssembly(AssemblyNameOld, ProviderFactoryName);
 				if (assembly != null)
-					clientNamespace = ClientNamespaceOld!;
+					clientNamespace = ClientNamespaceOld;
 			}
-			else if (AssemblyNameOld != null && assembly.GetName().Name == AssemblyNameOld)
+			else if (assembly.GetName().Name == AssemblyNameOld)
 			{
 				// cover case when provider factory loaded old assembly
-				clientNamespace = ClientNamespaceOld!;
+				clientNamespace = ClientNamespaceOld;
 			}
+#endif
 
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
@@ -131,7 +136,7 @@ namespace LinqToDB.DataProvider.DB2
 				if (type == null)
 					return null;
 
-				if (obsolete && type.GetCustomAttributes(typeof(ObsoleteAttribute), false).Length > 0)
+				if (obsolete && type.HasAttribute<ObsoleteAttribute>(false))
 					return null;
 
 				if (register)
@@ -231,7 +236,7 @@ namespace LinqToDB.DataProvider.DB2
 		#region Wrappers
 
 		[Wrapper]
-		private class DB2Binary
+		private sealed class DB2Binary
 		{
 			public bool IsNull { get; }
 		}
@@ -250,7 +255,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		[Wrapper]
-		public class DB2Connection : TypeWrapper, IDisposable
+		public class DB2Connection : TypeWrapper, IConnectionWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -273,10 +278,12 @@ namespace LinqToDB.DataProvider.DB2
 			public DB2ServerTypes eServerType => ((Func<DB2Connection, DB2ServerTypes>)CompiledWrappers[0])(this);
 			public void           Open()      => ((Action<DB2Connection>)CompiledWrappers[1])(this);
 			public void           Dispose()   => ((Action<DB2Connection>)CompiledWrappers[2])(this);
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		[Wrapper]
-		private class DB2Parameter
+		private sealed class DB2Parameter
 		{
 			public DB2Type DB2Type { get; set; }
 		}
@@ -346,7 +353,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		[Wrapper]
-		internal class DB2Transaction
+		internal sealed class DB2Transaction
 		{
 		}
 

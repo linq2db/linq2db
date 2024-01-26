@@ -15,11 +15,11 @@ namespace LinqToDB.DataProvider.Sybase
 
 		SybaseMappingSchema() : base(ProviderName.Sybase)
 		{
-			SetValueToSqlConverter(typeof(string)  , (sb, dt, v) => ConvertStringToSql(sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char)    , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb, dt, v) => ConvertTimeSpanToSql(sb, dt, (TimeSpan)v));
-			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string)  , (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char)    , (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,_,v) => ConvertTimeSpanToSql(sb, dt, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(byte[])  , (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 		}

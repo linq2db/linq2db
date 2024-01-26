@@ -1,11 +1,11 @@
-﻿namespace Tests.UserTests
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+using NUnit.Framework;
+
+namespace Tests.UserTests
 {
-	using System;
-	using System.Linq;
-	using System.Linq.Expressions;
-
-	using NUnit.Framework;
-
 	[TestFixture]
 	public class Issue447Tests : TestBase
 	{

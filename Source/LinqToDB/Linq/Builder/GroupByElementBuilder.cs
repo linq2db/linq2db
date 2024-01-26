@@ -4,12 +4,12 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	
-	class GroupByElementBuilder : ISequenceBuilder
+
+	sealed class GroupByElementBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
 
-		GroupByBuilder.GroupByContext? GetGroupByContext(ExpressionBuilder builder, BuildInfo buildInfo)
+		static GroupByBuilder.GroupByContext? GetGroupByContext(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			if (buildInfo.Expression.NodeType == ExpressionType.Parameter)
 			{

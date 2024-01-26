@@ -11,7 +11,9 @@ namespace LinqToDB.DataProvider.DB2
 
 	sealed class DB2MappingSchema : LockedMappingSchema
 	{
+#if NET6_0_OR_GREATER
 		private const string DATE_FORMAT       = "{0:yyyy-MM-dd}";
+#endif
 		private const string DATETIME_FORMAT   = "{0:yyyy-MM-dd-HH.mm.ss}";
 
 		private const string TIMESTAMP0_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss}";
@@ -47,19 +49,19 @@ namespace LinqToDB.DataProvider.DB2
 			SetDataType(typeof(byte), new SqlDataType(DataType.Int16, typeof(byte)));
 			SetDataType(typeof(byte?), new SqlDataType(DataType.Int16, typeof(byte)));
 
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid),     (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 
 			// set reader conversions from literals
 			SetConverter<string, DateTime>(ParseDateTime);
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
 			SetConverter<string, DateOnly>(ParseDateOnly);
 #endif
 		}

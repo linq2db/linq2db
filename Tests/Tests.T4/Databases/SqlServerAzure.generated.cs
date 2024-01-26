@@ -30,6 +30,7 @@ namespace TestAzureSQL
 		public ITable<AllTypes2>                    AllTypes2                 { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                        Children                  { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>                CollatedTables            { get { return this.GetTable<CollatedTable>(); } }
+		public ITable<CreateIfNotExistsTable>       CreateIfNotExistsTables   { get { return this.GetTable<CreateIfNotExistsTable>(); } }
 		public ITable<sys_DatabaseFirewallRule>     DatabaseFirewallRules     { get { return this.GetTable<sys_DatabaseFirewallRule>(); } }
 		public ITable<DataType>                     DataTypes                 { get { return this.GetTable<DataType>(); } }
 		public ITable<DecimalOverflow>              DecimalOverflows          { get { return this.GetTable<DecimalOverflow>(); } }
@@ -45,12 +46,14 @@ namespace TestAzureSQL
 		public ITable<Issue1115>                    Issue1115                 { get { return this.GetTable<Issue1115>(); } }
 		public ITable<Issue1144>                    Issue1144                 { get { return this.GetTable<Issue1144>(); } }
 		public ITable<LinqDataType>                 LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Member>                       Members                   { get { return this.GetTable<Member>(); } }
 		public ITable<NameTest>                     NameTests                 { get { return this.GetTable<NameTest>(); } }
 		public ITable<Parent>                       Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<ParentChildView>              ParentChildViews          { get { return this.GetTable<ParentChildView>(); } }
 		public ITable<ParentView>                   ParentViews               { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                      Patients                  { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>                       People                    { get { return this.GetTable<Person>(); } }
+		public ITable<Provider>                     Providers                 { get { return this.GetTable<Provider>(); } }
 		public ITable<SameTableName>                SameTableNames            { get { return this.GetTable<SameTableName>(); } }
 		public ITable<TestSchema_SameTableName>     SameTableNames0           { get { return this.GetTable<TestSchema_SameTableName>(); } }
 		public ITable<SqlType>                      SqlTypes                  { get { return this.GetTable<SqlType>(); } }
@@ -109,8 +112,8 @@ namespace TestAzureSQL
 
 		public partial class Issue1921Result
 		{
-			public string name  { get; set; } = null!;
-			public int?   objid { get; set; }
+			[Column("name") ] public string Name  { get; set; } = null!;
+			[Column("objid")] public int?   Objid { get; set; }
 		}
 
 		#endregion
@@ -193,6 +196,13 @@ namespace TestAzureSQL
 		[Column, NotNull] public int    Id              { get; set; } // int
 		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
 		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
+	}
+
+	[Table(Schema="dbo", Name="CreateIfNotExistsTable")]
+	public partial class CreateIfNotExistsTable
+	{
+		[Column, NotNull] public int Id    { get; set; } // int
+		[Column, NotNull] public int Value { get; set; } // int
 	}
 
 	[Table(Schema="sys", Name="database_firewall_rules", IsView=true)]
@@ -354,6 +364,23 @@ namespace TestAzureSQL
 		[Column(),      Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
+	[Table(Schema="dbo", Name="Member")]
+	public partial class Member
+	{
+		[PrimaryKey, Identity] public int    MemberId { get; set; } // int
+		[Column,     NotNull ] public string Alias    { get; set; } = null!; // nvarchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member_BackReference (dbo.Provider)
+		/// </summary>
+		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		public Provider? Provider { get; set; }
+
+		#endregion
+	}
+
 	[Table(Schema="dbo", Name="Name.Test")]
 	public partial class NameTest
 	{
@@ -423,6 +450,23 @@ namespace TestAzureSQL
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? Patient { get; set; }
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="Provider")]
+	public partial class Provider
+	{
+		[PrimaryKey, NotNull] public int    ProviderId { get; set; } // int
+		[Column,     NotNull] public string Test       { get; set; } = null!; // nvarchar(max)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member (dbo.Member)
+		/// </summary>
+		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		public Member Member { get; set; } = null!;
 
 		#endregion
 	}
@@ -660,7 +704,7 @@ namespace TestAzureSQL
 			return dataConnection.QueryProc(dataReader =>
 				new DuplicateColumnNamesResult
 				{
-					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
+					Id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
 					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
 				},
 				"[dbo].[DuplicateColumnNames]");
@@ -668,7 +712,7 @@ namespace TestAzureSQL
 
 		public partial class DuplicateColumnNamesResult
 		{
-			               public int    id      { get; set; }
+			[Column("id")] public int    Id      { get; set; }
 			[Column("id")] public string Column2 { get; set; } = null!;
 		}
 
@@ -1329,6 +1373,12 @@ namespace TestAzureSQL
 				t.Id == Id);
 		}
 
+		public static Member? Find(this ITable<Member> table, int MemberId)
+		{
+			return table.FirstOrDefault(t =>
+				t.MemberId == MemberId);
+		}
+
 		public static Parent? Find(this ITable<Parent> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
@@ -1345,6 +1395,12 @@ namespace TestAzureSQL
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static Provider? Find(this ITable<Provider> table, int ProviderId)
+		{
+			return table.FirstOrDefault(t =>
+				t.ProviderId == ProviderId);
 		}
 
 		public static SqlType? Find(this ITable<SqlType> table, int ID)

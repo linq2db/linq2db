@@ -1,21 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Globalization;
-	using Mapping;
-	using System.Data.Common;
 
-	partial class InformixSqlBuilder : BasicSqlBuilder
+	sealed partial class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -113,7 +112,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -150,7 +149,7 @@ namespace LinqToDB.DataProvider.Informix
 					break;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		/// <summary>
@@ -232,7 +231,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			if (name.Server != null && name.Database == null)
 				throw new LinqToDBException("You must specify database for linked server query");
@@ -285,7 +284,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			BuildExpression(value);
 			StringBuilder.Append("::");
-			BuildDataType(dataType, false);
+			BuildDataType(dataType, false, value.CanBeNull);
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)

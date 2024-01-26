@@ -13,14 +13,14 @@ namespace Tests.UserTests
 	{
 
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int     Id    { get; set; }
 			[Column] public string? Value { get; set; }
 		}
 
 		[Test]
-		public void Issue1925Test([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer, ProviderName.Sybase)]  string context)
+		public void Issue1925Test([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer, ProviderName.Sybase, TestProvName.AllClickHouse)]  string context)
 		{
 			var data = new[]
 			{
@@ -72,10 +72,9 @@ namespace Tests.UserTests
 					table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList();
 				}
 
-				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, "[0-9]")).ToList().Count);
-
-				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, asParam)).ToList().Count);
-
+				var expected = context.IsAnyOf(TestProvName.AllClickHouse) ? 0 : 1;
+				Assert.AreEqual(expected, table.Where(r => Sql.Like(r.Value, "[0-9]")).ToList().Count);
+				Assert.AreEqual(expected, table.Where(r => Sql.Like(r.Value, asParam)).ToList().Count);
 			}
 		}
 		

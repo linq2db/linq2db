@@ -9,7 +9,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -50,15 +49,15 @@ namespace Default.SqlCe
 			InitMappingSchema();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
-			: base(options)
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 			InitMappingSchema();
@@ -160,8 +159,8 @@ namespace Default.SqlCe
 		/// <summary>
 		/// FK_Issue695_Parent (Issue695Parent)
 		/// </summary>
-		[Association(ThisKey="ID, ID", OtherKey="ID, ID", CanBeNull=false)]
-		public Issue695Parent Parent { get; set; } = null!;
+		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false)]
+		public Issue695Parent Issue695Parent { get; set; } = null!;
 
 		#endregion
 	}
@@ -176,8 +175,8 @@ namespace Default.SqlCe
 		/// <summary>
 		/// FK_Issue695_Parent_BackReference (Issue695)
 		/// </summary>
-		[Association(ThisKey="ID, ID", OtherKey="ID, ID", CanBeNull=true)]
-		public IEnumerable<Issue695> FKIssue695ParentBackReferences { get; set; } = null!;
+		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true)]
+		public Issue695? FKIssue695ParentBackReference { get; set; }
 
 		#endregion
 	}

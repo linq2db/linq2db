@@ -13,7 +13,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -23,12 +25,15 @@ using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
+
 using Microsoft.SqlServer.Types;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
@@ -270,7 +275,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class DateTime2Table
+		sealed class DateTime2Table
 		{
 			[Column] public int Id { get; set; }
 			[Column(DataType = DataType.DateTime2)] public DateTime DTD { get; set; }
@@ -766,7 +771,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table(Schema = "dbo", Name = "LinqDataTypes")]
-		class DataTypes
+		sealed class DataTypes
 		{
 			[Column] public int      ID;
 			[Column] public decimal  MoneyValue;
@@ -907,7 +912,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		internal class AllTypes
+		internal sealed class AllTypes
 		{
 			[Identity]
 			[Column(DataType=DataType.Int32),          LinqToDB.Mapping.NotNull] public int             ID                       { get; set; }
@@ -1130,13 +1135,13 @@ namespace Tests.DataProvider
 
 				if (actualValue is SqlGeometry geometry)
 				{
-					Assert.That(actualValue == null  || geometry.IsNull                  ? null : actualValue.ToString(),
+					Assert.That(geometry.IsNull ? null : actualValue.ToString(),
 						Is.EqualTo(testValue == null || ((SqlGeometry) testValue).IsNull ? null : testValue.ToString()),
 						"Column  : {0}", column.MemberName);
 				}
 				else if (actualValue is SqlGeography geography)
 				{
-					Assert.That(actualValue == null  || geography.IsNull                  ? null : actualValue.ToString(),
+					Assert.That(geography.IsNull ? null : actualValue.ToString(),
 						Is.EqualTo(testValue == null || ((SqlGeography) testValue).IsNull ? null : testValue.ToString()),
 						"Column  : {0}", column.MemberName);
 				}
@@ -1152,7 +1157,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table(Name="AllTypes2")]
-		class AllTypes2
+		sealed class AllTypes2
 		{
 			[Column(DbType="int"),   PrimaryKey, Identity] public int             ID                     { get; set; } // int
 			[Column(DbType="date"),              Nullable] public DateTime?       dateDataType           { get; set; } // date
@@ -1278,11 +1283,12 @@ namespace Tests.DataProvider
 			using var db = GetDataConnection(context);
 			var       ms = new MappingSchema();
 
-			db.AddMappingSchema(ms);
-
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<AllTypes>()
-					.HasTableName("AllTypeCreateTest");
+					.HasTableName("AllTypeCreateTest")
+				.Build();
+
+			db.AddMappingSchema(ms);
 
 			db.DropTable<AllTypes>(tableOptions:TableOptions.DropIfExists);
 
@@ -1299,11 +1305,12 @@ namespace Tests.DataProvider
 			{
 				var ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
-
-				ms.GetFluentMappingBuilder()
+				new FluentMappingBuilder(ms)
 					.Entity<AllTypes2>()
-					.HasTableName("AllType2CreateTest");
+						.HasTableName("AllType2CreateTest")
+					.Build();
+
+				db.AddMappingSchema(ms);
 
 				try
 				{
@@ -1321,7 +1328,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("#TempTable")]
-		class TempTable
+		sealed class TempTable
 		{
 			[PrimaryKey] public int ID;
 		}
@@ -1349,14 +1356,14 @@ namespace Tests.DataProvider
 		}
 
 		[Table("DecimalOverflow")]
-		class DecimalOverflow
+		sealed class DecimalOverflow
 		{
 			[Column] public decimal Decimal1;
 			[Column] public decimal Decimal2;
 			[Column] public decimal Decimal3;
 		}
 
-		internal class TestSqlServerDataProvider : SqlServerDataProvider
+		internal sealed class TestSqlServerDataProvider : SqlServerDataProvider
 		{
 			public TestSqlServerDataProvider(string providerName, SqlServerVersion version, SqlServerProvider provider)
 				: base(providerName, version, provider)
@@ -1401,7 +1408,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("DecimalOverflow")]
-		class DecimalOverflow2
+		sealed class DecimalOverflow2
 		{
 			[Column] public SqlDecimal Decimal1;
 			[Column] public SqlDecimal Decimal2;
@@ -1612,7 +1619,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("Issue1613")]
-		private class Issue1613Table
+		private sealed class Issue1613Table
 		{
 			[Column("dt"), Nullable]
 			public DateTimeOffset? DateTimeOffset { get; set; }
@@ -1981,6 +1988,215 @@ AS
 					DropTableFunction();
 				}
 			}
+		}
+
+		private const string CREATE_TEMPORAL = @"
+-- simple temporal table
+CREATE TABLE TemporalTable1
+(
+	Id INT NOT NULL PRIMARY KEY CLUSTERED,
+	Name NVARCHAR(10) NULL,
+	ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START NOT NULL,
+	ValidTo DATETIME2 GENERATED ALWAYS AS ROW END NOT NULL,
+	PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo)
+) WITH (SYSTEM_VERSIONING = ON)
+
+-- with explicit history table name
+CREATE TABLE TemporalTable2
+(
+	Id INT NOT NULL PRIMARY KEY CLUSTERED,
+	Name NVARCHAR(10) NULL,
+	ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START NOT NULL,
+	ValidTo DATETIME2 GENERATED ALWAYS AS ROW END NOT NULL,
+	PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo)
+) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.TemporalTable2History))
+
+
+-- with user-defined history table
+CREATE TABLE TemporalTable3History
+(
+	Id INT NOT NULL,
+	Name NVARCHAR(10) NULL,
+	ValidFrom DATETIME2 NOT NULL,
+	ValidTo DATETIME2 NOT NULL
+)
+
+CREATE TABLE TemporalTable3
+(
+	Id INT NOT NULL PRIMARY KEY CLUSTERED,
+	Name NVARCHAR(10) NULL,
+	ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START NOT NULL,
+	ValidTo DATETIME2 GENERATED ALWAYS AS ROW END NOT NULL,
+	PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo)
+) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.TemporalTable3History))
+
+-- with hidden period columns
+CREATE TABLE TemporalTable4
+(
+	Id INT NOT NULL PRIMARY KEY CLUSTERED,
+	Name NVARCHAR(10) NULL,
+	ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START HIDDEN NOT NULL,
+	ValidTo DATETIME2 GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
+	PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo)
+) WITH (SYSTEM_VERSIONING = ON)";
+
+		private const string DROP_TEMPORAL = @"
+IF OBJECT_ID('dbo.TemporalTable1', 'U') IS NOT NULL ALTER TABLE TemporalTable1 SET ( SYSTEM_VERSIONING = OFF)
+IF OBJECT_ID('dbo.TemporalTable2', 'U') IS NOT NULL ALTER TABLE TemporalTable2 SET ( SYSTEM_VERSIONING = OFF)
+IF OBJECT_ID('dbo.TemporalTable3', 'U') IS NOT NULL ALTER TABLE TemporalTable3 SET ( SYSTEM_VERSIONING = OFF)
+IF OBJECT_ID('dbo.TemporalTable4', 'U') IS NOT NULL ALTER TABLE TemporalTable4 SET ( SYSTEM_VERSIONING = OFF)
+
+DROP TABLE IF EXISTS TemporalTable1
+DROP TABLE IF EXISTS TemporalTable2
+DROP TABLE IF EXISTS TemporalTable3
+DROP TABLE IF EXISTS TemporalTable4
+DROP TABLE IF EXISTS TemporalTable2History
+DROP TABLE IF EXISTS TemporalTable3History
+";
+
+		[Test]
+		public void TestTemporalTableSchema([IncludeDataSources(false, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+
+			db.Execute(DROP_TEMPORAL);
+			db.Execute(CREATE_TEMPORAL);
+
+			try
+			{
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable1").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable2").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable3").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable4").SingleOrDefault());
+
+				AssertHistoryTable(schema.Tables.Where(t => t.TableName == "TemporalTable2History").SingleOrDefault());
+				AssertHistoryTable(schema.Tables.Where(t => t.TableName == "TemporalTable3History").SingleOrDefault());
+			}
+			finally
+			{
+				db.Execute(DROP_TEMPORAL);
+			}
+
+			static void AssertTemporalTable(TableSchema? table)
+			{
+				Assert.IsNotNull(table);
+
+				Assert.AreEqual(4, table!.Columns.Count);
+
+				AssertColumn(table!, "Id", false);
+				AssertColumn(table!, "Name", false);
+				AssertColumn(table!, "ValidFrom", true);
+				AssertColumn(table!, "ValidTo", true);
+			}
+
+			static void AssertHistoryTable(TableSchema? table)
+			{
+				Assert.IsNotNull(table);
+
+				Assert.AreEqual(4, table!.Columns.Count);
+
+				AssertColumn(table!, "Id", true);
+				AssertColumn(table!, "Name", true);
+				AssertColumn(table!, "ValidFrom", true);
+				AssertColumn(table!, "ValidTo", true);
+			}
+
+			static void AssertColumn(TableSchema table, string name, bool readOnly)
+			{
+				var column = table.Columns.Where(c => c.ColumnName == name).SingleOrDefault();
+				Assert.IsNotNull(column);
+				Assert.AreEqual(readOnly, column!.SkipOnInsert);
+				Assert.AreEqual(readOnly, column!.SkipOnUpdate);
+			}
+		}
+
+		[Test]
+		public void TestTemporalTableSchemaHideSystemTables([IncludeDataSources(false, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+
+			db.Execute(DROP_TEMPORAL);
+			db.Execute(CREATE_TEMPORAL);
+
+			try
+			{
+				var options = new GetSchemaOptions()
+				{
+					IgnoreSystemHistoryTables = true
+				};
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, options);
+
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable1").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable2").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable3").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable4").SingleOrDefault());
+
+				Assert.IsNull(schema.Tables.Where(t => t.TableName == "TemporalTable2History").SingleOrDefault());
+				Assert.IsNull(schema.Tables.Where(t => t.TableName == "TemporalTable3History").SingleOrDefault());
+			}
+			finally
+			{
+				db.Execute(DROP_TEMPORAL);
+			}
+
+			static void AssertTemporalTable(TableSchema? table)
+			{
+				Assert.IsNotNull(table);
+
+				Assert.AreEqual(4, table!.Columns.Count);
+
+				AssertColumn(table!, "Id", false);
+				AssertColumn(table!, "Name", false);
+				AssertColumn(table!, "ValidFrom", true);
+				AssertColumn(table!, "ValidTo", true);
+			}
+
+			static void AssertColumn(TableSchema table, string name, bool readOnly)
+			{
+				var column = table.Columns.Where(c => c.ColumnName == name).SingleOrDefault();
+				Assert.IsNotNull(column);
+				Assert.AreEqual(readOnly, column!.SkipOnInsert);
+				Assert.AreEqual(readOnly, column!.SkipOnUpdate);
+			}
+		}
+
+		[Test]
+		public void GetDataConnectionTest([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			var cs = DataConnection.GetConnectionString(context);
+			using (SqlServerTools.CreateDataConnection(cs))
+			{
+			}
+		}
+
+		[Test]
+		public void TestVariantConverters([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConverter<object, DataParameter>(obj => new DataParameter(null, obj is TimeSpan ts ? ts.Ticks : obj));
+
+			using var db = GetDataConnection(context, ms);
+			using var tb = db.CreateLocalTable<VariantTable>();
+
+			db.BulkCopy(new[]
+			{
+				new VariantTable() { Id = 1, Value = "string value" },
+				new VariantTable() { Id = 2, Value = TimeSpan.FromDays(2) },
+			});
+
+			var res = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(res.Length, Is.EqualTo(2));
+			Assert.That(res[0].Value, Is.EqualTo("string value"));
+			Assert.That(res[1].Value, Is.EqualTo(TimeSpan.FromDays(2).Ticks));
+		}
+
+		sealed class VariantTable
+		{
+			public int     Id    { get; set; }
+			public object? Value { get; set; }
 		}
 	}
 }

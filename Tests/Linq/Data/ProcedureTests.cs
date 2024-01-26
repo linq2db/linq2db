@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.Data;
+using System.Data;
+using System.Threading.Tasks;
 
 using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using System.Data;
-	using System.Threading.Tasks;
 	using LinqToDB;
+	using LinqToDB.Data;
 	using LinqToDB.DataProvider.SqlServer;
 	using LinqToDB.Mapping;
 	using Model;
@@ -60,12 +60,12 @@ namespace Tests.Data
 			}
 		}
 
-		class VariableResult
+		sealed class VariableResult
 		{
 			public int     Code   { get; set; }
 			public string? Value1 { get; set; }
 
-			protected bool Equals(VariableResult other)
+			private bool Equals(VariableResult other)
 			{
 				return Code == other.Code && string.Equals(Value1, other.Value1) && string.Equals(Value2, other.Value2);
 			}
@@ -264,7 +264,7 @@ namespace Tests.Data
 			}
 		}
 
-		class QueryProcMultipleResult
+		sealed class QueryProcMultipleResult
 		{
 			[ResultSetIndex(0)] public IEnumerable<Person> Persons { get; set; } = null!;
 			[ResultSetIndex(1)] public IEnumerable<Doctor> Doctors { get; set; } = null!;

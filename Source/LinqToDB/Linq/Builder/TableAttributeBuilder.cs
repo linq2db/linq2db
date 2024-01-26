@@ -4,7 +4,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
-	class TableAttributeBuilder : MethodCallBuilder
+	sealed class TableAttributeBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = new[]
 		{
@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 			var table    = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
 			var value    = methodCall.Arguments.Count == 1 && methodCall.Method.Name == nameof(TableExtensions.IsTemporary) ?
 				true :
-				methodCall.Arguments[1].EvaluateExpression();
+				methodCall.Arguments[1].EvaluateExpression(builder.DataContext);
 
 			switch (methodCall.Method.Name)
 			{

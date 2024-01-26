@@ -8,6 +8,7 @@ namespace LinqToDB.SqlQuery
 {
 	using SqlProvider;
 	using Common;
+	using Common.Internal;
 	using Mapping;
 
 	public static partial class QueryHelper
@@ -17,7 +18,7 @@ namespace LinqToDB.SqlQuery
 			return null != testedRoot.Find(element, static (element, e) => e == element);
 		}
 
-		private class IsDependsOnSourcesContext
+		private sealed class IsDependsOnSourcesContext
 		{
 			public IsDependsOnSourcesContext(HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -73,7 +74,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
-		private class IsDependsOnElementContext
+		private sealed class IsDependsOnElementContext
 		{
 			public IsDependsOnElementContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -105,7 +106,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
-		private class DependencyCountContext
+		private sealed class DependencyCountContext
 		{
 			public DependencyCountContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -194,11 +195,11 @@ namespace LinqToDB.SqlQuery
 					//TODO: unify function names and put in common constant storage
 					//For example it should be "$COALESCE$" and "$CASE$" do do not mix with user defined extension
 
-					if (function.Name == "Coalesce" && function.Parameters.Length == 2)
+					if (function.Name is "Coalesce" or PseudoFunctions.COALESCE && function.Parameters.Length == 2)
 					{
 						return GetColumnDescriptor(function.Parameters[0]);
 					}
-					if (function.Name == "CASE" && function.Parameters.Length == 3)
+					else if (function.Name == "CASE" && function.Parameters.Length == 3)
 					{
 						return GetColumnDescriptor(function.Parameters[1]) ??
 						       GetColumnDescriptor(function.Parameters[2]);
@@ -254,11 +255,6 @@ namespace LinqToDB.SqlQuery
 					if (query.Select.Columns.Count == 1)
 						return SuggestDbDataType(query.Select.Columns[0]);
 					break;
-				}
-				case QueryElementType.SqlBinaryExpression:
-				{
-					var binary = (SqlBinaryExpression)expr;
-					return SuggestDbDataType(binary.Expr1) ?? SuggestDbDataType(binary.Expr2);
 				}
 				case QueryElementType.SqlValue:
 				{
@@ -349,37 +345,37 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public static bool IsTransitiveExpression(SqlExpression sqlExpression)
+		public static bool IsTransitiveExpression(SqlExpression sqlExpression, bool checkNullability)
 		{
-			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}" && sqlExpression.CanBeNull == sqlExpression.Parameters[0].CanBeNull)
+			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}" && (!checkNullability || sqlExpression.CanBeNull == sqlExpression.Parameters[0].CanBeNull))
 			{
 				if (sqlExpression.Parameters[0] is SqlExpression argExpression)
-					return IsTransitiveExpression(argExpression);
+					return IsTransitiveExpression(argExpression, checkNullability);
 				return true;
 			}
 
 			return false;
 		}
 
-		public static ISqlExpression UnwrapExpression(ISqlExpression expr)
+		public static ISqlExpression UnwrapExpression(ISqlExpression expr, bool checkNullability)
 		{
 			if (expr.ElementType == QueryElementType.SqlExpression)
 			{
-				var underlying = GetUnderlyingExpressionValue((SqlExpression)expr);
+				var underlying = GetUnderlyingExpressionValue((SqlExpression)expr, checkNullability);
 				if (!ReferenceEquals(expr, underlying))
-					return UnwrapExpression(underlying);
+					return UnwrapExpression(underlying, checkNullability);
 			}
 
 			return expr;
 		}
 
-		public static ISqlExpression GetUnderlyingExpressionValue(SqlExpression sqlExpression)
+		public static ISqlExpression GetUnderlyingExpressionValue(SqlExpression sqlExpression, bool checkNullability)
 		{
-			if (!IsTransitiveExpression(sqlExpression))
+			if (!IsTransitiveExpression(sqlExpression, checkNullability))
 				return sqlExpression;
 
 			if (sqlExpression.Parameters[0] is SqlExpression subExpr)
-				return GetUnderlyingExpressionValue(subExpr);
+				return GetUnderlyingExpressionValue(subExpr, checkNullability);
 
 			return sqlExpression.Parameters[0];
 		}
@@ -394,7 +390,7 @@ namespace LinqToDB.SqlQuery
 			if (expr.ElementType == QueryElementType.SqlExpression)
 			{
 				var sqlExpression = (SqlExpression) expr;
-				expr = GetUnderlyingExpressionValue(sqlExpression);
+				expr = GetUnderlyingExpressionValue(sqlExpression, true);
 			}
 			return expr.ElementType != QueryElementType.Column && expr.ElementType != QueryElementType.SqlField;
 		}
@@ -403,7 +399,7 @@ namespace LinqToDB.SqlQuery
 		{
 			return expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter;
 		}
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if tested expression is constant during query execution (e.g. value or parameter).
 		/// </summary>
@@ -906,14 +902,14 @@ namespace LinqToDB.SqlQuery
 					current = column.Expression;
 				else if (current is SqlFunction func)
 				{
-					if (func.Name == "$Convert$")
+					if (func.Name == PseudoFunctions.CONVERT)
 						current = func.Parameters[2];
 					else
 						break;
 				}
 				else if (current is SqlExpression expr)
 				{
-					if (IsTransitiveExpression(expr))
+					if (IsTransitiveExpression(expr, true))
 						current = expr.Parameters[0];
 					else
 						break;
@@ -925,11 +921,11 @@ namespace LinqToDB.SqlQuery
 			return current as SqlField;
 		}
 
-		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2)
+		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2, bool compareNullsAsValues)
 		{
 			var compare = new SqlCondition(false,
 				new SqlPredicate.ExprExpr(field1, SqlPredicate.Operator.Equal, field2,
-					Configuration.Linq.CompareNullsAsValues ? true : null));
+					compareNullsAsValues ? true : null));
 
 			return compare;
 		}
@@ -1434,17 +1430,61 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsAggregationOrWindowFunction(IQueryElement expr)
 		{
+			return IsAggregationFunction(expr) || IsWindowFunction(expr);
+		}
+
+		public static bool IsAggregationFunction(IQueryElement expr)
+		{
 			if (expr is SqlFunction func)
 				return func.IsAggregate;
 
 			if (expr is SqlExpression expression)
-				return (expression.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0;
+				return (expression.Flags & SqlFlags.IsAggregate) != 0;
 
 			return false;
 		}
 
-		// TODO: IsAggregationOrWindowFunction use needs review - maybe we should call ContainsAggregationOrWindowFunction there
-		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr) => null != expr.Find(IsAggregationOrWindowFunction);
+		public static bool IsWindowFunction(IQueryElement expr)
+		{
+			if (expr is SqlExpression expression)
+				return (expression.Flags & SqlFlags.IsWindowFunction) != 0;
+
+			return false;
+		}
+
+		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr)
+		{
+			if (expr is SqlColumn)
+				return false;
+			if (expr is SqlSearchCondition || expr is SelectQuery)
+				return ContainsAggregationOrWindowFunctionDeep(expr);
+
+			if (IsAggregationFunction(expr) || IsWindowFunction(expr))
+				return true;
+
+			return false;
+		}
+
+		public static bool ContainsAggregationOrWindowFunctionDeep(IQueryElement expr)
+		{
+			return null != expr.Find(e => IsAggregationFunction(e) || IsWindowFunction(e));
+		}
+
+		public static bool ContainsAggregationOrWindowFunctionOneLevel(IQueryElement expr)
+		{
+			var found = false;
+			expr.VisitParentFirst(expr, (_, e) =>
+			{
+				if (found)
+					return true;
+				if (e is SqlColumn)
+					return false;
+				found = IsAggregationFunction(e) || IsWindowFunction(e);
+				return !found;
+			});
+
+			return found;
+		}
 
 		/// <summary>
 		/// Collects unique keys from different sources.
@@ -1553,8 +1593,8 @@ namespace LinqToDB.SqlQuery
 		{
 			try
 			{
-				var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-					.ToString();
+				using var sb = Pools.StringBuilder.Allocate();
+				var str = expr.ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
 				return str;
 			}
 			catch
@@ -1634,7 +1674,7 @@ namespace LinqToDB.SqlQuery
 			return null != expression.Find(static e => (e.ElementType == QueryElementType.SqlParameter) && ((SqlParameter)e).IsQueryParameter);
 		}
 
-		private class NeedParameterInliningContext
+		private sealed class NeedParameterInliningContext
 		{
 			public bool HasParameter;
 			public bool IsQueryParameter;
@@ -1769,12 +1809,9 @@ namespace LinqToDB.SqlQuery
 		{
 			var tableToUpdate = updateStatement.Update.Table;
 
-			if (tableToUpdate == null)
-			{
-				tableToUpdate = EnumerateAccessibleSources(updateStatement.SelectQuery)
-					.OfType<SqlTable>()
-					.FirstOrDefault();
-			}
+			tableToUpdate ??= EnumerateAccessibleSources(updateStatement.SelectQuery)
+				.OfType<SqlTable>()
+				.FirstOrDefault();
 
 			return tableToUpdate;
 		}
@@ -1783,12 +1820,9 @@ namespace LinqToDB.SqlQuery
 		{
 			var tableToDelete = deleteStatement.Table;
 
-			if (tableToDelete == null)
-			{
-				tableToDelete = EnumerateAccessibleSources(deleteStatement.SelectQuery)
-					.OfType<SqlTable>()
-					.FirstOrDefault();
-			}
+			tableToDelete ??= EnumerateAccessibleSources(deleteStatement.SelectQuery)
+				.OfType<SqlTable>()
+				.FirstOrDefault();
 
 			return tableToDelete;
 		}

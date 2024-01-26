@@ -3,11 +3,14 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 
+#if NETFRAMEWORK
+using Microsoft.SqlServer.Server;
+#endif
+
 namespace LinqToDB.Metadata
 {
 	using Common;
 	using Extensions;
-	using LinqToDB.DataProvider.SqlServer;
 	using Mapping;
 
 	/// <summary>
@@ -18,181 +21,214 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	public class SystemDataSqlServerAttributeReader : IMetadataReader
 	{
-		static readonly ConcurrentDictionary<MemberInfo,object> _cache  = new ();
-		static readonly AttributeReader                         _reader = new ();
-		static readonly Type[]                                  _sqlMethodAttributes;
-		static readonly Type[]                                  _sqlUserDefinedTypeAttributes;
+		/// <summary>
+		/// Provider instance, which use mapping attributes from System.Data.SqlClient assembly.
+		/// Could be null of assembly not found.
+		/// </summary>
+		public static IMetadataReader? SystemDataSqlClientProvider = TryCreate(
+			"Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient",
+			"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient")
+#if NETFRAMEWORK
+			?? new SystemDataSqlServerAttributeReader(typeof(SqlMethodAttribute), typeof(SqlUserDefinedTypeAttribute))
+#endif
+			;
 
-		// TODO: v5 convert to Instance field
-		static SystemDataSqlServerAttributeReader()
+		/// <summary>
+		/// Provider instance, which use mapping attributes from Microsoft.Data.SqlClient assembly (v1-4).
+		/// Could be null of assembly not found.
+		/// </summary>
+		public static IMetadataReader? MicrosoftDataSqlClientProvider = TryCreate(
+			"Microsoft.Data.SqlClient.Server.SqlMethodAttribute, Microsoft.Data.SqlClient",
+			"Microsoft.Data.SqlClient.Server.SqlUserDefinedTypeAttribute, Microsoft.Data.SqlClient");
+
+		/// <summary>
+		/// Provider instance, which uses mapping attributes from Microsoft.SqlServer.Server assembly.
+		/// Used with Microsoft.Data.SqlClient provider starting from v5.
+		/// Could be null of assembly not found.
+		/// </summary>
+		public static IMetadataReader? MicrosoftSqlServerServerProvider = TryCreate(
+			"Microsoft.SqlServer.Server.SqlMethodAttribute, Microsoft.SqlServer.Server",
+			"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, Microsoft.SqlServer.Server");
+
+		readonly ConcurrentDictionary<(MemberInfo memberInfo,Type attributeType), MappingAttribute[]> _cache = new ();
+		readonly Type   _sqlMethodAttribute;
+		readonly Type   _sqlUserDefinedTypeAttribute;
+		readonly string _objectId;
+
+		readonly Func<object, string?> _methodNameGetter;
+		readonly Func<object, string?> _typeNameGetter;
+
+		/// <summary>
+		/// Creates new instance of <see cref="SystemDataSqlServerAttributeReader"/>.
+		/// </summary>
+		/// <param name="sqlMethodAttribute">SqlMethodAttribute type.</param>
+		/// <param name="sqlUserDefinedTypeAttribute">SqlUserDefinedTypeAttribute type.</param>
+		public SystemDataSqlServerAttributeReader(Type sqlMethodAttribute, Type sqlUserDefinedTypeAttribute)
 		{
-			// try/catch applied as Type.GetType(throwOnError: false) still can throw for sfx builds
+			_sqlMethodAttribute          = sqlMethodAttribute;
+			_sqlUserDefinedTypeAttribute = sqlUserDefinedTypeAttribute;
+			_objectId                    = $".{_sqlMethodAttribute.AssemblyQualifiedName}.{_sqlUserDefinedTypeAttribute.AssemblyQualifiedName}.";
+
+			var methodNameGetter = _sqlMethodAttribute.GetProperty("Name")!.GetMethod!;
+			_methodNameGetter    = attr => (string?)methodNameGetter.Invoke(attr, null);
+
+			var udtNameGetter = _sqlUserDefinedTypeAttribute.GetProperty("Name")!.GetMethod!;
+			_typeNameGetter   = attr => (string?)udtNameGetter.Invoke(attr, null);
+		}
+
+		static SystemDataSqlServerAttributeReader? TryCreate(string sqlMethodAttributeType, string sqlUserDefinedTypeAttributeType)
+		{
+			// throwOnError: false not used as it doesn't really work
 			// see https://github.com/linq2db/linq2db/issues/3630
-
-			Type? methodAttr1 = null;
-			Type? methodAttr2 = null;
-			Type? methodAttr3 = null;
-			Type? typeAttr1   = null;
-			Type? typeAttr2   = null;
-			Type? typeAttr3   = null;
-
 			try
 			{
-				methodAttr1 = Type.GetType("Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient"         , false);
-				typeAttr1   = Type.GetType("Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient", false);
+				var methodAttr = Type.GetType(sqlMethodAttributeType         , true)!;
+				var typeAttr   = Type.GetType(sqlUserDefinedTypeAttributeType, true)!;
+				return new SystemDataSqlServerAttributeReader(methodAttr, typeAttr);
 			}
 			catch
 			{
 			}
 
-			try
-			{
-				methodAttr2 = Type.GetType("Microsoft.Data.SqlClient.Server.SqlMethodAttribute, Microsoft.Data.SqlClient"         , false);
-				typeAttr2   = Type.GetType("Microsoft.Data.SqlClient.Server.SqlUserDefinedTypeAttribute, Microsoft.Data.SqlClient", false);
-			}
-			catch
-			{
-			}
-
-			// added since https://github.com/dotnet/SqlClient/releases/tag/v5.0.0-preview3
-			try
-			{
-				methodAttr3 = Type.GetType("Microsoft.SqlServer.Server.SqlMethodAttribute, Microsoft.SqlServer.Server"         , false);
-				typeAttr3   = Type.GetType("Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, Microsoft.SqlServer.Server", false);
-			}
-			catch
-			{
-			}
-
-			_sqlMethodAttributes = new[]
-			{
-				methodAttr1,
-				methodAttr2,
-				methodAttr3,
-#if NETFRAMEWORK
-				typeof(Microsoft.SqlServer.Server.SqlMethodAttribute),
-#endif
-			}.Where(t => t != null).Distinct().ToArray()!;
-
-			_sqlUserDefinedTypeAttributes = new[]
-			{
-				typeAttr1,
-				typeAttr2,
-				typeAttr3,
-#if NETFRAMEWORK
-				typeof(Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute),
-#endif
-			}.Where(t => t != null).Distinct().ToArray()!;
+			return null;
 		}
 
-		public T[] GetAttributes<T>(Type type, bool inherit)
-			where T : Attribute
-		{
-			return Array<T>.Empty;
-		}
+		public MappingAttribute[] GetAttributes(Type type) => Array<MappingAttribute>.Empty;
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
-			where T : Attribute
+		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
 		{
-			if (typeof(T) == typeof(Sql.ExpressionAttribute) && (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx()))
+			// HACK: we use _sqlMethodAttribute/_sqlUserDefinedTypeAttribute as cache key part instead of typeof(T) to avoid closure generation for lambda
+			// this is valid approach for current code but if we will add more attributes support we will need to add typeof(T) to key too
+			// (which probably will never happen anyways)
+
+			MappingAttribute[]? result = null;
+			if (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx())
 			{
-				if (!_cache.TryGetValue(memberInfo, out var attrs))
-				{
-					if (_sqlMethodAttributes.Length > 0)
+#if NET45 || NET46 || NETSTANDARD2_0
+#else
+#endif
+				result = _cache.GetOrAdd(
+					(memberInfo, _sqlMethodAttribute),
+#if NET45 || NET46 || NETSTANDARD2_0
+					key =>
 					{
-						if (memberInfo.IsMethodEx())
+						var nameGetter = _methodNameGetter;
+#else
+					static (key, nameGetter) =>
+					{
+#endif
+						if (key.memberInfo.IsMethodEx())
 						{
-							var ma = _reader.GetAttributes<Attribute>(type, memberInfo, inherit)
-								.Where(a => _sqlMethodAttributes.Any(_ => _.IsAssignableFrom(a.GetType())))
-								.ToArray();
+							var attr = FindAttribute(key.memberInfo, key.attributeType);
 
-							if (ma.Length > 0)
+							if (attr != null)
 							{
-								var mi = (MethodInfo)memberInfo;
+								var mi = (MethodInfo)key.memberInfo;
 								var ps = mi.GetParameters();
 
-								var ex = mi.IsStatic
-									?
-									string.Format("{0}::{1}({2})",
-										memberInfo.DeclaringType!.Name.ToLower().StartsWith("sql")
-											? memberInfo.DeclaringType.Name.ToLower().Substring(3)
-											: memberInfo.DeclaringType.Name.ToLower(),
-											((dynamic)ma[0]).Name ?? memberInfo.Name,
-										string.Join(", ", ps.Select((_, i) => '{' + i.ToString() + '}')))
-									:
-									string.Format("{{0}}.{0}({1})",
-											((dynamic)ma[0]).Name ?? memberInfo.Name,
-										string.Join(", ", ps.Select((_, i) => '{' + (i + 1).ToString() + '}')));
+								string ex;
+								if (mi.IsStatic)
+								{
+									var name = key.memberInfo.DeclaringType!.Name.ToLowerInvariant();
+									name = name.StartsWith("sql") ? name.Substring(3) : name;
 
-								attrs = new[] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true } };
-							}
-							else
-							{
-								attrs = Array<T>.Empty;
+									ex = string.Format(
+										"{0}::{1}({2})",
+										name,
+										nameGetter(attr) ?? key.memberInfo.Name,
+										string.Join(", ", ps.Select((_, i) => '{' + i.ToString() + '}')));
+								}
+								else
+								{
+									ex = string.Format(
+										"{{0}}.{0}({1})",
+										nameGetter(attr) ?? key.memberInfo.Name,
+										string.Join(", ", ps.Select((_, i) => '{' + (i + 1).ToString() + '}')));
+								}
+
+								return new MappingAttribute[] { new Sql.ExpressionAttribute(ex) { ServerSideOnly = true } };
 							}
 						}
 						else
 						{
-							var pi = (PropertyInfo)memberInfo;
+							var pi = (PropertyInfo)key.memberInfo;
 							var gm = pi.GetGetMethod();
 
 							if (gm != null)
 							{
-								var ma = _reader.GetAttributes<Attribute>(type, gm, inherit)
-									.Where(a => _sqlMethodAttributes.Any(_ => _.IsAssignableFrom(a.GetType())))
-									.ToArray();
+								var attr = FindAttribute(gm, key.attributeType);
 
-								if (ma.Length > 0)
+								if (attr != null)
 								{
-									var ex = $"{{0}}.{((dynamic)ma[0]).Name ?? memberInfo.Name}";
+									var ex = $"{{0}}.{nameGetter(attr) ?? key.memberInfo.Name}";
 
-									attrs = new[] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true, ExpectExpression = true } };
+									return new MappingAttribute[] { new Sql.ExpressionAttribute(ex) { ServerSideOnly = true, ExpectExpression = true } };
 								}
-								else
-								{
-									attrs = Array<T>.Empty;
-								}
-							}
-							else
-							{
-								attrs = Array<T>.Empty;
 							}
 						}
-					}
-					else
-						attrs = Array<T>.Empty;
 
-					_cache[memberInfo] = attrs;
-				}
-
-				return (T[])attrs;
+						return Array<MappingAttribute>.Empty;
+#if NET45 || NET46 || NETSTANDARD2_0
+					});
+#else
+					}, _methodNameGetter);
+#endif
 			}
 
-			if (typeof(T) == typeof(DataTypeAttribute) && _sqlUserDefinedTypeAttributes.Length > 0)
-			{
-				var attrs = _reader.GetAttributes<Attribute>(memberInfo.GetMemberType(), inherit)
-					.Where(a => _sqlUserDefinedTypeAttributes.Any(_ => _.IsAssignableFrom(a.GetType())))
-					.ToArray();
-
-				if (attrs.Length == 1)
+			var res = _cache.GetOrAdd(
+				(memberInfo, _sqlUserDefinedTypeAttribute),
+#if NET45 || NET46 || NETSTANDARD2_0
+				key =>
 				{
-					var c = attrs[0];
-					var n = ((dynamic)c).Name ?? memberInfo.GetMemberType().Name;
+					var nameGetter = _typeNameGetter;
+#else
+				static (key, nameGetter) =>
+				{
+#endif
+					var c = FindAttribute(key.memberInfo.GetMemberType(), key.attributeType);
 
-					if (n.ToLower().StartsWith("sql"))
-						n = n.Substring(3);
+					if (c != null)
+					{
+						var n = nameGetter(c) ?? key.memberInfo.GetMemberType().Name;
 
-					var attr = new DataTypeAttribute(DataType.Udt, n);
+						if (n.StartsWith("sql", StringComparison.OrdinalIgnoreCase))
+							n = n.Substring(3);
 
-					return new[] { (T)(Attribute)attr };
-				}
+						var attr = new DataTypeAttribute(DataType.Udt, n);
+
+						return new MappingAttribute[] { attr };
+					}
+
+					return Array<MappingAttribute>.Empty;
+#if NET45 || NET46 || NETSTANDARD2_0
+				});
+#else
+				}, _typeNameGetter);
+#endif
+
+			result = result == null || result.Length == 0
+				? res
+				: res.Length == 0
+					? result
+					: result.Concat(res).ToArray();
+
+			return result ?? Array<MappingAttribute>.Empty;
+		}
+
+		private static Attribute? FindAttribute(ICustomAttributeProvider source, Type attributeType)
+		{
+			foreach (var attr in source.GetAttributes<Attribute>())
+			{
+				if (attributeType.IsAssignableFrom(attr.GetType()))
+					return attr;
 			}
 
-			return Array<T>.Empty;
+			return null;
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type)
-			=> _reader.GetDynamicColumns(type);
+		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
+
+		public string GetObjectID() => _objectId;
 	}
 }

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
@@ -16,14 +14,16 @@ namespace LinqToDB.DataProvider.SQLite
 		static readonly Lazy<IDataProvider> _SQLiteClassicDataProvider = DataConnection.CreateDataProvider<SQLiteDataProviderClassic>();
 		static readonly Lazy<IDataProvider> _SQLiteMSDataProvider      = DataConnection.CreateDataProvider<SQLiteDataProviderMS>();
 
-		public static bool AlwaysCheckDbNull = true;
-
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		[Obsolete("Use SQLiteOptions.Default.AlwaysCheckDbNull instead.")]
+		public static bool AlwaysCheckDbNull
 		{
-			if (css.IsGlobal)
-				return null;
+			get => SQLiteOptions.Default.AlwaysCheckDbNull;
+			set => SQLiteOptions.Default = SQLiteOptions.Default with { AlwaysCheckDbNull = value };
+		}
 
-			switch (css.ProviderName)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
+		{
+			switch (options.ProviderName)
 			{
 				case SQLiteProviderAdapter.SystemDataSQLiteClientNamespace   :
 				case ProviderName.SQLiteClassic                              : return _SQLiteClassicDataProvider.Value;
@@ -32,22 +32,22 @@ namespace LinqToDB.DataProvider.SQLite
 				case ProviderName.SQLiteMS                                   : return _SQLiteMSDataProvider.Value;
 				case ""                                                      :
 				case null                                                    :
-					if (css.Name.Contains("SQLite") || css.Name.Contains("Sqlite"))
+					if (options.ConfigurationString?.Contains("SQLite") == true || options.ConfigurationString?.Contains("Sqlite") == true)
 						goto case ProviderName.SQLite;
 					break;
 				case ProviderName.SQLite                                     :
-					if (css.Name.Contains("MS") || css.Name.Contains("Microsoft"))
+					if (options.ConfigurationString?.Contains("MS") == true || options.ConfigurationString?.Contains("Microsoft") == true)
 						return _SQLiteMSDataProvider.Value;
 
-					if (css.Name.Contains("Classic"))
+					if (options.ConfigurationString?.Contains("Classic") == true)
 						return _SQLiteClassicDataProvider.Value;
 
 					return GetDataProvider();
 				case var providerName when providerName.Contains("SQLite") || providerName.Contains("Sqlite"):
-					if (css.ProviderName.Contains("MS") || css.ProviderName.Contains("Microsoft"))
+					if (options.ProviderName.Contains("MS") || options.ProviderName.Contains("Microsoft"))
 						return _SQLiteMSDataProvider.Value;
 
-					if (css.ProviderName.Contains("Classic"))
+					if (options.ProviderName.Contains("Classic"))
 						return _SQLiteClassicDataProvider.Value;
 
 					return GetDataProvider();
@@ -172,7 +172,12 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use SQLiteOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => SQLiteOptions.Default.BulkCopyType;
+			set => SQLiteOptions.Default = SQLiteOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 	}

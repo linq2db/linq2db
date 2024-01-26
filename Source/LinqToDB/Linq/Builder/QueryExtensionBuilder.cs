@@ -5,10 +5,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class QueryExtensionBuilder : MethodCallBuilder
+	sealed class QueryExtensionBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -40,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else if (arg is NewArrayExpression ae)
 				{
-					var attr = p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>().FirstOrDefault();
+					var evaluateElements = ae.Expressions.Count > 0 && p.HasAttribute<SqlQueryDependentAttribute>();
 
 					list.Add(new($"{name}.Count", arg, p)
 					{
@@ -51,8 +52,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ex = ae.Expressions[j];
 
-						if (attr != null)
-							ex = Expression.Constant(ex.EvaluateExpression());
+						if (evaluateElements)
+							ex = Expression.Constant(ex.EvaluateExpression(builder.DataContext));
 
 						list.Add(new($"{name}.{j}", ex, p, j));
 					}
@@ -60,10 +61,9 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					var ex   = methodCall.Arguments[i];
-					var attr = p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>().FirstOrDefault();
 
-					if (attr != null)
-						ex = Expression.Constant(ex.EvaluateExpression());
+					if (p.HasAttribute<SqlQueryDependentAttribute>())
+						ex = Expression.Constant(ex.EvaluateExpression(builder.DataContext));
 
 					list.Add(new(name, ex, p));
 				}
@@ -109,8 +109,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				switch (attr.Scope)
 				{
-					case Sql.QueryExtensionScope.TableHint:
-					case Sql.QueryExtensionScope.IndexHint:
+					case Sql.QueryExtensionScope.TableHint    :
+					case Sql.QueryExtensionScope.IndexHint    :
+					case Sql.QueryExtensionScope.TableNameHint:
 					{
 						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
 						attr.ExtendTable(table.SqlTable, list);
@@ -129,7 +130,10 @@ namespace LinqToDB.Linq.Builder
 					}
 					case Sql.QueryExtensionScope.SubQueryHint:
 					{
-						attr.ExtendSubQuery(sequence.SelectQuery.SqlQueryExtensions ??= new(), list);
+						if (sequence is SetOperationBuilder.SetOperationContext { SubQuery.SelectQuery : { HasSetOperators: true } q })
+							attr.ExtendSubQuery(q.SetOperators[^1].SelectQuery.SqlQueryExtensions ??= new(), list);
+						else
+							attr.ExtendSubQuery(sequence.SelectQuery.SqlQueryExtensions ??= new(), list);
 						break;
 					}
 					case Sql.QueryExtensionScope.QueryHint:
@@ -145,7 +149,7 @@ namespace LinqToDB.Linq.Builder
 			return joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence;
 		}
 
-		public class JoinHintContext : PassThroughContext
+		public sealed class JoinHintContext : PassThroughContext
 		{
 			public JoinHintContext(IBuildContext context, List<SqlQueryExtension> extensions)
 				: base(context)

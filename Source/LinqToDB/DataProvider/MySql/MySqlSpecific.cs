@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -14,7 +15,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 	}
 
-	class MySqlSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IMySqlSpecificTable<TSource>, ITable
+	sealed class MySqlSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IMySqlSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public MySqlSpecificTable(ITable<TSource> table) : base(table)
@@ -26,7 +27,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 	}
 
-	class MySqlSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IMySqlSpecificQueryable<TSource>, ITable
+	sealed class MySqlSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IMySqlSpecificQueryable<TSource>, ITable
 	{
 		public MySqlSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{
@@ -35,20 +36,21 @@ namespace LinqToDB.DataProvider.MySql
 
 	public static partial class MySqlTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificTable<TSource> AsMySql<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
+			var newTable = new Table<TSource>(table.DataContext, Expression.Call(
 				null,
 				MethodHelper.GetMethodInfo(AsMySql, table),
-				table.Expression);
+				table.Expression)
+			);
 
-			return new MySqlSpecificTable<TSource>(table);
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> AsMySql<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull

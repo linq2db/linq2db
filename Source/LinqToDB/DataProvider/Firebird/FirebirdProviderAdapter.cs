@@ -50,20 +50,20 @@ namespace LinqToDB.DataProvider.Firebird
 			if (FbDecFloatType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbDecFloat>(FbDecFloatType);
-				MappingSchema.SetDataType(FbDecFloatType, new SqlDataType(DataType.DecFloat, FbDecFloatType, "DECFLOAT"));
+				MappingSchema.SetDataType(FbDecFloatType, new SqlDataType(DataType.DecFloat, FbDecFloatType));
 				// we don't register literal generation for decfloat as it looks like special values (inf, (s)nan are not supported in literals)
 			}
 
 			if (FbZonedDateTimeType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbZonedDateTime>(FbZonedDateTimeType);
-				MappingSchema.SetDataType(FbZonedDateTimeType, new SqlDataType(DataType.DateTimeOffset, FbZonedDateTimeType, "TIMESPAN WITH TIME ZONE"));
+				MappingSchema.SetDataType(FbZonedDateTimeType, new SqlDataType(DataType.DateTimeOffset, FbZonedDateTimeType));
 			}
 
 			if (FbZonedTimeType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbZonedTime>(FbZonedTimeType);
-				MappingSchema.SetDataType(FbZonedTimeType, new SqlDataType(DataType.TimeTZ, FbZonedTimeType, "TIME WITH TIME ZONE"));
+				MappingSchema.SetDataType(FbZonedTimeType, new SqlDataType(DataType.TimeTZ, FbZonedTimeType));
 			}
 
 			typeMapper.FinalizeMappings();
@@ -117,28 +117,28 @@ namespace LinqToDB.DataProvider.Firebird
 		#region Wrappers
 
 		[Wrapper]
-		private class FbDecFloat
+		private sealed class FbDecFloat
 		{
 		}
 
 		[Wrapper]
-		private class FbZonedDateTime
+		private sealed class FbZonedDateTime
 		{
 		}
 
 		[Wrapper]
-		private class FbZonedTime
+		private sealed class FbZonedTime
 		{
 		}
 
 		[Wrapper]
-		private class FbConnection
+		private sealed class FbConnection
 		{
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
 		[Wrapper]
-		private class FbParameter
+		private sealed class FbParameter
 		{
 			public FbDbType FbDbType { get; set; }
 		}

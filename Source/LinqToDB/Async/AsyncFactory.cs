@@ -8,13 +8,15 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Async
 {
+	using Common;
+	using Expressions;
+	using Extensions;
+
 	/// <summary>
 	/// Provides factory methods to create async wrappers for <see cref="DbConnection"/> and <see cref="DbTransaction"/> instances.
 	/// </summary>
@@ -270,7 +272,7 @@ namespace LinqToDB.Async
 				return default;
 
 			var pInstance      = Expression.Parameter(typeof(TInstance));
-			var parameters     = delegateParameterTypes.Select(t => Expression.Parameter(t)).ToArray();
+			var parameters     = delegateParameterTypes.Select(Expression.Parameter).ToArray();
 
 			var callParameters = new List<Expression>();
 			for (var i = 0; i < methodParameterTypes.Length; i++)
@@ -367,7 +369,7 @@ namespace LinqToDB.Async
 				return default;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
-			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();
+			var parameters = parametersTypes.Select(Expression.Parameter).ToArray();
 
 			Expression body = Expression.Call(Expression.Convert(pInstance, instanceType), mi, parameters);
 			if (returnsValueTask && !returnValueTask)

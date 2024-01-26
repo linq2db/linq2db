@@ -168,7 +168,7 @@ namespace Tests.xUpdate
 
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
 		[Table("AllTypes")]
-		class AllType
+		sealed class AllType
 		{
 			[PrimaryKey, Identity]
 			public int ID;
@@ -181,12 +181,16 @@ namespace Tests.xUpdate
 			public string? nvarcharDataType;
 		}
 
+		// PostgreSQL: ncharDataType field missing in AllTypes
 		// DB2: ncharDataType field missing in AllTypes
 		// Informix: install the latest server
 		[Test]
 		public void MergeChar1([MergeDataContextSource(
 			false,
-			ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)]
+			ProviderName.DB2,
+			TestProvName.AllPostgreSQL15Plus,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);
@@ -212,11 +216,15 @@ namespace Tests.xUpdate
 
 		// ASE: alltypes table must be fixed
 		// DB2: ncharDataType field missing in AllTypes
+		// PostgreSQL: ncharDataType field missing in AllTypes
 		// Informix: install the latest server
 		[Test]
 		public void MergeChar2([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, TestProvName.AllInformix)]
+			ProviderName.DB2,
+			TestProvName.AllPostgreSQL15Plus,
+			ProviderName.Sybase,
+			TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -242,12 +250,17 @@ namespace Tests.xUpdate
 
 		// extra test to check MergeChar* fixes (but we really need to implement excessive types tests for all providers)
 		// ASE: AllTypes table must be fixed
+		// PostgreSQL: ncharDataType field missing in AllTypes
 		// DB2: ncharDataType and nvarcharDataType fields missing in AllTypes
 		// Informix, SAP: looks like \0 terminates string
 		[Test]
 		public void MergeString([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, TestProvName.AllInformix, TestProvName.AllSapHana)]
+			TestProvName.AllPostgreSQL15Plus,
+			ProviderName.DB2,
+			ProviderName.Sybase,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);

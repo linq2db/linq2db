@@ -23,9 +23,9 @@ namespace Cli.Default.SqlServer
 		{
 			private readonly IDataContext _dataContext;
 
+			public ITable<SameTableName> SameTableNames => _dataContext.GetTable<SameTableName>();
 			public ITable<TestSchemaA>   TestSchemaA    => _dataContext.GetTable<TestSchemaA>();
 			public ITable<TestSchemaB>   TestSchemaB    => _dataContext.GetTable<TestSchemaB>();
-			public ITable<SameTableName> SameTableNames => _dataContext.GetTable<SameTableName>();
 
 			public DataContext(IDataContext dataContext)
 			{
@@ -33,27 +33,11 @@ namespace Cli.Default.SqlServer
 			}
 		}
 
-		#region Table Extensions
-		public static TestSchemaA? Find(this ITable<TestSchemaA> table, int testSchemaAid)
+		[Table("SameTableName", Schema = "TestSchema")]
+		public class SameTableName
 		{
-			return table.FirstOrDefault(e => e.TestSchemaAid == testSchemaAid);
+			[Column("id")] public int? Id { get; set; } // int
 		}
-
-		public static Task<TestSchemaA?> FindAsync(this ITable<TestSchemaA> table, int testSchemaAid, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.TestSchemaAid == testSchemaAid, cancellationToken);
-		}
-
-		public static TestSchemaB? Find(this ITable<TestSchemaB> table, int testSchemaBid)
-		{
-			return table.FirstOrDefault(e => e.TestSchemaBid == testSchemaBid);
-		}
-
-		public static Task<TestSchemaB?> FindAsync(this ITable<TestSchemaB> table, int testSchemaBid, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.TestSchemaBid == testSchemaBid, cancellationToken);
-		}
-		#endregion
 
 		[Table("TestSchemaA", Schema = "TestSchema")]
 		public class TestSchemaA
@@ -65,20 +49,20 @@ namespace Cli.Default.SqlServer
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA backreference
 			/// </summary>
-			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaB.OriginTestSchemaAid))]
-			public IEnumerable<TestSchemaB> TestSchemaByOriginTestSchemaA { get; set; } = null!;
+			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaSchema.TestSchemaB.OriginTestSchemaAid))]
+			public IEnumerable<TestSchemaB> TestSchemaB { get; set; } = null!;
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA backreference
 			/// </summary>
-			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaB.TargetTestSchemaAid))]
-			public IEnumerable<TestSchemaB> TestSchemaByTargetTestSchemaA { get; set; } = null!;
+			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaSchema.TestSchemaB.TargetTestSchemaAid))]
+			public IEnumerable<TestSchemaB> TestSchemaB1 { get; set; } = null!;
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 backreference
 			/// </summary>
-			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaB.TargetTestSchemaAId))]
-			public IEnumerable<TestSchemaB> TestSchemaByTargetTestSchemaA1 { get; set; } = null!;
+			[Association(ThisKey = nameof(TestSchemaAid), OtherKey = nameof(TestSchemaSchema.TestSchemaB.TargetTestSchemaAId))]
+			public IEnumerable<TestSchemaB> TestSchemaB2 { get; set; } = null!;
 			#endregion
 		}
 
@@ -111,10 +95,26 @@ namespace Cli.Default.SqlServer
 			#endregion
 		}
 
-		[Table("SameTableName", Schema = "TestSchema")]
-		public class SameTableName
+		#region Table Extensions
+		public static TestSchemaA? Find(this ITable<TestSchemaA> table, int testSchemaAid)
 		{
-			[Column("id")] public int? Id { get; set; } // int
+			return table.FirstOrDefault(e => e.TestSchemaAid == testSchemaAid);
 		}
+
+		public static Task<TestSchemaA?> FindAsync(this ITable<TestSchemaA> table, int testSchemaAid, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.TestSchemaAid == testSchemaAid, cancellationToken);
+		}
+
+		public static TestSchemaB? Find(this ITable<TestSchemaB> table, int testSchemaBid)
+		{
+			return table.FirstOrDefault(e => e.TestSchemaBid == testSchemaBid);
+		}
+
+		public static Task<TestSchemaB?> FindAsync(this ITable<TestSchemaB> table, int testSchemaBid, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.TestSchemaBid == testSchemaBid, cancellationToken);
+		}
+		#endregion
 	}
 }

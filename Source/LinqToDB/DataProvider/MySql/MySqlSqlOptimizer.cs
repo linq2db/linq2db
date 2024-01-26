@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -10,7 +9,7 @@ namespace LinqToDB.DataProvider.MySql
 
 	using SqlBinary = SqlQuery.SqlBinaryExpression;
 
-	class MySqlSqlOptimizer : BasicSqlOptimizer
+	sealed class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
 		public MySqlSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -18,17 +17,17 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
 				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement),
-				QueryType.Delete => PrepareDelete((SqlDeleteStatement)statement),
+				QueryType.Delete => PrepareDelete     ((SqlDeleteStatement)statement),
 				_                => statement,
 			};
 		}
 
-		SqlStatement PrepareDelete(SqlDeleteStatement statement)
+		static SqlStatement PrepareDelete(SqlDeleteStatement statement)
 		{
 			var tables = statement.SelectQuery.From.Tables;
 
@@ -104,7 +103,7 @@ namespace LinqToDB.DataProvider.MySql
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}
@@ -124,15 +123,15 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context);
 
-			if (caseSensitive == null || caseSensitive == false)
+			if (caseSensitive != true)
 			{
 				var searchExpr = predicate.Expr2;
-				var dataExpr = predicate.Expr1;
+				var dataExpr   = predicate.Expr1;
 
 				if (caseSensitive == false)
 				{
-					searchExpr = new SqlFunction(typeof(string), "$ToLower$", searchExpr);
-					dataExpr   = new SqlFunction(typeof(string), "$ToLower$", dataExpr);
+					searchExpr = PseudoFunctions.MakeToLower(searchExpr);
+					dataExpr   = PseudoFunctions.MakeToLower(dataExpr);
 				}
 
 				ISqlPredicate? newPredicate = null;

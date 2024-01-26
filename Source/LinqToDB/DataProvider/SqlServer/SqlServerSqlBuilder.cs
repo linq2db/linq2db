@@ -8,13 +8,13 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery;
 
-	abstract class SqlServerSqlBuilder : BasicSqlBuilder
+	abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
 	{
-		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
@@ -49,8 +49,8 @@ namespace LinqToDB.DataProvider.SqlServer
 						.Append(' ');
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
-							.AppendLine(")")
-							.AppendLine();
+						.AppendLine(")")
+						.AppendLine();
 				}
 			}
 
@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
 				{
 					StringBuilder
 						.Append("OUTPUT [INSERTED].");
@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
-			if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+			if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
 			{
 				StringBuilder
 					.AppendLine();
@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (BuildStep == Step.Output)
 			{
 				return;
-		}
+			}
 
 			base.BuildOutputSubclause(output);
 		}
@@ -153,7 +153,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 		}
 
-		private string GetTablePhysicalName(string tableName, TableOptions tableOptions)
+		private static string GetTablePhysicalName(string tableName, TableOptions tableOptions)
 		{
 			if (tableName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
 				return tableName;
@@ -176,7 +176,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			var databaseName = name.Database;
 
@@ -188,7 +188,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (name.Server != null && (databaseName == null || name.Schema == null))
 				// all components required for linked-server syntax by SQL server
 				throw new LinqToDBException("You must specify both schema and database names explicitly for linked server query");
-			
+
 			if (name.Server != null)
 			{
 				(escape ? Convert(sb, name.Server, ConvertType.NameToServer) : sb.Append(name.Server))
@@ -299,7 +299,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				Indent--;
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -341,7 +341,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					return;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		protected override string? GetTypeName(IDataContext dataContext, DbParameter parameter)
@@ -432,6 +432,25 @@ namespace LinqToDB.DataProvider.SqlServer
 				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
 		}
 
+		protected override void BuildTableNameExtensions(SqlTable table)
+		{
+			var ext = table.SqlQueryExtensions?.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.TableNameHint);
+
+			if (ext is { BuilderType: not null })
+			{
+				var extensionBuilder = GetExtensionBuilder(ext.BuilderType);
+
+				switch (extensionBuilder)
+				{
+					case ISqlQueryExtensionBuilder queryExtensionBuilder:
+						queryExtensionBuilder.Build(this, StringBuilder, ext);
+						break;
+					default:
+						throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlQueryExtensionBuilder).FullName}' interface.");
+				}
+			}
+		}
+
 		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
 		{
 			if (join.SqlQueryExtensions != null)
@@ -461,7 +480,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")");
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")", Sql.QueryExtensionScope.QueryHint);
 		}
 	}
 }

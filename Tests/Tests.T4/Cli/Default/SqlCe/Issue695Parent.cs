@@ -6,7 +6,6 @@
 // ---------------------------------------------------------------------------------------------------
 
 using LinqToDB.Mapping;
-using System.Collections.Generic;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -22,8 +21,8 @@ namespace Cli.Default.SqlCe
 		/// <summary>
 		/// FK_Issue695_Parent backreference
 		/// </summary>
-		[Association(ThisKey = nameof(Id) + "," + nameof(Id), OtherKey = nameof(Issue695.Id) + "," + nameof(Id))]
-		public IEnumerable<Issue695> Issue695Parents { get; set; } = null!;
+		[Association(ThisKey = nameof(Id), OtherKey = nameof(SqlCe.Issue695.Id))]
+		public Issue695? Issue695 { get; set; }
 		#endregion
 	}
 }

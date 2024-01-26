@@ -2,8 +2,10 @@
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.Linq;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -11,15 +13,13 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlCe;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Globalization;
-	using System.Threading.Tasks;
-	using LinqToDB.Linq;
 	using Model;
 
 	[TestFixture]
@@ -504,6 +504,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(2, t.Columns.Count);
 				Assert.AreEqual(1, t.Columns.Count(_ => _.IsPrimaryKey));
 				Assert.AreEqual(1, t.ForeignKeys.Count);
+				Assert.AreEqual(1, t.ForeignKeys[0].ThisColumns.Count);
 			}
 		}
 
@@ -537,10 +538,11 @@ namespace Tests.DataProvider
 		public void ParametersInlining([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] bool inline)
 		{
 			Query.ClearCaches();
-			var defaultValue = SqlCeConfiguration.InlineFunctionParameters;
+			var defaultValue = SqlCeOptions.Default.InlineFunctionParameters;
 			try
 			{
-				SqlCeConfiguration.InlineFunctionParameters = inline;
+				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = inline };
+
 				using (var db = GetDataConnection(context))
 				{
 					var values = db.GetTable<TestInline>()
@@ -552,7 +554,7 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				SqlCeConfiguration.InlineFunctionParameters = defaultValue;
+				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = defaultValue };
 			}
 		}
 

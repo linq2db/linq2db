@@ -16,14 +16,14 @@ namespace Tests.UserTests
 	{
 		public static class SqlLite
 		{
-			class MatchBuilder : Sql.IExtensionCallBuilder
+			sealed class MatchBuilder : Sql.IExtensionCallBuilder
 			{
 				public void Build(Sql.ISqExtensionBuilder builder)
 				{
 					var method = (MethodInfo) builder.Member;
 					var arg = method.GetGenericArguments().Single();
 
-					builder.AddParameter("table_field", new SqlTable(builder.Mapping, arg));
+					builder.AddParameter("table_field", new SqlTable(builder.Mapping.GetEntityDescriptor(arg)));
 				}
 			}
 

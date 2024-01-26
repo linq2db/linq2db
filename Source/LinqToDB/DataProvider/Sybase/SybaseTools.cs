@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
@@ -18,9 +16,9 @@ namespace LinqToDB.DataProvider.Sybase
 #endif
 		static readonly Lazy<IDataProvider> _sybaseManagedDataProvider = DataConnection.CreateDataProvider<SybaseDataProviderManaged>();
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
 				case SybaseProviderAdapter.ManagedClientNamespace:
 				case ProviderName.SybaseManaged                  : return _sybaseManagedDataProvider.Value;
@@ -31,14 +29,14 @@ namespace LinqToDB.DataProvider.Sybase
 #endif
 				case ""                                          :
 				case null                                        :
-					if (css.Name.Contains("Sybase"))
+					if (options.ConfigurationString?.Contains("Sybase") == true)
 						goto case ProviderName.Sybase;
 					break;
 				case ProviderName.Sybase                         :
-					if (css.Name.Contains("Managed"))
+					if (options.ConfigurationString?.Contains("Managed") == true)
 						return _sybaseManagedDataProvider.Value;
 #if NETFRAMEWORK
-					if (css.Name.Contains("Native"))
+					if (options.ConfigurationString?.Contains("Native") == true)
 						return _sybaseNativeDataProvider.Value;
 #endif
 					return GetDataProvider();
@@ -114,6 +112,7 @@ namespace LinqToDB.DataProvider.Sybase
 		#endregion
 
 		#region BulkCopy
+
 		// don't set ProviderSpecific as default type while SAP not fix incorrect bit field value
 		// insert for first record
 		/// <summary>
@@ -122,7 +121,12 @@ namespace LinqToDB.DataProvider.Sybase
 		/// - identity: bulk copy operation fail with exception: "Bulk insert failed. Null value is not allowed in not null column.".
 		/// Those are provider bugs and could be fixed in latest versions.
 		/// </summary>
-		public static BulkCopyType DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use SybaseOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => SybaseOptions.Default.BulkCopyType;
+			set => SybaseOptions.Default = SybaseOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 	}

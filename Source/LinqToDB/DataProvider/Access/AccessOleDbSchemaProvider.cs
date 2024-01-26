@@ -10,13 +10,8 @@ namespace LinqToDB.DataProvider.Access
 	using Data;
 	using SchemaProvider;
 
-	class AccessOleDbSchemaProvider : AccessSchemaProviderBase
+	sealed class AccessOleDbSchemaProvider : AccessSchemaProviderBase
 	{
-		private const OleDbProviderAdapter.ColumnFlags COUNTER_OR_BIT = OleDbProviderAdapter.ColumnFlags.MayBeNull
-			| OleDbProviderAdapter.ColumnFlags.IsFixedLength
-			| OleDbProviderAdapter.ColumnFlags.WriteUnknown
-			| OleDbProviderAdapter.ColumnFlags.MayDefer;
-
 		private readonly AccessOleDbDataProvider _provider;
 
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
@@ -29,7 +24,7 @@ namespace LinqToDB.DataProvider.Access
 		// see https://github.com/linq2db/linq2db.LINQPad/issues/10
 		// we create separate connection for GetSchema calls to workaround provider bug
 		// logic not applied if active transaction present - user must remove transaction if he has issues
-		private TResult ExecuteOnNewConnection<TResult>(DataConnection dataConnection, Func<DataConnection, TResult> action)
+		private static TResult ExecuteOnNewConnection<TResult>(DataConnection dataConnection, Func<DataConnection, TResult> action)
 		{
 			if (dataConnection.Transaction != null)
 				return action(dataConnection);
@@ -130,14 +125,13 @@ namespace LinqToDB.DataProvider.Access
 					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])            : null,
 					// ole db provider returns incorrect flags (reports INT NOT NULL columns as identity)
 					// https://github.com/linq2db/linq2db/issues/3149
-					//IsIdentity  = dt?.ProviderDbType == 3 && flags == COUNTER_OR_BIT,
 					IsIdentity  = false,
 					Description = c.Field<string>("DESCRIPTION")
 				}
 			).ToList();
 		}
 
-		private int CorrectDataTypeFromFlags(int providerDbType, OleDbProviderAdapter.ColumnFlags flags)
+		private static int CorrectDataTypeFromFlags(int providerDbType, OleDbProviderAdapter.ColumnFlags flags)
 		{
 			switch (providerDbType)
 			{
@@ -238,7 +232,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = ExecuteOnNewConnection(dataConnection, cn => base.GetDataTypes(cn));
+			var dts = ExecuteOnNewConnection(dataConnection, base.GetDataTypes);
 
 			if (dts.All(dt => dt.ProviderDbType != 128))
 			{
@@ -289,7 +283,7 @@ namespace LinqToDB.DataProvider.Access
 
 					for (var i = 0; i < paramNames.Length; i++)
 					{
-						switch (paramNames[i].Trim().ToLower())
+						switch (paramNames[i].Trim().ToLowerInvariant())
 						{
 							case "max length": paramValues[i] = length;    break;
 							case "precision" : paramValues[i] = precision; break;

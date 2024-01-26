@@ -1,20 +1,21 @@
 ﻿#if NET6_0_OR_GREATER
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
+
 using LinqToDB;
+using LinqToDB.Mapping;
+using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Runtime.InteropServices;
-	using LinqToDB.Mapping;
-	using LinqToDB.Tools;
-
 	[TestFixture]
 	public class DateOnlyFunctionTests : TestBase
 	{
 		[Table("Transactions")]
-		private class Transaction
+		private sealed class Transaction
 		{
 			[PrimaryKey] public int      TransactionId   { get; set; }
 			[Column]     public DateOnly TransactionDate { get; set; }

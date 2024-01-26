@@ -13,7 +13,7 @@
 		<tags>linq linq2db SAP Sybase LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<dependency id="linq2db"              version="4.0.0"  />
+			<dependency id="linq2db"              version="5.0.0"  />
 			<dependency id="AdoNetCore.AseClient" version="0.19.2" />
 		</dependencies>
 		<contentFiles>
@@ -22,7 +22,6 @@
 	</metadata>
 	<files>
 		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                                 />
-		<file src="..\Nuget\readme.T4.txt"                                           target="readme.txt"                                                                                                />
 
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                                     />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                                     />

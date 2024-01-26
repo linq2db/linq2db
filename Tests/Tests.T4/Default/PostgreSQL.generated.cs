@@ -34,19 +34,14 @@ namespace Default.PostgreSQL
 		public ITable<Child>                          Children                  { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>                  CollatedTables            { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<Doctor>                         Doctors                   { get { return this.GetTable<Doctor>(); } }
-		public ITable<Employee>                       Employees                 { get { return this.GetTable<Employee>(); } }
-		public ITable<EmployeeTimeOffBalance>         EmployeeTimeOffBalances   { get { return this.GetTable<EmployeeTimeOffBalance>(); } }
 		public ITable<Entity>                         Entities                  { get { return this.GetTable<Entity>(); } }
 		public ITable<GrandChild>                     GrandChildren             { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>               InheritanceChildren       { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent>              InheritanceParents        { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<InventoryResource>              InventoryResources        { get { return this.GetTable<InventoryResource>(); } }
 		/// <summary>
 		/// This is the Issue2023 matview
 		/// </summary>
 		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
-		public ITable<LeaveRequest>                   LeaveRequests             { get { return this.GetTable<LeaveRequest>(); } }
-		public ITable<LeaveRequestDateEntry>          LeaveRequestDateEntries   { get { return this.GetTable<LeaveRequestDateEntry>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
@@ -61,10 +56,10 @@ namespace Default.PostgreSQL
 		public ITable<SequenceTest1>                  SequenceTest1             { get { return this.GetTable<SequenceTest1>(); } }
 		public ITable<SequenceTest2>                  SequenceTest2             { get { return this.GetTable<SequenceTest2>(); } }
 		public ITable<SequenceTest3>                  SequenceTest3             { get { return this.GetTable<SequenceTest3>(); } }
-		public ITable<TagTestTable>                   TagTestTables             { get { return this.GetTable<TagTestTable>(); } }
 		public ITable<TestIdentity>                   TestIdentities            { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>                     TestMerge1                { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>                     TestMerge2                { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMergeIdentity>              TestMergeIdentities       { get { return this.GetTable<TestMergeIdentity>(); } }
 		public ITable<test_schema_Testsamename>       Testsamenames             { get { return this.GetTable<test_schema_Testsamename>(); } }
 		public ITable<Testsamename>                   Testsamenames0            { get { return this.GetTable<Testsamename>(); } }
 		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
@@ -88,14 +83,7 @@ namespace Default.PostgreSQL
 			InitMappingSchema();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
@@ -118,22 +106,6 @@ namespace Default.PostgreSQL
 
 		#endregion
 
-		#region TestTableFunction
-
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
-		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
-		{
-			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				param1);
-		}
-
-		public partial class TestTableFunctionResult
-		{
-			public int? param2 { get; set; }
-		}
-
-		#endregion
-
 		#region TestTableFunction1
 
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction1\"")]
@@ -148,6 +120,22 @@ namespace Default.PostgreSQL
 		{
 			public int? param3 { get; set; }
 			public int? param4 { get; set; }
+		}
+
+		#endregion
+
+		#region TestTableFunction
+
+		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
+		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
+		{
+			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				param1);
+		}
+
+		public partial class TestTableFunctionResult
+		{
+			public int? param2 { get; set; }
 		}
 
 		#endregion
@@ -307,20 +295,6 @@ namespace Default.PostgreSQL
 		#endregion
 	}
 
-	[Table(Schema="public", Name="Employee")]
-	public partial class Employee
-	{
-		[PrimaryKey, NotNull] public int EmployeeId { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="EmployeeTimeOffBalance")]
-	public partial class EmployeeTimeOffBalance
-	{
-		[PrimaryKey, NotNull] public int Id               { get; set; } // integer
-		[Column,     NotNull] public int TrackingTimeType { get; set; } // integer
-		[Column,     NotNull] public int EmployeeId       { get; set; } // integer
-	}
-
 	[Table(Schema="public", Name="entity")]
 	public partial class Entity
 	{
@@ -352,13 +326,6 @@ namespace Default.PostgreSQL
 		[Column,        Nullable] public string? Name                { get; set; } // character varying(50)
 	}
 
-	[Table(Schema="public", Name="InventoryResource")]
-	public partial class InventoryResource
-	{
-		[PrimaryKey, NotNull] public Guid   Id     { get; set; } // uuid
-		[Column,     NotNull] public string Status { get; set; } = null!; // character varying
-	}
-
 	/// <summary>
 	/// This is the Issue2023 matview
 	/// </summary>
@@ -373,22 +340,6 @@ namespace Default.PostgreSQL
 		[Column(SkipOnInsert=true, SkipOnUpdate=true), Nullable] public string? LastName   { get; set; } // character varying(50)
 		[Column(SkipOnInsert=true, SkipOnUpdate=true), Nullable] public string? MiddleName { get; set; } // character varying(50)
 		[Column(SkipOnInsert=true, SkipOnUpdate=true), Nullable] public char?   Gender     { get; set; } // character(1)
-	}
-
-	[Table(Schema="public", Name="LeaveRequest")]
-	public partial class LeaveRequest
-	{
-		[PrimaryKey, NotNull] public int Id         { get; set; } // integer
-		[Column,     NotNull] public int EmployeeId { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="LeaveRequestDateEntry")]
-	public partial class LeaveRequestDateEntry
-	{
-		[PrimaryKey, NotNull    ] public int      Id             { get; set; } // integer
-		[Column,        Nullable] public decimal? EndHour        { get; set; } // numeric
-		[Column,        Nullable] public decimal? StartHour      { get; set; } // numeric
-		[Column,     NotNull    ] public int      LeaveRequestId { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="LinqDataTypes")]
@@ -547,13 +498,6 @@ namespace Default.PostgreSQL
 		[Column,     Nullable] public string? Value { get; set; } // character varying(50)
 	}
 
-	[Table(Schema="public", Name="TagTestTable")]
-	public partial class TagTestTable
-	{
-		[Column, NotNull    ] public int     ID   { get; set; } // integer
-		[Column,    Nullable] public string? Name { get; set; } // text
-	}
-
 	[Table(Schema="public", Name="TestIdentity")]
 	public partial class TestIdentity
 	{
@@ -616,6 +560,13 @@ namespace Default.PostgreSQL
 		[Column,        Nullable] public int?            FieldEnumNumber { get; set; } // integer
 	}
 
+	[Table(Schema="public", Name="TestMergeIdentity")]
+	public partial class TestMergeIdentity
+	{
+		[PrimaryKey, Identity] public int  Id    { get; set; } // integer
+		[Column,     Nullable] public int? Field { get; set; } // integer
+	}
+
 	[Table(Schema="test_schema", Name="testsamename")]
 	public partial class test_schema_Testsamename
 	{
@@ -672,16 +623,6 @@ namespace Default.PostgreSQL
 
 		#endregion
 
-		#region Floatrange
-
-		[Sql.Function(Name="\"public\".floatrange", ServerSideOnly=true)]
-		public static object? Floatrange(double? par6, double? par7, string? par8)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
 		#region FnTest
 
 		[Sql.Function(Name="\"SchemaName\".\"fnTest\"", ServerSideOnly=true)]
@@ -725,7 +666,7 @@ namespace Default.PostgreSQL
 		#region Reverse
 
 		[Sql.Function(Name="\"public\".reverse", ServerSideOnly=true)]
-		public static string? Reverse(string? par14)
+		public static string? Reverse(string? par7)
 		{
 			throw new InvalidOperationException();
 		}
@@ -735,7 +676,7 @@ namespace Default.PostgreSQL
 		#region TestAvg
 
 		[Sql.Function(Name="\"public\".test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par16)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
 		{
 			throw new InvalidOperationException();
 		}
@@ -787,18 +728,6 @@ namespace Default.PostgreSQL
 				t.PersonID == PersonID);
 		}
 
-		public static Employee? Find(this ITable<Employee> table, int EmployeeId)
-		{
-			return table.FirstOrDefault(t =>
-				t.EmployeeId == EmployeeId);
-		}
-
-		public static EmployeeTimeOffBalance? Find(this ITable<EmployeeTimeOffBalance> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
 		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
@@ -809,24 +738,6 @@ namespace Default.PostgreSQL
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
-		}
-
-		public static InventoryResource? Find(this ITable<InventoryResource> table, Guid Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static LeaveRequest? Find(this ITable<LeaveRequest> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static LeaveRequestDateEntry? Find(this ITable<LeaveRequestDateEntry> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int PersonID)
@@ -896,6 +807,12 @@ namespace Default.PostgreSQL
 		}
 
 		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);

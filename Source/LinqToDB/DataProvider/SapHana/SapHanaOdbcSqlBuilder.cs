@@ -7,10 +7,10 @@ namespace LinqToDB.DataProvider.SapHana
 	using SqlQuery;
 	using SqlProvider;
 
-	class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
+	sealed class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
 	{
-		public SapHanaOdbcSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SapHanaOdbcSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return new SapHanaOdbcSqlBuilder(this);
 		}
 
-		protected SapHanaOdbcSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		private SapHanaOdbcSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.SapHana
 			};
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.SapHana
 					StringBuilder.Append("Decimal(10, 4)");
 					break;
 				default:
-					base.BuildDataTypeFromDataType(type, forCreateTable);
+					base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 					break;
 			}
 		}

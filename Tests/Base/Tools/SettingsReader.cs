@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
-using NUnit.Framework;
 
 namespace Tests.Tools
 {
@@ -16,8 +13,10 @@ namespace Tests.Tools
 
 	public class TestSettings
 	{
+		public bool?                               DisableRemoteContext { get; set; }
 		public string?                             BasedOn              { get; set; }
 		public string?                             BaselinesPath        { get; set; }
+		public bool?                               StoreMetrics         { get; set; }
 		public string[]?                           Providers            { get; set; }
 		public string[]?                           Skip                 { get; set; }
 		public string?                             TraceLevel           { get; set; }
@@ -41,23 +40,16 @@ namespace Tests.Tools
 					if (!settings1.Connections.ContainsKey(connection.Key))
 						settings1.Connections.Add(connection.Key, connection.Value);
 
-				if (settings1.Providers == null)
-					settings1.Providers = settings2.Providers;
+				if (settings1.Providers is not null && settings2.Providers is not null)
+					settings1.Providers = settings2.Providers.Concat(settings1.Providers).ToArray();
 
-				if (settings1.Skip == null)
-					settings1.Skip = settings2.Skip;
-
-				if (settings1.TraceLevel == null)
-					settings1.TraceLevel = settings2.TraceLevel;
-
-				if (settings1.DefaultConfiguration == null)
-					settings1.DefaultConfiguration = settings2.DefaultConfiguration;
-
-				if (settings1.NoLinqService == null)
-					settings1.NoLinqService = settings2.NoLinqService;
-
-				if (settings1.BaselinesPath == null)
-					settings1.BaselinesPath = settings2.BaselinesPath;
+				settings1.Providers            ??= settings2.Providers;
+				settings1.Skip                 ??= settings2.Skip;
+				settings1.TraceLevel           ??= settings2.TraceLevel;
+				settings1.DefaultConfiguration ??= settings2.DefaultConfiguration;
+				settings1.NoLinqService        ??= settings2.NoLinqService;
+				settings1.BaselinesPath        ??= settings2.BaselinesPath;
+				settings1.StoreMetrics         ??= settings2.StoreMetrics;
 			}
 
 			var defaultSettings = JsonSerializer.Deserialize<Dictionary<string,TestSettings>>(defaultJson, _jsonOptions)!;
@@ -109,9 +101,11 @@ namespace Tests.Tools
 
 				//Translate connection strings enclosed in brackets as references to other existing connection strings.
 				settings.Connections ??= new();
+
 				foreach (var connection in settings.Connections)
 				{
 					var cs = connection.Value.ConnectionString;
+
 					if (cs != null && cs.StartsWith("[") && cs.EndsWith("]"))
 					{
 						cs = cs.Substring(1, cs.Length - 2);
@@ -120,6 +114,64 @@ namespace Tests.Tools
 						else
 							throw new InvalidOperationException($"Connection {cs} not found.");
 					}
+				}
+
+				if (settings.Providers is not null)
+				{
+					var providers = new HashSet<string>();
+
+					foreach (var provider in settings.Providers)
+					{
+						switch (provider)
+						{
+							case "++" or "+++" or "all":
+								foreach (var p in TestBase.Providers)
+									providers.Add(p);
+								break;
+							case "--" or "---":
+								providers.Clear();
+								break;
+							default:
+							{
+								if (provider.StartsWith("-"))
+								{
+									var p = provider.Replace("-", "").Trim();
+
+									if (p.StartsWith("*") && p.EndsWith("*"))
+									{
+										p = p.Trim('*');
+
+										foreach (var pr in providers.ToList())
+											if (pr.Contains(p))
+												providers.Remove(pr);
+									}
+									else if (p.StartsWith("*"))
+									{
+										p = p.Trim('*');
+
+										foreach (var pr in providers.ToList())
+											if (pr.EndsWith(p))
+												providers.Remove(pr);
+									}
+									else if (p.EndsWith("*"))
+									{
+										p = p.Trim('*');
+
+										foreach (var pr in providers.ToList())
+											if (pr.StartsWith(p))
+												providers.Remove(pr);
+									}
+									else
+										providers.Remove(p);
+								}
+								else
+									providers.Add(provider);
+								break;
+							}
+						}
+					}
+
+					settings.Providers = providers.ToArray();
 				}
 
 				return settings;

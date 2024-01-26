@@ -7,11 +7,11 @@ namespace Host
 	using LinqToDB.Remote;
 	using LinqToDB.Remote.Wcf;
 
-	class Program
+	sealed class Program
 	{
 		static void Main(string[] args)
 		{
-			var host = new ServiceHost(
+			using var host = new ServiceHost(
 				new WcfLinqService(new LinqService() { AllowUpdates = true }, true),
 				new Uri("net.tcp://localhost:30304"));
 

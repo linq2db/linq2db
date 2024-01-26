@@ -45,5 +45,14 @@ namespace LinqToDB.Common
 
 			return sb;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static StringBuilder AppendByteAsHexViaLookup32(this StringBuilder sb, byte @byte)
+		{
+			var val = _lookup32[@byte];
+			sb.Append((char)val);
+			sb.Append((char)(val >> 16));
+			return sb;
+		}
 	}
 }

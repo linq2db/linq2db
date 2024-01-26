@@ -21,7 +21,7 @@ namespace LinqToDB.Mapping
 	/// </para>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple=true)]
-	public class MapValueAttribute : Attribute
+	public class MapValueAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Adds <see cref="MapValueAttribute"/> mapping to enum field. If you don't specify <see cref="Value"/> property,
@@ -78,13 +78,6 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string? Configuration { get; set; }
-
-		/// <summary>
 		/// Database value, to which current enumeration field will be mapped when used in query or saved to database.
 		/// This value, when loaded from database, will be converted to current enumeration field.
 		/// </summary>
@@ -95,5 +88,10 @@ namespace LinqToDB.Mapping
 		/// database value.
 		/// </summary>
 		public bool   IsDefault     { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{(IsDefault ? 1 : 0)}.{Value}.";
+		}
 	}
 }

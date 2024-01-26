@@ -6,12 +6,13 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using Common;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
 	internal partial class MergeBuilder
 	{
-		internal class Merge : MethodCallBuilder
+		internal sealed class Merge : MethodCallBuilder
 		{
 			static readonly MethodInfo[] _supportedMethods = {MergeMethodInfo1, MergeMethodInfo2};
 
@@ -23,19 +24,27 @@ namespace LinqToDB.Linq.Builder
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				// Merge(ITable<TTarget> target, string hint)
+
+				var disableFilters = methodCall.Arguments[0] is not MethodCallExpression mc || mc.Method.Name != nameof(LinqExtensions.AsCte);
+				if (disableFilters)
+					builder.PushDisabledQueryFilters(Array<Type>.Empty);
+
 				var target = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()) { AssociationsAsSubQueries = true });
+
+				if (disableFilters)
+					builder.PopDisabledFilter();
 
 				if (target is not TableBuilder.TableContext tableContext
 					|| !tableContext.SelectQuery.IsSimple)
 				{
-					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
+					throw new NotImplementedException("Currently, only Tables and CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
 				}
 
 				var targetTable = tableContext.SqlTable;
 
 				var merge = new SqlMergeStatement(targetTable);
 				if (methodCall.Arguments.Count == 2)
-					merge.Hint = (string?)methodCall.Arguments[1].EvaluateExpression();
+					merge.Hint = methodCall.Arguments[1].EvaluateExpression<string>(builder.DataContext);
 
 				target.SetAlias(merge.Target.Alias!);
 				target.Statement = merge;

@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Common;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Common;
 
-	class SQLiteSqlOptimizer : BasicSqlOptimizer
+	sealed class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
 		public SQLiteSqlOptimizer(SqlProviderFlags sqlProviderFlags)
 			: base(sqlProviderFlags)
@@ -19,13 +16,13 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
 				{
-					statement = GetAlternativeDelete((SqlDeleteStatement)statement);
+					statement = GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 				}
@@ -34,11 +31,11 @@ namespace LinqToDB.DataProvider.SQLite
 				{
 					if (SqlProviderFlags.IsUpdateFromSupported)
 					{
-						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement);
+						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, dataOptions);
 					}
 					else
 					{
-						statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
+						statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions);
 					}
 
 					break;
@@ -138,7 +135,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}
@@ -173,23 +170,15 @@ namespace LinqToDB.DataProvider.SQLite
 				    !(exprExpr.Expr1.TryEvaluateExpression(visitor. Context.OptimizationContext.Context, out var value1) && value1 == null ||
 				      exprExpr.Expr2.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value2) && value2 == null))
 				{
-					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
+					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == PseudoFunctions.CONVERT || func1.Name == "DateTime")))
 					{
-						var left = new SqlFunction(leftType.SystemType, "$Convert$", SqlDataType.GetDataType(leftType.SystemType),
-							new SqlDataType(leftType), exprExpr.Expr1)
-						{
-							CanBeNull = exprExpr.Expr1.CanBeNull
-						};
+						var left = PseudoFunctions.MakeConvert(new SqlDataType(leftType), new SqlDataType(leftType), exprExpr.Expr1);
 						exprExpr = new SqlPredicate.ExprExpr(left, exprExpr.Operator, exprExpr.Expr2, null);
 					}
-					
-					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == "$Convert$" || func2.Name == "DateTime")))
+
+					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == PseudoFunctions.CONVERT || func2.Name == "DateTime")))
 					{
-						var right = new SqlFunction(rightType.SystemType, "$Convert$", new SqlDataType(rightType),
-							new SqlDataType(rightType), exprExpr.Expr2)
-						{
-							CanBeNull = exprExpr.Expr2.CanBeNull
-						};
+						var right = PseudoFunctions.MakeConvert(new SqlDataType(rightType), new SqlDataType(rightType), exprExpr.Expr2);
 						exprExpr = new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, right, null);
 					}
 
@@ -225,6 +214,22 @@ namespace LinqToDB.DataProvider.SQLite
 			          || type == typeof(DateTimeOffset)
 			          || type == typeof(DateTime?)
 			          || type == typeof(DateTimeOffset?);
+		}
+
+		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		{
+			if (!func.DoNotOptimize)
+			{
+				var from = (SqlDataType)func.Parameters[1];
+				var to   = (SqlDataType)func.Parameters[0];
+
+				// prevent same-type conversion removal as it is necessary in case of SQLite
+				// to ensure that we get proper type, because converted value could have any type actually
+				if (from.Type.EqualsDbOnly(to.Type))
+					func.DoNotOptimize = true;
+			}
+
+			return base.ConvertConversion(func);
 		}
 	}
 }

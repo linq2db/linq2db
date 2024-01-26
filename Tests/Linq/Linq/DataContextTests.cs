@@ -17,7 +17,7 @@ namespace Tests.Linq
 	public class DataContextTests : TestBase
 	{
 		[Test]
-		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
+		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
@@ -45,7 +45,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
+		public void TestContextToString([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
@@ -60,7 +60,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue210([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void Issue210([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var ctx = new DataContext(context))
 			{
@@ -107,7 +107,7 @@ namespace Tests.Linq
 
 		// sdanyliv: Disabled other providers for performance purposes
 		[Test]
-		public void LoopTest([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void LoopTest([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new DataContext(context))
 				for (int i = 0; i < 1000; i++)
@@ -118,7 +118,7 @@ namespace Tests.Linq
 
 		// sdanyliv: Disabled other providers for performance purposes
 		[Test]
-		public async Task LoopTestAsync([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public async Task LoopTestAsync([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new DataContext(context))
 				for (int i = 0; i < 1000; i++)
@@ -129,7 +129,7 @@ namespace Tests.Linq
 
 		// sdanyliv: Disabled other providers for performance purposes
 		[Test]
-		public void LoopTestMultipleContexts([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void LoopTestMultipleContexts([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			for (int i = 0; i < 1000; i++)
 			{
@@ -142,7 +142,7 @@ namespace Tests.Linq
 
 		// sdanyliv: Disabled other providers for performance purposes
 		[Test]
-		public async Task LoopTestMultipleContextsAsync([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public async Task LoopTestMultipleContextsAsync([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			for (int i = 0; i < 1000; i++)
 			{
@@ -153,7 +153,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class TestDataContext: DataContext
+		sealed class TestDataContext : DataContext
 		{
 			public TestDataContext(string context)
 				: base(context)
@@ -162,14 +162,14 @@ namespace Tests.Linq
 
 			public DataConnection? DataConnection { get; private set; }
 
-			protected override DataConnection CreateDataConnection(LinqToDBConnectionOptions options)
+			protected override DataConnection CreateDataConnection(DataOptions options)
 			{
 				return DataConnection = base.CreateDataConnection(options);
 			}
 		}
 
 		[Test]
-		public void CommandTimeoutTests([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void CommandTimeoutTests([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new TestDataContext(context))
 			{
@@ -232,7 +232,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class NewDataContext : DataContext
+		sealed class NewDataContext : DataContext
 		{
 			public NewDataContext(string context)
 				: base(context)
@@ -242,13 +242,13 @@ namespace Tests.Linq
 			public int CreateCalled;
 			public int CloneCalled;
 
-			protected override DataConnection CreateDataConnection(LinqToDBConnectionOptions options)
+			protected override DataConnection CreateDataConnection(DataOptions options)
 			{
 				CreateCalled++;
 				return base.CreateDataConnection(options);
 			}
 
-			protected override DataConnection CloneDataConnection(DataConnection currentConnection, LinqToDBConnectionOptions options)
+			protected override DataConnection CloneDataConnection(DataConnection currentConnection, DataOptions options)
 			{
 				CloneCalled++;
 				return base.CloneDataConnection(currentConnection, options);

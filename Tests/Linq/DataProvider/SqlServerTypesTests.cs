@@ -18,7 +18,7 @@ namespace Tests.DataProvider
 	public partial class SqlServerTypesTests : DataProviderTestBase
 	{
 		[Table(Name="AllTypes2")]
-		class AllTypes2
+		sealed class AllTypes2
 		{
 			[Column(DbType="int"),   PrimaryKey, Identity] public int             ID                     { get; set; } // int
 			[Column(DbType="date"),              Nullable] public DateTime?       dateDataType           { get; set; } // date
@@ -59,7 +59,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("#tmp")]
-		class MyTable
+		sealed class MyTable
 		{
 			[Column] public SqlHierarchyId ID;
 		}
@@ -81,6 +81,7 @@ namespace Tests.DataProvider
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 #endif
+
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var conn = GetDataContext(context))
 			{
@@ -96,7 +97,6 @@ namespace Tests.DataProvider
 						v5  = t.geographyDataType.M,
 						//v6  = t.geographyDataType.HasZ,
 						//v7  = t.geographyDataType.HasM,
-						// missing API
 #if NET472
 						v8 = SqlGeography.GeomFromGml(t.geographyDataType.AsGml(), 4326),
 						v9  = t.geographyDataType.AsGml(),
@@ -121,7 +121,7 @@ namespace Tests.DataProvider
 			{
 				if (_data == null)
 					using (new DisableBaseline("test cache"))
-					using (var db = new DataConnection(context.Replace(".LinqService", "")))
+					using (var db = new DataConnection(context.StripRemote()))
 						_data = db.GetTable<SqlTypes>().ToList();
 
 				foreach (var item in _data)
@@ -300,7 +300,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class Issue1836
+		sealed class Issue1836
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -409,8 +409,13 @@ namespace Tests.DataProvider
 				Test<TimeSpan>(DataType.NChar    , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
 				Test<TimeSpan>(DataType.VarChar  , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
 				Test<TimeSpan>(DataType.NVarChar , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
-				Test<TimeSpan>(DataType.Time     , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
-				Test<TimeSpan>(DataType.Undefined, i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				if (!context.IsAnyOf(TestProvName.AllSqlServer2005))
+				{
+					// 2005: time not supported
+					Test<TimeSpan>(DataType.Time     , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+					// 2005: no defaults, user should explicitly specify which type he wants to use for TimeSpan mapping
+					Test<TimeSpan>(DataType.Undefined, i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				}
 			}
 
 			// DateTimeOffset
@@ -429,8 +434,9 @@ namespace Tests.DataProvider
 				if (context.IsAnyOf(TestProvName.AllSqlServer2005))
 				{
 					Test<DateTimeOffset>(DataType.DateTime2, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
-					Test<DateTimeOffset>(DataType.DateTimeOffset, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
-					Test<DateTimeOffset>(DataType.Undefined, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
+					// not supported by sql2005 and we don't provide fallback
+					//Test<DateTimeOffset>(DataType.DateTimeOffset, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
+					//Test<DateTimeOffset>(DataType.Undefined, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
 				}
 				else
 				{
@@ -454,13 +460,16 @@ namespace Tests.DataProvider
 
 			void Test<TValue>(DataType dataType, int precision, TValue value, TValue expected)
 			{
-				using var db = GetDataContext(context);
+				var ms = new MappingSchema();
 
-				var prop = db.GetFluentMappingBuilder()
+				new FluentMappingBuilder(ms)
 					.Entity<LiteralsTestTable<TValue>>()
-					.Property(e => e.Value)
-					.HasDataType(dataType)
-					.HasPrecision(precision);
+						.Property(e => e.Value)
+							.HasDataType(dataType)
+							.HasPrecision(precision)
+					.Build();
+
+				using var db = GetDataContext(context, ms);
 
 				db.AddInterceptor(interceptor);
 				

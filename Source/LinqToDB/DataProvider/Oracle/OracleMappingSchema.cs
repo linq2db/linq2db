@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Linq;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
@@ -9,7 +10,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Expressions;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
 
 	public sealed class OracleMappingSchema : LockedMappingSchema
 	{
@@ -45,20 +45,20 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SetConvertExpression<decimal,TimeSpan>(v => new TimeSpan((long)v));
 
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v)         => ConvertBinaryToSql  (sb,     ((Guid)   v).ToByteArray()));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v)         => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
-			SetValueToSqlConverter(typeof(string)        , (sb, dt, v) => ConvertStringToSql  (sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char)          , (sb, dt, v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v)         => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb, dt, v)         => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),           (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Guid)   v).ToByteArray()));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
+			SetValueToSqlConverter(typeof(string)        , (sb, _,_,v) => ConvertStringToSql  (sb,     v.ToString()!));
+			SetValueToSqlConverter(typeof(char)          , (sb, _,_,v) => ConvertCharToSql    (sb,     (char)v));
+			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Binary)v).ToArray()));
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly),       (sb, dt, v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
 #endif
 
 			// adds floating point special values support
-			SetValueToSqlConverter(typeof(float), (sb, dt, v) =>
+			SetValueToSqlConverter(typeof(float), (sb,_,_,v) =>
 			{
 				var f = (float)v;
 				if (float.IsNaN(f))
@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.Oracle
 				else
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
 			});
-			SetValueToSqlConverter(typeof(double), (sb, dt, v) =>
+			SetValueToSqlConverter(typeof(double), (sb,_,_,v) =>
 			{
 				var d = (double)v;
 				if (double.IsNaN(d))

@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Data.Common;
 	using Configuration;
 	using Data;
 
@@ -19,13 +21,13 @@ namespace LinqToDB.DataProvider.DB2
 
 		public static bool AutoDetectProvider { get; set; } = true;
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
 			// DB2 ODS provider could be used by informix
-			if (css.Name.Contains("Informix"))
+			if (options.ConfigurationString?.Contains("Informix") == true)
 				return null;
 
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
 				case ProviderName.DB2LUW: return _db2DataProviderLUW.Value;
 				case ProviderName.DB2zOS: return _db2DataProviderzOS.Value;
@@ -33,7 +35,7 @@ namespace LinqToDB.DataProvider.DB2
 				case ""             :
 				case null           :
 
-					if (css.Name == "DB2")
+					if (options.ConfigurationString == "DB2")
 						goto case ProviderName.DB2;
 					break;
 
@@ -41,28 +43,39 @@ namespace LinqToDB.DataProvider.DB2
 				case DB2ProviderAdapter.NetFxClientNamespace:
 				case DB2ProviderAdapter.CoreClientNamespace :
 
-					if (css.Name.Contains("LUW"))
+					if (options.ConfigurationString?.Contains("LUW") == true)
 						return _db2DataProviderLUW.Value;
-					if (css.Name.Contains("z/OS") || css.Name.Contains("zOS"))
+					if (options.ConfigurationString?.Contains("z/OS") == true || options.ConfigurationString?.Contains("zOS") == true)
 						return _db2DataProviderzOS.Value;
 
-					if (AutoDetectProvider)
+					if (AutoDetectProvider && options.ConnectionString != null)
 					{
 						try
 						{
-							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
+							using var conn = DB2ProviderAdapter.Instance.CreateConnection(options.ConnectionString);
 
-							using (var conn = DB2ProviderAdapter.Instance.CreateConnection(cs))
+							if (options.ConnectionInterceptor == null)
 							{
 								conn.Open();
-
-								var iszOS = conn.eServerType == DB2ProviderAdapter.DB2ServerTypes.DB2_390;
-
-								return iszOS ? _db2DataProviderzOS.Value : _db2DataProviderLUW.Value;
 							}
+							else
+							{
+								using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
+									options.ConnectionInterceptor.ConnectionOpening(new(null), ((IConnectionWrapper)conn).Connection);
+
+								conn.Open();
+
+								using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
+									options.ConnectionInterceptor.ConnectionOpened(new(null), ((IConnectionWrapper)conn).Connection);
+							}
+
+							var iszOS = conn.eServerType == DB2ProviderAdapter.DB2ServerTypes.DB2_390;
+
+							return iszOS ? _db2DataProviderzOS.Value : _db2DataProviderLUW.Value;
 						}
 						catch
 						{
+							// ignored
 						}
 					}
 
@@ -83,10 +96,9 @@ namespace LinqToDB.DataProvider.DB2
 		public static void ResolveDB2(string path)
 		{
 			new AssemblyResolver(path, DB2ProviderAdapter.AssemblyName);
-			if (DB2ProviderAdapter.AssemblyNameOld != null)
-#pragma warning disable CS0162 // Unreachable code detected
-				new AssemblyResolver(path, DB2ProviderAdapter.AssemblyNameOld);
-#pragma warning restore CS0162 // Unreachable code detected
+#if !NETFRAMEWORK
+			new AssemblyResolver(path, DB2ProviderAdapter.AssemblyNameOld);
+#endif
 		}
 
 		public static void ResolveDB2(Assembly assembly)
@@ -138,7 +150,12 @@ namespace LinqToDB.DataProvider.DB2
 		/// methods, if mode is not specified explicitly.
 		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 		/// </summary>
-		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use DB2Options.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => DB2Options.Default.BulkCopyType;
+			set => DB2Options.Default = DB2Options.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 	}

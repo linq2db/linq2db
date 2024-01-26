@@ -34,10 +34,10 @@ namespace Cli.Default.SqlServerNorthwind
 
 		#region Associations
 		/// <summary>
-		/// FK_Orders_Employees
+		/// FK_Order_Details_Orders backreference
 		/// </summary>
-		[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(SqlServerNorthwind.Employee.EmployeeId))]
-		public Employee? Employee { get; set; }
+		[Association(ThisKey = nameof(OrderId), OtherKey = nameof(OrderDetail.OrderId))]
+		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Orders_Customers
@@ -46,16 +46,16 @@ namespace Cli.Default.SqlServerNorthwind
 		public Customer? Customer { get; set; }
 
 		/// <summary>
+		/// FK_Orders_Employees
+		/// </summary>
+		[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(SqlServerNorthwind.Employee.EmployeeId))]
+		public Employee? Employee { get; set; }
+
+		/// <summary>
 		/// FK_Orders_Shippers
 		/// </summary>
 		[Association(ThisKey = nameof(ShipVia), OtherKey = nameof(Shipper.ShipperId))]
 		public Shipper? Shippers { get; set; }
-
-		/// <summary>
-		/// FK_Order_Details_Orders backreference
-		/// </summary>
-		[Association(ThisKey = nameof(OrderId), OtherKey = nameof(OrderDetail.OrderId))]
-		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
 		#endregion
 	}
 }

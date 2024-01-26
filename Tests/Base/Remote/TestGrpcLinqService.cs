@@ -1,5 +1,6 @@
 ﻿#if !NETFRAMEWORK
 using System;
+using LinqToDB;
 
 namespace Tests.Remote
 {
@@ -10,7 +11,7 @@ namespace Tests.Remote
 
 	using LinqToDB.Remote.Grpc;
 
-	internal class TestGrpcLinqService : GrpcLinqService
+	internal sealed class TestGrpcLinqService : GrpcLinqService
 	{
 		private readonly LinqService    _linqService;
 
@@ -49,6 +50,9 @@ namespace Tests.Remote
 
 			if (_interceptor != null)
 				dc.AddInterceptor(_interceptor);
+
+			if (configuration?.IsAnyOf(TestProvName.AllMariaDB) == true)
+				dc.AddMappingSchema(TestBase._mariaDBSchema);
 
 			return dc;
 		}

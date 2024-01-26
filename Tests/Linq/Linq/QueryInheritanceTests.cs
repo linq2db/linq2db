@@ -21,15 +21,15 @@ namespace Tests.Linq
 		static IEnumerable<T> QueryTable<T>(IDataContext dataContext)
 		{
 			var query = new SqlSelectStatement();
-			var table = new SqlTable(typeof(T));
+			var table = SqlTable.Create<T>(dataContext);
 			var tableSource = new SqlTableSource(table, "t");
 			query.SelectQuery.From.Tables.Add(tableSource);
 
 			var connection = (DataConnection) dataContext;
 
-			var sqlBuilder = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema);
-			var sb = new StringBuilder();
-			sqlBuilder.BuildSql(0, query, sb, new OptimizationContext(new EvaluationContext(), new AliasesContext(), false));
+			var sqlBuilder = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema, connection.Options);
+			var sb         = new StringBuilder();
+			sqlBuilder.BuildSql(0, query, sb, new OptimizationContext(new EvaluationContext(), new AliasesContext(), false, connection.DataProvider.GetQueryParameterNormalizer));
 
 			return connection.Query<T>(sb.ToString());
 		}
@@ -213,10 +213,10 @@ namespace Tests.Linq
 					QueryTable<ParentInheritanceBase>(db).OfType<ParentInheritance1>().Cast<ParentInheritanceBase>());
 		}
 
-		class ParentEx : Parent
+		sealed class ParentEx : Parent
 		{
 			[NotColumn]
-			protected bool Field1;
+			public bool Field1;
 
 			public static void Test(QueryInheritanceTests inheritance, string context)
 			{
@@ -234,7 +234,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
-		class PersonEx : Person
+		sealed class PersonEx : Person
 		{
 		}
 
@@ -289,13 +289,13 @@ namespace Tests.Linq
 			public override TypeCodeEnum TypeCode => TypeCodeEnum.A;
 		}
 
-		class InheritanceA1 : InheritanceA
+		sealed class InheritanceA1 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
 			public override TypeCodeEnum TypeCode => TypeCodeEnum.A1;
 		}
 
-		class InheritanceA2 : InheritanceA
+		sealed class InheritanceA2 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
 			public override TypeCodeEnum TypeCode => TypeCodeEnum.A2;

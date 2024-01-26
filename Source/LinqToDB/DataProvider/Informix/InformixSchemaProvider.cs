@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Data;
 	using SchemaProvider;
 
-	class InformixSchemaProvider : SchemaProviderBase
+	sealed class InformixSchemaProvider : SchemaProviderBase
 	{
 		private readonly InformixDataProvider _provider;
 
@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.Informix
 			}.ToList();
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			return dataType switch
 			{

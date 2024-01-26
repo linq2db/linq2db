@@ -78,7 +78,7 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region Clone
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public static T? Clone<T>(this T? element, Dictionary<IQueryElement, IQueryElement> objectTree)
 			where T : class, IQueryElement
 		{
@@ -88,7 +88,7 @@ namespace LinqToDB.SqlQuery
 			return new CloneVisitor<object?>(objectTree, null).Clone(element);
 		}
 
-		[return: NotNullIfNotNull("elements")]
+		[return: NotNullIfNotNull(nameof(elements))]
 		public static T[]? Clone<T>(this T[]? elements, Dictionary<IQueryElement, IQueryElement> objectTree)
 			where T : class, IQueryElement
 		{
@@ -98,7 +98,7 @@ namespace LinqToDB.SqlQuery
 			return new CloneVisitor<object?>(objectTree, null).Clone(elements);
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public static T? Clone<T, TContext>(this T? element, TContext context, Dictionary<IQueryElement, IQueryElement> objectTree, Func<TContext, IQueryElement, bool> doClone)
 			where T : class, IQueryElement
 		{
@@ -108,7 +108,7 @@ namespace LinqToDB.SqlQuery
 			return new CloneVisitor<TContext>(objectTree, context, doClone).Clone(element);
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public static T? Clone<T, TContext>(this T? element, TContext context, Func<TContext, IQueryElement, bool> doClone)
 			where T : class, IQueryElement
 		{
@@ -118,7 +118,7 @@ namespace LinqToDB.SqlQuery
 			return new CloneVisitor<TContext>(null, context, doClone).Clone(element);
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public static T? Clone<T>(this T? element, Func<IQueryElement, bool> doClone)
 			where T : class, IQueryElement
 		{
@@ -128,7 +128,7 @@ namespace LinqToDB.SqlQuery
 			return new CloneVisitor<object?>(null, doClone).Clone(element);
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public static T? Clone<T>(this T? element)
 			where T : class, IQueryElement
 		{

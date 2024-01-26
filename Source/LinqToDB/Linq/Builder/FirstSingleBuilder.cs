@@ -5,21 +5,26 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 	using Common;
 	using Reflection;
 
-	class FirstSingleBuilder : MethodCallBuilder
+	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
 		public  static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
 		private static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			return IsApplicable(methodCall);
+		}
+
+		private static bool IsApplicable(MethodCallExpression methodCall)
+		{
 			return
-				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 1 ||
+				methodCall.IsQueryable(MethodNames)           && methodCall.Arguments.Count == 1 ||
 				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 2;
 		}
 
@@ -53,8 +58,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (take != 0)
 			{
-				var takeExpression = Configuration.Linq.ParameterizeTakeSkip
-					? (ISqlExpression)new SqlParameter(new DbDataType(typeof(int)), "take", take)
+				var takeExpression = builder.DataOptions.LinqOptions.ParameterizeTakeSkip
+					? (ISqlExpression)new SqlParameter(new (typeof(int)), "take", take)
 					{
 						IsQueryParameter = !builder.DataContext.InlineParameters
 					}
@@ -129,12 +134,15 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		public class FirstSingleContext : SequenceContextBase
+		public sealed class FirstSingleContext : SequenceContextBase
 		{
+			private readonly bool _orDefault;
+
 			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
 			{
 				_methodCall = methodCall;
+				_orDefault  = _methodCall.Method.Name.Contains("OrDefault");
 			}
 
 			readonly MethodCallExpression _methodCall;
@@ -261,10 +269,7 @@ namespace LinqToDB.Linq.Builder
 					_checkNullIndex = q.DefaultIfEmpty(-1).First();
 
 					if (_checkNullIndex < 0)
-					{
-						_checkNullIndex = SelectQuery.Select.Add(new SqlValue(1));
-						SelectQuery.Select.Columns[_checkNullIndex].RawAlias = "is_empty";
-					}
+						_checkNullIndex = SelectQuery.Select.AddNew(new SqlValue(1), "is_empty");
 
 					_checkNullIndex = ConvertToParentIndex(_checkNullIndex, this);
 				}
@@ -282,15 +287,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						foreach (var member in sc.Members.Values)
 						{
-							var found = null != member.Find(ctx, static(c, e) =>
+							if (member is MethodCallExpression mc
+								&& !IsApplicable(mc)
+								&& (context.Builder.IsSubQuery(ctx, mc) || EagerLoading.IsChainContainsNotSupported(mc)))
 							{
-								if (e is MethodCallExpression mc && c.Builder.IsSubQuery(c, mc))
-									return true;
-								return false;
-							});
-
-							if (found)
 								return true;
+							}
 						}
 
 						return false;
@@ -328,7 +330,7 @@ namespace LinqToDB.Linq.Builder
 
 						Expression defaultValue;
 
-						if (_methodCall.Method.Name.EndsWith("OrDefault"))
+						if (_orDefault)
 							defaultValue = Expression.Constant(expr.Type.GetDefaultValue(), expr.Type);
 						else
 							defaultValue = Expression.Convert(
@@ -365,6 +367,24 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				throw new NotImplementedException();
+			}
+
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				if (!_orDefault || Parent == null || SelectQuery.Select.Columns[index].CanBeNull)
+					return base.ConvertToParentIndex(index, context);
+
+				var column = SelectQuery.Select.Columns[index];
+
+				var idx = Parent.ConvertToParentIndex(index, context);
+
+				foreach (var col in Parent.SelectQuery.Select.Columns)
+				{
+					if (col.Expression == column)
+						col.Expression = new SqlExpression(col.SystemType, "{0}", column.Precedence, column) { CanBeNull = true };
+				}
+
+				return idx;
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)

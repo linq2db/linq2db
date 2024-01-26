@@ -42,7 +42,13 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression  ToExpr() { return _parent; }
 		}
 
-		public   List<SqlCondition>  Conditions { get; } = new List<SqlCondition>();
+		public List<SqlCondition>  Conditions { get; } = new List<SqlCondition>();
+
+		public SqlSearchCondition Add(SqlCondition condition)
+		{
+			Conditions.Add(condition);
+			return this;
+		}
 
 		protected override SqlSearchCondition Search => this;
 
@@ -141,9 +147,23 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			return this == other;
+			return other is ISqlPredicate otherPredicate
+				&& Equals(otherPredicate, comparer);
+		}
+
+		public bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			if (other is not SqlSearchCondition otherCondition
+				|| Conditions.Count != otherCondition.Conditions.Count)
+				return false;
+
+			for (var i = 0; i < Conditions.Count; i++)
+				if (!Conditions[i].Equals(otherCondition.Conditions[i], comparer))
+					return false;
+
+			return true;
 		}
 
 		#endregion
@@ -171,5 +191,10 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out List<SqlCondition> conditions)
+		{
+			conditions = Conditions;
+		}
 	}
 }

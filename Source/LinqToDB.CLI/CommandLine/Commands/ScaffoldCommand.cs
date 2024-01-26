@@ -54,6 +54,7 @@ namespace LinqToDB.CommandLine
 			// data model options
 			AddOption(_dataModelOptions, DataModel.GenerateDbName);
 			AddOption(_dataModelOptions, DataModel.GenerateDefaultSchemaName);
+			AddOption(_dataModelOptions, DataModel.Metadata);
 			AddOption(_dataModelOptions, DataModel.BaseEntity);
 			AddOption(_dataModelOptions, DataModel.DataTypeOnTables);
 			AddOption(_dataModelOptions, DataModel.DbTypeOnTables);
@@ -67,6 +68,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_dataModelOptions, DataModel.EmitTypedOptionsConstructor);
 			AddOption(_dataModelOptions, DataModel.DataContextName);
 			AddOption(_dataModelOptions, DataModel.DataContextBaseClass);
+			AddOption(_dataModelOptions, DataModel.EmitInitDataContextMethod);
 			AddOption(_dataModelOptions, DataModel.EmitAssociations);
 			AddOption(_dataModelOptions, DataModel.EmitAssociationExtensions);
 			// combines AssociationCollectionAsArray + AssociationCollectionType options
@@ -121,10 +123,14 @@ namespace LinqToDB.CommandLine
 			//defaultOptions.Schema.IncludeCatalogs + defaultOptions.Schema.Catalogs
 			//defaultOptions.Schema.ExcludeCatalogs + defaultOptions.Schema.Catalogs
 			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.IncludedCatalogs, SchemaOptions.ExcludedCatalogs);
+			AddOption(_schemaOptions, SchemaOptions.DefaultSchemas);
 			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.IncludedTables, SchemaOptions.ExcludedTables);
 			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.IncludedViews, SchemaOptions.ExcludedViews);
 			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.ProceduresWithSchema, SchemaOptions.ProceduresWithoutSchema);
+			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.IncludedStoredProcedures, SchemaOptions.ExcludedStoredProcedures);
 			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.IncludedTableFunctions, SchemaOptions.ExcludedTableFunctions);
+			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.IncludedScalarFunctions, SchemaOptions.ExcludedScalarFunctions);
+			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.IncludedAggregateFunctions, SchemaOptions.ExcludedAggregateFunctions);
 		}
 	}
 }

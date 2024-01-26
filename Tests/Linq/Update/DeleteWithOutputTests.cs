@@ -13,12 +13,12 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class DeleteWithOutputTests : TestBase
 	{
-		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureDeleteOutputInto     = TestProvName.AllSqlServer;
+		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputInto     = $"{TestProvName.AllSqlServer}";
 
 		[Table]
-		class TableWithData
+		sealed class TableWithData
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -26,7 +26,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table(Schema = "TestSchema")]
-		class TableWithDataAndSchema
+		sealed class TableWithDataAndSchema
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -34,7 +34,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class DestinationTable
+		sealed class DestinationTable
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -499,6 +499,136 @@ namespace Tests.xUpdate
 					}),
 				target.ToArray(),
 				ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
+
+		[Test]
+		public void DeleteWithOutputIntoTempTableProjByTableName([IncludeDataSources(FeatureDeleteOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateTempTable<DestinationTable>("DestinationTable_target");
+			var targetRef = db.GetTable<DestinationTable>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(target.TableName);
+
+			var expected = source
+				.Where(s => s.Id > 3)
+				.ToArray();
+
+			var param = 100500;
+			var output = source
+				.Where(s => s.Id > 3)
+				.DeleteWithOutputInto(
+					targetRef,
+					s => new DestinationTable()
+					{
+						Id       = s.Id       + param,
+						Value    = s.Value    + param,
+						ValueStr = s.ValueStr + param
+					});
+
+			AreEqual(
+				expected
+					.Select(s => new DestinationTable()
+					{
+						Id       = s.Id       + param,
+						Value    = s.Value    + param,
+						ValueStr = s.ValueStr + param,
+					}),
+				target.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
+
+		[Test]
+		public async Task DeleteWithOutputIntoTempTableProjByTableNameAsync([IncludeDataSources(FeatureDeleteOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateTempTable<DestinationTable>("DestinationTable_target");
+			var targetRef = db.GetTable<DestinationTable>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(target.TableName);
+
+			var expected = source
+				.Where(s => s.Id > 3)
+				.ToArray();
+
+			var param = 100500;
+			var output = await source
+				.Where(s => s.Id > 3)
+				.DeleteWithOutputIntoAsync(
+					targetRef,
+					s => new DestinationTable()
+					{
+						Id       = s.Id       + param,
+						Value    = s.Value    + param,
+						ValueStr = s.ValueStr + param
+					});
+
+			AreEqual(
+				expected
+					.Select(s => new DestinationTable()
+					{
+						Id       = s.Id       + param,
+						Value    = s.Value    + param,
+						ValueStr = s.ValueStr + param,
+					}),
+				target.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
+
+		[Test]
+		public void DeleteWithOutputIntoTempTableByTableName([IncludeDataSources(FeatureDeleteOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateTempTable<TableWithData>("TableWithData_target");
+			var targetRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(target.TableName);
+
+			var expected = source
+				.Where(s => s.Id > 3)
+				.ToArray();
+
+			var output = source
+				.Where(s => s.Id > 3)
+				.DeleteWithOutputInto(
+					targetRef);
+
+			AreEqual(
+				expected,
+				target.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
+		}
+
+		[Test]
+		public async Task DeleteWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureDeleteOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateTempTable<TableWithData>("TableWithData_target");
+			var targetRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(target.TableName);
+
+			var expected = source
+				.Where(s => s.Id > 3)
+				.ToArray();
+
+			var output = await source
+				.Where(s => s.Id > 3)
+				.DeleteWithOutputIntoAsync(
+					targetRef);
+
+			AreEqual(
+				expected,
+				target.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
 		}
 	}
 }

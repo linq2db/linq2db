@@ -1,9 +1,8 @@
 # LINQ to DB
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
-[![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db)
 
-> Starting from version 4 we obsolete T4 nugets in favor of new command-line scaffolding tool: [linq2db.cli](https://www.nuget.org/packages/linq2db.cli). Consider migration as we don't plan to introduce new features and fixes to T4 functionality.
+Also check command-line scaffolding tool: [linq2db.cli](https://www.nuget.org/packages/linq2db.cli).
 
 This nuget package contains database scaffolding T4 templates to generate POCO classes from your database.
 
@@ -12,6 +11,7 @@ You can read about T4 templates options [here](https://linq2db.github.io/article
 ## Important
 
 Don't use this package if you don't need database scaffolding functionality. Instead of this package, use:
+
 1. main [linq2db](https://www.nuget.org/packages/linq2db) package
 2. database provider nuget (see list of supported providers below)
 
@@ -36,9 +36,11 @@ Don't use this package if you don't need database scaffolding functionality. Ins
   - [linq2db4iSeries](https://www.nuget.org/packages/linq2db4iSeries): Don't reference linq2db package explicitly. This package already references supported linq2db version
 - Firebird
   - [FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient)
-- MySQL and MariaDB
+- MySQL
   - [MySqlConnector](https://www.nuget.org/packages/MySqlConnector) (recommended)
   - [MySql.Data](https://www.nuget.org/packages/MySql.Data) (highly discouraged, low quality provider)
+- MariaDB
+  - [MySqlConnector](https://www.nuget.org/packages/MySqlConnector) (recommended)
 - Oracle
   - [Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess) (.NET Framework)
   - [Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core) (.NET Core)
@@ -62,7 +64,7 @@ Don't use this package if you don't need database scaffolding functionality. Ins
 
 ## Obsoletion Note
 
-T4 templates will be obsoleted in `Linq To DB` 4.0.0 and replaced with new scaffolding utility.
+T4 templates obsoleted starting from `Linq To DB` 4.0.0 and replaced with new scaffolding utility. We still release newer versions of templates to maintain compatibility with new `LinqToDB` releases but don't actively develop new features for them.
 
 There are multiple reasons for it:
 
@@ -71,4 +73,4 @@ There are multiple reasons for it:
 - T4 host use x86 process for Visual Studio 2019- and x64 process for Visual Studio 2022+. This creates issues with native providers as they are platform-dependent (ODBC and OleDb providers, various native ADO.NET providers).
 - It's very hard to maintain big code generation framework, written in T4 templates.
 
-Those are just several most major issues current T4 templates have.
+These are the most significant issues with T4 templates.

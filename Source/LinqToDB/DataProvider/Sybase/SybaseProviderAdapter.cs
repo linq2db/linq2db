@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
 	using LinqToDB.Expressions;
 
 	public class SybaseProviderAdapter : IDynamicProviderAdapter
@@ -74,18 +74,24 @@ namespace LinqToDB.DataProvider.Sybase
 			if (name == ProviderName.Sybase)
 			{
 				if (_nativeInstance == null)
+				{
 					lock (_nativeSyncRoot)
-						if (_nativeInstance == null)
-							_nativeInstance = CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeProviderFactoryName, true);
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_nativeInstance ??= CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeProviderFactoryName, true);
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _nativeInstance;
 			}
 			else
 			{
 				if (_managedInstance == null)
+				{
 					lock (_managedSyncRoot)
-						if (_managedInstance == null)
-							_managedInstance = CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, null, false);
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_managedInstance ??= CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, null, false);
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _managedInstance;
 			}
@@ -151,7 +157,7 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		[Wrapper]
-		private class AseParameter
+		private sealed class AseParameter
 		{
 			public AseDbType AseDbType { get; set; }
 		}

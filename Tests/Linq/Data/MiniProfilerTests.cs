@@ -16,6 +16,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.Informix;
@@ -42,11 +43,7 @@ using Tests.Model;
 using IBM.Data.Informix;
 #endif
 
-#if NETFRAMEWORK
-using MySqlConnectorDateTime   = MySqlConnector::MySql.Data.Types.MySqlDateTime;
-#else
 using MySqlConnectorDateTime   = MySqlConnector::MySqlConnector.MySqlDateTime;
-#endif
 using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
@@ -70,7 +67,9 @@ namespace Tests.Data
 		public class MiniProfilerDataContext : DataConnection
 		{
 			public MiniProfilerDataContext(string configurationString)
+#pragma warning disable CA2000 // Dispose objects before losing scope
 				: base(GetDataProvider(), GetConnection(configurationString)) { }
+#pragma warning restore CA2000 // Dispose objects before losing scope
 
 			private static IDataProvider GetDataProvider()
 			{
@@ -79,7 +78,9 @@ namespace Tests.Data
 
 			private static DbConnection GetConnection(string configurationString)
 			{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 				var dbConnection = new SqlConnection(GetConnectionString(configurationString));
+#pragma warning restore CA2000 // Dispose objects before losing scope
 				return new ProfiledDbConnection(dbConnection, MiniProfiler.Current);
 			}
 		}
@@ -130,7 +131,7 @@ namespace Tests.Data
 #if NET472
 				// assert custom schema table access
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Any()));
+				Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Count > 0));
 #endif
 			}
 		}
@@ -255,22 +256,22 @@ namespace Tests.Data
 			}
 		}
 
-		class MapperExpressionTest1
+		sealed class MapperExpressionTest1
 		{
 			public DateTime Value { get; set; }
 		}
 
-		class MapperExpressionTest2
+		sealed class MapperExpressionTest2
 		{
 			public MySqlDataDateTime Value { get; set; }
 		}
 
-		class MapperExpressionTest3
+		sealed class MapperExpressionTest3
 		{
 			public object? Value { get; set; }
 		}
 
-		class TestMySqlDataProvider : MySqlDataProvider
+		sealed class TestMySqlDataProvider : MySqlDataProvider
 		{
 			public TestMySqlDataProvider(string providerName)
 				: base(providerName)
@@ -296,7 +297,7 @@ namespace Tests.Data
 			}
 		}
 
-		class LinqMySqlDataProvider : MySqlDataProvider
+		sealed class LinqMySqlDataProvider : MySqlDataProvider
 		{
 			private readonly Func<string, DbConnection> _connectionFactory;
 			public LinqMySqlDataProvider(Func<string, DbConnection> connectionFactory)
@@ -345,7 +346,7 @@ namespace Tests.Data
 			ms.SetConvertExpression<MySqlDataDateTime, string>(value => value.Value.ToBinary().ToString(CultureInfo.InvariantCulture));
 			ms.SetConvertExpression<string, MySqlDataDateTime>(value => new MySqlDataDateTime(DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture))));
 
-			using (var db = GetDataContext(testContext + (isLinq ? ".LinqService" : null), ms))
+			using (var db = GetDataContext(testContext + (isLinq ? LinqServiceSuffix : null), ms))
 			{
 				if (type == ConnectionType.MiniProfiler)
 					db.AddInterceptor(UnwrapProfilerInterceptor.Instance);
@@ -517,7 +518,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestDB2LUWDataProvider : DB2DataProvider
+		sealed class TestDB2LUWDataProvider : DB2DataProvider
 		{
 			public TestDB2LUWDataProvider()
 				: base(ProviderName.DB2LUW, DB2Version.LUW)
@@ -586,6 +587,7 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [TestProvName.AllSqlServer2008Minus])]
 		[Test]
 		public async Task TestRetryPolicy([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{
@@ -600,6 +602,7 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [TestProvName.AllSqlServer2008Minus])]
 		[Test]
 		public async Task TestSqlServer([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{
@@ -770,6 +773,7 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [TestProvName.AllSqlServer2008Minus])]
 		[Test]
 		public async Task TestSqlServerMS([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{
@@ -937,7 +941,11 @@ namespace Tests.Data
 		public async Task TestSapHanaNative([IncludeDataSources(ProviderName.SapHanaNative)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+#if NETFRAMEWORK
 			using (var db = CreateDataConnection(new SapHanaDataProvider(), context, type, DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly.GetType("Sap.Data.Hana.HanaConnection")!))
+#else
+			using (var db = CreateDataConnection(new SapHanaDataProvider(), context, type, "Sap.Data.Hana.HanaConnection, Sap.Data.Hana.Core.v2.1"))
+#endif
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1180,7 +1188,7 @@ namespace Tests.Data
 		}
 #endif
 
-		class TestInformixDataProvider : InformixDataProvider
+		sealed class TestInformixDataProvider : InformixDataProvider
 		{
 			public TestInformixDataProvider(string providerName)
 				: base(providerName)
@@ -1573,14 +1581,12 @@ namespace Tests.Data
 				Assert.True    (trace.Contains("DECLARE @p Json"));
 
 				// provider-specific type classes and readers
-				var dateValue = new DateTime(1234, 11, 22);
-#pragma warning disable CS0618 // Type or member is obsolete
-				var ndateValue = db.Execute<NpgsqlTypes.NpgsqlDate>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
-#pragma warning restore CS0618 // Type or member is obsolete
-				Assert.AreEqual(dateValue, (DateTime)ndateValue);
-				var rawValue = db.Execute<object>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
-				Assert.True    (rawValue is DateTime);
-				Assert.AreEqual(dateValue, (DateTime)rawValue);
+				var interval = TimeSpan.FromSeconds(-1234);
+				var nValue = db.Execute<NpgsqlTypes.NpgsqlInterval>("SELECT @p", new DataParameter("@p", interval, DataType.Interval));
+				Assert.AreEqual(interval, TimeSpan.FromTicks(nValue.Time * 10));
+				var rawValue = db.Execute<object>("SELECT @p", new DataParameter("@p", interval, DataType.Interval));
+				Assert.True    (rawValue is TimeSpan);
+				Assert.AreEqual(interval, (TimeSpan)rawValue);
 
 				// bulk copy without and with transaction
 				TestBulkCopy();
@@ -1596,9 +1602,9 @@ namespace Tests.Data
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var allTypes = schema.Tables.Where(t => t.TableName == "AllTypes").SingleOrDefault()!;
 				Assert.NotNull (allTypes);
-				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "timestampDataType").SingleOrDefault()!;
+				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "intervalDataType").SingleOrDefault()!;
 				Assert.NotNull (tsColumn);
-				Assert.AreEqual("NpgsqlDateTime", tsColumn.ProviderSpecificType);
+				Assert.AreEqual("NpgsqlInterval", tsColumn.ProviderSpecificType);
 
 				// provider properties
 				Assert.AreEqual(true, provider.HasMacAddr8);
@@ -1685,6 +1691,100 @@ namespace Tests.Data
 			public NpgsqlTypes.NpgsqlCircle? Column { get; set; }
 		}
 
+		internal sealed class TestClickHouseDataProvider : ClickHouseDataProvider
+		{
+			public TestClickHouseDataProvider(string providerName, ClickHouseProvider provider)
+				: base(providerName, provider)
+			{
+			}
+		}
+
+		[Table]
+		public class ClickHouseBulkCopyTable
+		{
+			[Column]
+			public int ID { get; set; }
+		}
+
+		[Test]
+		public async ValueTask TestClickHouse([IncludeDataSources(TestProvName.AllClickHouse)] string context, [Values] ConnectionType type)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+
+			ClickHouseDataProvider provider;
+			using (var db = GetDataConnection(context))
+				provider = new TestClickHouseDataProvider(db.DataProvider.Name, ((ClickHouseDataProvider)db.DataProvider).Provider);
+
+			// temporary workaround for https://github.com/Octonica/ClickHouseClient/issues/54
+			using (var db = context.IsAnyOf(ProviderName.ClickHouseOctonica)
+				? CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(provider.Adapter.ConnectionType, cs, null)!)
+				: CreateDataConnection(provider, context, type, provider.Adapter.ConnectionType))
+			{
+				var trace = string.Empty;
+				db.OnTraceConnection += (TraceInfo ti) =>
+				{
+					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						trace = ti.SqlText;
+				};
+
+				// native bulk copy not supported for mysql interface
+				if (!context.IsAnyOf(ProviderName.ClickHouseMySql))
+				{
+					TestBulkCopy();
+					await TestBulkCopyAsync();
+				}
+
+				void TestBulkCopy()
+				{
+					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
+					{
+						long copied  = 0;
+						var  options = GetDefaultBulkCopyOptions(context) with
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied
+							};
+
+						db.BulkCopy(
+							options,
+							Enumerable.Range(0, 1000).Select(n => new ClickHouseBulkCopyTable() { ID = 2000 + n }));
+
+						// Client provider supports only async API
+						if (context.IsAnyOf(ProviderName.ClickHouseClient))
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
+						else
+							Assert.AreEqual(true, trace.Contains("INSERT INTO"));
+						Assert.AreEqual(1000, copied);
+					}
+				}
+
+				async Task TestBulkCopyAsync()
+				{
+					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
+					{
+						long copied  = 0;
+						var  options = GetDefaultBulkCopyOptions(context) with
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied
+							};
+
+						await db.BulkCopyAsync(
+							options,
+							Enumerable.Range(0, 1000).Select(n => new ClickHouseBulkCopyTable() { ID = 2000 + n }));
+
+						if (context.IsAnyOf(ProviderName.ClickHouseClient))
+							Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
+						else
+							Assert.AreEqual(true, trace.Contains("INSERT INTO"));
+						Assert.AreEqual(1000, copied);
+					}
+				}
+			}
+		}
+
 		public enum ConnectionType
 		{
 			Raw,
@@ -1704,7 +1804,7 @@ namespace Tests.Data
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null)
 		{
-			var db = new DataConnection(provider, () =>
+			var db = new DataConnection(provider, options =>
 			{
 				// don't create connection using provider, or it will initialize types
 				var cn = connectionFactory(DataConnection.GetConnectionString(context) + csExtra);

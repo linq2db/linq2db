@@ -20,16 +20,16 @@ namespace Cli.Default.SqlServerNorthwind
 
 		#region Associations
 		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(CustomerId), OtherKey = nameof(SqlServerNorthwind.Customer.CustomerId))]
-		public Customer Customer { get; set; } = null!;
-
-		/// <summary>
 		/// FK_CustomerCustomerDemo
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(CustomerTypeId), OtherKey = nameof(CustomerDemographic.CustomerTypeId))]
-		public CustomerDemographic CustomerType { get; set; } = null!;
+		public CustomerDemographic FkCustomerCustomerDemo { get; set; } = null!;
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_Customers
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(CustomerId), OtherKey = nameof(Customer.CustomerId))]
+		public Customer Customers { get; set; } = null!;
 		#endregion
 	}
 }

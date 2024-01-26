@@ -1,9 +1,9 @@
-﻿#if NET472
-using System.Data.Linq.Mapping;
-using System.IO;
+﻿using System.IO;
+using System.Linq;
 using System.Text;
 
 using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
 using NUnit.Framework;
@@ -38,9 +38,9 @@ namespace Tests.Metadata
 						</ColumnAttribute>
 					</Member>
 					<Member Name='Property1'>
-						<System.Data.Linq.Mapping.ColumnAttribute>
+						<LinqToDB.Mapping.ColumnAttribute>
 							<Name Value='TestName' />
-						</System.Data.Linq.Mapping.ColumnAttribute>
+						</LinqToDB.Mapping.ColumnAttribute>
 					</Member>
 				</Type>
 			</Types>";
@@ -55,7 +55,7 @@ namespace Tests.Metadata
 		public void TypeAttribute()
 		{
 			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attrs = rd.GetAttributes<TableAttribute>(typeof(XmlReaderTests));
+			var attrs = rd.GetAttributes(typeof(XmlReaderTests)).OfType<TableAttribute>().ToArray();
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
@@ -68,7 +68,8 @@ namespace Tests.Metadata
 		public void FieldAttribute()
 		{
 			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Field1));
+			var attrs = rd.GetAttributes(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Field1))
+				.OfType<ColumnAttribute>().ToArray();
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
@@ -81,7 +82,8 @@ namespace Tests.Metadata
 		public void PropertyAttribute()
 		{
 			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Property1));
+			var attrs = rd.GetAttributes(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Property1))
+				.OfType<ColumnAttribute>().ToArray();
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
@@ -89,4 +91,3 @@ namespace Tests.Metadata
 		}
 	}
 }
-#endif

@@ -1,37 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using LinqToDB;
-using LinqToDB.Configuration;
-using NUnit.Framework;
 
+using LinqToDB;
 using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using System.Data;
 	using Model;
-	using Tests.Tools;
+	using Tools;
 
 	[TestFixture]
 	public class TraceTests : TestBase
 	{
 		private TraceLevel                           OriginalTraceLevel { get; set; }
-		private Action<TraceInfo>                    OriginalOnTrace    { get; set; } = null!;
 		private Action<string?, string?, TraceLevel> OriginalWrite      { get; set; } = null!;
 
 
 		[OneTimeSetUp]
 		public void SetTraceInfoLevel()
 		{
-			using (var db = new DataConnection())
-			{
-				//gets the default static on trace so it'll be reset after the tests are done
-				OriginalOnTrace = db.OnTraceConnection;
-			}
-
 			OriginalTraceLevel               = DataConnection.TraceSwitch.Level;
 			OriginalWrite                    = DataConnection.WriteTraceLine;
 			DataConnection.TraceSwitch.Level = TraceLevel.Info;
@@ -41,9 +34,6 @@ namespace Tests.Data
 		public void RestoreOriginalTraceLevel()
 		{
 			DataConnection.TraceSwitch.Level = OriginalTraceLevel;
-#pragma warning disable CS0618 // Type or member is obsolete
-			DataConnection.OnTrace           = OriginalOnTrace;
-#pragma warning restore CS0618 // Type or member is obsolete
 			DataConnection.WriteTraceLine    = OriginalWrite;
 		}
 
@@ -136,7 +126,7 @@ namespace Tests.Data
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
 				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
+				Assert.That(events[TraceInfoStep.Completed]!.Command, Is.Null);
 				Assert.NotNull(command);
 
 				// steps called once
@@ -494,14 +484,14 @@ namespace Tests.Data
 					// Begin transaction command is reported on each step
 					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
 					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
-					
+
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					db.CommitTransaction();
 
 					// Commit transaction command is reported on each step
 					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
 					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
-					
+
 					// steps called once for BeginTransaction once for Update and once for CommitTransaction
 					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
 					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
@@ -514,7 +504,7 @@ namespace Tests.Data
 					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
 				}
 			}
-			
+
 		}
 
 		[Test]
@@ -728,38 +718,17 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void OnTraceConnectionShouldUseStatic()
-		{
-			bool traceCalled = false;
-#pragma warning disable CS0618 // Type or member is obsolete
-			DataConnection.OnTrace = info => traceCalled = true;
-#pragma warning restore CS0618 // Type or member is obsolete
-
-			using (var db = new DataConnection())
-			{
-				db.OnTraceConnection(new TraceInfo(db, TraceInfoStep.BeforeExecute, TraceOperation.BuildMapping, false));
-			}
-			Assert.True(traceCalled);
-		}
-
-		[Test]
 		public void OnTraceConnectionShouldUseFromBuilder()
 		{
-			bool defaultTraceCalled = false;
-#pragma warning disable CS0618 // Type or member is obsolete
-			DataConnection.OnTrace = info => defaultTraceCalled = true;
-#pragma warning restore CS0618 // Type or member is obsolete
-
 			bool builderTraceCalled = false;
-			var builder = new LinqToDBConnectionOptionsBuilder().WithTracing(info => builderTraceCalled = true);
+			var builder = new DataOptions().UseTracing(info => builderTraceCalled = true);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder))
 			{
 				db.OnTraceConnection(new TraceInfo(db, TraceInfoStep.BeforeExecute, TraceOperation.BuildMapping, false));
 			}
 
 			Assert.True(builderTraceCalled, "because the builder trace should have been called");
-			Assert.False(defaultTraceCalled, "because the static trace should not have been called");
 		}
 
 		[Test]
@@ -778,9 +747,9 @@ namespace Tests.Data
 		{
 			var staticTraceLevel = DataConnection.TraceSwitch.Level;
 			var builderTraceLevel = staticTraceLevel + 1;
-			var builder = new LinqToDBConnectionOptionsBuilder().WithTraceLevel(builderTraceLevel);
+			var builder = new DataOptions().UseTraceLevel(builderTraceLevel);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder))
 			{
 				Assert.AreEqual(builderTraceLevel, db.TraceSwitchConnection.Level);
 				Assert.AreNotEqual(staticTraceLevel, db.TraceSwitchConnection.Level);
@@ -808,10 +777,10 @@ namespace Tests.Data
 			DataConnection.WriteTraceLine = (s, s1, arg3) => staticWriteCalled = true;
 
 			var builderWriteCalled = false;
-			var builder = new LinqToDBConnectionOptionsBuilder()
-				.WriteTraceWith((s, s1, a3) => builderWriteCalled = true);
+			var builder = new DataOptions()
+				.UseTraceWith((s, s1, a3) => builderWriteCalled = true);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder))
 			{
 				db.WriteTraceLineConnection(null, null, TraceLevel.Info);
 			}

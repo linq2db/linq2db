@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
@@ -29,28 +30,43 @@ namespace LinqToDB.DataProvider
 		{
 			Name             = name;
 			MappingSchema    = mappingSchema;
-			SqlProviderFlags = new SqlProviderFlags
+			// set default flags values explicitly even for default values
+			SqlProviderFlags = new SqlProviderFlags()
 			{
+				IsSybaseBuggyGroupBy                 = false,
+				IsParameterOrderDependent            = false,
 				AcceptsTakeAsParameter               = true,
+				AcceptsTakeAsParameterIfSkip         = false,
 				IsTakeSupported                      = true,
 				IsSkipSupported                      = true,
+				IsSkipSupportedIfTake                = false,
+				TakeHintsSupported                   = null,
 				IsSubQueryTakeSupported              = true,
 				IsSubQueryColumnSupported            = true,
+				IsSubQueryOrderBySupported           = false,
 				IsCountSubQuerySupported             = true,
+				IsIdentityParameterRequired          = false,
+				IsApplyJoinSupported                 = false,
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
-				IsDistinctOrderBySupported           = true,
-				IsSubQueryOrderBySupported           = false,
 				IsUpdateSetTableAliasSupported       = true,
-				TakeHintsSupported                   = null,
+				OutputDeleteUseSpecialTable          = false,
+				OutputInsertUseSpecialTable          = false,
+				OutputUpdateUseSpecialTables         = false,
+				IsGroupByColumnRequred               = false,
 				IsCrossJoinSupported                 = true,
 				IsInnerJoinAsCrossSupported          = true,
+				IsCommonTableExpressionsSupported    = false,
+				IsDistinctOrderBySupported           = true,
 				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
-				IsUpdateFromSupported                = true,
+				IsCountDistinctSupported             = false,
 				AcceptsOuterExpressionInAggregate    = true,
+				IsUpdateFromSupported                = true,
+				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,
+				RowConstructorSupport                = RowFeature.None,
 			};
 
 			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));
@@ -78,6 +94,7 @@ namespace LinqToDB.DataProvider
 		public virtual  MappingSchema    MappingSchema         { get; }
 		public          SqlProviderFlags SqlProviderFlags      { get; }
 		public abstract TableOptions     SupportedTableOptions { get; }
+		public virtual  bool             TransactionsSupported => true;
 
 		public static Func<IDataProvider, DbConnection, DbConnection>? OnConnectionCreated { get; set; }
 
@@ -86,7 +103,19 @@ namespace LinqToDB.DataProvider
 		}
 
 		private int? _id;
-		public  int   ID => _id ??= new IdentifierBuilder(Name).CreateID();
+		public  int   ID
+		{
+			get
+			{
+				if (_id == null)
+				{
+					using var idBuilder = new IdentifierBuilder(Name);
+					_id = idBuilder.CreateID();
+				}
+
+				return _id.Value;
+			}
+		}
 
 		public DbConnection CreateConnection(string connectionString)
 		{
@@ -99,8 +128,8 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected abstract DbConnection  CreateConnectionInternal (string connectionString);
-		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema);
-		public    abstract ISqlOptimizer GetSqlOptimizer ();
+		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema   mappingSchema, DataOptions dataOptions);
+		public    abstract ISqlOptimizer GetSqlOptimizer (DataOptions     dataOptions);
 
 		public virtual DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
@@ -212,11 +241,11 @@ namespace LinqToDB.DataProvider
 
 		#region GetReaderExpression
 
-		public virtual Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
+		public virtual Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type? toType)
 		{
 			var fieldType    = reader.GetFieldType(idx);
 			var providerType = reader.GetProviderSpecificFieldType(idx);
-			string? typeName = reader.GetDataTypeName(idx);
+			var typeName     = reader.GetDataTypeName(idx);
 
 			if (fieldType == null)
 			{
@@ -229,22 +258,21 @@ namespace LinqToDB.DataProvider
 #if DEBUG1
 			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
 			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
-			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}".Args(
+			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}",
 				toType       == null ? "(null)" : toType.Name,
 				providerType == null ? "(null)" : providerType.Name,
 				fieldType.Name,
-				typeName ?? "(null)"));
+				typeName ?? "(null)");
 			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
 
 			foreach (var ex in ReaderExpressions)
 			{
-				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21} {4}"
-					.Args(
-						ex.Key.ToType            == null ? null : ex.Key.ToType.Name,
-						ex.Key.ProviderFieldType == null ? null : ex.Key.ProviderFieldType.Name,
-						ex.Key.FieldType         == null ? null : ex.Key.FieldType.Name,
-						ex.Key.DataTypeName,
-						ex.Value));
+				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21} {4}",
+					ex.Key.ToType?.Name,
+					ex.Key.ProviderFieldType?.Name,
+					ex.Key.FieldType?.Name,
+					ex.Key.DataTypeName,
+					ex.Value);
 			}
 #endif
 
@@ -306,7 +334,7 @@ namespace LinqToDB.DataProvider
 			return false;
 		}
 
-		public virtual bool? IsDBNullAllowed(DbDataReader reader, int idx)
+		public virtual bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
 			var st = reader.GetSchemaTable();
 			return st == null || st.Rows[idx].IsNull("AllowDBNull") || (bool)st.Rows[idx]["AllowDBNull"];
@@ -442,28 +470,30 @@ namespace LinqToDB.DataProvider
 
 		#region BulkCopy
 
-		public virtual BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public virtual BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 			where T : notnull
 		{
-			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, table, options, source);
+			return new BasicBulkCopy().BulkCopy(options.BulkCopyOptions.BulkCopyType, table, options, source);
 		}
 
-		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 			where T : notnull
 		{
-			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
 
 #if NATIVE_ASYNC
-		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			where T: notnull
 		{
-			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
 #endif
 
 		#endregion
+
+		public virtual IQueryParametersNormalizer GetQueryParameterNormalizer() => new UniqueParametersNormalizer();
 	}
 }

@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Diagnostics;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
-
 
 namespace Tests
 {
@@ -37,7 +35,7 @@ namespace Tests
 			return Interlocked.Increment(ref _cnt);
 		}
 
-		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
+		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
 		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
 
@@ -56,6 +54,7 @@ namespace Tests
 		[Sql.Expression("current server", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_database", ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
 		[Sql.Function("DATABASE"        , ServerSideOnly = true, Configuration = ProviderName.MySql)]
+		[Sql.Function("currentDatabase" , ServerSideOnly = true, Configuration = ProviderName.ClickHouse)]
 		[Sql.Function("DB_NAME"         , ServerSideOnly = true)]
 		private static string DbName()
 		{
@@ -146,9 +145,13 @@ namespace Tests
 			return context switch
 			{
 				string when context.IsAnyOf(TestProvName.AllSQLite)   => "main",
-				string when context.IsAnyOf(TestProvName.AllAccess)   => "Database\\TestData",
+				// Access adds extension automatically to database name, but if there are
+				// dots in name, extension not added as dot treated as extension separator by Access
+				string when context.IsAnyOf(ProviderName.Access)      => "Database\\TestData",
+				string when context.IsAnyOf(ProviderName.AccessOdbc)  => "Database\\TestData.ODBC.mdb",
 				string when context.IsAnyOf(
 					TestProvName.AllMySql,
+					TestProvName.AllClickHouse,
 					TestProvName.AllPostgreSQL,
 					ProviderName.DB2,
 					TestProvName.AllSybase,
@@ -168,7 +171,7 @@ namespace Tests
 				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
 				if (match.Success)
 				{
-					var versionParts = match.Value.Split('.').Select(_ => int.Parse(_)).ToArray();
+					var versionParts = match.Value.Split('.').Select(int.Parse).ToArray();
 
 					return (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604);
 				}
@@ -188,7 +191,7 @@ namespace Tests
 			return fix ? new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second) : value;
 		}
 
-		class FirebirdTempTable<T> : TempTable<T>
+		sealed class FirebirdTempTable<T> : TempTable<T>
 			where T : notnull
 		{
 			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
@@ -235,7 +238,7 @@ namespace Tests
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.NotSet)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.CheckExistence)
 			where T : notnull
 		{
 			try

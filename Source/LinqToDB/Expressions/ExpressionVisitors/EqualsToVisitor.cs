@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 namespace LinqToDB.Expressions
 {
 	using Common;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Linq;
 	using Reflection;
 
@@ -64,7 +64,7 @@ namespace LinqToDB.Expressions
 			return new EqualsToInfo(dataContext, queryableAccessorDic, queryableMemberAccessorDic, queryDependedObjects, compareConstantValues);
 		}
 
-		internal class EqualsToInfo
+		internal sealed class EqualsToInfo
 		{
 			public EqualsToInfo(
 				IDataContext                                              dataContext,
@@ -443,11 +443,10 @@ namespace LinqToDB.Expressions
 
 					for (var i = 0; i < parameters.Length; i++)
 					{
-						var attr = parameters[i].GetCustomAttribute<SqlQueryDependentAttribute>(false);
+						var attr = parameters[i].GetAttribute<SqlQueryDependentAttribute>();
 						if (attr != null)
 						{
-							if (attributes == null)
-								attributes = new SqlQueryDependentAttribute[parameters.Length];
+							attributes  ??= new SqlQueryDependentAttribute[parameters.Length];
 							attributes[i] = attr;
 						}
 					}
@@ -466,7 +465,7 @@ namespace LinqToDB.Expressions
 					var flags = new bool[parameters.Length];
 
 					for (var i = 0; i < parameters.Length; i++)
-						flags[i] = parameters[i].GetCustomAttribute<SkipIfConstantAttribute>(false) != null;
+						flags[i] = parameters[i].HasAttribute<SkipIfConstantAttribute>();
 
 					return flags;
 				});
@@ -544,8 +543,8 @@ namespace LinqToDB.Expressions
 			{
 				if (arg1.NodeType == ExpressionType.Constant && arg2.NodeType == ExpressionType.Constant)
 				{
-					var query1 = ((Sql.IQueryableContainer)arg1.EvaluateExpression()!).Query;
-					var query2 = ((Sql.IQueryableContainer)arg2.EvaluateExpression()!).Query;
+					var query1 = (arg1.EvaluateExpression<Sql.IQueryableContainer>()!).Query;
+					var query2 = (arg2.EvaluateExpression<Sql.IQueryableContainer>()!).Query;
 					return EqualsTo(query1.Expression, query2.Expression, info);
 				}
 			}

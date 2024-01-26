@@ -424,13 +424,14 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<PersonWithDynamicStore>().HasTableName("Person")
 				.HasPrimaryKey(x => Sql.Property<int>(x, "ID"))
 				.Property(x => Sql.Property<string>(x, "FirstName")).IsNullable(false)
 				.Property(x => Sql.Property<string>(x, "LastName")).IsNullable(false)
 				.Property(x => Sql.Property<string>(x, "MiddleName"))
-				.Association(x => Sql.Property<Patient>(x, "Patient"), x => Sql.Property<int>(x, "ID"), x => x.PersonID);
+				.Association(x => Sql.Property<Patient>(x, "Patient"), x => Sql.Property<int>(x, "ID"), x => x.PersonID)
+				.Build();
 
 			return ms;
 		}
@@ -523,15 +524,17 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatWithDynamic([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		public void TestConcatWithDynamic([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var mappingSchema = new MappingSchema();
-			var builder = mappingSchema.GetFluentMappingBuilder()
+			var builder = new FluentMappingBuilder(mappingSchema)
 				.Entity<SomeClassWithDynamic>();
 
 			builder.Property(x => x.Description).HasColumnName("F066_04");
 			builder.Property(x => Sql.Property<string>(x, "F066_05"));
 			builder.Property(x => Sql.Property<string>(x, "F066_00"));
+
+			builder.Build();
 
 			var testData1 = new[]
 			{
@@ -561,18 +564,15 @@ namespace Tests.Linq
 			}
 		}
 
-
-		class BananaTable
+		sealed class BananaTable
 		{
 			public int Id { get; set; }
 			public string? Property { get; set; }
 		}
 
-		[Test]
-		[ActiveIssue("https://stackoverflow.com/questions/61081571", Details = "Expression 't.Id' is not a Field.")]
+		[Test(Description = "https://stackoverflow.com/questions/61081571: Expression 't.Id' is not a Field.")]
 		public void DynamicGoesBanana1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BananaTable>())
 			{
@@ -600,9 +600,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DynamicGoesBanana2([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		public void DynamicGoesBanana2([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
-
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BananaTable>())
 			{
@@ -630,9 +629,8 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
-		public void Issue3158([DataSources] string context)
+		public void Issue3158([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

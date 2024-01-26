@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using System.Linq;
 	using Extensions;
-	using SqlQuery;
+	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
@@ -13,11 +15,11 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement = base.Finalize(statement);
+			statement = base.Finalize(mappingSchema, statement, dataOptions);
 
 			return statement;
 		}
@@ -73,9 +75,9 @@ namespace LinqToDB.DataProvider.Firebird
 					if (caseSensitive == false)
 					{
 						predicate = new SqlPredicate.SearchString(
-							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+							PseudoFunctions.MakeToLower(predicate.Expr1),
 							predicate.IsNot,
-							new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2), predicate.Kind,
+							PseudoFunctions.MakeToLower(predicate.Expr2), predicate.Kind,
 							predicate.CaseSensitive);
 					}
 					else if (caseSensitive == true)
@@ -89,7 +91,7 @@ namespace LinqToDB.DataProvider.Firebird
 					}
 
 					return ConvertSearchStringPredicateViaLike(predicate, visitor);
-				}	
+				}
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 				{
 					expr = new SqlExpression(typeof(bool),
@@ -97,17 +99,17 @@ namespace LinqToDB.DataProvider.Firebird
 						Precedence.Comparison,
 						TryConvertToValue(
 							caseSensitive == false
-								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1)
+								? PseudoFunctions.MakeToLower(predicate.Expr1)
 								: caseSensitive == true
 									? new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1)
 									: predicate.Expr1,
 							visitor.Context.OptimizationContext.Context),
 						TryConvertToValue(
 							caseSensitive == false
-								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2)
+								? PseudoFunctions.MakeToLower(predicate.Expr2)
 								: predicate.Expr2, visitor.Context.OptimizationContext.Context)) {CanBeNull = false};
 					break;
-				}	
+				}
 				case SqlPredicate.SearchString.SearchKind.Contains:
 				{
 					if (caseSensitive == false)
@@ -133,7 +135,7 @@ namespace LinqToDB.DataProvider.Firebird
 						return ConvertSearchStringPredicateViaLike(predicate, visitor);
 					}
 					break;
-				}	
+				}
 				default:
 					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
@@ -141,12 +143,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
-				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions),
 				_                => statement,
 			};
 		}
@@ -167,24 +169,30 @@ namespace LinqToDB.DataProvider.Firebird
 						{
 							if (func.SystemType.ToUnderlying() == typeof(bool))
 							{
-								var ex = AlternativeConvertToBoolean(func, 1);
+								var ex = AlternativeConvertToBoolean(func, convertVisitor.Context.DataOptions, 1);
 								if (ex != null)
 									return ex;
 							}
 							break;
 						}
-						case "$Convert$":
+						case PseudoFunctions.CONVERT:
 						{
 							if (func.SystemType.ToUnderlying() == typeof(bool))
 							{
-								var ex = AlternativeConvertToBoolean(func, 2);
+								var ex = AlternativeConvertToBoolean(func, convertVisitor.Context.DataOptions, 2);
 								if (ex != null)
 									return ex;
 							}
 							else  if (func.SystemType.ToUnderlying() == typeof(string) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(Guid))
-								return new SqlFunction(func.SystemType, "UUID_TO_CHAR", func.Parameters[2]);
+								return new SqlFunction(func.SystemType, "UUID_TO_CHAR", false, true, func.Parameters[2])
+								{
+									CanBeNull = func.CanBeNull
+								};
 							else if (func.SystemType.ToUnderlying() == typeof(Guid) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(string))
-								return new SqlFunction(func.SystemType, "CHAR_TO_UUID", func.Parameters[2]);
+								return new SqlFunction(func.SystemType, "CHAR_TO_UUID", false, true, func.Parameters[2])
+								{
+									CanBeNull = func.CanBeNull
+								};
 							break;
 						}
 					}
@@ -226,19 +234,19 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override ISqlExpression ConvertFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
-			
+
 			return base.ConvertFunction(func);
 		}
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
 		{
-			statement = base.FinalizeStatement(statement, context);
+			statement = base.FinalizeStatement(statement, context, dataOptions);
 			statement = WrapParameters(statement, context);
 			return statement;
 		}
 
 		#region Wrap Parameters
-		private SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
+		private static SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
 		{
 			// for some reason Firebird doesn't use parameter type information (not supported?) is some places, so
 			// we need to wrap parameter into CAST() to add type information explicitly
@@ -259,78 +267,75 @@ namespace LinqToDB.DataProvider.Firebird
 					var paramValue = p.GetParameterValue(visitor.Context.ParameterValues);
 
 					// Don't cast in cast
-					if (visitor.ParentElement is SqlFunction convertFunc && convertFunc.Name == "$Convert$")
+					if (visitor.ParentElement is SqlFunction convertFunc && convertFunc.Name == PseudoFunctions.CONVERT)
+					{
+						// prevent removal by ConvertConvertion
+						if (!convertFunc.DoNotOptimize)
+							convertFunc.DoNotOptimize = CastRequired(visitor.Stack);
 						return e;
+					}
 
 					if (paramValue.DbDataType.SystemType == typeof(bool) && visitor.ParentElement is SqlFunction func && func.Name == "CASE")
 						return e;
 
-					var replace = false;
-					for (var i = visitor.Stack.Count - 1; i >= 0; i--)
-					{
-						// went outside of subquery, mission abort
-						if (visitor.Stack[i] is SelectQuery)
-							return e;
-
-						// part of select column
-						if (visitor.Stack[i] is SqlColumn)
-						{
-							replace = true;
-							break;
-						}
-
-						// part of output clause
-						if (visitor.Stack[i] is SqlOutputClause)
-						{
-							replace = true;
-							break;
-						}
-
-						// insert or update keys used in merge source select query
-						if (visitor.Stack[i] is SqlSetExpression set
-							&& i == 2
-							&& (visitor.Stack[i - 1] is SqlInsertClause || visitor.Stack[i - 1] is SqlUpdateClause)
-							&& visitor.Stack[i - 2] is SqlInsertOrUpdateStatement insertOrUpdate
-							&& insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
-						{
-							replace = true;
-							break;
-						}
-
-						// enumerable merge source
-						if (visitor.Stack[i] is SqlValuesTable)
-						{
-							replace = true;
-							break;
-						}
-
-						// complex insert/update statement, including merge
-						if (visitor.Stack[i] is SqlSetExpression
-							&& i >= 2
-							&& i < visitor.Stack.Count - 1 // not just parameter setter
-							&& (visitor.Stack[i - 1] is SqlUpdateClause
-								|| visitor.Stack[i - 1] is SqlInsertClause
-								|| visitor.Stack[i - 1] is SqlMergeOperationClause))
-						{
-							replace = true;
-							break;
-						}
-					}
-
-					if (!replace)
+					if (!CastRequired(visitor.Stack))
 						return e;
 
 					// TODO: temporary guard against cast to unknown type (Variant)
 					if (paramValue.DbDataType.DataType == DataType.Undefined && paramValue.DbDataType.SystemType == typeof(object))
 						return e;
 
-					return new SqlExpression(paramValue.DbDataType.SystemType, CASTEXPR, Precedence.Primary, p, new SqlDataType(paramValue.DbDataType));
+					return new SqlExpression(paramValue.DbDataType.SystemType, CASTEXPR, Precedence.Primary, p, new SqlDataType(paramValue.DbDataType))
+					{
+						CanBeNull = p.CanBeNull
+					};
 				}
 
 				return e;
 			}, withStack: true);
 
 			return statement;
+		}
+
+		private static bool CastRequired(IReadOnlyList<IQueryElement> parents)
+		{
+			for (var i = parents.Count - 1; i >= 0; i--)
+					{
+						// went outside of subquery, mission abort
+				if (parents[i] is SelectQuery)
+					return false;
+
+						// part of select column
+				if (parents[i] is SqlColumn)
+					return true;
+
+						// part of output clause
+				if (parents[i] is SqlOutputClause)
+					return true;
+
+						// insert or update keys used in merge source select query
+				if (parents[i] is SqlSetExpression set
+							&& i == 2
+					&& (parents[1] is SqlInsertClause || parents[1] is SqlUpdateClause)
+					&& parents[0] is SqlInsertOrUpdateStatement insertOrUpdate
+							&& insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
+					return true;
+
+						// enumerable merge source
+				if (parents[i] is SqlValuesTable)
+					return true;
+
+						// complex insert/update statement, including merge
+				if (parents[i] is SqlSetExpression
+							&& i >= 2
+					&& i < parents.Count - 1 // not just parameter setter
+					&& (parents[i - 1] is SqlUpdateClause
+						|| parents[i - 1] is SqlInsertClause
+						|| parents[i - 1] is SqlMergeOperationClause))
+					return true;
+					}
+
+			return false;
 		}
 
 		private const string CASTEXPR = "Cast({0} as {1})";

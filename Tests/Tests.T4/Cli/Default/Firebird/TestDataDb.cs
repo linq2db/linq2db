@@ -6,7 +6,6 @@
 // ---------------------------------------------------------------------------------------------------
 
 using LinqToDB;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using System.Linq;
 using System.Threading;
@@ -30,8 +29,8 @@ namespace Cli.Default.Firebird
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
-			: base(options)
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 		}

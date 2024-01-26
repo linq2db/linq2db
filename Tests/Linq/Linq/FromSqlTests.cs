@@ -19,7 +19,7 @@ namespace Tests.Linq
 	public class FromSqlTests : TestBase
 	{
 		[Table(Name = "sample_class")]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column("id")]
 			public int Id    { get; set; }
@@ -33,7 +33,7 @@ namespace Tests.Linq
 		}
 
 		[Table(Name = "sample_other_class")]
-		class SomeOtherClass
+		sealed class SomeOtherClass
 		{
 			[Column("id")]
 			public int Id       { get; set; }
@@ -50,7 +50,7 @@ namespace Tests.Linq
 			return Enumerable.Range(1, 20).Select(i => new SampleClass {Id = i, Value = "Str_" + i}).ToArray();
 		}
 
-		class ToTableName<T> : IToSqlConverter
+		sealed class ToTableName<T> : IToSqlConverter
 			where T : notnull
 		{
 			public ToTableName(ITable<T> table)
@@ -62,7 +62,7 @@ namespace Tests.Linq
 
 			public ISqlExpression ToSql(Expression expression)
 			{
-				return new SqlTable(typeof(T))
+				return new SqlTable(MappingSchema.Default.GetEntityDescriptor(typeof(T)))
 				{
 					TableName = new (_table.TableName)
 				};
@@ -75,7 +75,7 @@ namespace Tests.Linq
 			return new ToTableName<T>(table);
 		}
 
-		class ToColumnName : IToSqlConverter
+		sealed class ToColumnName : IToSqlConverter
 		{
 			public ToColumnName(string columnName)
 			{
@@ -107,12 +107,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -132,12 +134,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -158,12 +162,13 @@ namespace Tests.Linq
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id });
 
-				var projection = queryWithProjection.ToArray();
+				var projection = queryWithProjection.OrderBy(_ => _.Id).ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -186,12 +191,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -214,12 +221,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -239,12 +248,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -268,12 +279,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -298,12 +311,14 @@ namespace Tests.Linq
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
+					.OrderBy(_ => _.Id)
 					.ToArray();
 
 				Assert.AreEqual(expected, projection);
@@ -322,10 +337,11 @@ namespace Tests.Linq
 
 			var idFilter = 1;
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<SampleClass>()
 				.Association(x => x.AssociatedOne,
-					(x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter));
+					(x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter))
+				.Build();
 
 			using var db    = GetDataContext(context, ms);
 			using var table = db.CreateLocalTable(GenerateTestData());
@@ -354,9 +370,10 @@ namespace Tests.Linq
 
 				var idFilter = 1;
 
-				ms.GetFluentMappingBuilder()
+				new FluentMappingBuilder(ms)
 					.Entity<SampleClass>()
-						.Association(x => x.AssociatedOne, (x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter));
+						.Association(x => x.AssociatedOne, (x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter))
+					.Build();
 
 				using var db    = GetDataContext(context, ms);
 				using var table = db.CreateLocalTable(GenerateTestData());
@@ -486,7 +503,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestInvaildAliasExprUsage(
-			[IncludeDataSources(TestProvName.AllPostgreSQL)]
+			[IncludeDataSources(TestProvName.AllPostgreSQL15Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -499,7 +516,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_Interpolated_DataParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_Interpolated_DataParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -525,7 +542,7 @@ namespace Tests.Linq
 
 		// TODO: right now we don't create parameter from endId, as expression compiler pass it by value
 		[Test]
-		public void TestQueryCaching_Interpolated_ValueParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_Interpolated_ValueParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -550,7 +567,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_InterpolatedCache_BySqlExpressionParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_InterpolatedCache_BySqlExpressionParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table1 = db.CreateLocalTable(GenerateTestData()))
@@ -577,7 +594,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_Format_DataParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_Format_DataParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -605,7 +622,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_Format_ValueParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_Format_ValueParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -633,7 +650,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_Format_BySqlExpressionParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestQueryCaching_Format_BySqlExpressionParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table1 = db.CreateLocalTable(GenerateTestData()))
@@ -662,19 +679,19 @@ namespace Tests.Linq
 			}
 		}
 
-		class Scalar<T>
+		sealed class Scalar<T>
 		{
 			public T Value1 = default!;
 		}
 
-		class Values<T>
+		sealed class Values<T>
 		{
 			public T Value1 = default!;
 			public T Value2 = default!;
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Interpolation1([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Interpolation1([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -695,7 +712,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Formatted1([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Formatted1([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -716,7 +733,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Interpolation2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Interpolation2([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -738,7 +755,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Formatted2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Formatted2([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -760,7 +777,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Formatted21([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Formatted21([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -782,7 +799,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Interpolation3([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Interpolation3([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -804,7 +821,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Formatted3([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Formatted3([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -826,7 +843,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Interpolation4([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Interpolation4([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -848,7 +865,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Formatted4([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Formatted4([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -870,7 +887,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Interpolation5([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Interpolation5([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -892,7 +909,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Formatted5([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Formatted5([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -914,7 +931,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Formatted51([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Formatted51([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			using (var db = GetDataContext(context))
@@ -936,7 +953,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryCaching_ByParameter_Formatted52([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TestQueryCaching_ByParameter_Formatted52([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
 			var sql = "SELECT {0} as Value1, {1} as Value2 /*TestQueryCaching_ByParameter_Formatted52*/";

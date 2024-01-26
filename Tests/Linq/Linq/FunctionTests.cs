@@ -512,7 +512,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum2([DataSources] string context)
+		public void Sum2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -607,7 +607,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MatchFtsTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void MatchFtsTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -621,13 +621,13 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class TagsTable
+		sealed class TagsTable
 		{
 			[Column] public string? Name { get; set; }
 		}
 
 		[Test]
-		public void Issue3543Test([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		public void Issue3543Test([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tags = db.CreateLocalTable<TagsTable>();
@@ -642,7 +642,7 @@ namespace Tests.Linq
 
 	public static class SqlLite
 	{
-		class MatchBuilder : Sql.IExtensionCallBuilder
+		sealed class MatchBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

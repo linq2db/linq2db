@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Reflection;
 
-	class IgnoreFiltersBuilder : MethodCallBuilder
+	sealed class IgnoreFiltersBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var types = (Type[])methodCall.Arguments[1].EvaluateExpression()!;
+			var types = methodCall.Arguments[1].EvaluateExpression<Type[]>(builder.DataContext)!;
 
 			builder.PushDisabledQueryFilters(types);
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));

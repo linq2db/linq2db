@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Data.Common;
@@ -12,10 +11,10 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using SqlQuery;
 
-	class MySqlSqlBuilder : BasicSqlBuilder
+	sealed class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
-		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -25,12 +24,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
-		}
-
-		static MySqlSqlBuilder()
-		{
-			ParameterSymbol = '@';
+			return new MySqlSqlBuilder(this) { _hintBuilder = _hintBuilder };
 		}
 
 		protected override bool   IsRecursiveCteKeywordRequired   => true;
@@ -86,15 +80,15 @@ namespace LinqToDB.DataProvider.MySql
 				AppendIndent()
 					.AppendFormat(
 						"LIMIT {0}, {1}",
-						WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.SkipValue)),
+						WithStringBuilderBuildExpression(selectQuery.Select.SkipValue),
 						selectQuery.Select.TakeValue == null ?
 							long.MaxValue.ToString() :
-							WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.TakeValue).ToString()))
+							WithStringBuilderBuildExpression(selectQuery.Select.TakeValue))
 					.AppendLine();
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			// mysql has limited support for types in type-CAST expressions
 			if (!forCreateTable)
@@ -158,9 +152,9 @@ namespace LinqToDB.DataProvider.MySql
 					_ => null
 				})
 				{
-					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable); break;
-					case "$decimal$" : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable); break;
-					case var t       : StringBuilder.Append(t);                                             break;
+					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable, canBeNull); break;
+					case "$decimal$" : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable, canBeNull); break;
+					case var t       : StringBuilder.Append(t);                                                        break;
 				};
 
 				return;
@@ -250,8 +244,8 @@ namespace LinqToDB.DataProvider.MySql
 				_ => null
 			})
 						{
-				case null  : base.BuildDataTypeFromDataType(type, forCreateTable); break;
-				case var t : StringBuilder.Append(t);                              break;
+				case null  : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
+				case var t : StringBuilder.Append(t);                                         break;
 			};
 		}
 
@@ -284,7 +278,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			StringBuilder.Remove(pos, 4).Insert(pos, "UPDATE");
 
-			base.BuildUpdateSet(selectQuery, updateClause);
+			BuildUpdateSet(selectQuery, updateClause);
 		}
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
@@ -294,14 +288,15 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
-				BuildStep = Step.SelectClause;  BuildSelectClause(statement.SelectQuery);
-				BuildStep = Step.FromClause;    BuildFromClause(statement, statement.SelectQuery);
-				BuildStep = Step.WhereClause;   BuildWhereClause(statement.SelectQuery);
-				BuildStep = Step.GroupByClause; BuildGroupByClause(statement.SelectQuery);
-				BuildStep = Step.HavingClause;  BuildHavingClause(statement.SelectQuery);
-				BuildStep = Step.OrderByClause; BuildOrderByClause(statement.SelectQuery);
-				BuildStep = Step.OffsetLimit;   BuildOffsetLimit(statement.SelectQuery);
+				BuildStep = Step.WithClause;      BuildWithClause        (statement.GetWithClause());
+				BuildStep = Step.SelectClause;    BuildSelectClause      (statement.SelectQuery);
+				BuildStep = Step.FromClause;      BuildFromClause        (statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause;     BuildWhereClause       (statement.SelectQuery);
+				BuildStep = Step.GroupByClause;   BuildGroupByClause     (statement.SelectQuery);
+				BuildStep = Step.HavingClause;    BuildHavingClause      (statement.SelectQuery);
+				BuildStep = Step.OrderByClause;   BuildOrderByClause     (statement.SelectQuery);
+				BuildStep = Step.OffsetLimit;     BuildOffsetLimit       (statement.SelectQuery);
+				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 			}
 
 			if (insertClause.WithIdentity)
@@ -318,57 +313,25 @@ namespace LinqToDB.DataProvider.MySql
 				base.BuildFromClause(statement, selectQuery);
 		}
 
-		public static char ParameterSymbol           { get; set; }
-		public static bool TryConvertParameterSymbol { get; set; }
-
-		private static string _commandParameterPrefix = string.Empty;
-		public  static string  CommandParameterPrefix
-		{
-			get => _commandParameterPrefix;
-			set => _commandParameterPrefix = value ?? string.Empty;
-		}
-
-		private static string _sprocParameterPrefix = string.Empty;
-		public  static string  SprocParameterPrefix
-		{
-			get => _sprocParameterPrefix;
-			set => _sprocParameterPrefix = value ?? string.Empty;
-		}
-
-		private static List<char>? _convertParameterSymbols;
-		public  static List<char>  ConvertParameterSymbols
-		{
-			get => _convertParameterSymbols ??= new List<char>();
-			set => _convertParameterSymbols = value ?? new List<char>();
-		}
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
-				case ConvertType.NameToQueryParameter:
-					return sb.Append(ParameterSymbol).Append(value);
-
+				case ConvertType.NameToQueryParameter  :
 				case ConvertType.NameToCommandParameter:
-					return sb.Append(ParameterSymbol).Append(CommandParameterPrefix).Append(value);
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
 							throw new ArgumentException("Argument 'value' must represent parameter name.");
 
-					if (value[0] == ParameterSymbol)
+					if (value[0] == '@')
 						value = value.Substring(1);
 
-					if (value.StartsWith(SprocParameterPrefix, StringComparison.Ordinal))
-						value = value.Substring(SprocParameterPrefix.Length);
-
-					return sb.Append(ParameterSymbol).Append(SprocParameterPrefix).Append(value);
+					return sb.Append('@').Append(value);
 
 				case ConvertType.SprocParameterToName:
-					value = (value.Length > 0 && (value[0] == ParameterSymbol || (TryConvertParameterSymbol && ConvertParameterSymbols.Contains(value[0])))) ? value.Substring(1) : value;
-
-					if (!string.IsNullOrEmpty(SprocParameterPrefix) && value.StartsWith(SprocParameterPrefix))
-						value = value.Substring(SprocParameterPrefix.Length);
+					value = value.Length > 0 && value[0] == '@' ? value.Substring(1) : value;
 
 					return sb.Append(value);
 
@@ -475,7 +438,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			if (name.Database != null)
 			{
@@ -595,16 +558,16 @@ namespace LinqToDB.DataProvider.MySql
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
-		protected StringBuilder? HintBuilder;
+		private StringBuilder? _hintBuilder;
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;
 
 		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
 		{
-			if (HintBuilder == null)
+			if (_hintBuilder == null)
 			{
-				HintBuilder        = new();
+				_hintBuilder        = new();
 				_isTopLevelBuilder = true;
 				_hintPosition      = StringBuilder.Length;
 
@@ -612,7 +575,7 @@ namespace LinqToDB.DataProvider.MySql
 					_hintPosition -= " INTO ".Length;
 
 				if (selectQuery?.QueryName is {} queryName)
-					HintBuilder
+					_hintBuilder
 						.Append("QB_NAME(")
 						.Append(queryName)
 						.Append(')')
@@ -632,19 +595,19 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			base.FinalizeBuildQuery(statement);
 
-			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
+			if (statement.SqlQueryExtensions is not null && _hintBuilder is not null)
 			{
-				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')
-					HintBuilder.Append(' ');
-				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null);
+				if (_hintBuilder.Length > 0 && _hintBuilder[^1] != ' ')
+					_hintBuilder.Append(' ');
+				BuildQueryExtensions(_hintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 			}
 
-			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
+			if (_isTopLevelBuilder && _hintBuilder!.Length > 0)
 			{
-				HintBuilder.Insert(0, " /*+ ");
-				HintBuilder.Append(" */");
+				_hintBuilder.Insert(0, " /*+ ");
+				_hintBuilder.Append(" */");
 
-				StringBuilder.Insert(_hintPosition, HintBuilder);
+				StringBuilder.Insert(_hintPosition, _hintBuilder);
 			}
 		}
 
@@ -652,14 +615,42 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			if (table.SqlQueryExtensions is not null)
 			{
-				if (HintBuilder is not null)
-					BuildTableExtensions(HintBuilder, table, alias, null, " ", null, ext =>
+				if (_hintBuilder is not null)
+					BuildTableExtensions(_hintBuilder, table, alias, null, " ", null, ext =>
 						ext.Scope is
 							Sql.QueryExtensionScope.TableHint or
 							Sql.QueryExtensionScope.TablesInScopeHint);
 
 				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null, ext => ext.Scope is Sql.QueryExtensionScope.IndexHint);
 			}
+		}
+
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SelectQuery?.SqlQueryExtensions is not null)
+			{
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+				{
+					var buffer = new char[StringBuilder.Length - len];
+
+					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+
+					prefix += new string(buffer);
+				}
+
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
+			}
+		}
+
+		protected override void BuildSql()
+		{
+			BuildSqlForUnion();
 		}
 	}
 }

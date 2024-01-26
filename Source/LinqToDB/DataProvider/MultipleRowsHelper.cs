@@ -8,46 +8,49 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Extensions;
 
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
 		where T : notnull
 	{
-		public MultipleRowsHelper(ITable<T> table, BulkCopyOptions options)
+		public MultipleRowsHelper(ITable<T> table, DataOptions options)
 			: base(table.DataContext, options, typeof(T))
 		{
-			TableName = BasicBulkCopy.GetTableName(SqlBuilder, options, table);
+			TableName = BasicBulkCopy.GetTableName(SqlBuilder, options.BulkCopyOptions, table);
 		}
 	}
 
 	public abstract class MultipleRowsHelper
 	{
-		protected MultipleRowsHelper(IDataContext dataConnection, BulkCopyOptions options, Type entityType)
+		protected MultipleRowsHelper(IDataContext dataConnection, DataOptions options, Type entityType)
 		{
-			DataConnection = dataConnection is DataConnection dc
+			OriginalContext = dataConnection;
+			DataConnection  = dataConnection is DataConnection dc
 				? dc
 				: dataConnection is DataContext dx
 					? dx.GetDataConnection()
 					: throw new ArgumentException($"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}", nameof(dataConnection));
 
-			MappingSchema  = dataConnection.MappingSchema;
-			Options        = options;
-			SqlBuilder     = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema);
-			Descriptor     = MappingSchema.GetEntityDescriptor(entityType);
-			Columns        = Descriptor.Columns
-				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)
+			MappingSchema   = dataConnection.MappingSchema;
+			Options         = options;
+			SqlBuilder      = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema, DataConnection.Options);
+			Descriptor      = MappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
+			Columns         = Descriptor.Columns
+				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.BulkCopyOptions.KeepIdentity == true)
 				.ToArray();
-			ColumnTypes    = Columns.Select(c => new SqlDataType(c)).ToArray();
-			ParameterName  = SqlBuilder.ConvertInline("p", ConvertType.NameToQueryParameter);
-			BatchSize      = Math.Max(10, Options.MaxBatchSize ?? 1000);
+			ColumnTypes     = Columns.Select(c => new SqlDataType(c)).ToArray();
+			ParameterName   = "p";
+			BatchSize       = Math.Max(10, Options.BulkCopyOptions.MaxBatchSize ?? 1000);
 		}
+
 		public readonly ISqlBuilder         SqlBuilder;
+		public readonly IDataContext        OriginalContext;
 		public readonly DataConnection      DataConnection;
 		public readonly MappingSchema       MappingSchema;
-		public readonly BulkCopyOptions     Options;
+		public readonly DataOptions         Options;
 		public readonly EntityDescriptor    Descriptor;
 		public readonly ColumnDescriptor[]  Columns;
 		public readonly SqlDataType[]       ColumnTypes;
@@ -65,12 +68,14 @@ namespace LinqToDB.DataProvider
 		public int LastRowStringIndex;
 		public int LastRowParameterIndex;
 
+		public bool SuppressCloseAfterUse { get; set; }
+
 		public void SetHeader()
 		{
 			HeaderSize = StringBuilder.Length;
 		}
 
-		private static Func<ColumnDescriptor, bool> defaultSkipConvert = (_ => false);
+		static readonly Func<ColumnDescriptor, bool> _defaultSkipConvert = _ => false;
 
 		public virtual void BuildColumns(
 			object                        item,
@@ -80,7 +85,7 @@ namespace LinqToDB.DataProvider
 			bool                          castFirstRowLiteralOnUnionAll = false,
 			Func<ColumnDescriptor, bool>? castLiteral                   = null)
 		{
-			skipConvert ??= defaultSkipConvert;
+			skipConvert ??= _defaultSkipConvert;
 
 			for (var i = 0; i < Columns.Length; i++)
 			{
@@ -89,9 +94,9 @@ namespace LinqToDB.DataProvider
 
 				var position = StringBuilder.Length;
 
-				if (Options.UseParameters || skipConvert(column) || !MappingSchema.TryConvertToSql(StringBuilder, ColumnTypes[i], value))
+				if (Options.BulkCopyOptions.UseParameters || skipConvert(column) || !MappingSchema.TryConvertToSql(StringBuilder, ColumnTypes[i], Options, value))
 				{
-					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
+					var name = SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex, ConvertType.NameToQueryParameter);
 
 					if (castParameters && (CurrentCount == 0 || castAllRows))
 					{
@@ -101,13 +106,13 @@ namespace LinqToDB.DataProvider
 					{
 						StringBuilder.Append(name);
 					}
-					
 
 					if (value is DataParameter dataParameter)
 						value = dataParameter.Value;
 
-					Parameters.Add(new DataParameter(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, value,
-						column.DataType, column.DbType)
+					Parameters.Add(new DataParameter(
+						SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, ConvertType.NameToQueryParameter),
+						value, column.DataType, column.DbType)
 					{
 						Size      = column.Length,
 						Precision = column.Precision,
@@ -143,9 +148,9 @@ namespace LinqToDB.DataProvider
 
 			DataConnection.Execute(commandSql, parameters);
 
-			if (Options.RowsCopiedCallback != null)
+			if (Options.BulkCopyOptions.RowsCopiedCallback != null)
 			{
-				Options.RowsCopiedCallback(RowsCopied);
+				Options.BulkCopyOptions.RowsCopiedCallback(RowsCopied);
 
 				if (RowsCopied.Abort)
 					return false;
@@ -168,9 +173,9 @@ namespace LinqToDB.DataProvider
 
 			customExecute(DataConnection, commandSql, parameters);
 
-			if (Options.RowsCopiedCallback != null)
+			if (Options.BulkCopyOptions.RowsCopiedCallback != null)
 			{
-				Options.RowsCopiedCallback(RowsCopied);
+				Options.BulkCopyOptions.RowsCopiedCallback(RowsCopied);
 
 				if (RowsCopied.Abort)
 					return false;
@@ -191,15 +196,16 @@ namespace LinqToDB.DataProvider
 			await DataConnection.ExecuteAsync(StringBuilder.AppendLine().ToString(), cancellationToken, Parameters.ToArray())
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			if (Options.RowsCopiedCallback != null)
+			if (Options.BulkCopyOptions.RowsCopiedCallback != null)
 			{
-				Options.RowsCopiedCallback(RowsCopied);
+				Options.BulkCopyOptions.RowsCopiedCallback(RowsCopied);
 
 				if (RowsCopied.Abort)
 					return false;
 			}
 
 			Parameters.Clear();
+
 			ParameterIndex        = 0;
 			CurrentCount          = 0;
 			LastRowParameterIndex = 0;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -31,10 +32,10 @@ namespace LinqToDB.SqlQuery
 
 #if OVERRIDETOSTRING
 
-			public override string ToString()
-			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-			}
+		public override string ToString()
+		{
+			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+		}
 
 #endif
 
@@ -62,5 +63,19 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public bool Equals(SqlCondition other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			return IsNot == other.IsNot
+				&& IsOr  == other.IsOr
+				&& Predicate.Equals(other.Predicate, comparer);
+		}
+
+		public void Deconstruct(out bool isNot, out ISqlPredicate predicate, out bool isOr)
+		{
+			isNot     = IsNot;
+			predicate = Predicate;
+			isOr      = IsOr;
+		}
 	}
 }

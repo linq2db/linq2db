@@ -130,18 +130,24 @@ namespace LinqToDB.DataProvider.SQLite
 			if (name == ProviderName.SQLiteClassic)
 			{
 				if (_systemDataSQLite == null)
+				{
 					lock (_systemSyncRoot)
-						if (_systemDataSQLite == null)
-							_systemDataSQLite = CreateAdapter(SystemDataSQLiteAssemblyName, SystemDataSQLiteClientNamespace, "SQLite");
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_systemDataSQLite ??= CreateAdapter(SystemDataSQLiteAssemblyName, SystemDataSQLiteClientNamespace, "SQLite");
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _systemDataSQLite;
 			}
 			else
 			{
 				if (_microsoftDataSQLite == null)
+				{
 					lock (_msSyncRoot)
-						if (_microsoftDataSQLite == null)
-							_microsoftDataSQLite = CreateAdapter(MicrosoftDataSQLiteAssemblyName, MicrosoftDataSQLiteClientNamespace, "Sqlite");
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_microsoftDataSQLite ??= CreateAdapter(MicrosoftDataSQLiteAssemblyName, MicrosoftDataSQLiteClientNamespace, "Sqlite");
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _microsoftDataSQLite;
 			}
@@ -149,13 +155,13 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#region wrappers
 		[Wrapper]
-		private class SqliteConnection
+		private sealed class SqliteConnection
 		{
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
 		[Wrapper]
-		private class SQLiteConnection
+		private sealed class SQLiteConnection
 		{
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}

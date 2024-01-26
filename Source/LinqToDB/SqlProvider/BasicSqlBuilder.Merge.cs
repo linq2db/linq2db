@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlProvider
 {
-	using LinqToDB.Common;
+	using Common;
 	using SqlQuery;
 
-	public abstract partial class BasicSqlBuilder : ISqlBuilder
+	public abstract partial class BasicSqlBuilder
 	{
 		/// <summary>
 		/// If true, provider supports column aliases specification after table alias.
@@ -59,8 +59,9 @@ namespace LinqToDB.SqlProvider
 
 			BuildOutputSubclause(merge.Output);
 
-			BuildQueryExtensions(merge);
-			BuildMergeTerminator(merge);
+			BuildSubQueryExtensions(merge);
+			BuildQueryExtensions   (merge);
+			BuildMergeTerminator   (merge);
 		}
 
 		/// <summary>

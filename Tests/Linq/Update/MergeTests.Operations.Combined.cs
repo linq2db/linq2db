@@ -110,8 +110,12 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateWithConditionDeleteWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllSqlServer2008Plus,
-			TestProvName.AllOracle, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird, ProviderName.Sybase)]
+			TestProvName.AllPostgreSQL15Plus,
+			TestProvName.AllOracle,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
+			ProviderName.Firebird,
+			ProviderName.Sybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -238,7 +242,10 @@ namespace Tests.xUpdate
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete([MergeDataContextSource(
 			TestProvName.AllSqlServer2008Plus,
 			TestProvName.AllOracle,
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllPostgreSQL15Plus,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
+			ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -310,7 +317,10 @@ namespace Tests.xUpdate
 		public void UpdateWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			TestProvName.AllSqlServer2008Plus,
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllPostgreSQL15Plus,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
+			ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -721,7 +731,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class PKOnlyTable
+		sealed class PKOnlyTable
 		{
 			[PrimaryKey] public int ID { get; set; }
 		}

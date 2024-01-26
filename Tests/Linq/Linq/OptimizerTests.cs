@@ -9,7 +9,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class OptimizerTests : TestBase
 	{
-		class OptimizerData
+		sealed class OptimizerData
 		{
 			[PrimaryKey(1)]
 			public int Key1 { get; set; }
@@ -87,7 +87,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void AsSubQueryTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void AsSubQueryTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -129,7 +129,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AsSubQueryGrouping1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void AsSubQueryGrouping1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -146,7 +146,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AsSubQueryGrouping2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void AsSubQueryGrouping2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -168,7 +168,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void DistinctOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void DistinctOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -196,7 +196,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void GroupByOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -237,14 +237,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PrimaryKeyOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void PrimaryKeyOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var uniqueValues = first.Select(f => new { f.Key1, f.Key2 });
 
@@ -266,14 +266,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void HasKeyProjectionOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void HasKeyProjectionOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var allKeys = first.Select(f => new { First = f })
 					.HasUniqueKey(f => new {f.First.DataKey11})
@@ -338,14 +338,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void HasKeyJoinOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void HasKeyJoinOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var allKeys = first.Select(f => new { First = f })
 					.HasUniqueKey(f => new {f.First.DataKey11})
@@ -379,14 +379,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UniqueKeysPropagation([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void UniqueKeysPropagation([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var subqueryWhichWillBeOptimized =
 					from f in first
@@ -417,14 +417,14 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void UniqueKeysAndSubqueries([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void UniqueKeysAndSubqueries([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var subqueryWhichWillBeOptimized =
 					from f in first

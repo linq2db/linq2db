@@ -8,7 +8,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using LinqToDB.Expressions;
+	using Common.Internal;
+	using Expressions;
+	using Extensions;
 	using Mapping;
 	using SqlQuery;
 
@@ -21,7 +23,7 @@ namespace LinqToDB
 		[PublicAPI]
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class ExpressionAttribute : Attribute
+		public class ExpressionAttribute : MappingAttribute
 		{
 			/// <summary>
 			/// Creates an Expression that will be used in SQL,
@@ -97,12 +99,6 @@ namespace LinqToDB
 			/// Refer to <see cref="SqlQuery.Precedence"/>.
 			/// </summary>
 			public int            Precedence       { get; set; }
-			/// <summary>
-			/// If <c>null</c>, this will be treated as the default
-			/// evaluation for the expression. If set to a <see cref="ProviderName"/>,
-			/// It will only be used for that provider configuration.
-			/// </summary>
-			public string?        Configuration    { get; set; }
 			/// <summary>
 			/// If <c>true</c> The expression will only be evaluated on the
 			/// database server. If it cannot, an exception will
@@ -268,13 +264,16 @@ namespace LinqToDB
 
 			public static readonly SqlExpression UnknownExpression = new ("!!!");
 
-			public static void PrepareParameterValues(
-				Expression                expression,
-				ref string?               expressionStr,
-				bool                      includeInstance,
-				out List<Expression?>     knownExpressions,
-				bool                      ignoreGenericParameters,
-				out List<ISqlExpression>? genericTypes)
+			public static void PrepareParameterValues<TContext>(
+				TContext                                                   context,
+				MappingSchema                                              mappingSchema,
+				Expression                                                 expression,
+				ref string?                                                expressionStr,
+				bool                                                       includeInstance,
+				out List<Expression?>                                      knownExpressions,
+				bool                                                       ignoreGenericParameters,
+				out List<SqlDataType>?                                     genericTypes,
+				Func<TContext,Expression,ColumnDescriptor?,ISqlExpression> converter)
 			{
 				knownExpressions = new List<Expression?>();
 				genericTypes     = null;
@@ -295,12 +294,11 @@ namespace LinqToDB
 
 						if (arg is NewArrayExpression nae)
 						{
-							if (pis == null)
-								pis = mc.Method.GetParameters();
+							pis ??= mc.Method.GetParameters();
 
 							var p = pis[i];
 
-							if (p.GetCustomAttributes(true).OfType<ParamArrayAttribute>().Any())
+							if (p.HasAttribute<ParamArrayAttribute>())
 							{
 								knownExpressions.AddRange(nae.Expressions);
 							}
@@ -317,18 +315,54 @@ namespace LinqToDB
 
 					if (!ignoreGenericParameters)
 					{
+						ParameterInfo[]? pi = null;
+
 						if (mc.Method.DeclaringType!.IsGenericType)
 						{
-							genericTypes ??= new List<ISqlExpression>();
-							genericTypes.AddRange(mc.Method.DeclaringType.GetGenericArguments()
-								.Select(static t => (ISqlExpression)SqlDataType.GetDataType(t)));
+							genericTypes = new List<SqlDataType>();
+							foreach (var t in mc.Method.DeclaringType.GetGenericArguments())
+							{
+								var type = mappingSchema.GetDataType(t);
+								if (type.Type.DataType == DataType.Undefined)
+								{
+									pi ??= mc.Method.GetParameters();
+									for (var i = 0; i < pi.Length; i++)
+									{
+										if (pi[i].ParameterType == t)
+										{
+											var dbType = converter(context, mc.Arguments[i], null).GetExpressionType();
+											if (dbType.DataType != DataType.Undefined)
+												type = new SqlDataType(dbType);
+										}
+									}
+								}
+
+								genericTypes.Add(type);
+							}
 						}
 
 						if (mc.Method.IsGenericMethod)
 						{
-							genericTypes ??= new List<ISqlExpression>();
-							genericTypes.AddRange(mc.Method.GetGenericArguments()
-								.Select(static t => (ISqlExpression)SqlDataType.GetDataType(t)));
+							genericTypes ??= new List<SqlDataType>();
+							foreach (var t in mc.Method.GetGenericArguments())
+							{
+								var type = mappingSchema.GetDataType(t);
+								if (type.Type.DataType == DataType.Undefined)
+								{
+									pi ??= mc.Method.GetParameters();
+									for (var i = 0; i < pi.Length; i++)
+									{
+										if (pi[i].ParameterType == t)
+										{
+											var dbType = converter(context, mc.Arguments[i], null).GetExpressionType();
+											if (dbType.DataType != DataType.Undefined)
+												type = new SqlDataType(dbType);
+										}
+									}
+								}
+
+								genericTypes.Add(type);
+							}
 						}
 					}
 				}
@@ -342,12 +376,12 @@ namespace LinqToDB
 			}
 
 			public static ISqlExpression[] PrepareArguments<TContext>(
-				TContext              context,
-				string                expressionStr,
-				int[]?                argIndices,
-				bool                  addDefault,
-				List<Expression?>     knownExpressions,
-				List<ISqlExpression>? genericTypes,
+				TContext                                                    context,
+				string                                                      expressionStr,
+				int[]?                                                      argIndices,
+				bool                                                        addDefault,
+				List<Expression?>                                           knownExpressions,
+				List<SqlDataType>?                                          genericTypes,
 				Func<TContext,Expression,ColumnDescriptor?,ISqlExpression?> converter)
 			{
 				var parms = new List<ISqlExpression?>();
@@ -462,7 +496,7 @@ namespace LinqToDB
 				Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var expressionStr = Expression;
-				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes);
+				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve SQL Expression body from expression '{expression}'.");
@@ -481,6 +515,11 @@ namespace LinqToDB
 			}
 
 			public virtual bool GetIsPredicate(Expression expression) => IsPredicate;
+
+			public override string GetObjectID()
+			{
+				return $".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(CanBeNull ? 1 : 0)}.";
+			}
 		}
 	}
 }

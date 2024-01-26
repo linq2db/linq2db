@@ -10,7 +10,6 @@ using System.Transactions;
 
 using LinqToDB;
 using LinqToDB.AspNet;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
@@ -31,10 +30,10 @@ namespace Tests.Data
 	public class DataConnectionTests : TestBase
 	{
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void UsingDataProvider([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
-			var dataProvider = DataConnection.GetDataProvider(context);
+			var dataProvider     = DataConnection.GetDataProvider(context);
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
@@ -44,7 +43,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Test2()
+		public void UsingDefaultConfiguration()
 		{
 			using (var conn = new DataConnection())
 			{
@@ -57,7 +56,8 @@ namespace Tests.Data
 		public void Test3([IncludeDataSources(
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2005,
-			TestProvName.AllAccess)]
+			TestProvName.AllAccess,
+			TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var conn = GetDataConnection(context))
@@ -104,7 +104,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer)] string context)
+		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 
@@ -217,7 +217,7 @@ namespace Tests.Data
 			}
 		}
 
-		private class TestConnectionInterceptor : ConnectionInterceptor
+		private sealed class TestConnectionInterceptor : ConnectionInterceptor
 		{
 			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpening;
 			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpened;
@@ -327,7 +327,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestServiceCollection1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestServiceCollection1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var collection = new ServiceCollection();
 			collection.AddLinqToDB((serviceProvider, options) => options.UseConfigurationString(context));
@@ -338,7 +338,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestServiceCollection2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestServiceCollection2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var collection = new ServiceCollection();
 			collection.AddLinqToDBContext<DataConnection>((serviceProvider, options) => options.UseConfigurationString(context));
@@ -348,7 +348,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestServiceCollection3([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestServiceCollection3([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var collection = new ServiceCollection();
 			collection.AddTransient<DummyService>();
@@ -360,14 +360,14 @@ namespace Tests.Data
 
 		public class DbConnection1 : DataConnection
 		{
-			public DbConnection1(LinqToDBConnectionOptions options) : base(options)
+			public DbConnection1(DataOptions<DbConnection1> options) : base(options.Options)
 			{
 			}
 		}
 
 		public class DbConnection2 : DataConnection
 		{
-			public DbConnection2(LinqToDBConnectionOptions<DbConnection2> options) : base(options)
+			public DbConnection2(DataOptions<DbConnection2> options) : base(options.Options)
 			{
 			}
 		}
@@ -376,29 +376,23 @@ namespace Tests.Data
 
 		public class DbConnection3 : DataConnection
 		{
-			public DbConnection3(DummyService service, LinqToDBConnectionOptions<DbConnection3> options) : base(options)
+			public DbConnection3(DummyService service, DataOptions options) : base(options)
 			{
 			}
 		}
 
 		[Test]
-		public void TestSettingsPerDb([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSettingsPerDb([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var collection = new ServiceCollection();
 			collection.AddLinqToDBContext<DbConnection1>((provider, options) => options.UseConfigurationString(context));
-			collection.AddLinqToDBContext<DbConnection2>((provider, options) => {});
+			collection.AddLinqToDBContext<DbConnection2>((provider, options) => options);
 
 			var serviceProvider = collection.BuildServiceProvider();
 			var c1 = serviceProvider.GetService<DbConnection1>()!;
 			var c2 = serviceProvider.GetService<DbConnection2>()!;
 			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
 			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
-		}
-
-		[Test]
-		public void TestConstructorThrowsWhenGivenInvalidSettings()
-		{
-			Assert.Throws<LinqToDBException>(() => new DbConnection1(new LinqToDBConnectionOptionsBuilder().Build<DbConnection2>()));
 		}
 
 		// informix connection limits interfere with test
@@ -620,7 +614,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestEntityServiceInterceptor : EntityServiceInterceptor
+		sealed class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public int EntityCreatedCallCounter { get; set; }
 			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
@@ -630,7 +624,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestDataContextInterceptor : DataContextInterceptor
+		sealed class TestDataContextInterceptor : DataContextInterceptor
 		{
 			public int OnClosingCallCounter { get; set; }
 			public int OnClosedCallCounter { get; set; }
@@ -662,12 +656,12 @@ namespace Tests.Data
 			}
 		}
 
-		class TestRetryPolicy : IRetryPolicy
+		sealed class TestRetryPolicy : IRetryPolicy
 		{
-			TResult IRetryPolicy.Execute<TResult>(Func<TResult> operation) => operation();
-			void IRetryPolicy.Execute(Action operation) => operation();
+			TResult       IRetryPolicy.Execute<TResult>     (Func<TResult> operation                                                              ) => operation();
+			void          IRetryPolicy.Execute              (Action operation                                                                     ) => operation();
 			Task<TResult> IRetryPolicy.ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken) => operation(cancellationToken);
-			Task IRetryPolicy.ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken) => operation(cancellationToken);
+			Task          IRetryPolicy.ExecuteAsync         (Func<CancellationToken, Task> operation, CancellationToken cancellationToken         ) => operation(cancellationToken);
 		}
 
 		[Test]
@@ -831,45 +825,6 @@ namespace Tests.Data
 		}
 
 		[Test]
-		[Obsolete("DataConnection.OnTrace")]
-		public void TestCloneOnTraceConnection([DataSources(false)] string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				// to enable MARS-enabled cloning branch
-				var _ = db.Connection;
-				Action<TraceInfo> onTrace = OnTrace;
-
-				Assert.AreEqual(DataConnection.OnTrace, db.OnTraceConnection);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(DataConnection.OnTrace, cdb.OnTraceConnection);
-				}
-
-				db.OnTraceConnection = onTrace;
-
-				Assert.AreEqual(onTrace, db.OnTraceConnection);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(onTrace, cdb.OnTraceConnection);
-				}
-
-				db.OnTraceConnection = DataConnection.OnTrace;
-
-				Assert.AreEqual(DataConnection.OnTrace, db.OnTraceConnection);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(DataConnection.OnTrace, cdb.OnTraceConnection);
-				}
-			}
-
-			void OnTrace(TraceInfo ti) { };
-		}
-
-		[Test]
 		public void TestCloneOnClosingOnClosed([DataSources(false)] string context)
 		{
 			var interceptor = new TestDataContextInterceptor();
@@ -971,8 +926,8 @@ namespace Tests.Data
 
 				db.Close();
 				db.AddInterceptor(new TestConnectionInterceptor(
-					(args, cn) => OnBeforeConnectionOpen(args.DataConnection, cn),
-					(args, cn) => OnConnectionOpened(args.DataConnection, cn),
+					(_, _) => OnBeforeConnectionOpen(),
+					(_, _) => OnConnectionOpened(),
 					null,
 					null));
 
@@ -1027,8 +982,8 @@ namespace Tests.Data
 				}
 			}
 
-			void OnBeforeConnectionOpen(DataConnection dc, DbConnection cn) => open++;
-			void OnConnectionOpened    (DataConnection dc, DbConnection cn) => opened++;
+			void OnBeforeConnectionOpen() => open++;
+			void OnConnectionOpened    () => opened++;
 		}
 
 		[Test]
@@ -1058,8 +1013,8 @@ namespace Tests.Data
 				db.AddInterceptor(new TestConnectionInterceptor(
 					null,
 					null,
-					(args, cn, ct) => OnBeforeConnectionOpenAsync(args.DataConnection, cn, ct),
-					(args, cn, ct) => OnConnectionOpenedAsync(args.DataConnection, cn, ct)));
+					(_, _, _) => OnBeforeConnectionOpenAsync(),
+					(_,_,_) => OnConnectionOpenedAsync()));
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
 				await db.EnsureConnectionAsync();
@@ -1111,13 +1066,13 @@ namespace Tests.Data
 				}
 			}
 
-			Task OnBeforeConnectionOpenAsync(DataConnection dc, DbConnection cn, CancellationToken ct)
+			Task OnBeforeConnectionOpenAsync()
 			{
 				open++;
 				return Task.CompletedTask;
 			}
 
-			Task OnConnectionOpenedAsync(DataConnection dc, DbConnection cn, CancellationToken ct)
+			Task OnConnectionOpenedAsync()
 			{
 				opened++;
 				return Task.CompletedTask;
@@ -1237,12 +1192,13 @@ namespace Tests.Data
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				context == ProviderName.DB2            ||
-				context == ProviderName.InformixDB2    ||
-				context == ProviderName.SapHanaNative  ||
-				context == ProviderName.SqlCe          ||
-				context == ProviderName.Sybase         ||
+				context == ProviderName.DB2                     ||
+				context == ProviderName.InformixDB2             ||
+				context == ProviderName.SapHanaNative           ||
+				context == ProviderName.SqlCe                   ||
+				context == ProviderName.Sybase                  ||
 				context.IsAnyOf(TestProvName.AllMySqlConnector) ||
+				context.IsAnyOf(TestProvName.AllClickHouse)     ||
 				context.IsAnyOf(TestProvName.AllFirebird)       ||
 				context.IsAnyOf(TestProvName.AllOracle)         ||
 				context.IsAnyOf(TestProvName.AllPostgreSQL)     ||
@@ -1260,25 +1216,16 @@ namespace Tests.Data
 				// SQL Server: Cannot drop the table 'Categories', because it does not exist or you do not have permission.
 				// SQLCE: SqlCeConnection does not support nested transactions.
 				// Sybase native: just crashes without details (as usual for this "provider")
+				// ClickHouse doesn't support transactions
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope or doesn't support DDL in distributed transactions");
 			}
 
-			TransactionScope? scope = withScope ? new TransactionScope() : null;
-			try
+			using var scope = withScope ? new TransactionScope() : null;
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable(Category.Data))
+			using (db.CreateLocalTable(Product.Data))
 			{
-				using (var db = GetDataContext(context))
-				using (db.CreateLocalTable(Category.Data))
-				using (db.CreateLocalTable(Product.Data))
-				{
-					var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
-
-					scope?.Dispose();
-					scope = null;
-				}
-			}
-			finally
-			{
-				scope?.Dispose();
+				var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
 			}
 		}
 
@@ -1296,10 +1243,11 @@ namespace Tests.Data
 				context.IsAnyOf(TestProvName.AllOracleDevart)  ||
 				context.IsAnyOf(ProviderName.SapHanaNative)    ||
 #endif
-				context.IsAnyOf(TestProvName.AllMySqlData)     ||
-				context.IsAnyOf(TestProvName.AllAccess)        ||
-				context.IsAnyOf(TestProvName.AllSqlServer)     ||
-				context.IsAnyOf(TestProvName.AllPostgreSQL)    ||
+				context.IsAnyOf(TestProvName.AllClickHouse)                 ||
+				context.IsAnyOf(TestProvName.AllMySqlData)                  ||
+				context.IsAnyOf(TestProvName.AllAccess)                     ||
+				context.IsAnyOf(TestProvName.AllSqlServer)                  ||
+				context.IsAnyOf(TestProvName.AllPostgreSQL)                 ||
 				context.IsAnyOf(TestProvName.AllSQLiteClassic)
 				))
 			{
@@ -1316,6 +1264,7 @@ namespace Tests.Data
 				// Oracle managed: Operation is not supported on this platform.
 				// SAP.Native: Operation is not supported on this platform.
 				// SqlServer: The operation is not valid for the state of the transaction.
+				// ClickHouse doesn't support transactions
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
 			}
 
@@ -1342,7 +1291,7 @@ namespace Tests.Data
 		#endregion
 
 		[Table]
-		class TransactionScopeTable
+		sealed class TransactionScopeTable
 		{
 			[Column] public int Id { get; set; }
 		}
@@ -1471,11 +1420,15 @@ namespace Tests.Data
 		// SQLCE : System.Data.SqlServerCe
 		// SQLITE: Microsoft.Data.Sqlite (prior to v2.1.0)
 		// SYBASE: AdoNetCore.AseClient
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_MultipleDataReadersOnSameCommand_Supported(
 			[IncludeDataSources(false,
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
+				// depends on connection pool size
+				//ProviderName.ClickHouseClient,
+				ProviderName.ClickHouseOctonica,
 				ProviderName.SybaseManaged)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1518,9 +1471,11 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_MultipleDataReadersOnSameCommand_NotSupported(
 			[DataSources(false,
+				ProviderName.ClickHouseClient,
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
 				ProviderName.SQLiteMS,
@@ -1582,6 +1537,7 @@ namespace Tests.Data
 		// SQLServer: Microsoft.Data.SqlClient (with MARS enabled)
 		// SYBASE   : Sybase.AdoNet45.AseClient
 		// SYBASE   : AdoNetCore.AseClient
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_NoDispose_Supported(
 			[IncludeDataSources(false,
@@ -1592,6 +1548,10 @@ namespace Tests.Data
 				TestProvName.AllOracle,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
+				// disabled - depends on connection pool size
+				// which is one for session-aware connection
+				//ProviderName.ClickHouseClient,
+				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
@@ -1641,10 +1601,12 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_NoDispose_NotSupported(
 			[DataSources(false,
 				TestProvName.AllAccess,
+			ProviderName.ClickHouseClient,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -1715,6 +1677,7 @@ namespace Tests.Data
 		// SQLServer: Microsoft.Data.SqlClient (with MARS enabled)
 		// SYBASE   : Sybase.AdoNet45.AseClient
 		// SYBASE   : AdoNetCore.AseClient
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_Dispose_Supported(
 			[IncludeDataSources(false,
@@ -1726,6 +1689,9 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				TestProvName.AllSQLiteClassic,
 				TestProvName.AllSqlServer,
+				// depends on connection pool size
+				//ProviderName.ClickHouseClient,
+				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1772,10 +1738,12 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_Dispose_NotSupported(
 			[DataSources(false,
 				TestProvName.AllAccess,
+				ProviderName.ClickHouseClient,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -1827,10 +1795,14 @@ namespace Tests.Data
 			Assert.Fail("Failure expected");
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_Supported(
 			[DataSources(false,
 				TestProvName.AllMySql,
+				ProviderName.ClickHouseMySql,
+				// depends on connection pool size
+				ProviderName.ClickHouseClient,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1851,10 +1823,13 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_Unsupported(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
+				ProviderName.ClickHouseMySql,
+				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1876,7 +1851,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void MARS_ParametersPreservedAfterDispose([DataSources(false)] string context)
+		public void MARS_ParametersPreservedAfterDispose([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1892,7 +1867,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task MARS_ParametersPreservedAfterDisposeAsync([DataSources(false)] string context)
+		public async Task MARS_ParametersPreservedAfterDisposeAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1908,10 +1883,14 @@ namespace Tests.Data
 		}
 
 #if !NET472
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task MARS_SupportedAsync(
 			[DataSources(false,
 				TestProvName.AllMySql,
+				ProviderName.ClickHouseMySql,
+				// depends on connection pool size
+				ProviderName.ClickHouseClient,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1932,11 +1911,14 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task MARS_UnsupportedAsync(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
-				TestProvName.AllPostgreSQL)] string context)
+				TestProvName.AllPostgreSQL,
+				ProviderName.ClickHouseMySql,
+				ProviderName.ClickHouseOctonica)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1956,6 +1938,27 @@ namespace Tests.Data
 			}
 		}
 #endif
-#endregion
+		#endregion
+
+		[Test]
+		public void MappingSchemaReuse([DataSources] string context)
+		{
+			using var cn1 = GetDataContext(context);
+			using var cn2 = GetDataContext(context);
+
+			Assert.AreEqual(cn1.MappingSchema, cn2.MappingSchema);
+		}
+
+		[Test]
+		public void CustomMappingSchemaCaching([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConverter<string, int>(int.Parse);
+
+			using var cn1 = GetDataContext(context, ms);
+			using var cn2 = GetDataContext(context, ms);
+
+			Assert.AreEqual(cn1.MappingSchema, cn2.MappingSchema);
+		}
 	}
 }

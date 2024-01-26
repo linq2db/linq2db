@@ -6,14 +6,14 @@ using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Mapping;
 	using Reflection;
 
 	public static class MemberHelper
 	{
 		[DebuggerDisplay("{Type.Name}.{MemberInfo.Name}")]
-		public struct MemberInfoWithType
+		public struct MemberInfoWithType : IEquatable<MemberInfoWithType>
 		{
 			public MemberInfoWithType(Type? type, MemberInfo memberInfo)
 			{
@@ -24,7 +24,7 @@ namespace LinqToDB.Expressions
 			public Type?      Type;
 			public MemberInfo MemberInfo;
 
-			public bool Equals(MemberInfoWithType other)
+			public readonly bool Equals(MemberInfoWithType other)
 			{
 				return Equals(Type, other.Type) && MemberInfo.Equals(other.MemberInfo);
 			}
@@ -34,7 +34,7 @@ namespace LinqToDB.Expressions
 				return obj is MemberInfoWithType other && Equals(other);
 			}
 
-			public override int GetHashCode()
+			public readonly override int GetHashCode()
 			{
 				unchecked
 				{
@@ -156,6 +156,11 @@ namespace LinqToDB.Expressions
 		}
 
 		public static PropertyInfo PropertyOf<T>(Expression<Func<T,object?>> func)
+		{
+			return (PropertyInfo)GetMemberInfo(func);
+		}
+
+		public static PropertyInfo PropertyOf(Expression<Func<object?>> func)
 		{
 			return (PropertyInfo)GetMemberInfo(func);
 		}

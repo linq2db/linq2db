@@ -6,6 +6,8 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common.Internal;
+
 	//TODO: Investigate how to implement only ISqlTableSource interface
 	public class SqlRawSqlTable : SqlTable, IQueryElement
 	{
@@ -14,11 +16,10 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression[] Parameters { get; }
 
 		public SqlRawSqlTable(
-			MappingSchema    mappingSchema,
-			Type             objectType,
+			EntityDescriptor endtityDescriptor,
 			string           sql,
 			ISqlExpression[] parameters)
-			: base(mappingSchema, objectType)
+			: base(endtityDescriptor)
 		{
 			SQL        = sql        ?? throw new ArgumentNullException(nameof(sql));
 			Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
@@ -62,14 +63,20 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			using var sb = Pools.StringBuilder.Allocate();
+			return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement,IQueryElement>()).ToString();
 		}
 
 		#region IQueryElement Members
 
-		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+		public string SqlText
+		{
+			get
+			{
+				using var sb = Pools.StringBuilder.Allocate();
+				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			}
+		}
 
 		#endregion
 

@@ -1,15 +1,53 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Globalization;
+using System.Threading;
+
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Linq;
-using System;
-using System.Globalization;
-using System.Threading;
+using LinqToDB.Mapping;
+
 using Tests.Model;
 
 namespace Tests
 {
+	public class RestoreBaseTables : IDisposable
+	{
+		private readonly IDataContext _db;
+
+		public RestoreBaseTables(IDataContext db)
+		{
+			_db = db;
+		}
+
+		void IDisposable.Dispose()
+		{
+			using var _ = new DisableBaseline("isn't baseline query");
+
+			_db.GetTable<Parent>().Delete(p => p.ParentID > 7);
+			_db.GetTable<Child>().Delete(p => p.ParentID > 7 || p.ChildID > 77);
+
+			_db.GetTable<Patient>().Delete(p => p.PersonID > 4 || p.PersonID < 1);
+			_db.GetTable<Person>().Delete(p => p.ID > 4 || p.ID < 1);
+
+			_db.GetTable<LinqDataTypes2>().Delete(p => p.ID > 12 || p.ID < 1);
+			_db.GetTable<LinqDataTypes>()
+				.Set(_ => _.BinaryValue, () => null)
+				.Update();
+
+			_db.GetTable<AllTypes>().Delete(p => p.ID > 2 || p.ID < 1);
+		}
+
+		[Table]
+		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		public class AllTypes
+		{
+			[Column] public int ID { get; set; }
+		}
+		}
+
 	public class InvariantCultureRegion : IDisposable
 	{
 		private readonly CultureInfo? _original;
@@ -32,17 +70,17 @@ namespace Tests
 
 	public class FirebirdQuoteMode : IDisposable
 	{
-		private readonly FirebirdIdentifierQuoteMode _oldMode;
+		readonly FirebirdOptions _options;
 
 		public FirebirdQuoteMode(FirebirdIdentifierQuoteMode mode)
 		{
-			_oldMode = FirebirdConfiguration.IdentifierQuoteMode;
-			FirebirdConfiguration.IdentifierQuoteMode = mode;
+			_options                = FirebirdOptions.Default;
+			FirebirdOptions.Default = FirebirdOptions.Default with { IdentifierQuoteMode = mode };
 		}
 
 		void IDisposable.Dispose()
 		{
-			FirebirdConfiguration.IdentifierQuoteMode = _oldMode;
+			FirebirdOptions.Default = _options;
 		}
 	}
 
@@ -266,16 +304,16 @@ namespace Tests
 
 	public class OracleAlternativeBulkCopyMode : IDisposable
 	{
-		private readonly AlternativeBulkCopy _oldValue = OracleTools.UseAlternativeBulkCopy;
+		private readonly AlternativeBulkCopy _oldValue = OracleOptions.Default.AlternativeBulkCopy;
 
 		public OracleAlternativeBulkCopyMode(AlternativeBulkCopy mode)
 		{
-			OracleTools.UseAlternativeBulkCopy = mode;
+			OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = mode };
 		}
 
 		void IDisposable.Dispose()
 		{
-			OracleTools.UseAlternativeBulkCopy = _oldValue;
+			OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = _oldValue };
 		}
 	}
 

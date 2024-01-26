@@ -5,11 +5,11 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
 	using LinqToDB.Expressions;
 	using Reflection;
-	using Extensions;
 
-	partial class TableBuilder : ISequenceBuilder
+	sealed partial class TableBuilder : ISequenceBuilder
 	{
 		int ISequenceBuilder.BuildCounter { get; set; }
 
@@ -139,13 +139,13 @@ namespace LinqToDB.Linq.Builder
 			return FindBuildContext(builder, buildInfo, out var _) != BuildContextType.None;
 		}
 
-		IBuildContext ApplyQueryFilters(ExpressionBuilder builder, BuildInfo buildInfo, MemberInfo? memberInfo, TableContext tableContext)
+		static IBuildContext ApplyQueryFilters(ExpressionBuilder builder, BuildInfo buildInfo, MemberInfo? memberInfo, TableContext tableContext)
 		{
 			var entityType = tableContext.ObjectType;
 			if (builder.IsFilterDisabled(entityType))
 				return tableContext;
 
-			var ed = builder.MappingSchema.GetEntityDescriptor(entityType);
+			var ed = builder.MappingSchema.GetEntityDescriptor(entityType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			var filterFunc = ed.QueryFilterFunc;
 			if (filterFunc == null)
 				return tableContext;
@@ -165,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 
 				// here we use light version of optimization, only for comparing trees
 				var optimizationContext = new ExpressionTreeOptimizationContext(dc);
-				var optimizedExpr       = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionBuilder.DataContextParam);
+				var optimizedExpr       = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionConstants.DataContextParam);
 
 				optimizedExpr = optimizationContext.ExposeExpression(optimizedExpr);
 				optimizedExpr = optimizationContext.ExpandQueryableMethods(optimizedExpr);
@@ -174,7 +174,7 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			var filtered  = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext)!;
-			var optimized = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionBuilder.DataContextParam);
+			var optimized = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionConstants.DataContextParam);
 
 			optimized = builder.ConvertExpressionTree(optimized);
 			optimized = builder.ConvertExpression(optimized);
@@ -199,7 +199,7 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.TableConstant:
 					{
 						return ApplyQueryFilters(builder, buildInfo, null,
-							AddTableInScope(new(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType)));
+							AddTableInScope(new(builder, buildInfo, buildInfo.Expression.EvaluateExpression<IQueryable>(builder.DataContext)!.ElementType)));
 					}
 				case BuildContextType.GetTableMethod         :
 				case BuildContextType.MemberAccess           :

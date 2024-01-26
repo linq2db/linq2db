@@ -7,12 +7,12 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Reflection;
 	using SqlQuery;
 
-	class SetOperationBuilder : MethodCallBuilder
+	sealed class SetOperationBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll" };
 
@@ -29,9 +29,10 @@ namespace LinqToDB.Linq.Builder
 			var sequence2 = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 			SetOperation setOperation;
+
 			switch (methodCall.Method.Name)
 			{
-				case "Concat"       : 
+				case "Concat"       :
 				case "UnionAll"     : setOperation = SetOperation.UnionAll;     break;
 				case "Union"        : setOperation = SetOperation.Union;        break;
 				case "Except"       : setOperation = SetOperation.Except;       break;
@@ -85,7 +86,6 @@ namespace LinqToDB.Linq.Builder
 				return sequence;
 			}
 
-
 			var set1  = sequence1 as SetOperationContext;
 			var set2  = sequence2 as SetOperationContext;
 
@@ -135,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Context
 
-		sealed class SetOperationContext : SubQueryContext
+		public sealed class SetOperationContext : SubQueryContext
 		{
 			public SetOperationContext(SubQueryContext sequence1, SubQueryContext sequence2, MethodCallExpression methodCall, SqlSetOperator setOperator)
 				: base(sequence1)
@@ -164,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 			public readonly List<SubQueryContext>  Sequences = new ();
 
 			[DebuggerDisplay("{Member.MemberExpression}, SequenceInfo: ({SequenceInfo}), SqlQueryInfo: ({SqlQueryInfo})")]
-			class Member
+			sealed class Member
 			{
 				public SqlInfo?          SequenceInfo;
 				public SqlInfo?          SqlQueryInfo;
@@ -172,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			[DebuggerDisplay("{Member.MemberExpression}, Infos.Count: {Infos.Count}, Infos[0]: ({Infos[0]}), Infos[1]: ({Infos[1]})")]
-			class UnionMember
+			sealed class UnionMember
 			{
 				public UnionMember(Member member, SqlInfo info)
 				{
@@ -416,7 +416,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (nctor != null)
 						{
-							var recordType = RecordsHelper.GetRecordType(Builder.MappingSchema, nctor.Type);
+							var recordType = RecordsHelper.GetRecordType(nctor.Type);
 							if ((recordType & RecordType.CallConstructorOnRead) != 0)
 							{
 								if (nctor.Members != null)
@@ -559,8 +559,7 @@ namespace LinqToDB.Linq.Builder
 							foreach (var s in Sequences)
 							{
 								var res = s.BuildExpression(null, level, enforceServerSide);
-								if (ex == null)
-									ex = res;
+								ex ??= res;
 							}
 
 							return ex!;
@@ -660,7 +659,7 @@ namespace LinqToDB.Linq.Builder
 
 									if (!_members.TryGetValue(ma.Member, out var member))
 									{
-										var ed = Builder.MappingSchema.GetEntityDescriptor(_type!);
+										var ed = Builder.MappingSchema.GetEntityDescriptor(_type!, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 										if (ed.Aliases != null && ed.Aliases.ContainsKey(ma.Member.Name))
 										{
@@ -679,16 +678,13 @@ namespace LinqToDB.Linq.Builder
 									if (member == null)
 										throw new LinqToDBException($"Expression '{expression}' is not a field.");
 
-									if (member.SqlQueryInfo == null)
-									{
-										member.SqlQueryInfo = new SqlInfo
+									member.SqlQueryInfo ??= new SqlInfo
 										(
 											member.MemberExpression.Member,
 											SubQuery.SelectQuery.Select.Columns[member.SequenceInfo!.Index],
 											SelectQuery,
 											member.SequenceInfo!.Index
 										);
-									}
 
 									return new[] { member.SqlQueryInfo };
 								}

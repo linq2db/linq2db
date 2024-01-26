@@ -13,8 +13,7 @@ namespace LinqToDB.Tools.Mapper
 	/// <typeparam name="TFrom">Type to map from.</typeparam>
 	/// <typeparam name="TTo">Type to map to.</typeparam>
 	/// <example>
-	/// This example shows how to map one object to another.
-	/// <code source="CodeJam.Blocks.Tests\Mapping\Examples\MapTests.cs" region="Example" lang="C#"/>
+	/// This <see href="https://github.com/rsdn/CodeJam/blob/master/CodeJam.Blocks.Tests/Mapping/Examples/MapTests.cs">example</see> shows how to map one object to another.
 	/// </example>
 	[PublicAPI]
 	public class Mapper<TFrom,TTo>

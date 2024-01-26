@@ -9,8 +9,8 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
@@ -220,8 +220,7 @@ namespace LinqToDB.Linq.Builder
 							newArgs?.Add(arg);
 						else
 						{
-							if (newArgs == null)
-								newArgs = new List<Expression>(mc.Arguments.Take(index));
+							newArgs ??= new List<Expression>(mc.Arguments.Take(index));
 							newArgs.Add(newArg);
 						}
 					}
@@ -415,7 +414,7 @@ namespace LinqToDB.Linq.Builder
 		static HashSet<Expression> DefaultAllowedParams = new ()
 		{
 			ExpressionBuilder.ParametersParam,
-			ExpressionBuilder.DataContextParam
+			ExpressionConstants.DataContextParam
 		};
 
 		public bool CanBeCompiled(Expression expr)
@@ -432,7 +431,7 @@ namespace LinqToDB.Linq.Builder
 			return _lastResult2 = result;
 		}
 
-		internal class CanBeCompiledContext
+		internal sealed class CanBeCompiledContext
 		{
 			public CanBeCompiledContext(ExpressionTreeOptimizationContext optimizationContext)
 			{
@@ -606,7 +605,7 @@ namespace LinqToDB.Linq.Builder
 					var ll = Expressions.ConvertMember(MappingSchema, ue.Operand?.Type, ue.Operand!.Type.GetProperty(nameof(Array.Length))!);
 					if (ll != null)
 					{
-						var ex = СonvertMemberExpression(expr, ue.Operand!, ll);
+						var ex = ConvertMemberExpression(expr, ue.Operand!, ll);
 
 						return new TransformInfo(ex, false, true);
 					}
@@ -634,7 +633,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (l != null)
 					{
-						var ex = СonvertMemberExpression(expr, me.Expression!, l);
+						var ex = ConvertMemberExpression(expr, me.Expression!, l);
 
 						return new TransformInfo(AliasCall(ex, alias!), false, true);
 					}
@@ -744,7 +743,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		private static Expression СonvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
+		private static Expression ConvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
 		{
 			var body  = l.Body.Unwrap();
 			var parms = l.Parameters.ToDictionary(p => p);
@@ -759,11 +758,11 @@ namespace LinqToDB.Linq.Builder
 								return context.root;
 							}
 
-							if (ExpressionBuilder.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+							if (ExpressionConstants.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
 							{
-								if (ExpressionBuilder.DataContextParam.Type != wpi.Type)
-									return Expression.Convert(ExpressionBuilder.DataContextParam, wpi.Type);
-								return ExpressionBuilder.DataContextParam;
+								if (ExpressionConstants.DataContextParam.Type != wpi.Type)
+									return Expression.Convert(ExpressionConstants.DataContextParam, wpi.Type);
+								return ExpressionConstants.DataContextParam;
 							}
 
 							throw new LinqToDBException($"Can't convert {wpi} to expression.");
@@ -785,7 +784,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			mi = type.GetMemberOverride(mi);
 
-			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi, a => a.Configuration);
+			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi);
 
 			if (attr != null)
 			{
@@ -839,11 +838,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (n >= context.pi.Arguments.Count)
 						{
-							if (ExpressionBuilder.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+							if (ExpressionConstants.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
 							{
-								if (ExpressionBuilder.DataContextParam.Type != wpi.Type)
-									return Expression.Convert(ExpressionBuilder.DataContextParam, wpi.Type);
-								return ExpressionBuilder.DataContextParam;
+								if (ExpressionConstants.DataContextParam.Type != wpi.Type)
+									return Expression.Convert(ExpressionConstants.DataContextParam, wpi.Type);
+								return ExpressionConstants.DataContextParam;
 							}
 
 							throw new LinqToDBException($"Can't convert {wpi} to expression.");

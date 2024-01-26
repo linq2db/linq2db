@@ -34,9 +34,9 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext,ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable?)DeletedTable )?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)DeletedTable) ?.Walk(options, context, func);
 			((ISqlExpressionWalkable?)InsertedTable)?.Walk(options, context, func);
-			((ISqlExpressionWalkable?)OutputTable  )?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)OutputTable)  ?.Walk(options, context, func);
 
 			if (HasOutputItems)
 				foreach (var t in OutputItems)
@@ -61,7 +61,26 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			sb.Append("OUTPUT ");
+			sb.AppendLine("OUTPUT");
+
+			if (_outputItems?.Count > 0)
+			{
+				foreach (var item in OutputItems)
+				{
+					sb.Append('\t');
+					((IQueryElement)item).ToString(sb, dic);
+					sb.AppendLine();
+				}
+			}
+			else if (OutputColumns != null)
+			{
+				foreach (var item in OutputColumns)
+				{
+					sb.Append('\t');
+					((IQueryElement)item).ToString(sb, dic);
+					sb.AppendLine();
+				}
+			}
 
 			return sb;
 		}

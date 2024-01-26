@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
 
-	class AggregationBuilder : MethodCallBuilder
+	sealed class AggregationBuilder : MethodCallBuilder
 	{
 		public  static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum"      };
 		private static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync" };
@@ -68,16 +68,13 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression sqlExpression = new SqlFunction(methodCall.Type, methodName, true, sql);
 
-			if (sqlExpression == null)
-				throw new LinqToDBException("Invalid Aggregate function implementation");
-
 			context.Sql        = context.SelectQuery;
 			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodName);
 
 			return context;
 		}
 
-		class AggregationContext : SequenceContextBase
+		sealed class AggregationContext : SequenceContextBase
 		{
 			public AggregationContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)

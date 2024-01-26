@@ -14,10 +14,10 @@ namespace LinqToDB.DataProvider.Firebird
 	{
 		static readonly Lazy<IDataProvider> _firebirdDataProvider = DataConnection.CreateDataProvider<FirebirdDataProvider>();
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (css.ProviderName is ProviderName.Firebird or FirebirdProviderAdapter.ClientNamespace ||
-			    css.Name.Contains("Firebird"))
+			if (options.ProviderName is ProviderName.Firebird or FirebirdProviderAdapter.ClientNamespace ||
+				options.ConfigurationString?.Contains("Firebird") == true)
 				return _firebirdDataProvider.Value;
 
 			return null;
@@ -61,7 +61,12 @@ namespace LinqToDB.DataProvider.Firebird
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use FirebirdOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => FirebirdOptions.Default.BulkCopyType;
+			set => FirebirdOptions.Default = FirebirdOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 

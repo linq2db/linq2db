@@ -9,7 +9,7 @@ namespace LinqToDB
 
 	public partial class Sql
 	{
-		public struct SqlID : IToSqlConverter
+		public readonly struct SqlID : IToSqlConverter, IEquatable<SqlID>
 		{
 			public SqlIDType Type { get; }
 			public string    ID   { get; }
@@ -27,8 +27,14 @@ namespace LinqToDB
 
 			public override bool Equals(object? obj)
 			{
-				return obj is SqlID id && Type == id.Type && ID == id.ID;
+				return obj is SqlID other && Equals(other);
 			}
+
+			public bool Equals(SqlID other)
+			{
+				return Type == other.Type && ID == other.ID;
+			}
+
 
 			public override int GetHashCode()
 			{

@@ -6,7 +6,6 @@
 // ---------------------------------------------------------------------------------------------------
 
 using LinqToDB;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using System;
@@ -31,207 +30,37 @@ namespace Cli.T4.Informix
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
-			: base(options)
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 		}
 
 		partial void InitDataContext();
 
-		public ITable<Inheritanceparent> Inheritanceparents  => this.GetTable<Inheritanceparent>();
-		public ITable<Inheritancechild>  Inheritancechildren => this.GetTable<Inheritancechild>();
-		public ITable<Person>            People              => this.GetTable<Person>();
-		public ITable<Doctor>            Doctors             => this.GetTable<Doctor>();
-		public ITable<Patient>           Patients            => this.GetTable<Patient>();
-		public ITable<Parent>            Parents             => this.GetTable<Parent>();
-		public ITable<Child>             Children            => this.GetTable<Child>();
-		public ITable<Grandchild>        Grandchildren       => this.GetTable<Grandchild>();
-		public ITable<Linqdatatype>      Linqdatatypes       => this.GetTable<Linqdatatype>();
-		public ITable<Testidentity>      Testidentities      => this.GetTable<Testidentity>();
 		public ITable<Alltype>           Alltypes            => this.GetTable<Alltype>();
-		public ITable<Testunique>        Testuniques         => this.GetTable<Testunique>();
+		public ITable<Child>             Children            => this.GetTable<Child>();
+		public ITable<Collatedtable>     Collatedtables      => this.GetTable<Collatedtable>();
+		public ITable<Doctor>            Doctors             => this.GetTable<Doctor>();
+		public ITable<Grandchild>        Grandchildren       => this.GetTable<Grandchild>();
+		public ITable<Inheritancechild>  Inheritancechildren => this.GetTable<Inheritancechild>();
+		public ITable<Inheritanceparent> Inheritanceparents  => this.GetTable<Inheritanceparent>();
+		public ITable<Linqdatatype>      Linqdatatypes       => this.GetTable<Linqdatatype>();
+		public ITable<Parent>            Parents             => this.GetTable<Parent>();
+		public ITable<Patient>           Patients            => this.GetTable<Patient>();
+		public ITable<Person>            People              => this.GetTable<Person>();
 		public ITable<Testfkunique>      Testfkuniques       => this.GetTable<Testfkunique>();
+		public ITable<Testidentity>      Testidentities      => this.GetTable<Testidentity>();
 		public ITable<Testmerge1>        Testmerge1          => this.GetTable<Testmerge1>();
 		public ITable<Testmerge2>        Testmerge2          => this.GetTable<Testmerge2>();
-		public ITable<Collatedtable>     Collatedtables      => this.GetTable<Collatedtable>();
+		public ITable<Testunique>        Testuniques         => this.GetTable<Testunique>();
 		public ITable<Personview>        Personviews         => this.GetTable<Personview>();
-	}
-
-	[Table("inheritanceparent", Schema = "informix")]
-	public partial class Inheritanceparent
-	{
-		[Column("inheritanceparentid", IsPrimaryKey = true)] public int     Inheritanceparentid { get; set; } // INTEGER
-		[Column("typediscriminator"                       )] public int?    Typediscriminator   { get; set; } // INTEGER
-		[Column("name"                                    )] public string? Name                { get; set; } // NVARCHAR(50)
-	}
-
-	public static partial class ExtensionMethods
-	{
-		#region Table Extensions
-		public static Inheritanceparent? Find(this ITable<Inheritanceparent> table, int inheritanceparentid)
-		{
-			return table.FirstOrDefault(e => e.Inheritanceparentid == inheritanceparentid);
-		}
-
-		public static Inheritancechild? Find(this ITable<Inheritancechild> table, int inheritancechildid)
-		{
-			return table.FirstOrDefault(e => e.Inheritancechildid == inheritancechildid);
-		}
-
-		public static Person? Find(this ITable<Person> table, int personid)
-		{
-			return table.FirstOrDefault(e => e.Personid == personid);
-		}
-
-		public static Doctor? Find(this ITable<Doctor> table, int personid)
-		{
-			return table.FirstOrDefault(e => e.Personid == personid);
-		}
-
-		public static Patient? Find(this ITable<Patient> table, int personid)
-		{
-			return table.FirstOrDefault(e => e.Personid == personid);
-		}
-
-		public static Testidentity? Find(this ITable<Testidentity> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Alltype? Find(this ITable<Alltype> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Testunique? Find(this ITable<Testunique> table, int id1, int id2)
-		{
-			return table.FirstOrDefault(e => e.Id1 == id1 && e.Id2 == id2);
-		}
-
-		public static Testmerge1? Find(this ITable<Testmerge1> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Testmerge2? Find(this ITable<Testmerge2> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-		#endregion
-	}
-
-	[Table("inheritancechild", Schema = "informix")]
-	public partial class Inheritancechild
-	{
-		[Column("inheritancechildid" , IsPrimaryKey = true)] public int     Inheritancechildid  { get; set; } // INTEGER
-		[Column("inheritanceparentid"                     )] public int     Inheritanceparentid { get; set; } // INTEGER
-		[Column("typediscriminator"                       )] public int?    Typediscriminator   { get; set; } // INTEGER
-		[Column("name"                                    )] public string? Name                { get; set; } // NVARCHAR(50)
-	}
-
-	[Table("person", Schema = "informix")]
-	public partial class Person
-	{
-		[Column("personid"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     Personid   { get; set; } // SERIAL
-		[Column("firstname" , CanBeNull    = false                                                             )] public string  Firstname  { get; set; } = null!; // NVARCHAR(50)
-		[Column("lastname"  , CanBeNull    = false                                                             )] public string  Lastname   { get; set; } = null!; // NVARCHAR(50)
-		[Column("middlename"                                                                                   )] public string? Middlename { get; set; } // NVARCHAR(50)
-		[Column("gender"                                                                                       )] public char    Gender     { get; set; } // CHAR(1)
-
-		#region Associations
-		/// <summary>
-		/// FK_doctor_person backreference
-		/// </summary>
-		[Association(ThisKey = nameof(Personid), OtherKey = nameof(Informix.Doctor.Personid))]
-		public Doctor? Doctor { get; set; }
-
-		/// <summary>
-		/// FK_patient_person backreference
-		/// </summary>
-		[Association(ThisKey = nameof(Personid), OtherKey = nameof(Informix.Patient.Personid))]
-		public Patient? Patient { get; set; }
-		#endregion
-	}
-
-	[Table("doctor", Schema = "informix")]
-	public partial class Doctor
-	{
-		[Column("personid", IsPrimaryKey = true )] public int    Personid { get; set; } // INTEGER
-		[Column("taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // NVARCHAR(50)
-
-		#region Associations
-		/// <summary>
-		/// FK_doctor_person
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Personid), OtherKey = nameof(Informix.Person.Personid))]
-		public Person Person { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("patient", Schema = "informix")]
-	public partial class Patient
-	{
-		[Column("personid" , IsPrimaryKey = true )] public int    Personid  { get; set; } // INTEGER
-		[Column("diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // NVARCHAR(100)
-
-		#region Associations
-		/// <summary>
-		/// FK_patient_person
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Personid), OtherKey = nameof(Informix.Person.Personid))]
-		public Person Person { get; set; } = null!;
-		#endregion
-	}
-
-	[Table("parent", Schema = "informix")]
-	public partial class Parent
-	{
-		[Column("parentid")] public int? Parentid { get; set; } // INTEGER
-		[Column("value1"  )] public int? Value1   { get; set; } // INTEGER
-	}
-
-	[Table("child", Schema = "informix")]
-	public partial class Child
-	{
-		[Column("parentid")] public int? Parentid { get; set; } // INTEGER
-		[Column("childid" )] public int? Childid  { get; set; } // INTEGER
-	}
-
-	[Table("grandchild", Schema = "informix")]
-	public partial class Grandchild
-	{
-		[Column("parentid"    )] public int? Parentid     { get; set; } // INTEGER
-		[Column("childid"     )] public int? Childid      { get; set; } // INTEGER
-		[Column("grandchildid")] public int? Grandchildid { get; set; } // INTEGER
-	}
-
-	[Table("linqdatatypes", Schema = "informix")]
-	public partial class Linqdatatype
-	{
-		[Column("id"            )] public int?      Id             { get; set; } // INTEGER
-		[Column("moneyvalue"    )] public decimal?  Moneyvalue     { get; set; } // DECIMAL(10,4)
-		[Column("datetimevalue" )] public DateTime? Datetimevalue  { get; set; } // DATETIME YEAR TO FRACTION(3)
-		[Column("datetimevalue2")] public DateTime? Datetimevalue2 { get; set; } // DATETIME YEAR TO FRACTION(3)
-		[Column("boolvalue"     )] public bool?     Boolvalue      { get; set; } // BOOLEAN
-		[Column("guidvalue"     )] public string?   Guidvalue      { get; set; } // CHAR(36)
-		[Column("binaryvalue"   )] public byte[]?   Binaryvalue    { get; set; } // BYTE
-		[Column("smallintvalue" )] public short?    Smallintvalue  { get; set; } // SMALLINT
-		[Column("intvalue"      )] public int?      Intvalue       { get; set; } // INTEGER
-		[Column("bigintvalue"   )] public long?     Bigintvalue    { get; set; } // BIGINT
-		[Column("stringvalue"   )] public string?   Stringvalue    { get; set; } // NVARCHAR(50)
-	}
-
-	[Table("testidentity", Schema = "informix")]
-	public partial class Testidentity
-	{
-		[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // SERIAL
 	}
 
 	[Table("alltypes", Schema = "informix")]
@@ -260,26 +89,175 @@ namespace Cli.T4.Informix
 		[Column("bytedatatype"                                                                                      )] public byte[]?   Bytedatatype     { get; set; } // BYTE
 	}
 
-	[Table("testunique", Schema = "informix")]
-	public partial class Testunique
+	public static partial class ExtensionMethods
 	{
-		[Column("id1", IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int Id1 { get; set; } // INTEGER
-		[Column("id2", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int Id2 { get; set; } // INTEGER
-		[Column("id3"                                          )] public int Id3 { get; set; } // INTEGER
-		[Column("id4"                                          )] public int Id4 { get; set; } // INTEGER
+		#region Table Extensions
+		public static Alltype? Find(this ITable<Alltype> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Doctor? Find(this ITable<Doctor> table, int personid)
+		{
+			return table.FirstOrDefault(e => e.Personid == personid);
+		}
+
+		public static Inheritancechild? Find(this ITable<Inheritancechild> table, int inheritancechildid)
+		{
+			return table.FirstOrDefault(e => e.Inheritancechildid == inheritancechildid);
+		}
+
+		public static Inheritanceparent? Find(this ITable<Inheritanceparent> table, int inheritanceparentid)
+		{
+			return table.FirstOrDefault(e => e.Inheritanceparentid == inheritanceparentid);
+		}
+
+		public static Patient? Find(this ITable<Patient> table, int personid)
+		{
+			return table.FirstOrDefault(e => e.Personid == personid);
+		}
+
+		public static Person? Find(this ITable<Person> table, int personid)
+		{
+			return table.FirstOrDefault(e => e.Personid == personid);
+		}
+
+		public static Testidentity? Find(this ITable<Testidentity> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Testmerge1? Find(this ITable<Testmerge1> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Testmerge2? Find(this ITable<Testmerge2> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Testunique? Find(this ITable<Testunique> table, int id1, int id2)
+		{
+			return table.FirstOrDefault(e => e.Id1 == id1 && e.Id2 == id2);
+		}
+		#endregion
+	}
+
+	[Table("child", Schema = "informix")]
+	public partial class Child
+	{
+		[Column("parentid")] public int? Parentid { get; set; } // INTEGER
+		[Column("childid" )] public int? Childid  { get; set; } // INTEGER
+	}
+
+	[Table("collatedtable", Schema = "informix")]
+	public partial class Collatedtable
+	{
+		[Column("id"                                )] public int    Id              { get; set; } // INTEGER
+		[Column("casesensitive"  , CanBeNull = false)] public string Casesensitive   { get; set; } = null!; // VARCHAR(20)
+		[Column("caseinsensitive", CanBeNull = false)] public string Caseinsensitive { get; set; } = null!; // NVARCHAR(20)
+	}
+
+	[Table("doctor", Schema = "informix")]
+	public partial class Doctor
+	{
+		[Column("personid", IsPrimaryKey = true )] public int    Personid { get; set; } // INTEGER
+		[Column("taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // NVARCHAR(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_testfkunique_testunique backreference
+		/// FK_doctor_person
 		/// </summary>
-		[Association(ThisKey = nameof(Id1) + "," + nameof(Id1), OtherKey = nameof(Testfkunique.Id1) + "," + nameof(Id1))]
-		public IEnumerable<Testfkunique> Testfkuniques { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(Personid), OtherKey = nameof(Informix.Person.Personid))]
+		public Person Person { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("grandchild", Schema = "informix")]
+	public partial class Grandchild
+	{
+		[Column("parentid"    )] public int? Parentid     { get; set; } // INTEGER
+		[Column("childid"     )] public int? Childid      { get; set; } // INTEGER
+		[Column("grandchildid")] public int? Grandchildid { get; set; } // INTEGER
+	}
+
+	[Table("inheritancechild", Schema = "informix")]
+	public partial class Inheritancechild
+	{
+		[Column("inheritancechildid" , IsPrimaryKey = true)] public int     Inheritancechildid  { get; set; } // INTEGER
+		[Column("inheritanceparentid"                     )] public int     Inheritanceparentid { get; set; } // INTEGER
+		[Column("typediscriminator"                       )] public int?    Typediscriminator   { get; set; } // INTEGER
+		[Column("name"                                    )] public string? Name                { get; set; } // NVARCHAR(50)
+	}
+
+	[Table("inheritanceparent", Schema = "informix")]
+	public partial class Inheritanceparent
+	{
+		[Column("inheritanceparentid", IsPrimaryKey = true)] public int     Inheritanceparentid { get; set; } // INTEGER
+		[Column("typediscriminator"                       )] public int?    Typediscriminator   { get; set; } // INTEGER
+		[Column("name"                                    )] public string? Name                { get; set; } // NVARCHAR(50)
+	}
+
+	[Table("linqdatatypes", Schema = "informix")]
+	public partial class Linqdatatype
+	{
+		[Column("id"            )] public int?      Id             { get; set; } // INTEGER
+		[Column("moneyvalue"    )] public decimal?  Moneyvalue     { get; set; } // DECIMAL(10,4)
+		[Column("datetimevalue" )] public DateTime? Datetimevalue  { get; set; } // DATETIME YEAR TO FRACTION(3)
+		[Column("datetimevalue2")] public DateTime? Datetimevalue2 { get; set; } // DATETIME YEAR TO FRACTION(3)
+		[Column("boolvalue"     )] public bool?     Boolvalue      { get; set; } // BOOLEAN
+		[Column("guidvalue"     )] public string?   Guidvalue      { get; set; } // CHAR(36)
+		[Column("binaryvalue"   )] public byte[]?   Binaryvalue    { get; set; } // BYTE
+		[Column("smallintvalue" )] public short?    Smallintvalue  { get; set; } // SMALLINT
+		[Column("intvalue"      )] public int?      Intvalue       { get; set; } // INTEGER
+		[Column("bigintvalue"   )] public long?     Bigintvalue    { get; set; } // BIGINT
+		[Column("stringvalue"   )] public string?   Stringvalue    { get; set; } // NVARCHAR(50)
+	}
+
+	[Table("parent", Schema = "informix")]
+	public partial class Parent
+	{
+		[Column("parentid")] public int? Parentid { get; set; } // INTEGER
+		[Column("value1"  )] public int? Value1   { get; set; } // INTEGER
+	}
+
+	[Table("patient", Schema = "informix")]
+	public partial class Patient
+	{
+		[Column("personid" , IsPrimaryKey = true )] public int    Personid  { get; set; } // INTEGER
+		[Column("diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // NVARCHAR(100)
+
+		#region Associations
+		/// <summary>
+		/// FK_patient_person
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(Personid), OtherKey = nameof(Informix.Person.Personid))]
+		public Person Person { get; set; } = null!;
+		#endregion
+	}
+
+	[Table("person", Schema = "informix")]
+	public partial class Person
+	{
+		[Column("personid"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     Personid   { get; set; } // SERIAL
+		[Column("firstname" , CanBeNull    = false                                                             )] public string  Firstname  { get; set; } = null!; // NVARCHAR(50)
+		[Column("lastname"  , CanBeNull    = false                                                             )] public string  Lastname   { get; set; } = null!; // NVARCHAR(50)
+		[Column("middlename"                                                                                   )] public string? Middlename { get; set; } // NVARCHAR(50)
+		[Column("gender"                                                                                       )] public char    Gender     { get; set; } // CHAR(1)
+
+		#region Associations
+		/// <summary>
+		/// FK_doctor_person backreference
+		/// </summary>
+		[Association(ThisKey = nameof(Personid), OtherKey = nameof(Informix.Doctor.Personid))]
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_testfkunique_testunique_1 backreference
+		/// FK_patient_person backreference
 		/// </summary>
-		[Association(ThisKey = nameof(Id3) + "," + nameof(Id3), OtherKey = nameof(Testfkunique.Id3) + "," + nameof(Id3))]
-		public IEnumerable<Testfkunique> Testfkuniques1 { get; set; } = null!;
+		[Association(ThisKey = nameof(Personid), OtherKey = nameof(Informix.Patient.Personid))]
+		public Patient? Patient { get; set; }
 		#endregion
 	}
 
@@ -295,15 +273,21 @@ namespace Cli.T4.Informix
 		/// <summary>
 		/// FK_testfkunique_testunique
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Id1) + "," + nameof(Id1), OtherKey = nameof(Informix.Testunique.Id1) + "," + nameof(Id1))]
+		[Association(CanBeNull = false, ThisKey = nameof(Id1) + "," + nameof(Id2), OtherKey = nameof(Informix.Testunique.Id1) + "," + nameof(Informix.Testunique.Id2))]
 		public Testunique Testunique { get; set; } = null!;
 
 		/// <summary>
 		/// FK_testfkunique_testunique_1
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Id3) + "," + nameof(Id3), OtherKey = nameof(Informix.Testunique.Id3) + "," + nameof(Id3))]
+		[Association(CanBeNull = false, ThisKey = nameof(Id3) + "," + nameof(Id4), OtherKey = nameof(Informix.Testunique.Id3) + "," + nameof(Informix.Testunique.Id4))]
 		public Testunique Testunique1 { get; set; } = null!;
 		#endregion
+	}
+
+	[Table("testidentity", Schema = "informix")]
+	public partial class Testidentity
+	{
+		[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // SERIAL
 	}
 
 	[Table("testmerge1", Schema = "informix")]
@@ -354,12 +338,27 @@ namespace Cli.T4.Informix
 		[Column("fieldenumnumber"                     )] public int?      Fieldenumnumber { get; set; } // INTEGER
 	}
 
-	[Table("collatedtable", Schema = "informix")]
-	public partial class Collatedtable
+	[Table("testunique", Schema = "informix")]
+	public partial class Testunique
 	{
-		[Column("id"                                )] public int    Id              { get; set; } // INTEGER
-		[Column("casesensitive"  , CanBeNull = false)] public string Casesensitive   { get; set; } = null!; // VARCHAR(20)
-		[Column("caseinsensitive", CanBeNull = false)] public string Caseinsensitive { get; set; } = null!; // NVARCHAR(20)
+		[Column("id1", IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int Id1 { get; set; } // INTEGER
+		[Column("id2", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int Id2 { get; set; } // INTEGER
+		[Column("id3"                                          )] public int Id3 { get; set; } // INTEGER
+		[Column("id4"                                          )] public int Id4 { get; set; } // INTEGER
+
+		#region Associations
+		/// <summary>
+		/// FK_testfkunique_testunique backreference
+		/// </summary>
+		[Association(ThisKey = nameof(Id1) + "," + nameof(Id2), OtherKey = nameof(Testfkunique.Id1) + "," + nameof(Testfkunique.Id2))]
+		public IEnumerable<Testfkunique> Testfkuniques { get; set; } = null!;
+
+		/// <summary>
+		/// FK_testfkunique_testunique_1 backreference
+		/// </summary>
+		[Association(ThisKey = nameof(Id3) + "," + nameof(Id4), OtherKey = nameof(Testfkunique.Id3) + "," + nameof(Testfkunique.Id4))]
+		public IEnumerable<Testfkunique> Testfkuniques1 { get; set; } = null!;
+		#endregion
 	}
 
 	[Table("personview", Schema = "informix", IsView = true)]

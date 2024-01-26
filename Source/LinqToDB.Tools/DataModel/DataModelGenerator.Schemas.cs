@@ -9,10 +9,10 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Defines addtional schema classes.
 		/// </summary>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="schema">Schema model.</param>
-		/// <param name="contextType">Main context type.</param>
 		/// <returns>Type of schema context-like class.</returns>
-		private IType BuildAdditionalSchema(AdditionalSchemaModel schema, IType contextType)
+		private static IType BuildAdditionalSchema(IDataModelGenerationContext context, AdditionalSchemaModel schema)
 		{
 			// generated code for additional schema looks like:
 			/*
@@ -34,29 +34,25 @@ namespace LinqToDB.DataModel
 			 * }
 			 */
 
-			var schemaWrapper = DefineFileClass(schema.WrapperClass);
-			var schemaContext = DefineClass(schemaWrapper.Classes(), schema.ContextClass);
-			var findMethods   = schemaWrapper.Regions().New(FIND_METHODS_REGION).Methods(false);
+			var schemaWrapper = context.DefineFileClass(schema.WrapperClass);
+			var schemaContext = context.DefineClass(schemaWrapper.Classes(), schema.ContextClass);
 
 			// schema data context field
 			var ctxField = schemaContext
 				.Fields(false)
-					.New(AST.Name(SCHEMA_CONTEXT_FIELD), WellKnownTypes.LinqToDB.IDataContext)
+					.New(context.AST.Name(DataModelConstants.SCHEMA_CONTEXT_FIELD), WellKnownTypes.LinqToDB.IDataContext)
 						.Private()
 						.ReadOnly();
 
+			var childContext  = new NestedSchemaGenerationContext(context, schema, schemaWrapper, schemaContext, ctxField.Field.Reference);
+			context.RegisterChildContext(schema, childContext);
+
 			// define schema table mappings as nested classes in wrapper class
 			var schemaEntities = schemaWrapper.Classes();
-			BuildEntities(
-				schema.Entities,
-				entity => DefineClass(schemaEntities, entity.Class),
-				schemaContext.Properties(true),
-				contextType,
-				AST.Member(schemaContext.Type.This, ctxField.Field.Reference),
-				() => findMethods);
+			BuildEntities(childContext, schema.Entities, entity => context.DefineClass(schemaEntities, entity.Class));
 
 			// add constructor to context-like class
-			var ctorParam = AST.Parameter(WellKnownTypes.LinqToDB.IDataContext, AST.Name(SCHEMA_CONTEXT_CONSTRUCTOR_PARAMETER), CodeParameterDirection.In);
+			var ctorParam = context.AST.Parameter(WellKnownTypes.LinqToDB.IDataContext, context.AST.Name(DataModelConstants.SCHEMA_CONTEXT_CONSTRUCTOR_PARAMETER), CodeParameterDirection.In);
 			schemaContext
 				.Constructors()
 					.New()
@@ -64,12 +60,9 @@ namespace LinqToDB.DataModel
 						.Parameter(ctorParam)
 						.Body()
 							.Append(
-								AST.Assign(
-									AST.Member(schemaContext.Type.This, ctxField.Field.Reference),
+								context.AST.Assign(
+									context.AST.Member(schemaContext.Type.This, ctxField.Field.Reference),
 									ctorParam.Reference));
-
-			// save wrapper and context classes in lookup for later use by function/parameter generators
-			_schemaClasses.Add(schema, (schemaWrapper, schemaContext));
 
 			return schemaContext.Type.Type;
 		}

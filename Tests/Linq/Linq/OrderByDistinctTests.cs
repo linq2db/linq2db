@@ -11,7 +11,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class OrderByDistinctTests : TestBase
 	{
-		class OrderByDistinctData
+		sealed class OrderByDistinctData
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -408,7 +408,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderBySubQuery([DataSources(ProviderName.SqlCe)] string context)
+		public void OrderBySubQuery([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GetTestData();
 

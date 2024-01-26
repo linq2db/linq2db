@@ -9,13 +9,9 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Generates table function mapping.
 		/// </summary>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="tableFunction">Function model.</param>
-		/// <param name="functionsGroup">Functions region.</param>
-		/// <param name="context">Data context class.</param>
-		private void BuildTableFunction(
-			TableFunctionModel tableFunction,
-			RegionGroup        functionsGroup,
-			CodeClass          context)
+		private static void BuildTableFunction(IDataModelGenerationContext context, TableFunctionModel tableFunction)
 		{
 			// generated code sample:
 			/*
@@ -31,13 +27,13 @@ namespace LinqToDB.DataModel
 			 */
 
 			// create function region
-			var region = functionsGroup.New(tableFunction.Method.Name);
+			var region = context.AddTableFunctionRegion(tableFunction.Method.Name);
 
 			// if function schema load failed, generate error pragma with exception details
 			if (tableFunction.Error != null)
 			{
-				if (_options.DataModel.GenerateProceduresSchemaError)
-					region.Pragmas().Add(AST.Error($"Failed to load return table schema: {tableFunction.Error}"));
+				if (context.Options.GenerateProceduresSchemaError)
+					region.Pragmas().Add(context.AST.Error($"Failed to load return table schema: {tableFunction.Error}"));
 
 				// as we cannot generate table function without knowing it's schema, we skip failed function
 				return;
@@ -52,36 +48,35 @@ namespace LinqToDB.DataModel
 			// to not load it on each call, we cache MethodInfo instance in static field
 			var methodInfo = region
 				.Fields(false)
-					.New(AST.Name(tableFunction.MethodInfoFieldName), WellKnownTypes.System.Reflection.MethodInfo)
+					.New(context.AST.Name(tableFunction.MethodInfoFieldName), WellKnownTypes.System.Reflection.MethodInfo)
 						.Private()
 						.Static()
 						.ReadOnly();
 
 			// generate mapping method with metadata
-			var method = DefineMethod(region.Methods(false), tableFunction.Method);
-			_metadataBuilder.BuildTableFunctionMetadata(tableFunction.Metadata, method);
+			var method = context.DefineMethod(region.Methods(false), tableFunction.Method);
 
 			// generate method parameters, return type and body
 
 			// table record type
 			IType returnEntity;
 			if (tableFunction.Result.Entity != null)
-				returnEntity = _entityBuilders[tableFunction.Result.Entity].Type.Type;
+				returnEntity = context.GetEntityBuilder(tableFunction.Result.Entity).Type.Type;
 			else
-				returnEntity = BuildCustomResultClass(tableFunction.Result.CustomTable!, region.Classes(), true).resultClassType;
+				returnEntity = BuildCustomResultClass(context, tableFunction.Result.CustomTable!, region.Classes(), true).resultClassType;
 
 			// set return type
 			// T4 used ITable<T> for return type, but there is no reason to use ITable<T> over IQueryable<T>
 			// Even more: ITable<T> is not correct return type here
-			var returnType = _options.DataModel.TableFunctionReturnsTable
+			var returnType = context.Options.TableFunctionReturnsTable
 				? WellKnownTypes.LinqToDB.ITable(returnEntity)
 				: WellKnownTypes.System.Linq.IQueryable(returnEntity);
 			method.Returns(returnType);
 
 			// parameters for GetTable call in mapping body
 			var parameters = new ICodeExpression[3 + tableFunction.Parameters.Count];
-			parameters[0] = context.This; // `this` extension method parameter
-			parameters[1] = context.This; // context parameter
+			parameters[0] = context.ContextReference; // `this` extension method parameter
+			parameters[1] = context.CurrentDataContext.Type.This; // context parameter
 			parameters[2] = methodInfo.Field.Reference; // method info field
 
 			// add table function parameters (if any)
@@ -93,17 +88,17 @@ namespace LinqToDB.DataModel
 				// - to mapping method
 				// - to GetTable call in mapping
 				// - to mapping call in MethodInfo initializer we add parameter's default value
-				var parameter = DefineParameter(method, param.Parameter);
+				var parameter = context.DefineParameter(method, param.Parameter);
 				parameters[i + 3] = parameter.Reference;
 				// TODO: potential issue: target-typed `default` could cause errors with overloads
-				fieldInitParameters[i] = AST.Default(param.Parameter.Type, true);
+				fieldInitParameters[i] = context.AST.Default(param.Parameter.Type, true);
 			}
 
 			// generate mapping body
 			method.Body()
 				.Append(
-					AST.Return(
-						AST.ExtCall(
+					context.AST.Return(
+						context.AST.ExtCall(
 							WellKnownTypes.LinqToDB.DataExtensions,
 							WellKnownTypes.LinqToDB.DataExtensions_GetTable,
 							WellKnownTypes.LinqToDB.ITable(returnEntity),
@@ -112,32 +107,35 @@ namespace LinqToDB.DataModel
 							parameters)));
 
 			// generate MethodInfo field initializer
-			var lambdaParam = AST.LambdaParameter(AST.Name(TABLE_FUNCTION_METHOD_INFO_CONTEXT_PARAMETER), context.Type);
+			var lambdaParam = context.AST.LambdaParameter(context.AST.Name(DataModelConstants.TABLE_FUNCTION_METHOD_INFO_CONTEXT_PARAMETER), context.CurrentDataContext.Type.Type);
 
 			// Expression<Func<context, returnType>>
-			var lambda = AST
-				.Lambda(WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(returnType, context.Type)), true)
+			var lambda = context.AST
+				.Lambda(WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(returnType, context.CurrentDataContext.Type.Type)), true)
 				.Parameter(lambdaParam);
 
 			lambda.Body()
 				.Append(
-					AST.Return(
-						AST.Call(
+					context.AST.Return(
+						context.AST.Call(
 							lambdaParam.Reference,
 							method.Method.Name,
 							returnType,
 							fieldInitParameters)));
 
 			methodInfo.AddInitializer(
-				AST.Call(
+				context.AST.Call(
 					new CodeTypeReference(WellKnownTypes.LinqToDB.Expressions.MemberHelper),
 					WellKnownTypes.LinqToDB.Expressions.MemberHelper_MethodOf,
 					WellKnownTypes.System.Reflection.MethodInfo,
-					new[] { functionsGroup.OwnerType.Type },
+					new[] { context.TableFunctionsClass.Type },
 					false,
 					lambda.Method));
 
-			// TODO: similar tables
+			// TODO: similar tables deduplication
+
+			// metadata last
+			context.MetadataBuilder?.BuildTableFunctionMetadata(context, tableFunction.Metadata, method);
 		}
 	}
 }

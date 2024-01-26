@@ -1,23 +1,22 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Extensions;
-	using Mapping;
 	using Common;
+	using Extensions;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Expressions;
+	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using LinqToDB.Common.Internal;
 
 	partial class ExpressionBuilder
 	{
@@ -164,6 +163,7 @@ namespace LinqToDB.Linq.Builder
 								}
 
 								var l  = Expressions.ConvertMember(context.builder.MappingSchema, ma.Expression?.Type, ma.Member);
+
 								if (l != null)
 								{
 									// In Grouping KeyContext we have to perform calculation on server side
@@ -182,8 +182,9 @@ namespace LinqToDB.Linq.Builder
 									var prevCount  = ctx.SelectQuery.Select.Columns.Count;
 									var expression = ctx.BuildExpression(ma, 0, context.enforceServerSide);
 
-									if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression
-																						&& ma.Expression?.NodeType == ExpressionType.Parameter)
+									if (expression.NodeType == ExpressionType.Extension &&
+									    expression is DefaultValueExpression &&
+									    ma.Expression?.NodeType == ExpressionType.Parameter)
 									{
 										var objExpression = context.builder.BuildExpression(ctx, ma.Expression, context.enforceServerSide, context.alias);
 										var varTempVar    = objExpression.NodeType == ExpressionType.Parameter
@@ -214,7 +215,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									if (!context.builder.IsEnumerableSource(ce) && context.builder.IsSubQuery(context.context, ce))
 									{
-										if (!context.context.Builder.IsMultipleQuery(ce, context.context.Builder.MappingSchema))
+										if (!IsMultipleQuery(ce, context.context.Builder.MappingSchema))
 										{
 											var info = context.builder.GetSubQueryContext(context.context, ce);
 											if (context.alias != null)
@@ -299,8 +300,7 @@ namespace LinqToDB.Linq.Builder
 								if (context.builder.IsGroupJoinSource(context.context, ce))
 								{
 									foreach (var arg in ce.Arguments.Skip(1))
-										if (!context.builder._skippedExpressions.Contains(arg))
-											context.builder._skippedExpressions.Add(arg);
+										context.builder._skippedExpressions.Add(arg);
 
 									if (context.builder.IsSubQuery(context.context, ce))
 									{
@@ -328,7 +328,7 @@ namespace LinqToDB.Linq.Builder
 
 								if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(ce)) && context.builder.IsSubQuery(context.context, ce))
 								{
-									if (context.builder.IsMultipleQuery(ce, context.builder.MappingSchema))
+									if (IsMultipleQuery(ce, context.builder.MappingSchema))
 										return new TransformInfo(context.builder.BuildMultipleQuery(context.context, ce, context.enforceServerSide));
 
 									return new TransformInfo(context.builder.GetSubQueryExpression(context.context, ce, context.enforceServerSide, context.alias));
@@ -336,9 +336,8 @@ namespace LinqToDB.Linq.Builder
 
 								if (ce.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
 								{
-									return new TransformInfo(context.builder.BuildSql(context.context, ce.Arguments[0], context.alias ?? ce.Arguments[1].EvaluateExpression<string>()));
+									return new TransformInfo(context.builder.BuildSql(context.context, ce.Arguments[0], context.alias ?? ce.Arguments[1].EvaluateExpression<string>(context.builder.DataContext)));
 								}
-
 
 								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, context.enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
 									return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
@@ -359,10 +358,7 @@ namespace LinqToDB.Linq.Builder
 									var newArgument = context.builder.ConvertAssignmentArgument(context.context, argument, ne.Members?[i], context.enforceServerSide, memberAlias);
 
 									if (newArgument != argument)
-									{
-										if (arguments == null)
-											arguments = ne.Arguments.Take(i).ToList();
-									}
+										arguments ??= ne.Arguments.Take(i).ToList();
 
 									arguments?.Add(newArgument);
 								}
@@ -548,7 +544,7 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
+		static bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
 		{
 			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
 			var result = !ce.IsQueryable(FirstSingleBuilder.MethodNames)
@@ -560,7 +556,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		class SubQueryContextInfo
+		sealed class SubQueryContextInfo
 		{
 			public MethodCallExpression Method  = null!;
 			public IBuildContext        Context = null!;
@@ -595,8 +591,7 @@ namespace LinqToDB.Linq.Builder
 		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr, bool enforceServerSide, string? alias)
 		{
 			var info = GetSubQueryContext(context, expr);
-			if (info.Expression == null)
-				info.Expression = info.Context.BuildExpression(null, 0, enforceServerSide);
+			info.Expression ??= info.Context.BuildExpression(null, 0, enforceServerSide);
 
 			if (!string.IsNullOrEmpty(alias))
 				info.Context.SetAlias(alias!);
@@ -820,8 +815,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ParameterExpression BuildVariable(Expression expr, string? name = null)
 		{
-			if (name == null)
-				name = expr.Type.Name + Interlocked.Increment(ref VarIndex);
+			name ??= expr.Type.Name + Interlocked.Increment(ref VarIndex);
 
 			var variable = Expression.Variable(
 				expr.Type,
@@ -844,7 +838,7 @@ namespace LinqToDB.Linq.Builder
 				BuildBlock(expr), new[]
 				{
 					QueryRunnerParam,
-					DataContextParam,
+					ExpressionConstants.DataContextParam,
 					DataReaderParam,
 					ExpressionParam,
 					ParametersParam,
@@ -867,7 +861,7 @@ namespace LinqToDB.Linq.Builder
 				IEnumerable<Expression> parameters);
 		}
 
-		class MultipleQueryHelper<TRet> : IMultipleQueryHelper
+		sealed class MultipleQueryHelper<TRet> : IMultipleQueryHelper
 		{
 			public Expression GetSubquery(
 				ExpressionBuilder       builder,
@@ -884,7 +878,7 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Call(
 					null,
 					MemberHelper.MethodOf(() => ExecuteSubQuery(null!, null!, null!)),
-						DataContextParam,
+						ExpressionConstants.DataContextParam,
 						Expression.NewArrayInit(typeof(object), parameters),
 						Expression.Constant(queryReader)
 					);
@@ -1019,8 +1013,7 @@ namespace LinqToDB.Linq.Builder
 					root.NodeType == ExpressionType.Parameter &&
 					!context.parameters.Contains((ParameterExpression)root))
 				{
-					if (context.builder._buildMultipleQueryExpressions == null)
-						context.builder._buildMultipleQueryExpressions = new HashSet<Expression>();
+					context.builder._buildMultipleQueryExpressions ??= new HashSet<Expression>();
 
 					context.builder._buildMultipleQueryExpressions.Add(e);
 

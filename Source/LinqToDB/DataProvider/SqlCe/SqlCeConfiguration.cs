@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.SqlCe
+﻿using System;
+
+namespace LinqToDB.DataProvider.SqlCe
 {
 	public static class SqlCeConfiguration
 	{
@@ -6,6 +8,11 @@
 		/// Enables force inlining of function parameters to support SQL CE 3.0.
 		/// Default value: <c>false</c>.
 		/// </summary>
-		public static bool InlineFunctionParameters;
+		[Obsolete("Use SqlCeOptions.Default.BulkCopyType instead.")]
+		public static bool InlineFunctionParameters
+		{
+			get => SqlCeOptions.Default.InlineFunctionParameters;
+			set => SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = value };
+		}
 	}
 }

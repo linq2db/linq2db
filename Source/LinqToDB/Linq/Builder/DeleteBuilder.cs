@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class DeleteBuilder : MethodCallBuilder
+	sealed class DeleteBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames =
 		{
@@ -86,10 +86,9 @@ namespace LinqToDB.Linq.Builder
 
 				deleteStatement.Output = new SqlOutputClause();
 
-				var deletedTable = builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable ? SqlTable.Deleted(methodCall.Method.GetGenericArguments()[0]) : deleteStatement.GetDeleteTable();
-
-				if (deletedTable == null)
-					throw new InvalidOperationException("Cannot find target table for DELETE statement");
+				var deletedTable = builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable
+					? SqlTable.Deleted(builder.MappingSchema.GetEntityDescriptor(methodCall.Method.GetGenericArguments()[0], builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated))
+					: deleteStatement.GetDeleteTable() ?? throw new InvalidOperationException("Cannot find target table for DELETE statement");
 
 				outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable);
 
@@ -119,7 +118,7 @@ namespace LinqToDB.Linq.Builder
 			return new DeleteContext(buildInfo.Parent, sequence);
 		}
 
-		class DeleteContext : SequenceContextBase
+		sealed class DeleteContext : SequenceContextBase
 		{
 			public enum DeleteType
 			{
@@ -164,7 +163,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		class DeleteWithOutputContext : SelectContext
+		sealed class DeleteWithOutputContext : SelectContext
 		{
 			public DeleteWithOutputContext(IBuildContext? parent, IBuildContext sequence, IBuildContext outputContext, LambdaExpression outputExpression)
 				: base(parent, outputExpression, outputContext)

@@ -5,7 +5,7 @@ namespace LinqToDB.Linq
 {
 	using Extensions;
 
-	class MemberInfoComparer : IEqualityComparer<MemberInfo>
+	sealed class MemberInfoComparer : IEqualityComparer<MemberInfo>
 	{
 		public static MemberInfoComparer Instance = new ();
 

@@ -31,11 +31,12 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<FtsTable>()
 				.HasTableName(type.ToString() + "_TABLE")
 				.HasColumn(t => t.text1)
-				.HasColumn(t => t.text2);
+				.HasColumn(t => t.text2)
+				.Build();
 
 			return ms;
 		}
@@ -124,8 +125,8 @@ namespace Tests.Linq
 				var query = Sql.Ext.SQLite().MatchTable(db.GetTable<FtsTable>(), "found");
 
 				var sql = query.ToString()!;
-				Assert.That(sql.Contains("p_1 = 'found'"));
-				Assert.That(sql.Contains("[FTS5_TABLE](@p_1)"));
+				Assert.That(sql.Contains(" = 'found'"));
+				Assert.That(sql.Contains("[FTS5_TABLE](@"));
 			}
 		}
 
@@ -692,7 +693,7 @@ namespace Tests.Linq
 
 		#region FTS shadow tables
 		[Table]
-		class FTS3_TABLE_segdir
+		sealed class FTS3_TABLE_segdir
 		{
 			[Column] public long    level;
 			[Column] public long    idx;

@@ -7,7 +7,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3371Tests : TestBase
 	{
-		private class PayRate
+		private sealed class PayRate
 		{
 			public PayRate()
 			{
@@ -18,7 +18,7 @@ namespace Tests.UserTests
 			public string Name { get; set; }
 		}
 
-		private class Employee
+		private sealed class Employee
 		{
 			public int      Id        { get; set; }
 			public PayRate? PayRate   { get; set; }
@@ -27,15 +27,17 @@ namespace Tests.UserTests
 
 
 		[Test]
-		public void NullReferenceExceptionTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void NullReferenceExceptionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms      = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 
 			builder.Entity<Employee>()
 				.Association(x => x.PayRate, x => x.PayRateId, x => x!.Id);
 
 			builder.Entity<PayRate>();
+
+			builder.Build();
 
 			var payRateData = new PayRate[]
 			{

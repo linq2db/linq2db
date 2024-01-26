@@ -3,30 +3,29 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 #if NATIVE_ASYNC
 using System.Threading;
 #endif
 
 namespace LinqToDB.DataProvider
 {
-	using System.Diagnostics.CodeAnalysis;
-	using System.Threading.Tasks;
+	using Async;
 	using Common;
-	using LinqToDB.Async;
-	using LinqToDB.Data;
+	using Data;
 	using Mapping;
 
-	public class BulkCopyReader<T> : BulkCopyReader,
-#if NATIVE_ASYNC
-		IAsyncDisposable
-#else
-		Async.IAsyncDisposable
-#endif
+	public class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
 	{
+#if !NATIVE_ASYNC
+#pragma warning disable CA2213 // Disposable fields should be disposed
 		readonly IEnumerator<T>?      _enumerator;
-#if NATIVE_ASYNC
+#pragma warning restore CA2213 // Disposable fields should be disposed
+#else
+		readonly IEnumerator<T>?      _enumerator;
 		readonly IAsyncEnumerator<T>? _asyncEnumerator;
 #endif
 
@@ -73,9 +72,13 @@ namespace LinqToDB.DataProvider
 		protected override void Dispose(bool disposing)
 #pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
 		{
-			if (disposing && _asyncEnumerator != null)
+			if (disposing)
 			{
-				SafeAwaiter.Run(() => _asyncEnumerator.DisposeAsync());
+				_enumerator?.Dispose();
+				if (_asyncEnumerator != null)
+				{
+					SafeAwaiter.Run(_asyncEnumerator.DisposeAsync);
+				}
 			}
 		}
 #endif
@@ -89,6 +92,7 @@ namespace LinqToDB.DataProvider
 		public ValueTask DisposeAsync()
 #endif
 		{
+			_enumerator?.Dispose();
 			return _asyncEnumerator?.DisposeAsync() ?? default;
 		}
 #else
@@ -119,7 +123,7 @@ namespace LinqToDB.DataProvider
 #endif
 		protected abstract object Current { get; }
 
-		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns)
+		protected BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns)
 		{
 			_dataConnection = dataConnection;
 			_columns        = columns;

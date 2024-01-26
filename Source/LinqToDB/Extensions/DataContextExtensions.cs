@@ -1,11 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
+// ReSharper disable once CheckNamespace
 namespace LinqToDB
 {
 	/// <summary>
 	/// Internal data context helpers.
 	/// </summary>
-	internal static class DataContextExtensions
+	static class DataContextExtensions
 	{
 		public static IReadOnlyCollection<string>? GetNextCommandHints(this IDataContext context, bool clearNextHints)
 		{

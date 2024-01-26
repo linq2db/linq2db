@@ -11,7 +11,13 @@ namespace LinqToDB.Benchmarks.Models
 {
 	public class NorthwindDB : DataConnection
 	{
+		public NorthwindDB(DataOptions options) : base(options)
+		{
+		}
+
+#pragma warning disable CA2000 // Dispose objects before losing scope
 		public NorthwindDB(IDataProvider provider) : base(provider, new MockDbConnection(Array.Empty<QueryResult>(), ConnectionState.Open))
+#pragma warning restore CA2000 // Dispose objects before losing scope
 		{
 		}
 

@@ -4,7 +4,7 @@ rm -rf ./clidriver/*
 
 if [ -e ./IBM.Data.Db2.dll ]
 then
-    nuget install Net.IBM.Data.Db2-lnx -Version 6.0.0.200 -ExcludeVersion
+    nuget install Net.IBM.Data.Db2-lnx -Version 7.0.0.200 -ExcludeVersion
     rm ./IBM.Data.Db2.dll
     cp -a ./Net.IBM.Data.Db2-lnx/buildTransitive/clidriver/. ./clidriver/
     cp -f ./Net.IBM.Data.Db2-lnx/lib/net6.0/IBM.Data.Db2.dll ./IBM.Data.Db2.dll

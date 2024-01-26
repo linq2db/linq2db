@@ -14,7 +14,7 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class CommonTests : TestBase
 	{
-		class MyDataConnection : TestDataConnection
+		sealed class MyDataConnection : TestDataConnection
 		{
 			public MyDataConnection(string context) : base(context)
 			{
@@ -56,7 +56,7 @@ namespace Tests.Exceptions
 										var newTable = new SqlTable(oldTable) { TableName = new (v.Context.tableName) };
 
 										foreach (var field in oldTable.Fields)
-											v.Context.dic.Add(field, newTable[field.Name] ?? throw new InvalidOperationException());
+											v.Context.dic.Add(field, newTable.FindFieldByMemberName(field.Name) ?? throw new InvalidOperationException());
 
 										return newTable;
 									}

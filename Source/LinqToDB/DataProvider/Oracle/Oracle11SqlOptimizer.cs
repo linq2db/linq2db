@@ -3,6 +3,7 @@
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Extensions;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -12,21 +13,21 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			CheckAliases(statement, 30);
 
-			return base.Finalize(statement);
+			return base.Finalize(mappingSchema, statement, dataOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			statement = ReplaceTakeSkipWithRowNum(statement, false);
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
-				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
+				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
+				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions); break;
 			}
 
 			return statement;
@@ -85,11 +86,21 @@ namespace LinqToDB.DataProvider.Oracle
 						if (expr.Expr1.SystemType == typeof(string) &&
 						    expr.Expr1.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value1) && value1 is string string1)
 						{
-							if (string1 == "")
+							if (string1.Length == 0)
 							{
 								var sc = new SqlSearchCondition();
 								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr2, false), true));
+
+								bool isNotEqual = expr.Operator == SqlPredicate.Operator.NotEqual;
+
+								// Add 'AND [col] IS NOT NULL' when checking Not Equal to Empty String,
+								// else add 'OR [col] IS NULL'
+								sc.Conditions.Add(new(
+								  isNot: false,
+								  new SqlPredicate.IsNull(expr.Expr2, isNot: isNotEqual),
+								  isOr: !isNotEqual)
+								);
+
 								return sc;
 							}
 						}
@@ -97,11 +108,21 @@ namespace LinqToDB.DataProvider.Oracle
 						if (expr.Expr2.SystemType == typeof(string) &&
 						    expr.Expr2.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value2) && value2 is string string2)
 						{
-							if (string2 == "")
+							if (string2.Length == 0)
 							{
 								var sc = new SqlSearchCondition();
 								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr1, false), true));
+
+								bool isNotEqual = expr.Operator == SqlPredicate.Operator.NotEqual;
+
+								// Add 'AND [col] IS NOT NULL' when checking Not Equal to Empty String,
+								// else add 'OR [col] IS NULL'
+								sc.Conditions.Add(new(
+								  isNot: false,
+								  new SqlPredicate.IsNull(expr.Expr1, isNot: isNotEqual),
+								  isOr: !isNotEqual)
+								);
+
 								return sc;
 							}
 						}
@@ -145,7 +166,10 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					case "Coalesce":
 					{
-						return ConvertCoalesceToBinaryFunc(func, "Nvl");
+						if (func.Parameters.Length == 2)
+							return ConvertCoalesceToBinaryFunc(func, "Nvl");
+							
+						return func;
 					}
 					case "Convert"        :
 					{
@@ -153,7 +177,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}
@@ -265,7 +289,7 @@ namespace LinqToDB.DataProvider.Oracle
 						query.Select.Take(null, null);
 						return 0;
 					}
-						
+
 					return 1;
 				},
 				static (_, queries) =>

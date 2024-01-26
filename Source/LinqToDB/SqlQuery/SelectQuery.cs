@@ -7,6 +7,7 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common.Internal;
 	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
@@ -92,10 +93,10 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
 		/// </summary>
-		public bool               DoNotRemove         { get; set; }
+		public bool                     DoNotRemove        { get; set; }
 		public string?                  QueryName          { get; set; }
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
-		public bool            DoNotSetAliases      { get; set; }
+		public bool                     DoNotSetAliases    { get; set; }
 
 		List<ISqlExpression[]>? _uniqueKeys;
 
@@ -104,7 +105,7 @@ namespace LinqToDB.SqlQuery
 		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
 		/// </summary>
 		public  List<ISqlExpression[]> UniqueKeys    => _uniqueKeys ??= new ();
-		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
+		public  bool                   HasUniqueKeys => _uniqueKeys?.Count > 0;
 
 		#endregion
 
@@ -291,9 +292,14 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlQuery;
 
-		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+		public string SqlText
+		{
+			get
+			{
+				using var sb = Pools.StringBuilder.Allocate();
+				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			}
+		}
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{

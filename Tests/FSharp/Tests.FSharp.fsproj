@@ -1,18 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
-		<LangVersion>latest</LangVersion>
 		<WarningLevel>5</WarningLevel>
-		
+
 		<!--https://github.com/dotnet/fsharp/issues/12315-->
 		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
+		<NoWarn>$(NoWarn);NU1507</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="AssemblyInfo.fs" />
 		<Compile Include="Issue2678.fs" />
 		<Compile Include="Models.fs" />
 		<Compile Include="Issue3357.fs" />
@@ -20,6 +18,7 @@
 		<Compile Include="SelectTest.fs" />
 		<Compile Include="InsertTest.fs" />
 		<Compile Include="MappingSchema.fs" />
+		<Compile Include="Issue3743.fs" />
 	</ItemGroup>
 
 	<ItemGroup>

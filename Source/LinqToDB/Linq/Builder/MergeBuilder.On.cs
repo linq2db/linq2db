@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-		internal class On : MethodCallBuilder
+		internal sealed class On : MethodCallBuilder
 		{
 			static readonly MethodInfo[] _supportedMethods = {OnMethodInfo1, OnMethodInfo2, OnTargetKeyMethodInfo};
 
@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 					var targetType       = statement.Target.SystemType!;
 					var pTarget          = Expression.Parameter(targetType, "t");
 					var pSource          = Expression.Parameter(targetType, "s");
-					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType);
+					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 					Expression? ex = null;
 

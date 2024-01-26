@@ -19,7 +19,7 @@ namespace LinqToDB.Benchmarks.Queries
 		QueryResult                    _result           = null!;
 		int                            _key              = 124;
 		string                          CommandText      = "SELECT [SalesOrderID],[RevisionNumber],[OrderDate],[DueDate],[ShipDate],[Status],[OnlineOrderFlag],[SalesOrderNumber],[PurchaseOrderNumber],[AccountNumber],[CustomerID],[SalesPersonID],[TerritoryID],[BillToAddressID],[ShipToAddressID],[ShipMethodID],[CreditCardID],[CreditCardApprovalCode],[CurrencyRateID],[SubTotal],[TaxAmt],[Freight],[TotalDue],[Comment],[rowguid],[ModifiedDate] FROM [Sales].[SalesOrderHeader]";
-		IDataProvider                  _provider         = SqlServerTools.GetDataProvider();
+		IDataProvider                  _provider         = SqlServerTools.GetDataProvider(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient);
 
 		[GlobalSetup]
 		public void Setup()
@@ -62,7 +62,7 @@ namespace LinqToDB.Benchmarks.Queries
 		[Benchmark(Baseline = true)]
 		public object? RawAdoNet()
 		{
-			var toExecute = new MockDbCommand(CommandText + " WHERE SalesOrderId=@p", _result);
+			using var toExecute = new MockDbCommand(CommandText + " WHERE SalesOrderId=@p", _result);
 			toExecute.Parameters.Add(new MockDbParameter("@p", _key));
 
 			var results = MaterializeSet(toExecute);

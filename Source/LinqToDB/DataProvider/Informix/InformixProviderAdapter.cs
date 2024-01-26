@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
-	using LinqToDB.Common;
-	using LinqToDB.DataProvider.DB2;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Common;
+	using DB2;
+	using Expressions;
+	using Extensions;
+	using Mapping;
 
 	// Note on informix providers: there are actually 3 providers:
 	// - SQLI Provider(IBM.Data.Informix) : netfx only, no bulk copy
@@ -168,18 +169,24 @@ namespace LinqToDB.DataProvider.Informix
 			if (name == ProviderName.Informix)
 			{
 				if (_ifxAdapter == null)
+				{
 					lock (_ifxSyncRoot)
-						if (_ifxAdapter == null)
-							_ifxAdapter = CreateIfxAdapter();
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_ifxAdapter ??= CreateIfxAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _ifxAdapter;
 			}
 			else
 			{
 				if (_db2Adapter == null)
+				{
 					lock (_db2SyncRoot)
-						if (_db2Adapter == null)
-							_db2Adapter = new (DB2ProviderAdapter.Instance);
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_db2Adapter ??= new(DB2ProviderAdapter.Instance);
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _db2Adapter;
 			}
@@ -271,7 +278,7 @@ namespace LinqToDB.DataProvider.Informix
 				if (type == null)
 					return null;
 
-				if (obsolete && type.GetCustomAttributes(typeof(ObsoleteAttribute), false).Length > 0)
+				if (obsolete && type.HasAttribute<ObsoleteAttribute>(false))
 					return null;
 
 				if (register)
@@ -294,7 +301,7 @@ namespace LinqToDB.DataProvider.Informix
 		#region Wrappers
 
 		[Wrapper]
-		private class IfxParameter
+		private sealed class IfxParameter
 		{
 			public IfxType IfxType { get; set; }
 		}
@@ -515,7 +522,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		[Wrapper]
-		internal class IfxTimeSpan : TypeWrapper
+		internal sealed class IfxTimeSpan : TypeWrapper
 		{
 			public IfxTimeSpan(object instance) : base(instance, null)
 			{

@@ -4,11 +4,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class OfTypeBuilder : MethodCallBuilder
+	sealed class OfTypeBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					for (var type = toType.BaseType; type != null && type != typeof(object); type = type.BaseType)
 					{
-						var mapping = builder.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
+						var mapping = builder.MappingSchema.GetEntityDescriptor(type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping;
 
 						if (mapping.Count > 0)
 						{
@@ -61,14 +61,14 @@ namespace LinqToDB.Linq.Builder
 
 		static ISqlPredicate MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)
 		{
-			var table          = new SqlTable(builder.MappingSchema, fromType);
-			var mapper         = builder.MappingSchema.GetEntityDescriptor(fromType);
+			var mapper         = builder.MappingSchema.GetEntityDescriptor(fromType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			var table          = new SqlTable(mapper);
 			var discriminators = mapper.InheritanceMapping;
 
 			return builder.MakeIsPredicate((context, table), context, discriminators, toType,
 				static (context, name) =>
 				{
-					var field  = context.table[name] ?? throw new LinqException($"Field {name} not found in table {context.table}");
+					var field  = context.table.FindFieldByMemberName(name) ?? throw new LinqException($"Field {name} not found in table {context.table}");
 					var member = field.ColumnDescriptor.MemberInfo;
 					var expr   = Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType!, "p"), member);
 					var sql    = context.context.ConvertToSql(expr, 1, ConvertFlags.Field)[0].Sql;
@@ -79,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region OfTypeContext
 
-		class OfTypeContext : PassThroughContext
+		sealed class OfTypeContext : PassThroughContext
 		{
 			public OfTypeContext(IBuildContext context, MethodCallExpression methodCall)
 				: base(context)

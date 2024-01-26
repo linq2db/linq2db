@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Data.Common;
 	using Common;
 	using Configuration;
 	using Data;
@@ -16,28 +14,30 @@ namespace LinqToDB.DataProvider.MySql
 		static readonly Lazy<IDataProvider> _mySqlDataProvider          = DataConnection.CreateDataProvider<MySqlDataProviderMySqlOfficial>();
 		static readonly Lazy<IDataProvider> _mySqlConnectorDataProvider = DataConnection.CreateDataProvider<MySqlDataProviderMySqlConnector>();
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (css.IsGlobal)
+			// ensure ClickHouse configuration over mysql protocol is not detected as mysql
+			if (options.ProviderName?.Contains("ClickHouse") == true || options.ConfigurationString?.Contains("ClickHouse") == true)
 				return null;
 
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
 				case ProviderName.MySqlOfficial                :
 				case MySqlProviderAdapter.MySqlDataAssemblyName: return _mySqlDataProvider.Value;
+				case ProviderName.MariaDB                      :
 				case ProviderName.MySqlConnector               : return _mySqlConnectorDataProvider.Value;
 
 				case ""                         :
 				case null                       :
-					if (css.Name.Contains("MySql"))
+					if (options.ConfigurationString?.Contains("MySql") == true)
 						goto case ProviderName.MySql;
 					break;
 				case MySqlProviderAdapter.MySqlDataClientNamespace:
 				case ProviderName.MySql                           :
-					if (css.Name.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName))
+					if (options.ConfigurationString?.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName) == true)
 						return _mySqlConnectorDataProvider.Value;
 
-					if (css.Name.Contains(MySqlProviderAdapter.MySqlDataAssemblyName))
+					if (options.ConfigurationString?.Contains(MySqlProviderAdapter.MySqlDataAssemblyName) == true)
 						return _mySqlDataProvider.Value;
 
 					return GetDataProvider();
@@ -126,7 +126,12 @@ namespace LinqToDB.DataProvider.MySql
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use MySqlOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => MySqlOptions.Default.BulkCopyType;
+			set => MySqlOptions.Default = MySqlOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 	}

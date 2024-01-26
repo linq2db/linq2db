@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Data.Linq;
 using System.Globalization;
+using System.IO;
 using System.Linq.Expressions;
 using System.Xml;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Common
 {
-	using System.Collections;
-	using System.IO;
 	using Expressions;
-	using JetBrains.Annotations;
 	using Mapping;
 
 	/// <summary>
@@ -25,34 +26,35 @@ namespace LinqToDB.Common
 		{
 			var xml = new XmlDocument() { XmlResolver = null };
 
-			xml.Load(XmlReader.Create(new StringReader(str), new XmlReaderSettings() { XmlResolver = null }));
+			using var reader = XmlReader.Create(new StringReader(str), new XmlReaderSettings() { XmlResolver = null });
+			xml.Load(reader);
 
 			return xml;
 		}
 
 		static Converter()
 		{
-			SetConverter<string,         char>       (v => v.Length == 0 ? '\0' : v[0]);
-			SetConverter<string,         Binary>     (v => new Binary(Convert.FromBase64String(v)));
-			SetConverter<Binary,         string>     (v => Convert.ToBase64String(v.ToArray()));
-			SetConverter<Binary,         byte[]>     (v => v.ToArray());
-			SetConverter<bool,           decimal>    (v => v ? 1m : 0m);
-			SetConverter<DateTimeOffset, DateTime>   (v => v.LocalDateTime);
-			SetConverter<string,         XmlDocument>(v => CreateXmlDocument(v));
-			SetConverter<string,         byte[]>     (v => Convert.FromBase64String(v));
-			SetConverter<byte[],         string>     (v => Convert.ToBase64String(v));
-			SetConverter<TimeSpan,       DateTime>   (v => DateTime.MinValue + v);
-			SetConverter<DateTime,       TimeSpan>   (v => v - DateTime.MinValue);
-			SetConverter<string,         DateTime>   (v => DateTime.Parse(v, CultureInfo.InvariantCulture, DateTimeStyles.NoCurrentDateDefault));
-			SetConverter<char,           bool>       (v => ToBoolean(v));
-			SetConverter<string,         bool>       (v => v.Length == 1 ? ToBoolean(v[0]) : bool.Parse(v));
+			SetConverter<string,         char>          (v => v.Length == 0 ? '\0' : v[0]);
+			SetConverter<string,         Binary>        (v => new Binary(Convert.FromBase64String(v)));
+			SetConverter<Binary,         string>        (v => Convert.ToBase64String(v.ToArray()));
+			SetConverter<Binary,         byte[]>        (v => v.ToArray());
+			SetConverter<bool,           decimal>       (v => v ? 1m : 0m);
+			SetConverter<DateTimeOffset, DateTime>      (v => v.LocalDateTime);
+			SetConverter<string,         XmlDocument>   (v => CreateXmlDocument(v));
+			SetConverter<string,         byte[]>        (v => Convert.FromBase64String(v));
+			SetConverter<byte[],         string>        (v => Convert.ToBase64String(v));
+			SetConverter<TimeSpan,       DateTime>      (v => DateTime.MinValue + v);
+			SetConverter<DateTime,       TimeSpan>      (v => v - DateTime.MinValue);
+			SetConverter<string,         DateTime>      (v => DateTime.Parse(v, CultureInfo.InvariantCulture, DateTimeStyles.NoCurrentDateDefault));
+			SetConverter<char,           bool>          (v => ToBoolean(v));
+			SetConverter<string,         bool>          (v => v.Length == 1 ? ToBoolean(v[0]) : bool.Parse(v));
 
 #if NET6_0_OR_GREATER
-			SetConverter<DateTime,       DateOnly>   (v => DateOnly.FromDateTime(v));
-			SetConverter<DateOnly,       DateTime>   (v => v.ToDateTime(TimeOnly.MinValue));
+			SetConverter<DateTime,       DateOnly>      (v => DateOnly.FromDateTime(v));
+			SetConverter<DateOnly,       DateTime>      (v => v.ToDateTime(TimeOnly.MinValue));
 
 			// use DateTime.Parse() because db processing may return strings that are full date/time.
-			SetConverter<string,         DateOnly>   (v => DateOnly.FromDateTime(DateTime.Parse(v, CultureInfo.InvariantCulture, DateTimeStyles.None)));
+			SetConverter<string,         DateOnly>      (v => DateOnly.FromDateTime(DateTime.Parse(v, CultureInfo.InvariantCulture, DateTimeStyles.None)));
 #endif
 
 			SetConverter<byte  , BitArray>(v => new BitArray(new byte[] { v }));

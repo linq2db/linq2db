@@ -7,9 +7,9 @@ using System.Collections.Generic;
 namespace LinqToDB.Common.Internal.Cache
 {
 	/// <summary>
-	/// Represents an entry in the <see cref="IMemoryCache{TKey}"/> implementation.
+	/// Represents an entry in the <see cref="IMemoryCache{TKey,TEntity}"/> implementation.
 	/// </summary>
-	public interface ICacheEntry<TKey> : IDisposable
+	public interface ICacheEntry<TKey,TEntity> : IDisposable
 		where TKey : notnull
 	{
 		/// <summary>
@@ -20,7 +20,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Gets or set the value of the cache entry.
 		/// </summary>
-		object? Value { get; set; }
+		TEntity? Value { get; set; }
 
 		/// <summary>
 		/// Gets or sets an absolute expiration date for the cache entry.

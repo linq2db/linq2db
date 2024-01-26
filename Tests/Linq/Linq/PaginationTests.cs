@@ -12,7 +12,7 @@ namespace Tests.Linq
 	public class PaginationTests : TestBase
 	{
 		[Table]
-		class PaginationData
+		sealed class PaginationData
 		{
 			[Column] public int Id { get; set; }
 			[Column] public int Value { get; set; }
@@ -88,7 +88,6 @@ namespace Tests.Linq
 				AreEqualWithComparer(pagination2.Items, byKey2.Items);
 			}
 		}
-
 
 		[Test]
 		public void ApplyOrderBy([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)

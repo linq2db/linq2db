@@ -133,6 +133,7 @@ jobs:
 - job: test_windows_job
   pool:
     vmImage: 'windows-2022'
+
   displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
@@ -154,6 +155,7 @@ jobs:
             netfx: ${{ test_config.enable_fw_net472 }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
             net60: ${{ test_config.enable_fw_net60 }}
+            net70: ${{ test_config.enable_fw_net70 }}
             x86: ${{ test_config.x86 }}
 
   steps:
@@ -162,11 +164,11 @@ jobs:
       with_baselines: ${{ parameters.with_baselines }}
 
 ########################
-#  Tests: Ubuntu 20.04 #
+#  Tests: Ubuntu 22.04 #
 ########################
 - job: test_ubuntu_job
   pool:
-    vmImage: 'ubuntu-20.04'
+    vmImage: 'ubuntu-22.04'
   displayName: 'Tests: Linux'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
@@ -186,6 +188,7 @@ jobs:
             extra: ${{ test_config.extra }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
             net60: ${{ test_config.enable_fw_net60 }}
+            net70: ${{ test_config.enable_fw_net70 }}
 
   steps:
   - template: test-workflow-linux.yml
@@ -197,7 +200,7 @@ jobs:
 #################
 - job: test_macos_job
   pool:
-    vmImage: 'macOS-10.15'
+    vmImage: 'macOS-13'
   displayName: 'Tests: MacOS'
   dependsOn: create_baselines_branch
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
@@ -218,6 +221,7 @@ jobs:
             extra: ${{ test_config.extra }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
             net60: ${{ test_config.enable_fw_net60 }}
+            net70: ${{ test_config.enable_fw_net70 }}
 
   steps:
   - template: test-workflow-macos.yml

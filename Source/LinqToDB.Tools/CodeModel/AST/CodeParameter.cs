@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System;
+
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Method parameter.
@@ -10,6 +12,9 @@
 		{
 			Direction    = direction;
 			DefaultValue = defaultValue;
+
+			Name.OnChange += _ => ChangeHandler?.Invoke(this);
+			Type.Type.SetNameChangeHandler(_ => ChangeHandler?.Invoke(this));
 		}
 
 		public CodeParameter(IType type, CodeIdentifier name, CodeParameterDirection direction, ICodeExpression? defaultValue)
@@ -27,5 +32,10 @@
 		public ICodeExpression?       DefaultValue { get; }
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Parameter;
+
+		/// <summary>
+		/// Internal change-tracking infrastructure. Single action instance is enough.
+		/// </summary>
+		internal Action<CodeParameter>? ChangeHandler { get; set; }
 	}
 }

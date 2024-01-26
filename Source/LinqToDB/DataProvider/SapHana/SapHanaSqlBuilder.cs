@@ -4,14 +4,14 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
-		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -61,23 +61,21 @@ namespace LinqToDB.DataProvider.SapHana
 			if (createTable.StatementHeader == null)
 			{
 				AppendIndent().Append("CREATE COLUMN TABLE ");
-				BuildPhysicalTable(createTable.Table!, null);
+				BuildPhysicalTable(createTable.Table, null);
 			}
 			else
 			{
 				var name = WithStringBuilder(
-					new StringBuilder(),
-					() =>
+					static ctx =>
 					{
-						BuildPhysicalTable(createTable.Table!, null);
-						return StringBuilder.ToString();
-					});
+						ctx.this_.BuildPhysicalTable(ctx.createTable.Table, null);
+					}, (this_: this, createTable));
 
 				AppendIndent().AppendFormat(createTable.StatementHeader, name);
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -120,7 +118,7 @@ namespace LinqToDB.DataProvider.SapHana
 					}
 					break;
 			}
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
@@ -181,7 +179,7 @@ namespace LinqToDB.DataProvider.SapHana
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			// <table_name> ::= [[<linked_server_name>.]<schema_name>.][library_name:]<identifier>
 			if (name.Server != null && name.Schema == null)

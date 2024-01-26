@@ -215,7 +215,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void OriginalTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void OriginalTest1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Table1>())

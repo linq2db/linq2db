@@ -4,19 +4,13 @@ parameters:
 steps:
 - checkout: none
 
+# .NET 7 SDK already installed https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md#language-and-runtime
 - task: UseDotNet@2
-  displayName: 'Install .net core 3.1'
-  inputs:
-    packageType: sdk
-    version: 3.1.x
-  condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
-
-- task: UseDotNet@2
-  displayName: 'Install .net 6'
+  displayName: 'Install .NET 6'
   inputs:
     packageType: sdk
     version: 6.x
-  condition: and(variables.title, succeeded())
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -45,6 +39,13 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net70/$(config).json net70/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy .NET 7 test config
+  condition: and(variables.title, eq(variables.net70, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -108,6 +109,17 @@ steps:
 - script: dotnet test ./net60/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
   displayName: 'Tests (NET60): $(title)'
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net70'
+  condition: and(variables.title, variables.script_local, eq(variables.net70, 'true'), succeeded())
+  displayName: Setup tests
+
+- script: dotnet test ./net70/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net70 -l trx $(extra)
+  condition: and(variables.title, eq(variables.net70, 'true'), succeeded())
+  displayName: 'Tests (.NET 7): $(title)'
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())

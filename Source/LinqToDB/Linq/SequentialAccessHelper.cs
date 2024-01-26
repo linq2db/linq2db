@@ -8,8 +8,8 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Linq
 {
-	using Extensions;
 	using Common;
+	using Extensions;
 	using LinqToDB.Expressions;
 	using Internal;
 	using Reflection;
@@ -26,7 +26,7 @@ namespace LinqToDB.Linq
 		}
 
 		// shared between two visitors to avoid extra context allocation
-		private class OptimizeMappingExpressionForSequentialAccessContext
+		private sealed class OptimizeMappingExpressionForSequentialAccessContext
 		{
 			public OptimizeMappingExpressionForSequentialAccessContext(int fieldCount)
 			{
@@ -264,7 +264,7 @@ namespace LinqToDB.Linq
 		private static int? TryGetColumnIndex(MethodCallExpression call)
 		{
 			// ColumnReaderAttribute method
-			var attr = call.Method.GetCustomAttribute<ColumnReaderAttribute>();
+			var attr = call.Method.GetAttribute<ColumnReaderAttribute>();
 			if (attr != null && call.Arguments[attr.IndexParameterIndex] is ConstantExpression c1 && c1.Type == typeof(int))
 				return (int)c1.Value!;
 
@@ -278,7 +278,7 @@ namespace LinqToDB.Linq
 			return null;
 		}
 
-		class OptimizeColumnReaderForSequentialAccessContext
+		sealed class OptimizeColumnReaderForSequentialAccessContext
 		{
 			public OptimizeColumnReaderForSequentialAccessContext(Expression isNullParameter, Expression rawValueParameter, int columnIndex)
 			{
@@ -345,7 +345,7 @@ namespace LinqToDB.Linq
 			return expression;
 		}
 
-		class ExtractRawValueReaderContext
+		sealed class ExtractRawValueReaderContext
 		{
 			public ExtractRawValueReaderContext(int columnIndex)
 			{

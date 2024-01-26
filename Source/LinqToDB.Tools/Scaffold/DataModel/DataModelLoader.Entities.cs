@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
+using LinqToDB.Scaffold.Internal;
 using LinqToDB.Schema;
 using LinqToDB.SqlQuery;
 
@@ -26,7 +26,7 @@ namespace LinqToDB.Scaffold
 			ISet<string>     defaultSchemas,
 			IType?           baseType)
 		{
-			var (tableName, isNonDefaultSchema) = ProcessObjectName(table.Name, defaultSchemas);
+			var (tableName, isNonDefaultSchema) = ProcessObjectName(table.Name, defaultSchemas, false);
 
 			var metadata = new EntityMetadata()
 			{
@@ -107,7 +107,7 @@ namespace LinqToDB.Scaffold
 			Dictionary<string, ColumnModel> entityColumnsMap;
 			_columns.Add(entity, entityColumnsMap = new());
 
-			foreach (var column in table.Columns)
+			foreach (var column in table.Columns.OrderBy(c => c.Ordinal))
 			{
 				var typeMapping    = MapType(column.Type);
 				var columnMetadata = new ColumnMetadata() { Name = column.Name };
@@ -204,7 +204,11 @@ namespace LinqToDB.Scaffold
 			// back-reference is always optional
 			var targetMetadata      = new AssociationMetadata() { CanBeNull = true           };
 			
-			var association         = new AssociationModel(sourceMetadata, targetMetadata, source.Entity, target.Entity, manyToOne);
+			var association         = new AssociationModel(sourceMetadata, targetMetadata, source.Entity, target.Entity, manyToOne)
+			{
+				ForeignKeyName = fk.Name
+			};
+
 			association.FromColumns = fromColumns;
 			association.ToColumns   = toColumns;
 
@@ -213,18 +217,19 @@ namespace LinqToDB.Scaffold
 			var backreferenceSummary = $"{fk.Name} backreference";
 
 			// use foreign key column name for association name generation
-			var sourceColumnName     = fk.Relation.Count == 1 ? fk.Relation[0].SourceColumn : null;
 			var fromAssociationName  = GenerateAssociationName(
-				fk.Target,
 				fk.Source,
-				sourceColumnName,
+				fk.Target,
+				false,
+				fk.Relation.Select(c => c.SourceColumn).ToArray(),
 				fk.Name,
 				_options.DataModel.SourceAssociationPropertyNameOptions,
 				defaultSchemas);
 			var toAssocationName     = GenerateAssociationName(
-				fk.Source,
 				fk.Target,
-				null,
+				fk.Source,
+				true,
+				fk.Relation.Select(c => c.TargetColumn).ToArray(),
 				fk.Name,
 				manyToOne
 					? _options.DataModel.TargetMultipleAssociationPropertyNameOptions
@@ -269,13 +274,13 @@ namespace LinqToDB.Scaffold
 			return association;
 		}
 
-		// a bit of inhuman logic to reduce migration PITA
 		/// <summary>
 		/// Generates association property/method name.
 		/// </summary>
 		/// <param name="thisTable">This table database name. Source table for direct relation and target for backreference.</param>
 		/// <param name="otherTable">Other table database name. Target table for direct relation and source for backreference.</param>
-		/// <param name="firstFromColumnName">Foreign key column name. Specified only for non-composite FK for from/source association.</param>
+		/// <param name="isBackReference">Identify relation side. When <c>true</c>, <paramref name="thisTable"/> references foreign key source table.</param>
+		/// <param name="thisColumns">Ordered set of column names, used by foreign key relation, defined on <paramref name="thisTable"/>.</param>
 		/// <param name="fkName">Foreign key constrain name.</param>
 		/// <param name="settings">Name generation/normalization rules.</param>
 		/// <param name="defaultSchemas">List of default database schema names.</param>
@@ -283,83 +288,23 @@ namespace LinqToDB.Scaffold
 		private string GenerateAssociationName(
 			SqlObjectName        thisTable,
 			SqlObjectName        otherTable,
-			string?              firstFromColumnName,
+			bool                 isBackReference,
+			string[]             thisColumns,
 			string               fkName,
 			NormalizationOptions settings,
 			ISet<string>         defaultSchemas)
 		{
-			var name = otherTable.Name;
-
-			// T4 compatibility mode use logic, similar to one, used by old T4 templates
-			if (settings.Transformation == NameTransformation.Association)
-			{
-				// approximate port of SetForeignKeyMemberName T4 method.
-				// Approximate, because not all logic could be converted due to difference in generation pipeline
-
-				string? newName = null;
-
-				// TODO: customization/interceptors not implemented yet
-				//if (schemaOptions.GetAssociationMemberName != null)
-				//{
-				//	newName = schemaOptions.GetAssociationMemberName(key);
-
-				//	if (newName != null)
-				//		name = ToValidName(newName);
-				//}
-
-				newName = fkName;
-
-				// if column name provided - generate association name based on column name
-				if (firstFromColumnName != null && firstFromColumnName.ToLower().EndsWith("id"))
-				{
-					// if column name provided and ends with ID suffix
-					// we trim ID part and possible _ connectors before it
-					newName = firstFromColumnName;
-					newName = newName.Substring(0, newName.Length - "id".Length).TrimEnd('_');
-					// here name could become empty if column name was ID
-				}
-				else
-				{
-					// if column name not provided - use FK name for association name
-
-					// remove FK_ prefix
-					if (newName.StartsWith("FK_"))
-						newName = newName.Substring(3);
-
-					// - split name into words using _ as separator
-					// - remove words that match target table name, schema or any of default schema
-					// - concat remaining words back into single name
-					newName = string.Concat(newName
-						.Split('_')
-						.Where(_ =>
-							_.Length > 0 && _ != otherTable.Name &&
-							(otherTable.Schema == null || defaultSchemas.Contains(otherTable.Schema) || _ != otherTable.Schema)));
-
-					// remove trailing digits
-					// note that new implementation match all digits, not just 0-9 as it was in T4
-					var skip = true;
-					newName  = string.Concat(newName.EnumerateCharacters().Reverse().Select(_ =>
-					{
-						if (skip)
-						{
-							if (_.category == UnicodeCategory.DecimalDigitNumber)
-								return string.Empty;
-							else
-								skip = false;
-						}
-
-						return _.codePoint;
-					}).Reverse());
-				}
-
-				// if resulting name is empty - just use:
-				// - for self-reference relation (to same table): table name
-				// - otherwise: foreign key name without changes
-				if (string.IsNullOrEmpty(newName))
-					newName = thisTable == otherTable ? thisTable.Name : fkName;
-
-				name = newName;
-			}
+			// name generation logic moved to separate class to cover it with unittests
+			
+			var name = NameGenerationServices.GenerateAssociationName(
+				(tableName, columnName) => _entities.TryGetValue(tableName, out var table) && table.Entity.Columns.Any(_ => _.Metadata.Name == columnName && _.Metadata.IsPrimaryKey),
+				thisTable,
+				otherTable,
+				isBackReference,
+				thisColumns,
+				fkName,
+				settings.Transformation,
+				defaultSchemas);
 
 			return _namingServices.NormalizeIdentifier(settings, name);
 		}

@@ -65,7 +65,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SelectManyLetJoinTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void SelectManyLetJoinTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<AttachmentEntity>())

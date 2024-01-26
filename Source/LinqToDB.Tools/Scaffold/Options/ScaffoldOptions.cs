@@ -1,4 +1,5 @@
 ﻿using LinqToDB.DataModel;
+using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
 
@@ -40,12 +41,17 @@ namespace LinqToDB.Scaffold
 			options.Schema.LoadTableOrView             = (_, _) => true;
 			options.Schema.IgnoreDuplicateForeignKeys  = false;
 			options.Schema.IncludeSchemas              = true;
+			options.Schema.DefaultSchemas              = null;
 			options.Schema.IncludeCatalogs             = true;
+			options.Schema.IgnoreSystemHistoryTables   = false;
 			options.Schema.UseSafeSchemaLoad           = false;
 			options.Schema.LoadDatabaseName            = false;
 			options.Schema.LoadProceduresSchema        = true;
 			options.Schema.LoadProcedureSchema         = _ => true;
+			options.Schema.LoadStoredProcedure         = _ => true;
 			options.Schema.LoadTableFunction           = _ => true;
+			options.Schema.LoadScalarFunction          = _ => true;
+			options.Schema.LoadAggregateFunction       = _ => true;
 			options.Schema.EnableSqlServerReturnValue  = false;
 			options.Schema.Schemas .Clear();
 			options.Schema.Catalogs.Clear();
@@ -53,6 +59,7 @@ namespace LinqToDB.Scaffold
 			// data model options
 			options.DataModel.IncludeDatabaseName                            = false;
 			options.DataModel.GenerateDefaultSchema                          = true;
+			options.DataModel.Metadata                                       = MetadataSource.Attributes;
 			options.DataModel.BaseEntityClass                                = null;
 			options.DataModel.EntityClassIsPartial                           = true;
 			options.DataModel.EntityClassNameProvider                        = null;
@@ -69,6 +76,7 @@ namespace LinqToDB.Scaffold
 			options.DataModel.HasTypedOptionsConstructor                     = true;
 			options.DataModel.ContextClassName                               = null;
 			options.DataModel.BaseContextClass                               = null;
+			options.DataModel.GenerateInitDataContextMethod                  = true;
 			options.DataModel.GenerateAssociations                           = true;
 			options.DataModel.GenerateAssociationExtensions                  = false;
 			options.DataModel.AssociationCollectionAsArray                   = false;

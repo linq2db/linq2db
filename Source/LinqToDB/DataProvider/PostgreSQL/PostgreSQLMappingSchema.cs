@@ -2,6 +2,7 @@
 using System.Data.Linq;
 using System.Globalization;
 using System.Net.NetworkInformation;
+using System.Numerics;
 using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
@@ -23,15 +24,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
-			SetValueToSqlConverter(typeof(bool),     (sb,dt,v) => sb.Append(v));
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql(sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(bool),       (sb, _,_,v) => sb.Append(v));
+			SetValueToSqlConverter(typeof(string),     (sb, _,_,v) => ConvertStringToSql(sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char),       (sb, _,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),     (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),     (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),       (sb, _,_,v) => sb.AppendFormat("'{0:D}'::uuid", (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime),   (sb,dt,_,v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(BigInteger), (sb, _,_,v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
 
 			// adds floating point special values support
-			SetValueToSqlConverter(typeof(float) , (sb, dt, v) =>
+			SetValueToSqlConverter(typeof(float) , (sb,_,_,v) =>
 			{
 				var f = (float)v;
 				var quote = float.IsNaN(f) || float.IsInfinity(f);
@@ -39,7 +42,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
 				if (quote) sb.Append("'::float4");
 			});
-			SetValueToSqlConverter(typeof(double), (sb, dt, v) =>
+			SetValueToSqlConverter(typeof(double), (sb,_,_,v) =>
 			{
 				var d = (double)v;
 				var quote = double.IsNaN(d) || double.IsInfinity(d);
@@ -50,10 +53,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			AddScalarType(typeof(string),    DataType.Text);
 			AddScalarType(typeof(TimeSpan),  DataType.Interval);
-			AddScalarType(typeof(TimeSpan?), DataType.Interval);
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb, dt, v) => BuildDate(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDate(sb, dt, (DateOnly)v));
 #endif
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
@@ -62,10 +64,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetConvertExpression<uint   , DataParameter>(value => new DataParameter(null, (long )value, DataType.Int64));
 			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, (long?)value, DataType.Int64), addNullCheck: false);
 
-			var ulongType = new SqlDataType(DataType.Decimal, typeof(decimal), 20, 0);
+			var ulongType = new SqlDataType(DataType.Decimal, typeof(ulong), 20, 0);
 			// set type for proper SQL type generation
 			AddScalarType(typeof(ulong ), ulongType);
-			AddScalarType(typeof(ulong?), ulongType);
 
 			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
 			SetConvertExpression<ulong?, DataParameter>(value => new DataParameter(null, (decimal?)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/, addNullCheck: false);
@@ -111,7 +112,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append('\'');
+			stringBuilder.Append("'::bytea");
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
@@ -153,6 +154,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public sealed class PostgreSQL95MappingSchema : LockedMappingSchema
 		{
 			public PostgreSQL95MappingSchema() : base(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
+		}
+
+		public sealed class PostgreSQL15MappingSchema : LockedMappingSchema
+		{
+			public PostgreSQL15MappingSchema() : base(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
 			{
 			}
 		}

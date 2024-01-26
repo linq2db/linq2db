@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Access
 
 	abstract class AccessSchemaProviderBase : SchemaProviderBase
 	{
-		public AccessSchemaProviderBase()
+		protected AccessSchemaProviderBase()
 		{
 		}
 
@@ -28,16 +28,16 @@ namespace LinqToDB.DataProvider.Access
 		{
 			if (dataTypeInfo == null && dataType != null)
 			{
-				if (dataType.ToLower() == "text")
+				if (dataType.ToLowerInvariant() == "text")
 					return length == 1 && !options.GenerateChar1AsString ? typeof(char) : typeof(string);
 			}
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			return dataType?.ToLower() switch
+			return dataType?.ToLowerInvariant() switch
 			{
 				"smallint"   => DataType.Int16,
 				"short"      => DataType.Int16,

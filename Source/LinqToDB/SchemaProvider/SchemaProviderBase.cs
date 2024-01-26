@@ -7,12 +7,13 @@ using System.Text;
 namespace LinqToDB.SchemaProvider
 {
 	using Common;
+	using Common.Internal;
 	using Data;
-	using LinqToDB.SqlProvider;
+	using SqlProvider;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
-		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, int? length, int? prec, int? scale);
+		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, int? length, int? precision, int? scale);
 		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection, GetSchemaOptions options);
 		protected abstract IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options);
 		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
@@ -66,28 +67,27 @@ namespace LinqToDB.SchemaProvider
 
 			var first = true;
 
-			var sb = new StringBuilder();
-			sb.Append("IN (");
+			using var sb = Pools.StringBuilder.Allocate();
+			sb.Value.Append("IN (");
 
 			foreach (var schema in schemas)
 			{
 				if (!first)
-					sb.Append(", ");
+					sb.Value.Append(", ");
 				else
 					first = false;
 
-				stringLiteralBuilder(sb, schema);
+				stringLiteralBuilder(sb.Value, schema);
 			}
 
-			sb.Append(')');
+			sb.Value.Append(')');
 
-			return sb.ToString();
+			return sb.Value.ToString();
 		}
 
 		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
-			if (options == null)
-				options = new GetSchemaOptions();
+			options ??= new GetSchemaOptions();
 
 			IncludedSchemas       = GetHashSet(options.IncludedSchemas,  options.StringComparer);
 			ExcludedSchemas       = GetHashSet(options.ExcludedSchemas,  options.StringComparer);
@@ -107,17 +107,27 @@ namespace LinqToDB.SchemaProvider
 			foreach (var dt in GetDataTypes(dataConnection))
 				if (dt.ProviderSpecific)
 				{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+					ProviderSpecificDataTypesDic.TryAdd(dt.TypeName, dt);
+					ProviderSpecificDataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
+#else
 					if (!ProviderSpecificDataTypesDic.ContainsKey(dt.TypeName))
 						ProviderSpecificDataTypesDic.Add(dt.TypeName, dt);
 					if (!ProviderSpecificDataTypesByProviderDbTypeDic.ContainsKey(dt.ProviderDbType))
 						ProviderSpecificDataTypesByProviderDbTypeDic.Add(dt.ProviderDbType, dt);
+#endif
 				}
 				else
 				{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+					DataTypesDic.TryAdd(dt.TypeName, dt);
+					DataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
+#else
 					if (!DataTypesDic.ContainsKey(dt.TypeName))
 						DataTypesDic.Add(dt.TypeName, dt);
 					if (!DataTypesByProviderDbTypeDic.ContainsKey(dt.ProviderDbType))
 						DataTypesByProviderDbTypeDic.Add(dt.ProviderDbType, dt);
+#endif
 				}
 
 			List<TableSchema>     tables;
@@ -193,6 +203,7 @@ namespace LinqToDB.SchemaProvider
 						Length               = column.c.Length,
 						Precision            = column.c.Precision,
 						Scale                = column.c.Scale,
+						Ordinal              = column.c.Ordinal,
 					});
 				}
 
@@ -259,7 +270,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				#region Procedures
 
-				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
 				var procs       = GetProcedures(dataConnection, options);
 				var n           = 0;
 
@@ -612,7 +623,7 @@ namespace LinqToDB.SchemaProvider
 
 					for (var i = 0; i < paramNames.Length; i++)
 					{
-						switch (paramNames[i].Trim().ToLower())
+						switch (paramNames[i].Trim().ToLowerInvariant())
 						{
 							case "size"       :
 							case "length"     : paramValues[i] = length; break;
@@ -630,12 +641,14 @@ namespace LinqToDB.SchemaProvider
 			return dbType;
 		}
 
+		private static readonly char[] _nameSeparators = new [] {' ', '\t'};
+
 		// TODO: use proper C# identifier validation procedure
 		public static string ToValidName(string name)
 		{
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
-				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)
+				var ss = name.Split(_nameSeparators, StringSplitOptions.RemoveEmptyEntries)
 					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
 
 				name = string.Concat(ss);
@@ -764,7 +777,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				name = key.MemberName;
 
-				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
+				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLowerInvariant().EndsWith("id"))
 				{
 					name = key.ThisColumns[0].MemberName;
 					name = name.Substring(0, name.Length - "id".Length).TrimEnd('_');

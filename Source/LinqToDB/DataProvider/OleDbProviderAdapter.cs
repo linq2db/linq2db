@@ -49,8 +49,11 @@ namespace LinqToDB.DataProvider
 		public static OleDbProviderAdapter GetInstance()
 		{
 			if (_instance == null)
+			{
 				lock (_syncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 					if (_instance == null)
+#pragma warning restore CA1508 // Avoid dead conditional code
 					{
 #if NETFRAMEWORK
 						var assembly = typeof(System.Data.OleDb.OleDbConnection).Assembly;
@@ -89,6 +92,7 @@ namespace LinqToDB.DataProvider
 							typeGetter,
 							oleDbSchemaTableGetter);
 					}
+			}
 
 			return _instance;
 		}
@@ -102,13 +106,13 @@ namespace LinqToDB.DataProvider
 		}
 
 		[Wrapper]
-		private class OleDbParameter
+		private sealed class OleDbParameter
 		{
 			public OleDbType OleDbType { get; set; }
 		}
 
 		[Wrapper]
-		private class OleDbConnection
+		private sealed class OleDbConnection
 		{
 			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotImplementedException();
 		}

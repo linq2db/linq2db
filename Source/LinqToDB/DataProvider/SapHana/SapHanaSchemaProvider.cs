@@ -445,7 +445,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{
@@ -769,6 +769,7 @@ namespace LinqToDB.DataProvider.SapHana
 					PrimaryKeyOrder      = -1,
 					IsIdentity           = column.c.IsIdentity,
 					Description          = column.c.Description,
+					Ordinal              = column.c.Ordinal,
 				});
 			}
 

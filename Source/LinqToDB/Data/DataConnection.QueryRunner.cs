@@ -12,10 +12,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
+	using Common.Internal;
 	using Linq;
-	using Common;
 	using SqlQuery;
 	using SqlProvider;
+	using Tools;
 
 	public partial class DataConnection
 	{
@@ -25,7 +26,7 @@ namespace LinqToDB.Data
 			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
 		}
 
-		internal class QueryRunner : QueryRunnerBase
+		internal sealed class QueryRunner : QueryRunnerBase
 		{
 			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object?[]? parameters, object?[]? preambles)
 				: base(query, queryNumber, dataConnection, expression, parameters, preambles)
@@ -41,7 +42,6 @@ namespace LinqToDB.Data
 
 			bool        _isAsync;
 			Expression? _mapperExpression;
-			DataReaderWrapper? _dataReader;
 
 			public override Expression? MapperExpression
 			{
@@ -50,8 +50,7 @@ namespace LinqToDB.Data
 				{
 					_mapperExpression = value;
 
-					if (value != null && Configuration.Linq.TraceMapperExpression &&
-					    _dataConnection.TraceSwitchConnection.TraceInfo)
+					if (value != null && DataContext.Options.LinqOptions.TraceMapperExpression && _dataConnection.TraceSwitchConnection.TraceInfo)
 					{
 						_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.MapperCreated, TraceOperation.BuildMapping, _isAsync)
 						{
@@ -68,9 +67,10 @@ namespace LinqToDB.Data
 			{
 				SetCommand(true);
 
-				var sqlProvider = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
+				var sqlProvider = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.Options);
 
-				var sb = new StringBuilder();
+				using var sbv = Pools.StringBuilder.Allocate();
+				var sb = sbv.Value;
 
 				sb.Append("-- ").Append(_dataConnection.ConfigurationString);
 
@@ -102,10 +102,11 @@ namespace LinqToDB.Data
 
 						var sql = sb.ToString();
 
-						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
+						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.Options);
 						sql = sqlBuilder.ApplyQueryHints(sql, _executionQuery.PreparedQuery.QueryHints);
 
-						sb = new StringBuilder(sql);
+						sb.Length = 0;
+						sb.Append(sql);
 					}
 				}
 
@@ -127,15 +128,13 @@ namespace LinqToDB.Data
 					_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, _isAsync)
 					{
 						TraceLevel       = TraceLevel.Info,
-						Command          = _dataReader?.Command ?? _dataConnection.CurrentCommand,
+						Command          = _dataConnection.CurrentCommand,
 						MapperExpression = MapperExpression,
 						StartTime        = _startedOn,
 						ExecutionTime    = _stopwatch.Elapsed,
 						RecordsAffected  = RowsCount
 					});
 				}
-
-				_dataReader = null;
 
 				base.Dispose();
 			}
@@ -150,7 +149,7 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 					_executionScope.Dispose();
 #else
-					await _executionScope.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await _executionScope.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 #endif
 
 				if (_dataConnection.TraceSwitchConnection.TraceInfo)
@@ -169,40 +168,15 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 				return base.DisposeAsync();
 #else
-				await base.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await base.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 #endif
 			}
 
-			public class CommandWithParameters
-			{
-				public CommandWithParameters(string command, SqlParameter[] sqlParameters)
-				{
-					Command = command;
-					SqlParameters = sqlParameters;
-				}
+			private sealed record CommandWithParameters(string Command, IReadOnlyList<SqlParameter> SqlParameters);
 
-				public string              Command       { get; }
-				public SqlParameter[]      SqlParameters { get; }
-			}
+			private sealed record PreparedQuery(CommandWithParameters[] Commands, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints);
 
-			public class PreparedQuery
-			{
-				public CommandWithParameters[]      Commands      = null!;
-				public SqlStatement                 Statement     = null!;
-				public IReadOnlyCollection<string>? QueryHints;
-			}
-
-			public class ExecutionPreparedQuery
-			{
-				public ExecutionPreparedQuery(PreparedQuery preparedQuery, DbParameter[]?[] commandsParameters)
-				{
-					PreparedQuery      = preparedQuery;
-					CommandsParameters = commandsParameters;
-				}
-
-				public readonly PreparedQuery         PreparedQuery;
-				public readonly DbParameter[]?[] CommandsParameters;
-			}
+			private sealed record ExecutionPreparedQuery(PreparedQuery PreparedQuery, DbParameter[]?[] CommandsParameters);
 
 			ExecutionPreparedQuery? _executionQuery;
 
@@ -222,12 +196,7 @@ namespace LinqToDB.Data
 			{
 				if (query.Context != null)
 				{
-					return new PreparedQuery
-					{
-						Commands   = (CommandWithParameters[])query.Context,
-						Statement  = query.Statement,
-						QueryHints = dataConnection.GetNextCommandHints(!forGetSqlText),
-					};
+					return new PreparedQuery((CommandWithParameters[])query.Context, query.Statement, dataConnection.GetNextCommandHints(!forGetSqlText));
 				}
 
 				var sql = query.Statement;
@@ -242,11 +211,11 @@ namespace LinqToDB.Data
 					sql.IsParameterDependent = true;
 				}
 
-				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer();
+				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
+				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (dataConnection.Options);
 
 				var cc = sqlBuilder.CommandCount(sql);
-				var sb = new StringBuilder();
+				using var sb = Pools.StringBuilder.Allocate();
 
 				var commands = new CommandWithParameters[cc];
 
@@ -265,11 +234,13 @@ namespace LinqToDB.Data
 
 				for (var i = 0; i < cc; i++)
 				{
-					var optimizationContext = new OptimizationContext(evaluationContext, aliases, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent);
-					sb.Length = 0;
+					var optimizationContext = new OptimizationContext(evaluationContext, aliases, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent, dataConnection.DataProvider.GetQueryParameterNormalizer);
+					sb.Value.Length = 0;
 
-					sqlBuilder.BuildSql(i, sql, sb, optimizationContext, startIndent);
-					commands[i] = new CommandWithParameters(sb.ToString(), optimizationContext.GetParameters().ToArray());
+					using (ActivityService.Start(ActivityID.BuildSql))
+						sqlBuilder.BuildSql(i, sql, sb.Value, optimizationContext, startIndent);
+
+					commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
 					optimizationContext.ClearParameters();
 				}
 
@@ -282,12 +253,7 @@ namespace LinqToDB.Data
 					query.Aliases = null;
 				}
 
-				return new PreparedQuery
-				{
-					Commands   = commands,
-					Statement  = sql,
-					QueryHints = dataConnection.GetNextCommandHints(!forGetSqlText)
-				};
+				return new PreparedQuery(commands, sql, dataConnection.GetNextCommandHints(!forGetSqlText));
 			}
 
 			static DbParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues, bool forGetSqlText)
@@ -301,21 +267,18 @@ namespace LinqToDB.Data
 					for (var index = 0; index < pq.Commands.Length; index++)
 					{
 						var command = pq.Commands[index];
-						if (command.SqlParameters.Length == 0)
+						if (command.SqlParameters.Count == 0)
 							continue;
 
-						var parms = new DbParameter[command.SqlParameters.Length];
+						var parms = new DbParameter[command.SqlParameters.Count];
 
-						for (var i = 0; i < command.SqlParameters.Length; i++)
+						for (var i = 0; i < command.SqlParameters.Count; i++)
 						{
 							var sqlp = command.SqlParameters[i];
 
-							if (dbCommand == null)
-							{
-								dbCommand = forGetSqlText
-									? dataConnection.EnsureConnection(false).CreateCommand()
-									: dataConnection.GetOrCreateCommand();
-							}
+							dbCommand ??= forGetSqlText
+								? dataConnection.EnsureConnection(false).CreateCommand()
+								: dataConnection.GetOrCreateCommand();
 
 							parms[i] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues), forGetSqlText);
 						}
@@ -366,7 +329,7 @@ namespace LinqToDB.Data
 				InitFirstCommand(_dataConnection, _executionQuery!);
 			}
 
-#region ExecuteNonQuery
+			#region ExecuteNonQuery
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			static async Task<int> ExecuteNonQueryImplAsync(
@@ -379,7 +342,7 @@ namespace LinqToDB.Data
 					InitFirstCommand(dataConnection, executionQuery);
 
 					return await dataConnection.ExecuteNonQueryAsync(cancellationToken)
-						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 
 				var rowsAffected = -1;
@@ -393,7 +356,7 @@ namespace LinqToDB.Data
 						try
 						{
 							await dataConnection.ExecuteNonQueryAsync(cancellationToken)
-								.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						}
 						catch (Exception)
 						{
@@ -402,7 +365,7 @@ namespace LinqToDB.Data
 					else
 					{
 						var n = await dataConnection.ExecuteNonQueryAsync(cancellationToken)
-							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 						if (i == 0)
 							rowsAffected = n;
@@ -468,7 +431,7 @@ namespace LinqToDB.Data
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 
 				return await ExecuteNonQueryImplAsync(dataConnection, executionQuery, cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -481,9 +444,9 @@ namespace LinqToDB.Data
 				return ExecuteNonQueryImpl(dataConnection, executionQuery);
 			}
 
-#endregion
+			#endregion
 
-#region ExecuteScalar
+			#region ExecuteScalar
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			static async Task<object?> ExecuteScalarImplAsync(
@@ -499,19 +462,19 @@ namespace LinqToDB.Data
 					{
 						// This is because the firebird provider does not return any parameters via ExecuteReader
 						// the rest of the providers must support this mode
-						await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 						return idParam.Value;
 					}
 
-					return await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					return await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 
-				await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				InitCommand(dataConnection, executionQuery, 1);
 
-				return await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				return await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -551,8 +514,8 @@ namespace LinqToDB.Data
 						idParam = dataConnection.CurrentCommand!.CreateParameter();
 
 						idParam.ParameterName = "IDENTITY_PARAMETER";
-						idParam.Direction = ParameterDirection.Output;
-						idParam.DbType = DbType.Decimal;
+						idParam.Direction     = ParameterDirection.Output;
+						idParam.DbType        = DbType.Decimal;
 
 						dataConnection.CurrentCommand!.Parameters.Add(idParam);
 					}
@@ -595,7 +558,7 @@ namespace LinqToDB.Data
 				return ExecuteScalarImpl(_dataConnection, _executionQuery!);
 			}
 
-#endregion
+			#endregion
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			static void InitFirstCommand(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
@@ -660,12 +623,12 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				return _dataReader = _dataConnection.ExecuteReader();
+				return _dataConnection.ExecuteReader();
 			}
 
-#endregion
+			#endregion
 
-			class DataReaderAsync : IDataReaderAsync
+			sealed class DataReaderAsync : IDataReaderAsync
 			{
 				public DataReaderAsync(DataReaderWrapper dataReader)
 				{
@@ -710,30 +673,30 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				base.SetCommand(false);
+				SetCommand(false);
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				_dataReader = await _dataConnection.ExecuteDataReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				var dataReader = await _dataConnection.ExecuteDataReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return new DataReaderAsync(_dataReader);
+				return new DataReaderAsync(dataReader);
 			}
 
 			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				base.SetCommand(false);
+				SetCommand(false);
 
 				if (_executionQuery!.PreparedQuery.Commands.Length == 1)
 				{
 					InitFirstCommand(_dataConnection, _executionQuery);
 
-					return await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					return await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 
 				for (var i = 0; i < _executionQuery.PreparedQuery.Commands.Length; i++)
@@ -744,7 +707,7 @@ namespace LinqToDB.Data
 					{
 						try
 						{
-							await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						}
 						catch
 						{
@@ -752,7 +715,7 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					}
 				}
 
@@ -764,7 +727,7 @@ namespace LinqToDB.Data
 				_isAsync = true;
 
 				await _dataConnection.EnsureConnectionAsync(cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				SetCommand();
 
@@ -790,19 +753,19 @@ namespace LinqToDB.Data
 					{
 						// it is done because Firebird does not return parameters through ExecuteReader
 						// Other providers should support such mode
-						await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 						return idparam.Value;
 					}
 
-					return await _dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					return await _dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 
-				await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				InitCommand(_dataConnection, _executionQuery, 1);
 
-				return await _dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				return await _dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}

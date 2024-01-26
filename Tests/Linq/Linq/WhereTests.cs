@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
+
 using FluentAssertions;
+
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
@@ -12,9 +16,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
 	using Model;
-	using System.Text.RegularExpressions;
 
 	[TestFixture]
 	public class WhereTests : TestBase
@@ -143,7 +145,7 @@ namespace Tests.Linq
 				TestOneJohn(from p in db.Person where p.ID == StaticTestMethod() select p);
 		}
 
-		class TestMethodClass
+		sealed class TestMethodClass
 		{
 			private readonly int _n;
 
@@ -498,7 +500,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, (from p in db.Parent where p.Value1 == p.ParentID && p.Value1 == 1 select p).ToList().Count);
 		}
 
-		class WhereCompareData
+		sealed class WhereCompareData
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -536,7 +538,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareEqual([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CompareEqual([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(WhereCompareData.Seed()))
@@ -549,7 +551,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareGreat([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CompareGreat([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(WhereCompareData.Seed()))
@@ -562,7 +564,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareLess([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void CompareLess([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(WhereCompareData.Seed()))
@@ -575,7 +577,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareNullableEqual([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CompareNullableEqual([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -587,7 +589,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareNullableNotEqual([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CompareNullableNotEqual([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -599,7 +601,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareNullableGreatOrEqual([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CompareNullableGreatOrEqual([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -611,7 +613,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareNullableGreat([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CompareNullableGreat([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -623,7 +625,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareNullableLessOrEqual([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CompareNullableLessOrEqual([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -635,7 +637,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareNullableLess([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CompareNullableLess([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1199,12 +1201,12 @@ namespace Tests.Linq
 					from p in Types
 					select new { Value = Math.Round(p.MoneyValue, 2) } into pp
 					where pp.Value != 0 && pp.Value != 7
-					select pp.Value
-					,
+					select pp.Value,
 					q);
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void SearchCondition1([DataSources] string context)
 		{
@@ -1219,7 +1221,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBySubQquery1([DataSources] string context)
+		public void GroupBySubQquery1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1236,7 +1238,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBySubQquery2([DataSources] string context)
+		public void GroupBySubQquery2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1253,7 +1255,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBySubQquery2In([DataSources] string context)
+		public void GroupBySubQquery2In([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1322,7 +1324,7 @@ namespace Tests.Linq
 			}
 		}
 
-
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void WhereDateTimeTest1([DataSources] string context)
 		{
@@ -1338,7 +1340,7 @@ namespace Tests.Linq
 			}
 		}
 
-
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void WhereDateTimeTest2([DataSources] string context)
 		{
@@ -1354,6 +1356,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void WhereDateTimeTest3([DataSources] string context)
 		{
@@ -1369,6 +1372,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void WhereDateTimeTest4([DataSources] string context)
 		{
@@ -1384,6 +1388,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void WhereDateTimeTest5([DataSources] string context)
 		{
@@ -1399,6 +1404,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void WhereDateTimeTest6([DataSources] string context)
 		{
@@ -1414,7 +1420,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class WhereCases
+		sealed class WhereCases
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1428,6 +1434,7 @@ namespace Tests.Linq
 			public static readonly IEqualityComparer<WhereCases> Comparer = ComparerBuilder.GetEqualityComparer<WhereCases>();
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void WhereBooleanTest2([DataSources(TestProvName.AllSybase, TestProvName.AllFirebird)] string context)
 		{
@@ -1630,7 +1637,7 @@ namespace Tests.Linq
 					true);
 
 				// remote context doesn't have access to final SQL
-				if (!context.EndsWith(".LinqService"))
+				if (!context.IsRemote())
 					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}
@@ -1656,36 +1663,34 @@ namespace Tests.Linq
 					true);
 
 				// remote context doesn't have access to final SQL
-				if (!context.EndsWith(".LinqService"))
+				if (!context.IsRemote())
 					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}
 
 		[Test]
-		public void ExistsSqlTest1([DataSources(false)] string context)
+		public void ExistsSqlTest1([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
-			using (db.BeginTransaction())
 			{
-				db.Parent.Where(p => db.Child.Select(c => c.ParentID).Contains(p.ParentID)).Delete();
+				db.Parent.Where(p => db.Child.Select(c => c.ParentID).Contains(p.ParentID + 100)).Delete();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("iif(exists(") || db.LastQuery!.ToLower().Contains("when exists("));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("iif(exists(") || db.LastQuery!.ToLowerInvariant().Contains("when exists("));
 			}
 		}
 
 		[Test]
-		public void ExistsSqlTest2([DataSources(false)] string context)
+		public void ExistsSqlTest2([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
-			using (db.BeginTransaction())
 			{
-				db.Parent.Where(p => p.Children.Any()).Delete();
+				db.Parent.Where(p => p.Children.Any() && p.ParentID > 100).Delete();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("iif(exists(") || db.LastQuery!.ToLower().Contains("when exists("));
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("iif(exists(") || db.LastQuery!.ToLowerInvariant().Contains("when exists("));
 			}
 		}
 
-		class Parameter
+		sealed class Parameter
 		{
 			public int Id;
 		}
@@ -1694,7 +1699,6 @@ namespace Tests.Linq
 		public void OptionalObjectInCondition([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
-			using (db.BeginTransaction())
 			{
 				var p  = new Parameter() { Id = 1};
 				db.Person.Where(r => r.FirstName == (p != null ? p.Id.ToString() : null)).ToList();
@@ -1722,8 +1726,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void NullableBooleanConditionEvaluationTrueTests([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationTrueTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1731,8 +1736,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void NullableBooleanConditionEvaluationTrueTestsNot([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationTrueTestsNot([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1740,8 +1746,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void NullableBooleanConditionEvaluationFalseTests([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationFalseTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1749,8 +1756,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void NullableBooleanConditionEvaluationFalseTestsNot([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationFalseTestsNot([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1758,6 +1766,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void BinaryComparisonTest1([DataSources] string context)
 		{
@@ -1767,6 +1776,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void BinaryComparisonTest2([DataSources] string context)
 		{
@@ -1776,6 +1786,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void ComplexIsNullPredicateTest([DataSources] string context)
 		{
@@ -1793,7 +1804,7 @@ namespace Tests.Linq
 			return value => value == "1" ? "test" : value;
 		}
 
-		class WhereWithBool
+		sealed class WhereWithBool
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1802,6 +1813,7 @@ namespace Tests.Linq
 			public bool BoolValue { get; set; }
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void BooleanSubquery([DataSources] string context)
 		{
@@ -1821,7 +1833,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class WhereWithString
+		sealed class WhereWithString
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1833,7 +1845,7 @@ namespace Tests.Linq
 		[Test]
 		public void CaseOptimization([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new List<WhereWithString>{new()
 			{
 				Id        = 1,
@@ -1876,7 +1888,7 @@ namespace Tests.Linq
 
 
 		#region issue 2424
-		class Isue2424Table
+		sealed class Isue2424Table
 		{
 			[Column] public int    Id;
 			[Column] public string StrValue = null!;

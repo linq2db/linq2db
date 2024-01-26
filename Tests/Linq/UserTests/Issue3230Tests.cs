@@ -36,7 +36,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void InheritedAssociation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InheritedAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new GrandParent[]{new(){ID = 1}}))

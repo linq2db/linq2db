@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+
+using LinqToDB.Tools;
 
 namespace LinqToDB.Remote
 {
-	using System.Threading;
 	using Common;
 	using Data;
 	using Expressions;
@@ -31,11 +34,16 @@ namespace LinqToDB.Remote
 			set
 			{
 				_mappingSchema = value;
-				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
+				_serializationMappingSchema = value != null
+					? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, value)
+					: Remote.SerializationMappingSchema.Instance;
 			}
 		}
 
-		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(_mappingSchema);
+		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??=
+			_mappingSchema != null
+				? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, _mappingSchema)
+				: Remote.SerializationMappingSchema.Instance;
 
 		public static Func<string, Type?> TypeResolver = _ => null;
 
@@ -75,8 +83,8 @@ namespace LinqToDB.Remote
 			return new LinqServiceInfo
 			{
 				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
-				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
+				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
+				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
 				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
 			};
@@ -89,8 +97,8 @@ namespace LinqToDB.Remote
 			return Task.FromResult(new LinqServiceInfo()
 			{
 				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
-				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
+				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
+				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
 				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
 			});
@@ -106,11 +114,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -137,11 +146,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -170,11 +180,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -205,11 +216,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -271,11 +283,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -306,11 +319,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -333,7 +347,17 @@ namespace LinqToDB.Remote
 
 		private LinqServiceResult ProcessDataReaderWrapper(LinqServiceQuery query, DataConnection db, DataReaderWrapper rd)
 		{
-			var reader = ((IDataContext)db).UnwrapDataObjectInterceptor?.UnwrapDataReader(db, rd.DataReader!) ?? rd.DataReader!;
+			DbDataReader reader;
+
+			if (((IDataContext)db).UnwrapDataObjectInterceptor is {} interceptor)
+			{
+				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+					reader = interceptor.UnwrapDataReader(db, rd.DataReader!);
+			}
+			else
+			{
+				reader = rd.DataReader!;
+			}
 
 			var ret = new LinqServiceResult
 			{
@@ -373,7 +397,14 @@ namespace LinqToDB.Remote
 				// ugh...
 				// still if it fails here due to empty columns - it is a bug in columns generation
 
-				var fieldType = selectExpressions[i].SystemType!;
+				var fieldType      = selectExpressions[i].SystemType!;
+				var valueConverter = QueryHelper.GetValueConverter(selectExpressions[i]);
+				if (valueConverter != null)
+				{
+					// value converter applied on client side for both directions
+					// here on read we need to prepare expected by converter type
+					fieldType = valueConverter.FromProviderExpression.Parameters[0].Type;
+				}
 
 				// async compiled query support
 				if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
@@ -402,17 +433,18 @@ namespace LinqToDB.Remote
 
 			for (var i = 0; i < ret.FieldCount; i++)
 				columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
-					ret.FieldTypes[i], i, QueryHelper.GetValueConverter(selectExpressions[i]), true);
+					// converter must be null, see notes above
+					ret.FieldTypes[i], i, converter: null, true);
 
 			while (rd.DataReader!.Read())
 			{
-				var data = new string  [rd.DataReader!.FieldCount];
+				var data = new string[rd.DataReader!.FieldCount];
 
 				ret.RowCount++;
 
 				for (var i = 0; i < ret.FieldCount; i++)
 				{
-					if (!rd.DataReader!.IsDBNull(i))
+					if (!reader.IsDBNull(i))
 					{
 						var value = columnReaders[i].GetValue(reader);
 
@@ -433,13 +465,14 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, queryData);
-				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, r)).ToArray();
+				using var db = CreateDataContext(configuration);
+
+				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
+				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, r)).ToArray();
 
 				foreach (var query in queries)
 					ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				db.BeginTransaction();
@@ -469,13 +502,14 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, queryData);
-				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, r)).ToArray();
+				using var db = CreateDataContext(configuration);
+
+				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
+				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, r)).ToArray();
 
 				foreach (var query in queries)
 					ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				await db.BeginTransactionAsync(cancellationToken)
@@ -508,7 +542,7 @@ namespace LinqToDB.Remote
 
 		#region private classes
 
-		private class QueryContext : IQueryContext
+		private sealed class QueryContext : IQueryContext
 		{
 			public SqlStatement    Statement  { get; set; } = null!;
 			public object?         Context    { get; set; }

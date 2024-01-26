@@ -137,6 +137,7 @@ namespace Tests.xUpdate
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
 			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllPostgreSQL15Plus,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
 			ProviderName.Firebird)]

@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Runtime.Serialization;
 
 namespace LinqToDB.SqlQuery
 {
+	[Serializable]
 	public class SqlException : Exception
 	{
 		public SqlException()

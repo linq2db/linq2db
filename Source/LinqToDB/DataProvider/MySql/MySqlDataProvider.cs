@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,8 +12,8 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlProvider;
 
-	class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
-	class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
+	sealed class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
+	sealed class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
 
 	public abstract class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
 	{
@@ -46,6 +45,16 @@ namespace LinqToDB.DataProvider.MySql
 
 			SetProviderField(Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
 			SetToTypeField  (Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
+
+			if (Adapter.GetTimeSpanMethodName != null) SetProviderField(typeof(TimeSpan), Adapter.GetTimeSpanMethodName, Adapter.DataReaderType);
+			if (Adapter.GetSByteMethodName    != null) SetProviderField(typeof(sbyte)   , Adapter.GetSByteMethodName   , Adapter.DataReaderType);
+			if (Adapter.GetUInt16MethodName   != null) SetProviderField(typeof(ushort)  , Adapter.GetUInt16MethodName  , Adapter.DataReaderType);
+			if (Adapter.GetUInt32MethodName   != null) SetProviderField(typeof(uint)    , Adapter.GetUInt32MethodName  , Adapter.DataReaderType);
+			if (Adapter.GetUInt64MethodName   != null) SetProviderField(typeof(ulong)   , Adapter.GetUInt64MethodName  , Adapter.DataReaderType);
+#if NET6_0_OR_GREATER
+			if (Adapter.GetTimeOnlyMethodName != null) SetProviderField(typeof(TimeOnly), Adapter.GetTimeOnlyMethodName, Adapter.DataReaderType);
+			if (Adapter.GetDateOnlyMethodName != null) SetProviderField(typeof(DateOnly), Adapter.GetDateOnlyMethodName, Adapter.DataReaderType);
+#endif
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -60,9 +69,9 @@ namespace LinqToDB.DataProvider.MySql
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new MySqlSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new MySqlSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		private static MappingSchema GetMappingSchema(string name)
@@ -76,7 +85,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions)
 		{
 			return _sqlOptimizer;
 		}
@@ -120,27 +129,30 @@ namespace LinqToDB.DataProvider.MySql
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(MySqlOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(MySqlOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
@@ -148,14 +160,16 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(MySqlOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,

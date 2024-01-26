@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	class TableLikeQueryContext : SubQueryContext
+	sealed class TableLikeQueryContext : SubQueryContext
 	{
 		public SqlTableLikeSource Source { get; }
 
@@ -39,22 +39,22 @@ namespace LinqToDB.Linq.Builder
 				.Select(info =>
 				{
 					var expr  = (info.Sql is SqlColumn column) ? column.Expression : info.Sql;
-					var field = RegisterSourceField(expr, expr, info.Index, info.MemberChain.LastOrDefault());
+					var field = RegisterSourceField(expr, expr, info.Index, info.MemberChain.LastOrDefault()?.Name);
 
 					return new SqlInfo(info.MemberChain, field);
 				})
 				.ToArray();
 		}
 
-		SqlField RegisterSourceField(ISqlExpression baseExpression, ISqlExpression expression, int index, MemberInfo? member)
+		SqlField RegisterSourceField(ISqlExpression baseExpression, ISqlExpression expression, int index, string? name)
 		{
 			var sourceField = Source.RegisterSourceField(baseExpression, expression, index, () =>
 			{
 				var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
 
 				var newField = f == null
-					? new SqlField(expression.SystemType!, member?.Name, expression.CanBeNull)
-					: new SqlField(f) { Name = member?.Name ?? f.Name};
+					? new SqlField(expression.SystemType!, name, expression.CanBeNull)
+					: new SqlField(f) { Name = name ?? f.Name};
 
 				newField.PhysicalName = newField.Name;
 				newField.Table        = Source;
@@ -64,9 +64,12 @@ namespace LinqToDB.Linq.Builder
 			return sourceField;
 		}
 
-		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
+		public override int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			return base.IsExpression(expression, level, requestFlag);
+			var column = context.SelectQuery.Select.Columns[index];
+			var field = RegisterSourceField(column.Expression, column.Expression, index, column.Alias);
+
+			return Parent?.SelectQuery.Select.Add(field) ?? index;
 		}
 	}
 }

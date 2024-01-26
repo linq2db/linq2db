@@ -27,6 +27,7 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using LinqToDB.Expressions;
 	using Model;
 
 	[TestFixture]
@@ -444,7 +445,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("LinqDataTypes")]
-		class MyLinqDataType
+		sealed class MyLinqDataType
 		{
 			[Column]
 			public byte[]? BinaryValue { get; set; }
@@ -560,14 +561,14 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class TestDropTable
+		sealed class TestDropTable
 		{
 			[Column]
 			public int Field;
 		}
 
 		[Table]
-		class TestIdentityDropTable
+		sealed class TestIdentityDropTable
 		{
 			[Column, Identity]
 			public int Field;
@@ -1073,6 +1074,34 @@ namespace Tests.DataProvider
 				Assert.AreEqual(3, FirebirdModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First());
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4065")]
+		public void TestParameterlessProcedure([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// call as proc
+			db.ExecuteProc("\"Person_SelectAll\"");
+			db.QueryProc<PersonSelectAllResult>("\"Person_SelectAll\"").ToList();
+
+			// call as table function
+			PersonSelectAll(db).ToList();
+		}
+
+		[Sql.TableFunction("Person_SelectAll", ArgIndices = new int[0])]
+		public static IQueryable<PersonSelectAllResult> PersonSelectAll(IDataContext ctx)
+		{
+			return ctx.GetTable<PersonSelectAllResult>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, ctx);
+		}
+
+		public partial class PersonSelectAllResult
+		{
+			[Column("PERSONID"  , DataType = DataType.Int32   , DbType = "integer")    ] public int?    Personid   { get; set; }
+			[Column("FIRSTNAME" , DataType = DataType.NVarChar, DbType = "varchar(50)")] public string? Firstname  { get; set; }
+			[Column("LASTNAME"  , DataType = DataType.NVarChar, DbType = "varchar(50)")] public string? Lastname   { get; set; }
+			[Column("MIDDLENAME", DataType = DataType.NVarChar, DbType = "varchar(50)")] public string? Middlename { get; set; }
+			[Column("GENDER"    , DataType = DataType.NChar   , DbType = "char(1)")    ] public string? Gender     { get; set; }
+		}
 	}
 
 	static class FirebirdModuleFunctions
@@ -1113,7 +1142,7 @@ namespace Tests.DataProvider
 			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
 		}
 
-		public class Record
+		public sealed class Record
 		{
 			public int O { get; set; }
 		}
@@ -1121,7 +1150,7 @@ namespace Tests.DataProvider
 
 	static class FirebirdProcedures
 	{
-		public partial class PersonInsertResult
+		public sealed class PersonInsertResult
 		{
 			public int? PERSONID { get; set; }
 		}
@@ -1170,7 +1199,7 @@ namespace Tests.DataProvider
 				new DataParameter("INT_128",    INT_128,    DataType.Int128));
 		}
 
-		public partial class TestV4TYPESResult
+		public sealed class TestV4TYPESResult
 		{
 			public FbZonedDateTime? COL_TSTZ       { get; set; }
 			public FbZonedTime?     COL_TTZ        { get; set; }

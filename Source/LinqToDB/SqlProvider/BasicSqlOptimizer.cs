@@ -10,13 +10,13 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Common.Internal;
-	using DataProvider;
 	using Expressions;
 	using Extensions;
 	using Linq;
 	using Mapping;
-	using SqlQuery;
 	using Tools;
+	using SqlQuery;
+	using LinqToDB.DataProvider;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -33,21 +33,21 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlOptimizer Members
 
-		public virtual SqlStatement Finalize(SqlStatement statement)
+		public virtual SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			FixRootSelect (statement);
 			FixEmptySelect(statement);
-			FinalizeCte(statement);
+			FinalizeCte   (statement);
 
 			var evaluationContext = new EvaluationContext(null);
 
 //statement.EnsureFindTables();
 			//TODO: We can use Walk here but OptimizeUnions fails with subqueries. Needs revising.
 			statement.WalkQueries(
-				(SqlProviderFlags, statement),
+				(SqlProviderFlags, dataOptions, statement),
 				static (context, selectQuery) =>
 				{
-					new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
+					new SelectQueryOptimizer(context.SqlProviderFlags, context.dataOptions, context.statement, selectQuery, 0).FinalizeAndValidate(
 						context.SqlProviderFlags.IsApplyJoinSupported);
 
 					return selectQuery;
@@ -55,11 +55,11 @@ namespace LinqToDB.SqlProvider
 			);
 
 			statement.WalkQueries(
-				(context: this, evaluationContext),
+				(context: this, evaluationContext, mappingSchema, dataOptions),
 				static (context, selectQuery) =>
 				{
-					if (!context.context.SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = context.context.MoveCountSubQuery (selectQuery, context.evaluationContext);
-					if (!context.context.SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = context.context.MoveSubQueryColumn(selectQuery, context.evaluationContext);
+					if (!context.context.SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = context.context.MoveCountSubQuery (context.mappingSchema, selectQuery, context.evaluationContext, context.dataOptions);
+					if (!context.context.SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = context.context.MoveSubQueryColumn(context.mappingSchema, selectQuery, context.evaluationContext, context.dataOptions);
 
 					return selectQuery;
 				}
@@ -68,20 +68,19 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
 			{
 				statement.WalkQueries(
-					(SqlProviderFlags, statement),
+					(SqlProviderFlags, dataOptions, statement),
 					static (context, selectQuery) =>
 					{
-						new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
-							context.SqlProviderFlags.IsApplyJoinSupported);
+						new SelectQueryOptimizer(context.SqlProviderFlags, context.dataOptions, context.statement, selectQuery, 0)
+							.FinalizeAndValidate(context.SqlProviderFlags.IsApplyJoinSupported);
 
 						return selectQuery;
 					}
 				);
 			}
 
-
 //statement.EnsureFindTables();
-			if (Configuration.Linq.OptimizeJoins)
+			if (dataOptions.LinqOptions.OptimizeJoins)
 			{
 				OptimizeJoins(statement);
 
@@ -91,10 +90,10 @@ namespace LinqToDB.SqlProvider
 
 			statement = CorrectUnionOrderBy(statement);
 			statement = FixSetOperationNulls(statement);
-			statement = OptimizeUpdateSubqueries(statement);
+			statement = OptimizeUpdateSubqueries(statement, dataOptions);
 
 			// provider specific query correction
-			statement = FinalizeStatement(statement, evaluationContext);
+			statement = FinalizeStatement(statement, evaluationContext, dataOptions);
 //statement.EnsureFindTables();
 			return statement;
 		}
@@ -168,7 +167,6 @@ namespace LinqToDB.SqlProvider
 				if (value.Value == null)
 				{
 					var suggested = QueryHelper.SuggestDbDataType(reference);
-
 					if (suggested != null)
 					{
 						toCorrect = new SqlValue(suggested.Value, null);
@@ -178,15 +176,15 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual SqlStatement FixSetOperationNulls(SqlStatement statement)
-							{
+		{
 			statement.VisitParentFirst(static e =>
-								{
+			{
 				if (e.ElementType == QueryElementType.SqlQuery)
 				{
 					var query = (SelectQuery)e;
 					if (query.HasSetOperators)
 					{
-						for (int i = 0; i < query.Select.Columns.Count; i++)
+						for (var i = 0; i < query.Select.Columns.Count; i++)
 						{
 							var column     = query.Select.Columns[i];
 							var columnExpr = column.Expression;
@@ -213,7 +211,7 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		bool FixRootSelect(SqlStatement statement)
+		static bool FixRootSelect(SqlStatement statement)
 		{
 			if (statement.SelectQuery is {} query         &&
 				query.Select.HasModifier == false         &&
@@ -264,7 +262,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		//TODO: move tis to standard optimizer
-		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement)
+		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement, DataOptions dataOptions)
 		{
 			if (statement is SqlUpdateStatement updateStatement)
 			{
@@ -272,7 +270,7 @@ namespace LinqToDB.SqlProvider
 				{
 					if (setItem.Expression is SelectQuery q)
 					{
-						var optimizer = new SelectQueryOptimizer(SqlProviderFlags, q, q, 0);
+						var optimizer = new SelectQueryOptimizer(SqlProviderFlags, dataOptions, q, q, 0);
 						optimizer.FinalizeAndValidate(SqlProviderFlags.IsApplyJoinSupported);
 					}
 				}
@@ -293,8 +291,9 @@ namespace LinqToDB.SqlProvider
 		/// Used for correcting statement and should return new statement if changes were made.
 		/// </summary>
 		/// <param name="statement"></param>
+		/// <param name="dataOptions"></param>
 		/// <returns></returns>
-		public virtual SqlStatement TransformStatement(SqlStatement statement)
+		public virtual SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement;
 		}
@@ -314,8 +313,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 			});
-			// self-reference is allowed, so we do not need to add dependency
-			dependsOn.Remove(cteClause);
+
 			foundCte.Add(cteClause, dependsOn);
 
 			foreach (var clause in dependsOn)
@@ -373,6 +371,17 @@ namespace LinqToDB.SqlProvider
 					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 
+					// basic detection of non-recursive CTEs
+					// for more complex cases we will need dependency cycles detection
+					foreach (var kvp in cteHolder.WriteableValue)
+					{
+						if (kvp.Value.Count == 0)
+							kvp.Key.IsRecursive = false;
+
+						// remove self-reference for topo-sort
+						kvp.Value.Remove(kvp.Key);
+					}
+
 					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, cteHolder, static (cteHolder, i) => cteHolder.WriteableValue![i]).ToList();
 
 					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
@@ -383,7 +392,6 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 		}
-
 
 		protected static bool HasParameters(ISqlExpression expr)
 		{
@@ -447,13 +455,13 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context)
+		SelectQuery MoveCountSubQuery(MappingSchema mappingSchema, SelectQuery selectQuery, EvaluationContext context, DataOptions dataOptions)
 		{
-			selectQuery.Visit((context, optimizer: this), static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context));
+			selectQuery.Visit((context, optimizer: this, mappingSchema, dataOptions), static (context, e) => context.optimizer.MoveCountSubQuery(context.mappingSchema, e, context.context, context.dataOptions));
 			return selectQuery;
 		}
 
-		void MoveCountSubQuery(IQueryElement element, EvaluationContext context)
+		void MoveCountSubQuery(MappingSchema mappingSchema, IQueryElement element, EvaluationContext context, DataOptions dataOptions)
 		{
 			if (element.ElementType != QueryElementType.SqlQuery)
 				return;
@@ -487,9 +495,10 @@ namespace LinqToDB.SqlProvider
 					// Check if subquery where clause does not have ORs.
 					//
 					subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(
-						null,
+						mappingSchema,
+						dataOptions,
 						subQuery.Where.SearchCondition,
-						new OptimizationContext(context, new AliasesContext(), false),
+						new OptimizationContext(context, new AliasesContext(), false, static () => NoopQueryParametersNormalizer.Instance),
 						false)!;
 
 					var allAnd = true;
@@ -611,7 +620,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		private class MoveCountSubqueryContext
+		private sealed class MoveCountSubqueryContext
 		{
 			public MoveCountSubqueryContext(SelectQuery subQuery)
 			{
@@ -630,9 +639,9 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery, EvaluationContext context)
+		SelectQuery MoveSubQueryColumn(MappingSchema mappingSchema, SelectQuery selectQuery, EvaluationContext context, DataOptions dataOptions)
 		{
-			selectQuery.Visit((context, optimizer: this), static (context, element) =>
+			selectQuery.Visit((context, optimizer: this, mappingSchema, dataOptions), static (context, element) =>
 			{
 				if (element.ElementType != QueryElementType.SqlQuery)
 					return;
@@ -670,7 +679,9 @@ namespace LinqToDB.SqlProvider
 								_                         => false,
 							};
 						}))
+						{
 							continue;
+						}
 
 						// Join should not have ParentSelect, while SubQuery has
 						subQuery.ParentSelect = null;
@@ -680,9 +691,10 @@ namespace LinqToDB.SqlProvider
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
 						subQuery.Where.SearchCondition = (SqlSearchCondition)context.optimizer.OptimizeElement(
-							null,
+							context.mappingSchema,
+							context.dataOptions,
 							subQuery.Where.SearchCondition,
-							new OptimizationContext(context.context, new AliasesContext(), false),
+							new OptimizationContext(context.context, new AliasesContext(), false, static () => NoopQueryParametersNormalizer.Instance),
 							false)!;
 
 						var isCount      = false;
@@ -816,7 +828,7 @@ namespace LinqToDB.SqlProvider
 			return selectQuery;
 		}
 
-		private class MoveSubqueryCountContext
+		private sealed class MoveSubqueryCountContext
 		{
 			public MoveSubqueryCountContext(SelectQuery subQuery)
 			{
@@ -910,6 +922,27 @@ namespace LinqToDB.SqlProvider
 
 			switch (func.Name)
 			{
+				case PseudoFunctions.COALESCE:
+				{
+					var parms = func.Parameters;
+					if (parms.Length == 2)
+					{
+						if (parms[0] is SqlValue val1 && parms[1] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, CreateSqlValue(val1.Value, parms[1].GetExpressionType(), parms[0]), parms[1])
+							{
+								DoNotOptimize = true,
+								CanBeNull     = func.CanBeNull
+							};
+						else if (parms[1] is SqlValue val2 && parms[0] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms[0], CreateSqlValue(val2.Value, parms[0].GetExpressionType(), parms[1]))
+							{
+								DoNotOptimize = true,
+								CanBeNull     = func.CanBeNull
+							};
+					}
+
+					break;
+				}
 				case "CASE":
 				{
 					var parms = func.Parameters;
@@ -970,6 +1003,19 @@ namespace LinqToDB.SqlProvider
 
 							return parms[0];
 						}
+
+						// TODO: is it correct?
+						// type constant by value from other branch
+						if (parms[1] is SqlValue val1 && parms[2] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms[0], CreateSqlValue(val1.Value, parms[2].GetExpressionType(), parms[1]), parms[2])
+							{
+								DoNotOptimize = true
+							};
+						else if (parms[2] is SqlValue val2 && parms[1] is not SqlValue)
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms[0], parms[1], CreateSqlValue(val2.Value, parms[1].GetExpressionType(), parms[2]))
+							{
+								DoNotOptimize = true
+							};
 					}
 				}
 
@@ -989,11 +1035,11 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
-				case "$Convert$":
+				case PseudoFunctions.CONVERT:
 				{
 					var typef = func.SystemType.ToUnderlying();
 
-					if (func.Parameters[2] is SqlFunction from && from.Name == "$Convert$" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
+					if (func.Parameters[2] is SqlFunction from && from.Name == PseudoFunctions.CONVERT && from.Parameters[1].SystemType!.ToUnderlying() == typef)
 						return from.Parameters[2];
 
 					break;
@@ -1040,7 +1086,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
+		static ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
 		{
 			//TODO: refactor CASE optimization
 
@@ -1062,7 +1108,7 @@ namespace LinqToDB.SqlProvider
 			return isTrue;
 		}
 
-		ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, EvaluationContext context)
+		static ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, EvaluationContext context)
 		{
 			SqlFunction? func;
 			var valueFirst = expr.Expr1.TryEvaluateExpression(context, out var value);
@@ -1247,7 +1293,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 
-		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, EvaluationContext context)
+		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, EvaluationContext context, DataOptions dataOptions)
 		{
 			// Avoiding infinite recursion
 			//
@@ -1363,10 +1409,10 @@ namespace LinqToDB.SqlProvider
 							if (cond.Predicate is SqlPredicate.ExprExpr ee)
 							{
 								if (ee.Operator == SqlPredicate.Operator.Equal)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
+									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 
 								if (ee.Operator == SqlPredicate.Operator.NotEqual)
-									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, Configuration.Linq.CompareNullsAsValues ? true : null);
+									return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 							}
 						}
 					}
@@ -1585,20 +1631,17 @@ namespace LinqToDB.SqlProvider
 					if (value.Value is Sql.SqlID)
 						break;
 
-					if (visitor.Context.MappingSchema != null)
-					{
-						// TODO:
-						// this line produce insane amount of allocations
-						// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
-						//var dataType = new SqlDataType(value.ValueType);
-						_typeWrapper.Type = value.ValueType;
+					// TODO:
+					// this line produce insane amount of allocations
+					// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
+					//var dataType = new SqlDataType(value.ValueType);
+					_typeWrapper.Type = value.ValueType;
 
-						if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
-						{
-							// we cannot generate SQL literal, so just convert to parameter
-							var param = visitor.Context.OptimizationContext.SuggestDynamicParameter(value.ValueType, "value", value.Value);
-							return param;
-						}
+					if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, visitor.Context.DataOptions, value.Value))
+					{
+						// we cannot generate SQL literal, so just convert to parameter
+						var param = visitor.Context.OptimizationContext.SuggestDynamicParameter(value.ValueType, value.Value);
+						return param;
 					}
 
 					break;
@@ -1619,11 +1662,11 @@ namespace LinqToDB.SqlProvider
 					{
 						switch (value1)
 						{
-							case short   h when h == 0  :
-							case int     i when i == 0  :
-							case long    l when l == 0  :
-							case decimal d when d == 0  :
-							case string  s when s == "" : return be.Expr2;
+							case short   h when h == 0        :
+							case int     i when i == 0        :
+							case long    l when l == 0        :
+							case decimal d when d == 0        :
+							case string  s when s.Length == 0 : return be.Expr2;
 						}
 					}
 
@@ -1672,7 +1715,7 @@ namespace LinqToDB.SqlProvider
 								break;
 							}
 
-							case string vs when vs == "" : return be.Expr1;
+							case string vs when vs.Length == 0: return be.Expr1;
 							case string vs when
 								be.Expr1    is SqlBinaryExpression be1 &&
 								//be1.Operation == "+"                   &&
@@ -1899,10 +1942,10 @@ namespace LinqToDB.SqlProvider
 
 		#region Conversion
 
-		[return: NotNullIfNotNull("element")]
-		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context)
+		[return: NotNullIfNotNull(nameof(element))]
+		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, DataOptions dataOptions, IQueryElement? element, OptimizationContext context)
 		{
-			return OptimizeElement(mappingSchema, element, context, true);
+			return OptimizeElement(mappingSchema, dataOptions, element, context, true);
 		}
 
 		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
@@ -1920,7 +1963,7 @@ namespace LinqToDB.SqlProvider
 						{
 							if (be.Expr1.SystemType == typeof(string) && be.Expr2.SystemType != typeof(string))
 							{
-								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).Type.DataType);
+								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(visitor.Context.MappingSchema.GetDataType(be.Expr2.SystemType).Type.DataType);
 
 								if (len == null || len <= 0)
 									len = 100;
@@ -1929,20 +1972,20 @@ namespace LinqToDB.SqlProvider
 									be.SystemType,
 									be.Expr1,
 									be.Operation,
-									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr2), visitor),
+									ConvertExpressionImpl(PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), new SqlDataType(be.Expr2.GetExpressionType()), be.Expr2), visitor),
 									be.Precedence);
 							}
 
 							if (be.Expr1.SystemType != typeof(string) && be.Expr2.SystemType == typeof(string))
 							{
-								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).Type.DataType);
+								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(visitor.Context.MappingSchema.GetDataType(be.Expr1.SystemType).Type.DataType);
 
 								if (len == null || len <= 0)
 									len = 100;
 
 								return new SqlBinaryExpression(
 									be.SystemType,
-									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr1), visitor),
+									ConvertExpressionImpl(PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), new SqlDataType(be.Expr1.GetExpressionType()), be.Expr1), visitor),
 									be.Operation,
 									be.Expr2,
 									be.Precedence);
@@ -1995,14 +2038,13 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
-				case "$Convert$":
-					return ConvertConvertion(func);
+				case PseudoFunctions.CONVERT:
+					return ConvertConversion(func);
 
-
-				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$Replace$": return new SqlFunction(func.SystemType, "Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-
+				case PseudoFunctions.TO_LOWER: return new SqlFunction(func.SystemType, "Lower",    func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.TO_UPPER: return new SqlFunction(func.SystemType, "Upper",    func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.REPLACE : return new SqlFunction(func.SystemType, "Replace",  func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.COALESCE: return new SqlFunction(func.SystemType, "Coalesce", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
 			}
 
 			return func;
@@ -2011,15 +2053,17 @@ namespace LinqToDB.SqlProvider
 		public readonly struct RunOptimizationContext
 		{
 			public RunOptimizationContext(
-				OptimizationContext optimizationContext,
-				BasicSqlOptimizer   optimizer,
-				MappingSchema?      mappingSchema,
-				bool                register,
-				Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> func)
+				OptimizationContext  optimizationContext,
+				BasicSqlOptimizer    optimizer,
+				MappingSchema        mappingSchema,
+				DataOptions          dataOptions,
+				bool                 register,
+				Func<ConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> func)
 			{
 				OptimizationContext = optimizationContext;
 				Optimizer           = optimizer;
 				MappingSchema       = mappingSchema;
+				DataOptions         = dataOptions;
 				Register            = register;
 				Func                = func;
 			}
@@ -2027,20 +2071,22 @@ namespace LinqToDB.SqlProvider
 			public readonly OptimizationContext OptimizationContext;
 			public readonly BasicSqlOptimizer   Optimizer;
 			public readonly bool                Register;
-			public readonly MappingSchema?      MappingSchema;
+			public readonly MappingSchema       MappingSchema;
+			public readonly DataOptions         DataOptions;
 
-			public readonly Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> Func;
+			public readonly Func<ConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> Func;
 		}
 
 		static IQueryElement RunOptimization(
-			IQueryElement       element,
-			OptimizationContext optimizationContext,
-			BasicSqlOptimizer   optimizer,
-			MappingSchema?      mappingSchema,
-			bool                register,
+			IQueryElement        element,
+			OptimizationContext  optimizationContext,
+			BasicSqlOptimizer    optimizer,
+			MappingSchema        mappingSchema,
+			DataOptions          dataOptions,
+			bool                 register,
 			Func<ConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> func)
 		{
-			var ctx = new RunOptimizationContext(optimizationContext, optimizer, mappingSchema, register, func);
+			var ctx = new RunOptimizationContext(optimizationContext, optimizer, mappingSchema, dataOptions, register, func);
 
 			for (;;)
 			{
@@ -2083,7 +2129,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		public IQueryElement? OptimizeElement(MappingSchema? mappingSchema, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
+		public IQueryElement? OptimizeElement(MappingSchema mappingSchema, DataOptions dataOptions, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
 		{
 			if (element == null)
 				return null;
@@ -2091,15 +2137,82 @@ namespace LinqToDB.SqlProvider
 			if (optimizationContext.IsOptimized(element, out var newElement))
 				return newElement!;
 
-			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, !withConversion,
+			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, dataOptions, !withConversion,
 				static (visitor, e) =>
 				{
 					var ne = e;
+
 					if (ne is ISqlExpression expr1)
 						ne = visitor.Context.Optimizer.OptimizeExpression(expr1, visitor);
 
-					if (ne is ISqlPredicate pred1)
-						ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context);
+					switch (ne)
+					{
+						case ISqlPredicate pred1:
+							ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context, visitor.Context.DataOptions);
+							break;
+
+						case SqlCondition(true, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: false}]}) insq, var isOr1) cond]), var isOr)
+							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery:
+							return new SqlCondition(false, new SqlSearchCondition().Expr(insq.Expr1).IsNull.Or.Add(new (true, insq, isOr1)), isOr);
+
+						case SqlCondition(false, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: true} col]} subQuery) insq, _) cond]), var isOr)
+							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+						{
+							var newQuery = subQuery.Convert((subQuery,col.Expression), static (v, e) =>
+							{
+								if (ReferenceEquals(e, v.Context.Expression))
+									return new SqlValue(1);
+
+								if (e is SqlWhereClause w && w == v.Context.subQuery.Where)
+								{
+									var wc = new SqlWhereClause(new SqlSearchCondition(w.SearchCondition.Conditions));
+									wc.SearchCondition.Conditions.Add(new(
+										false,
+										new SqlPredicate.IsNull(v.Context.subQuery.Select.Columns[0].Expression, false)));
+									return wc;
+								}
+
+								return e;
+							});
+
+							return new SqlCondition(
+								false,
+								new SqlSearchCondition()
+									.Expr(insq.Expr1).IsNull.   And.Expr(new SqlValue(1)).InSubQuery(newQuery).Or
+									.Expr(insq.Expr1).IsNotNull.And.Add(cond), isOr);
+						}
+
+						case SqlCondition(false, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, true, {Select.Columns : [{CanBeNull: false}]}) insq, _) cond]), var isOr)
+							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+							return new SqlCondition(false, new SqlSearchCondition().Expr(insq.Expr1).IsNull.Or.Add(cond), isOr);
+
+						case SqlCondition(false, SqlPredicate.InSubQuery({CanBeNull: true} ex1, false, {Select.Columns : [{CanBeNull: true} col]} subQuery), var isOr)
+							when !visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+							return ConvertInSubquery(ex1, false, col, subQuery, isOr);
+
+						case SqlCondition(false, SqlPredicate.InSubQuery({CanBeNull: true} ex1, true, {Select.Columns : [{CanBeNull: false} col]} subQuery), var isOr)
+							when !visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+							return ConvertInSubquery(ex1, true, col, subQuery, isOr);
+					}
+
+					static IQueryElement ConvertInSubquery(ISqlExpression ex1, bool isNot, SqlColumn col, SelectQuery subQuery, bool isOr)
+					{
+						var newQuery = subQuery.Convert((subQuery,col,ex1), static (v, e) =>
+						{
+							if (e is SqlWhereClause w && w == v.Context.subQuery.Where)
+							{
+								var wc = new SqlWhereClause(new SqlSearchCondition(w.SearchCondition.Conditions));
+								wc.SearchCondition.Conditions.Add(new(
+									false,
+									new SqlPredicate.ExprExpr(v.Context.col.Expression, SqlPredicate.Operator.Equal, v.Context.ex1, true)));
+								return wc;
+							}
+
+							return e;
+						});
+
+						return new SqlCondition(isNot, new SqlPredicate.FuncLike(SqlFunction.CreateExists(newQuery)), isOr);
+					}
 
 					if (!ReferenceEquals(ne, e))
 						return ne;
@@ -2114,7 +2227,7 @@ namespace LinqToDB.SqlProvider
 				if (mappingSchema == null)
 					throw new InvalidOperationException("MappingSchema is required for conversion");
 
-				newElement = RunOptimization(newElement, optimizationContext, this, mappingSchema, true,
+				newElement = RunOptimization(newElement, optimizationContext, this, mappingSchema, dataOptions, true,
 					static(visitor, e) =>
 					{
 						var ne = e;
@@ -2170,24 +2283,35 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.IsTruePredicate:
 					return ((SqlPredicate.IsTrue)predicate).Reduce();
 				case QueryElementType.LikePredicate:
-					return ConvertLikePredicate(visitor.Context.MappingSchema!, (SqlPredicate.Like)predicate, visitor.Context.OptimizationContext.Context);
+					return ConvertLikePredicate(visitor.Context.MappingSchema, (SqlPredicate.Like)predicate, visitor.Context.OptimizationContext.Context);
 				case QueryElementType.SearchStringPredicate:
 					return ConvertSearchStringPredicate((SqlPredicate.SearchString)predicate, visitor);
 				case QueryElementType.InListPredicate:
-					return ConvertInListPredicate(visitor.Context.MappingSchema!, (SqlPredicate.InList)predicate, visitor.Context.OptimizationContext.Context);
+					return ConvertInListPredicate(visitor.Context.MappingSchema, (SqlPredicate.InList)predicate, visitor.Context.OptimizationContext.Context);
 			}
 			return predicate;
 		}
 
+		/// <summary>
+		/// Escape sequence/character to escape special characters in LIKE predicate (defined by <see cref="LikeCharactersToEscape"/>).
+		/// Default: <c>"~"</c>.
+		/// </summary>
 		public virtual string LikeEscapeCharacter         => "~";
 		public virtual string LikeWildcardCharacter       => "%";
-		public virtual bool   LikeHasCharacterSetSupport  => true;
 		public virtual bool   LikePatternParameterSupport => true;
 		public virtual bool   LikeValueParameterSupport   => true;
+		/// <summary>
+		/// Should be <c>true</c> for provider with <c>LIKE ... ESCAPE</c> modifier support.
+		/// Default: <c>true</c>.
+		/// </summary>
 		public virtual bool   LikeIsEscapeSupported       => true;
 
 		protected static  string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
-		public    virtual string[] LikeCharactersToEscape => StandardLikeCharactersToEscape;
+		/// <summary>
+		/// Characters with special meaning in LIKE predicate (defined by <see cref="LikeCharactersToEscape"/>) that should be escaped to be used as matched character.
+		/// Default: <c>["%", "_", "?", "*", "#", "[", "]"]</c>.
+		/// </summary>
+		public virtual string[] LikeCharactersToEscape => StandardLikeCharactersToEscape;
 
 		public virtual string EscapeLikeCharacters(string str, string escape)
 		{
@@ -2207,41 +2331,40 @@ namespace LinqToDB.SqlProvider
 
 		static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
 		{
-			var result = new SqlFunction(typeof(string), "$Replace$", false, true, expression, character,
-				new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive));
+			var result = PseudoFunctions.MakeReplace(expression, character, new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive));
 			return result;
 		}
 
 		public static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character)
 		{
-			var result = new SqlFunction(typeof(string), "$Replace$", false, true, expression, character,
+			var result = PseudoFunctions.MakeReplace(
+				expression,
+				character,
 				new SqlBinaryExpression(typeof(string), new SqlValue("["), "+",
 					new SqlBinaryExpression(typeof(string), character, "+", new SqlValue("]"), Precedence.Additive),
 					Precedence.Additive));
 			return result;
 		}
 
-		protected virtual string EscapeLikeCharactersBrackets(string str, string[] toEscape)
+		/// <summary>
+		/// Implements LIKE pattern escaping logic for provider without ESCAPE clause support (<see cref="LikeIsEscapeSupported"/> is <c>false</c>).
+		/// Default logic prefix characters from <see cref="LikeCharactersToEscape"/> with <see cref="LikeEscapeCharacter"/>.
+		/// </summary>
+		/// <param name="str">Raw pattern value.</param>
+		/// <returns>Escaped pattern value.</returns>
+		protected virtual string EscapeLikePattern(string str)
 		{
-			var newStr = DataTools.EscapeUnterminatedBracket(str);
-			if (newStr == str)
-				newStr = newStr.Replace("[", "[[]");
+			foreach (var s in LikeCharactersToEscape)
+				str = str.Replace(s, LikeEscapeCharacter + s);
 
-			foreach (var s in toEscape)
-			{
-				if (s != "[" && s != "]")
-					newStr = newStr.Replace(s, "[" + s + "]");
-			}
-
-			return newStr;
+			return str;
 		}
 
 		public virtual ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
 		{
 			var newExpr = expression;
 
-			if (escape == null)
-				escape = new SqlValue(LikeEscapeCharacter);
+			escape ??= new SqlValue(LikeEscapeCharacter);
 
 			newExpr = GenerateEscapeReplacement(newExpr, escape, escape);
 
@@ -2254,6 +2377,13 @@ namespace LinqToDB.SqlProvider
 			return newExpr;
 		}
 
+		/// <summary>
+		/// LIKE predicate interceptor. Default implementation does nothing.
+		/// </summary>
+		/// <param name="mappingSchema">Current mapping schema.</param>
+		/// <param name="predicate">LIKE predicate.</param>
+		/// <param name="context">Parameters evaluation context for current query.</param>
+		/// <returns>Preprocessed predicate.</returns>
 		public virtual ISqlPredicate ConvertLikePredicate(
 			MappingSchema     mappingSchema,
 			SqlPredicate.Like predicate,
@@ -2274,7 +2404,7 @@ namespace LinqToDB.SqlProvider
 
 				var patternValue = LikeIsEscapeSupported
 					? EscapeLikeCharacters(patternRawValue, LikeEscapeCharacter)
-					: EscapeLikeCharactersBrackets(patternRawValue, LikeCharactersToEscape);
+					: EscapeLikePattern(patternRawValue);
 
 				patternValue = predicate.Kind switch
 				{
@@ -2319,8 +2449,7 @@ namespace LinqToDB.SqlProvider
 
 				patternExpr = OptimizeExpression(patternExpr, visitor);
 
-				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
-					LikeIsEscapeSupported ? escape : null);
+				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr, LikeIsEscapeSupported ? escape : null);
 			}
 		}
 
@@ -2331,9 +2460,9 @@ namespace LinqToDB.SqlProvider
 			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == false)
 			{
 				predicate = new SqlPredicate.SearchString(
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
+					PseudoFunctions.MakeToLower(predicate.Expr1),
 					predicate.IsNot,
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2),
+					PseudoFunctions.MakeToLower(predicate.Expr2),
 					predicate.Kind,
 					new SqlValue(false));
 			}
@@ -2470,12 +2599,19 @@ namespace LinqToDB.SqlProvider
 			return p;
 		}
 
-		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlFunction func, string funcName)
+		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlFunction func, string funcName, bool supportsParameters = true)
 		{
 			var last = func.Parameters[func.Parameters.Length - 1];
+			if (!supportsParameters && last is SqlParameter p1)
+				p1.IsQueryParameter = false;
+
 			for (int i = func.Parameters.Length - 2; i >= 0; i--)
 			{
-				last = new SqlFunction(func.SystemType, funcName, func.Parameters[i], last);
+				var param = func.Parameters[i];
+				if (!supportsParameters && param is SqlParameter p2)
+					p2.IsQueryParameter = false;
+
+				last = new SqlFunction(func.SystemType, funcName, param, last);
 			}
 			return last;
 		}
@@ -2491,12 +2627,15 @@ namespace LinqToDB.SqlProvider
 		protected virtual int? GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.Type.DataType); }
 		protected virtual int? GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.Type.DataType); }
 
-		protected virtual ISqlExpression ConvertConvertion(SqlFunction func)
+		/// <summary>
+		/// Implements <see cref="PseudoFunctions.CONVERT"/> function converter.
+		/// </summary>
+		protected virtual ISqlExpression ConvertConversion(SqlFunction func)
 		{
 			var from = (SqlDataType)func.Parameters[1];
 			var to   = (SqlDataType)func.Parameters[0];
 
-			if (to.Type.SystemType == typeof(object))
+			if (!func.DoNotOptimize && (to.Type.SystemType == typeof(object) || from.Type.EqualsDbOnly(to.Type)))
 				return func.Parameters[2];
 
 			if (to.Type.Length > 0)
@@ -2507,17 +2646,20 @@ namespace LinqToDB.SqlProvider
 				if (to.Type.Length != newLength)
 					to = new SqlDataType(to.Type.WithLength(newLength));
 			}
-			else if (from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
+			else if (!func.DoNotOptimize && from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
 				return func.Parameters[2];
 
-			return new SqlFunction(func.SystemType, "Convert", to, func.Parameters[2]);
+			return new SqlFunction(func.SystemType, "Convert", false, true, to, func.Parameters[2])
+			{
+				CanBeNull = func.Parameters[2].CanBeNull,
+			};
 		}
 
 		#endregion
 
 		#region Alternative Builders
 
-		protected ISqlExpression? AlternativeConvertToBoolean(SqlFunction func, int paramNumber)
+		protected ISqlExpression? AlternativeConvertToBoolean(SqlFunction func, DataOptions dataOptions, int paramNumber)
 		{
 			var par = func.Parameters[paramNumber];
 
@@ -2528,9 +2670,9 @@ namespace LinqToDB.SqlProvider
 				sc.Conditions.Add(
 					new SqlCondition(false,
 						new SqlPredicate.ExprExpr(par, SqlPredicate.Operator.NotEqual, new SqlValue(0),
-							Configuration.Linq.CompareNullsAsValues ? false : null)));
+							dataOptions.LinqOptions.CompareNullsAsValues ? false : null)));
 
-				return new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(true), new SqlValue(false))
+				return new SqlFunction(func.SystemType, "CASE", false, true, sc, new SqlValue(true), new SqlValue(false))
 				{
 					CanBeNull = false,
 				};
@@ -2555,6 +2697,36 @@ namespace LinqToDB.SqlProvider
 				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Date,
 				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == dateName,
 				_                              => false,
+			};
+		}
+
+		protected static bool IsSmallDateTimeType(ISqlExpression expr, string typeName)
+		{
+			return expr.ElementType switch
+			{
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.SmallDateTime,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
+				_ => false,
+			};
+		}
+
+		protected static bool IsDateTime2Type(ISqlExpression expr, string typeName)
+		{
+			return expr.ElementType switch
+			{
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.DateTime2,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
+				_ => false,
+			};
+		}
+
+		protected static bool IsDateTimeType(ISqlExpression expr, string typeName)
+		{
+			return expr.ElementType switch
+			{
+				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.DateTime,
+				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
+				_ => false,
 			};
 		}
 
@@ -2585,13 +2757,13 @@ namespace LinqToDB.SqlProvider
 				new SqlFunction(func.SystemType, "Floor", par1) : par1;
 		}
 
-		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement)
+		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement, DataOptions dataOptions)
 		{
 			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0) &&
 				deleteStatement.SelectQuery.From.Tables[0].Source is SqlTable table)
 			{
 				if (deleteStatement.Output != null)
-					throw new NotImplementedException($"GetAlternativeDelete not implemented for delete with output");
+					throw new NotImplementedException("GetAlternativeDelete not implemented for delete with output");
 
 				var sql = new SelectQuery { IsParameterDependent = deleteStatement.IsParameterDependent };
 
@@ -2612,7 +2784,11 @@ namespace LinqToDB.SqlProvider
 					{
 						sc2.Conditions.Add(new SqlCondition(
 							false,
-							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i], Configuration.Linq.CompareNullsAsValues ? true : null)));
+							new SqlPredicate.ExprExpr(
+								copyKeys[i],
+								SqlPredicate.Operator.Equal,
+								tableKeys[i],
+								dataOptions.LinqOptions.CompareNullsAsValues ? true : null)));
 					}
 
 					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();
@@ -2666,7 +2842,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
+		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions)
 		{
 			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Skip(1).Take(2).Count();
 
@@ -2719,7 +2895,7 @@ namespace LinqToDB.SqlProvider
 					var column = QueryHelper.NeedColumnForExpression(clonedQuery, compareKeys[i], false);
 					if (column == null)
 						throw new LinqToDBException($"Can not create query column for expression '{compareKeys[i]}'.");
-					var compare = QueryHelper.GenerateEquality(tableKeys[i], column);
+					var compare = QueryHelper.GenerateEquality(tableKeys[i], column, dataOptions.LinqOptions.CompareNullsAsValues);
 					clonedQuery.Where.SearchCondition.Conditions.Add(compare);
 				}
 
@@ -2763,7 +2939,7 @@ namespace LinqToDB.SqlProvider
 									? newValue
 									: expr);
 
-							var newColumn = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
+							var newColumn = tableToUpdate.FindFieldByMemberName(QueryHelper.GetUnderlyingField(item.Column)!.Name)
 							                ?? throw new LinqException(
 								                $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 
@@ -2816,67 +2992,67 @@ namespace LinqToDB.SqlProvider
 
 				if (processUniversalUpdate)
 				{
-				foreach (var item in updateStatement.Update.Items)
-				{
-					var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
-						v.Context.TryGetValue(expr, out var newValue)
-							? newValue
-							: expr);
-
-					var usedSources = new HashSet<ISqlTableSource>();
-					QueryHelper.GetUsedSources(ex, usedSources);
-					usedSources.Remove(tableToUpdate);
-					if (objectTree.TryGetValue(tableToUpdate, out var replaced))
-						usedSources.Remove((ISqlTableSource)replaced);
-
-					if (usedSources.Count > 0)
+					foreach (var item in updateStatement.Update.Items)
 					{
-						// it means that update value column depends on other tables and we have to generate more complicated query
+						var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
+							v.Context.TryGetValue(expr, out var newValue)
+								? newValue
+								: expr);
 
-						var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
+						var usedSources = new HashSet<ISqlTableSource>();
+						QueryHelper.GetUsedSources(ex, usedSources);
+						usedSources.Remove(tableToUpdate);
+						if (objectTree.TryGetValue(tableToUpdate, out var replaced))
+							usedSources.Remove((ISqlTableSource)replaced);
 
-						innerQuery.ParentSelect = sql;
+						if (usedSources.Count > 0)
+						{
+							// it means that update value column depends on other tables and we have to generate more complicated query
 
-						innerQuery.Select.Columns.Clear();
+							var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
 
-						var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
-							static (v, e) =>
-							{
-								if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
+							innerQuery.ParentSelect = sql;
+
+							innerQuery.Select.Columns.Clear();
+
+							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
+								static (v, e) =>
 								{
-									e = n;
-									v.Context.objectTree.Remove(e);
-									v.Context.objectTree.Add(e, n);
-								}
-
-								if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
-								{
-										var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
-											(ISqlExpression)e, false);
-									if (column != null)
+									if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
 									{
+										e = n;
 										v.Context.objectTree.Remove(e);
-										v.Context.objectTree.Add(e, column);
-										return column;
+										v.Context.objectTree.Add(e, n);
 									}
-								}
 
-								return e;
+									if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
+									{
+											var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
+												(ISqlExpression)e, false);
+										if (column != null)
+										{
+											v.Context.objectTree.Remove(e);
+											v.Context.objectTree.Add(e, column);
+											return column;
+										}
+									}
 
-							});
+									return e;
 
-						innerQuery.Select.AddNew(remapped);
-							innerQuery.RemoveNotUnusedColumns();
-						ex = innerQuery;
+								});
+
+							innerQuery.Select.AddNew(remapped);
+								innerQuery.RemoveNotUnusedColumns();
+							ex = innerQuery;
+						}
+
+							item.Column = tableToUpdate.FindFieldByMemberName(QueryHelper.GetUnderlyingField(item.Column)!.Name)
+										  ?? throw new LinqException(
+											  $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
+							item.Expression = ex;
+							newUpdateStatement.Update.Items.Add(item);
+						}
 					}
-
-						item.Column = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
-						              ?? throw new LinqException(
-							              $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
-						item.Expression = ex;
-						newUpdateStatement.Update.Items.Add(item);
-					}
-				}
 
 					if (updateStatement.Output != null)
 					{
@@ -2914,12 +3090,12 @@ namespace LinqToDB.SqlProvider
 			return updateStatement;
 		}
 
-		void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
+		static void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
 		{
 			element?.Walk(WalkOptions.Default, (replacing, withTable), static (ctx, e) =>
 			{
 				if (e is SqlField field && field.Table == ctx.replacing)
-					return ctx.withTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {ctx.withTable}");
+					return ctx.withTable.FindFieldByMemberName(field.Name) ?? throw new LinqException($"Field {field.Name} not found in table {ctx.withTable}");
 
 				return e;
 			});
@@ -2956,7 +3132,7 @@ namespace LinqToDB.SqlProvider
 			return null;
 		}
 
-		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement)
+		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement, DataOptions dataOptions)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
 			{
@@ -2984,7 +3160,6 @@ namespace LinqToDB.SqlProvider
 				isDetachedUpdateTable = !QueryHelper.IsDependsOn(statement.SelectQuery, tableToUpdate);
 			}
 
-
 			// find appropriate first table
 			if (isDetachedUpdateTable)
 			{
@@ -2994,7 +3169,6 @@ namespace LinqToDB.SqlProvider
 
 				tableToCompare = foundTable;
 			}
-
 
 			var comparingIsNeed = true;
 
@@ -3079,14 +3253,14 @@ namespace LinqToDB.SqlProvider
 						var newItem = item.Convert((tableToCompare, tableToUpdate), static (v, e) =>
 						{
 							if (e is SqlField field && field.Table == v.Context.tableToCompare)
-								return v.Context.tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
+								return v.Context.tableToUpdate.FindFieldByMemberName(field.Name) ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
 
 							return e;
 						});
 
 						var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
 						if (updateField != null)
-							newItem.Column = tableToUpdate[updateField.Name] ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
+							newItem.Column = tableToUpdate.FindFieldByMemberName(updateField.Name) ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
 
 						statement.Update.Items[i] = newItem;
 					}
@@ -3105,7 +3279,7 @@ namespace LinqToDB.SqlProvider
 					if (column == null)
 						throw new LinqToDBException($"Can not create query column for expression '{keys2[i]}'.");
 
-					var compare = QueryHelper.GenerateEquality(keys1[i], column);
+					var compare = QueryHelper.GenerateEquality(keys1[i], column, dataOptions.LinqOptions.CompareNullsAsValues);
 					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
 				}
 
@@ -3147,7 +3321,7 @@ namespace LinqToDB.SqlProvider
 							{
 								if (exp is SqlField field && field.Table == ctx.updateTable)
 								{
-									return ctx.jt[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {ctx.jt}");
+									return ctx.jt.FindFieldByMemberName(field.Name) ?? throw new LinqException($"Field {field.Name} not found in table {ctx.jt}");
 								}
 								return exp;
 							});
@@ -3162,7 +3336,7 @@ namespace LinqToDB.SqlProvider
 					statement.Update = statement.Update.Convert((updateTable, newUpdateTable), static (v, e) =>
 					{
 						if (e is SqlField field && field.Table == v.Context.updateTable)
-							return v.Context.newUpdateTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.newUpdateTable}");
+							return v.Context.newUpdateTable.FindFieldByMemberName(field.Name) ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.newUpdateTable}");
 
 						return e;
 					});
@@ -3209,9 +3383,8 @@ namespace LinqToDB.SqlProvider
 			{
 				switch (e.ElementType)
 				{
-					case QueryElementType.SqlField     : ((SqlField)               e).Alias = SetAlias(((SqlField)               e).Alias, maxLen); break;
-					case QueryElementType.SqlParameter : ((SqlParameter)           e).Name  = SetAlias(((SqlParameter)           e).Name,  maxLen); break;
-					case QueryElementType.SqlTable     : ((SqlTable)               e).Alias = SetAlias(((SqlTable)               e).Alias, maxLen); break;
+					case QueryElementType.SqlField     : ((SqlField)      e).Alias = SetAlias(((SqlField)      e).Alias, maxLen); break;
+					case QueryElementType.SqlTable     : ((SqlTable)      e).Alias = SetAlias(((SqlTable)      e).Alias, maxLen); break;
 					case QueryElementType.Column       : ((SqlColumn)     e).Alias = SetAlias(((SqlColumn)     e).Alias, maxLen); break;
 					case QueryElementType.TableSource  : ((SqlTableSource)e).Alias = SetAlias(((SqlTableSource)e).Alias, maxLen); break;
 				}
@@ -3466,9 +3639,9 @@ namespace LinqToDB.SqlProvider
 			return null != statement.Find(this, static (ctx, e) => ctx.IsParameterDependedElement(e));
 		}
 
-		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
+		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
 		{
-			var newStatement = TransformStatement(statement);
+			var newStatement = TransformStatement(statement, dataOptions);
 
 			if (SqlProviderFlags.IsParameterOrderDependent)
 			{
@@ -3505,12 +3678,13 @@ namespace LinqToDB.SqlProvider
 			return newStatement;
 		}
 
-		public virtual void ConvertSkipTake(MappingSchema mappingSchema, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr)
+		public virtual void ConvertSkipTake(MappingSchema mappingSchema, DataOptions dataOptions, SelectQuery selectQuery,
+			OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr)
 		{
 			// make skip take as parameters or evaluate otherwise
 
-			takeExpr = ConvertElement(mappingSchema, selectQuery.Select.TakeValue, optimizationContext) as ISqlExpression;
-			skipExpr = ConvertElement(mappingSchema, selectQuery.Select.SkipValue, optimizationContext) as ISqlExpression;
+			takeExpr = ConvertElement(mappingSchema, dataOptions, selectQuery.Select.TakeValue, optimizationContext) as ISqlExpression;
+			skipExpr = ConvertElement(mappingSchema, dataOptions, selectQuery.Select.SkipValue, optimizationContext) as ISqlExpression;
 
 			if (takeExpr != null)
 			{
@@ -3523,7 +3697,7 @@ namespace LinqToDB.SqlProvider
 						var takeValue = takeExpr.EvaluateExpression(optimizationContext.Context)!;
 						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
 						{
-							IsQueryParameter = !QueryHelper.NeedParameterInlining(takeExpr) && Configuration.Linq.ParameterizeTakeSkip
+							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr)
 						};
 						takeExpr = takeParameter;
 					}
@@ -3544,7 +3718,7 @@ namespace LinqToDB.SqlProvider
 						var skipValue = skipExpr.EvaluateExpression(optimizationContext.Context)!;
 						var skipParameter = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
 						{
-							IsQueryParameter = !QueryHelper.NeedParameterInlining(skipExpr) && Configuration.Linq.ParameterizeTakeSkip
+							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(skipExpr)
 						};
 						skipExpr = skipParameter;
 					}

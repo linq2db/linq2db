@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
+	using SqlQuery;
 	using LinqToDB.Expressions;
 
-	class OrderByBuilder : MethodCallBuilder
+	sealed class OrderByBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
 
@@ -92,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 
-			if (!isContinuousOrder && !Configuration.Linq.DoNotClearOrderBys)
+			if (!isContinuousOrder && !builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 
 			foreach (var expr in sql)

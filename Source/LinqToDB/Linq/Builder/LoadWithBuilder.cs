@@ -1,17 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using System;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Common;
 
-	class LoadWithBuilder : MethodCallBuilder
+	sealed class LoadWithBuilder : MethodCallBuilder
 	{
 		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable" };
 
@@ -80,8 +80,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				if (table.LoadWith == null)
-					table.LoadWith = new List<LoadWithInfo[]>();
+				table.LoadWith ??= new List<LoadWithInfo[]>();
 
 				if (methodCall.Arguments.Count == 3)
 				{
@@ -98,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 			return loadWithSequence;
 		}
 
-		TableBuilder.TableContext GetTableContext(IBuildContext ctx, Expression path, out Expression? stopExpression)
+		static TableBuilder.TableContext GetTableContext(IBuildContext ctx, Expression path, out Expression? stopExpression)
 		{
 			stopExpression = null;
 
@@ -239,15 +238,17 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.MemberAccess :
 						{
-							var mexpr  = (MemberExpression)expression;
-							var member = lastMember = mexpr.Member;
-							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType!, member);
-							if (attr == null)
+							var mexpr         = (MemberExpression)expression;
+							var member        = lastMember = mexpr.Member;
+							var isAssociation = builder.MappingSchema.HasAttribute<AssociationAttribute>(member.ReflectedType!, member);
+
+							if (!isAssociation)
 							{
-								member = mexpr.Expression!.Type.GetMemberEx(member)!;
-								attr = builder.MappingSchema.GetAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
+								member        = mexpr.Expression!.Type.GetMemberEx(member)!;
+								isAssociation = builder.MappingSchema.HasAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
 							}
-							if (attr == null)
+
+							if (!isAssociation)
 								throw new LinqToDBException($"Member '{expression}' is not an association.");
 
 							yield return member;
@@ -288,7 +289,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal class LoadWithContext : PassThroughContext
+		internal sealed class LoadWithContext : PassThroughContext
 		{
 			private readonly TableBuilder.TableContext _tableContext;
 

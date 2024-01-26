@@ -1,15 +1,13 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlQuery;
-	using SqlProvider;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
-	class SqlServer2005SqlBuilder : SqlServerSqlBuilder
+	sealed class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2005SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SqlServer2005SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -24,15 +22,15 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override bool IsValuesSyntaxSupported => false;
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
 				case DataType.DateTimeOffset :
 				case DataType.DateTime2      :
 				case DataType.Time           :
-				case DataType.Date           : StringBuilder.Append("DateTime");                     break;
-				default                      : base.BuildDataTypeFromDataType(type, forCreateTable); break;
+				case DataType.Date           : StringBuilder.Append("DateTime");                                break;
+				default                      : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}
 		}
 

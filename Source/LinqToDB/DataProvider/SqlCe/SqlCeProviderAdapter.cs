@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
 	using LinqToDB.Expressions;
 
 	public class SqlCeProviderAdapter : IDynamicProviderAdapter
@@ -52,8 +52,11 @@ namespace LinqToDB.DataProvider.SqlCe
 		public static SqlCeProviderAdapter GetInstance()
 		{
 			if (_instance == null)
+			{
 				lock (_syncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 					if (_instance == null)
+#pragma warning restore CA1508 // Avoid dead conditional code
 					{
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
@@ -85,6 +88,7 @@ namespace LinqToDB.DataProvider.SqlCe
 							typeGetter,
 							typeMapper.BuildWrappedFactory((string connectionString) => new SqlCeEngine(connectionString))!);
 					}
+			}
 
 			return _instance;
 		}
@@ -114,7 +118,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		[Wrapper]
-		private class SqlCeParameter
+		private sealed class SqlCeParameter
 		{
 			public SqlDbType SqlDbType { get; set; }
 		}

@@ -14,6 +14,8 @@ namespace LinqToDB.DataProvider.DB2
 	// - CommandBehavior.SchemaOnly doesn't return schema for stored procedures
 	class DB2LUWSchemaProvider : SchemaProviderBase
 	{
+		private static readonly IReadOnlyList<string> _tableTypes = new[] { "TABLE", "VIEW" };
+
 		private readonly DB2DataProvider _provider;
 
 		public DB2LUWSchemaProvider(DB2DataProvider provider)
@@ -56,8 +58,7 @@ namespace LinqToDB.DataProvider.DB2
 			return
 			(
 				from t in tables.AsEnumerable()
-				where
-					new[] { "TABLE", "VIEW" }.Contains(t.Field<string>("TABLE_TYPE"))
+				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"))
 				let catalog = dataConnection.Connection.Database
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
@@ -79,8 +80,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected void LoadCurrentSchema(DataConnection dataConnection)
 		{
-			if (CurrentSchema == null)
-				CurrentSchema = dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
+			CurrentSchema ??= dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
@@ -301,7 +301,7 @@ WHERE
 			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			return dataType switch
 			{
@@ -389,7 +389,7 @@ WHERE
 					var ss = s.Split('=');
 					return new { key = ss.Length == 2 ? ss[0] : "", value = ss.Length == 2 ? ss[1] : "" };
 				})
-				.Where (s => s.key.ToUpper() == "SERVER")
+				.Where (s => s.key.ToLowerInvariant() == "server")
 				.Select(s => s.value)
 				.FirstOrDefault();
 

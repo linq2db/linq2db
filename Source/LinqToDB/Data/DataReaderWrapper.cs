@@ -1,10 +1,13 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Threading.Tasks;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Data
 {
+	using Interceptors;
+
 	/// <summary>
 	/// Disposable wrapper over <see cref="DbDataReader"/> instance, which properly disposes associated objects.
 	/// </summary>
@@ -16,7 +19,11 @@ namespace LinqToDB.Data
 		private          bool            _disposed;
 		private readonly DataConnection? _dataConnection;
 
-		internal DataReaderWrapper(DbDataReader dataReader)
+		/// <summary>
+		/// Creates wrapper instance for specified data reader.
+		/// </summary>
+		/// <param name="dataReader">Wrapped data reader instance.</param>
+		public DataReaderWrapper(DbDataReader dataReader)
 		{
 			DataReader = dataReader;
 		}
@@ -42,6 +49,10 @@ namespace LinqToDB.Data
 
 			if (DataReader != null)
 			{
+				if (_dataConnection is IInterceptable<ICommandInterceptor> { Interceptor: {} interceptor })
+					using (ActivityService.Start(ActivityID.CommandInterceptorBeforeReaderDispose))
+						interceptor.BeforeReaderDispose(new (_dataConnection), Command, DataReader);
+
 				DataReader.Dispose();
 				DataReader = null;
 			}
@@ -68,6 +79,11 @@ namespace LinqToDB.Data
 
 			if (DataReader != null)
 			{
+				if (_dataConnection is IInterceptable<ICommandInterceptor> { Interceptor: {} interceptor })
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorBeforeReaderDisposeAsync))
+						await interceptor.BeforeReaderDisposeAsync(new(_dataConnection), Command, DataReader)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 				await DataReader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				DataReader = null;
 			}

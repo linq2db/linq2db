@@ -1,18 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
-		<TargetFrameworks>net45;net46;net472;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0</TargetFrameworks>
+		<TargetFrameworks>net45;net46;net472;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<!-- T4 support -->
-		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
@@ -23,10 +17,26 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<!-- T4 support -->
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
+		<InternalsVisibleTo Include="linq2db.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010021259e121b7fbc7882afdb9118a5e5ac4684296d9a48db3411402ec45fb65cb5f2b5f157856da8258874c761d2dc0d27c09ce7fa3cd6161dabf4c81ec31ae6a793b6ded0e6cb22ec1c633cbf4081ae3842e20bfd9bc1af84a422991ec5395f2586ebc0f5a0d1d8bde074aa2dbaca26263ebb8a0997c793ef081fe557d7d4e3d1" />
+
 		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+
+		<None Update="DataProvider\ClickHouse\ClickHouseHints.tt">
+			<LastGenOutput>ClickHouseHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\ClickHouse\ClickHouseHints.generated.cs">
+			<DependentUpon>ClickHouseHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
 
 		<None Update="DataProvider\MySql\MySqlHints.tt">
 			<LastGenOutput>MySqlHints.generated.cs</LastGenOutput>
@@ -108,6 +118,13 @@
 		<Reference Include="System.ServiceModel" />
 		<Reference Include="System.Web.Services" />
 		<Reference Include="System.ComponentModel.DataAnnotations" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Nullability.Source">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">

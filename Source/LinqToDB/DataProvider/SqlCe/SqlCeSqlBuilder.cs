@@ -4,14 +4,14 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 
-	class SqlCeSqlBuilder : BasicSqlBuilder
+	sealed class SqlCeSqlBuilder : BasicSqlBuilder
 	{
-		public SqlCeSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SqlCeSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -69,18 +69,19 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
+			// https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2005/ms172424(v=sql.90)
 			switch (type.Type.DataType)
 			{
-				case DataType.Guid          : StringBuilder.Append("UNIQUEIDENTIFIER");                                                             return;
-				case DataType.Char          : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NChar,    type.Type.Length), forCreateTable); return;
-				case DataType.VarChar       : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NVarChar, type.Type.Length), forCreateTable); return;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                               return;
+				case DataType.Guid          : StringBuilder.Append("UNIQUEIDENTIFIER");                                                                        return;
+				case DataType.Char          : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NChar,    type.Type.Length), forCreateTable, canBeNull); return;
+				case DataType.VarChar       : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NVarChar, type.Type.Length), forCreateTable, canBeNull); return;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                                          return;
 				case DataType.DateTime2     :
 				case DataType.Time          :
 				case DataType.Date          :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                     return;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                                return;
 				case DataType.NVarChar:
 					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 					{
@@ -91,9 +92,20 @@ namespace LinqToDB.DataProvider.SqlCe
 					}
 
 					break;
+
+				case DataType.Binary:
+					StringBuilder.Append("BINARY");
+					if (type.Type.Length > 1 && type.Type.Length <= 8000)
+						StringBuilder.AppendFormat("({0})", type.Type.Length);
+					return;
+				case DataType.VarBinary:
+					StringBuilder.Append("VARBINARY");
+					if (type.Type.Length > 1 && type.Type.Length <= 8000)
+						StringBuilder.AppendFormat("({0})", type.Type.Length);
+					return;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -139,7 +151,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			StringBuilder.Append("IDENTITY");
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}

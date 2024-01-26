@@ -1,8 +1,8 @@
 ﻿using System;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using SqlQuery;
 	using SqlProvider;
 
 	class SqlServer2012SqlOptimizer : SqlServerSqlOptimizer
@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			// SQL Server 2012 supports OFFSET/FETCH providing there is an ORDER BY
 			// UPDATE queries do not directly support ORDER BY, TOP, OFFSET, or FETCH, but they are supported in subqueries
@@ -54,6 +54,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (func.Name)
 			{
+				case PseudoFunctions.TRY_CONVERT:
+					return new SqlFunction(func.SystemType, "TRY_CONVERT", false, true, func.Parameters[0], func.Parameters[2]) { CanBeNull = true };
+
 				case "CASE"     :
 
 					if (func.Parameters.Length <= 5)
@@ -87,6 +90,5 @@ namespace LinqToDB.DataProvider.SqlServer
 				parameters[start + 1],
 				ConvertCase(canBeNull, systemType, parameters, start + 2)) { CanBeNull = canBeNull };
 		}
-
 	}
 }

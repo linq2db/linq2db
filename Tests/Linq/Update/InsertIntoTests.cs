@@ -9,7 +9,7 @@ namespace Tests.xUpdate
 	public class InsertIntoTests : TestBase
 	{
 		[Table]
-		class InsertTestClass
+		sealed class InsertTestClass
 		{
 			[Column(IsIdentity = true)] public int  Id         { get; set; }
 			[Column]                    public int  Value      { get; set; }
@@ -22,7 +22,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -41,7 +41,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromTable([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -60,7 +60,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromCTE([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromCTE([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -79,7 +79,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromSql([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromSql([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -99,7 +99,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromTableOverride([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromTableOverride([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))

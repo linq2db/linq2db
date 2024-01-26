@@ -22,14 +22,12 @@ namespace Tests.UserTests
 		[ActiveIssue("CreateTable(Guid)", Configurations = new[]
 		{
 			TestProvName.AllAccess,
-			ProviderName.DB2,
-			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			TestProvName.AllSybase,
 		})]
 		[Test]
-		public void TestInsert([DataSources(TestProvName.AllSqlServer2005)] string context)
+		public void TestInsert([DataSources(TestProvName.AllSqlServer2005, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())

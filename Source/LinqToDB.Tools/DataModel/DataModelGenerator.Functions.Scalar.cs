@@ -10,13 +10,9 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Generates aggregate function mapping.
 		/// </summary>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="function">Function model.</param>
-		/// <param name="scalarsGroup">Functions region.</param>
-		/// <param name="getSchemaConfigurator">Mapping schema initializer provider.</param>
-		private void BuildScalarFunction(
-			ScalarFunctionModel                                  function,
-			Func<RegionGroup>                                    scalarsGroup,
-			Func<(BlockBuilder cctorBody, CodeReference schema)> getSchemaConfigurator)
+		private static void BuildScalarFunction(IDataModelGenerationContext context, ScalarFunctionModel function)
 		{
 			// generation sample
 			/*
@@ -40,25 +36,22 @@ namespace LinqToDB.DataModel
 			 *    });
 			 */
 
-			var region = scalarsGroup().New(function.Method.Name);
-			var method = DefineMethod(region.Methods(false), function.Method);
+			var region = context.AddScalarFunctionRegion(function.Method.Name);
+			var method = context.DefineMethod(region.Methods(false), function.Method);
 
 			// scalar functions cannot be used outside of query context, so we throw exception from method
 			var body = method.Body().Append(
-				AST.Throw(
-					AST.New(
+				context.AST.Throw(
+					context.AST.New(
 						WellKnownTypes.System.InvalidOperationException,
-						AST.Constant(EXCEPTION_QUERY_ONLY_SCALAR_CALL, true))));
-
-			// build mappings
-			_metadataBuilder.BuildFunctionMetadata(function.Metadata, method);
+						context.AST.Constant(DataModelConstants.EXCEPTION_QUERY_ONLY_SCALAR_CALL, true))));
 
 			IType returnType;
 			if (function.ReturnTuple != null)
 			{
 				// generate custom record class for result tuple
 				// T4 generated this class inside of context class, here we move it to function region
-				var tupleClassBuilder = DefineClass(region.Classes(), function.ReturnTuple!.Class);
+				var tupleClassBuilder = context.DefineClass(region.Classes(), function.ReturnTuple!.Class);
 				var tuplePropsRegion  = tupleClassBuilder.Properties(true);
 
 				// mapping expression tuple fields converters
@@ -66,28 +59,28 @@ namespace LinqToDB.DataModel
 
 				// parameter of mapping expression to map tuple (returned as object[] from npgsql)
 				// to custom class
-				var lambdaParam = AST.LambdaParameter(
-					AST.Name(SCALAR_TUPLE_MAPPING_PARAMETER),
-					AST.ArrayType(WellKnownTypes.System.ObjectArrayNullable, false));
+				var lambdaParam = context.AST.LambdaParameter(
+					context.AST.Name(DataModelConstants.SCALAR_TUPLE_MAPPING_PARAMETER),
+					context.AST.ArrayType(WellKnownTypes.System.ObjectArrayNullable, false));
 
 				// generate tuple field property and mapping converter
 				for (var i = 0; i < function.ReturnTuple!.Fields.Count; i++)
 				{
 					var field = function.ReturnTuple!.Fields[i];
 
-					var property = DefineProperty(tuplePropsRegion, field.Property);
+					var property = context.DefineProperty(tuplePropsRegion, field.Property);
 
-					initializers[i] = AST.Assign(
+					initializers[i] = context.AST.Assign(
 						property.Property.Reference,
-						AST.Cast(
+						context.AST.Cast(
 							property.Property.Type.Type,
-							AST.Index(
+							context.AST.Index(
 								lambdaParam.Reference,
-								AST.Constant(i, true),
+								context.AST.Constant(i, true),
 								WellKnownTypes.System.ObjectNullable)));
 				}
 
-				var conversionLambda = AST
+				var conversionLambda = context.AST
 						.Lambda(WellKnownTypes.System.Linq.Expressions.LambdaExpression, true)
 						.Parameter(lambdaParam);
 
@@ -95,22 +88,21 @@ namespace LinqToDB.DataModel
 				conversionLambda
 					.Body()
 					.Append(
-						AST.Return(
-							AST.New(
+						context.AST.Return(
+							context.AST.New(
 								tupleClassBuilder.Type.Type,
 								Array<ICodeExpression>.Empty,
 								initializers)));
 
 				// add conversion expression to mapping schema initializer
-				var (initializer, schema) = getSchemaConfigurator();
-				initializer
+				context.StaticInitializer
 					.Append(
-					AST.Call(
-						schema,
+					context.AST.Call(
+						context.ContextMappingSchema,
 						WellKnownTypes.LinqToDB.Mapping.MappingSchema_SetConvertExpression,
 						new IType[]
 						{
-							AST.ArrayType(WellKnownTypes.System.ObjectNullable, false),
+							context.AST.ArrayType(WellKnownTypes.System.ObjectNullable, false),
 							tupleClassBuilder.Type.Type
 						},
 						false,
@@ -123,8 +115,16 @@ namespace LinqToDB.DataModel
 
 			method.Returns(returnType);
 
+			method.Method.ChangeHandler += m =>
+			{
+				function.Return = m.ReturnType!.Type;
+			};
+
 			foreach (var param in function.Parameters)
-				DefineParameter(method, param.Parameter);
+				context.DefineParameter(method, param.Parameter);
+
+			// metadata last
+			context.MetadataBuilder?.BuildFunctionMetadata(context, function.Metadata, method);
 		}
 	}
 }

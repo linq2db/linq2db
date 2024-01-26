@@ -1,11 +1,13 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
 	/// <summary>
 	/// Contains result of <see cref="IBuildContext.IsExpression"/> function call.
 	/// </summary>
-	struct IsExpressionResult
+	readonly struct IsExpressionResult
 	{
 		/// <summary>
 		/// Indicates when test or request was successful.
@@ -22,6 +24,11 @@ namespace LinqToDB.Linq.Builder
 		/// </summary>
 		public readonly Expression?    Expression;
 
+		/// <summary>
+		/// Stores found expression request.
+		/// </summary>
+		public readonly ISqlExpression? SqlExpression;
+
 		public IsExpressionResult(bool result, Expression? expression = null)
 		{
 			Result     = result;
@@ -34,6 +41,12 @@ namespace LinqToDB.Linq.Builder
 			Result     = result;
 			Context    = context;
 			Expression = expression;
+		}
+
+		public IsExpressionResult(ISqlExpression expression)
+		{
+			Result        = true;
+			SqlExpression = expression;
 		}
 
 		/// <summary>
