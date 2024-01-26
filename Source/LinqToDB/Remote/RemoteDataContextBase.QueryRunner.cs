@@ -179,7 +179,8 @@ namespace LinqToDB.Remote
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
-					_dataContext.GetNextCommandHints(true));
+					_dataContext.GetNextCommandHints(true),
+					_dataContext.Options);
 
 				if (_dataContext._batchCounter > 0)
 				{
@@ -208,7 +209,8 @@ namespace LinqToDB.Remote
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
-					_dataContext.GetNextCommandHints(true));
+					_dataContext.GetNextCommandHints(true),
+					_dataContext.Options);
 
 				_client = _dataContext.GetClient();
 
@@ -246,7 +248,8 @@ namespace LinqToDB.Remote
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
-					_dataContext.GetNextCommandHints(true));
+					_dataContext.GetNextCommandHints(true),
+					_dataContext.Options);
 
 				_client = _dataContext.GetClient();
 
@@ -329,7 +332,8 @@ namespace LinqToDB.Remote
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
-					_dataContext.GetNextCommandHints(true));
+					_dataContext.GetNextCommandHints(true),
+					_dataContext.Options);
 
 				_client = _dataContext.GetClient();
 
@@ -359,7 +363,8 @@ namespace LinqToDB.Remote
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
-					_dataContext.GetNextCommandHints(true));
+					_dataContext.GetNextCommandHints(true),
+					_dataContext.Options);
 
 				_client = _dataContext.GetClient();
 
@@ -392,7 +397,8 @@ namespace LinqToDB.Remote
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
-					_dataContext.GetNextCommandHints(true));
+					_dataContext.GetNextCommandHints(true),
+					_dataContext.Options);
 
 				if (_dataContext._batchCounter > 0)
 				{

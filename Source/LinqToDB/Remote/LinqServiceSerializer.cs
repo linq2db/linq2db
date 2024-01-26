@@ -14,14 +14,18 @@ namespace LinqToDB.Remote
 	using Mapping;
 	using SqlQuery;
 
-
 	static class LinqServiceSerializer
 	{
 		#region Public Members
 
-		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues, IReadOnlyCollection<string>? queryHints)
+		public static string Serialize(
+			MappingSchema                serializationSchema,
+			SqlStatement                 statement,
+			IReadOnlyParameterValues?    parameterValues,
+			IReadOnlyCollection<string>? queryHints,
+			DataOptions                  dataOptions)
 		{
-			return new QuerySerializer(serializationSchema).Serialize(statement, parameterValues, queryHints);
+			return new QuerySerializer(serializationSchema).Serialize(statement, parameterValues, queryHints, dataOptions);
 		}
 
 		public static LinqServiceQuery Deserialize(MappingSchema serializationSchema, MappingSchema contextSchema, DataOptions options, string str)
@@ -270,6 +274,8 @@ namespace LinqToDB.Remote
 
 			protected string Str = null!;
 			protected int    Pos;
+
+			public DataOptions Options => _options;
 
 			protected DeserializerBase(MappingSchema serializationMappingSchema, MappingSchema contextMappingSchema, DataOptions options)
 			{
@@ -644,8 +650,14 @@ namespace LinqToDB.Remote
 			{
 			}
 
-			public string Serialize(SqlStatement statement, IReadOnlyParameterValues? parameterValues, IReadOnlyCollection<string>? queryHints)
+			public string Serialize(
+				SqlStatement                 statement,
+				IReadOnlyParameterValues?    parameterValues,
+				IReadOnlyCollection<string>? queryHints,
+				DataOptions                  options)
 			{
+				// Add QueryHints.
+				//
 				var queryHintCount = queryHints?.Count ?? 0;
 
 				Builder.AppendLine(queryHintCount.ToString());
@@ -654,6 +666,14 @@ namespace LinqToDB.Remote
 					foreach (var hint in queryHints!)
 						Builder.AppendLine(hint);
 
+				// Serialize options.
+				//
+				Builder
+					.Append(options.SqlOptions.Pack())
+					.AppendLine();
+
+				// Serialize statement.
+				//
 				statement.Visit((serializer: this, evaluationContext: new EvaluationContext(parameterValues)),
 					static (context, e) => context.serializer.Visit(e, context.evaluationContext));
 
@@ -1537,7 +1557,7 @@ namespace LinqToDB.Remote
 
 		public sealed class QueryDeserializer : DeserializerBase
 		{
-			SqlStatement   _statement  = null!;
+			SqlStatement _statement = null!;
 
 			readonly Dictionary<int,SelectQuery> _queries = new ();
 			readonly List<Action>                _actions = new ();
@@ -1551,6 +1571,8 @@ namespace LinqToDB.Remote
 			{
 				Str = str;
 
+				// Deserialize QueryHints.
+				//
 				List<string>? queryHints = null;
 
 				var queryHintCount = ReadInt();
@@ -1574,12 +1596,20 @@ namespace LinqToDB.Remote
 					}
 				}
 
+				// Deserialize options.
+				//
+				var options = Options.WithOptions<SqlOptions>(o => o.Unpack(ReadInt()));
+
+				NextLine();
+
+				// Deserialize statement.
+				//
 				while (Parse()) {}
 
 				foreach (var action in _actions)
 					action();
 
-				return new LinqServiceQuery { Statement = _statement, QueryHints = queryHints };
+				return new LinqServiceQuery { Statement = _statement, QueryHints = queryHints, DataOptions = options };
 			}
 
 			bool Parse()
@@ -1595,8 +1625,8 @@ namespace LinqToDB.Remote
 
 				switch ((QueryElementType)type)
 				{
-					case (QueryElementType)TypeIndex      : obj = ResolveType(ReadString());                break;
-					case (QueryElementType)TypeArrayIndex : obj = GetArrayType(ReadType()!);              break;
+					case (QueryElementType)TypeIndex      : obj = ResolveType(ReadString()); break;
+					case (QueryElementType)TypeArrayIndex : obj = GetArrayType(ReadType()!); break;
 
 					case QueryElementType.SqlField :
 						{
