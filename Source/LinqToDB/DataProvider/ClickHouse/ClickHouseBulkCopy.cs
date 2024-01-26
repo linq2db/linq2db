@@ -544,6 +544,13 @@ namespace LinqToDB.DataProvider.ClickHouse
 				if (copyOptions.MaxDegreeOfParallelism != null)
 					bc.MaxDegreeOfParallelism = copyOptions.MaxDegreeOfParallelism.Value;
 
+				if (bc.HasInitAsync)
+				{
+					// no escaping?
+					bc.ColumnNames = columns.Select(c => c.ColumnName).ToArray();
+					await bc.InitAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				}
+
 				var rd = createDataReader(columns);
 
 				await TraceActionAsync(
@@ -551,8 +558,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 					() => "INSERT ASYNC BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 					async () =>
 					{
-						if (bc.SupportsInitAsync)
-							await bc.InitAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						return rd.Count;
 					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
