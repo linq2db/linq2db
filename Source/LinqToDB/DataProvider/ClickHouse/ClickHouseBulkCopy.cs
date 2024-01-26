@@ -551,6 +551,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 					() => "INSERT ASYNC BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 					async () =>
 					{
+						if (bc.SupportsInitAsync)
+							await bc.InitAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						return rd.Count;
 					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);

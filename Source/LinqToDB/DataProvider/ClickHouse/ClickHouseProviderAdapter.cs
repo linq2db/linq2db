@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
@@ -381,9 +383,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 			[Wrapper]
 			public sealed class ClickHouseBulkCopy : TypeWrapper, IDisposable
 			{
-				private static LambdaExpression[] Wrappers { get; }
-					= new LambdaExpression[]
-				{
+				[UsedImplicitly]
+				private static object[] Wrappers { get; } =
+				[
 					// [0]: Dispose
 					(Expression<Action<ClickHouseBulkCopy>>)((ClickHouseBulkCopy this_) => ((IDisposable)this_).Dispose()),
 					// [1]: get BatchSize
@@ -402,7 +404,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 					(Expression<Func<ClickHouseBulkCopy, long>>)((ClickHouseBulkCopy this_) => this_.RowsWritten),
 					// [8]: WriteToServerAsync
 					(Expression<Func<ClickHouseBulkCopy, IDataReader, CancellationToken, Task>>)((ClickHouseBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync(dataReader, cancellationToken)),
-				};
+					// [9]: InitAsync
+					Tuple.Create((LambdaExpression)(Expression<Func<ClickHouseBulkCopy, Task>>)((ClickHouseBulkCopy this_) => this_.InitAsync()), true),
+				];
 
 				public ClickHouseBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{
@@ -439,6 +443,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 #pragma warning disable RS0030 // API mapping must preserve type
 				public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<ClickHouseBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
 #pragma warning restore RS0030 //  API mapping must preserve type
+
+				public bool SupportsInitAsync => CompiledWrappers[9] is not null;
+
+				public Task InitAsync() => ((Func<ClickHouseBulkCopy, Task>)CompiledWrappers[9])(this);
 			}
 		}
 
