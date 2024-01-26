@@ -1,13 +1,20 @@
 ﻿using System.Linq;
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
+using LinqToDB.Interceptors;
 using NUnit.Framework;
 using System.Linq.Dynamic.Core;
 using System.Linq.Dynamic.Core.CustomTypeProviders;
 using System.Collections.Generic;
 using System;
 using System.Diagnostics;
+using System.Data;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
+
 
 namespace Tests.UserTests
 {
@@ -177,6 +184,17 @@ namespace Tests.UserTests
 			public ShelfInfoDTO? Shelf6 { get; set; }
 			public ShelfInfoDTO? Shelf7 { get; set; }
 			public ShelfInfoDTO? Shelf8 { get; set; }
+		}
+
+		class QueryStartedInterceptor : LinqToDB.Interceptors.CommandInterceptor
+		{
+			public Action? Action { get; set; }
+
+			public override Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
+			{
+				Action?.Invoke();
+				return base.ExecuteReader(eventData, command, commandBehavior, result);
+			}
 		}
 
 		[Test]
@@ -654,12 +672,20 @@ namespace Tests.UserTests
 								} : null),
 							};
 
+				var i = new QueryStartedInterceptor();
+				s.AddInterceptor(i);
 				var sw = Stopwatch.StartNew();
+				var sw2 = Stopwatch.StartNew();
+				i.Action = () => sw.Stop();
 				var res = query.Select(x => new ChannelInfoCombinedDTO() { Id = x.Id, ChannelInfo = x.ChannelInfo, Shelf1 = x.Shelf1 }).ToList();
+				var gt1 = sw2.ElapsedMilliseconds;
 				var t1 = sw.ElapsedMilliseconds;
-				
+
 				sw = Stopwatch.StartNew();
+				sw2 = Stopwatch.StartNew();
+				i.Action = () => sw.Stop();
 				var res8 = query.Select(x => new ChannelInfoCombinedDTO() { Id = x.Id, ChannelInfo = x.ChannelInfo, Shelf1 = x.Shelf1, Shelf2 = x.Shelf2, Shelf3 = x.Shelf3, Shelf4 = x.Shelf4, Shelf5 = x.Shelf5, Shelf6 = x.Shelf6, Shelf7 = x.Shelf7, Shelf8 = x.Shelf8 }).ToList();
+				var gt8 = sw2.ElapsedMilliseconds;
 				var t8 = sw.ElapsedMilliseconds;
 			}
 		}
