@@ -7,5 +7,6 @@
 		SqlStatement    Statement   { get; }
 		object?         Context     { get; set; }
 		AliasesContext? Aliases     { get; set; }
+		DataOptions?    DataOptions { get; }
 	}
 }

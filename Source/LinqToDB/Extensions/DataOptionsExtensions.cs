@@ -1627,5 +1627,103 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		#region SqlOptions
+
+		/// <summary>
+		/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
+		/// Default value: <c>false</c>.
+		/// </summary>
+		public static SqlOptions WithEnableConstantExpressionInOrderBy(this SqlOptions options, bool enableConstantExpressionInOrderBy)
+		{
+			return options with { EnableConstantExpressionInOrderBy = enableConstantExpressionInOrderBy };
+		}
+
+		/// <summary>
+		/// Indicates whether SQL Builder should generate aliases for final projection.
+		/// It is not required for correct query processing but simplifies SQL analysis.
+		/// <para>
+		/// Default value: <c>false</c>.
+		/// </para>
+		/// <example>
+		/// For the query
+		/// <code>
+		/// var query = from child in db.Child
+		///	   select new
+		///	   {
+		///       TrackId = child.ChildID,
+		///	   };
+		/// </code>
+		/// When property is <c>true</c>
+		/// <code>
+		/// SELECT
+		///	   [child].[ChildID] as [TrackId]
+		/// FROM
+		///	   [Child] [child]
+		/// </code>
+		/// Otherwise alias will be removed
+		/// <code>
+		/// SELECT
+		///	   [child].[ChildID]
+		/// FROM
+		///	   [Child] [child]
+		/// </code>
+		/// </example>
+		/// </summary>
+		public static SqlOptions WithGenerateFinalAliases(this SqlOptions options, bool generateFinalAliases)
+		{
+			return options with { GenerateFinalAliases = generateFinalAliases };
+		}
+
+		#endregion
+
+		#region DataOptions.SqlOptions
+
+		/// <summary>
+		/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
+		/// Default value: <c>false</c>.
+		/// </summary>
+		public static DataOptions UseEnableConstantExpressionInOrderBy(this DataOptions options, bool enableConstantExpressionInOrderBy)
+		{
+			return options.WithOptions<SqlOptions>(o => o with { EnableConstantExpressionInOrderBy = enableConstantExpressionInOrderBy });
+		}
+
+		/// <summary>
+		/// Indicates whether SQL Builder should generate aliases for final projection.
+		/// It is not required for correct query processing but simplifies SQL analysis.
+		/// <para>
+		/// Default value: <c>false</c>.
+		/// </para>
+		/// <example>
+		/// For the query
+		/// <code>
+		/// var query = from child in db.Child
+		///	   select new
+		///	   {
+		///       TrackId = child.ChildID,
+		///	   };
+		/// </code>
+		/// When property is <c>true</c>
+		/// <code>
+		/// SELECT
+		///	   [child].[ChildID] as [TrackId]
+		/// FROM
+		///	   [Child] [child]
+		/// </code>
+		/// Otherwise alias will be removed
+		/// <code>
+		/// SELECT
+		///	   [child].[ChildID]
+		/// FROM
+		///	   [Child] [child]
+		/// </code>
+		/// </example>
+		/// </summary>
+		public static DataOptions UseGenerateFinalAliases(this DataOptions options, bool generateFinalAliases)
+		{
+			return options.WithOptions<SqlOptions>(o => o with { GenerateFinalAliases = generateFinalAliases });
+		}
+
+		#endregion
 	}
 }
