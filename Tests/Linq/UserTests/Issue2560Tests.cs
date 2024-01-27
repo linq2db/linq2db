@@ -33,7 +33,7 @@ namespace Tests.UserTests
 
 			var item = new DataClass
 			{
-				Value = LocalDateTime.FromDateTime(TestData.GetMaxScaleDateTime(context)),
+				Value = LocalDateTime.FromDateTime(GetDateTime(context)),
 			};
 
 			db.Insert(item);
@@ -56,7 +56,7 @@ namespace Tests.UserTests
 
 			var item = new DataClass
 			{
-				Value = LocalDateTime.FromDateTime(TestData.GetMaxScaleDateTime(context)),
+				Value = LocalDateTime.FromDateTime(GetDateTime(context)),
 			};
 
 			db.Insert(item);
@@ -66,5 +66,18 @@ namespace Tests.UserTests
 			Assert.AreEqual(1, list.Count);
 			Assert.That(list[0].Value, Is.EqualTo(item.Value));
 		}
+
+		private static DateTime GetDateTime(string context)
+		{
+			if (context.IsAnyOf(TestProvName.AllClickHouse))
+			{
+				// DateTime type has 1 second resolution
+				return TestData.DateTime0;
+			}
+
+			// default is max (7)
+			return TestData.DateTime;
+		}
+
 	}
 }

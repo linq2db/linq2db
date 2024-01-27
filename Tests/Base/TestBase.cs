@@ -37,16 +37,6 @@ namespace Tests
 	{
 		protected static class TestData
 		{
-			public static DateTime GetMaxScaleDateTime(string context)
-			{
-				if (context.IsAnyOf(TestProvName.AllSQLite))
-				{
-					return DateTime3;
-				}
-
-				// max: 7
-				return DateTime;
-			}
 			// offset 40 is not used by any timezone, so we can detect tz handling issues, which could be hidden when offset match current TZ
 			public static readonly DateTimeOffset DateTimeOffset          = new DateTimeOffset(2020, 2, 29, 17, 54, 55, 123, TimeSpan.FromMinutes(40)).AddTicks(1234);
 			public static readonly DateTimeOffset DateTimeOffsetUtc       = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);

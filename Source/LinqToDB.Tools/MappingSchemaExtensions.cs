@@ -204,25 +204,13 @@ namespace LinqToDB.Tools
 			// ms.SetConvertExpression<LocalDateTime, DataParameter>(timeStamp =>
 			//     new DataParameter
 			//     {
-			//         Value = new DateTime(timeStamp.Year, timeStamp.Month, timeStamp.Day, timeStamp.Hour,
-			//             timeStamp.Minute, timeStamp.Second, timeStamp.Millisecond),
+			//         Value    = timeStamp.ToDateTimeUnspecified(),
 			//         DataType = DataType.DateTime
 			//     });
 
 			var ldtParameter = Expression.Parameter(localDateTimeType, "timeStamp");
 
-			var newDateTime = Expression.New(
-				MemberHelper.ConstructorOf(() => new DateTime(0, 0, 0, 0, 0, 0, 0)),
-				new Expression[]
-				{
-					Expression.PropertyOrField(ldtParameter, "Year"),
-					Expression.PropertyOrField(ldtParameter, "Month"),
-					Expression.PropertyOrField(ldtParameter, "Day"),
-					Expression.PropertyOrField(ldtParameter, "Hour"),
-					Expression.PropertyOrField(ldtParameter, "Minute"),
-					Expression.PropertyOrField(ldtParameter, "Second"),
-					Expression.PropertyOrField(ldtParameter, "Millisecond")
-				});
+			var newDateTime = Expression.Call(ldtParameter, "ToDateTimeUnspecified", []);
 
 			mappingSchema.SetConvertExpression(
 				localDateTimeType,
@@ -264,7 +252,7 @@ namespace LinqToDB.Tools
 						dtParameter),
 					dtParameter));
 
-			// LocalDateTime.FromDateTime(DateTimeOffset.LocalDateTime),
+			// LocalDateTime.FromDateTime(DateTimeOffset.DateTime),
 
 			var dtoParameter = Expression.Parameter(typeof(DateTimeOffset), "dto");
 
@@ -274,7 +262,7 @@ namespace LinqToDB.Tools
 				Expression.Lambda(
 					Expression.Call(
 						localDateTimeType.GetMethod("FromDateTime", new[] { typeof(DateTime) })!,
-						Expression.Property(dtoParameter, "LocalDateTime")),
+						Expression.Property(dtoParameter, "DateTime")),
 					dtoParameter));
 
 			// LocalDateTime.FromDateTime(DateTime.Parse(string, IvariantInfo)),
