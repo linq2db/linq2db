@@ -18,6 +18,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 	(
 		BulkCopyType BulkCopyType                    = BulkCopyType.ProviderSpecific,
 		bool         UseStandardCompatibleAggregates = default
+		// If you add another parameter here, don't forget to update
+		// ClickHouseOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<ClickHouseOptions>(BulkCopyType)
 	{
