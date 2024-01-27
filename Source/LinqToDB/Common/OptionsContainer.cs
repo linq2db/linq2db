@@ -65,6 +65,7 @@ namespace LinqToDB.Common
 		/// </summary>
 		public virtual IEnumerable<IOptionSet> OptionSets
 		{
+			[Pure]
 			get
 			{
 				if (_sets != null)
@@ -78,6 +79,7 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <typeparam name="TSet">Options set type.</typeparam>
 		/// <returns>Options set or <c>null</c> if set with type <typeparamref name="TSet"/> not found in options.</returns>
+		[Pure]
 		public virtual TSet? Find<TSet>()
 			where TSet : class, IOptionSet
 		{
@@ -87,6 +89,7 @@ namespace LinqToDB.Common
 			return null;
 		}
 
+		[Pure]
 		public TSet FindOrDefault<TSet>(TSet defaultOptions)
 			where TSet : class, IOptionSet
 		{

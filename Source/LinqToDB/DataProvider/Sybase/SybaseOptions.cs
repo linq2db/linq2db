@@ -17,6 +17,8 @@ namespace LinqToDB.DataProvider.Sybase
 		// don't set ProviderSpecific as default type while SAP not fix incorrect bit field value
 		// insert for first record
 		BulkCopyType BulkCopyType = BulkCopyType.MultipleRows
+		// If you add another parameter here, don't forget to update
+		// SybaseOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<SybaseOptions>(BulkCopyType)
 	{

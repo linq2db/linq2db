@@ -581,6 +581,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 		}
 
+		protected override void BuildExpressionForOrderBy(ISqlExpression expr)
+		{
+			if (DataOptions.SqlOptions.EnableConstantExpressionInOrderBy && expr.SystemType == typeof(int) && expr is SqlValue(var value))
+				StringBuilder.Append(value);
+			else
+				base.BuildExpressionForOrderBy(expr);
+		}
+
 		protected override void MergeSqlBuilderData(BasicSqlBuilder sqlBuilder)
 		{
 			if (sqlBuilder is ClickHouseSqlBuilder { _finalHints: {} fh } )

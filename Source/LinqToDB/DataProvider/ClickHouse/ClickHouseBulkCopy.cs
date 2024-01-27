@@ -544,6 +544,13 @@ namespace LinqToDB.DataProvider.ClickHouse
 				if (copyOptions.MaxDegreeOfParallelism != null)
 					bc.MaxDegreeOfParallelism = copyOptions.MaxDegreeOfParallelism.Value;
 
+				if (bc.HasInitAsync)
+				{
+					// no escaping?
+					bc.ColumnNames = columns.Select(c => c.ColumnName).ToArray();
+					await bc.InitAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				}
+
 				var rd = createDataReader(columns);
 
 				await TraceActionAsync(

@@ -74,7 +74,7 @@ namespace Tests
 		public static string? BaselinesPath;
 		public static bool?   StoreMetrics;
 
-		protected static string? LastQuery;
+		protected static string? LastQuery { get; set; }
 
 		static TestBase()
 		{
@@ -1258,6 +1258,7 @@ namespace Tests
 			bool allowEmpty = false)
 		{
 			var resultList   = result.  Select(fixSelector).ToList();
+			var lastQuery    = LastQuery;
 			var expectedList = expected.Select(fixSelector).ToList();
 
 			if (sort != null)
@@ -1293,6 +1294,8 @@ namespace Tests
 
 			Assert.AreEqual(0, exceptExpected, $"Expected Was{Environment.NewLine}{message}");
 			Assert.AreEqual(0, exceptResult  , $"Expect Result{Environment.NewLine}{message}");
+
+			LastQuery = lastQuery;
 		}
 
 		protected void AreEqual<T>(IEnumerable<IEnumerable<T>> expected, IEnumerable<IEnumerable<T>> result)
@@ -1339,6 +1342,7 @@ namespace Tests
 				static (ctx, e) => e is ConstantExpression { Value : null } ce && ce.Type == typeof(IDataContext)
 					? Expression.Constant(Internals.GetDataContext(ctx), typeof(IDataContext))
 					: e);
+			var lastQuery = LastQuery;
 
 			var newExpr = expr.Transform(loaded, static (loaded, e) =>
 			{
@@ -1384,6 +1388,8 @@ namespace Tests
 
 			if (actual.Length > 0 || expected.Length > 0)
 				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
+
+			LastQuery = lastQuery;
 
 			return actual;
 		}
