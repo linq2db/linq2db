@@ -130,7 +130,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (UnaryExpression)expr;
 
-						_exprBuilder.AppendFormat(CultureInfo.InvariantCulture, "({0})", GetTypeName(e.Type));
+						_exprBuilder.Append(CultureInfo.InvariantCulture, $"({GetTypeName(e.Type)})");
 						Build(e.Operand);
 
 						return false;
@@ -158,7 +158,7 @@ namespace LinqToDB.Linq.Builder
 
 						_exprBuilder.Append('(');
 						Build(e.Operand);
-						_exprBuilder.AppendFormat(CultureInfo.InvariantCulture, " as {0})", GetTypeName(e.Type));
+						_exprBuilder.Append(CultureInfo.InvariantCulture, $" as {GetTypeName(e.Type)})");
 
 						return false;
 					}
@@ -186,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 						var e = (MemberExpression)expr;
 
 						Build(e.Expression!);
-						_exprBuilder.AppendFormat(CultureInfo.InvariantCulture, ".{0}", MangleName(e.Member.DeclaringType!, e.Member.Name, "P"));
+						_exprBuilder.Append(CultureInfo.InvariantCulture, $".{MangleName(e.Member.DeclaringType!, e.Member.Name, "P")}");
 
 						return false;
 					}
@@ -277,13 +277,13 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						if (typeof(Table<>).IsSameOrParentOf(expr.Type))
-							_exprBuilder.AppendFormat(CultureInfo.InvariantCulture, "db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArguments()[0]));
+							_exprBuilder.Append(CultureInfo.InvariantCulture, $"db.GetTable<{GetTypeName(expr.Type.GetGenericArguments()[0])}>()");
 						else if (c.Value == _dataContext)
 							_exprBuilder.Append("db");
 						else if (expr.ToString() == "value(" + expr.Type + ")")
 							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(')');
 						else
-							_exprBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", expr);
+							_exprBuilder.Append(CultureInfo.InvariantCulture, $"{expr}");
 
 						return true;
 					}
@@ -327,7 +327,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (ne.Members!.Count == 1)
 							{
-								_exprBuilder.AppendFormat(CultureInfo.InvariantCulture, "new {{ {0} = ", MangleName(ne.Members[0].DeclaringType!, ne.Members[0].Name, "P"));
+								_exprBuilder.Append(CultureInfo.InvariantCulture, $"new {{ {MangleName(ne.Members[0].DeclaringType!, ne.Members[0].Name, "P")} = ");
 								Build(ne.Arguments[0]);
 								_exprBuilder.Append(" }}");
 							}
@@ -339,7 +339,9 @@ namespace LinqToDB.Linq.Builder
 
 								for (var i = 0; i < ne.Members.Count; i++)
 								{
-									_exprBuilder.AppendLine().Append(_indent).AppendFormat(CultureInfo.InvariantCulture, "{0} = ", MangleName(ne.Members[i].DeclaringType!, ne.Members[i].Name, "P"));
+									_exprBuilder
+										.AppendLine()
+										.Append(CultureInfo.InvariantCulture, $"{_indent}{MangleName(ne.Members[i].DeclaringType!, ne.Members[i].Name, "P")} = ");
 									Build(ne.Arguments[i]);
 
 									if (i + 1 < ne.Members.Count)
@@ -352,7 +354,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							_exprBuilder.AppendFormat(CultureInfo.InvariantCulture, "new {0}(", GetTypeName(ne.Type));
+							_exprBuilder.Append(CultureInfo.InvariantCulture, $"new {GetTypeName(ne.Type)}(");
 
 							for (var i = 0; i < ne.Arguments.Count; i++)
 							{
@@ -375,11 +377,11 @@ namespace LinqToDB.Linq.Builder
 							{
 								case MemberBindingType.Assignment:
 									var ma = (MemberAssignment) b;
-									_exprBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0} = ", MangleName(ma.Member.DeclaringType!, ma.Member.Name, "P"));
+									_exprBuilder.Append(CultureInfo.InvariantCulture, $"{MangleName(ma.Member.DeclaringType!, ma.Member.Name, "P")} = ");
 									Build(ma.Expression);
 									break;
 								default:
-									_exprBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", b);
+									_exprBuilder.Append(CultureInfo.InvariantCulture, $"{b}");
 									break;
 							}
 						}
@@ -419,7 +421,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (NewArrayExpression)expr;
 
-						_exprBuilder.AppendFormat(CultureInfo.InvariantCulture, "new {0}[]", GetTypeName(e.Type.GetElementType()!));
+						_exprBuilder.Append(CultureInfo.InvariantCulture, $"new {GetTypeName(e.Type.GetElementType()!)}[]");
 
 						if (e.Expressions.Count == 1)
 						{
@@ -454,7 +456,7 @@ namespace LinqToDB.Linq.Builder
 
 						_exprBuilder.Append('(');
 						Build(e.Expression);
-						_exprBuilder.AppendFormat(CultureInfo.InvariantCulture, " is {0})", e.TypeOperand);
+						_exprBuilder.Append(CultureInfo.InvariantCulture, $" is {e.TypeOperand})");
 
 						return false;
 					}
@@ -514,8 +516,7 @@ namespace LinqToDB.Linq.Builder
 				default:
 					_exprBuilder
 						.AppendLine("// Unknown expression.")
-						.Append(_indent)
-						.AppendFormat(CultureInfo.InvariantCulture, "{0}", expr);
+						.Append(CultureInfo.InvariantCulture, $"{_indent}{expr}");
 					return false;
 			}
 		}

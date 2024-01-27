@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using System.Globalization;
-
 	using Common;
 	using Data;
 	using SchemaProvider;

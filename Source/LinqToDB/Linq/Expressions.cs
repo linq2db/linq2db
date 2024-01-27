@@ -820,9 +820,7 @@ namespace LinqToDB.Linq
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToBoolean((sbyte)   0 )), N(() => L<sbyte,   bool>((sbyte    p0) => Sql.ConvertTo<bool>.From(p0))) },
 			{ M(() => Convert.ToBoolean((float)   0 )), N(() => L<float,   bool>((float    p0) => Sql.ConvertTo<bool>.From(p0))) },
-#pragma warning disable MA0011 // false positive
 			{ M(() => Convert.ToBoolean((string) "0")), N(() => L<string,  bool>((string   p0) => Sql.ConvertTo<bool>.From(p0))) },
-#pragma warning restore MA0011 // false positive
 			{ M(() => Convert.ToBoolean((ushort)  0 )), N(() => L<ushort,  bool>((ushort   p0) => Sql.ConvertTo<bool>.From(p0))) },
 			{ M(() => Convert.ToBoolean((uint)    0 )), N(() => L<uint,    bool>((uint     p0) => Sql.ConvertTo<bool>.From(p0))) },
 			{ M(() => Convert.ToBoolean((ulong)   0 )), N(() => L<ulong,   bool>((ulong    p0) => Sql.ConvertTo<bool>.From(p0))) },
@@ -870,9 +868,7 @@ namespace LinqToDB.Linq
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToChar((sbyte)   0)  ), N(() => L<sbyte,   char>((sbyte    p0) => Sql.ConvertTo<char>.From(p0))) },
 			{ M(() => Convert.ToChar((float)   0)  ), N(() => L<float,   char>((float    p0) => Sql.ConvertTo<char>.From(Sql.RoundToEven(p0)))) },
-#pragma warning disable MA0011 // false positive
 			{ M(() => Convert.ToChar((string) "0") ), N(() => L<string,  char>((string   p0) => Sql.ConvertTo<char>.From(p0))) },
-#pragma warning restore MA0011 // false positive
 			{ M(() => Convert.ToChar((ushort)  0)  ), N(() => L<ushort,  char>((ushort   p0) => Sql.ConvertTo<char>.From(p0))) },
 			{ M(() => Convert.ToChar((uint)    0)  ), N(() => L<uint,    char>((uint     p0) => Sql.ConvertTo<char>.From(p0))) },
 			{ M(() => Convert.ToChar((ulong)   0)  ), N(() => L<ulong,   char>((ulong    p0) => Sql.ConvertTo<char>.From(p0))) },

@@ -151,10 +151,10 @@ namespace LinqToDB.SqlQuery
 				.Append(Name ?? "parameter");
 
 #if DEBUG
-			sb.Append('(').Append(_paramNumber).Append(')');
+			sb.Append(CultureInfo.InvariantCulture, $"({_paramNumber})");
 #endif
 			if (Value != null)
-				sb.AppendFormat(CultureInfo.InvariantCulture, "[{0}]", Value);
+				sb.Append(CultureInfo.InvariantCulture, $"[{Value}]");
 
 			return sb;
 		}

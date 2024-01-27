@@ -260,10 +260,9 @@ namespace LinqToDB.SqlQuery
 			}
 
 			sb
-				.Append('t')
-				.AppendFormat(CultureInfo.InvariantCulture, "{0}", Parent?.SourceID ?? - 1)
+				.Append(CultureInfo.InvariantCulture, $"t{Parent?.SourceID ?? -1}")
 #if DEBUG
-				.Append('[').Append(_columnNumber).Append(']')
+				.Append(CultureInfo.InvariantCulture, $"[{_columnNumber}]")
 #endif
 				.Append('.')
 				.Append(Alias ?? FormattableString.Invariant($"c{(parentIndex >= 0 ? parentIndex + 1 : parentIndex)}"));

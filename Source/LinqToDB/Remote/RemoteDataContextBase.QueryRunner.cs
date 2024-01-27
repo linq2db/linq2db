@@ -120,9 +120,7 @@ namespace LinqToDB.Remote
 							else if (value is char chr)
 								value = FormattableString.Invariant($"'{(chr == '\'' ? "''" : chr)}'");
 
-							sb.Value
-								.AppendFormat(CultureInfo.InvariantCulture, "-- SET {0} = {1}", p.Name, value)
-									.AppendLine();
+							sb.Value.AppendLine(CultureInfo.InvariantCulture, $"-- SET {p.Name} = {value}");
 						}
 
 						sb.Value.AppendLine();

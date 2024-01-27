@@ -161,9 +161,7 @@ namespace LinqToDB.SqlProvider
 #if NET6_0_OR_GREATER
 		static void BuildDateOnly(StringBuilder stringBuilder, DateOnly value)
 		{
-			var format = "'{0:yyyy-MM-dd}'";
-
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"'{{value:yyyy-MM-dd}}'");
 		}
 #endif
 

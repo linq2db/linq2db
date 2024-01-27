@@ -420,15 +420,15 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			sb.AppendFormat(CultureInfo.InvariantCulture, "{0}", Type.DataType);
+			sb.AppendFormat(CultureInfo.InvariantCulture, $"{Type.DataType}");
 
 			if (!string.IsNullOrEmpty(Type.DbType))
 				sb.Append(CultureInfo.InvariantCulture, $":\"{Type.DbType}\"");
 
 			if (Type.Length != 0)
-				sb.AppendFormat(CultureInfo.InvariantCulture, "({0})", Type.Length);
+				sb.Append(CultureInfo.InvariantCulture, $"({Type.Length})");
 			else if (Type.Precision != 0)
-				sb.AppendFormat(CultureInfo.InvariantCulture, "({0},{1})", Type.Precision, Type.Scale);
+				sb.Append(CultureInfo.InvariantCulture, $"({Type.Precision},{Type.Scale})");
 
 			return sb;
 		}

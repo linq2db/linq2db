@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			// char works with values in 0..255 range
 			// this is fine as long as we use it only for \0 character
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "char({0})", value);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"char({value})");
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

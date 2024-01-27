@@ -119,7 +119,7 @@ namespace LinqToDB.Remote
 
 			protected void Append(int value)
 			{
-				Builder.AppendFormat(CultureInfo.InvariantCulture, " {0}", value);
+				Builder.Append(CultureInfo.InvariantCulture, $" {value}");
 			}
 
 			protected void AppendStringList(ICollection<string> strings)
@@ -135,14 +135,14 @@ namespace LinqToDB.Remote
 				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
 
 				if (value.HasValue)
-					Builder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value.Value);
+					Builder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
 			}
 
 			protected void Append(Type? value)
 			{
 				// don't move space to format, as GetType is not get-only method...
 				Builder.Append(' ');
-				Builder.AppendFormat(CultureInfo.InvariantCulture, "{0}", GetType(value));
+				Builder.Append(CultureInfo.InvariantCulture, $"{GetType(value)}");
 			}
 
 			protected void Append(bool value)
@@ -179,7 +179,7 @@ namespace LinqToDB.Remote
 
 			protected void Append(IQueryElement? element)
 			{
-				Builder.AppendFormat(CultureInfo.InvariantCulture, " {0}", element == null ? 0 : ObjectIndices[element]);
+				Builder.Append(CultureInfo.InvariantCulture, $" {(element == null ? 0 : ObjectIndices[element])}");
 			}
 
 			protected void AppendDelayed(IQueryElement? element)
@@ -216,7 +216,7 @@ namespace LinqToDB.Remote
 				}
 				else
 				{
-					Builder.AppendFormat(CultureInfo.InvariantCulture, "{0}:{1}", str.Length, str);
+					Builder.Append(CultureInfo.InvariantCulture, $"{str.Length}:{str}");
 				}
 			}
 
@@ -233,13 +233,13 @@ namespace LinqToDB.Remote
 
 						ObjectIndices.Add(type, idx = ++Index);
 
-						Builder.AppendFormat(CultureInfo.InvariantCulture, "{0} {1} {2}", idx, TypeArrayIndex, elementType);
+						Builder.Append(CultureInfo.InvariantCulture, $"{idx} {TypeArrayIndex} {elementType}");
 					}
 					else
 					{
 						ObjectIndices.Add(type, idx = ++Index);
 
-						Builder.AppendFormat(CultureInfo.InvariantCulture, "{0} {1}", idx, TypeIndex);
+						Builder.Append(CultureInfo.InvariantCulture, $"{idx} {TypeIndex}");
 
 						Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					}
@@ -660,7 +660,7 @@ namespace LinqToDB.Remote
 				// Serialize options.
 				//
 				Builder
-					.Append(options.SqlOptions.Pack())
+					.Append(CultureInfo.InvariantCulture, $"{options.SqlOptions.Pack()}")
 					.AppendLine();
 
 				// Serialize statement.
@@ -747,8 +747,7 @@ namespace LinqToDB.Remote
 
 				ObjectIndices.Add(e, ++Index);
 
-				Builder
-					.AppendFormat(CultureInfo.InvariantCulture, "{0} {1}", Index, (int)e.ElementType);
+				Builder.Append(CultureInfo.InvariantCulture, $"{Index} {(int)e.ElementType}");
 
 				if (DelayedObjects.Count > 0)
 				{

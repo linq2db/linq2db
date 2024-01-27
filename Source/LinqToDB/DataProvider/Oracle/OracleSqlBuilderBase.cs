@@ -135,7 +135,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Type.Length == null || type.Type.Length == 0)
 						StringBuilder.Append("BLOB");
 					else
-						StringBuilder.Append("Raw(").Append(type.Type.Length?.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"Raw({type.Type.Length})");
 					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);         break;
 			}

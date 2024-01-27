@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "char({0})", value);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"char({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

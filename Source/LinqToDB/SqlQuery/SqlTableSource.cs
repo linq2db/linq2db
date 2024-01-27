@@ -189,7 +189,7 @@ namespace LinqToDB.SqlQuery
 				Source.ToString(sb, dic);
 
 			sb
-				.AppendFormat(CultureInfo.InvariantCulture, " as t{0}", SourceID);
+				.Append(CultureInfo.InvariantCulture, $" as t{SourceID}");
 
 			foreach (IQueryElement join in Joins)
 			{

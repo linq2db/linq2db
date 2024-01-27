@@ -75,10 +75,7 @@ namespace LinqToDB.Tools
 				}
 			}
 
-			stringBuilder
-				.AppendFormat(CultureInfo.InvariantCulture, "Count : {0}", itemValues.Count)
-				.AppendLine()
-				;
+			stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Count : {itemValues.Count}");
 
 			var lens = ta.Members.Count > 0 ? ta.Members.Select(m => m.Name.Length).ToArray() : new[] { ta.Type.Name.Length };
 

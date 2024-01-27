@@ -514,7 +514,7 @@ namespace LinqToDB.Data
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Value.AppendFormat(CultureInfo.InvariantCulture, "{0}", info.TraceInfoStep);
+					sb.Value.Append(CultureInfo.InvariantCulture, $"{info.TraceInfoStep}");
 
 					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 					{
@@ -535,7 +535,7 @@ namespace LinqToDB.Data
 							// list contains any elements or not
 							sb.Value
 								.AppendLine()
-								.AppendFormat(CultureInfo.InvariantCulture, "Failed while tried to log failure of type {0}", ex.GetType())
+								.Append(CultureInfo.InvariantCulture, $"Failed while tried to log failure of type {ex.GetType()}")
 								;
 						}
 					}

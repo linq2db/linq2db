@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.SQLite
 					or (_, "TEXT"):
 					stringBuilder
 						// ToUpperInvariant to match Microsoft.Data.SQLite behavior
-						.AppendFormat(CultureInfo.InvariantCulture, "'{0}'", value.ToString().ToUpperInvariant());
+						.Append(CultureInfo.InvariantCulture, $"'{value.ToString().ToUpperInvariant()}'");
 					break;
 				default:
 					ConvertBinaryToSql(stringBuilder, value.ToByteArray());
@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.SQLite
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "char({0})", value);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"char({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

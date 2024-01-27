@@ -257,7 +257,7 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				if (dropTable.Table.TableOptions.HasDropIfExists() || dropTable.Table.TableOptions.HasIsTemporary())
 				{
-					AppendIndent().AppendFormat(CultureInfo.InvariantCulture, "IF (EXISTS(SELECT 1 FROM {0} WHERE {1} = ", schemaTable, nameColumn);
+					AppendIndent().Append(CultureInfo.InvariantCulture, $"IF (EXISTS(SELECT 1 FROM {schemaTable} WHERE {nameColumn} = ");
 
 					var identifierValue = identifier;
 

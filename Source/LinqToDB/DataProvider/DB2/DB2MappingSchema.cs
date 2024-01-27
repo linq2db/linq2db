@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "chr({0})", value);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

@@ -309,9 +309,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.NVarChar  :
 					if (type.Type.Length is null or > 4000 or < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType.ToString())
-							.Append("(Max)");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}(Max)");
 						return;
 					}
 
@@ -321,9 +319,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.VarBinary :
 					if (type.Type.Length is null or > 8000 or < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType.ToString())
-							.Append("(Max)");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}(Max)");
 						return;
 					}
 
@@ -332,12 +328,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.DateTime2:
 				case DataType.DateTimeOffset:
 				case DataType.Time:
-					StringBuilder.Append(type.Type.DataType.ToString());
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}");
 					// Default precision for all three types is 7.
 					// For all other non-null values (including 0) precision must be specified.
 					if (type.Type.Precision != null && type.Type.Precision != 7)
 					{
-						StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "({0})", type.Type.Precision);
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision})");
 					}
 					return;
 			}
@@ -465,7 +461,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					switch (join.JoinType)
 					{
 						case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
-							                       StringBuilder.Append(CultureInfo.InvariantCulture, $"CROSS {h} JOIN "); return false;
+						                           StringBuilder.Append(CultureInfo.InvariantCulture, $"CROSS {h} JOIN "); return false;
 						case JoinType.Inner      : StringBuilder.Append(CultureInfo.InvariantCulture, $"INNER {h} JOIN "); return true;
 						case JoinType.Left       : StringBuilder.Append(CultureInfo.InvariantCulture, $"LEFT {h} JOIN ");  return true;
 						case JoinType.Right      : StringBuilder.Append(CultureInfo.InvariantCulture, $"RIGHT {h} JOIN "); return true;

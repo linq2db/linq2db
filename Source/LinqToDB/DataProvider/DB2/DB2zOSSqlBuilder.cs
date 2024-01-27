@@ -1,4 +1,7 @@
 ﻿using System.Globalization;
+#if NETFRAMEWORK || NETCOREAPP3_1 || NETSTANDARD2_0 || NETSTANDARD2_1
+using System.Text;
+#endif
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -30,10 +33,8 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				case DataType.VarBinary:
 					// https://www.ibm.com/docs/en/db2-for-zos/12?topic=strings-varying-length-binary
-					StringBuilder.AppendFormat(
-						CultureInfo.InvariantCulture,
-						"VARBINARY({0})",
-						type.Type.Length == null || type.Type.Length > 32704 || type.Type.Length < 1 ? 32704 : type.Type.Length);
+					var length =type.Type.Length == null || type.Type.Length > 32704 || type.Type.Length < 1 ? 32704 : type.Type.Length;
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARBINARY({length})");
 					return;
 			}
 

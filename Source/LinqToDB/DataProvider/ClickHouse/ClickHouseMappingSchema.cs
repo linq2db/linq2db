@@ -221,7 +221,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						if (i > 0)
 							stringBuilder.Append(':');
 
-						stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0:x2}{1:x2}", value[i], value[i + 1]);
+						stringBuilder.Append(CultureInfo.InvariantCulture, $"{value[i]:x2}{value[i + 1]:x2}");
 					}
 				}
 

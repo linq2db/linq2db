@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.Access
 			SetDataType(typeof(DateTime?), DataType.DateTime);
 
 			SetValueToSqlConverter(typeof(bool),     (sb,_,_,v) => sb.Append((bool)v));
-			SetValueToSqlConverter(typeof(Guid),     (sb,_,_,v) => sb.Append('\'').Append(((Guid)v).ToString("B")).Append('\''));
+			SetValueToSqlConverter(typeof(Guid),     (sb,_,_,v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));
 			SetValueToSqlConverter(typeof(DateTime), (sb,_,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
 #if NET6_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.Access
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "chr({0})", value);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

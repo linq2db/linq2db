@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.MySql
 						"LIMIT {0}, {1}",
 						WithStringBuilderBuildExpression(selectQuery.Select.SkipValue),
 						selectQuery.Select.TakeValue == null ?
-							long.MaxValue.ToString(NumberFormatInfo.InvariantInfo) :
+							(object)long.MaxValue :
 							WithStringBuilderBuildExpression(selectQuery.Select.TakeValue))
 					.AppendLine();
 			}

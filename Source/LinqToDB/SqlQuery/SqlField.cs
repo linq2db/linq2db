@@ -157,7 +157,7 @@ namespace LinqToDB.SqlQuery
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			if (Table != null)
-				sb.AppendFormat(CultureInfo.InvariantCulture, "t{0}.", Table.SourceID);
+				sb.Append(CultureInfo.InvariantCulture, $"t{Table.SourceID}.");
 
 			return sb.Append(Name);
 		}

@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.VarBinary:
 					if (type.Type.Length == null || type.Type.Length > 5000 || type.Type.Length < 1)
 					{
-						StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}(5000)", type.Type.DataType);
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}(5000)");
 
 						return;
 					}

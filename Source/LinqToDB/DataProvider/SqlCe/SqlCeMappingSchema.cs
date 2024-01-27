@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "nchar({0})", value);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"nchar({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

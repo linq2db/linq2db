@@ -50,7 +50,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(IConfigurationID? data)
 		{
-			_sb.Value.AppendFormat(CultureInfo.InvariantCulture, ".{0}", data?.ConfigurationID);
+			_sb.Value.Append(CultureInfo.InvariantCulture, $".{data?.ConfigurationID}");
 
 			return this;
 		}
@@ -84,7 +84,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(Delegate? data)
 		{
-			_sb.Value.AppendFormat(CultureInfo.InvariantCulture, ".{0}", data?.Method);
+			_sb.Value.Append(CultureInfo.InvariantCulture, $".{data?.Method}");
 
 			return this;
 		}

@@ -138,7 +138,7 @@ namespace LinqToDB.SqlQuery
 						.Append(strVal.Replace("\'", "''"))
 						.Append('\'')
 				:
-					sb.AppendFormat(CultureInfo.InvariantCulture, "{0}", Value);
+					sb.Append(CultureInfo.InvariantCulture, $"{Value}");
 		}
 
 		#endregion

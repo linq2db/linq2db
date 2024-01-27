@@ -7,6 +7,10 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if NETFRAMEWORK || NETCOREAPP3_1 || NETSTANDARD2_0 || NETSTANDARD2_1
+using System.Text;
+#endif
+
 namespace LinqToDB.DataProvider
 {
 	using Data;
@@ -562,8 +566,7 @@ namespace LinqToDB.DataProvider
 		private void MultipleRowsCopy1Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat(CultureInfo.InvariantCulture, "INSERT INTO {0}", helper.TableName)
-				.AppendLine()
+				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -631,8 +634,7 @@ namespace LinqToDB.DataProvider
 		private void MultipleRowsCopy2Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat(CultureInfo.InvariantCulture, "INSERT INTO {0}", helper.TableName)
-				.AppendLine()
+				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -685,8 +687,7 @@ namespace LinqToDB.DataProvider
 		private void MultipleRowsCopy3Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat(CultureInfo.InvariantCulture, "INSERT INTO {0}", helper.TableName)
-				.AppendLine()
+				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
 				.Append('(');
 
 			foreach (var column in helper.Columns)

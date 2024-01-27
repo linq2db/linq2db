@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "chr({0})", value);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
 		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)

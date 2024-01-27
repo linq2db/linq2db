@@ -309,7 +309,7 @@ namespace LinqToDB.SqlQuery
 
 			dic.Add(this, this);
 
-			sb.AppendFormat(CultureInfo.InvariantCulture, "({0}) ", SourceID);
+			sb.Append(CultureInfo.InvariantCulture, $"({SourceID}) ");
 
 			((IQueryElement)Select). ToString(sb, dic);
 			((IQueryElement)From).   ToString(sb, dic);

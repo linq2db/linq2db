@@ -16,7 +16,7 @@ namespace LinqToDB.SqlProvider
 			var count     = (int)   ((SqlValue)args["hintParameters.Count"]).Value!;
 			var delimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val0 } ? val0 : " ";
 
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}{1}", hint, delimiter);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"{hint}{delimiter}");
 
 			if (count > 0)
 			{

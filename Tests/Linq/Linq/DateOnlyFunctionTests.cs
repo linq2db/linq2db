@@ -47,12 +47,10 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Transaction.AllData);
 
-#pragma warning disable RS0030 // Do not use banned APIs
 			var query = from t in db.GetTable<Transaction>()
 				let d = DateOnly.Parse("2010-01-" + Sql.ZeroPad(t.TransactionId, 2))
 				where d.Day > 0
 				select d;
-#pragma warning restore RS0030 // Do not use banned APIs
 
 			AssertQuery(query);
 		}
@@ -62,11 +60,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.AllData))
-#pragma warning disable RS0030 // Do not use banned APIs
 				AreEqual(
 					from d in from t in Transaction.AllData        select DateOnly.Parse(Sql.ConvertTo<string>.From(t.TransactionDate)) where d.Day > 0 select d,
 					from d in from t in db.GetTable<Transaction>() select DateOnly.Parse(Sql.ConvertTo<string>.From(t.TransactionDate)) where d.Day > 0 select d);
-#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
 		#region DatePart

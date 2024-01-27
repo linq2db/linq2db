@@ -3331,13 +3331,13 @@ namespace LinqToDB.SqlProvider
 				case DataType.Boolean: StringBuilder.Append("Bit");      return;
 			}
 
-			StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", type.Type.DataType);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}");
 
 			if (type.Type.Length > 0)
-				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "({0})", type.Type.Length);
+				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
 
 			if (type.Type.Precision > 0)
-				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "({0}{1}{2})", type.Type.Precision, InlineComma, type.Type.Scale);
+				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision}{InlineComma}{type.Type.Scale})");
 		}
 
 		#endregion
@@ -3669,21 +3669,21 @@ namespace LinqToDB.SqlProvider
 				if (parameter.Size > 0)
 				{
 					if (t1.IndexOf('(') < 0)
-						sb.AppendFormat(CultureInfo.InvariantCulture, "({0})", parameter.Size);
+						sb.Append(CultureInfo.InvariantCulture, $"({parameter.Size})");
 				}
 #if NET45
 #pragma warning disable RS0030 // API missing from DbParameter in NET 4.5
 				else if (((IDbDataParameter)parameter).Precision > 0)
 				{
 					if (t1.IndexOf('(') < 0)
-						sb.Append('(').Append(((IDbDataParameter)parameter).Precision).Append(InlineComma).Append(((IDbDataParameter)parameter).Scale).Append(')');
+						sb.Append(CultureInfo.InvariantCulture, $"({((IDbDataParameter)parameter).Precision}{InlineComma}{((IDbDataParameter)parameter).Scale})");
 				}
 #pragma warning restore RS0030 // API missing from DbParameter in NET 4.5
 #else
 				else if (parameter.Precision > 0)
 				{
 					if (t1.IndexOf('(') < 0)
-						sb.AppendFormat(CultureInfo.InvariantCulture, "({0}{1}{2})", parameter.Precision, InlineComma, parameter.Scale);
+						sb.Append(CultureInfo.InvariantCulture, $"({parameter.Precision}{InlineComma}{parameter.Scale})");
 				}
 #endif
 				else
@@ -3698,7 +3698,7 @@ namespace LinqToDB.SqlProvider
 								var value = parameter.Value as string;
 
 								if (!string.IsNullOrEmpty(value))
-									sb.AppendFormat(CultureInfo.InvariantCulture, "({0})", value!.Length);
+									sb.Append(CultureInfo.InvariantCulture, $"({value!.Length})");
 
 								break;
 							}
@@ -3709,7 +3709,7 @@ namespace LinqToDB.SqlProvider
 								if (value is decimal dec)
 								{
 									var d = new SqlDecimal(dec);
-									sb.AppendFormat(CultureInfo.InvariantCulture, "({0}{1}{2})", d.Precision, InlineComma, d.Scale);
+									sb.Append(CultureInfo.InvariantCulture, $"({d.Precision}{InlineComma}{d.Scale})");
 								}
 
 								break;
@@ -3717,7 +3717,7 @@ namespace LinqToDB.SqlProvider
 						case DbType.Binary:
 							{
 								if (parameter.Value is byte[] value)
-									sb.AppendFormat(CultureInfo.InvariantCulture, "({0})", value.Length);
+									sb.Append(CultureInfo.InvariantCulture, $"({value.Length})");
 
 								break;
 							}
@@ -3842,7 +3842,7 @@ namespace LinqToDB.SqlProvider
 				return trimmed;
 			}
 			else
-				sb.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
+				sb.Append(CultureInfo.InvariantCulture, $"{value}");
 
 			return false;
 		}

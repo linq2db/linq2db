@@ -39,8 +39,7 @@ namespace LinqToDB.DataProvider
 				var param     = ((SqlValue)hintParameter).Value;
 				var delimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg) && extArg is SqlValue { Value : string val } ? val : " ";
 
-				stringBuilder.Append(delimiter);
-				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", param);
+				stringBuilder.Append(CultureInfo.InvariantCulture, $"{delimiter}{param}");
 			}
 			else if (args.TryGetValue("hintParameters.Count", out var hintParametersCount))
 			{
@@ -58,7 +57,7 @@ namespace LinqToDB.DataProvider
 
 						if (i > 0)
 							stringBuilder.Append(delimiter1);
-						stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
+						stringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 					}
 				}
 			}

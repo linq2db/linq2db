@@ -584,7 +584,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		protected override void BuildExpressionForOrderBy(ISqlExpression expr)
 		{
 			if (DataOptions.SqlOptions.EnableConstantExpressionInOrderBy && expr.SystemType == typeof(int) && expr is SqlValue(var value))
-				StringBuilder.Append(value);
+				StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			else
 				base.BuildExpressionForOrderBy(expr);
 		}

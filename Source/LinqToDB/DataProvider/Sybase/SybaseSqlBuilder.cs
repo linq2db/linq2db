@@ -67,7 +67,7 @@ namespace LinqToDB.DataProvider.Sybase
 					// yep, 5461...
 					if (type.Type.Length == null || type.Type.Length > 5461 || type.Type.Length < 1)
 					{
-						StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}(5461)", type.Type.DataType);
+						StringBuilder.Append("NVarChar(5461)");
 						return;
 					}
 					break;

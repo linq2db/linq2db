@@ -13,7 +13,7 @@ namespace LinqToDB.SqlProvider
 			var hint  = ((SqlValue)sqlQueryExtension.Arguments["hint"]).    Value;
 			var param = GetValue((SqlValue)sqlQueryExtension.Arguments["hintParameter"]);
 
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}({1})", hint, param);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"{hint}({param})");
 
 			object? GetValue(SqlValue value)
 			{

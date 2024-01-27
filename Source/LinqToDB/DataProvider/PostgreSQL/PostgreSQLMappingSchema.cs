@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "chr({0})", value);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
