@@ -8,6 +8,8 @@ using LinqToDB.Data;
 
 namespace LinqToDB.Tools
 {
+	using System.Globalization;
+
 	using Common;
 	using Comparers;
 	using Expressions;
@@ -262,6 +264,17 @@ namespace LinqToDB.Tools
 						dtParameter),
 					dtParameter));
 
+			var dtoParameter = Expression.Parameter(typeof(DateTimeOffset), "dto");
+
+			mappingSchema.SetConvertExpression(
+				typeof(DateTimeOffset),
+				localDateTimeType,
+				Expression.Lambda(
+					Expression.Call(
+						localDateTimeType.GetMethod("FromDateTime", new[] { typeof(DateTime) })!,
+						Expression.Property(dtoParameter, "LocalDateTime")),
+					dtoParameter));
+
 			var sParameter = Expression.Parameter(typeof(string), "str");
 
 			mappingSchema.SetConvertExpression(
@@ -271,8 +284,9 @@ namespace LinqToDB.Tools
 					Expression.Call(
 						localDateTimeType.GetMethod("FromDateTime", new[] { typeof(DateTime) })!,
 						Expression.Call(
-							MethodHelper.GetMethodInfo(DateTime.Parse, ""),
-							sParameter)),
+							MethodHelper.GetMethodInfo(DateTime.Parse, "", (IFormatProvider)null!),
+							sParameter,
+							Expression.Constant(DateTimeFormatInfo.InvariantInfo))),
 					sParameter));
 
 			var p  = Expression.Parameter(typeof(object), "obj");

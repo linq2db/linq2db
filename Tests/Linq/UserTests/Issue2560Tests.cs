@@ -33,7 +33,7 @@ namespace Tests.UserTests
 
 			var item = new DataClass
 			{
-				Value = LocalDateTime.FromDateTime(TestData.DateTime),
+				Value = LocalDateTime.FromDateTime(TestData.GetMaxScaleDateTime(context)),
 			};
 
 			db.Insert(item);
@@ -41,6 +41,7 @@ namespace Tests.UserTests
 			var list = tmp.ToList();
 
 			Assert.AreEqual(1, list.Count);
+			Assert.That(list[0].Value, Is.EqualTo(item.Value));
 		}
 
 		[Test]
@@ -55,7 +56,7 @@ namespace Tests.UserTests
 
 			var item = new DataClass
 			{
-				Value = LocalDateTime.FromDateTime(TestData.DateTime),
+				Value = LocalDateTime.FromDateTime(TestData.GetMaxScaleDateTime(context)),
 			};
 
 			db.Insert(item);
@@ -63,6 +64,7 @@ namespace Tests.UserTests
 			var list = tmp.ToList();
 
 			Assert.AreEqual(1, list.Count);
+			Assert.That(list[0].Value, Is.EqualTo(item.Value));
 		}
 	}
 }
