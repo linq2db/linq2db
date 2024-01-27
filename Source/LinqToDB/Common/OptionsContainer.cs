@@ -109,7 +109,7 @@ namespace LinqToDB.Common
 			if (Find<TSet>() is { } set)
 				return set;
 
-			(_sets ??= new())[typeof(TSet)] = set = new();
+			_sets = new (_sets ?? []) { [typeof(TSet)] = set = new() };
 
 			return set;
 		}
