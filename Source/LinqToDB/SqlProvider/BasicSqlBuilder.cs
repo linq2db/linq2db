@@ -141,7 +141,7 @@ namespace LinqToDB.SqlProvider
 
 		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int startIndent = 0)
 		{
-			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, !Configuration.Sql.GenerateFinalAliases && CanSkipRootAliases(statement));
+			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, !DataOptions.SqlOptions.GenerateFinalAliases && CanSkipRootAliases(statement));
 		}
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -2237,7 +2237,7 @@ namespace LinqToDB.SqlProvider
 
 				var item = selectQuery.OrderBy.Items[i];
 
-				BuildExpression(WrapBooleanExpression(item.Expression));
+				BuildExpressionForOrderBy(item.Expression);
 
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
@@ -2249,6 +2249,11 @@ namespace LinqToDB.SqlProvider
 			}
 
 			Indent--;
+		}
+
+		protected virtual void BuildExpressionForOrderBy(ISqlExpression expr)
+		{
+			BuildExpression(WrapBooleanExpression(expr));
 		}
 
 		#endregion
@@ -2514,7 +2519,7 @@ namespace LinqToDB.SqlProvider
 				case SqlPredicate.Operator.NotLess        : StringBuilder.Append(" !< "); break;
 				case SqlPredicate.Operator.Overlaps       : StringBuilder.Append(" OVERLAPS "); break;
 			}
-			}
+		}
 
 		protected virtual void BuildExprExprPredicate(SqlPredicate.ExprExpr expr)
 		{
@@ -2931,7 +2936,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlQuery:
 					{
-						var hasParentheses = checkParentheses && StringBuilder[StringBuilder.Length - 1] == '(';
+						var hasParentheses = checkParentheses && StringBuilder[^1] == '(';
 
 						if (!hasParentheses)
 							StringBuilder.AppendLine(OpenParens);
@@ -3159,7 +3164,7 @@ namespace LinqToDB.SqlProvider
 			if (value is Sql.SqlID id)
 				TryBuildSqlID(id);
 			else
-			MappingSchema.ConvertToSqlValue(StringBuilder, dataType, DataOptions, value);
+				MappingSchema.ConvertToSqlValue(StringBuilder, dataType, DataOptions, value);
 		}
 
 		#endregion

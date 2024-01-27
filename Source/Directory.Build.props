@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<Import Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
-	
+
 	<PropertyGroup>
 		<Configurations>Debug;Release</Configurations>
 	</PropertyGroup>

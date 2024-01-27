@@ -23,6 +23,8 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using Tools;
+
 
 	public abstract class Query
 	{
@@ -474,28 +476,46 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
-			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+			using var mt = ActivityService.Start(ActivityID.GetQueryTotal);
 
-			expr = optimizationContext.ExpandExpression(expr);
-//			// we need this call for correct processing parameters in ExpressionMethod
-//			// TODO: IT breaks performance. All these operations must be cached.
-			expr = optimizationContext.ExposeExpression(expr);
+			ExpressionTreeOptimizationContext optimizationContext;
+			DataOptions                       dataOptions;
+			QueryFlags                        queryFlags;
+			Query<T>?                         query;
 
-			dependsOnParameters = optimizationContext.IsDependsOnParameters();
+			using (ActivityService.Start(ActivityID.GetQueryFind))
+			{
+				using (ActivityService.Start(ActivityID.GetQueryFindExpose))
+				{
+					optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
-			if (dataContext is IExpressionPreprocessor preprocessor)
-				expr = preprocessor.ProcessExpression(expr);
+					expr = optimizationContext.ExpandExpression(expr);
+//					// we need this call for correct processing parameters in ExpressionMethod
+//					// TODO: IT breaks performance. All these operations must be cached.
+					expr = optimizationContext.ExposeExpression(expr);
 
-			var dataOptions = dataContext.Options;
+					dependsOnParameters = optimizationContext.IsDependsOnParameters();
 
-			if (dataOptions.LinqOptions.DisableQueryCache)
-				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
+					if (dataContext is IExpressionPreprocessor preprocessor)
+						expr = preprocessor.ProcessExpression(expr);
+				}
 
-			var queryFlags = dataContext.GetQueryFlags();
-			var query      = _queryCache.Find(dataContext, expr, queryFlags, dataOptions);
+				using (ActivityService.Start(ActivityID.GetQueryFindFind))
+				{
+					dataOptions = dataContext.Options;
+
+					if (dataOptions.LinqOptions.DisableQueryCache)
+						return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
+
+					queryFlags = dataContext.GetQueryFlags();
+					query      = _queryCache.Find(dataContext, expr, queryFlags, dataOptions);
+				}
+			}
 
 			if (query == null)
 			{
+				using var mc = ActivityService.Start(ActivityID.GetQueryCreate);
+
 				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 				if (!query.DoNotCache)
@@ -508,6 +528,7 @@ namespace LinqToDB.Linq
 		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)
 		{
 			var linqOptions = optimizationContext.DataContext.Options.LinqOptions;
+
 			if (linqOptions.GenerateExpressionTest)
 			{
 				var testFile = new ExpressionTestGenerator(dataContext).GenerateSource(expr);
@@ -547,9 +568,10 @@ namespace LinqToDB.Linq
 
 	public class QueryInfo : IQueryContext
 	{
-		public SqlStatement    Statement  { get; set; } = null!;
-		public object?         Context    { get; set; }
-		public AliasesContext? Aliases    { get; set; }
+		public SqlStatement    Statement   { get; set; } = null!;
+		public object?         Context     { get; set; }
+		public AliasesContext? Aliases     { get; set; }
+		public DataOptions?    DataOptions { get; set; }
 
 		internal List<ParameterAccessor> ParameterAccessors = new ();
 

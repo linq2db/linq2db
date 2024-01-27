@@ -23,6 +23,8 @@ namespace LinqToDB.SqlQuery
 		public ISqlPredicate Predicate { get; set; }
 		public bool          IsOr      { get; set; }
 
+		internal int OptimizationTag;
+
 		public int Precedence =>
 			IsNot ? SqlQuery.Precedence.LogicalNegation :
 				IsOr  ? SqlQuery.Precedence.LogicalDisjunction :

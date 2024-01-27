@@ -9,6 +9,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
+	using Tools;
+
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
@@ -2194,6 +2196,8 @@ namespace LinqToDB.Data
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
+
 			return dataConnection.DataProvider.BulkCopy(
 				dataConnection.Options.WithOptions(options),
 				dataConnection.GetTable<T>(),
@@ -2213,6 +2217,8 @@ namespace LinqToDB.Data
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
+
 			return dataConnection.DataProvider.BulkCopy(
 				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
 				dataConnection.GetTable<T>(),
@@ -2230,6 +2236,8 @@ namespace LinqToDB.Data
 			where T : class
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
 			return dataConnection.DataProvider.BulkCopy(
 				dataConnection.Options,
@@ -2249,6 +2257,8 @@ namespace LinqToDB.Data
 			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
+
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
 			var dataConnection = table.GetDataConnection();
 
@@ -2271,6 +2281,8 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
+
 			var dataConnection = table.GetDataConnection();
 
 			return table.GetDataProvider().BulkCopy(
@@ -2291,6 +2303,8 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
+
 			var dataConnection = table.GetDataConnection();
 
 			return table.GetDataProvider().BulkCopy(
@@ -2302,6 +2316,19 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region BulkCopy IEnumerable async
+
+		static Task<BulkCopyRowsCopied> CallMetrics(Func<Task<BulkCopyRowsCopied>> call)
+		{
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.BulkCopyAsync);
+
+			return a is null ? call() : CallAwait();
+
+			async Task<BulkCopyRowsCopied> CallAwait()
+			{
+				await using (a)
+					return await call().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+		}
 
 		/// <summary>
 		/// Asynchronously performs bulk insert operation.
@@ -2318,11 +2345,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.Options.WithOptions(options),
-				dataConnection.GetTable<T>(),
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options.WithOptions(options),
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2340,11 +2368,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
-				dataConnection.GetTable<T>(),
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2361,11 +2390,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.Options,
-				dataConnection.GetTable<T>(),
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options,
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2385,11 +2415,12 @@ namespace LinqToDB.Data
 
 			var dataConnection = table.GetDataConnection();
 
-			return table.GetDataProvider().BulkCopyAsync(
-				dataConnection.Options.WithOptions(options),
-				table,
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options.WithOptions(options),
+					table,
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2409,11 +2440,12 @@ namespace LinqToDB.Data
 
 			var dataConnection = table.GetDataConnection();
 
-			return table.GetDataProvider().BulkCopyAsync(
-				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize, }),
-				table,
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize, }),
+					table,
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2432,11 +2464,12 @@ namespace LinqToDB.Data
 
 			var dataConnection = table.GetDataConnection();
 
-			return table.GetDataProvider().BulkCopyAsync(
-				dataConnection.Options,
-				table,
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options,
+					table,
+					source,
+					cancellationToken));
 		}
 
 		#endregion
@@ -2459,11 +2492,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.Options.WithOptions(options),
-				dataConnection.GetTable<T>(),
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options.WithOptions(options),
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2481,11 +2515,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
-				dataConnection.GetTable<T>(),
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2502,11 +2537,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.Options,
-				dataConnection.GetTable<T>(),
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options,
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2526,11 +2562,12 @@ namespace LinqToDB.Data
 
 			var dataConnection = table.GetDataConnection();
 
-			return table.GetDataProvider().BulkCopyAsync(
-				dataConnection.Options.WithOptions(options),
-				table,
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options.WithOptions(options),
+					table,
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2550,11 +2587,12 @@ namespace LinqToDB.Data
 
 			var dataConnection = table.GetDataConnection();
 
-			return table.GetDataProvider().BulkCopyAsync(
-				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
-				table,
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+					table,
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2573,11 +2611,12 @@ namespace LinqToDB.Data
 
 			var dataConnection = table.GetDataConnection();
 
-			return table.GetDataProvider().BulkCopyAsync(
-				dataConnection.Options,
-				table,
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options,
+					table,
+					source,
+					cancellationToken));
 		}
 
 #endif

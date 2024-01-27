@@ -124,16 +124,21 @@ namespace LinqToDB.Common
 		/// annotations in [Column], [Association], or [Nullable].
 		/// </summary>
 		/// <remarks>Defaults to false.</remarks>
-		public static bool UseNullableTypesMetadata 
-		{ 
+		public static bool UseNullableTypesMetadata
+		{
 			get => _useNullableTypesMetadata;
-			set 
+			set
 			{
-				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.				
+				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.
 				if (value) Mapping.Nullability.EnsureSupport();
 				_useNullableTypesMetadata = value;
 			}
-		}	
+		}
+
+		/// <summary>
+		/// Enables tracing of object materialization activity. It can significantly break performance if tracing consumer performs slow, so it is disabled by default.
+		/// </summary>
+		public static bool TraceMaterializationActivity { get; set; }
 
 		public static class Data
 		{
@@ -582,6 +587,22 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class Sql
 		{
+			static volatile SqlOptions _options = new();
+
+			/// <summary>
+			/// Default <see cref="SqlOptions"/> options. Automatically synchronized with other settings in <see cref="Sql"/> class.
+			/// </summary>
+			public static SqlOptions Options
+			{
+				get => _options;
+				set
+				{
+					_options = value;
+					DataConnection.ResetDefaultOptions();
+					DataConnection.ConnectionOptionsByConfigurationString.Clear();
+				}
+			}
+
 			/// <summary>
 			/// Format for association alias.
 			/// <para>
@@ -644,7 +665,21 @@ namespace LinqToDB.Common
 			/// </code>
 			/// </example>
 			/// </summary>
-			public static bool GenerateFinalAliases { get; set; }
+			public static bool GenerateFinalAliases
+			{
+				get => Options.GenerateFinalAliases;
+				set => Options = Options with { GenerateFinalAliases = value };
+			}
+
+			/// <summary>
+			/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
+			/// Default value: <c>false</c>.
+			/// </summary>
+			public static bool EnableConstantExpressionInOrderBy
+			{
+				get => Options.EnableConstantExpressionInOrderBy;
+				set => Options = Options with { EnableConstantExpressionInOrderBy = value };
+			}
 		}
 	}
 }
