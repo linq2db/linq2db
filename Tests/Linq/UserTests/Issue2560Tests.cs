@@ -26,7 +26,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			ms.UseNodaTime(/*typeof(LocalDateTime)*/);
+			ms.UseNodaTime(/*typeof(LocalDateTime)*/ ms);
 
 			using var db  = GetDataContext(context, ms);
 			using var tmp = db.CreateLocalTable<DataClass>();
@@ -49,7 +49,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			ms.UseNodaTime(typeof(LocalDateTime));
+			ms.UseNodaTime(typeof(LocalDateTime), ms);
 
 			using var db  = GetDataContext(context, ms);
 			using var tmp = db.CreateLocalTable<DataClass>();

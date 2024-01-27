@@ -186,18 +186,18 @@ namespace LinqToDB.Tools
 			return table.DataContext.MappingSchema.GetKeyEqualityComparer<T>();
 		}
 
-		public static bool UseNodaTime(this MappingSchema mappingSchema)
+		public static bool UseNodaTime(this MappingSchema mappingSchema, MappingSchema? remoteContextSerializationSchema = null)
 		{
 			if (Type.GetType("NodaTime.LocalDateTime, NodaTime", false) is {} type)
 			{
-				UseNodaTime(mappingSchema, type);
+				UseNodaTime(mappingSchema, type, remoteContextSerializationSchema);
 				return true;
 			}
 
 			return false;
 		}
 
-		public static void UseNodaTime(this MappingSchema mappingSchema, Type localDateTimeType)
+		public static void UseNodaTime(this MappingSchema mappingSchema, Type localDateTimeType, MappingSchema? remoteContextSerializationSchema = null)
 		{
 			mappingSchema.SetDataType(localDateTimeType, new SqlDataType(new DbDataType(typeof(DateTime), DataType.DateTime)));
 
@@ -251,7 +251,7 @@ namespace LinqToDB.Tools
 				typeof(DateTime),
 				Expression.Lambda(newDateTime, ldtParameter));
 
-			// LocalDateTime.FromDateTime(TestData.DateTime),
+			// LocalDateTime.FromDateTime(DateTime),
 
 			var dtParameter = Expression.Parameter(typeof(DateTime), "dt");
 
@@ -264,6 +264,8 @@ namespace LinqToDB.Tools
 						dtParameter),
 					dtParameter));
 
+			// LocalDateTime.FromDateTime(DateTimeOffset.LocalDateTime),
+
 			var dtoParameter = Expression.Parameter(typeof(DateTimeOffset), "dto");
 
 			mappingSchema.SetConvertExpression(
@@ -274,6 +276,8 @@ namespace LinqToDB.Tools
 						localDateTimeType.GetMethod("FromDateTime", new[] { typeof(DateTime) })!,
 						Expression.Property(dtoParameter, "LocalDateTime")),
 					dtoParameter));
+
+			// LocalDateTime.FromDateTime(DateTime.Parse(string, IvariantInfo)),
 
 			var sParameter = Expression.Parameter(typeof(string), "str");
 
@@ -300,6 +304,34 @@ namespace LinqToDB.Tools
 			var l = ex.Compile();
 
 			mappingSchema.SetValueToSqlConverter(localDateTimeType, (sb, _, v) => sb.Append('\'').Append(l(v).ToString()).Append('\''));
+
+			if (remoteContextSerializationSchema != null)
+			{
+				var localDateTimePattern = localDateTimeType.Assembly.GetType("NodaTime.Text.LocalDateTimePattern", true)!;
+				var pattern = Expression.Property((Expression?)null, localDateTimePattern, "FullRoundtrip");
+
+				// ldt => LocalDateTimePattern.FullRoundtrip.Format(ldt)
+
+				var ldt = Expression.Parameter(localDateTimeType, "ldt");
+
+				var serializer = Expression.Lambda(
+					Expression.Call(pattern, "Format", [], ldt),
+					ldt);
+
+				remoteContextSerializationSchema.SetConvertExpression(localDateTimeType, typeof(string), serializer);
+
+				// str => LocalDateTimePattern.FullRoundtrip.Parse(str).Value
+
+				var str = Expression.Parameter(typeof(string), "str");
+
+				var deserializer = Expression.Lambda(
+					Expression.Property(
+						Expression.Call(pattern, "Parse", [], str),
+						"Value"),
+					str);
+
+				remoteContextSerializationSchema.SetConvertExpression(typeof(string), localDateTimeType, deserializer);
+			}
 		}
 	}
 }
