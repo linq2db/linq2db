@@ -58,7 +58,7 @@ namespace LinqToDB.Common
 			return ReferenceEquals(original, options) ? (T)this : WithOptions(options);
 		}
 
-		Dictionary<Type,IOptionSet>? _sets;
+		volatile Dictionary<Type,IOptionSet>? _sets;
 
 		/// <summary>
 		/// Provides access to option sets, stored in current options object.
