@@ -69,10 +69,24 @@ namespace Tests.UserTests
 
 		private static DateTime GetDateTime(string context)
 		{
-			if (context.IsAnyOf(TestProvName.AllClickHouse))
+			// different databases has different datetime precision (and we different defaults for them)
+			if (context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle))
 			{
-				// DateTime type has 1 second resolution
 				return TestData.DateTime0;
+			}
+			if (context.IsAnyOf(TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllSapHana))
+			{
+				return TestData.DateTime3;
+			}
+
+			if (context.IsAnyOf(TestProvName.AllFirebird))
+			{
+				return TestData.DateTime4;
+			}
+
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.DB2))
+			{
+				return TestData.DateTime6;
 			}
 
 			// default is max (7)
