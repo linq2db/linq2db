@@ -106,7 +106,19 @@ namespace Tests
 
 			var fullPath = Path.Combine(fixturePath, fileName);
 
-			File.WriteAllText(fullPath, baseline, Encoding.UTF8);
+			// split baselines in 5-line batches to simplify diff review on GH
+			var lines = baseline.Split(Environment.NewLine);
+
+			using var fs = File.Create(fullPath);
+			using var sw = new StreamWriter(fs, Encoding.UTF8);
+
+			for (var i = 0; i < lines.Length; i++)
+			{
+				sw.WriteLine(lines[i]);
+
+				if (i % 5 == 4)
+					sw.WriteLine();
+			}
 		}
 	}
 }
