@@ -281,6 +281,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net472", "net472", "{B7AADC
 		Build\Azure\net472\sqlserver.2017.json = Build\Azure\net472\sqlserver.2017.json
 		Build\Azure\net472\sqlserver.2019.json = Build\Azure\net472\sqlserver.2019.json
 		Build\Azure\net472\sqlserver.2022.json = Build\Azure\net472\sqlserver.2022.json
+		Build\Azure\net472\sqlserver.2022.metrics.json = Build\Azure\net472\sqlserver.2022.metrics.json
 		Build\Azure\net472\sqlserver.extras.json = Build\Azure\net472\sqlserver.extras.json
 	EndProjectSection
 EndProject
@@ -411,6 +412,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554
 		Build\Azure\net60\sqlserver.2017.json = Build\Azure\net60\sqlserver.2017.json
 		Build\Azure\net60\sqlserver.2019.json = Build\Azure\net60\sqlserver.2019.json
 		Build\Azure\net60\sqlserver.2022.json = Build\Azure\net60\sqlserver.2022.json
+		Build\Azure\net60\sqlserver.2022.metrics.json = Build\Azure\net60\sqlserver.2022.metrics.json
 		Build\Azure\net60\sqlserver.extras.json = Build\Azure\net60\sqlserver.extras.json
 		Build\Azure\net60\sqlserver.fts.2019.json = Build\Azure\net60\sqlserver.fts.2019.json
 		Build\Azure\net60\sybase.json = Build\Azure\net60\sybase.json
@@ -520,6 +522,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net70", "net70", "{1ED95A47
 		Build\Azure\net70\sqlserver.2017.json = Build\Azure\net70\sqlserver.2017.json
 		Build\Azure\net70\sqlserver.2019.json = Build\Azure\net70\sqlserver.2019.json
 		Build\Azure\net70\sqlserver.2022.json = Build\Azure\net70\sqlserver.2022.json
+		Build\Azure\net70\sqlserver.2022.metrics.json = Build\Azure\net70\sqlserver.2022.metrics.json
 		Build\Azure\net70\sqlserver.extras.json = Build\Azure\net70\sqlserver.extras.json
 		Build\Azure\net70\sqlserver.fts.2019.json = Build\Azure\net70\sqlserver.fts.2019.json
 		Build\Azure\net70\sybase.json = Build\Azure\net70\sybase.json
