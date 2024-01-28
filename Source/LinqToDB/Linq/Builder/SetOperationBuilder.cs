@@ -239,16 +239,16 @@ namespace LinqToDB.Linq.Builder
 
 						if (em == null)
 						{
-								foreach (var m in _unionMembers!)
+							foreach (var m in _unionMembers!)
+							{
+								if (m.Member.SequenceInfo != null &&
+									m.Infos.Count < Sequences.Count &&
+									m.Member.SequenceInfo.CompareLastMember(info))
 								{
-									if (m.Member.SequenceInfo != null &&
-										m.Infos.Count < Sequences.Count &&
-										m.Member.SequenceInfo.CompareLastMember(info))
-									{
-										em = m;
-										break;
-									}
+									em = m;
+									break;
 								}
+							}
 						}
 
 						if (em == null)

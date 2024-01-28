@@ -20,6 +20,8 @@ namespace LinqToDB.DataProvider.SqlCe
 	(
 		BulkCopyType BulkCopyType             = BulkCopyType.MultipleRows,
 		bool         InlineFunctionParameters = default
+		// If you add another parameter here, don't forget to update
+		// SqlCeOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<SqlCeOptions>(BulkCopyType)
 	{

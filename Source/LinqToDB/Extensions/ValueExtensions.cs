@@ -1,20 +1,14 @@
 ﻿using System;
-using System.Text;
-using System.Reflection;
 
 namespace LinqToDB.Extensions
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
-
 	/// <summary>
 	/// Contains data manipulation helpers (e.g. for use in query parameters).
 	/// </summary>
 	static class ValueExtensions
 	{
-		internal static readonly int[] TICKS_DIVIDERS = new[]
-		{
+		internal static readonly int[] TICKS_DIVIDERS =
+		[
 			10000000,
 			1000000,
 			100000,
@@ -23,7 +17,7 @@ namespace LinqToDB.Extensions
 			100,
 			10,
 			1
-		};
+		];
 
 		public static long GetTicks(this TimeSpan ts, int precision)
 		{

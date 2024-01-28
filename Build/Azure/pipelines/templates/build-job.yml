@@ -12,7 +12,7 @@ jobs:
 
   # mitigate https://status.dev.azure.com/_event/182998791
   - task: NuGetToolInstaller@1
-  
+
   # .NET 7 SDK already installed https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md#net-core-tools
 
   - task: PowerShell@2

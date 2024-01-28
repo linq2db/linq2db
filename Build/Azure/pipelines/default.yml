@@ -48,3 +48,4 @@ stages:
       experimental: false
       with_baselines: true
       mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded()) # enable macos testing only for release
+      db_filter: '[all][metrics]'
