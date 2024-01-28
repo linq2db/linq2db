@@ -74,7 +74,7 @@ namespace Tests.UserTests
 			{
 				return TestData.DateTime0;
 			}
-			if (context.IsAnyOf(TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllSapHana))
+			if (context.IsAnyOf(TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllSybase))
 			{
 				return TestData.DateTime3;
 			}
