@@ -362,18 +362,21 @@ namespace LinqToDB.DataProvider.Oracle
 
 		bool Execute(MultipleRowsHelper helper, List<object> list)
 		{
+			var valueConverter = new BulkCopyReader.Parameter();
+
 			for (var i = 0; i < helper.Columns.Length; i++)
 			{
-				var column   = helper.Columns[i];
-				var dataType = column.DataType == DataType.Undefined
-					? helper.MappingSchema.GetDataType(column.MemberType).Type.DataType
-					: column.DataType;
+				var column     = helper.Columns[i];
+				var columnType = column.GetConvertedDbDataType();
 
 				var value = new object?[list.Count];
 				for (var j = 0; j < value.Length; j++)
-					value[j] = column.GetProviderValue(list[j]);
+				{
+					helper.DataConnection.DataProvider.SetParameter(helper.DataConnection, valueConverter, string.Empty, columnType, column.GetProviderValue(list[j]));
+					value[j] = valueConverter.Value;
+				}
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, dataType, column.DbType)
+				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, columnType.DataType, columnType.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,
@@ -397,18 +400,21 @@ namespace LinqToDB.DataProvider.Oracle
 
 		Task<bool> ExecuteAsync(MultipleRowsHelper helper, List<object> list, CancellationToken cancellationToken)
 		{
+			var valueConverter = new BulkCopyReader.Parameter();
+
 			for (var i = 0; i < helper.Columns.Length; i++)
 			{
-				var column   = helper.Columns[i];
-				var dataType = column.DataType == DataType.Undefined
-					? helper.MappingSchema.GetDataType(column.MemberType).Type.DataType
-					: column.DataType;
+				var column     = helper.Columns[i];
+				var columnType = column.GetConvertedDbDataType();
 
 				var value = new object?[list.Count];
 				for (var j = 0; j < value.Length; j++)
-					value[j] = column.GetProviderValue(list[j]);
+				{
+					helper.DataConnection.DataProvider.SetParameter(helper.DataConnection, valueConverter, string.Empty, columnType, column.GetProviderValue(list[j]));
+					value[j] = valueConverter.Value;
+				}
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, dataType, column.DbType)
+				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, columnType.DataType, columnType.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,
