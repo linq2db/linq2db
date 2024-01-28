@@ -582,8 +582,6 @@ namespace LinqToDB.Linq
 			{ MT<uint?   >(() => ((uint?)    0) .ToString()!), N(() => L<uint?,    string>((uint?    p0) => p0!.Value.ToString() )) },
 			{ MT<ulong?  >(() => ((ulong?)   0) .ToString()!), N(() => L<ulong?,   string>((ulong?   p0) => p0!.Value.ToString() )) },
 
-			{ MT<Guid?   >(() => (Guid.Empty)   .ToString()!), N(() => L<Guid?,    string>((Guid?    p0) => Sql.GuidToString(p0)!)) },
-
 			// handle all other as default
 			{ MT<object>(() => ((object)0).ToString()!), N(() => L<object, string>((object   p0) => Sql.ConvertTo<string>.From(p0) )) },
 
