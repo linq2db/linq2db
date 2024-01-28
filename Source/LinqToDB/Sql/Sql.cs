@@ -263,12 +263,21 @@ namespace LinqToDB
 			}
 		}
 
+		/// <summary>
+		/// Converts a Guid to a normalized string in the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXX
+		/// means no brakets, uppercase, dashes
+		/// </summary>
+		/// <param name="guid">the guid to convert</param>
+		/// <returns>a formated string</returns>
 		[CLSCompliant(false)]
-		[Expression(PN.SQLite, "(substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12))", IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Extension("", BuilderType = typeof(GuidToStringBuilder))]
-		public static string? GuidToString(Guid? value)
+		[Expression(PN.SQLite, "(substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.Access, "Mid(CStr({0}), 2, 36)", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.PostgreSQL, "Upper(Cast({0} as VarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.Oracle, "(substr(rawtohex({0}), 7, 2) || substr(rawtohex({0}), 5, 2) || substr(rawtohex({0}), 3, 2) || substr(rawtohex({0}), 1, 2) || '-' || substr(rawtohex({0}), 11, 2) || substr(rawtohex({0}), 9, 2) || '-' || substr(rawtohex({0}), 15, 2) || substr(rawtohex({0}), 13, 2) || '-' || substr(rawtohex({0}), 17, 4) || '-' || substr(rawtohex({0}), 21, 12))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Extension("", BuilderType = typeof(GuidToStringBuilder), PreferServerSide = true)]
+		public static string? GuidToNormalizedString(Guid? guid)
 		{
-			return value == null ? null : value.ToString();
+			return guid == null ? null : guid.ToString();
 		}
 
 		#endregion
