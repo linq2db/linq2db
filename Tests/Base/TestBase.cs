@@ -43,6 +43,8 @@ namespace Tests
 			public static readonly DateTime DateTime                      = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
 			public static readonly DateTime DateTime0                     = new DateTime(2020, 2, 29, 17, 54, 55);
 			public static readonly DateTime DateTime3                     = new DateTime(2020, 2, 29, 17, 54, 55, 123);
+			public static readonly DateTime DateTime4                     = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1000);
+			public static readonly DateTime DateTime6                     = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1230);
 			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
 			public static readonly DateTime DateTime4Utc                  = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
 			public static readonly DateTime Date                          = new (2020, 2, 29);

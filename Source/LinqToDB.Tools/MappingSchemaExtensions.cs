@@ -1,14 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 using JetBrains.Annotations;
+using LinqToDB.Data;
 
 namespace LinqToDB.Tools
 {
+	using System.Globalization;
+
+	using Common;
 	using Comparers;
+	using Expressions;
+	using Linq;
 	using Mapping;
 	using Reflection;
+	using SqlQuery;
 
 	[PublicAPI]
 	public static class MappingSchemaExtensions
@@ -176,6 +184,142 @@ namespace LinqToDB.Tools
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
 			return table.DataContext.MappingSchema.GetKeyEqualityComparer<T>();
+		}
+
+		public static bool UseNodaTime(this MappingSchema mappingSchema, MappingSchema? remoteContextSerializationSchema = null)
+		{
+			if (Type.GetType("NodaTime.LocalDateTime, NodaTime", false) is {} type)
+			{
+				UseNodaTime(mappingSchema, type, remoteContextSerializationSchema);
+				return true;
+			}
+
+			return false;
+		}
+
+		public static void UseNodaTime(this MappingSchema mappingSchema, Type localDateTimeType, MappingSchema? remoteContextSerializationSchema = null)
+		{
+			mappingSchema.SetDataType(localDateTimeType, new SqlDataType(new DbDataType(typeof(DateTime), DataType.DateTime)));
+
+			// ms.SetConvertExpression<LocalDateTime, DataParameter>(timeStamp =>
+			//     new DataParameter
+			//     {
+			//         Value    = timeStamp.ToDateTimeUnspecified(),
+			//         DataType = DataType.DateTime
+			//     });
+
+			var ldtParameter = Expression.Parameter(localDateTimeType, "timeStamp");
+
+			var newDateTime = Expression.Call(ldtParameter, "ToDateTimeUnspecified", []);
+
+			mappingSchema.SetConvertExpression(
+				localDateTimeType,
+				typeof(DataParameter),
+				Expression.Lambda(
+					Expression.MemberInit(
+						Expression.New(typeof(DataParameter)),
+						Expression.Bind(
+							MemberHelper.PropertyOf<DataParameter>(dp => dp.Value),
+							Expression.Convert(
+								newDateTime,
+								typeof(object))),
+						Expression.Bind(
+							MemberHelper.PropertyOf<DataParameter>(dp => dp.DataType),
+							Expression.Constant(
+								DataType.DateTime,
+								typeof(DataType)))),
+					ldtParameter));
+
+			// ms.SetConvertExpression<LocalDateTime, DateTime>(timeStamp =>
+			//     new DateTime(timeStamp.Year, timeStamp.Month, timeStamp.Day, timeStamp.Hour,
+			//         timeStamp.Minute, timeStamp.Second, timeStamp.Millisecond));
+
+			mappingSchema.SetConvertExpression(
+				localDateTimeType,
+				typeof(DateTime),
+				Expression.Lambda(newDateTime, ldtParameter));
+
+			// LocalDateTime.FromDateTime(DateTime),
+
+			var dtParameter = Expression.Parameter(typeof(DateTime), "dt");
+
+			mappingSchema.SetConvertExpression(
+				typeof(DateTime),
+				localDateTimeType,
+				Expression.Lambda(
+					Expression.Call(
+						localDateTimeType.GetMethod("FromDateTime", new[] { typeof(DateTime) })!,
+						dtParameter),
+					dtParameter));
+
+			// LocalDateTime.FromDateTime(DateTimeOffset.DateTime),
+
+			var dtoParameter = Expression.Parameter(typeof(DateTimeOffset), "dto");
+
+			mappingSchema.SetConvertExpression(
+				typeof(DateTimeOffset),
+				localDateTimeType,
+				Expression.Lambda(
+					Expression.Call(
+						localDateTimeType.GetMethod("FromDateTime", new[] { typeof(DateTime) })!,
+						Expression.Property(dtoParameter, "DateTime")),
+					dtoParameter));
+
+			// LocalDateTime.FromDateTime(DateTime.Parse(string, IvariantInfo)),
+
+			var sParameter = Expression.Parameter(typeof(string), "str");
+
+			mappingSchema.SetConvertExpression(
+				typeof(string),
+				localDateTimeType,
+				Expression.Lambda(
+					Expression.Call(
+						localDateTimeType.GetMethod("FromDateTime", new[] { typeof(DateTime) })!,
+						Expression.Call(
+							MethodHelper.GetMethodInfo(DateTime.Parse, "", (IFormatProvider)null!),
+							sParameter,
+							Expression.Constant(DateTimeFormatInfo.InvariantInfo))),
+					sParameter));
+
+			var p  = Expression.Parameter(typeof(object), "obj");
+			var ex = Expression.Lambda<Func<object,DateTime>>(
+				Expression.Block(
+					new[] { ldtParameter },
+					Expression.Assign(ldtParameter, Expression.Convert(p, localDateTimeType)),
+					newDateTime),
+				p);
+
+			var l = ex.Compile();
+
+			mappingSchema.SetValueToSqlConverter(localDateTimeType, (sb, _, v) => sb.Append('\'').Append(l(v).ToString()).Append('\''));
+
+			if (remoteContextSerializationSchema != null)
+			{
+				var localDateTimePattern = localDateTimeType.Assembly.GetType("NodaTime.Text.LocalDateTimePattern", true)!;
+				var pattern = Expression.Property((Expression?)null, localDateTimePattern, "FullRoundtrip");
+
+				// ldt => LocalDateTimePattern.FullRoundtrip.Format(ldt)
+
+				var ldt = Expression.Parameter(localDateTimeType, "ldt");
+
+				var serializer = Expression.Lambda(
+					Expression.Call(pattern, "Format", [], ldt),
+					ldt);
+
+				remoteContextSerializationSchema.SetConvertExpression(localDateTimeType, typeof(string), serializer);
+
+				// str => LocalDateTimePattern.FullRoundtrip.Parse(str).Value
+
+				var str = Expression.Parameter(typeof(string), "str");
+
+				var deserializer = Expression.Lambda(
+					Expression.Property(
+						Expression.Call(pattern, "Parse", [], str),
+						"Value"),
+					str);
+
+				remoteContextSerializationSchema.SetConvertExpression(typeof(string), localDateTimeType, deserializer);
+			}
 		}
 	}
 }

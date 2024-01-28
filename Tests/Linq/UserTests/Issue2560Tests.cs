@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Linq;
+
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 using NodaTime;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -13,51 +15,83 @@ namespace Tests.UserTests
 	public class Issue2560Tests : TestBase
 	{
 		[Table]
-		sealed class DataClass
+		class DataClass
 		{
-			[Column] public int Id    { get; set; }
+			[Column] public int           Id    { get; set; }
 			[Column] public LocalDateTime Value { get; set; }
 		}
 
 		[Test]
-		public void TestNodaTimeInsert([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void NodaTimeInsertTest1([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 
-			ms.SetDataType(typeof(LocalDateTime), new SqlDataType(new DbDataType(typeof(DateTime), DataType.DateTime)));
+			ms.UseNodaTime(/*typeof(LocalDateTime)*/ ms);
 
-			ms.SetConverter<LocalDateTime, DataParameter>(timeStamp =>
-				new DataParameter
-				{
-					Value = new DateTime(timeStamp.Year, timeStamp.Month, timeStamp.Day, timeStamp.Hour,
-						timeStamp.Minute, timeStamp.Second, timeStamp.Millisecond),
-					DataType = DataType.DateTime
-				});
+			using var db  = GetDataContext(context, ms);
+			using var tmp = db.CreateLocalTable<DataClass>();
 
-			ms.SetConverter<LocalDateTime, DateTime>(timeStamp =>
-				new DateTime(timeStamp.Year, timeStamp.Month, timeStamp.Day, timeStamp.Hour,
-					timeStamp.Minute, timeStamp.Second, timeStamp.Millisecond));
-
-			ms.SetValueToSqlConverter(typeof(LocalDateTime), (sb, dt, v) =>
-				{
-					var d = (LocalDateTime)v;
-					var d1 = new DateTime(d.Year, d.Month, d.Day, d.Hour,
-						d.Minute, d.Second, d.Millisecond);
-
-					sb.Append('\'').Append(d1.ToString()).Append('\'');
-				}
-			);
-
-			using (var db = GetDataContext(context, ms))
-			using (db.CreateLocalTable<DataClass>())
+			var item = new DataClass
 			{
-				var item = new DataClass
-				{
-					Value = LocalDateTime.FromDateTime(TestData.DateTime),
-				};
+				Value = LocalDateTime.FromDateTime(GetDateTime(context)),
+			};
 
-				db.Insert(item);
-			}
+			db.Insert(item);
+
+			var list = tmp.ToList();
+
+			Assert.AreEqual(1, list.Count);
+			Assert.That(list[0].Value, Is.EqualTo(item.Value));
 		}
+
+		[Test]
+		public void NodaTimeInsertTest2([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.UseNodaTime(typeof(LocalDateTime), ms);
+
+			using var db  = GetDataContext(context, ms);
+			using var tmp = db.CreateLocalTable<DataClass>();
+
+			var item = new DataClass
+			{
+				Value = LocalDateTime.FromDateTime(GetDateTime(context)),
+			};
+
+			db.Insert(item);
+
+			var list = tmp.ToList();
+
+			Assert.AreEqual(1, list.Count);
+			Assert.That(list[0].Value, Is.EqualTo(item.Value));
+		}
+
+		private static DateTime GetDateTime(string context)
+		{
+			// different databases has different datetime precision (and we different defaults for them)
+			if (context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle))
+			{
+				return TestData.DateTime0;
+			}
+			if (context.IsAnyOf(TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllSybase))
+			{
+				return TestData.DateTime3;
+			}
+
+			if (context.IsAnyOf(TestProvName.AllFirebird))
+			{
+				return TestData.DateTime4;
+			}
+
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.DB2))
+			{
+				return TestData.DateTime6;
+			}
+
+			// default is max (7)
+			return TestData.DateTime;
+		}
+
 	}
 }
