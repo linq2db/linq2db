@@ -34,7 +34,7 @@ namespace Tests.UserTests
 				var id = (from infeed in db.GetTable<InfeedAdvicePositionDTO>()
 						   select Sql.GuidToNormalizedString(infeed.Id)).First();
 
-				Assert.AreEqual(id, expected);
+				Assert.AreEqual(expected, id);
 
 				var qryA = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
 						   where Sql.GuidToNormalizedString(infeed.Id)!.Contains("7F4-53")
