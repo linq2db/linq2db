@@ -107,7 +107,7 @@ namespace Tests
 			var fullPath = Path.Combine(fixturePath, fileName);
 
 			// split baselines in 5-line batches to simplify diff review on GH
-			var lines = baseline.Split(Environment.NewLine);
+			var lines = baseline.Split(new char[] {'\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
 			using var fs = File.Create(fullPath);
 			using var sw = new StreamWriter(fs, Encoding.UTF8);
