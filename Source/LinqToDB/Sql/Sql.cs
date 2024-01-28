@@ -273,7 +273,12 @@ namespace LinqToDB
 		[Expression(PN.SQLite, "(substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Expression(PN.Access, "Mid(CStr({0}), 2, 36)", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Expression(PN.PostgreSQL, "Upper(Cast({0} as VarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.MariaDB, "Upper(Cast({0} as CHAR(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.MySql, "Upper(Cast({0} as CHAR(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.Informix, "Upper(To_Char({0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.DB2, "(substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Expression(PN.Oracle, "(substr(rawtohex({0}), 7, 2) || substr(rawtohex({0}), 5, 2) || substr(rawtohex({0}), 3, 2) || substr(rawtohex({0}), 1, 2) || '-' || substr(rawtohex({0}), 11, 2) || substr(rawtohex({0}), 9, 2) || '-' || substr(rawtohex({0}), 15, 2) || substr(rawtohex({0}), 13, 2) || '-' || substr(rawtohex({0}), 17, 4) || '-' || substr(rawtohex({0}), 21, 12))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.ClickHouse, "upper(toString({0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Extension("", BuilderType = typeof(GuidToStringBuilder), PreferServerSide = true)]
 		public static string? GuidToNormalizedString(Guid? guid)
 		{
