@@ -278,7 +278,7 @@ namespace LinqToDB.SqlQuery
 
 			_currentSetOperator = null;
 			
-			var newElement = base.VisitSqlTableSource(element);;
+			var newElement = base.VisitSqlTableSource(element);
 
 			_currentSetOperator = saveCurrent;
 
@@ -911,15 +911,6 @@ namespace LinqToDB.SqlQuery
 				}
 
 				var whereToIgnore = new List<IQueryElement> { sql.Where, sql.Select };
-
-				// add join conditions
-				foreach (var join in sql.From.Tables.SelectMany(t => t.Joins))
-				{
-					if (join.JoinType == JoinType.Inner)
-						whereToIgnore.Add(join.Condition);
-					else
-						break;
-				}
 
 				// we cannot optimize apply because reference to parent sources are used inside the query
 				if (QueryHelper.IsDependsOnOuterSources(sql, whereToIgnore))
@@ -2056,8 +2047,15 @@ namespace LinqToDB.SqlQuery
 					{
 						var join = table.Joins[j];
 						if (join.JoinType == JoinType.OuterApply ||
-						    join.JoinType == JoinType.Left)
+						    join.JoinType == JoinType.Left       ||
+						    join.JoinType == JoinType.CrossApply)
 						{
+							if (join.JoinType == JoinType.CrossApply)
+							{
+								if (_applySelect == null)
+									continue;
+							}
+
 							evaluationContext ??= new EvaluationContext();
 
 							if (join.Table.Source is SelectQuery tsQuery && tsQuery.Select.Columns.Count > 0)
