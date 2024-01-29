@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -184,7 +185,7 @@ namespace LinqToDB.Metadata
 			if (xmlDocStream == null) throw new ArgumentNullException(nameof(xmlDocStream));
 
 			_types    = LoadStream(xmlDocStream, null);
-			_objectId = xmlDocStream.GetHashCode().ToString();
+			_objectId = xmlDocStream.GetHashCode().ToString(NumberFormatInfo.InvariantInfo);
 		}
 
 		static AttributeInfo[] GetAttrs(string? fileName, XElement el, string? exclude, string typeName, string? memberName)

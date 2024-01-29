@@ -140,16 +140,14 @@ namespace LinqToDB.DataProvider.DB2
 				case DataType.DateTime2 :
 					StringBuilder.Append("timestamp");
 					if (type.Type.Precision != null && type.Type.Precision != 6)
-						StringBuilder.Append($"({type.Type.Precision})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision})");
 					return;
 				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
 				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
 				case DataType.NVarChar  :
 					if (type.Type.Length == null || type.Type.Length > 8168 || type.Type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(8168)");
+						StringBuilder.Append("NVarChar(8168)");
 						return;
 					}
 
@@ -267,7 +265,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal decValue)
 			{
 				var d = new SqlDecimal(decValue);
-				return string.Format("({0}{1}{2})", d.Precision.ToString(CultureInfo.InvariantCulture), InlineComma, d.Scale.ToString(CultureInfo.InvariantCulture));
+				return string.Format(CultureInfo.InvariantCulture, "({0}{1}{2})", d.Precision, InlineComma, d.Scale);
 			}
 
 			if (DataProvider is DB2DataProvider provider)
