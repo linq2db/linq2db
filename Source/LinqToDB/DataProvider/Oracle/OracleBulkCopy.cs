@@ -254,7 +254,7 @@ namespace LinqToDB.DataProvider.Oracle
 			helper.StringBuilder.AppendLine(")");
 			helper.SetHeader();
 
-			return new List<object>(31);
+			return new List<object>(helper.BatchSize);
 		}
 
 		BulkCopyRowsCopied OracleMultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source)
