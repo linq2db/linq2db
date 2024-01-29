@@ -1550,7 +1550,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql),
-					Expression.Constant(null, typeof(IDataContext)), Expression.Constant(sql)));
+					ExpressionInstances.NullIDataContext, Expression.Constant(sql)));
 		}
 
 		/// <summary>

@@ -9,6 +9,9 @@ namespace LinqToDB.Expressions
 	/// </summary>
 	public static class ExpressionInstances
 	{
+		public static readonly Expression NullIDataContext = Expression.Constant(null, typeof(IDataContext));
+		public static readonly Expression IntNegative1521134295 = Expression.Constant(-1521134295);
+		
 		public static readonly ConstantExpression True        = Expression.Constant(true);
 		public static readonly ConstantExpression False       = Expression.Constant(false);
 		public static readonly ConstantExpression UntypedNull = Expression.Constant(null);
