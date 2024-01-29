@@ -1586,7 +1586,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSqlScalar<TEntity>, dataContext, sql),
-					Expression.Constant(null, typeof(IDataContext)), Expression.Constant(sql)));
+					ExpressionInstances.NullIDataContext, Expression.Constant(sql)));
 		}
 
 #endif
@@ -1629,7 +1629,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql, parameters),
-					Expression.Constant(null, typeof(IDataContext)), Expression.Constant(sql), Expression.Constant(parameters)));
+					ExpressionInstances.NullIDataContext, Expression.Constant(sql), Expression.Constant(parameters)));
 		}
 
 		#endregion
@@ -1676,7 +1676,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SelectQuery, dataContext, selector),
-					Expression.Constant(null, typeof(IDataContext)), Expression.Quote(selector)));
+					ExpressionInstances.NullIDataContext, Expression.Quote(selector)));
 		}
 
 		#endregion
