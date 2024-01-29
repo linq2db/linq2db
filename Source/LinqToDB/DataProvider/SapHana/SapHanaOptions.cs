@@ -15,6 +15,8 @@ namespace LinqToDB.DataProvider.SapHana
 	public sealed record SapHanaOptions
 	(
 		BulkCopyType BulkCopyType = BulkCopyType.MultipleRows
+		// If you add another parameter here, don't forget to update
+		// SapHanaOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<SapHanaOptions>(BulkCopyType)
 	{

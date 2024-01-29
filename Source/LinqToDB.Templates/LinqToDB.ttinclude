@@ -691,10 +691,11 @@ void GenerateTypesFromMetadata()
 		var tabfs = new MemberGroup { Region = "Table Functions" };
 
 		var currentContext = DataContextObject;
-		foreach (var p in Procedures.Values.Where(
-			proc => proc.IsLoaded || proc.IsFunction && !proc.IsTableFunction ||
-			proc.IsTableFunction && proc.ResultException != null
-			))
+		foreach (var p in Procedures.Values
+			.Where(proc =>
+				proc.IsLoaded || proc.IsFunction && !proc.IsTableFunction ||
+				proc.IsTableFunction && proc.ResultException != null)
+			.OrderBy(proc => proc.Name))
 		{
 			Action<MemberGroup> addProcs = tp => procs.Members.Add(tp);
 			Action<MemberGroup> addFuncs = tp => funcs.Members.Add(tp);

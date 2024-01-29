@@ -62,5 +62,7 @@ stages:
         db_filter: '[sybase.ase.all]'
       ${{ if eq(variables['Build.DefinitionName'], 'test-clickhouse') }}:
         db_filter: '[clickhouse.all]'
+      ${{ if eq(variables['Build.DefinitionName'], 'test-metrics') }}:
+        db_filter: '[metrics]'
       ${{ if ne(variables['Build.DefinitionName'], 'test-all') }}:
         mac_enabled: true

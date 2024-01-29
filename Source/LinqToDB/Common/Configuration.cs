@@ -587,6 +587,22 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class Sql
 		{
+			static volatile SqlOptions _options = new();
+
+			/// <summary>
+			/// Default <see cref="SqlOptions"/> options. Automatically synchronized with other settings in <see cref="Sql"/> class.
+			/// </summary>
+			public static SqlOptions Options
+			{
+				get => _options;
+				set
+				{
+					_options = value;
+					DataConnection.ResetDefaultOptions();
+					DataConnection.ConnectionOptionsByConfigurationString.Clear();
+				}
+			}
+
 			/// <summary>
 			/// Format for association alias.
 			/// <para>
@@ -649,7 +665,21 @@ namespace LinqToDB.Common
 			/// </code>
 			/// </example>
 			/// </summary>
-			public static bool GenerateFinalAliases { get; set; }
+			public static bool GenerateFinalAliases
+			{
+				get => Options.GenerateFinalAliases;
+				set => Options = Options with { GenerateFinalAliases = value };
+			}
+
+			/// <summary>
+			/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
+			/// Default value: <c>false</c>.
+			/// </summary>
+			public static bool EnableConstantExpressionInOrderBy
+			{
+				get => Options.EnableConstantExpressionInOrderBy;
+				set => Options = Options with { EnableConstantExpressionInOrderBy = value };
+			}
 		}
 	}
 }
