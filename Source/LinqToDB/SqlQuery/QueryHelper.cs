@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -1357,12 +1358,12 @@ namespace LinqToDB.SqlQuery
 				if (open.Length % 2 == 0)
 					return match.Value;
 
-				if (!int.TryParse(key, out var idx))
+				if (!int.TryParse(key, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var idx))
 					return match.Value;
 
 				var newIndex = transformFunc(context, idx);
 
-				return $"{{{newIndex}}}";
+				return FormattableString.Invariant($"{{{newIndex}}}");
 			});
 
 			return str;
@@ -1396,7 +1397,7 @@ namespace LinqToDB.SqlQuery
 				if (open.Length % 2 == 0)
 					continue;
 
-				if (!int.TryParse(key, out var idx))
+				if (!int.TryParse(key, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var idx))
 					continue;
 
 				var current = parameters[idx];

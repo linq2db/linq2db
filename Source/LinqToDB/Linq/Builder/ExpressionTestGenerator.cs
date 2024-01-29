@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -129,7 +130,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (UnaryExpression)expr;
 
-						_exprBuilder.AppendFormat("({0})", GetTypeName(e.Type));
+						_exprBuilder.Append(CultureInfo.InvariantCulture, $"({GetTypeName(e.Type)})");
 						Build(e.Operand);
 
 						return false;
@@ -157,7 +158,7 @@ namespace LinqToDB.Linq.Builder
 
 						_exprBuilder.Append('(');
 						Build(e.Operand);
-						_exprBuilder.AppendFormat(" as {0})", GetTypeName(e.Type));
+						_exprBuilder.Append(CultureInfo.InvariantCulture, $" as {GetTypeName(e.Type)})");
 
 						return false;
 					}
@@ -185,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 						var e = (MemberExpression)expr;
 
 						Build(e.Expression!);
-						_exprBuilder.AppendFormat(".{0}", MangleName(e.Member.DeclaringType!, e.Member.Name, "P"));
+						_exprBuilder.Append(CultureInfo.InvariantCulture, $".{MangleName(e.Member.DeclaringType!, e.Member.Name, "P")}");
 
 						return false;
 					}
@@ -276,13 +277,13 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						if (typeof(Table<>).IsSameOrParentOf(expr.Type))
-							_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArguments()[0]));
+							_exprBuilder.Append(CultureInfo.InvariantCulture, $"db.GetTable<{GetTypeName(expr.Type.GetGenericArguments()[0])}>()");
 						else if (c.Value == _dataContext)
 							_exprBuilder.Append("db");
 						else if (expr.ToString() == "value(" + expr.Type + ")")
 							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(')');
 						else
-							_exprBuilder.Append(expr);
+							_exprBuilder.Append(CultureInfo.InvariantCulture, $"{expr}");
 
 						return true;
 					}
@@ -326,7 +327,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (ne.Members!.Count == 1)
 							{
-								_exprBuilder.AppendFormat("new {{ {0} = ", MangleName(ne.Members[0].DeclaringType!, ne.Members[0].Name, "P"));
+								_exprBuilder.Append(CultureInfo.InvariantCulture, $"new {{ {MangleName(ne.Members[0].DeclaringType!, ne.Members[0].Name, "P")} = ");
 								Build(ne.Arguments[0]);
 								_exprBuilder.Append(" }}");
 							}
@@ -338,7 +339,9 @@ namespace LinqToDB.Linq.Builder
 
 								for (var i = 0; i < ne.Members.Count; i++)
 								{
-									_exprBuilder.AppendLine().Append(_indent).AppendFormat("{0} = ", MangleName(ne.Members[i].DeclaringType!, ne.Members[i].Name, "P"));
+									_exprBuilder
+										.AppendLine()
+										.Append(CultureInfo.InvariantCulture, $"{_indent}{MangleName(ne.Members[i].DeclaringType!, ne.Members[i].Name, "P")} = ");
 									Build(ne.Arguments[i]);
 
 									if (i + 1 < ne.Members.Count)
@@ -351,7 +354,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							_exprBuilder.AppendFormat("new {0}(", GetTypeName(ne.Type));
+							_exprBuilder.Append(CultureInfo.InvariantCulture, $"new {GetTypeName(ne.Type)}(");
 
 							for (var i = 0; i < ne.Arguments.Count; i++)
 							{
@@ -374,11 +377,11 @@ namespace LinqToDB.Linq.Builder
 							{
 								case MemberBindingType.Assignment:
 									var ma = (MemberAssignment) b;
-									_exprBuilder.AppendFormat("{0} = ", MangleName(ma.Member.DeclaringType!, ma.Member.Name, "P"));
+									_exprBuilder.Append(CultureInfo.InvariantCulture, $"{MangleName(ma.Member.DeclaringType!, ma.Member.Name, "P")} = ");
 									Build(ma.Expression);
 									break;
 								default:
-									_exprBuilder.Append(b);
+									_exprBuilder.Append(CultureInfo.InvariantCulture, $"{b}");
 									break;
 							}
 						}
@@ -418,7 +421,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (NewArrayExpression)expr;
 
-						_exprBuilder.AppendFormat("new {0}[]", GetTypeName(e.Type.GetElementType()!));
+						_exprBuilder.Append(CultureInfo.InvariantCulture, $"new {GetTypeName(e.Type.GetElementType()!)}[]");
 
 						if (e.Expressions.Count == 1)
 						{
@@ -453,7 +456,7 @@ namespace LinqToDB.Linq.Builder
 
 						_exprBuilder.Append('(');
 						Build(e.Expression);
-						_exprBuilder.AppendFormat(" is {0})", e.TypeOperand);
+						_exprBuilder.Append(CultureInfo.InvariantCulture, $" is {e.TypeOperand})");
 
 						return false;
 					}
@@ -511,7 +514,9 @@ namespace LinqToDB.Linq.Builder
 					}
 
 				default:
-					_exprBuilder.AppendLine("// Unknown expression.").Append(_indent).Append(expr);
+					_exprBuilder
+						.AppendLine("// Unknown expression.")
+						.Append(CultureInfo.InvariantCulture, $"{_indent}{expr}");
 					return false;
 			}
 		}
@@ -556,7 +561,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						attr = "[MapValue(\"" + valueAttribute.Value + "\")] ";
 					}
-					_typeBuilder.AppendLine("\t\t" + attr + nm + " = " + Convert.ToInt64(Enum.Parse(type, nm)) + ",");
+					_typeBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t\t{attr}{nm} = {Convert.ToInt64(Enum.Parse(type, nm), CultureInfo.InvariantCulture)},");
 				}
 				_typeBuilder.Remove(_typeBuilder.Length - 1, 1);
 				_typeBuilder.AppendLine("\t}");
@@ -571,7 +576,7 @@ namespace LinqToDB.Linq.Builder
 				var attr  = string.Concat(attrs.Select(a => "\r\n\t\t" + a.ToString()));
 				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p"));
 
-				return string.Format(@"{0}
+				return string.Format(CultureInfo.InvariantCulture, @"{0}
 		public {1}({2})
 		{{
 			// throw new NotImplementedException();
@@ -604,7 +609,7 @@ namespace LinqToDB.Linq.Builder
 						attr += "\t\t[PrimaryKey]" + Environment.NewLine;
 					}
 				}
-				return string.Format(@"
+				return string.Format(CultureInfo.InvariantCulture, @"
 {0}		public {1} {2};",
 					attr,
 					GetTypeName(f.FieldType),
@@ -631,7 +636,7 @@ namespace LinqToDB.Linq.Builder
 							attr += "\t\t[PrimaryKey]" + Environment.NewLine;
 						}
 					}
-					return string.Format(@"
+					return string.Format(CultureInfo.InvariantCulture, @"
 {0}		{3}{1} {2} {{ get; set; }}",
 						attr,
 						GetTypeName(p.PropertyType),
@@ -643,7 +648,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var attrs = m.GetCustomAttributesData();
 					var ps    = m.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p"));
-					return string.Format(@"{0}
+					return string.Format(CultureInfo.InvariantCulture, @"{0}
 		{5}{4}{1} {2}({3})
 		{{
 			throw new NotImplementedException();
@@ -669,6 +674,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				_typeBuilder.AppendFormat(
+					CultureInfo.InvariantCulture,
 					type.IsGenericType ?
 @"
 {0}	{1}{2}{3} {4}<{8}>{5}
@@ -757,7 +763,7 @@ namespace LinqToDB.Linq.Builder
 				if (_nameDic.TryGetValue(prefix + oldNames[i], out var mangledName))
 					newNames[i] = mangledName;
 				else
-					newNames[i] = _nameDic[prefix + oldNames[i]] = prefix + _nameDic.Count;
+					newNames[i] = _nameDic[prefix + oldNames[i]] = FormattableString.Invariant($"{prefix}{_nameDic.Count}");
 			}
 
 			return string.Join(".", newNames);
@@ -817,7 +823,9 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					name = string.Format("{0}<{1}>",
+					name = string.Format(
+						CultureInfo.InvariantCulture,
+						"{0}<{1}>",
 						name,
 						string.Join(", ", args.Select(GetTypeName)));
 				}
@@ -953,7 +961,7 @@ namespace LinqToDB.Linq.Builder
 
 				var number = 0;//DateTime.Now.Ticks;
 
-				fileName = Path.Combine(dir, "ExpressionTest." + number + ".cs");
+				fileName = Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.{number}.cs"));
 
 				sw = File.CreateText(fileName);
 
@@ -1007,7 +1015,7 @@ namespace LinqToDB.Linq.Builder
 			_exprBuilder.Replace("<>h__TransparentIdentifier", "tp");
 			_exprBuilder.Insert(0, "var query = ");
 
-			var result = string.Format(
+			var result = string.Format(CultureInfo.InvariantCulture,
 @"//---------------------------------------------------------------------------------------------------
 // This code was generated by LinqToDB.
 //---------------------------------------------------------------------------------------------------

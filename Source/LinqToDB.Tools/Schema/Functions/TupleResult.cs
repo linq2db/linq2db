@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 
 namespace LinqToDB.Schema
 {
@@ -10,6 +12,6 @@ namespace LinqToDB.Schema
 	public sealed record TupleResult(IReadOnlyCollection<ScalarResult> Fields, bool Nullable)
 		: Result(ResultKind.Tuple)
 	{
-		public override string ToString() => $"({string.Join(", ", Fields)})";
+		public override string ToString() => $"({string.Join(", ", Fields.Select(f => string.Format(CultureInfo.InvariantCulture, "{0}", f)))})";
 	}
 }

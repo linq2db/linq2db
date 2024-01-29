@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
@@ -85,9 +86,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.NVarChar:
 					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(4000)");
+						StringBuilder.Append("NVarChar(4000)");
 						return;
 					}
 
@@ -96,12 +95,12 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.Binary:
 					StringBuilder.Append("BINARY");
 					if (type.Type.Length > 1 && type.Type.Length <= 8000)
-						StringBuilder.AppendFormat("({0})", type.Type.Length);
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
 					return;
 				case DataType.VarBinary:
 					StringBuilder.Append("VARBINARY");
 					if (type.Type.Length > 1 && type.Type.Length <= 8000)
-						StringBuilder.AppendFormat("({0})", type.Type.Length);
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
 					return;
 			}
 
