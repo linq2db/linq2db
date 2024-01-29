@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Globalization;
 using System.Runtime.Serialization;
 
 namespace LinqToDB.Linq
@@ -36,7 +37,7 @@ namespace LinqToDB.Linq
 		/// <seealso cref="Exception.Message"/>
 		[JetBrains.Annotations.StringFormatMethod("message")]
 		public LinqException(string message, params object?[] args)
-			: base(string.Format(message, args))
+			: base(string.Format(CultureInfo.InvariantCulture, message, args))
 		{
 		}
 

@@ -2,9 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+#if NETFRAMEWORK || NETCOREAPP3_1 || NETSTANDARD2_0 || NETSTANDARD2_1
+using System.Text;
+#endif
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -193,7 +198,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static void OracleMultipleRowsCopy1Add(MultipleRowsHelper helper, object item, string? from)
 		{
-			helper.StringBuilder.AppendFormat("\tINTO {0} (", helper.TableName);
+			helper.StringBuilder.Append(CultureInfo.InvariantCulture, $"\tINTO {helper.TableName} (");
 
 			foreach (var column in helper.Columns)
 			{
@@ -229,7 +234,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static List<object> OracleMultipleRowsCopy2Prep(MultipleRowsHelper helper)
 		{
-			helper.StringBuilder.AppendFormat("INSERT INTO {0} (", helper.TableName);
+			helper.StringBuilder.Append(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName} (");
 
 			foreach (var column in helper.Columns)
 			{
@@ -242,7 +247,7 @@ namespace LinqToDB.DataProvider.Oracle
 			helper.StringBuilder.Append(") VALUES (");
 
 			for (var i = 0; i < helper.Columns.Length; i++)
-				helper.StringBuilder.Append(":p" + (i + 1)).Append(", ");
+				helper.StringBuilder.Append(CultureInfo.InvariantCulture, $":p{i + 1}, ");
 
 			helper.StringBuilder.Length -= 2;
 
@@ -376,7 +381,7 @@ namespace LinqToDB.DataProvider.Oracle
 					value[j] = valueConverter.Value;
 				}
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, columnType.DataType, columnType.DbType)
+				helper.Parameters.Add(new DataParameter(FormattableString.Invariant($":p{i + 1}"), value, columnType.DataType, columnType.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,
@@ -414,7 +419,7 @@ namespace LinqToDB.DataProvider.Oracle
 					value[j] = valueConverter.Value;
 				}
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, columnType.DataType, columnType.DbType)
+				helper.Parameters.Add(new DataParameter(FormattableString.Invariant($":p{i + 1}"), value, columnType.DataType, columnType.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,
@@ -430,7 +435,7 @@ namespace LinqToDB.DataProvider.Oracle
 		static void OracleMultipleRowsCopy3Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
 				.Append('(');
 
 			foreach (var column in helper.Columns)

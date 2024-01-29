@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -182,7 +183,7 @@ namespace LinqToDB.DataModel
 			if (_entityAssociationExtensions == null || !_entityAssociationExtensions.TryGetValue(entity, out var group))
 			{
 				(_entityAssociationExtensions ??= new())
-					.Add(entity, group = GetAssociationExtensionsRegion().New(string.Format(DataModelConstants.EXTENSIONS_ENTITY_ASSOCIATIONS_REGION, entity.Class.Name)).Methods(false));
+					.Add(entity, group = GetAssociationExtensionsRegion().New(string.Format(CultureInfo.InvariantCulture, DataModelConstants.EXTENSIONS_ENTITY_ASSOCIATIONS_REGION, entity.Class.Name)).Methods(false));
 			}
 
 			return group;

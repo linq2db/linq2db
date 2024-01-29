@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -77,7 +78,7 @@ namespace LinqToDB.SqlQuery
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			return sb.Append($"CTE({CteID}, {Name})");
+			return sb.Append(CultureInfo.InvariantCulture, $"CTE({CteID}, {Name})");
 		}
 
 		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
