@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -105,8 +106,8 @@ namespace LinqToDB.DataProvider.Firebird
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");                           break;
-				case DataType.Money         : StringBuilder.AppendFormat("Decimal(18{0}4)", InlineComma); break;
-				case DataType.SmallMoney    : StringBuilder.AppendFormat("Decimal(10{0}4)", InlineComma); break;
+				case DataType.Money         : StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "Decimal(18{0}4)", InlineComma); break;
+				case DataType.SmallMoney    : StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "Decimal(10{0}4)", InlineComma); break;
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
 				case DataType.DateTime      : StringBuilder.Append("TimeStamp");                          break;
@@ -120,7 +121,7 @@ namespace LinqToDB.DataProvider.Firebird
 					if (type.Type.Length == null || type.Type.Length < 1)
 						StringBuilder.Append("(255)");
 					else
-						StringBuilder.Append($"({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
 
 					// type for UUID, e.g. see https://firebirdsql.org/refdocs/langrefupd25-intfunc-gen_uuid.html
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
@@ -256,7 +257,7 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				if (dropTable.Table.TableOptions.HasDropIfExists() || dropTable.Table.TableOptions.HasIsTemporary())
 				{
-					AppendIndent().AppendFormat("IF (EXISTS(SELECT 1 FROM {0} WHERE {1} = ", schemaTable, nameColumn);
+					AppendIndent().Append(CultureInfo.InvariantCulture, $"IF (EXISTS(SELECT 1 FROM {schemaTable} WHERE {nameColumn} = ");
 
 					var identifierValue = identifier;
 

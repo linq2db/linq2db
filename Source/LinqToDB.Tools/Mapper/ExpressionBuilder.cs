@@ -73,7 +73,7 @@ namespace LinqToDB.Tools.Mapper
 			}
 			else if (_processCrossReferences)
 			{
-				_data.LocalDic = Parameter(typeof(IDictionary<object,object>), "ldic" + ++_data.NameCounter);
+				_data.LocalDic = Parameter(typeof(IDictionary<object,object>), FormattableString.Invariant($"ldic{++_data.NameCounter}"));
 				_data.Locals.Add(_data.LocalDic);
 				_data.Expressions.Add(Assign(_data.LocalDic, New(MemberHelper.ConstructorOf(() => new Dictionary<object,object>()))));
 
@@ -295,7 +295,7 @@ namespace LinqToDB.Tools.Mapper
 		{
 			var pFrom = Parameter(_fromType, "from");
 			var pTo   = Parameter(_toType,   "to");
-			var pDic  = Parameter(typeof(IDictionary<object,object>), "dic" + ++_data.NameCounter);
+			var pDic  = Parameter(typeof(IDictionary<object,object>), FormattableString.Invariant($"dic{++_data.NameCounter}"));
 
 			if (_mapperBuilder.MappingSchema.IsScalarType(_fromType) || _mapperBuilder.MappingSchema.IsScalarType(_toType))
 			{
@@ -306,7 +306,7 @@ namespace LinqToDB.Tools.Mapper
 					pDic);
 			}
 
-			_data.LocalDic = Parameter(typeof(IDictionary<object,object>), "ldic" + ++_data.NameCounter);
+			_data.LocalDic = Parameter(typeof(IDictionary<object,object>), FormattableString.Invariant($"ldic{++_data.NameCounter}"));
 			_data.Locals.     Add(_data.LocalDic);
 			_data.Expressions.Add(Assign(_data.LocalDic, pDic));
 
@@ -347,7 +347,7 @@ namespace LinqToDB.Tools.Mapper
 				_builder        = builder;
 				_fromExpression = fromExpression;
 				_toExpression   = toExpression;
-				_localObject    = Parameter(_toExpression.Type, "obj" + ++_builder._data.NameCounter);
+				_localObject    = Parameter(_toExpression.Type, FormattableString.Invariant($"obj{++_builder._data.NameCounter}"));
 				_fromAccessor   = TypeAccessor.GetAccessor(_fromExpression.Type);
 				_toAccessor     = TypeAccessor.GetAccessor(_toExpression.  Type);
 				_cacheMapper    = _builder._mapperBuilder.ProcessCrossReferences != false;
