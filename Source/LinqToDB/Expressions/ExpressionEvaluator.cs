@@ -28,9 +28,11 @@ namespace LinqToDB.Expressions
 				return null;
 
 			if (dataContext != null)
+			{
 				expr = expr.Transform(
 					dataContext,
-					static (dc, e) => e is ConstantExpression { Value : null } ce && ce.Type == typeof(IDataContext) ? Expression.Constant(dc) : e);
+					static (dc, e) => e is ConstantExpression { Value: null, Type: var t } && t == typeof(IDataContext) ? Expression.Constant(dc) : e);
+			}
 
 			return Evaluate(expr, dataContext);
 

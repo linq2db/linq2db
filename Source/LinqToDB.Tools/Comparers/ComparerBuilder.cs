@@ -246,7 +246,7 @@ namespace LinqToDB.Tools.Comparers
 					var mi = eq.Type.GetMethods().Single(m => m.IsPublic && m.Name == "GetHashCode" && m.GetParameters().Length == 1);
 
 					return Expression.Add(
-						Expression.Multiply(e, ExpressionInstances.IntNegative1521134295),
+						Expression.Multiply(e, ExpressionInstances.HashMultiplier),
 						Expression.Call(eq, mi, ma));
 				});
 

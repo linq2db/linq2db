@@ -32,7 +32,6 @@ namespace LinqToDB.Linq.Builder
 			List<LoadWithInfo[]>? loadWith,
 			out bool isLeft)
 		{
-//			var dataContextConstant = Expression.Constant(builder.DataContext, builder.DataContext.GetType());
 
 			Expression dataContextExpr = ExpressionBuilder.DataContextParam;
 
@@ -67,7 +66,6 @@ namespace LinqToDB.Linq.Builder
 				if (onMember.Arguments == null)
 				{
 					if (definedQueryMethod.Parameters.Count > 1 && typeof(IDataContext).IsSameOrParentOf(definedQueryMethod.Parameters[1].Type))
-//						parameterMatch.Add(definedQueryMethod.Parameters[1], dataContextConstant);
 						parameterMatch.Add(definedQueryMethod.Parameters[1], dataContextExpr);
 				}
 				else
@@ -154,7 +152,6 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-//				var queryParam = Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(objectType), dataContextConstant);
 				var queryParam = Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(objectType), dataContextExpr);
 
 				var filterLambda = Expression.Lambda(predicate, childParam);
