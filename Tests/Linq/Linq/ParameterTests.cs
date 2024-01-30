@@ -1663,5 +1663,26 @@ namespace Tests.Linq
 			using var _ = new CultureRegion("fa-IR");
 			Assert.That(tb.Where(r => r.ColumnTS == ts).Count(), Is.EqualTo(1));
 		}
+
+		[Test]
+		public void Issue4359_PrimaryParameterName([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// primary constructor parameter use reference to backing field with ugly name
+			// we use field name to derive parameter name
+			var result = new TestParameterNames("John").Test(db);
+
+			Assert.That(result, Is.Not.Null);
+			Assert.That(result!.ID, Is.EqualTo(1));
+		}
+
+		private class TestParameterNames(string Parameter)
+		{
+			public Person? Test(ITestDataContext db)
+			{
+				return db.Person.Where(p => p.FirstName == Parameter).SingleOrDefault();
+			}
+		}
 	}
 }
