@@ -158,32 +158,48 @@ namespace LinqToDB.AspNet
 			where TContextImplementation : TContext, IDataContext
 			where TContext: IDataContext
 		{
-			var hasTypedConstructor = HasTypedContextConstructor<TContextImplementation>();
+			var constructorType = HasTypedContextConstructor<TContextImplementation, TContext>();
 
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(TContext), typeof(TContextImplementation), lifetime));
-			serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions<TContext>),
-				provider => new DataOptions<TContext>(configure(provider, new DataOptions())),
-				lifetime));
 
-			if (!hasTypedConstructor)
+			if (constructorType == 1)
+			{
+				serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions<TContextImplementation>),
+					provider => new DataOptions<TContextImplementation>(configure(provider, new DataOptions())),
+					lifetime));
+			}
+			else if (constructorType == 2)
+			{
+				serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions<TContext>),
+					provider => new DataOptions<TContext>(configure(provider, new DataOptions())),
+					lifetime));
+			}
+			else if (constructorType == 0)
+			{
 				serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions),
 					provider => configure(provider, new DataOptions()), lifetime));
+			}
 
 			return serviceCollection;
 		}
 
-		static bool HasTypedContextConstructor<TContext>() where TContext : IDataContext
+		static int HasTypedContextConstructor<TContextImplementation, TContext>()
+			where TContextImplementation : IDataContext
+			where TContext : IDataContext
 		{
-			var constructors = typeof(TContext)
+			var constructors = typeof(TContextImplementation)
 				.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
 
+			if (constructors.Any(c => c.GetParameters().Any(p => p.ParameterType == typeof(DataOptions<TContextImplementation>))))
+				return 1;
+
 			if (constructors.Any(c => c.GetParameters().Any(p => p.ParameterType == typeof(DataOptions<TContext>))))
-				return true;
+				return 2;
 
 			if (constructors.Any(c => c.GetParameters().Any(p => p.ParameterType == typeof(DataOptions))))
-				return false;
+				return 0;
 
-			throw new ArgumentException($"Missing constructor accepting '{nameof(DataOptions)}' on type {typeof(TContext).Name}.");
+			throw new ArgumentException($"Missing constructor accepting '{nameof(DataOptions)}' on type {typeof(TContextImplementation).Name}.");
 		}
 	}
 }
