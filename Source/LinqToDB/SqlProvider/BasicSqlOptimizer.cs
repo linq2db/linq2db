@@ -2515,40 +2515,37 @@ namespace LinqToDB.SqlProvider
 							return new SqlPredicate.InList(keys[0], null, p.IsNot, values);
 						}
 
+						var sc = new SqlSearchCondition();
+
+						foreach (var item in items)
 						{
-							var sc = new SqlSearchCondition();
+							var itemCond = new SqlSearchCondition();
 
-							foreach (var item in items)
+							foreach (var key in keys)
 							{
-								var itemCond = new SqlSearchCondition();
+								var field    = ExpectsUnderlyingField(key);
+								var cd       = field.ColumnDescriptor;
+								var sqlValue = mappingSchema.GetSqlValueFromObject(cd, item!);
+								//TODO: review
+								var cond = sqlValue.Value == null ?
+									new SqlCondition(false, new SqlPredicate.IsNull  (field, false)) :
+									new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, sqlValue, null));
 
-								foreach (var key in keys)
-								{
-									var field    = ExpectsUnderlyingField(key);
-									var cd       = field.ColumnDescriptor;
-									var sqlValue = mappingSchema.GetSqlValueFromObject(cd, item!);
-									//TODO: review
-									var cond = sqlValue.Value == null ?
-										new SqlCondition(false, new SqlPredicate.IsNull  (field, false)) :
-										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, sqlValue, null));
-
-									itemCond.Conditions.Add(cond);
-								}
-
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
+								itemCond.Conditions.Add(cond);
 							}
 
-							if (sc.Conditions.Count == 0)
-								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-							if (p.IsNot)
-								return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
-
-							return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
+							sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
 						}
-					}
 
-					if (p.Expr1 is SqlObjectExpression expr)
+						if (sc.Conditions.Count == 0)
+							return new SqlPredicate.Expr(new SqlValue(p.IsNot));
+
+						if (p.IsNot)
+							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
+
+						return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
+					}
+					else if (p.Expr1 is SqlObjectExpression expr)
 					{
 						var parameters = expr.InfoParameters;
 						if (parameters.Length == 1)
@@ -2592,7 +2589,76 @@ namespace LinqToDB.SqlProvider
 
 						return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
 					}
+					else if (p.WithNull != null && paramValue.ProviderValue is not string)
+						return ConvertInListNulls(p, items.Cast<object?>(), context);
 				}
+			}
+			else if (p.WithNull != null)
+				return ConvertInListNulls(p, p.Values, context);
+
+			return p;
+		}
+
+		private ISqlPredicate ConvertInListNulls(SqlPredicate.InList p, IEnumerable<object?> items, EvaluationContext context)
+		{
+			List<ISqlExpression>? newValues = null;
+			var idx                         = 0;
+			var hasNull                     = false;
+
+			foreach (var value in items)
+			{
+				var val = value;
+				if (val is ISqlExpression sqlExpr)
+					val = sqlExpr.EvaluateExpression(context);
+
+				if (val == null)
+				{
+					if (!hasNull)
+					{
+						hasNull = true;
+						if (idx > 0)
+						{
+							newValues = new List<ISqlExpression>();
+							var i = 0;
+							foreach (var item in items)
+							{
+								newValues.Add(new SqlValue(item is ISqlExpression e ? e.EvaluateExpression(context)! : item!));
+
+								i++;
+								if (i == idx)
+									break;
+							}
+						}
+					}
+				}
+				else if (hasNull)
+				{
+					newValues ??= new List<ISqlExpression>();
+					newValues.Add(new SqlValue(val));
+				}
+
+				idx++;
+			}
+
+			if (hasNull || (p.WithNull == true && p.Expr1.ShouldCheckForNull()))
+			{
+				if (!hasNull && newValues == null)
+					return new SqlPredicate.Expr(new SqlValue(p.IsNot));
+
+				var isNull = new SqlPredicate.IsNull(p.Expr1, hasNull ? p.IsNot : false);
+
+				if (newValues == null)
+					return isNull;
+
+				var sc = new SqlSearchCondition();
+				sc.Conditions.Add(new SqlCondition(
+					false,
+					newValues.Count == 1
+						? new SqlPredicate.ExprExpr(p.Expr1, p.IsNot ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal, newValues[0], withNull: null)
+						: new SqlPredicate.InList(p.Expr1, withNull: null, p.IsNot, newValues),
+					!hasNull || !p.IsNot));
+				sc.Conditions.Add(new SqlCondition(false, isNull));
+				return sc;
 			}
 
 			return p;
@@ -2615,9 +2681,9 @@ namespace LinqToDB.SqlProvider
 			return last;
 		}
 
-		#endregion
+#endregion
 
-		#endregion
+#endregion
 
 		#region DataTypes
 
