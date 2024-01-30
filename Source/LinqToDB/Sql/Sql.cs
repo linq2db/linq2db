@@ -282,6 +282,7 @@ namespace LinqToDB
 		[Expression(PN.SapHana, "Upper(Cast({0} as NVarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Expression(PN.Sybase, "Upper(Convert(NVarChar(36), {0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Extension("", BuilderType = typeof(GuidToStringBuilder), PreferServerSide = true)]
+		[return: NotNullIfNotNull(nameof(guid))]
 		public static string? GuidToNormalizedString(Guid? guid)
 		{
 			return guid == null ? null : guid.ToString();
