@@ -66,6 +66,12 @@ namespace LinqToDB
 		[LinqToDB.Sql.Expression(ProviderName.PostgreSQL, "{0} ~ {1}", ServerSideOnly = true, IsPredicate = true)]
 		[LinqToDB.Sql.Expression(ProviderName.Oracle, "REGEXP_LIKE({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
 		[LinqToDB.Sql.Expression(ProviderName.SapHana, "{0} REGEXP {1}", ServerSideOnly = true, IsPredicate = true)]
+		[LinqToDB.Sql.Expression(ProviderName.DB2, "REGEXP_LIKE({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
+		[LinqToDB.Sql.Expression(ProviderName.DB2LUW, "REGEXP_LIKE({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
+		[LinqToDB.Sql.Expression(ProviderName.DB2zOS, "REGEXP_LIKE({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
+		[LinqToDB.Sql.Expression(ProviderName.Firebird, "{0} SIMILAR TO {1}", ServerSideOnly = true, IsPredicate = true)]
+		[LinqToDB.Sql.Expression(ProviderName.Informix, "regex_match({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
+		[LinqToDB.Sql.Expression(ProviderName.ClickHouse, "match({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
 		[LinqToDB.Sql.Expression(ProviderName.SqlServer, "dbo.regex({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
 		public static bool IsMatch(string text, string expression)
 		{
