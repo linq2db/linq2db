@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
+
 using PN = LinqToDB.ProviderName;
 
 // ReSharper disable CheckNamespace
@@ -12,12 +14,11 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Mapping;
+	using Common;
 	using Expressions;
 	using Linq;
+	using Mapping;
 	using SqlQuery;
-	using LinqToDB.Common;
-	using System.Diagnostics.CodeAnalysis;
 
 	[PublicAPI]
 	public static partial class Sql
@@ -275,11 +276,10 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Converts a Guid to a normalized string in the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXX
-		/// means no brakets, uppercase, dashes
+		/// Converts a Guid to a normalized string in the format <c>XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXX</c>.
 		/// </summary>
-		/// <param name="guid">the guid to convert</param>
-		/// <returns>a formated string</returns>
+		/// <param name="guid">The guid to convert.</param>
+		/// <returns>The guid formatted to a string.</returns>
 		[CLSCompliant(false)]
 		[Expression(PN.SQLite, "(substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Expression(PN.Access, "Mid(CStr({0}), 2, 36)", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
@@ -293,9 +293,7 @@ namespace LinqToDB
 		[Expression(PN.SapHana, "Upper(Cast({0} as NVarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Expression(PN.Sybase, "Upper(Convert(NVarChar(36), {0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Extension("", BuilderType = typeof(GuidToStringBuilder), PreferServerSide = true)]
-#if NET30_OR_GREATER || NETSTANDARD2_1_OR_GREATER
 		[return: NotNullIfNotNull(nameof(guid))]
-#endif
 		public static string? GuidToNormalizedString(Guid? guid)
 		{
 			return guid == null ? null : guid.ToString();
