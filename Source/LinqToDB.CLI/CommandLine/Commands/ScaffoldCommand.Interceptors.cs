@@ -325,7 +325,7 @@ namespace LinqToDB.CommandLine
 
 				Console.Error.WriteLine("T4 compilation failed:");
 				foreach (var diag in result.Diagnostics)
-					Console.Error.WriteLine($"\t{diag}");
+					Console.Error.WriteLine(FormattableString.Invariant($"\t{diag}"));
 
 				return (StatusCodes.EXPECTED_ERROR, null);
 			}
@@ -359,7 +359,7 @@ namespace LinqToDB.CommandLine
 				foreach (CompilerError? error in generator.Errors)
 				{
 					if (error != null)
-						Console.Error.WriteLine($"\t{error.FileName} ({error.Line}, {error.Column}): {error.ErrorText}");
+						Console.Error.WriteLine(FormattableString.Invariant($"\t{error.FileName} ({error.Line}, {error.Column}): {error.ErrorText}"));
 				}
 
 				return StatusCodes.T4_ERROR;

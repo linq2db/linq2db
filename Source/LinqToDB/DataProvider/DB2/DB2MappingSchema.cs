@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.DB2
 			SetDataType(typeof(byte?), new SqlDataType(DataType.Int16, typeof(byte)));
 
 			SetValueToSqlConverter(typeof(Guid),     (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
-			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
 			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static DateTime ParseDateTime(string value)
 		{
-			if (DateTime.TryParse(value, out var res))
+			if (DateTime.TryParse(value, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var res))
 				return res;
 
 			return DateTime.ParseExact(
@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void ConvertTimeToSql(StringBuilder stringBuilder, TimeSpan time)
 		{
-			stringBuilder.Append($"'{time:hh\\:mm\\:ss}'");
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"'{time:hh\\:mm\\:ss}'");
 		}
 
 		static string GetTimestampFormat(SqlDataType type)
@@ -92,7 +92,7 @@ namespace LinqToDB.DataProvider.DB2
 				var dbtype = type.Type.DbType.ToLowerInvariant();
 				if (dbtype.StartsWith("timestamp("))
 				{
-					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), out var fromDbType))
+					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var fromDbType))
 						precision = fromDbType;
 				}
 			}
@@ -159,11 +159,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

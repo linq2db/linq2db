@@ -809,10 +809,7 @@ namespace LinqToDB.Linq.Builder
 
 								case ExpressionType.Parameter    :
 									{
-										if (levelExpression == ExpressionConstants.DataContextParam && requestFlag == RequestFor.Field)
-											return IsExpressionResult.False;
-
-										var sequence  = GetSequence(expression, level);
+										var sequence = GetSequence(expression, level);
 
 										if (sequence == null)
 										{
@@ -921,9 +918,6 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Parameter    :
 						{
-							if (levelExpression == ExpressionConstants.DataContextParam)
-								break;
-
 							var sequence   = GetSequence(expression, level)!;
 							var paramIndex = Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence);
 							var parameter  = paramIndex >= 0 ? Lambda.Parameters[paramIndex] : null;

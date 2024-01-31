@@ -314,6 +314,14 @@ namespace Tests.xUpdate
 			[Column] public int Id { get; set; }
 		}
 
+#if NET6_0_OR_GREATER
+		[Table]
+		public class DateOnlyTable
+		{
+			[Column] public DateOnly Date { get; set; }
+		}
+#endif		
+
 		[Table]
 		public class IdentitySimpleBulkCopyTable
 		{
@@ -395,6 +403,44 @@ namespace Tests.xUpdate
 				await table.BulkCopyAsync(options, AsyncEnumerableData(30, 1));
 			}
 		}
+
+#if NET6_0_OR_GREATER
+		[Test]
+		public void BulkCopyDateOnly(
+			[DataSources(false)] string context,
+			[Values(BulkCopyType.RowByRow, BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType copyType)
+		{
+			using var db    = new DataConnection(context);
+			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			using var table = db.CreateLocalTable<DateOnlyTable>();
+			
+			db.DataProvider.BulkCopy(
+				db.Options.WithOptions(options), 
+				table, 
+				new[] { new DateOnlyTable() { Date = new DateOnly(2021, 1, 1) } });
+			
+			Assert.That(table.Single().Date, Is.EqualTo(new DateOnly(2021, 1, 1)));
+		}
+
+		[Test]
+		public void BulkCopyDateOnlyArrayBound(
+			[IncludeDataSources(TestProvName.AllOracle)] string context
+		)
+		{
+			// This makes use of array-bound parameters, which is a unique code-path in OracleBulkCopy (issue #4385)
+			using var mode  = new OracleAlternativeBulkCopyMode(AlternativeBulkCopy.InsertInto);
+			using var db    = new DataConnection(context);
+			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+			using var table = db.CreateLocalTable<DateOnlyTable>();
+			
+			db.DataProvider.BulkCopy(
+				db.Options.WithOptions(options), 
+				table, 
+				new[] { new DateOnlyTable() { Date = new DateOnly(2021, 1, 1) } });
+			
+			Assert.That(table.Single().Date, Is.EqualTo(new DateOnly(2021, 1, 1)));
+		}
+#endif
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 		private async IAsyncEnumerable<SimpleBulkCopyTable> AsyncEnumerableData(int start, int count)
