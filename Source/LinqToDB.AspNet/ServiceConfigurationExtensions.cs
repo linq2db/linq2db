@@ -158,32 +158,56 @@ namespace LinqToDB.AspNet
 			where TContextImplementation : TContext, IDataContext
 			where TContext: IDataContext
 		{
-			var hasTypedConstructor = HasTypedContextConstructor<TContextImplementation>();
+			var constructorType = HasTypedContextConstructor<TContextImplementation, TContext>();
 
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(TContext), typeof(TContextImplementation), lifetime));
-			serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions<TContext>),
-				provider => new DataOptions<TContext>(configure(provider, new DataOptions())),
-				lifetime));
 
-			if (!hasTypedConstructor)
-				serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions),
-					provider => configure(provider, new DataOptions()), lifetime));
+			switch (constructorType)
+			{
+				case OptionsParameterType.DataOptionsTImpl:
+					serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions<TContextImplementation>),
+						provider => new DataOptions<TContextImplementation>(configure(provider, new DataOptions())),
+						lifetime));
+					break;
+				case OptionsParameterType.DataOptionsTContext:
+					serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions<TContext>),
+						provider => new DataOptions<TContext>(configure(provider, new DataOptions())),
+						lifetime));
+					break;
+				case OptionsParameterType.DataOptions:
+					serviceCollection.TryAdd(new ServiceDescriptor(typeof(DataOptions),
+						provider => configure(provider, new DataOptions()), lifetime));
+					break;
+
+			}
 
 			return serviceCollection;
 		}
 
-		static bool HasTypedContextConstructor<TContext>() where TContext : IDataContext
+		enum OptionsParameterType
 		{
-			var constructors = typeof(TContext)
+			DataOptionsTImpl,
+			DataOptionsTContext,
+			DataOptions,
+		}
+
+		static OptionsParameterType HasTypedContextConstructor<TContextImplementation, TContext>()
+			where TContextImplementation : IDataContext
+			where TContext : IDataContext
+		{
+			var constructors = typeof(TContextImplementation)
 				.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
 
+			if (constructors.Any(c => c.GetParameters().Any(p => p.ParameterType == typeof(DataOptions<TContextImplementation>))))
+				return OptionsParameterType.DataOptionsTImpl;
+
 			if (constructors.Any(c => c.GetParameters().Any(p => p.ParameterType == typeof(DataOptions<TContext>))))
-				return true;
+				return OptionsParameterType.DataOptionsTContext;
 
 			if (constructors.Any(c => c.GetParameters().Any(p => p.ParameterType == typeof(DataOptions))))
-				return false;
+				return OptionsParameterType.DataOptions;
 
-			throw new ArgumentException($"Missing constructor accepting '{nameof(DataOptions)}' on type {typeof(TContext).Name}.");
+			throw new ArgumentException($"Missing constructor accepting '{nameof(DataOptions)}' on type {typeof(TContextImplementation).Name}.");
 		}
 	}
 }
