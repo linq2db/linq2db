@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 using System.Text;
 
 using JetBrains.Annotations;
@@ -61,9 +62,9 @@ namespace LinqToDB.Tools
 						var type   = ta.Members[i].Type.ToNullableUnderlying();
 
 						if      (value == null)            values[i] = "<NULL>";
-						else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G");
-						else if (type == typeof(DateTime)) values[i] = ((DateTime)value).ToString("yyy-MM-dd hh:mm:ss");
-						else                               values[i] = value.ToString() ?? string.Empty;
+						else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G", DateTimeFormatInfo.InvariantInfo);
+						else if (type == typeof(DateTime)) values[i] = ((DateTime)value).ToString("yyy-MM-dd hh:mm:ss", DateTimeFormatInfo.InvariantInfo);
+						else                               values[i] = string.Format(CultureInfo.InvariantCulture, "{0}", value);
 					}
 
 					itemValues.Add(values);
@@ -74,9 +75,7 @@ namespace LinqToDB.Tools
 				}
 			}
 
-			stringBuilder
-				.Append("Count : ").Append(itemValues.Count).AppendLine()
-				;
+			stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Count : {itemValues.Count}");
 
 			var lens = ta.Members.Count > 0 ? ta.Members.Select(m => m.Name.Length).ToArray() : new[] { ta.Type.Name.Length };
 

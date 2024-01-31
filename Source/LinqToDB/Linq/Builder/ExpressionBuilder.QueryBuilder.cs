@@ -815,7 +815,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ParameterExpression BuildVariable(Expression expr, string? name = null)
 		{
-			name ??= expr.Type.Name + Interlocked.Increment(ref VarIndex);
+			name ??= FormattableString.Invariant($"{expr.Type.Name}{Interlocked.Increment(ref VarIndex)}");
 
 			var variable = Expression.Variable(
 				expr.Type,

@@ -170,23 +170,15 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				if (count == 0)
 				{
-					stringBuilder
-						.Append("ForceSeek, Index(")
-						.Append(value.Value)
-						.Append(')')
-						;
+					stringBuilder.Append(CultureInfo.InvariantCulture, $"ForceSeek, Index({value.Value})");
 				}
 				else
 				{
-					stringBuilder
-						.Append("ForceSeek(")
-						.Append(value.Value)
-						.Append('(')
-						;
+					stringBuilder.Append(CultureInfo.InvariantCulture, $"ForceSeek({value.Value}(");
 
 					for (var i = 0; i < count; i++)
 					{
-						sqlBuilder.BuildExpression(sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[$"columns.{i}"], false);
+						sqlBuilder.BuildExpression(sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[FormattableString.Invariant($"columns.{i}")], false);
 						stringBuilder.Append(", ");
 					}
 
@@ -236,17 +228,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["values.Count"]).Value!;
 
-				stringBuilder
-					.Append(((SqlValue)sqlQueryExtension.Arguments[".ExtensionArguments.0"]).Value)
-					.Append('(');
-					;
+				stringBuilder.Append(
+					CultureInfo.InvariantCulture,
+					$"{((SqlValue)sqlQueryExtension.Arguments[".ExtensionArguments.0"]).Value}(");
 
 				for (var i = 0; i < count; i++)
 				{
 					if (i > 0)
 						stringBuilder.Append(", ");
-					var value = (SqlValue)sqlQueryExtension.Arguments[$"values.{i}"];
-					stringBuilder.Append(value.Value);
+					var value = (SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"values.{i}")];
+					stringBuilder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
 				}
 
 				stringBuilder.Append(')');
@@ -309,8 +300,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				for (var i = 0; i < count; i++)
 				{
 					stringBuilder.Append(", ");
-					var value = (SqlValue)sqlQueryExtension.Arguments[$"values.{i}"];
-					stringBuilder.Append(value.Value);
+					var value = (SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"values.{i}")];
+					stringBuilder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
 				}
 
 				stringBuilder.Append(')');

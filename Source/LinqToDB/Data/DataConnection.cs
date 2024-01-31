@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
@@ -502,8 +504,8 @@ namespace LinqToDB.Data
 				case TraceInfoStep.AfterExecute:
 					dc.WriteTraceLineConnection(
 						info.RecordsAffected != null
-							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
-							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
+							? FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n")
+							: FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n"),
 						dc.TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
@@ -512,7 +514,7 @@ namespace LinqToDB.Data
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Value.Append(info.TraceInfoStep);
+					sb.Value.Append(CultureInfo.InvariantCulture, $"{info.TraceInfoStep}");
 
 					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 					{
@@ -520,8 +522,8 @@ namespace LinqToDB.Data
 						{
 							sb.Value
 								.AppendLine()
-								.AppendLine($"Exception: {ex.GetType()}")
-								.AppendLine($"Message  : {ex.Message}")
+								.AppendLine(CultureInfo.InvariantCulture, $"Exception: {ex.GetType()}")
+								.AppendLine(CultureInfo.InvariantCulture, $"Message  : {ex.Message}")
 								.AppendLine(ex.StackTrace)
 								;
 						}
@@ -533,7 +535,7 @@ namespace LinqToDB.Data
 							// list contains any elements or not
 							sb.Value
 								.AppendLine()
-								.AppendFormat("Failed while tried to log failure of type {0}", ex.GetType())
+								.Append(CultureInfo.InvariantCulture, $"Failed while tried to log failure of type {ex.GetType()}")
 								;
 						}
 					}
@@ -561,10 +563,10 @@ namespace LinqToDB.Data
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Value.Append($"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
+					sb.Value.Append(CultureInfo.InvariantCulture, $"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
 
 					if (info.RecordsAffected != null)
-						sb.Value.Append($" Rows Count: {info.RecordsAffected}.");
+						sb.Value.Append(CultureInfo.InvariantCulture, $" Rows Count: {info.RecordsAffected}.");
 
 					sb.Value.AppendLine();
 

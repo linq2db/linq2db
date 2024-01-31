@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					else if (i > 0)
 						stringBuilder.Append(", ");
 
-					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[$"tableIDs.{i}"]).Value!;
+					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"tableIDs.{i}")]).Value!;
 					var alias = sqlBuilder.BuildSqlID(id);
 
 					stringBuilder.Append(alias);

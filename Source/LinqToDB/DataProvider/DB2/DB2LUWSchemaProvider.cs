@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.DB2
@@ -290,7 +291,7 @@ WHERE
 							var format = string.Join(",",
 								type.CreateParameters
 									.Split(',')
-									.Select((p,i) => "{" + i + "}"));
+									.Select((p,i) => FormattableString.Invariant($"{{{i}}}")));
 
 							type.CreateFormat = type.TypeName + "(" + format + ")";
 						}
@@ -556,14 +557,14 @@ FROM
 
 				if (IncludedSchemas.Count != 0)
 				{
-					sql += string.Format(" IN ({0})", string.Join(", ", IncludedSchemas.Select(n => '\'' + n + '\'')));
+					sql += string.Format(CultureInfo.InvariantCulture, " IN ({0})", string.Join(", ", IncludedSchemas.Select(n => '\'' + n + '\'')));
 
 					if (ExcludedSchemas.Count != 0)
 						sql += " AND " + schemaNameField;
 				}
 
 				if (ExcludedSchemas.Count != 0)
-					sql += string.Format(" NOT IN ({0})", string.Join(", ", ExcludedSchemas.Select(n => '\'' + n + '\'')));
+					sql += string.Format(CultureInfo.InvariantCulture, " NOT IN ({0})", string.Join(", ", ExcludedSchemas.Select(n => '\'' + n + '\'')));
 
 				return sql;
 			}

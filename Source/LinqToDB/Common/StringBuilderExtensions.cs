@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace LinqToDB.Common
@@ -12,7 +13,7 @@ namespace LinqToDB.Common
 			var result = new uint[256];
 			for (int i = 0; i < 256; i++)
 			{
-				string s = i.ToString("X2");
+				string s = i.ToString("X2", NumberFormatInfo.InvariantInfo);
 				result[i] = ((uint)s[0]) + ((uint)s[1] << 16);
 			}
 			return result;

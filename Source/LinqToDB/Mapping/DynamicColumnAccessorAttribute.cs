@@ -76,7 +76,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{GetterExpressionMethod}.{IdentifierBuilder.GetObjectID(SetterExpression)}.{IdentifierBuilder.GetObjectID(GetterExpression)}.";
+			return FormattableString.Invariant($".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{GetterExpressionMethod}.{IdentifierBuilder.GetObjectID(SetterExpression)}.{IdentifierBuilder.GetObjectID(GetterExpression)}.");
 		}
 	}
 }

@@ -17,6 +17,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+
+		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\BannedSymbols.txt" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">

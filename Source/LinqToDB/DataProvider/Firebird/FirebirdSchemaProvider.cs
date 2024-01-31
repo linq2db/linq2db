@@ -408,7 +408,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 				{
 					dataType.CreateFormat =
 						dataType.TypeName + "(" +
-						string.Join(",", dataType.CreateParameters!.Split(',').Select((_,i) => "{" + i + "}")) +
+						string.Join(",", dataType.CreateParameters!.Split(',').Select((_,i) => FormattableString.Invariant($"{{{i}}}"))) +
 						")";
 				}
 			}

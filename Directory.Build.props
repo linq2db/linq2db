@@ -65,7 +65,7 @@
 	<ItemGroup>
 		<PackageReference Include="PolySharp" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
-		<AdditionalFiles Include="$(MSBuildThisFileDirectory)/Build/BannedSymbols.txt" />
+		<PackageReference Include="Meziantou.Analyzer" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
 			<PrivateAssets>all</PrivateAssets>

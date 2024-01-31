@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -114,21 +115,22 @@ namespace LinqToDB.Remote
 							var value = parameterValue.ProviderValue;
 
 							if(value != null)
-								if (value is string || value is char)
-									value = "'" + value!.ToString()!.Replace("'", "''") + "'";
+								if (value is string str)
+									value = FormattableString.Invariant($"'{str.Replace("'", "''")}'");
+							else if (value is char chr)
+								value = FormattableString.Invariant($"'{(chr == '\'' ? "''" : chr)}'");
 
-							sb.Value
-								.Append("-- SET ")
-								.Append(p.Name)
-								.Append(" = ")
-								.Append(value)
-								.AppendLine();
+							sb.Value.AppendLine(CultureInfo.InvariantCulture, $"-- SET {p.Name} = {value}");
 						}
 
 						sb.Value.AppendLine();
 					}
 
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
 					sb.Value.Append(sqlStringBuilder.Value);
+#else
+					sb.Value.Append(sqlStringBuilder.Value.ToString());
+#endif
 					sqlStringBuilder.Value.Length = 0;
 				}
 

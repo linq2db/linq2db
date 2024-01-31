@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -259,13 +260,12 @@ namespace LinqToDB.SqlQuery
 			}
 
 			sb
-				.Append('t')
-				.Append(Parent?.SourceID ?? - 1)
+				.Append(CultureInfo.InvariantCulture, $"t{Parent?.SourceID ?? -1}")
 #if DEBUG
-				.Append('[').Append(_columnNumber).Append(']')
+				.Append(CultureInfo.InvariantCulture, $"[{_columnNumber}]")
 #endif
 				.Append('.')
-				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
+				.Append(Alias ?? FormattableString.Invariant($"c{(parentIndex >= 0 ? parentIndex + 1 : parentIndex)}"));
 
 			return sb;
 		}

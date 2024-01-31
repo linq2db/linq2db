@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -180,7 +181,7 @@ namespace LinqToDB.SqlQuery
 					// limit number of printed records
 					if (i == 10)
 					{
-						sb.Append($"-- skipping... total rows: {rows.Count}");
+						sb.Append(CultureInfo.InvariantCulture, $"-- skipping... total rows: {rows.Count}");
 						break;
 					}
 

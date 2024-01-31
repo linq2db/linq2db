@@ -1,6 +1,5 @@
-﻿#if !NET45
-using System;
-#endif
+﻿using System;
+using System.Globalization;
 
 namespace LinqToDB.Common
 {

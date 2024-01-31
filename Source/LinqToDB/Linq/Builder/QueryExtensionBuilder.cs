@@ -55,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 						if (evaluateElements)
 							ex = Expression.Constant(ex.EvaluateExpression(builder.DataContext));
 
-						list.Add(new($"{name}.{j}", ex, p, j));
+						list.Add(new(FormattableString.Invariant($"{name}.{j}"), ex, p, j));
 					}
 				}
 				else
