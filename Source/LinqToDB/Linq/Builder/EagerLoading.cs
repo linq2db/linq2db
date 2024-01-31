@@ -1006,7 +1006,7 @@ namespace LinqToDB.Linq.Builder
 							}
 					}
 				}
-				else if (e.NodeType == ExpressionType.Parameter && e != ExpressionConstants.DataContextParam)
+				else if (e.NodeType == ExpressionType.Parameter)
 				{
 					context.dependencies.Add(e);
 					context.dependencyParameters.Add((ParameterExpression)e);
