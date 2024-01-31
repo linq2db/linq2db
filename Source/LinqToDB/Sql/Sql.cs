@@ -18,6 +18,7 @@ namespace LinqToDB
 	using Linq;
 	using SqlQuery;
 	using LinqToDB.Common;
+	using System.Diagnostics.CodeAnalysis;
 
 	[PublicAPI]
 	public static partial class Sql
@@ -282,7 +283,9 @@ namespace LinqToDB
 		[Expression(PN.SapHana, "Upper(Cast({0} as NVarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Expression(PN.Sybase, "Upper(Convert(NVarChar(36), {0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Extension("", BuilderType = typeof(GuidToStringBuilder), PreferServerSide = true)]
+#if NET30_OR_GREATER || NETSTANDARD2_1_OR_GREATER
 		[return: NotNullIfNotNull(nameof(guid))]
+#endif
 		public static string? GuidToNormalizedString(Guid? guid)
 		{
 			return guid == null ? null : guid.ToString();
