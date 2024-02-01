@@ -1520,7 +1520,7 @@ namespace LinqToDB.Linq.Builder
 				var trueValue  = ConvertToSql(context, ExpressionInstances.True,  false, descriptor);
 				var falseValue = ConvertToSql(context, ExpressionInstances.False, false, descriptor);
 
-				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false);
+				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false, _doNotOptimizeIsTruePredicateCounter == 0);
 			}
 
 			return new SqlPredicate.Expr(ex);
@@ -1669,7 +1669,7 @@ namespace LinqToDB.Linq.Builder
 						? withNull
 						: (bool?)null;
 
-					return new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+					return new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot, _doNotOptimizeIsTruePredicateCounter == 0);
 				}
 			}
 
@@ -2619,7 +2619,9 @@ namespace LinqToDB.Linq.Builder
 						var e            = (UnaryExpression)expression;
 						var notCondition = new SqlSearchCondition();
 
+						_doNotOptimizeIsTruePredicateCounter++;
 						BuildSearchCondition(context, e.Operand, notCondition.Conditions);
+						_doNotOptimizeIsTruePredicateCounter--;
 
 						conditions.Add(new SqlCondition(true, notCondition));
 
@@ -2635,6 +2637,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		int _doNotOptimizeIsTruePredicateCounter;
 
 		static bool NeedNullCheck(ISqlExpression expr)
 		{
