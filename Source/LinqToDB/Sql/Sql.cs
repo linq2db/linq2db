@@ -265,23 +265,24 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Converts a Guid to a normalized string in the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXX
-		/// means no brakets, uppercase, dashes
+		/// Converts a Guid to a normalized string in the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx
+		/// means no brakets, lowercase, dashes
 		/// </summary>
 		/// <param name="guid">the guid to convert</param>
 		/// <returns>a formated string</returns>
 		[CLSCompliant(false)]
-		[Expression(PN.SQLite, "(substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.Access, "Mid(CStr({0}), 2, 36)", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.PostgreSQL, "Upper(Cast({0} as VarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.MariaDB, "Upper(Cast({0} as CHAR(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.MySql, "Upper(Cast({0} as CHAR(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.Informix, "Upper(To_Char({0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.DB2, "(substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.Oracle, "(substr(rawtohex({0}), 7, 2) || substr(rawtohex({0}), 5, 2) || substr(rawtohex({0}), 3, 2) || substr(rawtohex({0}), 1, 2) || '-' || substr(rawtohex({0}), 11, 2) || substr(rawtohex({0}), 9, 2) || '-' || substr(rawtohex({0}), 15, 2) || substr(rawtohex({0}), 13, 2) || '-' || substr(rawtohex({0}), 17, 4) || '-' || substr(rawtohex({0}), 21, 12))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.ClickHouse, "upper(toString({0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.SapHana, "Upper(Cast({0} as NVarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.Sybase, "Upper(Convert(NVarChar(36), {0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.SQLite, "lower((substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.Access, "LCase(Mid(CStr({0}), 2, 36))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.PostgreSQL, "(Cast({0} as VarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.MariaDB, "Lower(Cast({0} as CHAR(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.MySql, "Lower(Cast({0} as CHAR(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.Informix, "Lower(To_Char({0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.DB2, "lower((substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.Oracle, "lower((substr(rawtohex({0}), 7, 2) || substr(rawtohex({0}), 5, 2) || substr(rawtohex({0}), 3, 2) || substr(rawtohex({0}), 1, 2) || '-' || substr(rawtohex({0}), 11, 2) || substr(rawtohex({0}), 9, 2) || '-' || substr(rawtohex({0}), 15, 2) || substr(rawtohex({0}), 13, 2) || '-' || substr(rawtohex({0}), 17, 4) || '-' || substr(rawtohex({0}), 21, 12)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.ClickHouse, "lower(toString({0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.SapHana, "Lower(Cast({0} as NVarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.Sybase, "Lower(Convert(NVarChar(36), {0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.SqlServer, "LOWER(CAST({0} AS char(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Extension("", BuilderType = typeof(GuidToStringBuilder), PreferServerSide = true)]
 #if NET30_OR_GREATER || NETSTANDARD2_1_OR_GREATER
 		[return: NotNullIfNotNull(nameof(guid))]

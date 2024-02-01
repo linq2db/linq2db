@@ -26,7 +26,7 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InfeedAdvicePositionDTO>())
 			{
-				var expected = "193AE7F4-5309-4EEE-A746-27B28C7E30F3";
+				var expected = "193AE7F4-5309-4EEE-A746-27B28C7E30F3".ToLowerInvariant();
 
 				var a = new InfeedAdvicePositionDTO() { Id = Guid.Parse(expected) };
 				db.Insert(a);
@@ -37,14 +37,14 @@ namespace Tests.UserTests
 				Assert.AreEqual(expected, id);
 
 				var qryA = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
-						   where Sql.GuidToNormalizedString(infeed.Id)!.Contains("7F4-53")
+						   where Sql.GuidToNormalizedString(infeed.Id)!.Contains("7f4-53")
 						   select infeed;
 
 				var lA = qryA.ToList();
 				Assert.AreEqual(1, lA.Count);
 
 				var qryB = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
-						   where Sql.GuidToNormalizedString(infeed.Id)!.StartsWith("193AE")
+						   where Sql.GuidToNormalizedString(infeed.Id)!.StartsWith("193ae")
 						   select infeed;
 
 				var lB = qryB.ToList();
@@ -52,14 +52,14 @@ namespace Tests.UserTests
 
 
 				var qryC = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
-						   where Sql.GuidToNormalizedString(infeed.Id)!.Contains("8F4-53")
+						   where Sql.GuidToNormalizedString(infeed.Id)!.Contains("8f4-53")
 						   select infeed;
 
 				var lC = qryC.ToList();
 				Assert.AreEqual(0, lC.Count);
 
 				var qryD = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
-						   where Sql.GuidToNormalizedString(infeed.Id)!.ToLower().StartsWith("293AE")
+						   where Sql.GuidToNormalizedString(infeed.Id)!.ToLower().StartsWith("293ae")
 						   select infeed;
 
 				var lD = qryD.ToList();
