@@ -25,7 +25,7 @@ namespace LinqToDB.Extensions
 				return ts.Ticks;
 
 			if (precision < 0)
-				throw new InvalidOperationException($"Precision must be >= 0: {precision}");
+				throw new InvalidOperationException(FormattableString.Invariant($"Precision must be >= 0: {precision}"));
 
 			return ts.Ticks - (ts.Ticks % TICKS_DIVIDERS[precision]);
 		}
@@ -36,7 +36,7 @@ namespace LinqToDB.Extensions
 				return dto;
 
 			if (precision < 0)
-				throw new InvalidOperationException($"Precision must be >= 0: {precision}");
+				throw new InvalidOperationException(FormattableString.Invariant($"Precision must be >= 0: {precision}"));
 
 			var delta = dto.Ticks % TICKS_DIVIDERS[precision];
 			return delta == 0 ? dto : dto.AddTicks(-delta);
@@ -48,7 +48,7 @@ namespace LinqToDB.Extensions
 				return dt;
 
 			if (precision < 0)
-				throw new InvalidOperationException($"Precision must be >= 0: {precision}");
+				throw new InvalidOperationException(FormattableString.Invariant($"Precision must be >= 0: {precision}"));
 
 			var delta = dt.Ticks % TICKS_DIVIDERS[precision];
 			return delta == 0 ? dt : dt.AddTicks(-delta);

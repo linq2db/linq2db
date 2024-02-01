@@ -1339,7 +1339,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (source is SqlTable table)
 				{
-					var res = $"({source.SourceID}).{table.NameForLogging}";
+					var res = FormattableString.Invariant($"({source.SourceID}).{table.NameForLogging}");
 					if (table.Alias != table.NameForLogging && !string.IsNullOrEmpty(table.Alias))
 						res = res + "(" + table.Alias + ")";
 
@@ -1349,7 +1349,7 @@ namespace LinqToDB.SqlProvider
 				using var sb = Pools.StringBuilder.Allocate();
 				source.ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>());
 
-				return $"({source.SourceID}).{sb.Value}";
+				return FormattableString.Invariant($"({source.SourceID}).{sb.Value}");
 			}
 
 			public string DisplayString()

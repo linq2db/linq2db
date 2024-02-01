@@ -91,7 +91,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{(IsDefault ? 1 : 0)}.{Value}.";
+			return FormattableString.Invariant($".{Configuration}.{(IsDefault ? 1 : 0)}.{Value}.");
 		}
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -166,11 +167,11 @@ namespace LinqToDB.SqlQuery
 				return sb.Append(Expr);
 
 			if (Expr.Contains("{"))
-				sb.AppendFormat(Expr, ss.ToArray());
+				sb.AppendFormat(CultureInfo.InvariantCulture, Expr, ss.ToArray());
 			else
 				sb.Append(Expr)
 					.Append('{')
-					.Append(string.Join(", ", ss))
+					.Append(string.Join(", ", ss.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
 					.Append('}');
 
 			return sb;

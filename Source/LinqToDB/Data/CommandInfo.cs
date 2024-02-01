@@ -5,12 +5,17 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+
+#if NETFRAMEWORK || NETCOREAPP3_1 || NETSTANDARD2_0 || NETSTANDARD2_1
+using System.Text;
+#endif
 
 using JetBrains.Annotations;
 
@@ -1611,10 +1616,7 @@ namespace LinqToDB.Data
 
 			for (var i = 0; i < dataReader.FieldCount; i++)
 			{
-				sb.Value.Append(dataReader.GetName(i))
-					.Append(',')
-					.Append(dataReader.GetFieldType(i))
-					.Append(';');
+				sb.Value.Append(CultureInfo.InvariantCulture, $"{dataReader.GetName(i)},{dataReader.GetFieldType(i)};");
 			}
 
 			return sb.Value.ToString();

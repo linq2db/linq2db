@@ -1122,7 +1122,7 @@ namespace LinqToDB.CodeModel
 					RenderType(type.WithNullability(false), null, false);
 					Write(')');
 					var underlyingType = Enum.GetUnderlyingType(enumType);
-					WriteLiteral(Convert.ChangeType(value, underlyingType), _languageProvider.TypeParser.Parse(underlyingType), true);
+					WriteLiteral(Convert.ChangeType(value, underlyingType, CultureInfo.InvariantCulture), _languageProvider.TypeParser.Parse(underlyingType), true);
 				}
 			}
 			else

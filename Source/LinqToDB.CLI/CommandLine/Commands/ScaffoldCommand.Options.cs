@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using LinqToDB.DataModel;
@@ -1119,7 +1120,7 @@ If you don't specify some property, CLI will use default value for current optio
 					option,
 					help,
 					NAMING_HELP,
-					new[] { string.Format(NAMING_EXAMPLE_TEMPLATE, option) },
+					new[] { string.Format(CultureInfo.InvariantCulture, NAMING_EXAMPLE_TEMPLATE, option) },
 					defaults,
 					t4defaults);
 			}

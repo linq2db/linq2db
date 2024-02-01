@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider
 				// if the name is reserved or already in use, generate a unique name for the parameter
 				var cnt = 0;
 				while (IsReserved(name) || _usedParameterNames?.Contains(name) == true)
-					name = $"{originalName}{CounterSeparator}{++cnt}";
+					name = FormattableString.Invariant($"{originalName}{CounterSeparator}{++cnt}");
 
 				// if name is not too long, return it
 				if (name.Length <= MaxLength)

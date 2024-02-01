@@ -61,7 +61,7 @@ namespace LinqToDB.Concurrency
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{(int)Behavior}.";
+			return FormattableString.Invariant($".{Configuration}.{(int)Behavior}.");
 		}
 	}
 }

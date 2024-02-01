@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 			SetValueToSqlConverter(typeof(Guid),     (sb,dt,_,v) => ConvertGuidToSql    (sb, dt, (Guid)v));
 			SetValueToSqlConverter(typeof(DateTime), (sb, _,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
-			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
 			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.SQLite
 					or (_, "TEXT"):
 					stringBuilder
 						// ToUpperInvariant to match Microsoft.Data.SQLite behavior
-						.AppendFormat("'{0}'", value.ToString().ToUpperInvariant());
+						.Append(CultureInfo.InvariantCulture, $"'{value.ToString().ToUpperInvariant()}'");
 					break;
 				default:
 					ConvertBinaryToSql(stringBuilder, value.ToByteArray());
@@ -96,11 +96,7 @@ namespace LinqToDB.DataProvider.SQLite
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("char(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"char({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

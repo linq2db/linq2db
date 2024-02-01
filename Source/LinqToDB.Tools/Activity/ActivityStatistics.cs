@@ -387,7 +387,7 @@ namespace LinqToDB.Tools.Activity
 						1 => m.Elapsed,
 						_ => new TimeSpan(m.Elapsed.Ticks / m.CallCount)
 					},
-					Percent = m.CallCount == 0 ? "" : $"{m.Elapsed.Ticks / totalTime * 100,7:0.00}%"
+					Percent = m.CallCount == 0 ? "" : FormattableString.Invariant($"{m.Elapsed.Ticks / totalTime * 100,7:0.00}%")
 				})
 				.ToDiagnosticString();
 		}

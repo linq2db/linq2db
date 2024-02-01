@@ -6,6 +6,11 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
+#if NET45
+// net45 is goner, so it is easier to suppress than fix
+#pragma warning disable MA0076 // Do not use implicit culture-sensitive ToString in interpolated strings
+#endif
+
 namespace LinqToDB.DataProvider.SQLite
 {
 	public interface ISQLiteExtensions
@@ -541,8 +546,8 @@ namespace LinqToDB.DataProvider.SQLite
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{
 				columns[i]         = sqlBuilder.ConvertInline(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
-				parameterTokens[i] = $"@p{i}";
-				parameters[i]      = DataParameter.VarChar($"@p{i}", (string)ed.Columns[i].GetProviderValue(record)!);
+				parameterTokens[i] = FormattableString.Invariant($"@p{i}");
+				parameters[i]      = DataParameter.VarChar(FormattableString.Invariant($"@p{i}"), (string)ed.Columns[i].GetProviderValue(record)!);
 			}
 
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rowid, {string.Join(", ", columns)}) VALUES('delete', {rowid.ToString(NumberFormatInfo.InvariantInfo)}, {string.Join(", ", parameterTokens)})", parameters);

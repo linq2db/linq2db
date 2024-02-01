@@ -67,7 +67,7 @@ namespace LinqToDB.Data
 
 		private ParameterExpression BuildVariable(Expression expr, string? name = null)
 		{
-			name ??= expr.Type.Name + ++_varIndex;
+			name ??= FormattableString.Invariant($"{expr.Type.Name}{++_varIndex}");
 
 			var variable = Expression.Variable(
 				expr.Type,

@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider
 
 				if (Options.BulkCopyOptions.UseParameters || skipConvert(column) || !MappingSchema.TryConvertToSql(StringBuilder, ColumnTypes[i], Options, value))
 				{
-					var name = SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex, ConvertType.NameToQueryParameter);
+					var name = SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : FormattableString.Invariant($"{ParameterName}{++ParameterIndex}"), ConvertType.NameToQueryParameter);
 
 					if (castParameters && (CurrentCount == 0 || castAllRows))
 					{
@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider
 						value = dataParameter.Value;
 
 					Parameters.Add(new DataParameter(
-						SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, ConvertType.NameToQueryParameter),
+						SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : FormattableString.Invariant($"p{ParameterIndex}"), ConvertType.NameToQueryParameter),
 						value, column.DataType, column.DbType)
 					{
 						Size      = column.Length,

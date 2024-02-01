@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -91,8 +92,8 @@ namespace LinqToDB.Expressions
 			if (baseType != Enum.GetUnderlyingType(originalType))
 				throw new LinqToDBException($"Enums {wrapperType} and {originalType} have different base types: {baseType} vs {Enum.GetUnderlyingType(originalType)}");
 
-			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(_ => _.ToString()!, _ => _);
-			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(_ => _.ToString()!, _ => _);
+			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
+			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
 
 			var hasCommonMembers   = false;
 			var hasDifferentValues = false;
@@ -101,7 +102,7 @@ namespace LinqToDB.Expressions
 				if (originalValues.TryGetValue(kvp.Key, out var origValue))
 				{
 					hasCommonMembers = true;
-					if (Convert.ToInt64(kvp.Value) != Convert.ToInt64(origValue))
+					if (Convert.ToInt64(kvp.Value, CultureInfo.InvariantCulture) != Convert.ToInt64(origValue, CultureInfo.InvariantCulture))
 					{
 						hasDifferentValues = true;
 						break;

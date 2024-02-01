@@ -58,7 +58,7 @@ namespace LinqToDB.Common
 			return ReferenceEquals(original, options) ? (T)this : WithOptions(options);
 		}
 
-		Dictionary<Type,IOptionSet>? _sets;
+		volatile Dictionary<Type,IOptionSet>? _sets;
 
 		/// <summary>
 		/// Provides access to option sets, stored in current options object.
@@ -96,6 +96,8 @@ namespace LinqToDB.Common
 			return Find<TSet>() ?? defaultOptions;
 		}
 
+		readonly object _sync = new ();
+
 		/// <summary>
 		/// Returns options set by set type <typeparamref name="TSet"/>. If options doesn't contain specific options set, it is created and added to options.
 		/// </summary>
@@ -103,13 +105,15 @@ namespace LinqToDB.Common
 		/// <returns>
 		/// Returns options set by set type <typeparamref name="TSet"/>. If options doesn't contain specific options set, it is created and added to options.
 		/// </returns>
+		[Pure]
 		public virtual TSet Get<TSet>()
 			where TSet : class, IOptionSet, new()
 		{
 			if (Find<TSet>() is { } set)
 				return set;
 
-			(_sets ??= new())[typeof(TSet)] = set = new();
+			lock (_sync)
+				_sets = new (_sets ?? []) { [typeof(TSet)] = set = new() };
 
 			return set;
 		}

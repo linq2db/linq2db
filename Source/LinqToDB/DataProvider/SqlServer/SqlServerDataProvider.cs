@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -245,7 +246,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Text or DataType.Char or DataType.VarChar
 					or DataType.NText or DataType.NChar or DataType.NVarChar
 						when value is DateOnly d:
-					value = d.ToString("yyyy-MM-dd");
+					value = d.ToString("yyyy-MM-dd", DateTimeFormatInfo.InvariantInfo);
 					break;
 #endif
 
@@ -266,7 +267,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					value = dt.ToString(
 						dt.Millisecond == 0
 							? "yyyy-MM-ddTHH:mm:ss"
-							: "yyyy-MM-ddTHH:mm:ss.fff");
+							: "yyyy-MM-ddTHH:mm:ss.fff",
+						DateTimeFormatInfo.InvariantInfo);
 					break;
 
 				case DataType.Text or DataType.Char or DataType.VarChar

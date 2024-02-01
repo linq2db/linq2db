@@ -44,7 +44,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{(int)Affects}.";
+			return FormattableString.Invariant($".{Configuration}.{(int)Affects}.");
 		}
 	}
 }

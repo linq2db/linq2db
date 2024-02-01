@@ -334,7 +334,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{Name}.{MemberName}.{(int)DataType}.{DbType}.{(IsColumn?'1':'0')}.{Storage}.{(IsDiscriminator?'1':'0')}.{(SkipOnEntityFetch?'1':'0')}.{_skipOnInsert}.{_skipOnUpdate}.{_isIdentity}.{_isPrimaryKey}.{PrimaryKeyOrder}.{_canBeNull}.{_length}.{_precision}.{_scale}.{CreateFormat}.{_order}.";
+			return FormattableString.Invariant($".{Configuration}.{Name}.{MemberName}.{(int)DataType}.{DbType}.{(IsColumn?'1':'0')}.{Storage}.{(IsDiscriminator?'1':'0')}.{(SkipOnEntityFetch?'1':'0')}.{_skipOnInsert}.{_skipOnUpdate}.{_isIdentity}.{_isPrimaryKey}.{PrimaryKeyOrder}.{_canBeNull}.{_length}.{_precision}.{_scale}.{CreateFormat}.{_order}.");
 		}
 	}
 }

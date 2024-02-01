@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 // ReSharper disable InconsistentNaming
@@ -1734,7 +1735,7 @@ namespace LinqToDB.SqlProvider
 					if (v1 && v2)
 					{
 						if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 + i2, be);
-						if (value1 is string || value2 is string) return CreateSqlValue(value1?.ToString() + value2, be);
+						if (value1 is string || value2 is string) return CreateSqlValue(string.Format(CultureInfo.InvariantCulture, "{0}{1}", value1, value2), be);
 					}
 
 					break;
@@ -3823,7 +3824,7 @@ namespace LinqToDB.SqlProvider
 						orderByItems = context.supportsEmptyOrderBy ? Array<SqlOrderByItem>.Empty : new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
 
 					var orderBy = string.Join(", ",
-						orderByItems.Select(static (oi, i) => oi.IsDescending ? $"{{{i}}} DESC" : $"{{{i}}}"));
+						orderByItems.Select(static (oi, i) => oi.IsDescending ? FormattableString.Invariant($"{{{i}}} DESC") : FormattableString.Invariant($"{{{i}}}")));
 
 					var parameters = orderByItems.Select(static oi => oi.Expression).ToArray();
 
@@ -3892,13 +3893,13 @@ namespace LinqToDB.SqlProvider
 
 						var orderByItems = q.Select.OrderBy.Items;
 
-						var partitionBy = string.Join(", ", columnItems.Select(static (oi, i) => $"{{{i}}}"));
+						var partitionBy = string.Join(", ", columnItems.Select(static (oi, i) => FormattableString.Invariant($"{{{i}}}")));
 
 						var columns = new string[orderByItems.Count];
 						for (var i = 0; i < columns.Length; i++)
 							columns[i] = orderByItems[i].IsDescending
-								? $"{{{i + columnItems.Count}}} DESC"
-								: $"{{{i + columnItems.Count}}}";
+								? FormattableString.Invariant($"{{{i + columnItems.Count}}} DESC")
+								: FormattableString.Invariant($"{{{i + columnItems.Count}}}");
 						var orderBy = string.Join(", ", columns);
 
 						var parameters = columnItems.Concat(orderByItems.Select(static oi => oi.Expression)).ToArray();

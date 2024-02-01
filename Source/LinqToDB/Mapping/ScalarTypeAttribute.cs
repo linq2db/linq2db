@@ -59,7 +59,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{(IsScalar ? 1 : 0)}.";
+			return FormattableString.Invariant($".{Configuration}.{(IsScalar ? 1 : 0)}.");
 		}
 	}
 }
