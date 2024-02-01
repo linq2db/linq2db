@@ -218,7 +218,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NotNullableTest([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void NotNullableTest([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context, [Values] bool compareNullsAsValues)
 		{
 			var data = new NotNullableBoolClass[]
 			{
@@ -226,7 +226,7 @@ namespace Tests.Linq
 				new () { Value = false },
 			};
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { CompareNullsAsValues = compareNullsAsValues }));
 			using var tt = db.CreateLocalTable(data);
 
 			AreEqual(
