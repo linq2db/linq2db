@@ -354,7 +354,7 @@ namespace LinqToDB.Linq.Builder
 				break;
 			}
 
-			return expr != null && (expr.NodeType == ExpressionType.Constant || expr == ExpressionConstants.DataContextParam);
+			return expr != null && expr.NodeType == ExpressionType.Constant;
 		}
 
 		bool IsGroupJoinSource(IBuildContext context, MethodCallExpression call)
