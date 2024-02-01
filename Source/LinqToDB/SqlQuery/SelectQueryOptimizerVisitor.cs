@@ -132,7 +132,7 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
-			var saveQuery          = _applySelect;
+			var saveQuery = _applySelect;
 
 			if (element.JoinType == JoinType.CrossApply || element.JoinType == JoinType.OuterApply)
 				_applySelect = element.Table.Source as SelectQuery;
@@ -141,7 +141,7 @@ namespace LinqToDB.SqlQuery
 
 			var newElement = base.VisitSqlJoinedTable(element);
 
-			_applySelect    = saveQuery;
+			_applySelect = saveQuery;
 
 			return newElement;
 		}
@@ -149,7 +149,7 @@ namespace LinqToDB.SqlQuery
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var saveSetOperatorCount = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
-			var saveParent       = _parentSelect;
+			var saveParent           = _parentSelect;
 
 			_parentSelect = selectQuery;
 
@@ -501,23 +501,31 @@ namespace LinqToDB.SqlQuery
 		{
 			var isModified = false;
 
-			RemoveEmptyJoins(selectQuery);
-			OptimizeGroupBy(selectQuery);
+			if (RemoveEmptyJoins(selectQuery))
+				isModified = true;
 
-			RemoveEmptyJoins(selectQuery);
+			if (OptimizeGroupBy(selectQuery))
+				isModified = true;
+
+			if (RemoveEmptyJoins(selectQuery))
+				isModified = true;
 
 			if (OptimizeUnions(selectQuery))
 				isModified = true;
 
-			OptimizeGroupBy(selectQuery);
-			OptimizeDistinct(selectQuery);
-			CorrectColumns(selectQuery);
+			if (OptimizeDistinct(selectQuery))
+				isModified = true;
+
+			if (CorrectColumns(selectQuery))
+				isModified = true;
 
 			return isModified;
 		}
 
-		void OptimizeGroupBy(SelectQuery selectQuery)
+		bool OptimizeGroupBy(SelectQuery selectQuery)
 		{
+			var isModified = false;
+
 			if (!selectQuery.GroupBy.IsEmpty)
 			{
 				// Remove constants.
@@ -530,21 +538,28 @@ namespace LinqToDB.SqlQuery
 						if (!selectQuery.Select.Columns.Any(c => ReferenceEquals(c.Expression, groupByItem)))
 						{
 							selectQuery.GroupBy.Items.RemoveAt(i);
+							isModified = true;
 						}
 					}
 				}
 			}
+
+			return isModified;
 		}
 
-		void CorrectColumns(SelectQuery selectQuery)
+		bool CorrectColumns(SelectQuery selectQuery)
 		{
+			var isModified = false;
 			if (!selectQuery.GroupBy.IsEmpty && selectQuery.Select.Columns.Count == 0)
 			{
+				isModified = true;
 				foreach (var item in selectQuery.GroupBy.Items)
 				{
 					selectQuery.Select.Add(item);
 				}
 			}
+
+			return isModified;
 		}
 
 		void EnsureReferencesCorrected(SelectQuery selectQuery)
@@ -640,19 +655,19 @@ namespace LinqToDB.SqlQuery
 			return usedSources.Count > accessibleSources.Count;
 		}
 
-		void OptimizeDistinct(SelectQuery selectQuery)
+		bool OptimizeDistinct(SelectQuery selectQuery)
 		{
 			if (!selectQuery.Select.IsDistinct || !selectQuery.Select.OptimizeDistinct)
-				return;
+				return false;
 
 			if (IsComplexQuery(selectQuery))
-				return;
+				return false;
 
 			if (IsLimitedToOneRecord(selectQuery))
 			{
 				// we can simplify query if we take only one record
 				selectQuery.Select.IsDistinct = false;
-				return;
+				return true;
 			}
 
 			if (!selectQuery.GroupBy.IsEmpty)
@@ -660,7 +675,7 @@ namespace LinqToDB.SqlQuery
 				if (selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi))))
 				{
 					selectQuery.GroupBy.Items.Clear();
-					return;
+					return true;
 				}
 			}
 
@@ -671,7 +686,7 @@ namespace LinqToDB.SqlQuery
 			QueryHelper.CollectUniqueKeys(selectQuery, includeDistinct: false, keys);
 			QueryHelper.CollectUniqueKeys(table, keys);
 			if (keys.Count == 0)
-				return;
+				return false;
 
 			var expressions = new HashSet<ISqlExpression>(selectQuery.Select.Columns.Select(static c => c.Expression));
 			var foundUnique = false;
@@ -706,11 +721,15 @@ namespace LinqToDB.SqlQuery
 					break;
 			}
 
+			var isModified = false;
 			if (foundUnique)
 			{
 				// We have found that distinct columns has unique key, so we can remove distinct
 				selectQuery.Select.IsDistinct = false;
+				isModified = true;
 			}
+
+			return isModified;
 		}
 
 		static void ApplySubsequentOrder(SelectQuery mainQuery, SelectQuery subQuery)
@@ -1861,10 +1880,12 @@ namespace LinqToDB.SqlQuery
 			return optimized;
 		}
 
-		void RemoveEmptyJoins(SelectQuery selectQuery)
+		bool RemoveEmptyJoins(SelectQuery selectQuery)
 		{
 			if (_providerFlags.IsCrossJoinSupported)
-				return;
+				return false;
+
+			var isModified = false;
 
 			for (var tableIndex = 0; tableIndex < selectQuery.From.Tables.Count; tableIndex++)
 			{
@@ -1877,9 +1898,12 @@ namespace LinqToDB.SqlQuery
 						selectQuery.From.Tables.Insert(tableIndex + 1, join.Table);
 						table.Joins.RemoveAt(joinIndex);
 						--joinIndex;
+						isModified = true;
 					}
 				}
 			}
+
+			return isModified;
 		}
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
