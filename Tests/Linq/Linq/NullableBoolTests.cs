@@ -15,8 +15,10 @@ namespace Tests.Linq
 			public bool? Value;
 		}
 
+		const string ProvidersThatDoNotSupportNullableBool = $"{TestProvName.AllAccess},{TestProvName.AllSybase},{ProviderName.ClickHouseOctonica}";
+
 		[Test]
-		public void TrueTest([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void TrueTest([DataSources(ProvidersThatDoNotSupportNullableBool)] string context)
 		{
 			var data = new NullableBoolClass[]
 			{
@@ -66,7 +68,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FalseTest([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void FalseTest([DataSources(ProvidersThatDoNotSupportNullableBool)] string context)
 		{
 			var data = new NullableBoolClass[]
 			{
@@ -117,7 +119,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void NullTest([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void NullTest([DataSources(ProvidersThatDoNotSupportNullableBool)] string context)
 		{
 			var data = new NullableBoolClass[]
 			{
@@ -159,7 +161,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ValueTest([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context, [Values] bool? value)
+		public void ValueTest([DataSources(ProvidersThatDoNotSupportNullableBool)] string context, [Values] bool? value)
 		{
 			var data = new NullableBoolClass[]
 			{
@@ -218,7 +220,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NotNullableTest([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context, [Values] bool compareNullsAsValues)
+		public void NotNullableTest([DataSources(ProvidersThatDoNotSupportNullableBool)] string context, [Values] bool compareNullsAsValues)
 		{
 			var data = new NotNullableBoolClass[]
 			{
