@@ -36,6 +36,11 @@ namespace LinqToDB.Mapping
 	[DebuggerDisplay("{DisplayID}")]
 	public class MappingSchema : IConfigurationID
 	{
+		static MappingSchema()
+		{
+			Configuration.MapTimeSpanToIntervalType();
+		}
+
 		static readonly MemoryCache<(MappingSchema ms1, MappingSchema ms2), MappingSchema> _combinedSchemasCache = new (new ());
 
 		/// <summary>
@@ -1379,7 +1384,7 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(DateTime),        DataType.DateTime2);
 				AddScalarType(typeof(DateTimeOffset),  DataType.DateTimeOffset);
 
-				AddScalarType(typeof(TimeSpan), DataType.Time);
+				AddScalarType(typeof(TimeSpan), DataType.Int64);
 				
 #if NET6_0_OR_GREATER
 				AddScalarType(typeof(DateOnly),        DataType.Date);
