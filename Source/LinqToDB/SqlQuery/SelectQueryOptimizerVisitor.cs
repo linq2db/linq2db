@@ -931,6 +931,16 @@ namespace LinqToDB.SqlQuery
 
 				var whereToIgnore = new List<IQueryElement> { sql.Where, sql.Select };
 
+				// add join conditions
+				// Check SelectManyTests.Basic9 for Access
+				foreach (var join in sql.From.Tables.SelectMany(t => t.Joins))
+				{
+					if (join.JoinType == JoinType.Inner && join.Table.Source is SqlTable)
+						whereToIgnore.Add(join.Condition);
+					else
+						break;
+				}
+
 				// we cannot optimize apply because reference to parent sources are used inside the query
 				if (QueryHelper.IsDependsOnOuterSources(sql, whereToIgnore))
 					return optimized;
