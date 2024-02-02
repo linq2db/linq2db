@@ -136,7 +136,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				if (updateStatement.Update.TableSource == null)
 				{
-					if (updateStatement.SelectQuery.From.Tables.Count > 0)
+					var tableName      = updateStatement.Update.Table.TableName;
+					var hasComplexName = !string.IsNullOrEmpty(tableName.Server) || !string.IsNullOrEmpty(tableName.Schema) || !string.IsNullOrEmpty(tableName.Database);
+
+					if (updateStatement.SelectQuery.From.Tables.Count > 0 || hasComplexName)
 					{
 						var suggestedSource = new SqlTableSource(updateStatement.Update.Table!,
 							QueryHelper.SuggestTableSourceAlias(updateStatement.SelectQuery, "u"));
