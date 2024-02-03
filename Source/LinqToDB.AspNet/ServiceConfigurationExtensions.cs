@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -7,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace LinqToDB.AspNet
 {
+
 	using Data;
 
 	public static class ServiceConfigurationExtensions
@@ -97,8 +99,9 @@ namespace LinqToDB.AspNet
 		/// <returns>
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
-		public static IServiceCollection AddLinqToDBContext<TContext>(
-			this IServiceCollection serviceCollection,
+		public static IServiceCollection AddLinqToDBContext<
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContext>(
+			this IServiceCollection                        serviceCollection,
 			Func<IServiceProvider,DataOptions,DataOptions> configure,
 			ServiceLifetime                                lifetime = ServiceLifetime.Scoped)
 			where TContext : IDataContext
@@ -151,7 +154,8 @@ namespace LinqToDB.AspNet
 		/// <returns>
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
-		public static IServiceCollection AddLinqToDBContext<TContext, TContextImplementation>(
+		public static IServiceCollection AddLinqToDBContext<TContext,
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContextImplementation>(
 			this IServiceCollection serviceCollection,
 			Func<IServiceProvider,DataOptions,DataOptions> configure,
 			ServiceLifetime                                lifetime  = ServiceLifetime.Scoped)
@@ -191,7 +195,8 @@ namespace LinqToDB.AspNet
 			DataOptions,
 		}
 
-		static OptionsParameterType HasTypedContextConstructor<TContextImplementation, TContext>()
+		static OptionsParameterType HasTypedContextConstructor<
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContextImplementation, TContext>()
 			where TContextImplementation : IDataContext
 			where TContext : IDataContext
 		{
