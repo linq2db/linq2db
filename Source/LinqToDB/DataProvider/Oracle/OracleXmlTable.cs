@@ -179,9 +179,13 @@ namespace LinqToDB.DataProvider.Oracle
 			return converter(data);
 		}
 
-		private static readonly MethodInfo OracleXmlTableIEnumerableT = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (IEnumerable<object>)null!)).GetGenericMethodDefinition();
-		private static readonly MethodInfo OracleXmlTableString       = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (string)null!))             .GetGenericMethodDefinition();
-		private static readonly MethodInfo OracleXmlTableFuncString   = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (Func<string>)null!))       .GetGenericMethodDefinition();
+		private static MethodInfo? _oracleXmlTableIEnumerableT;
+		private static MethodInfo? _oracleXmlTableString;
+		private static MethodInfo? _oracleXmlTableFuncString;
+
+		private static MethodInfo OracleXmlTableIEnumerableT => _oracleXmlTableIEnumerableT ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (IEnumerable<object>)null!)).GetGenericMethodDefinition();
+		private static MethodInfo? OracleXmlTableString      => _oracleXmlTableString       ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (string)null!))             .GetGenericMethodDefinition();
+		private static MethodInfo? OracleXmlTableFuncString  => _oracleXmlTableFuncString   ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (Func<string>)null!))       .GetGenericMethodDefinition();
 
 		[OracleXmlTable]
 		public static ITable<T> OracleXmlTable<T>(this IDataContext dataContext, IEnumerable<T> data)
