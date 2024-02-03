@@ -15,6 +15,9 @@ namespace Tests.Linq
 			public bool? Value;
 		}
 
+```suggestion
+
+		// octonica blocked by https://github.com/Octonica/ClickHouseClient/issues/56
 		const string ProvidersThatDoNotSupportNullableBool = $"{TestProvName.AllAccess},{TestProvName.AllSybase},{ProviderName.ClickHouseOctonica}";
 
 		[Test]
