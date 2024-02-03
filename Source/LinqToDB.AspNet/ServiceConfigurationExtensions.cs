@@ -1,10 +1,7 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-
-#if NET6_0_OR_GREATER
-using System.Diagnostics.CodeAnalysis;
-#endif
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -103,10 +100,7 @@ namespace LinqToDB.AspNet
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
 		public static IServiceCollection AddLinqToDBContext<
-#if NET6_0_OR_GREATER
-			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-#endif
-		TContext>(
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContext>(
 			this IServiceCollection                        serviceCollection,
 			Func<IServiceProvider,DataOptions,DataOptions> configure,
 			ServiceLifetime                                lifetime = ServiceLifetime.Scoped)
@@ -161,10 +155,7 @@ namespace LinqToDB.AspNet
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
 		public static IServiceCollection AddLinqToDBContext<TContext,
-#if NET6_0_OR_GREATER
-			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-#endif
-		TContextImplementation>(
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContextImplementation>(
 			this IServiceCollection serviceCollection,
 			Func<IServiceProvider,DataOptions,DataOptions> configure,
 			ServiceLifetime                                lifetime  = ServiceLifetime.Scoped)
@@ -205,10 +196,7 @@ namespace LinqToDB.AspNet
 		}
 
 		static OptionsParameterType HasTypedContextConstructor<
-#if NET6_0_OR_GREATER
-			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-#endif
-			TContextImplementation, TContext>()
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContextImplementation, TContext>()
 			where TContextImplementation : IDataContext
 			where TContext : IDataContext
 		{
