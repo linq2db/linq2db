@@ -125,10 +125,6 @@ namespace LinqToDB
 			[Property(                  "DateTime",       ServerSideOnly=true, CanBeNull = false)]
 			public static DateTimeOffset DateTimeOffset => DateTimeOffset.Now;
 
-			[Property(PN.PostgreSQL, "Interval", ServerSideOnly = true, CanBeNull = false)]
-			[Property("BigInt", ServerSideOnly = true, CanBeNull = false)]
-			public static TimeSpan TimeSpan => TimeSpan.Zero;
-
 			[Function(PN.SqlCe,         "NChar",          ServerSideOnly=true, CanBeNull = false)]
 			[Function(                                    ServerSideOnly=true, CanBeNull = false)]
 			public static string  Char(int length) => "";
