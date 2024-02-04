@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
@@ -130,17 +131,19 @@ namespace LinqToDB.Metadata
 									name = name.StartsWith("sql") ? name.Substring(3) : name;
 
 									ex = string.Format(
+										CultureInfo.InvariantCulture,
 										"{0}::{1}({2})",
 										name,
 										nameGetter(attr) ?? key.memberInfo.Name,
-										string.Join(", ", ps.Select((_, i) => '{' + i.ToString() + '}')));
+										string.Join(", ", ps.Select((_, i) => '{' + i.ToString(NumberFormatInfo.InvariantInfo) + '}')));
 								}
 								else
 								{
 									ex = string.Format(
+										CultureInfo.InvariantCulture,
 										"{{0}}.{0}({1})",
 										nameGetter(attr) ?? key.memberInfo.Name,
-										string.Join(", ", ps.Select((_, i) => '{' + (i + 1).ToString() + '}')));
+										string.Join(", ", ps.Select((_, i) => '{' + (i + 1).ToString(NumberFormatInfo.InvariantInfo) + '}')));
 								}
 
 								return new MappingAttribute[] { new Sql.ExpressionAttribute(ex) { ServerSideOnly = true } };

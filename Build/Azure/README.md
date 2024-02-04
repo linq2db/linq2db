@@ -44,6 +44,7 @@ Those pipelines used to run tests only for specific databases manually by team m
 - `/azp run test-sqlserver-2019` - SQL Server 2019 tests
 - `/azp run test-sqlserver-2022` - SQL Server 2022 tests
 - `/azp run test-sybase` - SAP/SYBASE ASE tests
+- `/azp run test-metrics` - SQL Server 2022 tests with metrics
 
 ## Test Matrix
 

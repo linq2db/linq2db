@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -414,7 +415,7 @@ namespace LinqToDB.Linq.Builder
 		static HashSet<Expression> DefaultAllowedParams = new ()
 		{
 			ExpressionBuilder.ParametersParam,
-			ExpressionConstants.DataContextParam
+			ExpressionBuilder.DataContextParam
 		};
 
 		public bool CanBeCompiled(Expression expr)
@@ -758,11 +759,11 @@ namespace LinqToDB.Linq.Builder
 								return context.root;
 							}
 
-							if (ExpressionConstants.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+							if (ExpressionBuilder.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
 							{
-								if (ExpressionConstants.DataContextParam.Type != wpi.Type)
-									return Expression.Convert(ExpressionConstants.DataContextParam, wpi.Type);
-								return ExpressionConstants.DataContextParam;
+								if (ExpressionBuilder.DataContextParam.Type != wpi.Type)
+									return Expression.Convert(ExpressionBuilder.DataContextParam, wpi.Type);
+								return ExpressionBuilder.DataContextParam;
 							}
 
 							throw new LinqToDBException($"Can't convert {wpi} to expression.");
@@ -800,7 +801,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var args  = method.GetGenericArguments();
 						var names = args.Select(t => (object)t.Name).ToArray();
-						var name  = string.Format(attr.MethodName, names);
+						var name  = string.Format(CultureInfo.InvariantCulture, attr.MethodName, names);
 
 						expr = Expression.Call(
 							mi.DeclaringType!,
@@ -838,11 +839,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (n >= context.pi.Arguments.Count)
 						{
-							if (ExpressionConstants.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+							if (ExpressionBuilder.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
 							{
-								if (ExpressionConstants.DataContextParam.Type != wpi.Type)
-									return Expression.Convert(ExpressionConstants.DataContextParam, wpi.Type);
-								return ExpressionConstants.DataContextParam;
+								if (ExpressionBuilder.DataContextParam.Type != wpi.Type)
+									return Expression.Convert(ExpressionBuilder.DataContextParam, wpi.Type);
+								return ExpressionBuilder.DataContextParam;
 							}
 
 							throw new LinqToDBException($"Can't convert {wpi} to expression.");

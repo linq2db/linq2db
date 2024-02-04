@@ -1,7 +1,6 @@
 ﻿{
 	"NET80.Azure": {
 		"Providers": [
-			// SQL CE
 			"SqlCe"
 		]
 	}

@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		SybaseMappingSchema() : base(ProviderName.Sybase)
 		{
-			SetValueToSqlConverter(typeof(string)  , (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(string)  , (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
 			SetValueToSqlConverter(typeof(char)    , (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,_,v) => ConvertTimeSpanToSql(sb, dt, (TimeSpan)v));
 			SetValueToSqlConverter(typeof(byte[])  , (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			if (sqlDataType.Type.DataType == DataType.Int64)
 			{
-				stringBuilder.Append(value.Ticks);
+				stringBuilder.Append(value.Ticks.ToString(NumberFormatInfo.InvariantInfo));
 			}
 			else
 			{
@@ -55,11 +55,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("char(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"char({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

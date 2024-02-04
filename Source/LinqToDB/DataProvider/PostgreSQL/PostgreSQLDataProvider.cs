@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -501,7 +502,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (dbType.StartsWith("float(") && dbType.EndsWith(")"))
 			{
-				if (int.TryParse(dbType.Substring("float(".Length, dbType.Length - "float(".Length - 1), out var precision))
+				if (int.TryParse(dbType.Substring("float(".Length, dbType.Length - "float(".Length - 1), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var precision))
 				{
 					if (precision >= 1 && precision <= 24)
 						dbType = "real";

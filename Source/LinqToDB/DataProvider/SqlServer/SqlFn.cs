@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -157,7 +158,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
 				var dataType = builder.GetObjectValue("data_type");
-				builder.AddExpression("data_type", dataType is SqlType ? dataType.ToString()! : ((Func<SqlType>)dataType)().ToString());
+				builder.AddExpression("data_type", dataType is SqlType ? string.Format(CultureInfo.InvariantCulture, "{0}", dataType) : ((Func<SqlType>)dataType)().ToString());
 			}
 		}
 

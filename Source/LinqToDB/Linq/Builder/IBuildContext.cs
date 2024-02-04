@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 #if DEBUG
@@ -16,11 +17,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = context.SelectQuery == null
 				? $"{context.GetType().Name}(<none>)"
-				: $"{context.GetType().Name}({context.SelectQuery.SourceID})";
+				: FormattableString.Invariant($"{context.GetType().Name}({context.SelectQuery.SourceID})");
 
 			if (context is TableBuilder.TableContext tc)
 			{
-				result += $"(T: {tc.SqlTable.SourceID})";
+				result += FormattableString.Invariant($"(T: {tc.SqlTable.SourceID})");
 			}
 
 			return result;

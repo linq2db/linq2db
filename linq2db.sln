@@ -5,7 +5,6 @@ VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
-		Build\BannedSymbols.txt = Build\BannedSymbols.txt
 		Build\BuildNuspecs.ps1 = Build\BuildNuspecs.ps1
 		Directory.Build.props = Directory.Build.props
 		Directory.Packages.props = Directory.Packages.props
@@ -17,6 +16,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{AF93451E-198C-4A94-8EB4-C330D886E102}"
 	ProjectSection(SolutionItems) = preProject
 		Source\.editorconfig = Source\.editorconfig
+		Source\BannedSymbols.txt = Source\BannedSymbols.txt
 		Source\Directory.Build.props = Source\Directory.Build.props
 	EndProjectSection
 EndProject
@@ -25,6 +25,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DF8DE665-05A2-4ACF-9799-8FC35E7F1525}"
 	ProjectSection(SolutionItems) = preProject
 		Tests\.editorconfig = Tests\.editorconfig
+		Tests\BannedSymbols.txt = Tests\BannedSymbols.txt
 		Tests\DataProviders.json = Tests\DataProviders.json
 		Tests\Directory.Build.props = Tests\Directory.Build.props
 		Tests\linq2db.Providers.props = Tests\linq2db.Providers.props
@@ -91,8 +92,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E-D3B3-433F-A3CA-EE29CD24C324}"
 	ProjectSection(SolutionItems) = preProject
-		NuGet\icon300.png = NuGet\icon300.png
-		NuGet\icon64.png = NuGet\icon64.png
+		NuGet\icon.png = NuGet\icon.png
 		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
 		NuGet\linq2db.AspNet.nuspec = NuGet\linq2db.AspNet.nuspec
 		NuGet\linq2db.cli.nuspec = NuGet\linq2db.cli.nuspec
@@ -277,6 +277,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netfx", "netfx", "{B7AADC73
 		Build\Azure\netfx\sqlserver.2017.json = Build\Azure\netfx\sqlserver.2017.json
 		Build\Azure\netfx\sqlserver.2019.json = Build\Azure\netfx\sqlserver.2019.json
 		Build\Azure\netfx\sqlserver.2022.json = Build\Azure\netfx\sqlserver.2022.json
+		Build\Azure\netfx\sqlserver.2022.metrics.json = Build\Azure\netfx\sqlserver.2022.metrics.json
 		Build\Azure\netfx\sqlserver.extras.json = Build\Azure\netfx\sqlserver.extras.json
 	EndProjectSection
 EndProject
@@ -408,6 +409,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554
 		Build\Azure\net60\sqlserver.2017.json = Build\Azure\net60\sqlserver.2017.json
 		Build\Azure\net60\sqlserver.2019.json = Build\Azure\net60\sqlserver.2019.json
 		Build\Azure\net60\sqlserver.2022.json = Build\Azure\net60\sqlserver.2022.json
+		Build\Azure\net60\sqlserver.2022.metrics.json = Build\Azure\net60\sqlserver.2022.metrics.json
 		Build\Azure\net60\sqlserver.extras.json = Build\Azure\net60\sqlserver.extras.json
 		Build\Azure\net60\sqlserver.fts.2019.json = Build\Azure\net60\sqlserver.fts.2019.json
 		Build\Azure\net60\sybase.json = Build\Azure\net60\sybase.json
@@ -516,6 +518,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net80", "net80", "{1ED95A47
 		Build\Azure\net80\sqlserver.2017.json = Build\Azure\net80\sqlserver.2017.json
 		Build\Azure\net80\sqlserver.2019.json = Build\Azure\net80\sqlserver.2019.json
 		Build\Azure\net80\sqlserver.2022.json = Build\Azure\net80\sqlserver.2022.json
+		Build\Azure\net80\sqlserver.2022.metrics.json = Build\Azure\net80\sqlserver.2022.metrics.json
 		Build\Azure\net80\sqlserver.extras.json = Build\Azure\net80\sqlserver.extras.json
 		Build\Azure\net80\sqlserver.fts.2019.json = Build\Azure\net80\sqlserver.fts.2019.json
 		Build\Azure\net80\sybase.json = Build\Azure\net80\sybase.json

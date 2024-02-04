@@ -1,7 +1,6 @@
 ﻿{
 	"NETFX.Azure": {
 		"Providers": [
-			// SQL CE
 			"SqlCe"
 		]
 	}

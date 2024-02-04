@@ -354,7 +354,7 @@ namespace LinqToDB.Linq.Builder
 				break;
 			}
 
-			return expr != null && (expr.NodeType == ExpressionType.Constant || expr == ExpressionConstants.DataContextParam);
+			return expr != null && expr.NodeType == ExpressionType.Constant;
 		}
 
 		bool IsGroupJoinSource(IBuildContext context, MethodCallExpression call)
@@ -1857,7 +1857,7 @@ namespace LinqToDB.Linq.Builder
 					ISqlExpression l, r;
 
 					SqlValue sqlvalue;
-					var ce = MappingSchema.GetConverter(new DbDataType(type), new DbDataType(typeof(DataParameter)), false);
+					var ce = MappingSchema.GetConverter(new DbDataType(type), new DbDataType(typeof(DataParameter)), false, ConversionType.Common);
 
 					if (ce != null)
 					{

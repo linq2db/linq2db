@@ -1572,5 +1572,117 @@ namespace Tests.Linq
 						  && (c.MiddleName != null ? c.MiddleName.Trim().ToLower() : string.Empty) == (data.MiddleName != null ? data.MiddleName.Trim().ToLower() : string.Empty)
 						  select c).ToList();
 		}
+
+		[Table]
+		public sealed class Issue4371Table
+		{
+#if NET6_0_OR_GREATER
+			[Column(DataType = DataType.VarChar)] public DateOnly?       ColumnDO  { get; set; }
+#endif
+			[Column(DataType = DataType.VarChar)] public DateTime?       ColumnDT  { get; set; }
+			[Column(DataType = DataType.VarChar)] public DateTimeOffset? ColumnDTO { get; set; }
+			[Column(DataType = DataType.VarChar)] public TimeSpan?       ColumnTS  { get; set; }
+		}
+
+#if NET6_0_OR_GREATER
+		[Test]
+		public void Issue4371TestDateOnly([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table>();
+
+			var dt = TestData.DateOnly;
+			db.Insert(new Issue4371Table() { ColumnDO = dt });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnDO == dt).Count(), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue4371TestDateOnlyCrash([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table>();
+
+			var dt = DateOnly.FromDateTime(new DateTime(50284592391540000));
+			db.Insert(new Issue4371Table() { ColumnDO = dt });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnDO == dt).Count(), Is.EqualTo(1));
+		}
+#endif
+
+		[Test]
+		public void Issue4371TestDateTimeOffset([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table>();
+
+			var dto = TestData.DateTimeOffset;
+			db.Insert(new Issue4371Table() { ColumnDTO = dto });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnDTO == dto).Count(), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue4371TestDateTimeCrash([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table>();
+
+			var dt = new DateTime(50284592391540000);
+			db.Insert(new Issue4371Table() { ColumnDT = dt });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnDT == dt).Count(), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue4371TestDateTimeOffsetCrash([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table>();
+
+			var dto = new DateTimeOffset(50284592391540000, default);
+			db.Insert(new Issue4371Table() { ColumnDTO = dto });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnDTO == dto).Count(), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue4371TestTimeSpan([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table>();
+
+			var ts = TestData.TimeOfDay;
+			db.Insert(new Issue4371Table() { ColumnTS = ts });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnTS == ts).Count(), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue4359_PrimaryParameterName([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// primary constructor parameter use reference to backing field with ugly name
+			// we use field name to derive parameter name
+			var result = new TestParameterNames("John").Test(db);
+
+			Assert.That(result, Is.Not.Null);
+			Assert.That(result!.ID, Is.EqualTo(1));
+		}
+
+		private class TestParameterNames(string Parameter)
+		{
+			public Person? Test(ITestDataContext db)
+			{
+				return db.Person.Where(p => p.FirstName == Parameter).SingleOrDefault();
+			}
+		}
 	}
 }

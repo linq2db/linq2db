@@ -11451,3 +11451,11 @@ virtual LinqToDB.Schema.Result.PrintMembers(System.Text.StringBuilder! builder) 
 virtual LinqToDB.Schema.TableLikeObject.EqualityContract.get -> System.Type!
 virtual LinqToDB.Schema.TableLikeObject.Equals(LinqToDB.Schema.TableLikeObject? other) -> bool
 virtual LinqToDB.Schema.TableLikeObject.PrintMembers(System.Text.StringBuilder! builder) -> bool
+LinqToDB.Tools.Activity.ActivityHierarchy
+LinqToDB.Tools.Activity.ActivityHierarchy.ActivityHierarchy(LinqToDB.Tools.ActivityID activityID, System.Action<string!>! pushReport) -> void
+LinqToDB.Tools.Activity.ActivityHierarchy.Indent.get -> string!
+LinqToDB.Tools.Activity.ActivityHierarchy.Indent.set -> void
+LinqToDB.Tools.Activity.ActivityStatistics
+override LinqToDB.Tools.Activity.ActivityHierarchy.Dispose() -> void
+static LinqToDB.Tools.Activity.ActivityStatistics.Factory(LinqToDB.Tools.ActivityID activityID) -> LinqToDB.Tools.IActivity!
+static LinqToDB.Tools.Activity.ActivityStatistics.GetReport(bool includeAll = false) -> string!
