@@ -501,7 +501,10 @@ namespace LinqToDB.Linq.Builder
 						return new TransformInfo(ConvertExpression(expr));
 					}
 
-					if (!Configuration.MappedTimeSpanToIntervalType)
+					var timeSpanDatatype = this.MappingSchema.GetDataType(typeof(TimeSpan));
+					var timeSpanHasIntervaltype = timeSpanDatatype.Type.DataType == DataType.Interval || timeSpanDatatype.Type.DataType == DataType.Int64;
+
+					if (!timeSpanHasIntervaltype)
 					{
 						if (ma.Member.DeclaringType == typeof(TimeSpan))
 						{
@@ -564,95 +567,6 @@ namespace LinqToDB.Linq.Builder
 
 					break;
 				}
-
-				case ExpressionType.Add:
-				case ExpressionType.AddChecked:
-				case ExpressionType.Subtract:
-				case ExpressionType.SubtractChecked:
-				{
-					if (!Configuration.MappedTimeSpanToIntervalType)
-						goto default;
-
-					var ex = (BinaryExpression)e;
-					var leftType = (Nullable.GetUnderlyingType(ex.Left.Type) ?? ex.Left.Type);
-					var righttype = (Nullable.GetUnderlyingType(ex.Right.Type) ?? ex.Right.Type);
-					
-					if (leftType == typeof(DateTime) && righttype == typeof(TimeSpan))
-					{
-						var method = MemberHelper.MethodOf(
-												() => Sql.DateAdd(Sql.DateParts.Millisecond, 0, DateTime.MinValue));
-
-						Expression value = Expression.Convert(Expression.Property(Expression.Convert(ex.Right,  typeof(TimeSpan)), "TotalMilliseconds"), typeof(double?));
-						
-						if (ex.NodeType == ExpressionType.Subtract || ex.NodeType == ExpressionType.SubtractChecked)
-							value = Expression.Convert(Expression.Multiply(Expression.Convert(value, typeof(double)), Expression.Constant((double)-1)), typeof(double?));
-
-						var call   = Expression.Convert(
-													Expression.Call(
-														null,
-														method,
-														Expression.Constant(Sql.DateParts.Millisecond),
-														value,
-														Expression.Convert(ex.Left, typeof(DateTime?))),
-													 typeof(DateTime?));
-
-						return new TransformInfo(ConvertExpression(call));
-					}
-
-					if (leftType == typeof(DateTimeOffset) && righttype == typeof(TimeSpan))
-					{
-						var method = MemberHelper.MethodOf(
-												() => Sql.DateAdd(Sql.DateParts.Millisecond, 0, DateTimeOffset.MinValue));
-
-						Expression value = Expression.Convert(Expression.Property(Expression.Convert(ex.Right,  typeof(TimeSpan)), "TotalMilliseconds"), typeof(double?));
-
-						if (ex.NodeType == ExpressionType.Subtract || ex.NodeType == ExpressionType.SubtractChecked)
-							value = Expression.Convert(Expression.Multiply(Expression.Convert(value, typeof(double)), Expression.Constant((double)-1)), typeof(double?));
-
-						var call   = Expression.Convert(
-													Expression.Call(
-														null,
-														method,
-														Expression.Constant(Sql.DateParts.Millisecond),
-														value,
-														Expression.Convert(ex.Left,  typeof(DateTimeOffset?))),
-													 typeof(DateTimeOffset?));
-
-						return new TransformInfo(ConvertExpression(call));
-					}
-
-					if (leftType == typeof(DateTime) && righttype == typeof(DateTime))
-					{
-						var method = MemberHelper.MethodOf(
-												() => Sql.DateDiffInterval(DateTime.MinValue, DateTime.MinValue));
-						var call   =			Expression.Convert(
-													Expression.Call(
-														null,
-														method,
-														Expression.Convert(ex.Right, typeof(DateTime?)),
-														Expression.Convert(ex.Left,  typeof(DateTime?))),
-													typeof(TimeSpan));
-
-						return new TransformInfo(ConvertExpression(call));
-					}
-
-					if (leftType == typeof(DateTimeOffset) && righttype == typeof(DateTimeOffset))
-					{
-						var method = MemberHelper.MethodOf(
-												() => Sql.DateDiffInterval(DateTimeOffset.MinValue, DateTimeOffset.MinValue));
-						var call   =            Expression.Convert(
-													Expression.Call(
-														null,
-														method,
-														Expression.Convert(ex.Right, typeof(DateTimeOffset?)),
-														Expression.Convert(ex.Left,  typeof(DateTimeOffset?))),
-													typeof(TimeSpan));
-
-						return new TransformInfo(ConvertExpression(call));
-					}
-					goto default;
-				}
-
 				default:
 				{
 					if (e is BinaryExpression binary)

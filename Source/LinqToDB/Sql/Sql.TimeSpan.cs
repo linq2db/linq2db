@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Globalization;
 
 namespace LinqToDB
 {
+	using Linq;
 	using SqlQuery;
 	using Expressions;
 
@@ -63,25 +66,10 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var part     = builder.GetValue<TimeSpanParts>("part");
-				var partStr  = TimeSpanPartToStr(part);
+				var partStr  = TimeSpanPartBuilder.TimeSpanPartToStr(part);
 				var timeSpan = builder.GetExpression("timeSpan");
 
 				builder.ResultExpression = new SqlExpression(typeof(long), "round({0} " + partStr + ")", timeSpan);
-			}
-
-			public static string TimeSpanPartToStr(TimeSpanParts part)
-			{
-				return part switch
-				{
-					TimeSpanParts.TotalNanoseconds => "* 0.01",
-					TimeSpanParts.TotalMicroseconds => "/ 10",
-					TimeSpanParts.TotalMilliseconds => "/ 10000",
-					TimeSpanParts.TotalSeconds => "/ 10000000",
-					TimeSpanParts.TotalMinutes => "/ 600000000",
-					TimeSpanParts.TotalHours => "/ 36000000000",
-					TimeSpanParts.TotalDays => "/ 864000000000",
-					_ => throw new InvalidOperationException($"Unexpected timespanpart: {part}")
-				};
 			}
 		}
 
@@ -93,18 +81,8 @@ namespace LinqToDB
 				var partStr  = TimeSpanPartToStr(part);
 				var timeSpan = builder.GetExpression("timeSpan");
 
-				var dt = DataType.Undefined;
-				if (timeSpan is SqlField f)
-				{
-					dt = f.ColumnDescriptor.DataType;
-				}
-				else if (timeSpan is SqlExpression e)
-				{
-					if (e.Parameters.Length > 0 && e.Parameters[0] is SqlField f2)
-					{
-						dt = f2.ColumnDescriptor.DataType;
-					}
-				}
+				var tp = timeSpan.GetExpressionType();
+				var dt = tp.DataType;
 					
 				if (dt == DataType.Int64)
 				{
@@ -159,12 +137,124 @@ namespace LinqToDB
 				TimeSpanParts.Microseconds		=> (long)timeSpan.Value.Microseconds,
 				TimeSpanParts.TotalNanoseconds	=> (long)timeSpan.Value.TotalNanoseconds,
 				TimeSpanParts.Nanoseconds		=> (long)timeSpan.Value.Nanoseconds,
+#else
+				TimeSpanParts.TotalMicroseconds => (long)timeSpan.Value.Ticks / 10,
+				TimeSpanParts.TotalNanoseconds	=> (long)timeSpan.Value.Ticks * 100,
 #endif
-				_								=> throw new InvalidOperationException(),
+				_ => throw new InvalidOperationException(),
 			};
 			throw new NotImplementedException();
 		}
 
 		#endregion
+
+
+		internal sealed class DateTimeAddIntervalBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var p = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(TimeSpanPart, TimeSpanParts.TotalNanoseconds, (TimeSpan?)TimeSpan.Zero),
+						Expression.Constant(TimeSpanParts.TotalNanoseconds),
+						builder.Arguments[1]
+					);
+
+				var e = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(DateAdd, DateParts.Nanosecond, (double?)0, (DateTime?)DateTime.MinValue),
+						Expression.Constant(DateParts.Nanosecond),
+					 	Expression.Convert(p, typeof(double?)),
+						builder.Arguments[0]
+					);
+
+				var exp = builder.ConvertExpressionToSql(e, true);
+				builder.ResultExpression = exp;
+			}
+		}
+
+		internal sealed class DateTimeAddIntervalBuilderOracle : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var date   = builder.GetExpression("date");
+				var timeSpan = builder.GetExpression("timeSpan", true);
+				
+				builder.ResultExpression = builder.Add(date, timeSpan, typeof(DateTime));
+			}
+		}
+
+		internal sealed class DateTimeAddIntervalBuilderPostgreSQL : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var date   = builder.GetExpression("date");
+				var timeSpan = builder.GetExpression("timeSpan", true);
+
+				var tp = timeSpan.GetExpressionType();
+				var dt = tp.DataType;
+
+				if (dt == DataType.Int64)
+				{
+					var p = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(TimeSpanPart, TimeSpanParts.TotalMicroseconds, (TimeSpan?)TimeSpan.Zero),
+						Expression.Constant(TimeSpanParts.TotalMicroseconds),
+						builder.Arguments[1]
+					);
+
+					var e = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(DateAdd, DateParts.Microsecond, (double?)0, (DateTime?)DateTime.MinValue),
+						Expression.Constant(DateParts.Microsecond),
+					 	Expression.Convert(p, typeof(double?)),
+						builder.Arguments[0]
+					);
+
+					var exp = builder.ConvertExpressionToSql(e, true);
+					builder.ResultExpression = exp;
+				}
+				else
+				{
+					builder.ResultExpression = builder.Add(date, timeSpan, typeof(DateTime));
+				}
+			}
+		}
+
+		internal sealed class DateTimeAddIntervalBuilderSQLite : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var date   = builder.GetExpression("date");
+				var timeSpan = builder.GetExpression("timeSpan", true);
+				var expStr = "strftime('%Y-%m-%d %H:%M:%f', {0}, ({1}/1000.0) || ' Second')";
+
+				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Concatenate, date, timeSpan);
+			}
+		}
+
+		[Extension("DateAdd", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilder))]
+		[Extension(PN.Oracle, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderOracle))]
+		[Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderPostgreSQL))]
+		[Extension(PN.SQLite, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderSQLite))]
+		public static DateTime? DateAdd(DateTime? date, TimeSpan? timeSpan)
+		{
+			if (date == null || timeSpan == null)
+				return null;
+
+			return date + timeSpan;
+		}
+
+		[Extension("DateAdd", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilder))]
+		[Extension(PN.Oracle, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderOracle))]
+		[Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderPostgreSQL))]
+		[Extension(PN.SQLite, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderSQLite))]
+		public static DateTimeOffset? DateAdd(DateTimeOffset? date, TimeSpan? timeSpan)
+		{
+			if (date == null || timeSpan == null)
+				return null;
+
+			return date + timeSpan;
+		}
 	}
 }

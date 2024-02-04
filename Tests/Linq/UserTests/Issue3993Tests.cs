@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.Serialization;
 using LinqToDB;
 using LinqToDB.Data;
@@ -74,7 +75,7 @@ namespace Tests.UserTests.Test3993
 					ms.AddScalarType(typeof(TimeSpan), DataType.Int64);
 				}
 
-				LinqToDB.Common.Configuration.MapTimeSpanToIntervalType();
+			    LinqToDB.Linq.Expressions.AddTimeSpanMappings();
 
 				db = GetDataContext(configuration, ms);
 
@@ -95,6 +96,10 @@ namespace Tests.UserTests.Test3993
 
 
 				var d = db.GetTable<Test>().ToList();
+
+				var d2 = db.GetTable<Test>().Where(x=>x.StartDateTime2.Year == 2023).ToList();
+				var d3 = db.GetTable<Test>().Where(x=>x.StartDateTime2 + TimeSpan.FromMinutes(5) > DateTime.UtcNow).ToList();
+				var d4 = db.GetTable<Test>().Where(x=>x.StartDateTime2 + TimeSpan.FromDays(365 * 100) > DateTime.UtcNow).ToList();
 
 				var qry2 =
 				(from t in db.GetTable<Test>()
@@ -168,7 +173,6 @@ namespace Tests.UserTests.Test3993
 			finally
 			{
 				db?.Dispose();
-				LinqToDB.Common.Configuration.MappedTimeSpanToIntervalType = false;
 			}
 		}
 		
@@ -216,7 +220,7 @@ namespace Tests.UserTests.Test3993
 					ms.AddScalarType(typeof(TimeSpan), DataType.Int64);
 				}
 
-				LinqToDB.Common.Configuration.MapTimeSpanToIntervalType();
+				LinqToDB.Linq.Expressions.AddTimeSpanMappings();
 
 				db = GetDataContext(configuration, ms);
 
@@ -259,7 +263,82 @@ namespace Tests.UserTests.Test3993
 			finally
 			{
 				db?.Dispose();
-				LinqToDB.Common.Configuration.MappedTimeSpanToIntervalType = false;
+			}
+		}
+
+		[Test]
+		public void TestIssue3993_Test3([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle)] string configuration)
+		{
+			MappingSchema ms;
+			Model.ITestDataContext? db = null;
+			try
+			{
+				if (configuration.Contains("PostgreSQL") || configuration.Contains("Oracle"))
+				{
+					ms = new FluentMappingBuilder()
+						.Entity<Test>()
+							.HasTableName("Common_Topology_Locations")
+							.Property(e => e.StartDateTime)
+							.Property(e => e.StartDateTime2)
+							.Property(e => e.PreNotification)
+								.HasDataType(DataType.Int64)
+							.Property(e => e.PreNotification2)
+								.HasDataType(DataType.Interval)
+							.Property(e => e.PreNotification3)
+								.HasDataType(DataType.Interval)
+							.Property(e => e.StrField)
+						.Build()
+						.MappingSchema;
+					ms.AddScalarType(typeof(TimeSpan), DataType.Interval);
+				}
+				else
+				{
+					ms = new FluentMappingBuilder()
+						.Entity<Test>()
+							.HasTableName("Common_Topology_Locations")
+							.Property(e => e.StartDateTime)
+							.Property(e => e.StartDateTime2)
+							.Property(e => e.PreNotification)
+								.HasDataType(DataType.Int64)
+							.Property(e => e.PreNotification2)
+								.HasDataType(DataType.Int64)
+							.Property(e => e.PreNotification3)
+								.HasDataType(DataType.Int64)
+							.Property(e => e.StrField)
+						.Build()
+						.MappingSchema;
+					ms.AddScalarType(typeof(TimeSpan), DataType.Int64);
+				}
+
+				LinqToDB.Linq.Expressions.AddTimeSpanMappings();
+
+				db = GetDataContext(configuration, ms);
+
+				using var tbl = db.CreateLocalTable(new[]
+				{
+					new Test
+					{
+						StartDateTime    = TestData.DateTimeUtc,
+						PreNotification = TimeSpan.FromSeconds(4 * 60 * 60 + 3 * 60 + 2)
+					}
+				});
+
+				var qryComplex = from t in db.GetTable<Test>()
+								 select new
+								 {
+									 Task = t,
+									 NotificationDateTime = t.StartDateTime - t.PreNotification
+								 };
+
+				var lst = qryComplex.First();
+
+				var hour = qryComplex.Where(x => x.NotificationDateTime!.Value.Hour == 13).First();
+				var minute = qryComplex.Where(x => x.NotificationDateTime!.Value.Minute == 51).First();
+				var second = qryComplex.Where(x => x.NotificationDateTime!.Value.Second == 53).First();
+			}
+			finally
+			{
+				db?.Dispose();
 			}
 		}
 	}

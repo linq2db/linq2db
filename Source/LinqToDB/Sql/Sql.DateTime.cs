@@ -491,12 +491,43 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var part    = builder.GetValue<DateParts>("part");
-				var partStr = DatePartBuilder.DatePartToStr(part);
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number", true);
 
-				builder.ResultExpression = new SqlFunction(typeof(DateTime?), builder.Expression,
-					new SqlExpression(partStr, Precedence.Primary), number, date);
+				if (part == DateParts.Millisecond)
+				{
+					builder.ResultExpression =
+						new SqlFunction(typeof(DateTime?), builder.Expression,
+							new SqlExpression("hour", Precedence.Primary), builder.Div(number, 3600_000),
+								new SqlFunction(typeof(DateTime?), builder.Expression,
+									new SqlExpression("millisecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000), Precedence.Multiplicative), date));
+					//new SqlFunction(typeof(long), "mod", number, new SqlValue(1000)), date));
+				}
+				else if (part == DateParts.Microsecond)
+				{
+					builder.ResultExpression = 
+						new SqlFunction(typeof(DateTime?), builder.Expression,
+							new SqlExpression("hour", Precedence.Primary), builder.Div(number, 3600_000_000),
+								new SqlFunction(typeof(DateTime?), builder.Expression,
+									new SqlExpression("microsecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000), Precedence.Multiplicative), date));
+					//new SqlFunction(typeof(long), "mod", number, new SqlValue(1000)), date));
+				} 
+				else if (part == DateParts.Nanosecond)
+				{
+					builder.ResultExpression =
+						new SqlFunction(typeof(DateTime?), builder.Expression,
+							new SqlExpression("hour", Precedence.Primary), new SqlExpression(typeof(int), "cast({0} as int)", Precedence.Multiplicative, builder.Div(number, 3600_000_000_000)),
+								new SqlFunction(typeof(DateTime?), builder.Expression,
+									new SqlExpression("millisecond", Precedence.Primary), builder.Div(new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000_000), Precedence.Multiplicative), 1000_000), 
+										new SqlFunction(typeof(DateTime?), builder.Expression,
+											new SqlExpression("nanosecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000_000), Precedence.Multiplicative), "%", new SqlValue(1000_000), Precedence.Multiplicative), date)));
+				} 
+				else
+				{
+					var partStr = DatePartBuilder.DatePartToStr(part);
+					builder.ResultExpression = new SqlFunction(typeof(DateTime?), builder.Expression,
+						new SqlExpression(partStr, Precedence.Primary), number, date);
+				}
 			}
 		}
 
@@ -619,6 +650,7 @@ namespace LinqToDB
 					case DateParts.Minute      : expStr = "{0} * Interval '1 Minute'";       break;
 					case DateParts.Second      : expStr = "{0} * Interval '1 Second'";       break;
 					case DateParts.Millisecond : expStr = "{0} * Interval '1 Millisecond'";  break;
+					case DateParts.Microsecond : expStr = "{0} * Interval '1 Microsecond'";  break;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}

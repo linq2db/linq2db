@@ -53,25 +53,6 @@ namespace LinqToDB.Common
 	public static class Configuration
 	{
 		/// <summary>
-		/// Enables TimespanMapping to an Interval Type (instead of the Time Type in the datbases)
-		/// If you do so, you need to also add a mapping according the interval type of your database
-		/// in your mapping schema, with
-		/// mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
-		/// or
-		/// mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Interval);
-		/// </summary>
-		public static void MapTimeSpanToIntervalType()
-		{
-			MappedTimeSpanToIntervalType = true;
-			Expressions.AddTimeSpanMappings();
-		}
-
-		/// <summary>
-		/// Fixes wrong TimespanMapping and uses a Interval Type if the Database has one (if not it uses Int64)
-		/// </summary>
-		internal static bool MappedTimeSpanToIntervalType;
-
-		/// <summary>
 		/// If <c>true</c> - non-primitive and non-enum value types (structures) will be treated as scalar types (e.g. <see cref="DateTime"/>) during mapping;
 		/// otherwise they will be treated the same way as classes.
 		/// Default value: <c>true</c>.
