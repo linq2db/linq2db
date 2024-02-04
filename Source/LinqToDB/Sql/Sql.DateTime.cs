@@ -711,8 +711,13 @@ namespace LinqToDB
 					DateParts.Hour      => "h",
 					DateParts.Minute    => "n",
 					DateParts.Second    => "s",
+					DateParts.Millisecond   => "s",
 					_                       => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
+
+				if (part == DateParts.Millisecond)
+					number = builder.Div(number, 1000);
+
 				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd",
 					new SqlValue(partStr), number, date);
 			}
@@ -1047,12 +1052,15 @@ namespace LinqToDB
 					DateParts.Hour        => "h",
 					DateParts.Minute      => "n",
 					DateParts.Second      => "s",
-					DateParts.Millisecond => throw new ArgumentOutOfRangeException(nameof(part), part, "Access doesn't support milliseconds interval."),
+					DateParts.Millisecond => "s",
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
 				expStr += "', {0}, {1})";
+
+				if (part == DateParts.Millisecond)
+					expStr += " * 1000";
 
 				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
 			}
