@@ -1702,6 +1702,27 @@ namespace LinqToDB.Linq
 
 		#endregion
 
+		public static void AddTimeSpanMappings()
+		{
+			Expressions.MapMember<TimeSpan>(p => p.Days, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Days, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalDays, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalDays, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.Hours, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Hours, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalHours, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalHours, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.Minutes, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Minutes, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalMinutes, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalMinutes, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.Seconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Seconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalSeconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalSeconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.Milliseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Milliseconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalMilliseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalMilliseconds, p)!.Value));
+
+#if NET7_0_OR_GREATER
+			Expressions.MapMember<TimeSpan>(p => p.Microseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Microseconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalMicroseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalMicroseconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.Nanoseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Nanoseconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalNanoseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalNanoseconds, p)!.Value));
+#endif
+		}
+
 		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, LambdaExpression expression)
 		{
 			if (!Members.TryGetValue(providerName, out var dic))
