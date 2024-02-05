@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
 	using Common;
-
 	using Data;
 	using Mapping;
 
@@ -84,9 +84,11 @@ namespace LinqToDB.SqlQuery
 						{
 							var converter = entityDescriptor.MappingSchema.GetConverter(
 								field.Type,
-								new DbDataType(typeof(DataParameter)), true);
+								new DbDataType(typeof(DataParameter)),
+								true,
+								ConversionType.ToDatabase);
 
-							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.Type.SystemType, entityDescriptor.MappingSchema));
+							var parameter = converter?.ConvertValueToParameter(DefaultValue.GetValue(field.Type.SystemType, entityDescriptor.MappingSchema));
 							if (parameter != null)
 								field.Type = field.Type.WithDataType(parameter.DataType);
 						}
@@ -289,10 +291,10 @@ namespace LinqToDB.SqlQuery
 
 		public virtual QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			if (TableName.Server   != null) writer.Append($"[{TableName.Server}].");
-			if (TableName.Database != null) writer.Append($"[{TableName.Database}].");
-			if (TableName.Schema   != null) writer.Append($"[{TableName.Schema}].");
-			return writer.Append($"[{Expression ?? TableName.Name}({SourceID})]");
+			if (TableName.Server   != null) writer.Append('[').Append(TableName.Server).Append("].");
+			if (TableName.Database != null) writer.Append('[').Append(TableName.Database).Append("].");
+			if (TableName.Schema   != null) writer.Append('[').Append(TableName.Schema).Append("].");
+			return writer.Append('[').Append(Expression ?? TableName.Name).Append('(').Append(SourceID).Append(")]");
 		}
 
 		#endregion

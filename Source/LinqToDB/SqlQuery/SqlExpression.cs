@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.SqlQuery
@@ -136,7 +137,7 @@ namespace LinqToDB.SqlQuery
 			else
 				writer.Append(Expr)
 					.Append('{')
-					.Append(string.Join(", ", ss))
+					.Append(string.Join(", ", ss.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
 					.Append('}');
 
 			return writer;

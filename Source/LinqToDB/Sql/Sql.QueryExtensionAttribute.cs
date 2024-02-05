@@ -82,7 +82,7 @@ namespace LinqToDB
 					arguments.Add(".ExtensionArguments.Count",  new SqlValue(ExtensionArguments.Length));
 
 					for (var i = 0; i < ExtensionArguments.Length; i++)
-						arguments.Add($".ExtensionArguments.{i}", new SqlValue(ExtensionArguments[i]));
+						arguments.Add(FormattableString.Invariant($".ExtensionArguments.{i}"), new SqlValue(ExtensionArguments[i]));
 				}
 
 				return new SqlQueryExtension()
@@ -130,7 +130,7 @@ namespace LinqToDB
 
 			public override string GetObjectID()
 			{
-				return $".{Configuration}.{(int)Scope}.{IdentifierBuilder.GetObjectID(ExtensionBuilderType)}.{IdentifierBuilder.GetObjectID(ExtensionArguments)}.";
+				return FormattableString.Invariant($".{Configuration}.{(int)Scope}.{IdentifierBuilder.GetObjectID(ExtensionBuilderType)}.{IdentifierBuilder.GetObjectID(ExtensionArguments)}.");
 			}
 		}
 	}

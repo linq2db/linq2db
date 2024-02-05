@@ -6,6 +6,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Data.Common;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Xml;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -21,19 +26,12 @@ using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 
-using Tests.Remote.ServerContainer;
-
 namespace Tests
 {
-	using System.Data.Common;
-	using System.Text.Json;
-	using System.Text.Json.Serialization;
-	using System.Threading;
-	using System.Xml;
-
 	using LinqToDB.FSharp;
 
 	using Model;
+	using Remote.ServerContainer;
 	using Tools;
 
 	public partial class TestBase
@@ -77,12 +75,17 @@ namespace Tests
 
 		private const int TRACES_LIMIT = 50000;
 
-		private static string? _baselinesPath;
+		public static string? BaselinesPath;
+		public static bool?   StoreMetrics;
 
-		protected static string? LastQuery;
+		protected static string? LastQuery { get; set; }
 
 		static TestBase()
 		{
+			AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+
+			try
+			{
 			TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
 
 			TestContext.WriteLine("CLR Version: {0}...", Environment.Version);
@@ -107,6 +110,7 @@ namespace Tests
 							baseline = new StringBuilder();
 							ctx.Set(CustomTestContext.BASELINE, baseline);
 						}
+
 						baseline.AppendLine(message);
 					}
 				}
@@ -164,15 +168,7 @@ namespace Tests
 			var userDataProvidersJson =
 				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-#if NET6_0
-			var configName = "NET60";
-#elif NET8_0
-			var configName = "NET80";
-#elif NETFRAMEWORK
-			var configName = "NETFX";
-#else
-#error Unknown framework
-#endif
+				var configName = GetConfigName();
 
 #if AZURE
 			TestContext.WriteLine("Azure configuration detected.");
@@ -277,9 +273,52 @@ namespace Tests
 			if (!string.IsNullOrWhiteSpace(testSettings.BaselinesPath))
 			{
 				var baselinesPath = Path.GetFullPath(testSettings.BaselinesPath);
+
 				if (Directory.Exists(baselinesPath))
-					_baselinesPath = baselinesPath;
+					{
+						BaselinesPath = baselinesPath;
+						StoreMetrics  = testSettings.StoreMetrics;
+					}
+				}
 			}
+			catch (Exception ex)
+			{
+				Log(ex);
+				throw;
+			}
+		}
+
+		static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+		{
+			if (e.ExceptionObject is Exception ex)
+				Log(ex);
+			else
+				Log(e.ExceptionObject.ToString());
+			}
+
+		internal static string GetConfigName()
+		{
+#if NET6_0
+			return "NET60";
+#elif NET8_0
+			return "NET80";
+#elif NETFRAMEWORK
+			return "NETFX";
+#else
+#error Unknown framework
+#endif
+		}
+
+		public static void Log(Exception ex)
+		{
+			Log($"Exception: {ex.Message}");
+			Log(ex.StackTrace);
+		}
+
+		static void Log(string? message)
+		{
+			var path = Path.GetTempPath();
+			File.AppendAllText(path + "linq2db.Tests." + GetConfigName() + ".log", (message ?? "") + Environment.NewLine);
 		}
 
 		static void CopyDatabases()
@@ -1235,6 +1274,7 @@ namespace Tests
 			bool allowEmpty = false)
 		{
 			var resultList   = result.  Select(fixSelector).ToList();
+			var lastQuery    = LastQuery;
 			var expectedList = expected.Select(fixSelector).ToList();
 
 			if (sort != null)
@@ -1270,6 +1310,8 @@ namespace Tests
 
 			Assert.AreEqual(0, exceptExpected, $"Expected Was{Environment.NewLine}{message}");
 			Assert.AreEqual(0, exceptResult  , $"Expect Result{Environment.NewLine}{message}");
+
+			LastQuery = lastQuery;
 		}
 
 		protected void AreEqual<T>(IEnumerable<IEnumerable<T>> expected, IEnumerable<IEnumerable<T>> result)
@@ -1401,14 +1443,15 @@ namespace Tests
 			// dump baselines
 			var ctx = CustomTestContext.Get();
 
-			if (_baselinesPath != null)
+			if (BaselinesPath != null)
 			{
 				var baseline = ctx.Get<StringBuilder>(CustomTestContext.BASELINE);
 				if (baseline != null)
-					BaselinesWriter.Write(_baselinesPath, baseline.ToString());
+					BaselinesWriter.Write(BaselinesPath, baseline.ToString());
 			}
 
 			var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+
 			if (trace != null && TestContext.CurrentContext.Result.FailCount > 0 && ctx.Get<bool>(CustomTestContext.LIMITED))
 			{
 				// we need to set ErrorInfo.Message element text

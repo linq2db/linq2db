@@ -7,8 +7,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -479,7 +479,7 @@ namespace LinqToDB.CodeModel
 				public static IType Converter { get; } = Parser.Parse(typeof(Converter));
 
 				/// <summary>
-				/// <see cref="Converter.ChangeTypeTo{T}(object?, MappingSchema?)"/> method reference.
+				/// <see cref="Converter.ChangeTypeTo{T}(object?, MappingSchema?,ConversionType)"/> method reference.
 				/// </summary>
 				public static CodeIdentifier Converter_ChangeTypeTo { get; } = new CodeIdentifier(nameof(global::LinqToDB.Common.Converter.ChangeTypeTo), true);
 			}
@@ -594,7 +594,7 @@ namespace LinqToDB.CodeModel
 				public static IType MappingSchema        { get; } = Parser.Parse<MappingSchema>();
 
 				/// <summary>
-				/// <see cref="MappingSchema.SetConvertExpression(DbDataType, DbDataType, LambdaExpression, bool)"/> method reference.
+				/// <see cref="MappingSchema.SetConvertExpression(DbDataType, DbDataType, LambdaExpression, bool, ConversionType)"/> method reference.
 				/// </summary>
 				public static CodeIdentifier MappingSchema_SetConvertExpression { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.MappingSchema.SetConvertExpression), true);
 

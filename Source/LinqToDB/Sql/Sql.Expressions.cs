@@ -40,7 +40,7 @@ namespace LinqToDB
 					builder.ResultExpression = columnExpressions[0];
 				else
 					builder.ResultExpression = new SqlExpression(
-						string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => $"{{{i}}}")),
+						string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
 						Precedence.Primary,
 						columnExpressions);
 			}
@@ -187,7 +187,7 @@ namespace LinqToDB
 				return columnExpressions[0];
 
 			return new SqlExpression(
-				string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => $"{{{i}}}")),
+				string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
 				Precedence.Primary,
 				columnExpressions);
 		}

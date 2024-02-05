@@ -344,6 +344,28 @@ namespace Tests.Data
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
+		[Test]
+		public void TestServiceCollection_Issue4326_Positive([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDBContext<IDataContext, DbConnection1>((serviceProvider, options) => options.UseConfigurationString(context));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<IDataContext>()!;
+			Assert.That(con, Is.TypeOf<DbConnection1>());
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
+		[Test]
+		public void TestServiceCollection_Issue4326_Compat([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDBContext<IDataContext, DbConnection4>((serviceProvider, options) => options.UseConfigurationString(context));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<IDataContext>()!;
+			Assert.That(con, Is.TypeOf<DbConnection4>());
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
 		public class DbConnection1 : DataConnection
 		{
 			public DbConnection1(DataOptions<DbConnection1> options) : base(options.Options)
@@ -363,6 +385,13 @@ namespace Tests.Data
 		public class DbConnection3 : DataConnection
 		{
 			public DbConnection3(DummyService service, DataOptions options) : base(options)
+			{
+			}
+		}
+
+		public class DbConnection4 : DataConnection
+		{
+			public DbConnection4(DataOptions<IDataContext> options) : base(options.Options)
 			{
 			}
 		}

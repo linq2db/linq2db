@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -475,9 +476,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			(
 				from item in data
 
-				let name         = Convert.ToString(item.name)
-				let thisTableID  = Convert.ToString (item.thisTable)
-				let otherTableID = Convert.ToString (item.otherTable)
+				let name         = Convert.ToString(item.name, CultureInfo.InvariantCulture)
+				let thisTableID  = Convert.ToString (item.thisTable, CultureInfo.InvariantCulture)
+				let otherTableID = Convert.ToString (item.otherTable, CultureInfo.InvariantCulture)
 
 				from col in item.thisColumns
 					.Zip(item.otherColumns, (thisColumn,otherColumn) => new { thisColumn, otherColumn })
@@ -488,8 +489,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					Name         = name,
 					ThisTableID  = thisTableID,
 					OtherTableID = otherTableID,
-					ThisColumn   = Convert.ToString(col.thisColumn)!,
-					OtherColumn  = Convert.ToString(col.otherColumn)!,
+					ThisColumn   = Convert.ToString(col.thisColumn, CultureInfo.InvariantCulture)!,
+					OtherColumn  = Convert.ToString(col.otherColumn, CultureInfo.InvariantCulture)!,
 					Ordinal      = col.ordinal
 				}
 			).ToList();

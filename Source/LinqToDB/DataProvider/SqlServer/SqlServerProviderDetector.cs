@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Globalization;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -168,7 +169,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override SqlServerVersion? DetectServerVersion(SqlServerProviderAdapter.SqlConnection connection)
 		{
-			if (!int.TryParse(connection.ServerVersion.Split('.')[0], out var version))
+			if (!int.TryParse(connection.ServerVersion.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var version))
 				return null;
 
 			if (version <= 8)

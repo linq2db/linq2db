@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -88,7 +89,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(object? value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -97,7 +98,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(sbyte value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -105,7 +106,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(byte value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -113,7 +114,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(short value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -121,7 +122,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(int value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -129,7 +130,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(long value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -137,7 +138,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(float value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -145,7 +146,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(double value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -153,7 +154,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(decimal value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -171,7 +172,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(ushort value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -180,7 +181,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(uint value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -189,7 +190,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(ulong value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(value);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			return this;
 		}
 
@@ -197,7 +198,11 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(StringBuilder? value)
 		{
 			if (value != null)
+#if NET6_0_OR_GREATER
+				StringBuilder.Append(value);
+#else
 				Append(value.ToString());
+#endif
 			return this;
 		}
 
@@ -277,7 +282,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter AppendFormat(string format, object arg0)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.AppendFormat(format, arg0);
+			StringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, arg0);
 			return this;
 		}
 
@@ -285,7 +290,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter AppendFormat(string format, params object[] args)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.AppendFormat(format, args);
+			StringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, args);
 			return this;
 		}
 

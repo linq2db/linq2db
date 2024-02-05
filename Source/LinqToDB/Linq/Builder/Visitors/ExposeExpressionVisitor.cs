@@ -15,6 +15,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 	using Reflection;
 	using LinqToDB.Expressions;
 	using LinqToDB.Common.Internal;
+	using System.Globalization;
 
 	class ExposeExpressionVisitor : ExpressionVisitorBase, IExpressionEvaluator
 	{
@@ -1075,7 +1076,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 					{
 						var args  = method.GetGenericArguments();
 						var names = args.Select(t => (object)t.Name).ToArray();
-						var name  = string.Format(attr.MethodName!, names);
+						var name  = string.Format(CultureInfo.InvariantCulture, attr.MethodName!, names);
 
 						expr = Expression.Call(
 							mi.DeclaringType!,

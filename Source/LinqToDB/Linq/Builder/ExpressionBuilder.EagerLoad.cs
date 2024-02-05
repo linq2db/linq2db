@@ -102,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpression = Expression.New(constructor);
 			var initExpression = Expression.MemberInit(newExpression,
-				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty("Item" + (i + 1))!, a)));
+				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty(FormattableString.Invariant($"Item{i + 1}"))!, a)));
 			return initExpression;
 		}
 

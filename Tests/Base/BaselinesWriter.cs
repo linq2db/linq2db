@@ -2,21 +2,24 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+
 using NUnit.Framework.Internal;
 
 namespace Tests
 {
-	internal sealed class BaselinesWriter
+	public sealed class BaselinesWriter
 	{
 		// used to detect baseline overwrites by another test(case)
 		// case-insensitive to support windoze file system
-		private static readonly ISet<string> _baselines = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		static readonly ISet<string> _baselines = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+		static string? _context;
 
 		internal static void Write(string baselinesPath, string baseline)
 		{
 			var test = TestExecutionContext.CurrentContext.CurrentTest;
 
-			var context = GetTestContextName(test);
+			_context = GetTestContextName(test);
 
 #if NETFRAMEWORK
 			var target = "netfx";
@@ -28,10 +31,10 @@ namespace Tests
 #error "Build Target must be specified here."
 #endif
 
-			if (context == null)
+			if (_context == null)
 				return;
 
-			var fixturePath = Path.Combine(baselinesPath, target, context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
+			var fixturePath = Path.Combine(baselinesPath, target, _context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
 			Directory.CreateDirectory(fixturePath);
 
 			var fileName = $"{NormalizeFileName(test.FullName)}.sql";
@@ -62,6 +65,7 @@ namespace Tests
 		private static string? GetTestContextName(Test test)
 		{
 			var parameters = test.Method!.GetParameters();
+
 			for (var i = 0; i < parameters.Length; i++)
 			{
 				var attr = parameters[i].GetCustomAttributes<DataSourcesBaseAttribute>(true);
@@ -73,6 +77,24 @@ namespace Tests
 			}
 
 			return null;
+		}
+
+		public static void WriteMetrics(string baselinesPath, string baseline)
+		{
+			if (_context == null)
+				return;
+
+			var target = TestBase.GetConfigName();
+
+			var fixturePath = Path.Combine(baselinesPath, target);
+
+			Directory.CreateDirectory(fixturePath);
+
+			var fileName = $"{_context}.{Environment.OSVersion.Platform}.Metrics.txt";
+
+			var fullPath = Path.Combine(fixturePath, fileName);
+
+			File.WriteAllText(fullPath, baseline);
 		}
 	}
 }

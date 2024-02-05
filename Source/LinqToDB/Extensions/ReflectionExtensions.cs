@@ -854,7 +854,7 @@ namespace LinqToDB.Extensions
 
 #endregion
 
-#region MethodInfo extensions
+		#region MethodInfo extensions
 
 		[return: NotNullIfNotNull(nameof(method))]
 		public static PropertyInfo? GetPropertyInfo(this MethodInfo? method)
@@ -876,9 +876,9 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-#endregion
+		#endregion
 
-#region MemberInfo extensions
+		#region MemberInfo extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
@@ -1040,7 +1040,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-#endregion
+		#endregion
 
 		public static bool IsAnonymous(this Type type)
 		{

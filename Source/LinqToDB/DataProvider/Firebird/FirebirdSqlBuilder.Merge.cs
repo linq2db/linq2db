@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.Firebird
 				BuildExpression(value);
 
 				if (typeRequired)
-					StringBuilder.Append($" AS VARCHAR({length.ToString(CultureInfo.InvariantCulture)}))");
+					StringBuilder.Append(CultureInfo.InvariantCulture, $" AS VARCHAR({length}))");
 			}
 			else
 				base.BuildTypedExpression(dataType, value);

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
@@ -505,8 +507,8 @@ namespace LinqToDB.DataProvider.SapHana
 				commandText = "SELECT * FROM " + commandText + "(";
 				commandText += string.Join(",", procedure.Parameters.Select(p => (
 					p.SystemType == typeof (DateTime)
-						? "'" + DateTime.Now + "'"
-						: DefaultValue.GetValue(p.SystemType ?? typeof(object))) ?? "''"));
+						? string.Format(CultureInfo.InvariantCulture, "'{0}'", DateTime.Now)
+						: string.Format(CultureInfo.InvariantCulture, "{0}", DefaultValue.GetValue(p.SystemType ?? typeof(object)) ?? "''"))));
 
 				commandText += ")";
 				commandType = CommandType.Text;
@@ -647,10 +649,10 @@ namespace LinqToDB.DataProvider.SapHana
 				{
 					var infoStr = sqlDataTypeParts[1].Substring(0, sqlDataTypeParts[1].Length - 1);
 					var splited = infoStr.Split(',');
-					length = Convert.ToInt32(splited[0]);
+					length = Convert.ToInt32(splited[0], CultureInfo.InvariantCulture);
 					if (splited.Length == 2)
 					{
-						scale = Convert.ToInt32(splited[1]);
+						scale = Convert.ToInt32(splited[1], CultureInfo.InvariantCulture);
 					}
 				}
 

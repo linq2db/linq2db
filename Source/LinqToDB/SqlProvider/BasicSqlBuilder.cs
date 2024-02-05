@@ -7,6 +7,7 @@ using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -143,7 +144,7 @@ namespace LinqToDB.SqlProvider
 
 		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int startIndent = 0)
 		{
-			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, !Configuration.Sql.GenerateFinalAliases && CanSkipRootAliases(statement));
+			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, !DataOptions.SqlOptions.GenerateFinalAliases && CanSkipRootAliases(statement));
 		}
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -1420,7 +1421,7 @@ namespace LinqToDB.SqlProvider
 						ctx.this_.BuildPhysicalTable(ctx.createTable.Table!, null);
 					}, (this_: this, createTable));
 
-				AppendIndent().AppendFormat(createTable.StatementHeader, name);
+				AppendIndent().AppendFormat(CultureInfo.InvariantCulture, createTable.StatementHeader, name);
 			}
 		}
 
@@ -1615,14 +1616,18 @@ namespace LinqToDB.SqlProvider
 
 				if (field.Field.CreateFormat != null)
 				{
-					StringBuilder.AppendFormat(field.Field.CreateFormat, field.Name, field.Type, field.Null, field.Identity);
+					StringBuilder.AppendFormat(CultureInfo.InvariantCulture, field.Field.CreateFormat, field.Name, field.Type, field.Null, field.Identity);
 
 					while (StringBuilder.Length > 0 && StringBuilder[StringBuilder.Length - 1] == ' ')
 						StringBuilder.Length--;
 				}
 				else
 				{
+#if NET6_0_OR_GREATER
 					StringBuilder.Append(field.StringBuilder);
+#else
+					StringBuilder.Append(field.StringBuilder.ToString());
+#endif
 				}
 			}
 
@@ -2315,7 +2320,7 @@ namespace LinqToDB.SqlProvider
 
 				var item = selectQuery.OrderBy.Items[i];
 
-				BuildExpression(WrapBooleanExpression(item.Expression));
+				BuildExpressionForOrderBy(item.Expression);
 
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
@@ -2327,6 +2332,11 @@ namespace LinqToDB.SqlProvider
 			}
 
 			Indent--;
+		}
+
+		protected virtual void BuildExpressionForOrderBy(ISqlExpression expr)
+		{
+			BuildExpression(WrapBooleanExpression(expr));
 		}
 
 		#endregion
@@ -2354,7 +2364,7 @@ namespace LinqToDB.SqlProvider
 
 			if (SkipFirst && NeedSkip(takeExpr, skipExpr) && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
-					SkipFormat, WithStringBuilderBuildExpression(skipExpr!));
+					CultureInfo.InvariantCulture, SkipFormat, WithStringBuilderBuildExpression(skipExpr!));
 
 			if (NeedTake(takeExpr) && FirstFormat(selectQuery) != null)
 			{
@@ -2362,7 +2372,7 @@ namespace LinqToDB.SqlProvider
 				BuildStep = Step.OffsetLimit;
 
 				StringBuilder.Append(' ').AppendFormat(
-					FirstFormat(selectQuery)!, WithStringBuilderBuildExpression(takeExpr!));
+					CultureInfo.InvariantCulture, FirstFormat(selectQuery)!, WithStringBuilderBuildExpression(takeExpr!));
 
 				BuildStep = saveStep;
 
@@ -2371,7 +2381,7 @@ namespace LinqToDB.SqlProvider
 
 			if (!SkipFirst && NeedSkip(takeExpr, skipExpr) && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
-					SkipFormat, WithStringBuilderBuildExpression(skipExpr!));
+					CultureInfo.InvariantCulture, SkipFormat, WithStringBuilderBuildExpression(skipExpr!));
 		}
 
 		protected virtual void BuildTakeHints(SelectQuery selectQuery)
@@ -2400,7 +2410,7 @@ namespace LinqToDB.SqlProvider
 				if (doSkip && OffsetFirst)
 				{
 					StringBuilder.AppendFormat(
-						OffsetFormat(selectQuery)!, WithStringBuilderBuildExpression(skipExpr!));
+						CultureInfo.InvariantCulture, OffsetFormat(selectQuery)!, WithStringBuilderBuildExpression(skipExpr!));
 
 					if (doTake)
 						StringBuilder.Append(' ');
@@ -2409,7 +2419,7 @@ namespace LinqToDB.SqlProvider
 				if (doTake)
 				{
 					StringBuilder.AppendFormat(
-						LimitFormat(selectQuery)!, WithStringBuilderBuildExpression(takeExpr!));
+						CultureInfo.InvariantCulture, LimitFormat(selectQuery)!, WithStringBuilderBuildExpression(takeExpr!));
 
 					if (doSkip)
 						StringBuilder.Append(' ');
@@ -2417,7 +2427,7 @@ namespace LinqToDB.SqlProvider
 
 				if (doSkip && !OffsetFirst)
 					StringBuilder.AppendFormat(
-						OffsetFormat(selectQuery)!, WithStringBuilderBuildExpression(skipExpr!));
+						CultureInfo.InvariantCulture, OffsetFormat(selectQuery)!, WithStringBuilderBuildExpression(skipExpr!));
 
 				StringBuilder.AppendLine();
 			}
@@ -3029,7 +3039,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlQuery:
 					{
-						var hasParentheses = checkParentheses && StringBuilder[StringBuilder.Length - 1] == '(';
+						var hasParentheses = checkParentheses && StringBuilder[^1] == '(';
 
 						if (!hasParentheses)
 							StringBuilder.AppendLine(OpenParens);
@@ -3261,7 +3271,7 @@ namespace LinqToDB.SqlProvider
 					values[i] = WithStringBuilderBuildExpression(precedence, value);
 				}
 
-				StringBuilder.AppendFormat(format, values);
+				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, values);
 			}
 		}
 
@@ -3518,13 +3528,13 @@ namespace LinqToDB.SqlProvider
 				case DataType.Boolean: StringBuilder.Append("Bit");      return;
 			}
 
-			StringBuilder.Append(type.Type.DataType);
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}");
 
 			if (type.Type.Length > 0)
-				StringBuilder.Append('(').Append(type.Type.Length).Append(')');
+				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
 
 			if (type.Type.Precision > 0)
-				StringBuilder.Append('(').Append(type.Type.Precision).Append(InlineComma).Append(type.Type.Scale).Append(')');
+				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision}{InlineComma}{type.Type.Scale})");
 		}
 
 		#endregion
@@ -3749,7 +3759,7 @@ namespace LinqToDB.SqlProvider
 							}
 
 							sb.Value.Length = 0;
-							sb.Value.AppendFormat(tbl.Expression!, values);
+							sb.Value.AppendFormat(CultureInfo.InvariantCulture, tbl.Expression!, values);
 						}
 						else if (tbl.SqlTableType == SqlTableType.Function)
 						{
@@ -3864,12 +3874,12 @@ namespace LinqToDB.SqlProvider
 				if (parameter.Size > 0)
 				{
 					if (t1.IndexOf('(') < 0)
-						sb.Append('(').Append(parameter.Size).Append(')');
+						sb.Append(CultureInfo.InvariantCulture, $"({parameter.Size})");
 				}
 				else if (parameter.Precision > 0)
 				{
 					if (t1.IndexOf('(') < 0)
-						sb.Append('(').Append(parameter.Precision).Append(InlineComma).Append(parameter.Scale).Append(')');
+						sb.Append(CultureInfo.InvariantCulture, $"({parameter.Precision}{InlineComma}{parameter.Scale})");
 				}
 				else
 				{
@@ -3883,7 +3893,7 @@ namespace LinqToDB.SqlProvider
 								var value = parameter.Value as string;
 
 								if (!string.IsNullOrEmpty(value))
-									sb.Append('(').Append(value!.Length).Append(')');
+									sb.Append(CultureInfo.InvariantCulture, $"({value!.Length})");
 
 								break;
 							}
@@ -3894,7 +3904,7 @@ namespace LinqToDB.SqlProvider
 								if (value is decimal dec)
 								{
 									var d = new SqlDecimal(dec);
-									sb.Append('(').Append(d.Precision).Append(InlineComma).Append(d.Scale).Append(')');
+									sb.Append(CultureInfo.InvariantCulture, $"({d.Precision}{InlineComma}{d.Scale})");
 								}
 
 								break;
@@ -3902,7 +3912,7 @@ namespace LinqToDB.SqlProvider
 						case DbType.Binary:
 							{
 								if (parameter.Value is byte[] value)
-									sb.Append('(').Append(value.Length).Append(')');
+									sb.Append(CultureInfo.InvariantCulture, $"({value.Length})");
 
 								break;
 							}
@@ -3990,7 +4000,7 @@ namespace LinqToDB.SqlProvider
 				// ISO8601 format (with Kind-specific offset part)
 				sb
 					.Append('\'')
-					.Append(dt.ToString("o"))
+					.Append(dt.ToString("o", DateTimeFormatInfo.InvariantInfo))
 					.Append('\'');
 			}
 			else if (value is DateTimeOffset dto)
@@ -3998,7 +4008,7 @@ namespace LinqToDB.SqlProvider
 				// ISO8601 format with offset
 				sb
 					.Append('\'')
-					.Append(dto.ToString("o"))
+					.Append(dto.ToString("o", DateTimeFormatInfo.InvariantInfo))
 					.Append('\'');
 			}
 			else if (value is IEnumerable collection)
@@ -4027,7 +4037,7 @@ namespace LinqToDB.SqlProvider
 				return trimmed;
 			}
 			else
-				sb.Append(value);
+				sb.Append(CultureInfo.InvariantCulture, $"{value}");
 
 			return false;
 		}
@@ -4100,7 +4110,7 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
-				alias = desiredAlias + i;
+				alias = FormattableString.Invariant($"{desiredAlias}{i}");
 			}
 
 			return alias;
@@ -4163,7 +4173,7 @@ namespace LinqToDB.SqlProvider
 			}
 			else
 			{
-				var testToReplace = $"$$${++_testReplaceNumber}$$$";
+				var testToReplace = FormattableString.Invariant($"$$${++_testReplaceNumber}$$$");
 
 				StringBuilder.Append(testToReplace);
 

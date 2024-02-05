@@ -8,6 +8,9 @@
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.AspNet.xml</DocumentationFile>
 
 		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0</TargetFrameworks>
+
+		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0'">true</IsAotCompatible>
+		<PolySharpIncludeRuntimeSupportedAttributes>true</PolySharpIncludeRuntimeSupportedAttributes>
 	</PropertyGroup>
 
 	<ItemGroup>

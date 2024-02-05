@@ -3,8 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+
+#if NETFRAMEWORK || NETSTANDARD2_0
+using System.Text;
+#endif
 
 namespace LinqToDB.DataProvider
 {
@@ -549,7 +554,7 @@ namespace LinqToDB.DataProvider
 		private void MultipleRowsCopy1Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -615,7 +620,7 @@ namespace LinqToDB.DataProvider
 		private void MultipleRowsCopy2Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -666,7 +671,7 @@ namespace LinqToDB.DataProvider
 		private void MultipleRowsCopy3Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
 				.Append('(');
 
 			foreach (var column in helper.Columns)

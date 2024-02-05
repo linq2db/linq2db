@@ -13,7 +13,6 @@ abstract LinqToDB.SqlQuery.SqlStatement.GetTableSource(LinqToDB.SqlQuery.ISqlTab
 abstract LinqToDB.SqlQuery.SqlStatement.ToString(LinqToDB.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.SqlQuery.QueryElementTextWriter!
 abstract LinqToDB.SqlQuery.Visitors.SqlQueryConvertVisitorBase.ConvertElement(LinqToDB.SqlQuery.IQueryElement! element) -> LinqToDB.SqlQuery.IQueryElement!
 const LinqToDB.Expressions.ChangeTypeExpression.ChangeTypeType = (System.Linq.Expressions.ExpressionType)1000 -> System.Linq.Expressions.ExpressionType
-const LinqToDB.LinqToDBConstants.Copyright = "© 2011-2024 linq2db.com" -> string!
 const LinqToDB.Sql.SqlRow.MaxMemberCount = 10 -> int
 const LinqToDB.SqlQuery.PseudoFunctions.CONVERT_FORMAT = "$Convert_Format$" -> string!
 LinqToDB.Common.SqlTextWriter
@@ -104,6 +103,7 @@ LinqToDB.Expressions.ClosurePlaceholderExpression.ClosureExpression.get -> Syste
 LinqToDB.Expressions.ClosurePlaceholderExpression.ClosurePlaceholderExpression(System.Linq.Expressions.Expression! closureExpression) -> void
 LinqToDB.Expressions.ClosurePlaceholderExpression.Update(System.Linq.Expressions.Expression! closureExpression) -> LinqToDB.Expressions.ClosurePlaceholderExpression!
 LinqToDB.Expressions.DefaultValueExpression.Equals(LinqToDB.Expressions.DefaultValueExpression! other) -> bool
+LinqToDB.Expressions.ExpressionConstants
 LinqToDB.Expressions.ExpressionPrinter
 LinqToDB.Expressions.ExpressionPrinter.ExpressionPrinter() -> void
 LinqToDB.Expressions.ExpressionVisitorBase
@@ -1814,6 +1814,7 @@ static LinqToDB.SqlQuery.QueryVisitorExtensions.Replace<T>(this T! element, Syst
 static LinqToDB.SqlQuery.SqlNullabilityExpression.ApplyNullability(LinqToDB.SqlQuery.ISqlExpression! sqlExpression, bool canBeNull) -> LinqToDB.SqlQuery.ISqlExpression!
 static LinqToDB.SqlQuery.SqlNullabilityExpression.ApplyNullability(LinqToDB.SqlQuery.ISqlExpression! sqlExpression, LinqToDB.SqlQuery.NullabilityContext! nullability) -> LinqToDB.SqlQuery.ISqlExpression!
 static LinqToDB.SqlQuery.SqlPredicate.MakeBool(bool isTrue) -> LinqToDB.SqlQuery.ISqlPredicate!
+static readonly LinqToDB.Expressions.ExpressionConstants.DataContextParam -> System.Linq.Expressions.ParameterExpression!
 static readonly LinqToDB.Reflection.Methods.Enumerable.Single -> System.Reflection.MethodInfo!
 static readonly LinqToDB.Reflection.Methods.Enumerable.SingleOrDefault -> System.Reflection.MethodInfo!
 static readonly LinqToDB.Reflection.Methods.Enumerable.SingleOrDefaultCondition -> System.Reflection.MethodInfo!

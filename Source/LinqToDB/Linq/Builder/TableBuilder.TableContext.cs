@@ -13,6 +13,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using Tools;
 
 	partial class TableBuilder
 	{

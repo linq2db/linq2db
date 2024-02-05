@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Threading.Tasks;
+
+using LinqToDB.Tools;
 
 namespace LinqToDB.Data
 {
@@ -45,8 +46,9 @@ namespace LinqToDB.Data
 
 			if (DataReader != null)
 			{
-				if (_dataConnection is IInterceptable<ICommandInterceptor> interceptable)
-					interceptable.Interceptor?.BeforeReaderDispose(new (_dataConnection), Command, DataReader);
+				if (_dataConnection is IInterceptable<ICommandInterceptor> { Interceptor: {} interceptor })
+					using (ActivityService.Start(ActivityID.CommandInterceptorBeforeReaderDispose))
+						interceptor.BeforeReaderDispose(new (_dataConnection), Command, DataReader);
 
 				DataReader.Dispose();
 				DataReader = null;
@@ -74,8 +76,10 @@ namespace LinqToDB.Data
 
 			if (DataReader != null)
 			{
-				if (_dataConnection is IInterceptable<ICommandInterceptor> interceptable && interceptable.Interceptor != null)
-					await interceptable.Interceptor.BeforeReaderDisposeAsync(new(_dataConnection), Command, DataReader).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				if (_dataConnection is IInterceptable<ICommandInterceptor> { Interceptor: {} interceptor })
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorBeforeReaderDisposeAsync))
+						await interceptor.BeforeReaderDisposeAsync(new(_dataConnection), Command, DataReader)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				await DataReader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				DataReader = null;

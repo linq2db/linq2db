@@ -7,6 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB
 {
 	using Data;
@@ -401,7 +403,9 @@ namespace LinqToDB
 
 		void IDataContext.Close()
 		{
-			_dataContextInterceptor?.OnClosing(new (this));
+			if (_dataContextInterceptor != null)
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosing))
+					_dataContextInterceptor.OnClosing(new(this));
 
 			if (_dataConnection != null)
 			{
@@ -413,13 +417,17 @@ namespace LinqToDB
 				_dataConnection = null;
 			}
 
-			_dataContextInterceptor?.OnClosed(new (this));
+			if (_dataContextInterceptor != null)
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosed))
+					_dataContextInterceptor.OnClosed(new (this));
 		}
 
 		async Task IDataContext.CloseAsync()
 		{
 			if (_dataContextInterceptor != null)
-				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
+					await _dataContextInterceptor.OnClosingAsync(new(this))
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (_dataConnection != null)
 			{
@@ -432,7 +440,9 @@ namespace LinqToDB
 			}
 
 			if (_dataContextInterceptor != null)
-				await _dataContextInterceptor.OnClosedAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
+					await _dataContextInterceptor.OnClosedAsync(new (this))
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>

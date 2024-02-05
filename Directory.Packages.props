@@ -9,6 +9,7 @@
 	over dependencies like linq2db.cli
 	-->
 	<ItemGroup Label="Build: Analyzers and Tools">
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.139"              />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.11.0-beta1.23525.2" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="8.0.0"                />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="3.11.0-beta1.23525.2" />
@@ -107,6 +108,9 @@
 	<ItemGroup Label="Examples">
 		<PackageVersion Include="linq2db.t4models"                                      Version="5.3.2"                />
 		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="8.0.0"                />
+		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="7.0.13"               />
+		<PackageVersion Include="OpenTelemetry"                                         Version="1.6.0"                />
+		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.6.0"                />
 	</ItemGroup>
 
 </Project>

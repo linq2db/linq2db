@@ -66,7 +66,7 @@
 	
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
-		<AdditionalFiles Include="$(MSBuildThisFileDirectory)/Build/BannedSymbols.txt" />
+		<PackageReference Include="Meziantou.Analyzer" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" />
 	</ItemGroup>
@@ -74,5 +74,4 @@
 	<ItemGroup Condition="'$(Language)'=='C#'">
 		<Compile Include="$(MSBuildThisFileDirectory)/Source/Shared/*.cs" LinkBase="Compatibility" />
 	</ItemGroup>
-
 </Project>

@@ -166,7 +166,9 @@ namespace LinqToDB.Linq.Builder
 			// Will be used for completing GroupBy part
 			key.GroupByContext = groupBy;
 
+#if DEBUG
 			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
+#endif
 
 			if (resultSelector != null)
 			{

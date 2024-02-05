@@ -15,6 +15,7 @@ namespace LinqToDB.Linq.Builder
 	using Visitors;
 	using LinqToDB.Expressions;
 	using LinqToDB.Common.Internal;
+	using Tools;
 
 	internal sealed partial class ExpressionBuilder : IExpressionEvaluator
 	{
@@ -167,14 +168,22 @@ namespace LinqToDB.Linq.Builder
 
 		public Query<T> Build<T>()
 		{
+			using var m = ActivityService.Start(ActivityID.Build);
+
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));
 
 			if (_reorder)
+			{
+				using var mr = ActivityService.Start(ActivityID.ReorderBuilders);
+
 				lock (_sync)
 				{
 					_reorder = false;
 					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToArray();
 				}
+			}
+
+			using var mq = ActivityService.Start(ActivityID.BuildQuery);
 
 			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
 
@@ -285,6 +294,8 @@ namespace LinqToDB.Linq.Builder
 
 		public BuildSequenceResult TryBuildSequence(BuildInfo buildInfo)
 		{
+			using var m = ActivityService.Start(ActivityID.BuildSequence);
+
 			var originalExpression = buildInfo.Expression;
 
 			var expanded = ExpandToRoot(buildInfo.Expression, buildInfo);
@@ -296,8 +307,15 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var builder in _builders)
 			{
-				if (builder.CanBuild(this, buildInfo))
+				bool canBuild;
+
+				using (ActivityService.Start(ActivityID.BuildSequenceCanBuild))
+					canBuild = builder.CanBuild(this, buildInfo);
+
+				if (canBuild)
 				{
+					using var mb = ActivityService.Start(ActivityID.BuildSequenceBuild);
+
 					var result = builder.BuildSequence(this, buildInfo);
 
 					lock (builder)

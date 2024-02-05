@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Remote
 {
 	using Common;
@@ -424,16 +426,27 @@ namespace LinqToDB.Remote
 
 		void IDataContext.Close()
 		{
-			_dataContextInterceptor?.OnClosing(new (this));
-			_dataContextInterceptor?.OnClosed (new (this));
+			if (_dataContextInterceptor != null)
+			{
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosing))
+					_dataContextInterceptor.OnClosing(new(this));
+
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosed))
+					_dataContextInterceptor.OnClosed (new(this));
+			}
 		}
 
 		async Task IDataContext.CloseAsync()
 		{
 			if (_dataContextInterceptor != null)
 			{
-				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-				await _dataContextInterceptor.OnClosedAsync (new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
+					await _dataContextInterceptor.OnClosingAsync(new (this))
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
+					await _dataContextInterceptor.OnClosedAsync (new (this))
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 

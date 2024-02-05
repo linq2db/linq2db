@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -18,8 +19,8 @@ namespace LinqToDB.Expressions
 	/// </summary>
 	public sealed class TypeMapper
 	{
-		private static readonly Type[] _wrapperContructorParameters1 = new[] { typeof(object) };
-		private static readonly Type[] _wrapperContructorParameters2 = new[] { typeof(object), typeof(Delegate[]) };
+		private static readonly Type[] _wrapperConstructorParameters1 = [typeof(object)];
+		private static readonly Type[] _wrapperConstructorParameters2 = [typeof(object), typeof(Delegate[])];
 
 		// [type name] = originalType
 		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>();
@@ -91,8 +92,8 @@ namespace LinqToDB.Expressions
 			if (baseType != Enum.GetUnderlyingType(originalType))
 				throw new LinqToDBException($"Enums {wrapperType} and {originalType} have different base types: {baseType} vs {Enum.GetUnderlyingType(originalType)}");
 
-			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(_ => _.ToString()!, _ => _);
-			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(_ => _.ToString()!, _ => _);
+			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
+			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
 
 			var hasCommonMembers   = false;
 			var hasDifferentValues = false;
@@ -101,7 +102,7 @@ namespace LinqToDB.Expressions
 				if (originalValues.TryGetValue(kvp.Key, out var origValue))
 				{
 					hasCommonMembers = true;
-					if (Convert.ToInt64(kvp.Value) != Convert.ToInt64(origValue))
+					if (Convert.ToInt64(kvp.Value, CultureInfo.InvariantCulture) != Convert.ToInt64(origValue, CultureInfo.InvariantCulture))
 					{
 						hasDifferentValues = true;
 						break;
@@ -204,11 +205,11 @@ namespace LinqToDB.Expressions
 				var eventsHandler = BuildWrapperEvents (wrapperType);
 
 				// pre-register factory, so we don't need to use concurrent dictionary to access factory later
-				var types = delegates != null ? _wrapperContructorParameters2 : _wrapperContructorParameters1;
+				var types = delegates != null ? _wrapperConstructorParameters2 : _wrapperConstructorParameters1;
 				var ctor = wrapperType.GetConstructor(types);
 
 				if (ctor == null)
-					throw new LinqToDBException($"Cannot find contructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
+					throw new LinqToDBException($"Cannot find constructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
 
 				var pInstance = Expression.Parameter(typeof(object));
 

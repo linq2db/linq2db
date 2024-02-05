@@ -23,6 +23,7 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using Tools;
 
 	public abstract class Query
 	{
@@ -484,66 +485,80 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
-			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+			using var mt = ActivityService.Start(ActivityID.GetQueryTotal);
 
-			// I hope fast tree optimization for unbalanced Binary Expressions. See Issue447Tests.
-			//
-			expr = optimizationContext.AggregateExpression(expr);
+			ExpressionTreeOptimizationContext optimizationContext;
+			DataOptions                       dataOptions;
+			var                               queryFlags = QueryFlags.None;
+			Query<T>?                         query;
+			bool                              useCache;
 
-			dependsOnParameters = false;
-
-			if (dataContext is IExpressionPreprocessor preprocessor)
-				expr = preprocessor.ProcessExpression(expr);
-
-			var dataOptions = dataContext.Options;
-
-			var useCache = !dataOptions.LinqOptions.DisableQueryCache;
-
-			QueryFlags queryFlags = QueryFlags.None;
-			Query<T>?  query      = null;
-
-			if (useCache)
+			using (ActivityService.Start(ActivityID.GetQueryFind))
 			{
-				queryFlags = dataContext.GetQueryFlags();
+				using (ActivityService.Start(ActivityID.GetQueryFindExpose))
+				{
+					optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
-				query = _queryCache.Find(dataContext, expr, queryFlags, false);
-				if (query != null)
-					return query;
-			}
+					// I hope fast tree optimization for unbalanced Binary Expressions. See Issue447Tests.
+					//
+					expr = optimizationContext.AggregateExpression(expr);
 
-			// Expose expression, call all needed invocations.
-			// After execution there should be no constants which contains IDataContext reference, no constants with ExpressionQueryImpl
-			// Parameters with SqlQueryDependentAttribute will be transferred to constants
-			// No LambdaExpressions which are located in constants, they will be expanded and injected into tree
-			//
-			var exposed = ExpressionBuilder.ExposeExpression(expr, dataContext, optimizationContext,
+					dependsOnParameters = false;
+
+					if (dataContext is IExpressionPreprocessor preprocessor)
+						expr = preprocessor.ProcessExpression(expr);
+				}
+				dataOptions = dataContext.Options;
+
+				useCache = !dataOptions.LinqOptions.DisableQueryCache;
+
+				if (useCache)
+				{
+					queryFlags = dataContext.GetQueryFlags();
+					using (ActivityService.Start(ActivityID.GetQueryFindFind))
+						query = _queryCache.Find(dataContext, expr, queryFlags, false);
+
+					if (query != null)
+						return query;
+				}
+
+				// Expose expression, call all needed invocations.
+				// After execution there should be no constants which contains IDataContext reference, no constants with ExpressionQueryImpl
+				// Parameters with SqlQueryDependentAttribute will be transferred to constants
+				// No LambdaExpressions which are located in constants, they will be expanded and injected into tree
+				//
+				var exposed = ExpressionBuilder.ExposeExpression(expr, dataContext, optimizationContext,
 				optimizeConditions : true, compactBinary : false /* binary already compacted by AggregateExpression*/);
 
-			// simple trees do not mutate
-			var isExposed = !ReferenceEquals(exposed, expr);
+				// simple trees do not mutate
+				var isExposed = !ReferenceEquals(exposed, expr);
 
-			expr = exposed;
-			if (isExposed && useCache)
-			{
-				dependsOnParameters = true;
+				expr = exposed;
+				if (isExposed && useCache)
+				{
+					dependsOnParameters = true;
 
-				queryFlags |= QueryFlags.ExpandedQuery;
+					queryFlags |= QueryFlags.ExpandedQuery;
 
-				// search again
-				query = _queryCache.Find(dataContext, expr, queryFlags, true);
-				if (query != null)
-					return query;
+					// search again
+					using (ActivityService.Start(ActivityID.GetQueryFindFind))
+						query = _queryCache.Find(dataContext, expr, queryFlags, true);
+
+					if (query != null)
+						return query;
+				}
+
+				if (useCache)
+				{
+					// Cache missed, Build query
+					//
+					_queryCache.TriggerCacheMiss();
+				}
 			}
 
-			if (useCache)
-			{
-				// Cache missed, Build query
-				//
-				_queryCache.TriggerCacheMiss();
-			}
-
-			query = CreateQuery(optimizationContext, new ParametersContext(expr, null, optimizationContext, dataContext),
-				dataContext, expr);
+			using (var mc = ActivityService.Start(ActivityID.GetQueryCreate))
+				query = CreateQuery(optimizationContext, new ParametersContext(expr, null, optimizationContext, dataContext),
+					dataContext, expr);
 
 			if (useCache && !query.DoNotCache)
 			{
@@ -592,6 +607,7 @@ namespace LinqToDB.Linq
 		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)
 		{
 			var linqOptions = optimizationContext.DataContext.Options.LinqOptions;
+
 			if (linqOptions.GenerateExpressionTest)
 			{
 				var testFile = new ExpressionTestGenerator(dataContext).GenerateSource(expr);
@@ -634,6 +650,7 @@ namespace LinqToDB.Linq
 		public SqlStatement    Statement  { get; set; } = null!;
 		public object?         Context    { get; set; }
 		public AliasesContext? Aliases    { get; set; }
+		public DataOptions?    DataOptions { get; set; }
 
 		internal List<ParameterAccessor> ParameterAccessors = new ();
 

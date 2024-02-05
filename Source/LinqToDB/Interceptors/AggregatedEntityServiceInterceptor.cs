@@ -1,5 +1,7 @@
 ﻿using System;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Interceptors
 {
 	sealed class AggregatedEntityServiceInterceptor : AggregatedInterceptor<IEntityServiceInterceptor>, IEntityServiceInterceptor
@@ -9,7 +11,8 @@ namespace LinqToDB.Interceptors
 			return Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					entity = interceptor.EntityCreated(eventData, entity);
+					using (ActivityService.Start(ActivityID.EntityServiceInterceptorEntityCreated))
+						entity = interceptor.EntityCreated(eventData, entity);
 				return entity;
 			});
 		}

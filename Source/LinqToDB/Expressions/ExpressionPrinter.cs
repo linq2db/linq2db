@@ -16,6 +16,8 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
+	using System.Globalization;
+
 	using Common;
 	using Infrastructure;
 
@@ -502,11 +504,9 @@ namespace LinqToDB.Expressions
 					return;
 				}
 
-				var stringValue = value == null
-					? "null"
-					: value.ToString() != value.GetType().ToString()
-						? value.ToString()
-						: value.GetType().ShortDisplayName();
+				var stringValue = value == null ? "null" : FormattableString.Invariant($"{value}");
+				if (value != null && stringValue == value.GetType().ToString())
+					stringValue = value.GetType().ShortDisplayName();
 
 				if (value is string)
 				{
@@ -520,7 +520,9 @@ namespace LinqToDB.Expressions
 		/// <inheritdoc />
 		protected override Expression VisitGoto(GotoExpression gotoExpression)
 		{
-			Append("Goto(" + gotoExpression.Kind.ToString().ToLower() + " ");
+			Append("Goto(");
+			Append(FormattableString.Invariant($"{gotoExpression.Kind}").ToLowerInvariant());
+			Append(" ");
 
 			if (gotoExpression.Kind == GotoExpressionKind.Break)
 			{
@@ -874,7 +876,7 @@ namespace LinqToDB.Expressions
 					}
 
 					Append("namelessParameter{");
-					Append(_namelessParameters.IndexOf(parameterExpression).ToString());
+					Append(FormattableString.Invariant($"{_namelessParameters.IndexOf(parameterExpression)}"));
 					Append("}");
 				}
 				else if (parameterName.Contains('.'))
@@ -914,7 +916,7 @@ namespace LinqToDB.Expressions
 					_encounteredParameters.Add(parameterExpression);
 				}
 
-				_stringBuilder.Append("{" + parameterIndex + "}");
+				_stringBuilder.Append(FormattableString.Invariant($"{{{parameterIndex}}}"));
 			}
 
 			return parameterExpression;

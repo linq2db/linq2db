@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ex = ae.Expressions[j];
 
-						list.Add(new($"{name}.{j}", ex, p, j));
+						list.Add(new(FormattableString.Invariant($"{name}.{j}"), ex, p, j));
 					}
 				}
 				else

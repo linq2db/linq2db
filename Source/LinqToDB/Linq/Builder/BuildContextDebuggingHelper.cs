@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -13,15 +14,15 @@ namespace LinqToDB.Linq.Builder
 #endif
 			var result = context.SelectQuery == null
 				? $"{context.GetType().Name}{contextId}(<none>)"
-				: $"{context.GetType().Name}{contextId}({context.SelectQuery.SourceID})";
+				: FormattableString.Invariant($"{context.GetType().Name}{contextId}({context.SelectQuery.SourceID})");
 
 			if (context is TableBuilder.TableContext tc)
 			{
-				result += $"(T: {tc.SqlTable.SourceID})";
+				result += FormattableString.Invariant($"(T: {tc.SqlTable.SourceID})");
 			}
 			if (context is ScopeContext scope)
 			{
-				result += $"(S:{scope.Context.SelectQuery.SourceID} -> {scope.UpTo.SelectQuery.SourceID})";
+				result += FormattableString.Invariant($"(S:{scope.Context.SelectQuery.SourceID} -> {scope.UpTo.SelectQuery.SourceID})");
 			}
 			else if (context is SubQueryContext sc)
 			{

@@ -5,12 +5,17 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+
+#if NETFRAMEWORK || NETSTANDARD2_0
+using System.Text;
+#endif
 
 using JetBrains.Annotations;
 
@@ -25,6 +30,7 @@ namespace LinqToDB.Data
 	using Linq;
 	using Mapping;
 	using Reflection;
+	using Tools;
 
 	/// <summary>
 	/// Provides database connection command abstraction.
@@ -321,9 +327,21 @@ namespace LinqToDB.Data
 					if (rd.DataReader!.Read())
 					{
 						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-						var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
-						var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
-						var isFaulted = false;
+
+						DbDataReader reader;
+
+						if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+						{
+							using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+								reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
+						}
+						else
+						{
+							reader = rd.DataReader!;
+						}
+
+						var objectReader = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
+						var isFaulted    = false;
 
 						do
 						{
@@ -424,9 +442,21 @@ namespace LinqToDB.Data
 					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
 						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-						var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
-						var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
-						var isFaulted     = false;
+
+						DbDataReader reader;
+
+						if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+						{
+							using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+								reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
+						}
+						else
+						{
+							reader = rd.DataReader!;
+						}
+
+						var objectReader = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
+						var isFaulted    = false;
 
 						do
 						{
@@ -572,11 +602,11 @@ namespace LinqToDB.Data
 			{
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-				{
+			{
 					result = await ReadMultipleResultSetsAsync<T>(rd.DataReader!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					SetRebindParameters(rd);
-				}
+			}
 			}
 
 			return result;
@@ -848,13 +878,17 @@ namespace LinqToDB.Data
 		/// <returns>Number of records, affected by command execution.</returns>
 		public int Execute()
 		{
-			var startedOn     = DateTime.UtcNow;
-			var stopwatch     = Stopwatch.StartNew();
+			using var m = ActivityService.Start(ActivityID.CommandInfoExecute);
+
+			var startedOn = DateTime.UtcNow;
+			var stopwatch = Stopwatch.StartNew();
+
 			InitCommand();
 
 			var commandResult = DataConnection.ExecuteNonQuery();
 
 			stopwatch.Stop();
+
 			if (DataConnection.TraceSwitchConnection.TraceInfo)
 			{
 				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
@@ -880,13 +914,17 @@ namespace LinqToDB.Data
 		/// <returns>Number of records, affected by command execution.</returns>
 		internal int ExecuteCustom(Func<DbCommand, int> customExecute)
 		{
-			var startedOn     = DateTime.UtcNow;
-			var stopwatch     = Stopwatch.StartNew();
+			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteCustom);
+
+			var startedOn = DateTime.UtcNow;
+			var stopwatch = Stopwatch.StartNew();
+
 			InitCommand();
 
 			var commandResult = DataConnection.ExecuteNonQueryCustom(customExecute);
 
 			stopwatch.Stop();
+
 			if (DataConnection.TraceSwitchConnection.TraceInfo)
 			{
 				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
@@ -928,32 +966,35 @@ namespace LinqToDB.Data
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public async Task<int> ExecuteAsync(CancellationToken cancellationToken = default)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			var startedOn     = DateTime.UtcNow;
-			var stopwatch     = Stopwatch.StartNew();
-
-			InitCommand();
-
-			var commandResult = await DataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			stopwatch.Stop();
-			if (DataConnection.TraceSwitchConnection.TraceInfo)
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInfoExecuteAsync))
 			{
-				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
+				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				var startedOn = DateTime.UtcNow;
+				var stopwatch = Stopwatch.StartNew();
+
+				InitCommand();
+
+				var commandResult = await DataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				stopwatch.Stop();
+				if (DataConnection.TraceSwitchConnection.TraceInfo)
 				{
-					TraceLevel      = TraceLevel.Info,
-					Command         = DataConnection.CurrentCommand,
-					StartTime       = startedOn,
-					ExecutionTime   = stopwatch.Elapsed,
-					RecordsAffected = commandResult,
-				});
+					DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
+					{
+						TraceLevel      = TraceLevel.Info,
+						Command         = DataConnection.CurrentCommand,
+						StartTime       = startedOn,
+						ExecutionTime   = stopwatch.Elapsed,
+						RecordsAffected = commandResult,
+					});
+				}
+
+				if (DataConnection.CurrentCommand?.Parameters.Count > 0 && Parameters?.Length > 0)
+					RebindParameters(DataConnection.CurrentCommand);
+
+				return commandResult;
 			}
-
-			if (DataConnection.CurrentCommand?.Parameters.Count > 0 && Parameters?.Length > 0)
-				RebindParameters(DataConnection.CurrentCommand);
-
-			return commandResult;
 		}
 
 		#endregion
@@ -979,6 +1020,8 @@ namespace LinqToDB.Data
 		/// <returns>Resulting value.</returns>
 		public T Execute<T>()
 		{
+			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteT);
+
 			var startedOn     = DateTime.UtcNow;
 			var stopwatch     = Stopwatch.StartNew();
 			var hasParameters = InitCommand();
@@ -991,8 +1034,20 @@ namespace LinqToDB.Data
 				if (rd.DataReader!.Read())
 				{
 					var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-					var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
-					var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
+
+					DbDataReader reader;
+
+					if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+					{
+						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+							reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
+					}
+					else
+					{
+						reader = rd.DataReader!;
+					}
+
+					var objectReader = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
 
 					try
 					{
@@ -1053,51 +1108,54 @@ namespace LinqToDB.Data
 		/// <returns>Task with resulting value.</returns>
 		public async Task<T> ExecuteAsync<T>(CancellationToken cancellationToken = default)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			var startedOn = DateTime.UtcNow;
-			var stopwatch = Stopwatch.StartNew();
-			var hasParameters = InitCommand();
-
-			T result = default!;
-
-			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInfoExecuteAsyncT))
 			{
-				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				var startedOn     = DateTime.UtcNow;
+				var stopwatch     = Stopwatch.StartNew();
+				var hasParameters = InitCommand();
+
+				T result = default!;
+
+				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
-						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-						try
+						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
+							var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
+							try
+							{
 								result = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
-						}
-						catch (InvalidCastException)
-						{
+							}
+							catch (InvalidCastException)
+							{
 								result = GetObjectReader2<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
+							}
 						}
-					}
 
-					stopwatch.Stop();
+						stopwatch.Stop();
 
-					if (DataConnection.TraceSwitchConnection.TraceInfo)
-					{
-						DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
+						if (DataConnection.TraceSwitchConnection.TraceInfo)
 						{
-							TraceLevel      = TraceLevel.Info,
-							Command         = rd.Command,
-							StartTime       = startedOn,
-							ExecutionTime   = stopwatch.Elapsed,
-							RecordsAffected = 1,
-						});
+							DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
+							{
+								TraceLevel      = TraceLevel.Info,
+								Command         = rd.Command,
+								StartTime       = startedOn,
+								ExecutionTime   = stopwatch.Elapsed,
+								RecordsAffected = 1,
+							});
+						}
+
+						SetRebindParameters(rd);
 					}
-
-					SetRebindParameters(rd);
 				}
-			}
 
-			return result;
+				return result;
+			}
 		}
 
 		#endregion
@@ -1511,10 +1569,7 @@ namespace LinqToDB.Data
 
 			for (var i = 0; i < dataReader.FieldCount; i++)
 			{
-				sb.Value.Append(dataReader.GetName(i))
-					.Append(',')
-					.Append(dataReader.GetFieldType(i))
-					.Append(';');
+				sb.Value.Append(CultureInfo.InvariantCulture, $"{dataReader.GetName(i)},{dataReader.GetFieldType(i)};");
 			}
 
 			return sb.Value.ToString();

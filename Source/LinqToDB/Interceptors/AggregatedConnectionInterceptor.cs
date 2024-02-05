@@ -3,6 +3,8 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Interceptors
 {
 	sealed class AggregatedConnectionInterceptor : AggregatedInterceptor<IConnectionInterceptor>, IConnectionInterceptor
@@ -12,7 +14,8 @@ namespace LinqToDB.Interceptors
 			Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					interceptor.ConnectionOpening(eventData, connection);
+					using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
+						interceptor.ConnectionOpening(eventData, connection);
 			});
 		}
 
@@ -21,7 +24,9 @@ namespace LinqToDB.Interceptors
 			await Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
-					await interceptor.ConnectionOpeningAsync(eventData, connection, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpeningAsync))
+						await interceptor.ConnectionOpeningAsync(eventData, connection, cancellationToken)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
@@ -30,7 +35,8 @@ namespace LinqToDB.Interceptors
 			Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					interceptor.ConnectionOpened(eventData, connection);
+					using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
+						interceptor.ConnectionOpened(eventData, connection);
 			});
 		}
 
@@ -39,7 +45,9 @@ namespace LinqToDB.Interceptors
 			await Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
-					await interceptor.ConnectionOpenedAsync(eventData, connection, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpenedAsync))
+						await interceptor.ConnectionOpenedAsync(eventData, connection, cancellationToken)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 	}

@@ -11,6 +11,7 @@ namespace LinqToDB.Linq
 {
 	using Async;
 	using Data;
+	using Tools;
 	using Extensions;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
@@ -293,6 +294,8 @@ namespace LinqToDB.Linq
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
+			using var m = ActivityService.Start(ActivityID.QueryProviderExecuteT);
+
 			var query = GetQuery(ref expression, false, out _);
 
 			using (StartLoadTransaction(query))
@@ -308,6 +311,8 @@ namespace LinqToDB.Linq
 
 		object? IQueryProvider.Execute(Expression expression)
 		{
+			using var m = ActivityService.Start(ActivityID.QueryProviderExecute);
+
 			var query = GetQuery(ref expression, false, out _);
 
 			using (StartLoadTransaction(query))
@@ -327,6 +332,8 @@ namespace LinqToDB.Linq
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
+			using var _ = ActivityService.Start(ActivityID.QueryProviderGetEnumeratorT);
+
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
 
@@ -343,6 +350,8 @@ namespace LinqToDB.Linq
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
+			using var _ = ActivityService.Start(ActivityID.QueryProviderGetEnumerator);
+
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
 
@@ -358,6 +367,5 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
-
 	}
 }

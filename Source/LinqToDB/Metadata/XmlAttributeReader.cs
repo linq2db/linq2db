@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -49,7 +50,7 @@ namespace LinqToDB.Metadata
 	/// <item>Node name is a mapping attribute type name as <c>Type.FullName</c>, <c>Type.Name</c> or <c>Type.Name</c> without <c>"Attribute"</c> suffix</item>
 	/// <item>PropertyName node name is a name of attribute property you want to set</item>
 	/// <item>Type attribute specify value type as <c>Type.FullName</c> or <c>Type.Name</c> string and specified only for non-string properties</item>
-	/// <item>Value contains attribute property value, serialized as string, understandable by <see cref="Converter.ChangeType(object?, Type, Mapping.MappingSchema?)"/> method</item>
+	/// <item>Value contains attribute property value, serialized as string, understandable by <see cref="Converter.ChangeType(object?, Type, Mapping.MappingSchema?, ConversionType)"/> method</item>
 	/// </list>
 	/// </example>
 	public class XmlAttributeReader : IMetadataReader
@@ -58,7 +59,7 @@ namespace LinqToDB.Metadata
 
 		readonly Dictionary<string,MetaTypeInfo> _types;
 
-		readonly static IReadOnlyDictionary<string,Type> _mappingAttributes;
+		static readonly IReadOnlyDictionary<string,Type> _mappingAttributes;
 
 		static XmlAttributeReader()
 		{
@@ -184,7 +185,7 @@ namespace LinqToDB.Metadata
 			if (xmlDocStream == null) throw new ArgumentNullException(nameof(xmlDocStream));
 
 			_types    = LoadStream(xmlDocStream, null);
-			_objectId = xmlDocStream.GetHashCode().ToString();
+			_objectId = xmlDocStream.GetHashCode().ToString(NumberFormatInfo.InvariantInfo);
 		}
 
 		static AttributeInfo[] GetAttrs(string? fileName, XElement el, string? exclude, string typeName, string? memberName)

@@ -12,6 +12,7 @@ namespace LinqToDB.SqlQuery
 	using SqlProvider;
 	using Visitors;
 	using DataProvider;
+	using System.Globalization;
 
 	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
@@ -882,7 +883,7 @@ namespace LinqToDB.SqlQuery
 							if (i > 0)
 								rnBuilder.Append(", ");
 
-							rnBuilder.Append($"{{{parameters.Count}}}");
+							rnBuilder.Append(CultureInfo.InvariantCulture, $"{{{parameters.Count}}}");
 							parameters.Add(partitionBy[i]);
 						}
 					}
@@ -915,7 +916,7 @@ namespace LinqToDB.SqlQuery
 								rnBuilder.Append(", ");
 
 							var orderItem = orderByItems[i];
-							rnBuilder.Append($"{{{parameters.Count}}}");
+							rnBuilder.Append(CultureInfo.InvariantCulture, $"{{{parameters.Count}}}");
 							if (orderItem.IsDescending)
 								rnBuilder.Append(" DESC");
 

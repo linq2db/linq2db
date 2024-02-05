@@ -19,9 +19,14 @@ namespace LinqToDB.Remote
 	{
 		#region Public Members
 
-		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues, IReadOnlyCollection<string>? queryHints)
+		public static string Serialize(
+			MappingSchema                serializationSchema,
+			SqlStatement                 statement,
+			IReadOnlyParameterValues?    parameterValues,
+			IReadOnlyCollection<string>? queryHints,
+			DataOptions                  dataOptions)
 		{
-			return new QuerySerializer(serializationSchema).Serialize(statement, parameterValues, queryHints);
+			return new QuerySerializer(serializationSchema).Serialize(statement, parameterValues, queryHints, dataOptions);
 		}
 
 		public static LinqServiceQuery Deserialize(MappingSchema serializationSchema, MappingSchema contextSchema, DataOptions options, string str)
@@ -115,7 +120,7 @@ namespace LinqToDB.Remote
 
 			protected void Append(int value)
 			{
-				Builder.Append(' ').Append(value);
+				Builder.Append(CultureInfo.InvariantCulture, $" {value}");
 			}
 
 			protected void AppendStringList(ICollection<string> strings)
@@ -131,12 +136,14 @@ namespace LinqToDB.Remote
 				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
 
 				if (value.HasValue)
-					Builder.Append(value.Value);
+					Builder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
 			}
 
 			protected void Append(Type? value)
 			{
-				Builder.Append(' ').Append(GetType(value));
+				// don't move space to format, as GetType is not get-only method...
+				Builder.Append(' ');
+				Builder.Append(CultureInfo.InvariantCulture, $"{GetType(value)}");
 			}
 
 			protected void Append(bool value)
@@ -173,7 +180,7 @@ namespace LinqToDB.Remote
 
 			protected void Append(IQueryElement? element)
 			{
-				Builder.Append(' ').Append(element == null ? 0 : ObjectIndices[element]);
+				Builder.Append(CultureInfo.InvariantCulture, $" {(element == null ? 0 : ObjectIndices[element])}");
 			}
 
 			protected void AppendDelayed(IQueryElement? element)
@@ -181,11 +188,11 @@ namespace LinqToDB.Remote
 				Builder.Append(' ');
 
 				if (element == null)
-					Builder.Append(0);
+					Builder.Append('0');
 				else
 				{
 					if (ObjectIndices.TryGetValue(element, out var idx))
-						Builder.Append(idx);
+						Builder.Append(idx.ToString(NumberFormatInfo.InvariantInfo));
 					else
 					{
 						if (!DelayedObjects.TryGetValue(element, out var id))
@@ -210,10 +217,7 @@ namespace LinqToDB.Remote
 				}
 				else
 				{
-					Builder
-						.Append(str.Length)
-						.Append(':')
-						.Append(str);
+					Builder.Append(CultureInfo.InvariantCulture, $"{str.Length}:{str}");
 				}
 			}
 
@@ -230,21 +234,13 @@ namespace LinqToDB.Remote
 
 						ObjectIndices.Add(type, idx = ++Index);
 
-						Builder
-							.Append(idx)
-							.Append(' ')
-							.Append(TypeArrayIndex)
-							.Append(' ')
-							.Append(elementType);
+						Builder.Append(CultureInfo.InvariantCulture, $"{idx} {TypeArrayIndex} {elementType}");
 					}
 					else
 					{
 						ObjectIndices.Add(type, idx = ++Index);
 
-						Builder
-							.Append(idx)
-							.Append(' ')
-							.Append(TypeIndex);
+						Builder.Append(CultureInfo.InvariantCulture, $"{idx} {TypeIndex}");
 
 						Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					}
@@ -270,6 +266,8 @@ namespace LinqToDB.Remote
 
 			protected string Str = null!;
 			protected int    Pos;
+
+			public DataOptions Options => _options;
 
 			protected DeserializerBase(MappingSchema serializationMappingSchema, MappingSchema contextMappingSchema, DataOptions options)
 			{
@@ -476,7 +474,7 @@ namespace LinqToDB.Remote
 						TypeIndex      => ResolveType(ReadString())!,
 						TypeArrayIndex => GetArrayType(Read<Type>()!),
 						_              => throw new SerializationException(
-							$"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}"),
+							FormattableString.Invariant($"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}")),
 					};
 					ObjectIndices.Add(idx, type);
 
@@ -484,7 +482,7 @@ namespace LinqToDB.Remote
 
 					var idx2 = ReadInt();
 					if (idx2 != idx)
-						throw new SerializationException($"Wrong type reading, expected index is {idx} but was {idx2}");
+						throw new SerializationException(FormattableString.Invariant($"Wrong type reading, expected index is {idx} but was {idx2}"));
 				}
 
 				return (Type?) type;
@@ -717,16 +715,30 @@ namespace LinqToDB.Remote
 				}
 			}
 
-			public string Serialize(SqlStatement statement, IReadOnlyParameterValues? parameterValues, IReadOnlyCollection<string>? queryHints)
+			public string Serialize(
+				SqlStatement                 statement,
+				IReadOnlyParameterValues?    parameterValues,
+				IReadOnlyCollection<string>? queryHints,
+				DataOptions                  options)
 			{
+				// Add QueryHints.
+				//
 				var queryHintCount = queryHints?.Count ?? 0;
 
-				Builder.AppendLine(queryHintCount.ToString());
+				Builder.AppendLine(queryHintCount.ToString(NumberFormatInfo.InvariantInfo));
 
 				if (queryHintCount > 0)
 					foreach (var hint in queryHints!)
 						Builder.AppendLine(hint);
 
+				// Serialize options.
+				//
+				Builder
+					.Append(CultureInfo.InvariantCulture, $"{options.SqlOptions.Pack()}")
+					.AppendLine();
+
+				// Serialize statement.
+				//
 				var visitor = new QuerySerializationVisitor(this, new EvaluationContext(parameterValues));
 
 				visitor.Visit(statement);
@@ -812,16 +824,13 @@ namespace LinqToDB.Remote
 
 				ObjectIndices.Add(e, ++Index);
 
-				Builder
-					.Append(Index)
-					.Append(' ')
-					.Append((int)e.ElementType);
+				Builder.Append(CultureInfo.InvariantCulture, $"{Index} {(int)e.ElementType}");
 
 				if (DelayedObjects.Count > 0)
 				{
 					if (DelayedObjects.TryGetValue(e, out var id))
 					{
-						Builder.Replace(id, Index.ToString());
+						Builder.Replace(id, Index.ToString(NumberFormatInfo.InvariantInfo));
 						DelayedObjects.Remove(e);
 					}
 				}
@@ -1657,6 +1666,8 @@ namespace LinqToDB.Remote
 			{
 				Str = str;
 
+				// Deserialize QueryHints.
+				//
 				List<string>? queryHints = null;
 
 				var queryHintCount = ReadInt();
@@ -1680,12 +1691,20 @@ namespace LinqToDB.Remote
 					}
 				}
 
+				// Deserialize options.
+				//
+				var options = Options.WithOptions<SqlOptions>(o => o.Unpack(ReadInt()));
+
+				NextLine();
+
+				// Deserialize statement.
+				//
 				while (Parse()) {}
 
 				foreach (var action in _actions)
 					action();
 
-				return new LinqServiceQuery { Statement = _statement, QueryHints = queryHints };
+				return new LinqServiceQuery { Statement = _statement, QueryHints = queryHints, DataOptions = options };
 			}
 
 			bool Parse()

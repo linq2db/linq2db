@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Interceptors
 {
-	abstract class AggregatedInterceptor<TInterceptor>: IInterceptor
+	abstract class AggregatedInterceptor<TInterceptor> : IInterceptor
 		where TInterceptor : IInterceptor
 	{
 		public List<TInterceptor> Interceptors { get; } = new ();

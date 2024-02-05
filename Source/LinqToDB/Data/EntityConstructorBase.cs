@@ -16,6 +16,7 @@ namespace LinqToDB.Data
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using Tools;
 
 	internal abstract class EntityConstructorBase
 	{
@@ -709,9 +710,12 @@ namespace LinqToDB.Data
 
 		static object OnEntityCreated(IDataContext context, object entity, TableOptions tableOptions, string? tableName, string? schemaName, string? databaseName, string? serverName)
 		{
-			return context is IInterceptable<IEntityServiceInterceptor> entityService ?
-				entityService.Interceptor?.EntityCreated(new(context, tableOptions, tableName, schemaName, databaseName, serverName), entity) ?? entity :
-				entity;
+			if (context is not IInterceptable<IEntityServiceInterceptor> { Interceptor: { } interceptor })
+				return entity;
+
+			using (ActivityService.Start(ActivityID.EntityServiceInterceptorEntityCreated))
+				return interceptor.EntityCreated(
+					new(context, tableOptions, tableName, schemaName, databaseName, serverName), entity);
 		}
 
 		static readonly MethodInfo _onEntityCreatedMethodInfo = MemberHelper.MethodOf(() =>

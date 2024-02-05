@@ -186,7 +186,9 @@ namespace LinqToDB.SqlQuery
 						// limit number of printed records
 						if (i == 10)
 						{
-							writer.Append($"-- skipping... total rows: {rows.Count}");
+							writer
+								.Append("-- skipping... total rows: ")
+								.Append(rows.Count);
 							break;
 						}
 

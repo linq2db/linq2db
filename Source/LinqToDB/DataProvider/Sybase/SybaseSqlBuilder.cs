@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Data.Common;
 
@@ -67,9 +68,7 @@ namespace LinqToDB.DataProvider.Sybase
 					// yep, 5461...
 					if (type.Type.Length == null || type.Type.Length > 5461 || type.Type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(5461)");
+						StringBuilder.Append("NVarChar(5461)");
 						return;
 					}
 					break;

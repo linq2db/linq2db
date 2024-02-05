@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 
@@ -141,7 +142,7 @@ namespace LinqToDB.SqlQuery
 
 		static int Len(object obj)
 		{
-			return obj.ToString()!.Length;
+			return string.Format(CultureInfo.InvariantCulture, "{0}", obj).Length;
 		}
 
 		static readonly TypeInfo[] _typeInfo = SortTypeInfo
@@ -324,7 +325,7 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType UInt16           = new (DataType.UInt16,         typeof(ushort),        (int?)null,     (int?)null, null, null);
 		public static readonly SqlDataType Int32            = DbInt32;
 		public static readonly SqlDataType UInt32           = new (DataType.UInt32,         typeof(uint),          (int?)null,     (int?)null, null, null);
-		public static readonly SqlDataType UInt64           = new (DataType.UInt64,         typeof(ulong),         (int?)null, ulong.MaxValue.ToString().Length, null, null);
+		public static readonly SqlDataType UInt64           = new (DataType.UInt64,         typeof(ulong),         (int?)null, ulong.MaxValue.ToString(NumberFormatInfo.InvariantInfo).Length, null, null);
 		public static readonly SqlDataType Single           = DbSingle;
 		public static readonly SqlDataType Double           = DbDouble;
 		public static readonly SqlDataType Decimal          = DbDecimal;
@@ -417,7 +418,7 @@ namespace LinqToDB.SqlQuery
 			writer.Append(Type.DataType);
 
 			if (!string.IsNullOrEmpty(Type.DbType))
-				writer.Append($":\"{Type.DbType}\"");
+				writer.Append(":\"").Append(Type.DbType).Append('"');
 
 			if (Type.Length != 0)
 				writer.Append('(').Append(Type.Length).Append(')');

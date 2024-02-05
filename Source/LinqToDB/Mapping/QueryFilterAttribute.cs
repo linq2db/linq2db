@@ -26,7 +26,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return IdentifierBuilder.GetObjectID(FilterFunc).ToString();
+			return FormattableString.Invariant($"{IdentifierBuilder.GetObjectID(FilterFunc)}");
 		}
 	}
 }

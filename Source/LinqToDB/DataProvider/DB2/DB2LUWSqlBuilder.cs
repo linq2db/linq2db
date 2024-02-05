@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Globalization;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -77,10 +78,8 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				case DataType.VarBinary:
 					// https://www.ibm.com/docs/en/db2/11.5?topic=list-binary-strings
-					StringBuilder
-						.Append("VARBINARY(")
-						.Append(type.Type.Length == null || type.Type.Length > 32672 || type.Type.Length < 1 ? 32672 : type.Type.Length)
-						.Append(')');
+					var length = type.Type.Length == null || type.Type.Length > 32672 || type.Type.Length < 1 ? 32672 : type.Type.Length;
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARBINARY({length})");
 					return;
 			}
 

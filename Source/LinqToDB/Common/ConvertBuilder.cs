@@ -212,11 +212,12 @@ namespace LinqToDB.Common
 				{
 					var val = values.GetValue(i)!;
 					var lv  = (long)Convert.ChangeType(val, typeof(long), Thread.CurrentThread.CurrentCulture)!;
+					var lvs = lv.ToString(NumberFormatInfo.InvariantInfo);
 
-					dic[lv.ToString()] = val;
+					dic[lvs] = val;
 
 					if (lv > 0)
-						dic["+" + lv.ToString()] = val;
+						dic["+" + lvs] = val;
 				}
 
 				for (var i = 0; i < values.Length; i++)
@@ -458,7 +459,9 @@ namespace LinqToDB.Common
 								Expression.Call(
 									_throwLinqToDBConvertException,
 									Expression.Constant(
-										string.Format("Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
+										string.Format(
+											CultureInfo.InvariantCulture,
+											"Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
 											from.FullName, fromAttrs[0].Field.Name,
 											to.FullName,
 											prev.To.Field.Name,

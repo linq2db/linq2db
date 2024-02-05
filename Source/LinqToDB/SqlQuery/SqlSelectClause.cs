@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.SqlQuery
@@ -358,12 +359,12 @@ namespace LinqToDB.SqlQuery
 
 					csb
 						.Append('t')
-						.Append(c.Parent?.SourceID ?? -1)
+						.Append((c.Parent?.SourceID ?? -1).ToString(NumberFormatInfo.InvariantInfo))
 #if DEBUG
 						.Append('[').Append(c.Number).Append(']')
 #endif
 						.Append('.')
-						.Append(c.Alias ?? "c" + (i + 1));
+						.Append(c.Alias ?? FormattableString.Invariant($"c{i + 1}"));
 
 					var columnName = csb.ToString();
 					columnNames.Add(columnName);

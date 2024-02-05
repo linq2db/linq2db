@@ -57,7 +57,7 @@
 
 	//GenerateConstructors = false;
 
-	LoadSqlServerMetadata(GetConnectionString("SqlServer.2014"));
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.2019"));
 
 	AddReturnParameter("Issue1897");
 

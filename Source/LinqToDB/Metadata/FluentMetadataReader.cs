@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
@@ -98,7 +99,7 @@ namespace LinqToDB.Metadata
 				sb.Value.Append('.')
 					.Append(IdentifierBuilder.GetObjectID(type.Key))
 					.Append('.')
-					.Append(type.Value.Length)
+					.Append(type.Value.Length.ToString(NumberFormatInfo.InvariantInfo))
 					.Append('.')
 					;
 
@@ -113,7 +114,7 @@ namespace LinqToDB.Metadata
 					.Append('.')
 					.Append(member.Key.Name)
 					.Append('.')
-					.Append(member.Value.Length)
+					.Append(member.Value.Length.ToString(NumberFormatInfo.InvariantInfo))
 					.Append('.')
 					;
 
@@ -128,7 +129,7 @@ namespace LinqToDB.Metadata
 					.Append('.')
 					.Append(column.Key.Name)
 					.Append('.')
-					.Append(column.Value.Length)
+					.Append(column.Value.Length.ToString(NumberFormatInfo.InvariantInfo))
 					.Append('.')
 					;
 

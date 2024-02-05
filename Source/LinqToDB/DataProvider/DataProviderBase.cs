@@ -6,6 +6,7 @@ using System.Data.Common;
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -356,7 +357,7 @@ namespace LinqToDB.DataProvider
 				case DataType.NVarChar  :
 				case DataType.Text      :
 				case DataType.NText     :
-					if      (value is DateTimeOffset dto) value = dto.ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
+					if      (value is DateTimeOffset dto) value = dto.ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz", DateTimeFormatInfo.InvariantInfo);
 					else if (value is DateTime dt)
 					{
 						value = dt.ToString(
@@ -364,7 +365,8 @@ namespace LinqToDB.DataProvider
 								? dt.Hour == 0 && dt.Minute == 0 && dt.Second == 0
 									? "yyyy-MM-dd"
 									: "yyyy-MM-ddTHH:mm:ss"
-								: "yyyy-MM-ddTHH:mm:ss.fff");
+								: "yyyy-MM-ddTHH:mm:ss.fff",
+							DateTimeFormatInfo.InvariantInfo);
 					}
 					else if (value is TimeSpan ts)
 					{
@@ -375,7 +377,8 @@ namespace LinqToDB.DataProvider
 									: "d\\.hh\\:mm\\:ss"
 								: ts.Milliseconds > 0
 									? "hh\\:mm\\:ss\\.fff"
-									: "hh\\:mm\\:ss");
+									: "hh\\:mm\\:ss",
+							DateTimeFormatInfo.InvariantInfo);
 					}
 					break;
 				case DataType.Image     :
@@ -388,7 +391,7 @@ namespace LinqToDB.DataProvider
 					if (value is TimeSpan span) value = span.Ticks;
 					break;
 				case DataType.Xml       :
-					     if (value is XDocument)            value = value.ToString();
+					     if (value is XDocument xdoc)       value = xdoc.ToString();
 					else if (value is XmlDocument document) value = document.InnerXml;
 					break;
 			}

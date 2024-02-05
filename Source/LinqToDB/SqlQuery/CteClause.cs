@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 
@@ -75,7 +76,13 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return writer.Append($"CTE({CteID}, {Name})");
+			return writer
+				.Append("CTE(")
+				.Append(CteID)
+				.Append(", ")
+				.Append(Name)
+				.Append(")")
+				;
 		}
 
 		public void UpdateIndex(int index, SqlField field)

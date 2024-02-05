@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -186,7 +187,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (value is DateTimeOffset dto)
 					{
 						dto      = dto.WithPrecision(dataType.Precision ?? 6);
-						var zone = (dto.Offset < TimeSpan.Zero ? "-" : "+") + dto.Offset.ToString("hh\\:mm");
+						var zone = (dto.Offset < TimeSpan.Zero ? "-" : "+") + dto.Offset.ToString("hh\\:mm", DateTimeFormatInfo.InvariantInfo);
 						value    = Adapter.CreateOracleTimeStampTZ(dto, zone);
 					}
 					break;

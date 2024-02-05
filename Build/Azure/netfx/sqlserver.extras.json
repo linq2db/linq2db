@@ -1,11 +1,9 @@
 ﻿{
 	"NETFX.Azure": {
 		"Providers": [
-			// disable to shorten test execution time
-			//"SqlServer.SA",
+			"SqlServer.SA",
 			"SqlServer.SA.MS",
-			// disable to shorten test execution time
-			//"SqlServer.Contained",
+			"SqlServer.Contained",
 			"SqlServer.Contained.MS"
 		]
 	}

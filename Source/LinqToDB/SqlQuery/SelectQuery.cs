@@ -103,7 +103,7 @@ namespace LinqToDB.SqlQuery
 			internal set => _uniqueKeys = value;
 		}
 
-		public bool HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
+		public  bool                   HasUniqueKeys => _uniqueKeys?.Count > 0;
 
 		#endregion
 

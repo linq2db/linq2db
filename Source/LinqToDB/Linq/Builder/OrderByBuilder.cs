@@ -106,8 +106,9 @@ namespace LinqToDB.Linq.Builder
 			foreach (var expr in placeholders)
 			{
 				// we do not need sorting by immutable values, like "Some", Func("Some"), "Some1" + "Some2". It does nothing for ordering
+				// IT: Actually it does. See ORDER BY ordinal position.
 				//
-				if (QueryHelper.IsConstant(expr.Sql))
+				if (!builder.DataOptions.SqlOptions.EnableConstantExpressionInOrderBy && QueryHelper.IsConstant(expr.Sql))
 					continue;
 
 				sequence.SelectQuery.OrderBy.Expr(expr.Sql, methodCall.Method.Name.EndsWith("Descending"));

@@ -338,7 +338,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var pdt = db.Types2.First(t => t.ID == 1).DateTimeValue;
-				var dt  = DateTime.Parse("2010-12-14T05:00:07.4250141Z");
+				var dt  = DateTime.Parse("2010-12-14T05:00:07.4250141Z", DateTimeFormatInfo.InvariantInfo);
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue = dt });
 
@@ -370,7 +370,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var pdt = db.Types2.First(t => t.ID == 1).DateTimeValue2;
-				var dt  = DateTime.Parse("2010-12-14T05:00:07.4250141Z");
+				var dt  = DateTime.Parse("2010-12-14T05:00:07.4250141Z", DateTimeFormatInfo.InvariantInfo);
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = dt });
 
@@ -402,7 +402,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var pdt = db.Types2.First(t => t.ID == 1).DateTimeValue2;
-				var dt  = DateTime.Parse("2010-12-14T05:00:07.4250141Z");
+				var dt  = DateTime.Parse("2010-12-14T05:00:07.4250141Z", DateTimeFormatInfo.InvariantInfo);
 
 				db.Types2
 					.Where(t => t.ID == 1)
@@ -437,7 +437,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var pdt = db.Types2.First(t => t.ID == 1).DateTimeValue2;
-				var dt  = DateTime.Parse("2010-12-14T05:00:07.4250141Z");
+				var dt  = DateTime.Parse("2010-12-14T05:00:07.4250141Z", DateTimeFormatInfo.InvariantInfo);
 				var tt  = db.Types2.First(t => t.ID == 1);
 
 				tt.DateTimeValue2 = dt;

@@ -77,7 +77,7 @@ namespace LinqToDB.Linq
 							var index = columnIndex.Value * 2;
 							if (context.NewVariables[index] == null)
 							{
-								var variable                       = Expression.Variable(typeof(bool), $"is_null_{columnIndex}");
+								var variable                       = Expression.Variable(typeof(bool), FormattableString.Invariant($"is_null_{columnIndex}"));
 								context.NewVariables[index]        = variable;
 								context.Replacements[index]        = variable;
 								context.InsertedExpressions[index] = Expression.Assign(variable, call);
@@ -98,7 +98,7 @@ namespace LinqToDB.Linq
 								{
 									// no IsDBNull call: column is not nullable
 									// (also could be a bad expression)
-									variable                           = Expression.Variable(type, $"get_value_{columnIndex}");
+									variable                           = Expression.Variable(type, FormattableString.Invariant($"get_value_{columnIndex}"));
 									context.InsertedExpressions[index] = Expression.Assign(variable, Expression.Convert(call, type));
 								}
 								else
@@ -110,7 +110,7 @@ namespace LinqToDB.Linq
 										context.IsNullableStruct[columnIndex.Value] = true;
 									}
 
-									variable                   = Expression.Variable(type, $"get_value_{columnIndex}");
+									variable                   = Expression.Variable(type, FormattableString.Invariant($"get_value_{columnIndex}"));
 									context.InsertedExpressions[index] = Expression.Assign(
 										variable,
 										Expression.Condition(
@@ -142,7 +142,7 @@ namespace LinqToDB.Linq
 
 						if (context.NewVariables[index] == null)
 						{
-							context.NewVariables[index] = Expression.Variable(typeof(object), $"get_value_{columnIndex}");
+							context.NewVariables[index] = Expression.Variable(typeof(object), FormattableString.Invariant($"get_value_{columnIndex}"));
 							if (context.SlowColumnTypes == null)
 							{
 								context.SlowColumnTypes = new Dictionary<int, Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>>();
@@ -313,7 +313,7 @@ namespace LinqToDB.Linq
 						// this is currently how we detect method that we must process
 						if (idx != context.ColumnIndex)
 						{
-							context.FailMessage = $"Expected column index: {context.ColumnIndex}, but found {idx}";
+							context.FailMessage = FormattableString.Invariant($"Expected column index: {context.ColumnIndex}, but found {idx}");
 							return e;
 						}
 
@@ -374,7 +374,7 @@ namespace LinqToDB.Linq
 					{
 						if (idx != context.ColumnIndex)
 						{
-							context.FailMessage = $"Expected column index: {context.ColumnIndex}, but found {idx}";
+							context.FailMessage = FormattableString.Invariant($"Expected column index: {context.ColumnIndex}, but found {idx}");
 							return;
 						}
 

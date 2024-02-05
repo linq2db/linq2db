@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Data.RetryPolicy
 {
 	using Configuration;
+	using Tools;
 
 	sealed class RetryingDbCommand : DbCommand, IProxy<DbCommand>
 	{
@@ -81,32 +82,71 @@ namespace LinqToDB.Data.RetryPolicy
 
 		protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
 		{
+			using var m = ActivityService.Start(ActivityID.CommandExecuteReader);
 			return _policy.Execute(() => _command.ExecuteReader(behavior));
 		}
 
 		public override int ExecuteNonQuery()
 		{
+			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQuery);
 			return _policy.Execute(_command.ExecuteNonQuery);
 		}
 
 		public override object? ExecuteScalar()
 		{
+			using var m = ActivityService.Start(ActivityID.CommandExecuteScalar);
 			return _policy.Execute(_command.ExecuteScalar);
 		}
 
 		protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
 		{
-			return _policy.ExecuteAsync(ct => _command.ExecuteReaderAsync(behavior, ct), cancellationToken);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync);
+
+			if (a is null)
+				return _policy.ExecuteAsync(ct => _command.ExecuteReaderAsync(behavior, ct), cancellationToken);
+
+			return CallAwaitUsing();
+
+			async Task<DbDataReader> CallAwaitUsing()
+			{
+				await using (a)
+					return await _policy.ExecuteAsync(ct => _command.ExecuteReaderAsync(behavior, ct), cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 		}
 
 		public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
-			return _policy.ExecuteAsync(_command.ExecuteNonQueryAsync, cancellationToken);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync);
+
+			if (a is null)
+				return _policy.ExecuteAsync(_command.ExecuteNonQueryAsync, cancellationToken);
+
+			return CallAwaitUsing();
+
+			async Task<int> CallAwaitUsing()
+			{
+				await using (a)
+					return await _policy.ExecuteAsync(_command.ExecuteNonQueryAsync, cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 		}
 
 		public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
-			return _policy.ExecuteAsync(_command.ExecuteScalarAsync, cancellationToken);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteScalarAsync);
+
+			if (a is null)
+				return _policy.ExecuteAsync(_command.ExecuteScalarAsync, cancellationToken);
+
+			return CallAwaitUsing();
+
+			async Task<object?> CallAwaitUsing()
+			{
+				await using (a)
+					return await _policy.ExecuteAsync(_command.ExecuteScalarAsync, cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 		}
 
 		public DbCommand UnderlyingObject => _command;

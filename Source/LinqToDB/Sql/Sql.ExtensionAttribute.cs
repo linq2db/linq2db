@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -295,7 +296,7 @@ namespace LinqToDB
 
 				if (Extension != null)
 				{
-					str = $"{paramPrefix}('{Name ?? ""}', {Extension.ChainPrecedence}): {Extension.Expr}";
+					str = FormattableString.Invariant($"{paramPrefix}('{Name ?? ""}', {Extension.ChainPrecedence}): {Extension.Expr}");
 				}
 				else if (Expression != null)
 				{
@@ -408,7 +409,7 @@ namespace LinqToDB
 								return GetValue<T>(i);
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
+					throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Argument '{0}' not found", argName));
 				}
 
 				public object GetObjectValue(int index)
@@ -428,7 +429,7 @@ namespace LinqToDB
 								return GetObjectValue(i);
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
+					throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression? GetExpression(int index, bool unwrap)
@@ -450,7 +451,7 @@ namespace LinqToDB
 						}
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
+					throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression? ConvertToSqlExpression()
@@ -898,7 +899,7 @@ namespace LinqToDB
 							{
 								if (p.Expression != null)
 								{
-									paramValue = $"{{{newParams.Count}}}";
+									paramValue = string.Format(CultureInfo.InvariantCulture, "{{{0}}}", newParams.Count);
 									newParams.Add(p.Expression);
 								}
 							}
@@ -1036,7 +1037,7 @@ namespace LinqToDB
 
 			public override string GetObjectID()
 			{
-				return $"{base.GetObjectID()}.{TokenName}.{IdentifierBuilder.GetObjectID(BuilderType)}.{BuilderValue}.{ChainPrecedence}.";
+				return FormattableString.Invariant($"{base.GetObjectID()}.{TokenName}.{IdentifierBuilder.GetObjectID(BuilderType)}.{BuilderValue}.{ChainPrecedence}.");
 			}
 		}
 	}

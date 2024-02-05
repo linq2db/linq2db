@@ -226,8 +226,8 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			// handles situation, when char values were serialized as character hex value for some
 			// versions of Microsoft.Data.Sqlite
-			if (Name == ProviderName.SQLiteMS && value is char)
-				value = value.ToString();
+			if (Name == ProviderName.SQLiteMS && value is char chr)
+				value = chr.ToString();
 
 			if (value is Guid guid)
 			{

@@ -379,7 +379,6 @@ const LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.ManagedClientNamespace 
 const LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.NativeAssemblyName = "Sybase.AdoNet45.AseClient" -> string!
 const LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.NativeClientNamespace = "Sybase.Data.AseClient" -> string!
 const LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.NativeProviderFactoryName = "Sybase.Data.AseClient" -> string!
-const LinqToDB.LinqToDBConstants.Copyright = "© 2011-2023 linq2db.com" -> string!
 const LinqToDB.LinqToDBConstants.ProductDescription = "Linq to DB" -> string!
 const LinqToDB.LinqToDBConstants.ProductName = "Linq to DB" -> string!
 const LinqToDB.ProviderName.Access = "Access" -> string!
@@ -3100,7 +3099,6 @@ LinqToDB.Expressions.CustomMapperAttribute
 LinqToDB.Expressions.CustomMapperAttribute.CustomMapperAttribute(System.Type! mapper) -> void
 LinqToDB.Expressions.DefaultValueExpression
 LinqToDB.Expressions.DefaultValueExpression.DefaultValueExpression(LinqToDB.Mapping.MappingSchema? mappingSchema, System.Type! type) -> void
-LinqToDB.Expressions.ExpressionConstants
 LinqToDB.Expressions.ExpressionEvaluator
 LinqToDB.Expressions.ExpressionExtensions
 LinqToDB.Expressions.ExpressionGenerator
@@ -3900,10 +3898,6 @@ LinqToDB.Mapping.MappingSchema.GetAttribute<T>(System.Type! type, System.Reflect
 LinqToDB.Mapping.MappingSchema.GetAttributes<T>(System.Type! type) -> T![]!
 LinqToDB.Mapping.MappingSchema.GetAttributes<T>(System.Type! type, System.Reflection.MemberInfo! memberInfo, bool forFirstConfiguration = false) -> T![]!
 LinqToDB.Mapping.MappingSchema.GetCanBeNull(System.Type! type) -> bool
-LinqToDB.Mapping.MappingSchema.GetConverter<TFrom, TTo>() -> System.Func<TFrom, TTo>?
-LinqToDB.Mapping.MappingSchema.GetConvertExpression(LinqToDB.Common.DbDataType from, LinqToDB.Common.DbDataType to, bool checkNull = true, bool createDefault = true) -> System.Linq.Expressions.LambdaExpression?
-LinqToDB.Mapping.MappingSchema.GetConvertExpression(System.Type! from, System.Type! to, bool checkNull = true, bool createDefault = true) -> System.Linq.Expressions.LambdaExpression?
-LinqToDB.Mapping.MappingSchema.GetConvertExpression<TFrom, TTo>(bool checkNull = true, bool createDefault = true) -> System.Linq.Expressions.Expression<System.Func<TFrom, TTo>!>?
 LinqToDB.Mapping.MappingSchema.GetDataType(System.Type! type) -> LinqToDB.SqlQuery.SqlDataType!
 LinqToDB.Mapping.MappingSchema.GetDefaultFromEnumType(System.Type! enumType) -> System.Type?
 LinqToDB.Mapping.MappingSchema.GetDefaultValue(System.Type! type) -> object?
@@ -3921,12 +3915,6 @@ LinqToDB.Mapping.MappingSchema.MappingSchema(params LinqToDB.Mapping.MappingSche
 LinqToDB.Mapping.MappingSchema.MappingSchema(string? configuration) -> void
 LinqToDB.Mapping.MappingSchema.MappingSchema(string? configuration, params LinqToDB.Mapping.MappingSchema![]? schemas) -> void
 LinqToDB.Mapping.MappingSchema.SetCanBeNull(System.Type! type, bool value) -> void
-LinqToDB.Mapping.MappingSchema.SetConverter<TFrom, TTo>(System.Func<TFrom, TTo>! func) -> void
-LinqToDB.Mapping.MappingSchema.SetConverter<TFrom, TTo>(System.Func<TFrom, TTo>! func, LinqToDB.Common.DbDataType from, LinqToDB.Common.DbDataType to) -> void
-LinqToDB.Mapping.MappingSchema.SetConvertExpression(LinqToDB.Common.DbDataType fromType, LinqToDB.Common.DbDataType toType, System.Linq.Expressions.LambdaExpression! expr, bool addNullCheck = true) -> void
-LinqToDB.Mapping.MappingSchema.SetConvertExpression(System.Type! fromType, System.Type! toType, System.Linq.Expressions.LambdaExpression! expr, bool addNullCheck = true) -> void
-LinqToDB.Mapping.MappingSchema.SetConvertExpression<TFrom, TTo>(System.Linq.Expressions.Expression<System.Func<TFrom, TTo>!>! checkNullExpr, System.Linq.Expressions.Expression<System.Func<TFrom, TTo>!>! expr) -> void
-LinqToDB.Mapping.MappingSchema.SetConvertExpression<TFrom, TTo>(System.Linq.Expressions.Expression<System.Func<TFrom, TTo>!>! expr, bool addNullCheck = true) -> void
 LinqToDB.Mapping.MappingSchema.SetCultureInfo(System.Globalization.CultureInfo! info) -> void
 LinqToDB.Mapping.MappingSchema.SetDataType(System.Type! type, LinqToDB.DataType dataType) -> void
 LinqToDB.Mapping.MappingSchema.SetDataType(System.Type! type, LinqToDB.SqlQuery.SqlDataType! dataType) -> void
@@ -3934,8 +3922,6 @@ LinqToDB.Mapping.MappingSchema.SetDefaultFromEnumType(System.Type! enumType, Sys
 LinqToDB.Mapping.MappingSchema.SetDefaultValue(System.Type! type, object? value) -> void
 LinqToDB.Mapping.MappingSchema.SetGenericConvertProvider(System.Type! type) -> void
 LinqToDB.Mapping.MappingSchema.SetScalarType(System.Type! type, bool isScalarType = true) -> void
-LinqToDB.Mapping.MappingSchema.SetValueToSqlConverter(System.Type! type, System.Action<System.Text.StringBuilder!, LinqToDB.SqlQuery.SqlDataType!, LinqToDB.DataOptions!, object!>! converter) -> void
-LinqToDB.Mapping.MappingSchema.SetValueToSqlConverter(System.Type! type, System.Action<System.Text.StringBuilder!, LinqToDB.SqlQuery.SqlDataType!, object!>! converter) -> void
 LinqToDB.Mapping.MappingSchema.ValueToSqlConverter.get -> LinqToDB.SqlProvider.ValueToSqlConverter!
 LinqToDB.Mapping.MapValue
 LinqToDB.Mapping.MapValue.MapValue(object! origValue, params LinqToDB.Mapping.MapValueAttribute![]! mapValues) -> void
@@ -7121,8 +7107,6 @@ static LinqToDB.Common.Convert<TFrom, TTo>.Lambda.get -> System.Func<TFrom, TTo>
 static LinqToDB.Common.Convert<TFrom, TTo>.Lambda.set -> void
 static LinqToDB.Common.ConvertBuilder.GetConverter(LinqToDB.Mapping.MappingSchema? mappingSchema, System.Type! from, System.Type! to) -> System.Tuple<System.Linq.Expressions.LambdaExpression!, System.Linq.Expressions.LambdaExpression?, bool>!
 static LinqToDB.Common.ConvertBuilder.GetDefaultMappingFromEnumType(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! enumType) -> System.Type?
-static LinqToDB.Common.Converter.ChangeType(object? value, System.Type! conversionType, LinqToDB.Mapping.MappingSchema? mappingSchema = null) -> object?
-static LinqToDB.Common.Converter.ChangeTypeTo<T>(object? value, LinqToDB.Mapping.MappingSchema? mappingSchema = null) -> T
 static LinqToDB.Common.Converter.GetDefaultMappingFromEnumType(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! enumType) -> System.Type?
 static LinqToDB.Common.Converter.SetConverter<TFrom, TTo>(System.Linq.Expressions.Expression<System.Func<TFrom, TTo>!>! expr) -> void
 static LinqToDB.Common.ConvertTo<TTo>.From<TFrom>(TFrom o) -> TTo
@@ -9426,7 +9410,6 @@ static readonly LinqToDB.Data.BulkCopyOptions.Empty -> LinqToDB.Data.BulkCopyOpt
 static readonly LinqToDB.Data.QueryTraceOptions.Empty -> LinqToDB.Data.QueryTraceOptions!
 static readonly LinqToDB.DataContextOptions.Empty -> LinqToDB.DataContextOptions!
 static readonly LinqToDB.DataProvider.NoopQueryParametersNormalizer.Instance -> LinqToDB.DataProvider.IQueryParametersNormalizer!
-static readonly LinqToDB.Expressions.ExpressionConstants.DataContextParam -> System.Linq.Expressions.ParameterExpression!
 static readonly LinqToDB.Expressions.ExpressionInstances.Constant0 -> System.Linq.Expressions.ConstantExpression!
 static readonly LinqToDB.Expressions.ExpressionInstances.Constant1 -> System.Linq.Expressions.ConstantExpression!
 static readonly LinqToDB.Expressions.ExpressionInstances.Constant26 -> System.Linq.Expressions.ConstantExpression!
@@ -10466,3 +10449,163 @@ virtual LinqToDB.UpdateColumnFilter<T>.Invoke(T entity, LinqToDB.Mapping.ColumnD
 ~static LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLock<TSource>(this LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable<TSource> table) -> LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable<TSource>
 ~static LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLockInScope<TSource>(this LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable<TSource> query) -> LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable<TSource>
 ~virtual LinqToDB.DataProvider.DataProviderOptions<T>.Equals(LinqToDB.DataProvider.DataProviderOptions<T>? other) -> bool
+abstract LinqToDB.Tools.ActivityBase.Dispose() -> void
+const LinqToDB.LinqToDBConstants.Copyright = "© 2011-2024 linq2db.com" -> string!
+LinqToDB.Common.ConversionType
+LinqToDB.Common.ConversionType.Common = 0 -> LinqToDB.Common.ConversionType
+LinqToDB.Common.ConversionType.FromDatabase = 2 -> LinqToDB.Common.ConversionType
+LinqToDB.Common.ConversionType.ToDatabase = 1 -> LinqToDB.Common.ConversionType
+LinqToDB.DataOptions.SqlOptions.get -> LinqToDB.SqlOptions!
+LinqToDB.Linq.IQueryContext.DataOptions.get -> LinqToDB.DataOptions?
+LinqToDB.Linq.QueryInfo.DataOptions.get -> LinqToDB.DataOptions?
+LinqToDB.Linq.QueryInfo.DataOptions.set -> void
+LinqToDB.Mapping.MappingSchema.GetConverter<TFrom, TTo>(LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> System.Func<TFrom, TTo>?
+LinqToDB.Mapping.MappingSchema.GetConvertExpression(LinqToDB.Common.DbDataType from, LinqToDB.Common.DbDataType to, bool checkNull = true, bool createDefault = true, LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> System.Linq.Expressions.LambdaExpression?
+LinqToDB.Mapping.MappingSchema.GetConvertExpression(System.Type! from, System.Type! to, bool checkNull = true, bool createDefault = true, LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> System.Linq.Expressions.LambdaExpression?
+LinqToDB.Mapping.MappingSchema.GetConvertExpression<TFrom, TTo>(bool checkNull = true, bool createDefault = true, LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> System.Linq.Expressions.Expression<System.Func<TFrom, TTo>!>?
+LinqToDB.Mapping.MappingSchema.SetConverter<TFrom, TTo>(System.Func<TFrom, TTo>! func, LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> LinqToDB.Mapping.MappingSchema!
+LinqToDB.Mapping.MappingSchema.SetConverter<TFrom, TTo>(System.Func<TFrom, TTo>! func, LinqToDB.Common.DbDataType from, LinqToDB.Common.DbDataType to, LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> LinqToDB.Mapping.MappingSchema!
+LinqToDB.Mapping.MappingSchema.SetConvertExpression(LinqToDB.Common.DbDataType fromType, LinqToDB.Common.DbDataType toType, System.Linq.Expressions.LambdaExpression! expr, bool addNullCheck = true, LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> LinqToDB.Mapping.MappingSchema!
+LinqToDB.Mapping.MappingSchema.SetConvertExpression(System.Type! fromType, System.Type! toType, System.Linq.Expressions.LambdaExpression! expr, bool addNullCheck = true, LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> LinqToDB.Mapping.MappingSchema!
+LinqToDB.Mapping.MappingSchema.SetConvertExpression<TFrom, TTo>(System.Linq.Expressions.Expression<System.Func<TFrom, TTo>!>! checkNullExpr, System.Linq.Expressions.Expression<System.Func<TFrom, TTo>!>! expr, LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> LinqToDB.Mapping.MappingSchema!
+LinqToDB.Mapping.MappingSchema.SetConvertExpression<TFrom, TTo>(System.Linq.Expressions.Expression<System.Func<TFrom, TTo>!>! expr, bool addNullCheck = true, LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> LinqToDB.Mapping.MappingSchema!
+LinqToDB.Mapping.MappingSchema.SetValueToSqlConverter(System.Type! type, System.Action<System.Text.StringBuilder!, LinqToDB.SqlQuery.SqlDataType!, LinqToDB.DataOptions!, object!>! converter) -> LinqToDB.Mapping.MappingSchema!
+LinqToDB.Mapping.MappingSchema.SetValueToSqlConverter(System.Type! type, System.Action<System.Text.StringBuilder!, LinqToDB.SqlQuery.SqlDataType!, object!>! converter) -> LinqToDB.Mapping.MappingSchema!
+LinqToDB.Remote.LinqServiceQuery.DataOptions.get -> LinqToDB.DataOptions!
+LinqToDB.Remote.LinqServiceQuery.DataOptions.set -> void
+LinqToDB.SqlOptions
+LinqToDB.SqlOptions.<Clone>$() -> LinqToDB.SqlOptions!
+LinqToDB.SqlOptions.Deconstruct(out bool EnableConstantExpressionInOrderBy, out bool GenerateFinalAliases) -> void
+LinqToDB.SqlOptions.EnableConstantExpressionInOrderBy.get -> bool
+LinqToDB.SqlOptions.EnableConstantExpressionInOrderBy.init -> void
+LinqToDB.SqlOptions.Equals(LinqToDB.SqlOptions? other) -> bool
+LinqToDB.SqlOptions.GenerateFinalAliases.get -> bool
+LinqToDB.SqlOptions.GenerateFinalAliases.init -> void
+LinqToDB.SqlOptions.Pack() -> int
+LinqToDB.SqlOptions.SqlOptions() -> void
+LinqToDB.SqlOptions.SqlOptions(bool EnableConstantExpressionInOrderBy = false, bool GenerateFinalAliases = false) -> void
+LinqToDB.SqlOptions.Unpack(int n) -> LinqToDB.SqlOptions!
+LinqToDB.Tools.ActivityBase
+LinqToDB.Tools.ActivityBase.ActivityBase() -> void
+LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.Build = 9 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.BuildQuery = 14 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.BuildSequence = 10 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.BuildSequenceBuild = 12 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.BuildSequenceCanBuild = 11 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.BuildSql = 45 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.BulkCopy = 43 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.BulkCopyAsync = 44 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandExecuteNonQuery = 69 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandExecuteNonQueryAsync = 70 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandExecuteReader = 67 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandExecuteReaderAsync = 68 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandExecuteScalar = 65 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandExecuteScalarAsync = 66 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInfoExecute = 46 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInfoExecuteAsync = 49 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInfoExecuteAsyncT = 50 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInfoExecuteCustom = 48 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInfoExecuteT = 47 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInterceptorAfterExecuteReader = 78 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInterceptorBeforeReaderDispose = 79 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInterceptorBeforeReaderDisposeAsync = 80 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInterceptorCommandInitialized = 71 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInterceptorExecuteNonQuery = 74 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInterceptorExecuteNonQueryAsync = 75 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInterceptorExecuteReader = 76 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInterceptorExecuteReaderAsync = 77 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInterceptorExecuteScalar = 72 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CommandInterceptorExecuteScalarAsync = 73 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionBeginTransaction = 57 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionBeginTransactionAsync = 58 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionClose = 53 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionCloseAsync = 54 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionDispose = 55 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionDisposeAsync = 56 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionInterceptorConnectionOpened = 83 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionInterceptorConnectionOpenedAsync = 84 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionInterceptorConnectionOpening = 81 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionInterceptorConnectionOpeningAsync = 82 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionOpen = 51 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ConnectionOpenAsync = 52 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CreateTable = 29 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.CreateTableAsync = 30 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.DataContextInterceptorOnClosed = 87 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.DataContextInterceptorOnClosedAsync = 88 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.DataContextInterceptorOnClosing = 85 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.DataContextInterceptorOnClosingAsync = 86 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.DeleteObject = 33 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.DeleteObjectAsync = 34 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.DropTable = 31 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.DropTableAsync = 32 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.EntityServiceInterceptorEntityCreated = 89 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteElement = 19 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteElementAsync = 20 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteNonQuery = 23 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteNonQuery2 = 25 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteNonQuery2Async = 26 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteNonQueryAsync = 24 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteQuery = 17 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteQueryAsync = 18 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteScalar = 21 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteScalarAlternative = 27 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteScalarAlternativeAsync = 28 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ExecuteScalarAsync = 22 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.FinalizeQuery = 15 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.GetIEnumerable = 16 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.GetQueryCreate = 8 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.GetQueryFind = 5 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.GetQueryFindExpose = 6 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.GetQueryFindFind = 7 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.GetQueryTotal = 4 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.GetSqlText = 94 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.InsertObject = 35 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.InsertObjectAsync = 36 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.InsertOrReplaceObject = 37 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.InsertOrReplaceObjectAsync = 38 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.InsertWithIdentityObject = 39 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.InsertWithIdentityObjectAsync = 40 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.Materialization = 95 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.OnTraceInternal = 96 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.QueryProviderExecute = 1 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.QueryProviderExecuteT = 0 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.QueryProviderGetEnumerator = 3 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.QueryProviderGetEnumeratorT = 2 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.ReorderBuilders = 13 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.TransactionCommit = 59 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.TransactionCommitAsync = 60 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.TransactionDispose = 63 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.TransactionDisposeAsync = 64 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.TransactionRollback = 61 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.TransactionRollbackAsync = 62 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.UnwrapDataObjectInterceptorUnwrapCommand = 92 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.UnwrapDataObjectInterceptorUnwrapConnection = 90 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader = 93 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.UnwrapDataObjectInterceptorUnwrapTransaction = 91 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.UpdateObject = 41 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityID.UpdateObjectAsync = 42 -> LinqToDB.Tools.ActivityID
+LinqToDB.Tools.ActivityService
+LinqToDB.Tools.IActivity
+override LinqToDB.SqlOptions.Equals(object? obj) -> bool
+override LinqToDB.SqlOptions.GetHashCode() -> int
+override LinqToDB.SqlOptions.ToString() -> string!
+static LinqToDB.Common.Configuration.Sql.EnableConstantExpressionInOrderBy.get -> bool
+static LinqToDB.Common.Configuration.Sql.EnableConstantExpressionInOrderBy.set -> void
+static LinqToDB.Common.Configuration.Sql.Options.get -> LinqToDB.SqlOptions!
+static LinqToDB.Common.Configuration.Sql.Options.set -> void
+static LinqToDB.Common.Configuration.TraceMaterializationActivity.get -> bool
+static LinqToDB.Common.Configuration.TraceMaterializationActivity.set -> void
+static LinqToDB.Common.Converter.ChangeType(object? value, System.Type! toConvertType, LinqToDB.Mapping.MappingSchema? mappingSchema = null, LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> object?
+static LinqToDB.Common.Converter.ChangeTypeTo<T>(object? value, LinqToDB.Mapping.MappingSchema? mappingSchema = null, LinqToDB.Common.ConversionType conversionType = LinqToDB.Common.ConversionType.Common) -> T
+static LinqToDB.DataOptionsExtensions.UseEnableConstantExpressionInOrderBy(this LinqToDB.DataOptions! options, bool enableConstantExpressionInOrderBy) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseGenerateFinalAliases(this LinqToDB.DataOptions! options, bool generateFinalAliases) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.WithEnableConstantExpressionInOrderBy(this LinqToDB.SqlOptions! options, bool enableConstantExpressionInOrderBy) -> LinqToDB.SqlOptions!
+static LinqToDB.DataOptionsExtensions.WithGenerateFinalAliases(this LinqToDB.SqlOptions! options, bool generateFinalAliases) -> LinqToDB.SqlOptions!
+static LinqToDB.SqlOptions.operator !=(LinqToDB.SqlOptions? left, LinqToDB.SqlOptions? right) -> bool
+static LinqToDB.SqlOptions.operator ==(LinqToDB.SqlOptions? left, LinqToDB.SqlOptions? right) -> bool
+static LinqToDB.Tools.ActivityService.AddFactory(System.Func<LinqToDB.Tools.ActivityID, LinqToDB.Tools.IActivity?>! factory) -> void
+static readonly LinqToDB.Expressions.ExpressionInstances.HashMultiplier -> System.Linq.Expressions.Expression!
+static readonly LinqToDB.Expressions.ExpressionInstances.NullIDataContext -> System.Linq.Expressions.Expression!
+virtual LinqToDB.SqlProvider.BasicSqlBuilder.BuildExpressionForOrderBy(LinqToDB.SqlQuery.ISqlExpression! expr) -> void
+virtual LinqToDB.Tools.ActivityBase.DisposeAsync() -> System.Threading.Tasks.ValueTask

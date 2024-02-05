@@ -386,7 +386,7 @@ namespace LinqToDB.SqlProvider
 					if (v1 && v2)
 					{
 						if (value1 is int i1 && value2 is int i2) return QueryHelper.CreateSqlValue(i1 + i2, element);
-						if (value1 is string || value2 is string) return QueryHelper.CreateSqlValue(value1?.ToString() + value2, element);
+						if (value1 is string || value2 is string) return QueryHelper.CreateSqlValue(FormattableString.Invariant($"{value1}{value2}"), element);
 					}
 
 					break;

@@ -148,7 +148,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			await CommandInfo!.ExecuteQueryAsync(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber, action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await CommandInfo!.ExecuteQueryAsync(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -206,7 +206,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			var sql = CommandInfo!.CommandText + "$$$" + ReadNumber;
+			var sql = FormattableString.Invariant($"{CommandInfo!.CommandText}$$${ReadNumber}");
 
 			return await CommandInfo.ExecuteScalarAsync<T>(Reader!, sql, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
