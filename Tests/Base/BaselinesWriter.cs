@@ -21,20 +21,10 @@ namespace Tests
 
 			_context = GetTestContextName(test);
 
-#if NETFRAMEWORK
-			var target = "netfx";
-#elif NET6_0
-			var target = "net60";
-#elif NET8_0
-			var target = "net80";
-#else
-#error "Build Target must be specified here."
-#endif
-
 			if (_context == null)
 				return;
 
-			var fixturePath = Path.Combine(baselinesPath, target, _context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
+			var fixturePath = Path.Combine(baselinesPath, _context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
 			Directory.CreateDirectory(fixturePath);
 
 			var fileName = $"{NormalizeFileName(test.FullName)}.sql";
