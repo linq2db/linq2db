@@ -22,13 +22,13 @@ namespace Tests
 			_context = GetTestContextName(test);
 
 #if NET472
-			var target = "net472";
+			var target = "netfx";
 #elif NETCOREAPP3_1
 			var target = "core31";
 #elif NET6_0
-			var target = "net60";
+			var target = "netcore_low";
 #elif NET7_0
-			var target = "net70";
+			var target = "netcore";
 #else
 #error "Build Target must be specified here."
 #endif
