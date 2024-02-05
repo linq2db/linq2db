@@ -9,8 +9,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using static Tests.UserTests.Issue4394Tests;
-
 namespace Tests.UserTests
 {
 	[TestFixture]
