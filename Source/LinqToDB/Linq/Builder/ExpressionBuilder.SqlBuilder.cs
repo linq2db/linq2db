@@ -569,7 +569,30 @@ namespace LinqToDB.Linq.Builder
 				}
 				default:
 				{
-					if (e is BinaryExpression binary)
+					if(e is UnaryExpression unary)
+					{
+						var l = Expressions.ConvertUnary(MappingSchema, unary);
+						if (l != null)
+						{
+							var body = l.Body.Unwrap();
+							var expr = body.Transform((l, unary), static (context, wpi) =>
+							{
+								if (wpi.NodeType == ExpressionType.Parameter)
+								{
+									if (context.l.Parameters[0] == wpi)
+										return context.unary.Operand;
+								}
+
+								return wpi;
+							});
+
+							if (expr.Type != e.Type)
+								expr = new ChangeTypeExpression(expr, e.Type);
+
+							return new TransformInfo(ConvertExpression(expr));
+						}
+					}
+					else if (e is BinaryExpression binary)
 					{
 						var l = Expressions.ConvertBinary(MappingSchema, binary);
 						if (l != null)

@@ -179,8 +179,34 @@ namespace LinqToDB
 			{
 				var date   = builder.GetExpression("date");
 				var timeSpan = builder.GetExpression("timeSpan", true);
-				
-				builder.ResultExpression = builder.Add(date, timeSpan, typeof(DateTime));
+
+				var tp = timeSpan.GetExpressionType();
+				var dt = tp.DataType;
+
+				if (dt == DataType.Int64)
+				{
+					var p = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(TimeSpanPart, TimeSpanParts.TotalMilliseconds, (TimeSpan?)TimeSpan.Zero),
+						Expression.Constant(TimeSpanParts.TotalMilliseconds),
+						builder.Arguments[1]
+					);
+
+					var e = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(DateAdd, DateParts.Millisecond, (double?)0, (DateTime?)DateTime.MinValue),
+						Expression.Constant(DateParts.Millisecond),
+					 	Expression.Convert(p, typeof(double?)),
+						builder.Arguments[0]
+					);
+
+					var exp = builder.ConvertExpressionToSql(e, true);
+					builder.ResultExpression = exp;
+				}
+				else
+				{
+					builder.ResultExpression = builder.Add(date, timeSpan, typeof(DateTime));
+				}
 			}
 		}
 
@@ -255,6 +281,24 @@ namespace LinqToDB
 				return null;
 
 			return date + timeSpan;
+		}
+
+		internal sealed class NegateIntervalBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var timeSpan = builder.GetExpression("timeSpan", true);
+				builder.ResultExpression = builder.Mul<TimeSpan>(timeSpan, new SqlValue(-1));
+			}
+		}
+
+		[Extension("", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(NegateIntervalBuilder))]
+		public static TimeSpan? NegateInterval(TimeSpan? timeSpan)
+		{
+			if (timeSpan == null)
+				return null;
+
+			return -timeSpan.Value;
 		}
 	}
 }
