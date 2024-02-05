@@ -247,6 +247,30 @@ namespace LinqToDB
 			}
 		}
 
+		internal sealed class DateTimeAddIntervalBuilderMySql : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var p = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(TimeSpanPart, TimeSpanParts.TotalMicroseconds, (TimeSpan?)TimeSpan.Zero),
+						Expression.Constant(TimeSpanParts.TotalMicroseconds),
+						builder.Arguments[1]
+					);
+
+				var e = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(DateAdd, DateParts.Microsecond, (double?)0, (DateTime?)DateTime.MinValue),
+						Expression.Constant(DateParts.Microsecond),
+					 	Expression.Convert(p, typeof(double?)),
+						builder.Arguments[0]
+					);
+
+				var exp = builder.ConvertExpressionToSql(e, true);
+				builder.ResultExpression = exp;
+			}
+		}
+
 		internal sealed class DateTimeAddIntervalBuilderSQLite : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
@@ -262,6 +286,7 @@ namespace LinqToDB
 		[Extension("DateAdd",         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilder))]
 		[Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderOracle))]
 		[Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderPostgreSQL))]
+		[Extension(PN.MySql,      "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMySql))]
 		[Extension(PN.SQLite,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderSQLite))]
 		public static DateTime? DateAdd(DateTime? date, TimeSpan? timeSpan)
 		{

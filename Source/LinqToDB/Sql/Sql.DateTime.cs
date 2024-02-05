@@ -683,7 +683,8 @@ namespace LinqToDB
 					case DateParts.Hour        : expStr = "Interval {0} Hour"; break;
 					case DateParts.Minute      : expStr = "Interval {0} Minute"; break;
 					case DateParts.Second      : expStr = "Interval {0} Second"; break;
-					case DateParts.Millisecond : expStr = "Interval {0} Millisecond"; break;
+					case DateParts.Millisecond : expStr = "Interval ({0} * 1000) Microsecond"; break;
+					case DateParts.Microsecond : expStr = "Interval {0} Microsecond"; break;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
