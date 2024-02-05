@@ -7,8 +7,8 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
 			{
 				//TODO: Check this
-				var sql = ExpressionBuilder.ConvertToSqlConvertible(expression);
+				var sql = ExpressionBuilder.ConvertToSqlConvertible(expression, DataContext);
 				if (sql != null)
 					return null;
 			}
@@ -229,7 +229,8 @@ namespace LinqToDB.Linq.Builder
 
 			var evaluatedExpr = Expression.Call(null,
 				Methods.LinqToDB.EvaluateExpression,
-				valueAccessorExpr);
+				valueAccessorExpr,
+				Expression.Constant(null, typeof(IDataContext)));
 
 			var valueAccessor = (Expression)evaluatedExpr;
 			valueAccessor = Expression.Convert(valueAccessor, expectedType);
@@ -403,7 +404,7 @@ namespace LinqToDB.Linq.Builder
 			//
 			if (name == null && expression.Type == typeof(DataParameter))
 			{
-				var dp = expression.EvaluateExpression<DataParameter>();
+				var dp = expression.EvaluateExpression<DataParameter>(dataContext);
 				if (dp != null && !string.IsNullOrEmpty(dp.Name))
 					name = dp.Name;
 			}

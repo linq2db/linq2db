@@ -1,11 +1,12 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+
+namespace LinqToDB.DataProvider.Firebird
 {
-	using LinqToDB.SqlQuery;
-	using System;
-	using System.Linq;
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.Text;
+	using SqlQuery;
 
 	public partial class FirebirdSqlBuilder
 	{
@@ -67,7 +68,7 @@
 				BuildExpression(value);
 
 				if (typeRequired)
-					StringBuilder.Append($" AS VARCHAR({length.ToString(CultureInfo.InvariantCulture)}))");
+					StringBuilder.Append(CultureInfo.InvariantCulture, $" AS VARCHAR({length}))");
 			}
 			else
 				base.BuildTypedExpression(dataType, value);

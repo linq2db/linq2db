@@ -1,24 +1,20 @@
 ﻿using System;
-using System.Globalization;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
+using System.Globalization;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Common;
-using LinqToDB.DataProvider.MySql;
-using LinqToDB.Expressions;
-using LinqToDB.Mapping;
-using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
+	using Common;
+	using MySql;
+	using Expressions;
+	using Mapping;
+	using SqlQuery;
+
 	public class ClickHouseProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _octonicaSyncRoot = new ();
@@ -101,10 +97,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 			ParameterType  = mySqlProviderAdapter.ParameterType;
 			CommandType    = mySqlProviderAdapter.CommandType;
 
-			GetSByteReaderMethod  = mySqlProviderAdapter.GetSByteMethodName;
-			GetUInt16ReaderMethod = mySqlProviderAdapter.GetUInt16MethodName;
-			GetUInt32ReaderMethod = mySqlProviderAdapter.GetUInt32MethodName;
-			GetUInt64ReaderMethod = mySqlProviderAdapter.GetUInt64MethodName;
+			GetSByteReaderMethod        = mySqlProviderAdapter.GetSByteMethodName;
+			GetUInt16ReaderMethod       = mySqlProviderAdapter.GetUInt16MethodName;
+			GetUInt32ReaderMethod       = mySqlProviderAdapter.GetUInt32MethodName;
+			GetUInt64ReaderMethod       = mySqlProviderAdapter.GetUInt64MethodName;
+			GetMySqlDecimalReaderMethod = mySqlProviderAdapter.GetMySqlDecimalMethodName;
+
 		}
 
 		// IDynamicProviderAdapter
@@ -136,6 +134,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		internal string? GetSByteReaderMethod          { get; }
 		internal string? GetBigIntegerReaderMethod     { get; }
 		internal string? GetDateOnlyReaderMethod       { get; }
+		internal string? GetMySqlDecimalReaderMethod   { get; }
 
 		// Client connection management
 		internal Func<string, ClientWrappers.ClickHouseConnectionStringBuilder>? CreateClientConnectionStringBuilder { get; }
@@ -146,24 +145,39 @@ namespace LinqToDB.DataProvider.ClickHouse
 			if (provider == ClickHouseProvider.Octonica)
 			{
 				if (_octonicaAdapter == null)
+				{
 					lock (_octonicaSyncRoot)
+						// https://github.com/dotnet/roslyn-analyzers/issues/1649
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_octonicaAdapter ??= CreateOctonicaAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _octonicaAdapter;
 			}
 			else if (provider == ClickHouseProvider.MySqlConnector)
 			{
 				if (_mysqlAdapter == null)
+				{
 					lock (_mysqlSyncRoot)
+						// https://github.com/dotnet/roslyn-analyzers/issues/1649
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_mysqlAdapter ??= new ClickHouseProviderAdapter(MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector));
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _mysqlAdapter;
 			}
 			else
 			{
 				if (_clientAdapter == null)
+				{
 					lock (_clientSyncRoot)
+						// https://github.com/dotnet/roslyn-analyzers/issues/1649
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_clientAdapter ??= CreateClientAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _clientAdapter;
 			}
@@ -171,7 +185,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateClientAdapter()
 		{
-			var assembly = Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
+			var assembly = Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
 
@@ -236,7 +250,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateOctonicaAdapter()
 		{
-			var assembly = Common.Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
+			var assembly = Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {OctonicaAssemblyName}");
 
@@ -367,27 +381,31 @@ namespace LinqToDB.DataProvider.ClickHouse
 			[Wrapper]
 			public sealed class ClickHouseBulkCopy : TypeWrapper, IDisposable
 			{
-				private static LambdaExpression[] Wrappers { get; }
-					= new LambdaExpression[]
+				private static object[] Wrappers { get; }
+					= new []
 				{
 					// [0]: Dispose
-					(Expression<Action<ClickHouseBulkCopy>>)((ClickHouseBulkCopy this_) => ((IDisposable)this_).Dispose()),
+					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseBulkCopy>>)((ClickHouseBulkCopy this_) => ((IDisposable)this_).Dispose()), true),
 					// [1]: get BatchSize
-					(Expression<Func<ClickHouseBulkCopy, int>>)((ClickHouseBulkCopy this_) => this_.BatchSize),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, int>>)((ClickHouseBulkCopy this_) => this_.BatchSize), true),
 					// [2]: set BatchSize
-					PropertySetter((ClickHouseBulkCopy this_) => this_.BatchSize),
+					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.BatchSize), true),
 					// [3]: get MaxDegreeOfParallelism
-					(Expression<Func<ClickHouseBulkCopy, int>>)((ClickHouseBulkCopy this_) => this_.MaxDegreeOfParallelism),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, int>>)((ClickHouseBulkCopy this_) => this_.MaxDegreeOfParallelism), true),
 					// [4]: set MaxDegreeOfParallelism
-					PropertySetter((ClickHouseBulkCopy this_) => this_.MaxDegreeOfParallelism),
+					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.MaxDegreeOfParallelism), true),
 					// [5]: get DestinationTableName
-					(Expression<Func<ClickHouseBulkCopy, string?>>)((ClickHouseBulkCopy this_) => this_.DestinationTableName),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, string?>>)((ClickHouseBulkCopy this_) => this_.DestinationTableName), true),
 					// [6]: set DestinationTableName
-					PropertySetter((ClickHouseBulkCopy this_) => this_.DestinationTableName),
+					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.DestinationTableName), true),
 					// [7]: get RowsWritten
-					(Expression<Func<ClickHouseBulkCopy, long>>)((ClickHouseBulkCopy this_) => this_.RowsWritten),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, long>>)((ClickHouseBulkCopy this_) => this_.RowsWritten), true),
 					// [8]: WriteToServerAsync
-					(Expression<Func<ClickHouseBulkCopy, IDataReader, CancellationToken, Task>>)((ClickHouseBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync(dataReader, cancellationToken)),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, IDataReader, CancellationToken, Task>>)((ClickHouseBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync(dataReader, cancellationToken)), true),
+					// [9]: InitAsync
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, Task>>)((ClickHouseBulkCopy this_) => this_.InitAsync()), false),
+					// [10]: ColumnNames { set; }
+					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.ColumnNames), false),
 				};
 
 				public ClickHouseBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -397,7 +415,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 				public ClickHouseBulkCopy(ClickHouseConnection connection) => throw new NotImplementedException();
 
 				void IDisposable.Dispose() => ((Action<ClickHouseBulkCopy>)CompiledWrappers[0])(this);
-
 
 				public int BatchSize
 				{
@@ -421,10 +438,18 @@ namespace LinqToDB.DataProvider.ClickHouse
 				{
 					get => ((Func<ClickHouseBulkCopy, long>)CompiledWrappers[7])(this);
 				}
-
 #pragma warning disable RS0030 // API mapping must preserve type
 				public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<ClickHouseBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
 #pragma warning restore RS0030 //  API mapping must preserve type
+
+				// 6.8.0+
+				public bool HasInitAsync => CompiledWrappers[9] != null;
+				public Task InitAsync() => ((Func<ClickHouseBulkCopy, Task>)CompiledWrappers[9])(this);
+				public IReadOnlyCollection<string> ColumnNames
+				{
+					get => throw new InvalidOperationException($"get_ColumnNames is not mapped");
+					set => ((Action<ClickHouseBulkCopy, IReadOnlyCollection<string>>)CompiledWrappers[10])(this, value);
+				}
 			}
 		}
 

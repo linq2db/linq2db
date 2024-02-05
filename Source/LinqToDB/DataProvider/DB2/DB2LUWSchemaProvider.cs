@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.DB2
@@ -14,6 +15,8 @@ namespace LinqToDB.DataProvider.DB2
 	// - CommandBehavior.SchemaOnly doesn't return schema for stored procedures
 	class DB2LUWSchemaProvider : SchemaProviderBase
 	{
+		private static readonly IReadOnlyList<string> _tableTypes = new[] { "TABLE", "VIEW" };
+
 		private readonly DB2DataProvider _provider;
 
 		public DB2LUWSchemaProvider(DB2DataProvider provider)
@@ -56,8 +59,7 @@ namespace LinqToDB.DataProvider.DB2
 			return
 			(
 				from t in tables.AsEnumerable()
-				where
-					new[] { "TABLE", "VIEW" }.Contains(t.Field<string>("TABLE_TYPE"))
+				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"))
 				let catalog = dataConnection.Connection.Database
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
@@ -289,7 +291,7 @@ WHERE
 							var format = string.Join(",",
 								type.CreateParameters
 									.Split(',')
-									.Select((p,i) => "{" + i + "}"));
+									.Select((p,i) => FormattableString.Invariant($"{{{i}}}")));
 
 							type.CreateFormat = type.TypeName + "(" + format + ")";
 						}
@@ -555,14 +557,14 @@ FROM
 
 				if (IncludedSchemas.Count != 0)
 				{
-					sql += string.Format(" IN ({0})", string.Join(", ", IncludedSchemas.Select(n => '\'' + n + '\'')));
+					sql += string.Format(CultureInfo.InvariantCulture, " IN ({0})", string.Join(", ", IncludedSchemas.Select(n => '\'' + n + '\'')));
 
 					if (ExcludedSchemas.Count != 0)
 						sql += " AND " + schemaNameField;
 				}
 
 				if (ExcludedSchemas.Count != 0)
-					sql += string.Format(" NOT IN ({0})", string.Join(", ", ExcludedSchemas.Select(n => '\'' + n + '\'')));
+					sql += string.Format(CultureInfo.InvariantCulture, " NOT IN ({0})", string.Join(", ", ExcludedSchemas.Select(n => '\'' + n + '\'')));
 
 				return sql;
 			}

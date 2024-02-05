@@ -166,6 +166,9 @@ namespace LinqToDB.DataProvider.SapHana
 						options.RowsCopiedCallback(rc);
 				}
 
+				if (table.DataContext.CloseAfterUse)
+					await table.DataContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 				return rc;
 			}
 		}
@@ -237,6 +240,9 @@ namespace LinqToDB.DataProvider.SapHana
 					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 						options.RowsCopiedCallback(rc);
 				}
+
+				if (table.DataContext.CloseAfterUse)
+					table.DataContext.Close();
 
 				return rc;
 			}

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -168,9 +169,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override IQueryParametersNormalizer GetQueryParameterNormalizer()
 		{
-			return Version == OracleVersion.v11
-				? new Oracle11ParametersNormalizer()
-				: new Oracle12ParametersNormalizer();
+			// TODO: versioning support
+			// currently we cannot enable Oracle122ParametersNormalizer
+			// as we don't have Version for Oracle 12.2 or higher
+			// also see https://github.com/linq2db/linq2db/issues/4219
+			return new Oracle11ParametersNormalizer();
 		}
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
@@ -181,7 +184,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (value is DateTimeOffset dto)
 					{
 						dto      = dto.WithPrecision(dataType.Precision ?? 6);
-						var zone = (dto.Offset < TimeSpan.Zero ? "-" : "+") + dto.Offset.ToString("hh\\:mm");
+						var zone = (dto.Offset < TimeSpan.Zero ? "-" : "+") + dto.Offset.ToString("hh\\:mm", DateTimeFormatInfo.InvariantInfo);
 						value    = Adapter.CreateOracleTimeStampTZ(dto, zone);
 					}
 					break;

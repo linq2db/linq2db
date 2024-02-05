@@ -503,7 +503,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestInvaildAliasExprUsage(
-			[IncludeDataSources(TestProvName.AllPostgreSQL)]
+			[IncludeDataSources(TestProvName.AllPostgreSQL15Minus)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

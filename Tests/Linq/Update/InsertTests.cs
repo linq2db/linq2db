@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -17,7 +18,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using System.Collections.Generic;
 	using Model;
 
 	[TestFixture]
@@ -553,6 +553,7 @@ namespace Tests.xUpdate
 			[Column] public short     SmallIntValue;
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void InsertArray1([DataSources] string context)
 		{
@@ -574,6 +575,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void InsertArray2([DataSources] string context)
 		{
@@ -600,6 +602,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void InsertArray3([DataSources] string context)
 		{
@@ -626,6 +629,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void InsertArray4([DataSources] string context)
 		{
@@ -1753,7 +1757,7 @@ namespace Tests.xUpdate
 						? "_f3"
 						: "_f");
 
-				if (context.EndsWith("LinqService"))
+				if (context.IsRemote())
 					tableName += "l";
 
 				tableName += "_" + methodName;
@@ -1763,7 +1767,7 @@ namespace Tests.xUpdate
 			{
 				tableName += "_o";
 
-				if (context.EndsWith("LinqService"))
+				if (context.IsRemote())
 					tableName += "l";
 			}
 

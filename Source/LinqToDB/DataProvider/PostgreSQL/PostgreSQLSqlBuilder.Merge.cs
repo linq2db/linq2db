@@ -11,7 +11,6 @@ using System.Text;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
-	using Extensions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;

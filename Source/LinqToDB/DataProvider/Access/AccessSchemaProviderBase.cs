@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Access
 
 	abstract class AccessSchemaProviderBase : SchemaProviderBase
 	{
-		public AccessSchemaProviderBase()
+		protected AccessSchemaProviderBase()
 		{
 		}
 

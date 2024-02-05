@@ -1003,6 +1003,7 @@ namespace LinqToDB
 
 				var expStr = "DATEDIFF('";
 
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
 				expStr += part switch
 				{
 					DateParts.Year        => "yyyy",
@@ -1018,6 +1019,7 @@ namespace LinqToDB
 					DateParts.Millisecond => throw new ArgumentOutOfRangeException(nameof(part), part, "Access doesn't support milliseconds interval."),
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
 				expStr += "', {0}, {1})";
 

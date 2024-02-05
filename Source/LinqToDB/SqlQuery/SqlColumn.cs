@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common.Internal;
-
 	public class SqlColumn : IEquatable<SqlColumn>, ISqlExpression
 	{
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
@@ -174,7 +173,7 @@ namespace LinqToDB.SqlQuery
 #else
 			if (Expression is SqlField)
 			{
-				using var sb = Pools.StringBuilder.Allocate();
+				using var sb = Common.Internal.Pools.StringBuilder.Allocate();
 				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
 			}
 
@@ -261,13 +260,12 @@ namespace LinqToDB.SqlQuery
 			}
 
 			sb
-				.Append('t')
-				.Append(Parent?.SourceID ?? - 1)
+				.Append(CultureInfo.InvariantCulture, $"t{Parent?.SourceID ?? -1}")
 #if DEBUG
-				.Append('[').Append(_columnNumber).Append(']')
+				.Append(CultureInfo.InvariantCulture, $"[{_columnNumber}]")
 #endif
 				.Append('.')
-				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
+				.Append(Alias ?? FormattableString.Invariant($"c{(parentIndex >= 0 ? parentIndex + 1 : parentIndex)}"));
 
 			return sb;
 		}

@@ -13,6 +13,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			var helper = new MultipleRowsHelper<T>(table, options);
+			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
@@ -20,7 +21,12 @@ namespace LinqToDB.DataProvider.SqlCe
 			var ret = MultipleRowsCopy2(helper, source, "");
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
+
+				if (helper.OriginalContext.CloseAfterUse)
+					helper.OriginalContext.Close();
+			}
 
 			return ret;
 		}
@@ -29,6 +35,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var helper = new MultipleRowsHelper<T>(table, options);
+			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
@@ -38,8 +45,13 @@ namespace LinqToDB.DataProvider.SqlCe
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				if (helper.OriginalContext.CloseAfterUse)
+					await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 
 			return ret;
 		}
@@ -49,6 +61,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var helper = new MultipleRowsHelper<T>(table, options);
+			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
@@ -58,8 +71,14 @@ namespace LinqToDB.DataProvider.SqlCe
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				if (helper.OriginalContext.CloseAfterUse)
+					await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+
 
 			return ret;
 		}

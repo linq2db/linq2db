@@ -16,7 +16,7 @@ namespace LinqToDB.Common
 
 	public static class ConvertBuilder
 	{
-		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
+		internal static readonly MethodInfo DefaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
 
 		static object ConvertDefault(object value, Type conversionType)
 		{
@@ -212,11 +212,12 @@ namespace LinqToDB.Common
 				{
 					var val = values.GetValue(i)!;
 					var lv  = (long)Convert.ChangeType(val, typeof(long), Thread.CurrentThread.CurrentCulture)!;
+					var lvs = lv.ToString(NumberFormatInfo.InvariantInfo);
 
-					dic[lv.ToString()] = val;
+					dic[lvs] = val;
 
 					if (lv > 0)
-						dic["+" + lv.ToString()] = val;
+						dic["+" + lvs] = val;
 				}
 
 				for (var i = 0; i < values.Length; i++)
@@ -234,7 +235,7 @@ namespace LinqToDB.Common
 				var expr = Expression.Switch(
 					p,
 					Expression.Convert(
-						Expression.Call(_defaultConverter,
+						Expression.Call(DefaultConverter,
 							Expression.Convert(p, typeof(string)),
 							Expression.Constant(to)),
 						to),
@@ -310,7 +311,7 @@ namespace LinqToDB.Common
 					var expr = Expression.Switch(
 						expression,
 						Expression.Convert(
-							Expression.Call(_defaultConverter,
+							Expression.Call(DefaultConverter,
 								Expression.Convert(expression, typeof(object)),
 								Expression.Constant(to)),
 							to),
@@ -384,7 +385,7 @@ namespace LinqToDB.Common
 						var expr = Expression.Switch(
 							expression,
 							Expression.Convert(
-								Expression.Call(_defaultConverter,
+								Expression.Call(DefaultConverter,
 									Expression.Convert(expression, typeof(object)),
 									Expression.Constant(to)),
 								to),
@@ -459,7 +460,9 @@ namespace LinqToDB.Common
 								Expression.Call(
 									_throwLinqToDBConvertException,
 									Expression.Constant(
-										string.Format("Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
+										string.Format(
+											CultureInfo.InvariantCulture,
+											"Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
 											from.FullName, fromAttrs[0].Field.Name,
 											to.FullName,
 											prev.To.Field.Name,
@@ -479,7 +482,7 @@ namespace LinqToDB.Common
 						var expr = Expression.Switch(
 							expression,
 							Expression.Convert(
-								Expression.Call(_defaultConverter,
+								Expression.Call(DefaultConverter,
 									Expression.Convert(expression, typeof(object)),
 									Expression.Constant(to)),
 								to),
@@ -609,7 +612,7 @@ namespace LinqToDB.Common
 			{
 				var uto = to.ToNullableUnderlying();
 
-				var defex = Expression.Call(_defaultConverter,
+				var defex = Expression.Call(DefaultConverter,
 					Expression.Convert(p, typeof(object)),
 					Expression.Constant(uto)) as Expression;
 
@@ -622,7 +625,7 @@ namespace LinqToDB.Common
 			}
 			else
 			{
-				var defex = Expression.Call(_defaultConverter,
+				var defex = Expression.Call(DefaultConverter,
 					Expression.Convert(p, typeof(object)),
 					Expression.Constant(to)) as Expression;
 

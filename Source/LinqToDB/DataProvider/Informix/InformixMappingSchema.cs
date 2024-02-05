@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.Informix
 			SetDataType(typeof(byte),   new SqlDataType(DataType.Int16,    typeof(byte)));
 			SetDataType(typeof(byte?),  new SqlDataType(DataType.Int16,    typeof(byte)));
 
-			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
 			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,o,v) => ConvertDateTimeToSql(sb, dt, o, (DateTime)v));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.Informix
 #endif
 		}
 
-		private void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
+		private static void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
 		{
 			// for now just generate DAYS TO FRACTION(5) interval, hardly anyone needs YEAR TO MONTH one
 			// and if he needs, it is easy to workaround by adding another one converter to mapping schema
@@ -58,11 +58,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			// chr works with values in 0..255 range, bigger/smaller values will be converted to byte
 			// this is fine as long as we don't have out-of-range characters in _extraEscapes
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

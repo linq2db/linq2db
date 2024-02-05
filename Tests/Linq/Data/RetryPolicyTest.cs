@@ -80,12 +80,13 @@ namespace Tests.Data
 			}
 		}
 
-		sealed class TestException : Exception
+		public sealed class TestException : Exception
 		{}
 
 		public class FakeClass
 		{}
 
+		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [ TestProvName.AllSqlServer2008Minus ])]
 		[Test]
 		public void TestRetryPolicy([DataSources(false)] string context)
 		{

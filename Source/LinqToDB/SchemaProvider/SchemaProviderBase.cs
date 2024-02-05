@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -107,17 +108,27 @@ namespace LinqToDB.SchemaProvider
 			foreach (var dt in GetDataTypes(dataConnection))
 				if (dt.ProviderSpecific)
 				{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+					ProviderSpecificDataTypesDic.TryAdd(dt.TypeName, dt);
+					ProviderSpecificDataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
+#else
 					if (!ProviderSpecificDataTypesDic.ContainsKey(dt.TypeName))
 						ProviderSpecificDataTypesDic.Add(dt.TypeName, dt);
 					if (!ProviderSpecificDataTypesByProviderDbTypeDic.ContainsKey(dt.ProviderDbType))
 						ProviderSpecificDataTypesByProviderDbTypeDic.Add(dt.ProviderDbType, dt);
+#endif
 				}
 				else
 				{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+					DataTypesDic.TryAdd(dt.TypeName, dt);
+					DataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
+#else
 					if (!DataTypesDic.ContainsKey(dt.TypeName))
 						DataTypesDic.Add(dt.TypeName, dt);
 					if (!DataTypesByProviderDbTypeDic.ContainsKey(dt.ProviderDbType))
 						DataTypesByProviderDbTypeDic.Add(dt.ProviderDbType, dt);
+#endif
 				}
 
 			List<TableSchema>     tables;
@@ -308,7 +319,7 @@ namespace LinqToDB.SchemaProvider
 									IsOut                = pr.IsOut,
 									IsResult             = pr.IsResult,
 									Size                 = pr.Length,
-									ParameterName        = ToValidName(pr.ParameterName ?? "par" + ++n),
+									ParameterName        = ToValidName(pr.ParameterName ?? FormattableString.Invariant($"par{++n}")),
 									ParameterType        = ToTypeName(systemType, true),
 									SystemType           = systemType,
 									DataType             = GetDataType(pr.DataType, pr.DataTypeExact, pr.Length, pr.Precision, pr.Scale),
@@ -617,27 +628,29 @@ namespace LinqToDB.SchemaProvider
 						{
 							case "size"       :
 							case "length"     : paramValues[i] = length; break;
-							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length?.ToString(); break;
+							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length?.ToString(NumberFormatInfo.InvariantInfo); break;
 							case "precision"  : paramValues[i] = precision;   break;
 							case "scale"      : paramValues[i] = scale.HasValue || paramNames.Length == 2 ? scale : precision; break;
 						}
 					}
 
 					if (paramValues.All(v => v != null))
-						dbType = string.Format(format, paramValues);
+						dbType = string.Format(CultureInfo.InvariantCulture, format, paramValues);
 				}
 			}
 
 			return dbType;
 		}
 
+		private static readonly char[] _nameSeparators = new [] {' ', '\t'};
+
 		// TODO: use proper C# identifier validation procedure
 		public static string ToValidName(string name)
 		{
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
-				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)
-					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
+				var ss = name.Split(_nameSeparators, StringSplitOptions.RemoveEmptyEntries)
+					.Select(s => char.ToUpperInvariant(s[0]) + s.Substring(1));
 
 				name = string.Concat(ss);
 			}

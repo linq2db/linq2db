@@ -1,14 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
-
-
 
 namespace LinqToDB.DataProvider.Access
 {
 	using Common;
 	using Data;
 	using SchemaProvider;
+
 	// https://docs.microsoft.com/en-us/dotnet/framework/data/adonet/odbc-schema-collections
 	// unused tables:
 	// DataSourceInformation - database settings
@@ -177,8 +178,8 @@ namespace LinqToDB.DataProvider.Access
 
 					if (paramValues.All(v => v != null))
 					{
-						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => $"{{{i}}}"))})";
-						dbType     = string.Format(format, paramValues);
+						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => FormattableString.Invariant($"{{{i}}}")))})";
+						dbType     = string.Format(CultureInfo.InvariantCulture, format, paramValues);
 					}
 				}
 			}

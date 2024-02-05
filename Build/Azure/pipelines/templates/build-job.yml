@@ -13,11 +13,7 @@ jobs:
   # mitigate https://status.dev.azure.com/_event/182998791
   - task: NuGetToolInstaller@1
 
-  - task: UseDotNet@2
-    displayName: 'Install .NET'
-    inputs:
-      packageType: sdk
-      version: 7.x
+  # .NET 7 SDK already installed https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md#net-core-tools
 
   - task: PowerShell@2
     inputs:
@@ -43,15 +39,11 @@ jobs:
   - task: CmdLine@2
     inputs:
       script: |
-        dotnet publish Tests\Linq\Tests.csproj -f netcoreapp3.1 -c $(build_configuration)
-        if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration)
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net7.0 -c $(build_configuration)
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net472 -c $(build_configuration) -a x64 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net472\publishx64
-        if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f netcoreapp3.1 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net6.0\publishx86
         if %errorlevel% neq 0 exit
@@ -60,8 +52,6 @@ jobs:
         mkdir testing
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net472 testing\net472
-        if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publish testing\netcore31
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net6.0\publish testing\net60
         if %errorlevel% neq 0 exit
@@ -72,8 +62,6 @@ jobs:
         xcopy /i /s testing\net472\runtimes testing\net472x64\runtimes
         if %errorlevel% neq 0 exit
         xcopy /i /s /y testing\net472\x64 testing\net472x64\x64
-        if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86 testing\netcore31x86
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net6.0\publishx86 testing\net60x86
         if %errorlevel% neq 0 exit
@@ -94,8 +82,6 @@ jobs:
         copy Tests\DataProviders.json testing\net70x86
         if %errorlevel% neq 0 exit
         xcopy /i Build\$(build_configuration)\net472 testing\configs\net472
-        if %errorlevel% neq 0 exit
-        xcopy /i Build\$(build_configuration)\netcoreapp31 testing\configs\netcore31
         if %errorlevel% neq 0 exit
         xcopy /i Build\$(build_configuration)\net60 testing\configs\net60
         if %errorlevel% neq 0 exit

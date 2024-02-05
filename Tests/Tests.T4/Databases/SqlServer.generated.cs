@@ -664,29 +664,6 @@ namespace DataModel
 
 		#endregion
 
-		#region SalesByYear
-
-		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @BeginningDate, DateTime? @EndingDate)
-		{
-			var parameters = new []
-			{
-				new DataParameter("@Beginning_Date", @BeginningDate, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @EndingDate,    LinqToDB.DataType.DateTime)
-			};
-
-			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]", parameters).ToList();
-		}
-
-		public partial class SalesByYearResult
-		{
-			public DateTime? ShippedDate { get; set; }
-			public int       OrderID     { get; set; }
-			public decimal?  Subtotal    { get; set; }
-			public string?   Year        { get; set; }
-		}
-
-		#endregion
-
 		#region SalesByCategory
 
 		public static List<SalesByCategoryResult> SalesByCategory(this NorthwindDB dataConnection, string? @CategoryName, string? @OrdYear)
@@ -710,6 +687,29 @@ namespace DataModel
 		{
 			public string   ProductName   { get; set; } = null!;
 			public decimal? TotalPurchase { get; set; }
+		}
+
+		#endregion
+
+		#region SalesByYear
+
+		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @BeginningDate, DateTime? @EndingDate)
+		{
+			var parameters = new []
+			{
+				new DataParameter("@Beginning_Date", @BeginningDate, LinqToDB.DataType.DateTime),
+				new DataParameter("@Ending_Date",    @EndingDate,    LinqToDB.DataType.DateTime)
+			};
+
+			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]", parameters).ToList();
+		}
+
+		public partial class SalesByYearResult
+		{
+			public DateTime? ShippedDate { get; set; }
+			public int       OrderID     { get; set; }
+			public decimal?  Subtotal    { get; set; }
+			public string?   Year        { get; set; }
 		}
 
 		#endregion

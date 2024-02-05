@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -781,6 +782,7 @@ namespace Tests.Linq
 				Assert.Throws<LinqException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
@@ -847,10 +849,10 @@ namespace Tests.Linq
 				}))
 				using (db.CreateLocalTable(new[]
 				{
-					new Confirmation { BatchId = 1, Date = DateTime.Parse("09 Apr 2019 14:30:00 GMT") },
-					new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:20 GMT") },
-					new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:25 GMT") },
-					new Confirmation { BatchId = 3, Date = DateTime.Parse("09 Apr 2019 14:30:35 GMT") },
+					new Confirmation { BatchId = 1, Date = DateTime.Parse("09 Apr 2019 14:30:00 GMT", DateTimeFormatInfo.InvariantInfo) },
+					new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:20 GMT", DateTimeFormatInfo.InvariantInfo) },
+					new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:25 GMT", DateTimeFormatInfo.InvariantInfo) },
+					new Confirmation { BatchId = 3, Date = DateTime.Parse("09 Apr 2019 14:30:35 GMT", DateTimeFormatInfo.InvariantInfo) },
 				}))
 				{
 
@@ -872,8 +874,8 @@ namespace Tests.Linq
 					Assert.That(res[0].Value,        Is.EqualTo("V2"));
 					Assert.That(res[1].BatchId,      Is.EqualTo(3));
 					Assert.That(res[1].Value,        Is.EqualTo("V3"));
-					Assert.That(res[0].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:20 GMT")));
-					Assert.That(res[1].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:35 GMT")));
+					Assert.That(res[0].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:20 GMT", DateTimeFormatInfo.InvariantInfo)));
+					Assert.That(res[1].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:35 GMT", DateTimeFormatInfo.InvariantInfo)));
 
 					CheckTakeGlobalParams(db);
 				}

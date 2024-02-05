@@ -122,8 +122,7 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   return;
 				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); return;
 				case DataType.Time       :
-					StringBuilder.Append("INTERVAL HOUR TO FRACTION");
-					StringBuilder.AppendFormat("({0})", (type.Type.Length ?? 5).ToString(CultureInfo.InvariantCulture));
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"INTERVAL HOUR TO FRACTION({type.Type.Length ?? 5})");
 					return;
 				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      return;
 				case DataType.SByte      :
@@ -132,17 +131,13 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.Decimal    :
 					StringBuilder.Append("Decimal");
 					if (type.Type.Precision != null && type.Type.Scale != null)
-						StringBuilder.AppendFormat(
-							"({0}, {1})",
-							type.Type.Precision.Value.ToString(CultureInfo.InvariantCulture),
-							type.Type.Scale.Value.ToString(CultureInfo.InvariantCulture));
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision}, {type.Type.Scale})");
 					return;
 				case DataType.NVarChar:
 					if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(255)");
+						StringBuilder.Append("NVarChar(255)");
+
 						return;
 					}
 
@@ -231,7 +226,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			if (name.Server != null && name.Database == null)
 				throw new LinqToDBException("You must specify database for linked server query");

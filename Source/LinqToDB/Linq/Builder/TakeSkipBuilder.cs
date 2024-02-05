@@ -49,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				TakeHints? hints = null;
 				if (methodCall.Arguments.Count == 3 && methodCall.Arguments[2].Type == typeof(TakeHints))
-					hints = (TakeHints)methodCall.Arguments[2].EvaluateExpression()!;
+					hints = (TakeHints)methodCall.Arguments[2].EvaluateExpression(builder.DataContext)!;
 
 				BuildTake(builder, sequence, expr, hints);
 			}

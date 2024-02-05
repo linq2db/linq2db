@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -18,6 +19,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	public class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
+		private static readonly IReadOnlyList<string> _schemaSchemas = new[] { "pg_catalog", "information_schema" };
+
 		private readonly PostgreSQLDataProvider _provider;
 
 		public PostgreSQLSchemaProvider(PostgreSQLDataProvider provider)
@@ -76,7 +79,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var provider = (PostgreSQLDataProvider)dataConnection.DataProvider;
 
 			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
+
+			if (provider.Adapter.NpgsqlCidrType != null)
+			{
+				list.Add(new DataTypeInfo { TypeName = "cidr", DataType = provider.Adapter.NpgsqlCidrType.AssemblyQualifiedName!, ProviderSpecific = true });
+			}
+			else
+			{
+				list.Add(new DataTypeInfo { TypeName = "cidr", DataType = provider.Adapter.NpgsqlInetType.AssemblyQualifiedName!, ProviderSpecific = true });
+			}
+
 			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Adapter.NpgsqlPointType.   AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Adapter.NpgsqlLineType.    AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Adapter.NpgsqlLSegType.    AssemblyQualifiedName!, ProviderSpecific = true });
@@ -101,7 +113,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).      AssemblyQualifiedName!       });
-			list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+			if (provider.Adapter.NpgsqlCidrType != null)
+				list.Add(new DataTypeInfo { TypeName = "cidr"               , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Byte, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+			else
+				list.Add(new DataTypeInfo { TypeName = "cidr"               , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+
 			list.Add(new DataTypeInfo { TypeName = "date"                   , DataType = typeof(DateTime).       AssemblyQualifiedName! });
 			list.Add(new DataTypeInfo { TypeName = "timetz"                 , DataType = typeof(DateTimeOffset). AssemblyQualifiedName!, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
 			list.Add(new DataTypeInfo { TypeName = "time without time zone" , DataType = typeof(TimeSpan).       AssemblyQualifiedName!, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
@@ -204,7 +220,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var excludeSchemas =
 				new HashSet<string?>(
-					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(new[] { "pg_catalog", "information_schema" }),
+					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(_schemaSchemas),
 					StringComparer.OrdinalIgnoreCase);
 			
 			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !string.IsNullOrEmpty(s)), StringComparer.OrdinalIgnoreCase);
@@ -460,9 +476,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			(
 				from item in data
 
-				let name         = Convert.ToString(item.name)
-				let thisTableID  = Convert.ToString (item.thisTable)
-				let otherTableID = Convert.ToString (item.otherTable)
+				let name         = Convert.ToString(item.name, CultureInfo.InvariantCulture)
+				let thisTableID  = Convert.ToString (item.thisTable, CultureInfo.InvariantCulture)
+				let otherTableID = Convert.ToString (item.otherTable, CultureInfo.InvariantCulture)
 
 				from col in item.thisColumns
 					.Zip(item.otherColumns, (thisColumn,otherColumn) => new { thisColumn, otherColumn })
@@ -473,8 +489,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					Name         = name,
 					ThisTableID  = thisTableID,
 					OtherTableID = otherTableID,
-					ThisColumn   = Convert.ToString(col.thisColumn)!,
-					OtherColumn  = Convert.ToString(col.otherColumn)!,
+					ThisColumn   = Convert.ToString(col.thisColumn, CultureInfo.InvariantCulture)!,
+					OtherColumn  = Convert.ToString(col.otherColumn, CultureInfo.InvariantCulture)!,
 					Ordinal      = col.ordinal
 				}
 			).ToList();
@@ -569,7 +585,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "path"                        : return _provider.Adapter.NpgsqlPathType     .Name;
 				case "polygon"                     : return _provider.Adapter.NpgsqlPolygonType  .Name;
 				case "line"                        : return _provider.Adapter.NpgsqlLineType     .Name;
-				case "cidr"                        :
+				case "cidr"                        : return (_provider.Adapter.NpgsqlCidrType ?? _provider.Adapter.NpgsqlInetType).Name;
 				case "inet"                        : return _provider.Adapter.NpgsqlInetType     .Name;
 				case "geometry"                    : return "PostgisGeometry";
 			}

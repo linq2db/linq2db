@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -145,9 +146,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			mapType("datemultirange"          , NpgsqlProviderAdapter.NpgsqlDbType.DateMultirange);
 
 
-			if (Adapter.NpgsqlTimeSpanType != null) SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, Adapter.GetIntervalReaderMethod! , dataReaderType: Adapter.DataReaderType);
-			if (Adapter.NpgsqlDateTimeType != null) SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, Adapter.GetTimeStampReaderMethod!, dataReaderType: Adapter.DataReaderType);
-			if (Adapter.NpgsqlDateType     != null) SetProviderField(Adapter.NpgsqlDateType    , Adapter.NpgsqlDateType    , Adapter.GetDateReaderMethod!     , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.NpgsqlTimeSpanType != null) SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, Adapter.GetIntervalReaderMethod!    , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.NpgsqlDateTimeType != null) SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, Adapter.GetTimeStampReaderMethod!   , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.NpgsqlDateType     != null) SetProviderField(Adapter.NpgsqlDateType    , Adapter.NpgsqlDateType    , Adapter.GetDateReaderMethod!        , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.NpgsqlCidrType     != null) SetProviderField(Adapter.NpgsqlCidrType    , Adapter.NpgsqlCidrType    , GetProviderSpecificValueReaderMethod, dataReaderType: Adapter.DataReaderType);
 
 			if (Adapter.NpgsqlIntervalType != null)
 				ReaderExpressions[new ReaderInfo { ToType = Adapter.NpgsqlIntervalType }] = Adapter.NpgsqlIntervalReader!;
@@ -502,7 +504,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (dbType.StartsWith("float(") && dbType.EndsWith(")"))
 			{
-				if (int.TryParse(dbType.Substring("float(".Length, dbType.Length - "float(".Length - 1), out var precision))
+				if (int.TryParse(dbType.Substring("float(".Length, dbType.Length - "float(".Length - 1), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var precision))
 				{
 					if (precision >= 1 && precision <= 24)
 						dbType = "real";

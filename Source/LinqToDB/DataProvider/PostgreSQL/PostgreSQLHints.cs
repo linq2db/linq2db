@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					else if (i > 0)
 						stringBuilder.Append(", ");
 
-					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[$"tableIDs.{i}"]).Value!;
+					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"tableIDs.{i}")]).Value!;
 					var alias = sqlBuilder.BuildSqlID(id);
 
 					stringBuilder.Append(alias);
@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <param name="hint">SQL text, added to join in generated query.</param>
 		/// <param name="tableIDs">Table IDs.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
 		public static IPostgreSQLSpecificQueryable<TSource> SubQueryTableHint<TSource>(
@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
 		/// <param name="tableIDs">Table IDs.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
 		public static IPostgreSQLSpecificQueryable<TSource> SubQueryTableHint<TSource>(

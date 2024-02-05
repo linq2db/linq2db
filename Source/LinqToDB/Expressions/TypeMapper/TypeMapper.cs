@@ -1,25 +1,26 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Expressions
 {
-	using System.Collections;
-	using System.Diagnostics.CodeAnalysis;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using Common;
-	using LinqToDB.Extensions;
+	using Extensions;
 
 	/// <summary>
 	/// Implements typed mappings support for dynamically loaded types.
 	/// </summary>
 	public sealed class TypeMapper
 	{
-		private static readonly Type[] _wrapperContructorParameters1 = new[] { typeof(object) };
-		private static readonly Type[] _wrapperContructorParameters2 = new[] { typeof(object), typeof(Delegate[]) };
+		private static readonly Type[] _wrapperConstructorParameters1 = [typeof(object)];
+		private static readonly Type[] _wrapperConstructorParameters2 = [typeof(object), typeof(Delegate[])];
 
 		// [type name] = originalType
 		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>();
@@ -91,8 +92,8 @@ namespace LinqToDB.Expressions
 			if (baseType != Enum.GetUnderlyingType(originalType))
 				throw new LinqToDBException($"Enums {wrapperType} and {originalType} have different base types: {baseType} vs {Enum.GetUnderlyingType(originalType)}");
 
-			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(_ => _.ToString()!, _ => _);
-			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(_ => _.ToString()!, _ => _);
+			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
+			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
 
 			var hasCommonMembers   = false;
 			var hasDifferentValues = false;
@@ -101,7 +102,7 @@ namespace LinqToDB.Expressions
 				if (originalValues.TryGetValue(kvp.Key, out var origValue))
 				{
 					hasCommonMembers = true;
-					if (Convert.ToInt64(kvp.Value) != Convert.ToInt64(origValue))
+					if (Convert.ToInt64(kvp.Value, CultureInfo.InvariantCulture) != Convert.ToInt64(origValue, CultureInfo.InvariantCulture))
 					{
 						hasDifferentValues = true;
 						break;
@@ -204,11 +205,11 @@ namespace LinqToDB.Expressions
 				var eventsHandler = BuildWrapperEvents (wrapperType);
 
 				// pre-register factory, so we don't need to use concurrent dictionary to access factory later
-				var types = delegates != null ? _wrapperContructorParameters2 : _wrapperContructorParameters1;
+				var types = delegates != null ? _wrapperConstructorParameters2 : _wrapperConstructorParameters1;
 				var ctor = wrapperType.GetConstructor(types);
 
 				if (ctor == null)
-					throw new LinqToDBException($"Cannot find contructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
+					throw new LinqToDBException($"Cannot find constructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
 
 				var pInstance = Expression.Parameter(typeof(object));
 
@@ -494,7 +495,7 @@ namespace LinqToDB.Expressions
 			return newMembers[0];
 		}
 
-		Expression? ReplaceTypes(Expression expression, ReplaceTypesContext ctx)
+		static Expression? ReplaceTypes(Expression expression, ReplaceTypesContext ctx)
 		{
 			var converted = expression.Transform(ctx, static (context, e) =>
 			{
@@ -509,7 +510,7 @@ namespace LinqToDB.Expressions
 								break;
 
 							var ue   = (UnaryExpression)e;
-							var expr = context.Mapper.ReplaceTypes(ue.Operand, context)!;
+							var expr = ReplaceTypes(ue.Operand, context)!;
 							var type = context.Mapper.TryMapType(ue.Type, out var newType) ? newType : ue.Type;
 
 							if (ue.Method != null)
@@ -554,7 +555,7 @@ namespace LinqToDB.Expressions
 					case ExpressionType.Assign:
 						{
 							var be    = (BinaryExpression)e;
-							var left  = context.Mapper.ReplaceTypes(be.Left, context)!;
+							var left  = ReplaceTypes(be.Left, context)!;
 							var right = be.Right;
 
 							if (context.Mapper.TryMapType(right.Type, out var replacement))
@@ -589,7 +590,7 @@ namespace LinqToDB.Expressions
 
 							if (context.Mapper.TryMapType(ma.Expression.Type, out var replacement))
 							{
-								var expr = context.Mapper.ReplaceTypes(ma.Expression, context)!;
+								var expr = ReplaceTypes(ma.Expression, context)!;
 								if (expr.Type != replacement)
 									throw new LinqToDBException($"Invalid replacement of '{ma.Expression}' to type '{replacement.FullName}'.");
 
@@ -647,7 +648,7 @@ namespace LinqToDB.Expressions
 									throw new LinqToDBException($"Constructor not found in target type: {name}");
 								}
 
-								var newArguments  = ne.Arguments.Select(a => context.Mapper.ReplaceTypes(a, context)!);
+								var newArguments  = ne.Arguments.Select(a => ReplaceTypes(a, context)!);
 								if (ne.Members != null)
 								{
 									var newMembers = ne.Members.Select(m => ReplaceMember(m, replacement));
@@ -667,7 +668,7 @@ namespace LinqToDB.Expressions
 							var mi = (MemberInitExpression)e;
 							if (context.Mapper.TryMapType(mi.Type, out var replacement))
 							{
-								var newExpression = (NewExpression)context.Mapper.ReplaceTypes(mi.NewExpression, context)!;
+								var newExpression = (NewExpression)ReplaceTypes(mi.NewExpression, context)!;
 								var newBindings = mi.Bindings.Select(b =>
 								{
 									switch (b.BindingType)
@@ -676,7 +677,7 @@ namespace LinqToDB.Expressions
 											{
 												var mab = (MemberAssignment)b;
 												return Expression.Bind(ReplaceMember(mab.Member, replacement),
-													context.Mapper.ReplaceTypes(mab.Expression, context)!);
+													ReplaceTypes(mab.Expression, context)!);
 											}
 										case MemberBindingType.MemberBinding:
 											{
@@ -730,8 +731,8 @@ namespace LinqToDB.Expressions
 										throw new LinqToDBException($"Method not found in target type: {name}");
 									}
 
-									var newArguments  = mc.Arguments.Select(a => context.Mapper.ReplaceTypes(a, context)!);
-									var newMethodCall = Expression.Call(context.Mapper.ReplaceTypes(mc.Object!, context)!, methodName, typeArgs, newArguments.ToArray());
+									var newArguments  = mc.Arguments.Select(a => ReplaceTypes(a, context)!);
+									var newMethodCall = Expression.Call(ReplaceTypes(mc.Object!, context)!, methodName, typeArgs, newArguments.ToArray());
 
 									if (customReturnMapper != null)
 									{
@@ -769,8 +770,8 @@ namespace LinqToDB.Expressions
 										throw new LinqToDBException($"Method not found in target type: {name}");
 									}
 
-									var newArguments  = mc.Arguments.Select(a => context.Mapper.ReplaceTypes(a, context)!);
-									var newMethodCall = Expression.Call(context.Mapper.ReplaceTypes(mc.Object!, context), method, newArguments);
+									var newArguments  = mc.Arguments.Select(a => ReplaceTypes(a, context)!);
+									var newMethodCall = Expression.Call(ReplaceTypes(mc.Object!, context), method, newArguments);
 
 									if (customReturnMapper != null)
 									{

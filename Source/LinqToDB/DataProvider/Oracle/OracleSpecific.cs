@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -35,7 +36,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public static partial class OracleTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IOracleSpecificTable<TSource> AsOracle<TSource>(this ITable<TSource> table)
 			where TSource : notnull
@@ -50,7 +51,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IOracleSpecificQueryable<TSource> AsOracle<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull

@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
-> Starting from version 4 we also support new command-line scaffolding tool: [linq2db.cli](https://www.nuget.org/packages/linq2db.cli).
+Also check command-line scaffolding tool: [linq2db.cli](https://www.nuget.org/packages/linq2db.cli).
 
 This nuget package contains database scaffolding T4 templates to generate POCO classes from your database.
 

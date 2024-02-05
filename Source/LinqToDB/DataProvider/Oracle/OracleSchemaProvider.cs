@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Data;
 
@@ -158,14 +159,14 @@ namespace LinqToDB.DataProvider.Oracle
 				.ToList();
 		}
 
-		private int GetMajorVersion(DataConnection dataConnection)
+		private static int GetMajorVersion(DataConnection dataConnection)
 		{
 			var version = dataConnection.Query<string?>("SELECT  VERSION from PRODUCT_COMPONENT_VERSION WHERE ROWNUM = 1").FirstOrDefault();
 			if (version != null)
 			{
 				try
 				{
-					return int.Parse(version.Split('.')[0]);
+					return int.Parse(version.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 				}
 				catch { }
 			}

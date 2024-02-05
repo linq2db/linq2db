@@ -85,7 +85,7 @@ if ($version) {
 		}
 
 		Set-Metadata -name 'releaseNotes'             -value ('https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-' + $dotlessVersion)
-		Set-Metadata -name 'copyright'                -value ('Copyright © 2023 ' + $authors)
+		Set-Metadata -name 'copyright'                -value ('Copyright © 2024 ' + $authors)
 		Set-Metadata -name 'authors'                  -value $authors
 		Set-Metadata -name 'owners'                   -value $authors
 		Set-Metadata -name 'projectUrl'               -value 'http://linq2db.com'
@@ -128,7 +128,7 @@ if ($version) {
 			Set-File -src '..\NuGet\README.T4.md'  -target 'README.md'
 		}
 
-		Set-File -src '..\NuGet\icon64.png' -target 'images\icon.png'
+		Set-File -src '..\NuGet\icon.png' -target 'images\icon.png'
 
 		$xml.package.metadata.AppendChild($xml.CreateSignificantWhitespace("`n`t"))
 		$xml.package.files.AppendChild($xml.CreateSignificantWhitespace("`n`t"))

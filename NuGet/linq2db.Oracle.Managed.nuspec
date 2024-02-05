@@ -12,19 +12,19 @@
 		<dependencies>
 			<group targetFramework="net45">
 				<dependency id="linq2db"                       version="5.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess"      version="19.19.0"  />
+				<dependency id="Oracle.ManagedDataAccess"      version="19.20.0"  />
 			</group>
 			<group targetFramework="net462">
 				<dependency id="linq2db"                       version="5.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess"      version="21.10.0"  />
+				<dependency id="Oracle.ManagedDataAccess"      version="21.11.0"  />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"                       version="5.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.190" />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.200" />
 			</group>
 			<group targetFramework="netstandard2.1">
 				<dependency id="linq2db"                       version="5.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess.Core" version="3.21.100" />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="3.21.110" />
 			</group>
 		</dependencies>
 		<contentFiles>

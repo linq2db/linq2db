@@ -35,15 +35,12 @@ namespace LinqToDB.Linq.Builder
 			if (context is LoadWithBuilder.LoadWithContext lwCtx)
 				return lwCtx.TableContext;
 
-			if (table == null)
+			var isTableResult = context.IsExpression(null, 0, RequestFor.Table);
+			if (isTableResult.Result)
 			{
-				var isTableResult = context.IsExpression(null, 0, RequestFor.Table);
-				if (isTableResult.Result)
-				{
-					table = isTableResult.Context as TableBuilder.TableContext;
-					if (table != null)
-						return table;
-				}
+				table = isTableResult.Context as TableBuilder.TableContext;
+				if (table != null)
+					return table;
 			}
 
 			return null;

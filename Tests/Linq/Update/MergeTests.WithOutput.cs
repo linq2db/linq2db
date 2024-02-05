@@ -302,7 +302,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
 				PrepareData(db);
 
@@ -337,13 +337,54 @@ namespace Tests.xUpdate
 				record.SourceId. Should().Be(6);
 			}
 		}
-
+		
 		[Test]
-		public void MergeWithOutputIntoTempTable([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task MergeWithOutputIntoWithSourceAsync([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable", tableOptions: TableOptions.IsTemporary);
+				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var affected = await table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutputIntoAsync(temp,
+						(a, deleted, inserted, source) => new ()
+						{
+							Action    = a,
+							NewId     = inserted.Id,
+							DeletedId = deleted.Id,
+							SourceId  = source.Id + 1
+						}
+					);
+
+				affected.Should().Be(1);
+
+				var result = temp.ToArray();
+
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.Action.   Should().Be("INSERT");
+				record.NewId.    Should().Be(5);
+				record.DeletedId.Should().BeNull();
+				record.SourceId. Should().Be(6);
+			}
+		}
+
+		[Test]
+		public void MergeWithOutputConditionalInto([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
 				PrepareData(db);
 
@@ -355,6 +396,86 @@ namespace Tests.xUpdate
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.MergeWithOutputInto(temp,
+						(a, deleted, inserted, source) => new ()
+						{
+							Action    = a == "DELETE" ? "Row Deleted" : a == "INSERT" ? "Row Inserted" : "Row Updated",
+							NewId     = inserted.Id,
+							DeletedId = deleted.Id,
+							SourceId  = source.Id + 1
+						}
+					);
+
+				affected.Should().Be(1);
+
+				var result = temp.ToArray();
+
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.Action.   Should().Be("Row Inserted");
+				record.NewId.    Should().Be(5);
+				record.DeletedId.Should().BeNull();
+				record.SourceId. Should().Be(6);
+			}
+		}
+
+		[Test]
+		public void MergeWithOutputIntoTempTable([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable", tableOptions: TableOptions.IsTemporary);
+
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var affected = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutputInto(temp,
+						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
+					);
+
+				affected.Should().Be(1);
+
+				var result = temp.ToArray();
+
+				result.Should().HaveCount(1);
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.Action.Should().Be("INSERT");
+
+				record.NewId.Should().Be(5);
+				record.DeletedId.Should().BeNull();
+			}
+		}
+		
+		[Test]
+		public void MergeWithOutputIntoTempTableByTableName([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42", tableOptions: TableOptions.IsTemporary);
+				var tempRef = db.GetTable<InsertTempTable>()
+					.TableOptions(TableOptions.IsTemporary)
+					.TableName(temp.TableName);
+
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var affected = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutputInto(tempRef,
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
@@ -414,7 +535,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
 				PrepareData(db);
 
@@ -445,5 +566,131 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public async Task MergeWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
+				var tempRef = db.GetTable<InsertTempTable>()
+					.TableOptions(TableOptions.IsTemporary)
+					.TableName(temp.TableName);
+
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var affected = await table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutputIntoAsync(tempRef,
+						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
+					);
+
+				affected.Should().Be(1);
+
+				var result = await temp.ToArrayAsync();
+
+				result.Should().HaveCount(1);
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.Action.Should().Be("INSERT");
+
+				record.NewId.Should().Be(5);
+				record.DeletedId.Should().BeNull();
+			}
+		}
+
+		[Test]
+		public void MergeWithOutputIntoTempTableByTableNameWithSource([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
+				var tempRef = db.GetTable<InsertTempTable>()
+					.TableOptions(TableOptions.IsTemporary)
+					.TableName(temp.TableName);
+
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var affected = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutputInto(tempRef,
+						(a, deleted, inserted, source) => new ()
+						{
+							Action    = a,
+							NewId     = inserted.Id,
+							DeletedId = deleted.Id,
+							SourceId  = source.Id + 1
+						}
+					);
+
+				affected.Should().Be(1);
+
+				var result = temp.ToArray();
+
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.Action.Should().Be("INSERT");
+				record.NewId.Should().Be(5);
+				record.DeletedId.Should().BeNull();
+				record.SourceId.Should().Be(6);
+			}
+		}
+
+		[Test]
+		public async Task MergeWithOutputIntoTempTableByTableNameWithSourceAsync([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
+				var tempRef = db.GetTable<InsertTempTable>()
+					.TableOptions(TableOptions.IsTemporary)
+					.TableName(temp.TableName);
+
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var affected = await table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutputIntoAsync(tempRef,
+						(a, deleted, inserted, source) => new ()
+						{
+							Action    = a,
+							NewId     = inserted.Id,
+							DeletedId = deleted.Id,
+							SourceId  = source.Id + 1
+						}
+					);
+
+				affected.Should().Be(1);
+
+				var result = temp.ToArray();
+
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.Action.Should().Be("INSERT");
+				record.NewId.Should().Be(5);
+				record.DeletedId.Should().BeNull();
+				record.SourceId.Should().Be(6);
+			}
+		}
 	}
 }

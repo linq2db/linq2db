@@ -2,7 +2,7 @@ using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
-	public class PostgreSQLSpecific
+	public static class PostgreSQLSpecific
 	{
 		public class SequenceTest1
 		{

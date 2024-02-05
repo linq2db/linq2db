@@ -18,7 +18,12 @@
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"                                   version="5.0.0" />
 				<dependency id="Microsoft.Extensions.DependencyInjection"  version="6.0.1" />
-				<dependency id="Microsoft.Extensions.Logging.Abstractions" version="6.0.3" />
+				<dependency id="Microsoft.Extensions.Logging.Abstractions" version="6.0.4" />
+			</group>
+			<group targetFramework="net6.0">
+				<dependency id="linq2db"                                   version="5.0.0" />
+				<dependency id="Microsoft.Extensions.DependencyInjection"  version="6.0.1" />
+				<dependency id="Microsoft.Extensions.Logging.Abstractions" version="6.0.4" />
 			</group>
 		</dependencies>
 	</metadata>
@@ -31,5 +36,8 @@
 		<file src="..\Source\LinqToDB.AspNet\bin\Release\netstandard2.0\linq2db.AspNet.pdb" target="lib\netstandard2.0\" />
 		<file src="..\Source\LinqToDB.AspNet\bin\Release\netstandard2.0\linq2db.AspNet.xml" target="lib\netstandard2.0\" />
 		<file src="..\Source\LinqToDB.AspNet\bin\Release\netstandard2.0\linq2db.AspNet.dll" target="lib\netstandard2.0\" />
+		<file src="..\Source\LinqToDB.AspNet\bin\Release\net60\linq2db.AspNet.pdb"          target="lib\net60\"          />
+		<file src="..\Source\LinqToDB.AspNet\bin\Release\net60\linq2db.AspNet.xml"          target="lib\net60\"          />
+		<file src="..\Source\LinqToDB.AspNet\bin\Release\net60\linq2db.AspNet.dll"          target="lib\net60\"          />
 	</files>
 </package>

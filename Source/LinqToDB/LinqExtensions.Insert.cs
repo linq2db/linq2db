@@ -316,10 +316,7 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable),
 					query.Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression);
 
-			if (query is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => query.Provider.Execute<int>(expr), token);
+			return ((IQueryProviderAsync)query).ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -403,10 +400,7 @@ namespace LinqToDB
 					query.Expression, Expression.Quote(setter), ((IQueryable<TOutput>)outputTable).Expression,
 					Expression.Quote(outputExpression));
 
-			if (query is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => query.Provider.Execute<int>(expr), token);
+			return ((IQueryProviderAsync)query).ExecuteAsync<int>(expr, token);
 		}
 
 

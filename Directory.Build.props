@@ -5,7 +5,7 @@
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</Authors>
 		<Company>linq2db.net</Company>
-		<Copyright>2002-2023 linq2db.net</Copyright>
+		<Copyright>2002-2024 linq2db.net</Copyright>
 		<RepositoryUrl>https://github.com/linq2db/linq2db</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 
@@ -67,6 +67,9 @@
 		<LinqToDBT4SQLiteTemplatesPath>$(SolutionDir)Nuget\SQLite\</LinqToDBT4SQLiteTemplatesPath>
 		<LinqToDBT4SqlServerTemplatesPath>$(SolutionDir)Nuget\SqlServer\</LinqToDBT4SqlServerTemplatesPath>
 		<LinqToDBT4SybaseAseTemplatesPath>$(SolutionDir)Nuget\Sybase\</LinqToDBT4SybaseAseTemplatesPath>
+
+		<!--temporary suppress netcoreapp3.1 warnings-->
+		<CheckEolTargetFramework>false</CheckEolTargetFramework>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
@@ -90,7 +93,7 @@
 	<ItemGroup>
 		<PackageReference Include="PolySharp" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
-		<AdditionalFiles Include="$(MSBuildThisFileDirectory)/Build/BannedSymbols.txt" />
+		<PackageReference Include="Meziantou.Analyzer" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
 			<PrivateAssets>all</PrivateAssets>
@@ -101,5 +104,4 @@
 	<ItemGroup Condition="'$(Language)'=='C#'">
 		<Compile Include="$(MSBuildThisFileDirectory)/Source/Shared/*.cs" LinkBase="Compatibility" />
 	</ItemGroup>
-
 </Project>

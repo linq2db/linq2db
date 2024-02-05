@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -86,9 +87,11 @@ namespace LinqToDB.SqlQuery
 						{
 							var converter = entityDescriptor.MappingSchema.GetConverter(
 								field.Type,
-								new DbDataType(typeof(DataParameter)), true);
+								new DbDataType(typeof(DataParameter)),
+								true,
+								ConversionType.ToDatabase);
 
-							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.Type.SystemType, entityDescriptor.MappingSchema));
+							var parameter = converter?.ConvertValueToParameter(DefaultValue.GetValue(field.Type.SystemType, entityDescriptor.MappingSchema));
 							if (parameter != null)
 								field.Type = field.Type.WithDataType(parameter.DataType);
 						}
@@ -288,10 +291,10 @@ namespace LinqToDB.SqlQuery
 
 		public virtual StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			if (TableName.Server   != null) sb.Append($"[{TableName.Server}].");
-			if (TableName.Database != null) sb.Append($"[{TableName.Database}].");
-			if (TableName.Schema   != null) sb.Append($"[{TableName.Schema}].");
-			return sb.Append($"[{Expression ?? TableName.Name}({SourceID})]");
+			if (TableName.Server   != null) sb.Append(CultureInfo.InvariantCulture, $"[{TableName.Server}].");
+			if (TableName.Database != null) sb.Append(CultureInfo.InvariantCulture, $"[{TableName.Database}].");
+			if (TableName.Schema   != null) sb.Append(CultureInfo.InvariantCulture, $"[{TableName.Schema}].");
+			return sb.Append(CultureInfo.InvariantCulture, $"[{Expression ?? TableName.Name}({SourceID})]");
 		}
 
 		#endregion

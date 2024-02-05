@@ -4,6 +4,7 @@ using LinqToDB.Schema;
 using LinqToDB.CodeModel;
 using LinqToDB.Common;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace LinqToDB.DataModel
 {
@@ -66,9 +67,11 @@ namespace LinqToDB.DataModel
 			{
 				// if procedure resultset schema load failed, generate error pragma
 				if (context.Options.GenerateProceduresSchemaError)
-					(region ??= context.AddStoredProcedureRegion(storedProcedure.Method.Name))
+				{
+					(region = context.AddStoredProcedureRegion(storedProcedure.Method.Name))
 						.Pragmas()
 							.Add(context.AST.Error(storedProcedure.Error));
+				}
 
 				// even with this error procedure generation could continue, as we still
 				// can invoke procedure, we just cannot get resultset from it
@@ -537,7 +540,7 @@ namespace LinqToDB.DataModel
 			// DataParameter constructor arguments
 			var ctorParams = new ICodeExpression[dataType != null ? 3 : 2];
 
-			ctorParams[0] = context.AST.Constant(parameterName ?? string.Format(DataModelConstants.STORED_PROCEDURE_PARAMETER_TEMPLATE, parameterIndex), true);
+			ctorParams[0] = context.AST.Constant(parameterName ?? string.Format(CultureInfo.InvariantCulture, DataModelConstants.STORED_PROCEDURE_PARAMETER_TEMPLATE, parameterIndex), true);
 			// pass parameter value for in and inout parameters
 			// otherwise pass null
 			ctorParams[1] = direction == System.Data.ParameterDirection.Input || direction == System.Data.ParameterDirection.InputOutput
