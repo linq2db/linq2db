@@ -309,7 +309,7 @@ namespace Tests.UserTests.Test3993
 						.MappingSchema;
 					ms.AddScalarType(typeof(TimeSpan), DataType.Int64);
 				}
-
+				
 				LinqToDB.Linq.Expressions.AddTimeSpanMappings();
 
 				db = GetDataContext(configuration, ms);
@@ -331,6 +331,13 @@ namespace Tests.UserTests.Test3993
 								 };
 
 				var lst = qryComplex.First();
+
+				var val = qryComplex.Select(x=>
+				new {
+					StartDateTime = x.Task.StartDateTime,
+					PreNotification = x.Task.PreNotification,
+					x.NotificationDateTime
+				}).First();
 
 				var hour = qryComplex.Where(x => x.NotificationDateTime!.Value.Hour == 13).First();
 				var minute = qryComplex.Where(x => x.NotificationDateTime!.Value.Minute == 51).First();

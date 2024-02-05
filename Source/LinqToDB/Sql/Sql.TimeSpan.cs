@@ -49,7 +49,7 @@ namespace LinqToDB
 			{
 				return part switch
 				{
-					TimeSpanParts.TotalNanoseconds	=> "* 0.01",
+					TimeSpanParts.TotalNanoseconds	=> "* 100",
 					TimeSpanParts.TotalMicroseconds => "/ 10",
 					TimeSpanParts.TotalMilliseconds => "/ 10000",
 					TimeSpanParts.TotalSeconds		=> "/ 10000000",
@@ -111,10 +111,10 @@ namespace LinqToDB
 			}
 		}
 
-		[Extension(               "",                        ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TimeSpanPartBuilder))]
-		[Extension(PN.Oracle, "(extract(second from {0}) + extract(minute from {0}) * 60 + extract(hour from {0}) * 3600 + extract(day from {0}) * 86400)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TimeSpanPartBuilderIntervalType))]
+		[Extension(               "",																															ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TimeSpanPartBuilder))]
+		[Extension(PN.SQLite,     "",																													        ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TimeSpanPartBuilderSqlite))]
+		[Extension(PN.Oracle,     "(extract(second from {0}) + extract(minute from {0}) * 60 + extract(hour from {0}) * 3600 + extract(day from {0}) * 86400)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TimeSpanPartBuilderIntervalType))]
 		[Extension(PN.PostgreSQL, "(extract(second from {0}) + extract(minute from {0}) * 60 + extract(hour from {0}) * 3600 + extract(day from {0}) * 86400)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TimeSpanPartBuilderIntervalType))]
-		[Extension(PN.SQLite,     "",                        ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TimeSpanPartBuilderSqlite))]
 		public static long? TimeSpanPart([SqlQueryDependent] TimeSpanParts part, [ExprParameter] TimeSpan? timeSpan)
 		{
 			if (timeSpan == null)
@@ -253,16 +253,16 @@ namespace LinqToDB
 			{
 				var date   = builder.GetExpression("date");
 				var timeSpan = builder.GetExpression("timeSpan", true);
-				var expStr = "strftime('%Y-%m-%d %H:%M:%f', {0}, ({1}/1000.0) || ' Second')";
+				var expStr = "strftime('%Y-%m-%d %H:%M:%f', {0}, ({1}/10000000.0) || ' Second')";
 
 				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Concatenate, date, timeSpan);
 			}
 		}
 
-		[Extension("DateAdd", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilder))]
-		[Extension(PN.Oracle, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderOracle))]
+		[Extension("DateAdd",         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilder))]
+		[Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderOracle))]
 		[Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderPostgreSQL))]
-		[Extension(PN.SQLite, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderSQLite))]
+		[Extension(PN.SQLite,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderSQLite))]
 		public static DateTime? DateAdd(DateTime? date, TimeSpan? timeSpan)
 		{
 			if (date == null || timeSpan == null)
@@ -271,10 +271,10 @@ namespace LinqToDB
 			return date + timeSpan;
 		}
 
-		[Extension("DateAdd", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilder))]
-		[Extension(PN.Oracle, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderOracle))]
+		[Extension("DateAdd",         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilder))]
+		[Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderOracle))]
 		[Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderPostgreSQL))]
-		[Extension(PN.SQLite, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderSQLite))]
+		[Extension(PN.SQLite,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderSQLite))]
 		public static DateTimeOffset? DateAdd(DateTimeOffset? date, TimeSpan? timeSpan)
 		{
 			if (date == null || timeSpan == null)
