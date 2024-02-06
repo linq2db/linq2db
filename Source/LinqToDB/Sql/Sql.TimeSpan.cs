@@ -173,6 +173,54 @@ namespace LinqToDB
 			}
 		}
 
+		internal sealed class DateTimeAddIntervalBuilderMicroseconds : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var p = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(TimeSpanPart, TimeSpanParts.TotalMicroseconds, (TimeSpan?)TimeSpan.Zero),
+						Expression.Constant(TimeSpanParts.TotalMicroseconds),
+						builder.Arguments[1]
+					);
+
+				var e = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(DateAdd, DateParts.Microsecond, (double?)0, (DateTime?)DateTime.MinValue),
+						Expression.Constant(DateParts.Microsecond),
+					 	Expression.Convert(p, typeof(double?)),
+						builder.Arguments[0]
+					);
+
+				var exp = builder.ConvertExpressionToSql(e, true);
+				builder.ResultExpression = exp;
+			}
+		}
+
+		internal sealed class DateTimeAddIntervalBuilderMilliseconds : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var p = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(TimeSpanPart, TimeSpanParts.TotalMilliseconds, (TimeSpan?)TimeSpan.Zero),
+						Expression.Constant(TimeSpanParts.TotalMilliseconds),
+						builder.Arguments[1]
+					);
+
+				var e = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(DateAdd, DateParts.Millisecond, (double?)0, (DateTime?)DateTime.MinValue),
+						Expression.Constant(DateParts.Millisecond),
+					 	Expression.Convert(p, typeof(double?)),
+						builder.Arguments[0]
+					);
+
+				var exp = builder.ConvertExpressionToSql(e, true);
+				builder.ResultExpression = exp;
+			}
+		}
+
 		internal sealed class DateTimeAddIntervalBuilderOracle : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
@@ -247,30 +295,6 @@ namespace LinqToDB
 			}
 		}
 
-		internal sealed class DateTimeAddIntervalBuilderMySql : IExtensionCallBuilder
-		{
-			public void Build(ISqExtensionBuilder builder)
-			{
-				var p = Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(TimeSpanPart, TimeSpanParts.TotalMicroseconds, (TimeSpan?)TimeSpan.Zero),
-						Expression.Constant(TimeSpanParts.TotalMicroseconds),
-						builder.Arguments[1]
-					);
-
-				var e = Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(DateAdd, DateParts.Microsecond, (double?)0, (DateTime?)DateTime.MinValue),
-						Expression.Constant(DateParts.Microsecond),
-					 	Expression.Convert(p, typeof(double?)),
-						builder.Arguments[0]
-					);
-
-				var exp = builder.ConvertExpressionToSql(e, true);
-				builder.ResultExpression = exp;
-			}
-		}
-
 		internal sealed class DateTimeAddIntervalBuilderSQLite : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
@@ -286,8 +310,14 @@ namespace LinqToDB
 		[Extension("DateAdd",         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilder))]
 		[Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderOracle))]
 		[Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderPostgreSQL))]
-		[Extension(PN.MySql,      "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMySql))]
+		[Extension(PN.MySql,      "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMicroseconds))]
 		[Extension(PN.SQLite,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderSQLite))]
+		[Extension(PN.Firebird,	  "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
+		[Extension(PN.DB2,        "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
+		[Extension(PN.Informix,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
+		[Extension(PN.ClickHouse, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
+		[Extension(PN.SapHana,    "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
+		[Extension(PN.Sybase,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMicroseconds))]
 		public static DateTime? DateAdd(DateTime? date, TimeSpan? timeSpan)
 		{
 			if (date == null || timeSpan == null)
@@ -299,7 +329,14 @@ namespace LinqToDB
 		[Extension("DateAdd",         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilder))]
 		[Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderOracle))]
 		[Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderPostgreSQL))]
+		[Extension(PN.MySql,      "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMicroseconds))]
 		[Extension(PN.SQLite,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderSQLite))]
+		[Extension(PN.Firebird,	  "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
+		[Extension(PN.DB2,        "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
+		[Extension(PN.Informix,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
+		[Extension(PN.ClickHouse, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
+		[Extension(PN.SapHana,    "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
+		[Extension(PN.Sybase,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMicroseconds))]
 		public static DateTimeOffset? DateAdd(DateTimeOffset? date, TimeSpan? timeSpan)
 		{
 			if (date == null || timeSpan == null)

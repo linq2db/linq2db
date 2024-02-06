@@ -252,6 +252,7 @@ namespace LinqToDB
 					case DateParts.Hour        : exprStr = "Hour({date})";                     break;
 					case DateParts.Minute      : exprStr = "Minute({date})";                   break;
 					case DateParts.Second      : exprStr = "Second({date})";                   break;
+					case DateParts.Millisecond : exprStr = "Second({date}) * 1000";            break;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
@@ -1412,7 +1413,7 @@ namespace LinqToDB
 		[Extension(PN.PostgreSQL,   "",              BuilderType = typeof(DateDiffIntervalBuilderPostgreSql))]
 		[Extension(PN.Access,       "",              BuilderType = typeof(DateDiffIntervalBuilderAccess))]
 		[Extension(PN.ClickHouse,   "",              BuilderType = typeof(DateDiffIntervalBuilderClickHouse))]
-		/* Returns the Native Database Interval type, or the Timespan Ticks (100ns) */
+		/* Returns the Native Database Interval type, or the Timespan Ticks (100ns) */		
 		public static TimeSpan? DateDiffInterval(DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)
