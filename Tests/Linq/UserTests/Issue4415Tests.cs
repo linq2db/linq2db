@@ -35,7 +35,7 @@ namespace Tests.UserTests.Test4415
 		}
 
 		[Test]
-		public void TestIssue4415_Test1([DataSources] string configuration)
+		public void TestIssue4415_Test1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -74,7 +74,7 @@ namespace Tests.UserTests.Test4415
 		}
 
 		[Test]
-		public void TestIssue4415_Test2([DataSources] string configuration)
+		public void TestIssue4415_Test2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -113,7 +113,7 @@ namespace Tests.UserTests.Test4415
 		}
 
 		[Test]
-		public void TestIssue4415_Test3([DataSources] string configuration)
+		public void TestIssue4415_Test3([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -152,7 +152,7 @@ namespace Tests.UserTests.Test4415
 		}
 
 		[Test]
-		public void TestIssue4415_Test4([DataSources] string configuration)
+		public void TestIssue4415_Test4([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
