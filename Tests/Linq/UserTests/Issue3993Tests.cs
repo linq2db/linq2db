@@ -32,7 +32,7 @@ namespace Tests.UserTests.Test3993
 		}
 
 		[Test]
-		public void TestIssue3993_Test1([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql)] string configuration)
+		public void TestIssue3993_Test1([DataSources] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -92,8 +92,6 @@ namespace Tests.UserTests.Test3993
 						StrField         = TestData.Date,
 					}
 				});
-
-
 
 				var d = db.GetTable<Test>().ToList();
 
@@ -177,7 +175,7 @@ namespace Tests.UserTests.Test3993
 		}
 		
 		[Test]
-		public void TestIssue3993_Test2([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql)] string configuration)
+		public void TestIssue3993_Test2([DataSources] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -267,7 +265,7 @@ namespace Tests.UserTests.Test3993
 		}
 
 		[Test]
-		public void TestIssue3993_Test3([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql)] string configuration)
+		public void TestIssue3993_Test3([DataSources] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
