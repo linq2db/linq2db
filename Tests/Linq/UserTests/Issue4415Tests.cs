@@ -64,6 +64,124 @@ namespace Tests.UserTests.Test4415
 				var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID));
 				var qry2 = p.Where(x => qry.Contains(x.LanguageID));
 				var lst = qry2.ToList();
+
+				Assert.AreEqual(1, lst.Count);
+			}
+			finally
+			{
+				db?.Dispose();
+			}
+		}
+
+		[Test]
+		public void TestIssue4415_Test2([DataSources] string configuration)
+		{
+			MappingSchema ms;
+			Model.ITestDataContext? db = null;
+			try
+			{
+				ms = new FluentMappingBuilder()
+					.Entity<LanguageDTO>()
+						.HasTableName("Common_Language")
+						.Property(e => e.LanguageID).IsNullable().IsPrimaryKey()
+						.Property(e => e.AlternativeLanguageID).IsNullable()
+					.Build()
+					.MappingSchema;
+
+				db = GetDataContext(configuration, ms);
+
+				using var tbl = db.CreateLocalTable(new[]
+				{
+					new LanguageDTO
+					{
+						LanguageID    = "de",
+						Name = "deutsch"
+					}
+				});
+
+				var p = db.GetTable<LanguageDTO>();
+				var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID));
+				var qry2 = p.Where(x => qry.Contains(x.LanguageID));
+				var lst = qry2.ToList();
+
+				Assert.AreEqual(1, lst.Count);
+			}
+			finally
+			{
+				db?.Dispose();
+			}
+		}
+
+		[Test]
+		public void TestIssue4415_Test3([DataSources] string configuration)
+		{
+			MappingSchema ms;
+			Model.ITestDataContext? db = null;
+			try
+			{
+				ms = new FluentMappingBuilder()
+					.Entity<LanguageDTO>()
+						.HasTableName("Common_Language")
+						.Property(e => e.LanguageID).IsNotNull().IsPrimaryKey()
+						.Property(e => e.AlternativeLanguageID).IsNullable()
+					.Build()
+					.MappingSchema;
+
+				db = GetDataContext(configuration, ms);
+
+				using var tbl = db.CreateLocalTable(new[]
+				{
+					new LanguageDTO
+					{
+						LanguageID    = "de",
+						Name = "deutsch"
+					}
+				});
+
+				var p = db.GetTable<LanguageDTO>();
+				var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID));
+				var qry2 = p.Where(x => qry.Contains(x.LanguageID));
+				var lst = qry2.ToList();
+
+				Assert.AreEqual(1, lst.Count);
+			}
+			finally
+			{
+				db?.Dispose();
+			}
+		}
+
+		[Test]
+		public void TestIssue4415_Test4([DataSources] string configuration)
+		{
+			MappingSchema ms;
+			Model.ITestDataContext? db = null;
+			try
+			{
+				ms = new FluentMappingBuilder()
+					.Entity<LanguageDTO>()
+						.HasTableName("Common_Language")
+						.Property(e => e.LanguageID).IsPrimaryKey()
+						.Property(e => e.AlternativeLanguageID).IsNullable()
+					.Build()
+					.MappingSchema;
+
+				db = GetDataContext(configuration, ms);
+
+				using var tbl = db.CreateLocalTable(new[]
+				{
+					new LanguageDTO
+					{
+						LanguageID    = "de",
+						Name = "deutsch"
+					}
+				});
+
+				var p = db.GetTable<LanguageDTO>();
+				var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID));
+				var lst = qry.ToList();
+
+				Assert.AreEqual(1, lst.Count);
 			}
 			finally
 			{
