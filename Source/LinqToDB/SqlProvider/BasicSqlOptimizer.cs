@@ -2189,13 +2189,22 @@ namespace LinqToDB.SqlProvider
 							if (ReferenceEquals(e, v.Context.Expression))
 								return new SqlValue(1);
 
-							if (e is SqlWhereClause w && w == v.Context.subQuery.Where)
+							if (e is SqlWhereClause w && w == v.Context.subQuery.Where && v.Context.subQuery.Select.Columns[0].Expression is SqlFunction f && !f.IsAggregate)
 							{
 								var wc = new SqlWhereClause(new SqlSearchCondition(w.SearchCondition.Conditions));
 								wc.SearchCondition.Conditions.Add(new(
 									false,
 									new SqlPredicate.IsNull(v.Context.subQuery.Select.Columns[0].Expression, false)));
 								return wc;
+							}
+
+							if (e is SqlWhereClause h && h == v.Context.subQuery.Having && v.Context.subQuery.Select.Columns[0].Expression is SqlFunction f2 && f2.IsAggregate)
+							{
+								var hc = new SqlWhereClause(new SqlSearchCondition(h.SearchCondition.Conditions));
+								hc.SearchCondition.Conditions.Add(new(
+									false,
+									new SqlPredicate.IsNull(v.Context.subQuery.Select.Columns[0].Expression, false)));
+								return hc;
 							}
 
 							return e;
