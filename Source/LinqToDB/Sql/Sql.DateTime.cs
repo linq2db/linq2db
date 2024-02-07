@@ -510,7 +510,6 @@ namespace LinqToDB
 							new SqlExpression("hour", Precedence.Primary), builder.Div(number, 3600_000),
 								new SqlFunction(typeof(DateTime?), builder.Expression,
 									new SqlExpression("millisecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000), Precedence.Multiplicative), date));
-					//new SqlFunction(typeof(long), "mod", number, new SqlValue(1000)), date));
 				}
 				else if (part == DateParts.Microsecond)
 				{
@@ -519,7 +518,6 @@ namespace LinqToDB
 							new SqlExpression("hour", Precedence.Primary), builder.Div(number, 3600_000_000),
 								new SqlFunction(typeof(DateTime?), builder.Expression,
 									new SqlExpression("microsecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000), Precedence.Multiplicative), date));
-					//new SqlFunction(typeof(long), "mod", number, new SqlValue(1000)), date));
 				} 
 				else if (part == DateParts.Nanosecond)
 				{
@@ -826,25 +824,36 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
 
-				switch (part)
+				if (part == DateParts.Millisecond) // only needed in Firebird 2.5
 				{
-					case DateParts.Quarter   :
-						part   = DateParts.Month;
-						number  = builder.Mul(number, 3);
-						break;
-					case DateParts.DayOfYear :
-					case DateParts.WeekDay   :
-						part   = DateParts.Day;
-						break;
-					case DateParts.Week      :
-						part   = DateParts.Day;
-						number = builder.Mul(number, 7);
-						break;
+					builder.ResultExpression =
+						new SqlFunction(typeof(DateTime?), "DateAdd",
+							new SqlExpression("hour", Precedence.Primary), builder.Div(number, 3600_000),
+								new SqlFunction(typeof(DateTime?), "DateAdd",
+									new SqlExpression("millisecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000), Precedence.Multiplicative), date));
 				}
+				else
+				{
+					switch (part)
+					{
+						case DateParts.Quarter:
+							part = DateParts.Month;
+							number = builder.Mul(number, 3);
+							break;
+						case DateParts.DayOfYear:
+						case DateParts.WeekDay:
+							part = DateParts.Day;
+							break;
+						case DateParts.Week:
+							part = DateParts.Day;
+							number = builder.Mul(number, 7);
+							break;
+					}
 
-				var partSql = new SqlExpression(part.ToString());
+					var partSql = new SqlExpression(part.ToString());
 
-				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", partSql, number, date);
+					builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", partSql, number, date);
+				}
 			}
 		}
 
