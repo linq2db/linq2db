@@ -1296,9 +1296,7 @@ namespace LinqToDB
 				var startdate  = builder.GetExpression(0);
 				var endDate    = builder.GetExpression(1);
 
-				ISqlExpression func = new SqlFunction(typeof(int), "Nano100_Between", startdate, endDate);
-				func = builder.Mul(func, 100);
-				builder.ResultExpression = func;
+				builder.ResultExpression = new SqlFunction(typeof(int), "Nano100_Between", startdate, endDate); ;
 			}
 		}
 
