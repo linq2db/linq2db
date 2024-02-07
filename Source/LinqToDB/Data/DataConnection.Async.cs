@@ -554,7 +554,7 @@ namespace LinqToDB.Data
 
 			if (_commandInterceptor != null)
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteReaderAsync))
-					result = await _commandInterceptor.ExecuteReaderAsync(new (this), CurrentCommand!, commandBehavior, result, cancellationToken)
+					result = await _commandInterceptor.ExecuteReaderAsync(new (this), _command!, commandBehavior, result, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			DbDataReader? dr;
@@ -570,8 +570,10 @@ namespace LinqToDB.Data
 				using (ActivityService.Start(ActivityID.CommandInterceptorAfterExecuteReader))
 					_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, dr);
 
-			var wrapper = new DataReaderWrapper(this, dr, CurrentCommand);
-			_command    = null;
+			var wrapper = new DataReaderWrapper(this, dr, _command!, _concurrencyToken!);
+
+			_command          = null;
+			_concurrencyToken = null;
 
 			return wrapper;
 		}
