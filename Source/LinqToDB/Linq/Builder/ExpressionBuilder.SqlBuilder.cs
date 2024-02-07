@@ -501,10 +501,7 @@ namespace LinqToDB.Linq.Builder
 						return new TransformInfo(ConvertExpression(expr));
 					}
 
-					var timeSpanDatatype = this.MappingSchema.GetDataType(typeof(TimeSpan));
-					var timeSpanHasIntervaltype = timeSpanDatatype.Type.DataType == DataType.Interval || timeSpanDatatype.Type.DataType == DataType.Int64;
-
-					if (!timeSpanHasIntervaltype)
+					if (!Configuration.DisableLegacySqlBuilderDateDiffCalls)
 					{
 						if (ma.Member.DeclaringType == typeof(TimeSpan))
 						{
@@ -564,7 +561,7 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 					}
-
+					
 					break;
 				}
 				default:
