@@ -116,6 +116,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			switch (type.Type.DataType)
 			{
+				case DataType.Interval   : StringBuilder.Append("interval day (9) to fraction (9)"); break;
 				case DataType.Guid       : StringBuilder.Append("VARCHAR(36)");               return;
 				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
 				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   return;

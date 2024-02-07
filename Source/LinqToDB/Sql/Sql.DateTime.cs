@@ -442,6 +442,14 @@ namespace LinqToDB
 						builder.Expression = "toUnixTimestamp64Milli({date}) % 1000";
 						builder.Extension.Precedence = Precedence.Multiplicative;
 						return;
+					case DateParts.Microsecond:
+						builder.Expression = "toUnixTimestamp64Nano({date}) % 1000";
+						builder.Extension.Precedence = Precedence.Multiplicative;
+						return;
+					case DateParts.Nanosecond:
+						builder.Expression = "toUnixTimestamp64Nano({date})";
+						builder.Extension.Precedence = Precedence.Multiplicative;
+						return;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
@@ -620,7 +628,7 @@ namespace LinqToDB
 					case DateParts.Hour        : expStr = "{0} + Interval({1}) Hour to Hour";       break;
 					case DateParts.Minute      : expStr = "{0} + Interval({1}) Minute to Minute";   break;
 					case DateParts.Second      : expStr = "{0} + Interval({1}) Second to Second";   break;
-					case DateParts.Millisecond : expStr = "{0} + Interval({1}) Second to Fraction * 1000";  break;
+					case DateParts.Millisecond : expStr = "{0} + Interval({1} * 1000) Second to Fraction";  break;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
@@ -865,6 +873,22 @@ namespace LinqToDB
 						builder.ResultExpression = new SqlExpression(
 							typeof(DateTime?),
 							"fromUnixTimestamp64Nano(toInt64(toUnixTimestamp64Nano(toDateTime64({0}, 9)) + toInt64({1}) * 1000000))",
+							Precedence.Primary,
+							date,
+							number);
+						break;
+					case DateParts.Microsecond:
+						builder.ResultExpression = new SqlExpression(
+							typeof(DateTime?),
+							"fromUnixTimestamp64Nano(toInt64(toUnixTimestamp64Nano(toDateTime64({0}, 9)) + toInt64({1}) * 1000))",
+							Precedence.Primary,
+							date,
+							number);
+						break;
+					case DateParts.Nanosecond:
+						builder.ResultExpression = new SqlExpression(
+							typeof(DateTime?),
+							"fromUnixTimestamp64Nano(toInt64(toUnixTimestamp64Nano(toDateTime64({0}, 9)) + toInt64({1})))",
 							Precedence.Primary,
 							date,
 							number);
@@ -1406,8 +1430,8 @@ namespace LinqToDB
 		[Extension(PN.MySql,        "TIMESTAMPDIFF", BuilderType = typeof(DateDiffIntervalBuilderMySql))]
 		[Extension(PN.DB2,          "",              BuilderType = typeof(DateDiffIntervalBuilderDB2))]
 		[Extension(PN.SapHana,      "",              BuilderType = typeof(DateDiffIntervalBuilderSapHana))]
-		[Extension(PN.Firebird,     "",              BuilderType = typeof(DateDiffIntervalBuilderFirebird))]
-		[Extension(PN.Sybase,       "",              BuilderType = typeof(DateDiffIntervalBuilderFirebird))]
+		[Extension(PN.Firebird,		"DateDiff",      BuilderType = typeof(DateDiffIntervalBuilderFirebird))]
+		[Extension(PN.Sybase,		"DateDiff",      BuilderType = typeof(DateDiffIntervalBuilderSybase))]
 		[Extension(PN.SQLite,       "",              BuilderType = typeof(DateDiffIntervalBuilderSQLite))]
 		[Extension(PN.Oracle,       "",              BuilderType = typeof(DateDiffIntervalBuilderOracle))]
 		[Extension(PN.PostgreSQL,   "",              BuilderType = typeof(DateDiffIntervalBuilderPostgreSql))]

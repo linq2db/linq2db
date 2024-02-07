@@ -38,7 +38,7 @@ namespace Tests.UserTests.Test3993
 			Model.ITestDataContext? db = null;
 			try
 			{
-				if (configuration.Contains("PostgreSQL") || configuration.Contains("Oracle"))
+				if (configuration.Contains("PostgreSQL") || configuration.Contains("Oracle") || configuration.Contains("Informix"))
 				{
 					ms = new FluentMappingBuilder()
 						.Entity<Test>()
@@ -161,6 +161,8 @@ namespace Tests.UserTests.Test3993
 
 				var res6 = qry5.ToList();
 				Assert.AreEqual(1, res6.Count);
+				var res21 = qry5.Select(x => x.diff).ToList();
+				Assert.AreEqual(TimeSpan.FromHours(4), res21);
 				var res5 = qry5.Where(x => x.diff < TimeSpan.FromHours(5)).ToList();
 				Assert.AreEqual(1, res5.Count);
 				var res7 = qry5.Where(x => x.diff!.Value.TotalHours < 5).ToList();
