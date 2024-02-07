@@ -162,7 +162,7 @@ namespace Tests.UserTests.Test3993
 				var res6 = qry5.ToList();
 				Assert.AreEqual(1, res6.Count);
 				var res21 = qry5.Select(x => x.diff).ToList();
-				Assert.AreEqual(TimeSpan.FromHours(4), res21);
+				Assert.AreEqual(TimeSpan.FromHours(4), res21[0]!.Value);
 				var res5 = qry5.Where(x => x.diff < TimeSpan.FromHours(5)).ToList();
 				Assert.AreEqual(1, res5.Count);
 				var res7 = qry5.Where(x => x.diff!.Value.TotalHours < 5).ToList();
