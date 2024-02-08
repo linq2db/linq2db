@@ -26,24 +26,22 @@ namespace Tests.Common
 			using var db = GetDataContext(context);
 
 			await using var enum1 = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
-			await enum1.MoveNextAsync();
+			_ = await enum1.MoveNextAsync();
 
-			Assert.ThrowsAsync<LinqException>(async () =>
+			_ = Assert.ThrowsAsync<LinqException>(async () =>
 				await Task.Run(() => db.Parent.ToListAsync()));
 		}
 
 		[Test]
-		public void ConcurrentUsageSameThreadThrows([DataSources] string context)
+		public void ConcurrentUsageSameThreadDoesNotThrow([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			using var enum1 = db.Parent.GetEnumerator();
-			enum1.MoveNext();
+			_ = enum1.MoveNext();
 
 			using var enum2 = db.Parent.GetEnumerator();
-
-			Assert.Throws<LinqException>(
-				() => enum2.MoveNext());
+			_ = enum2.MoveNext();
 		}
 	}
 }
