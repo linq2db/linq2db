@@ -10,15 +10,20 @@ namespace LinqToDB.Common.Internal
 		private const string ConcurrentExecutionMessage = "A second operation was started on this context instance before a previous operation completed. This is usually caused by different threads concurrently using the same instance of DbContext.";
 
 		private int _inCriticalSection;
+		private static readonly AsyncLocal<int> ThreadAcquiredLocksCount = new();
 		private int _currentContextRefCount;
 
 		public IDisposable EnterCriticalSection()
 		{
 			if (Interlocked.CompareExchange(ref _inCriticalSection, 1, 0) == 1)
 			{
-				throw new LinqException(ConcurrentExecutionMessage);
+				if (ThreadAcquiredLocksCount.Value == 0)
+				{
+					throw new LinqException(ConcurrentExecutionMessage);
+				}
 			}
 
+			ThreadAcquiredLocksCount.Value++;
 			_currentContextRefCount++;
 			return new CurrencyDetectorDisposer(this);
 		}
@@ -31,6 +36,7 @@ namespace LinqToDB.Common.Internal
 		/// </summary>
 		private void ExitCriticalSection()
 		{
+			ThreadAcquiredLocksCount.Value--;
 			if (--_currentContextRefCount == 0)
 			{
 				_inCriticalSection = 0;
