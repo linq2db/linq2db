@@ -29,7 +29,8 @@ namespace LinqToDB
 			Microseconds		=  10,
 			TotalMicroseconds	=  11,
 			Nanoseconds			=  12,
-			TotalNanoseconds    =  13
+			TotalNanoseconds    =  13,
+			Ticks               =  14,
 		}
 
 		#region TimeSpanPart
@@ -50,6 +51,7 @@ namespace LinqToDB
 				return part switch
 				{
 					TimeSpanParts.TotalNanoseconds	=> "* 100",
+					TimeSpanParts.Ticks             => "",
 					TimeSpanParts.TotalMicroseconds => "/ 10",
 					TimeSpanParts.TotalMilliseconds => "/ 10000",
 					TimeSpanParts.TotalSeconds		=> "/ 10000000",
@@ -100,6 +102,7 @@ namespace LinqToDB
 				return part switch
 				{
 					TimeSpanParts.TotalNanoseconds	=> " * 1000000000",
+					TimeSpanParts.Ticks             => " * 10000000",
 					TimeSpanParts.TotalMicroseconds => " * 1000000",
 					TimeSpanParts.TotalMilliseconds => " * 1000",
 					TimeSpanParts.TotalSeconds		=> "",
@@ -141,6 +144,7 @@ namespace LinqToDB
 				TimeSpanParts.TotalMicroseconds => (long)timeSpan.Value.Ticks / 10,
 				TimeSpanParts.TotalNanoseconds	=> (long)timeSpan.Value.Ticks * 100,
 #endif
+				TimeSpanParts.Ticks             => (long)timeSpan.Value.Ticks,
 				_ => throw new InvalidOperationException(),
 			};
 			throw new NotImplementedException();
@@ -172,6 +176,38 @@ namespace LinqToDB
 				builder.ResultExpression = exp;
 			}
 		}
+
+		/*internal sealed class DateTimeAddIntervalBuilderNanosecondsInParts : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var p = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(TimeSpanPart, TimeSpanParts.TotalNanoseconds, (TimeSpan?)TimeSpan.Zero),
+						Expression.Constant(TimeSpanParts.TotalNanoseconds),
+						builder.Arguments[1]
+					);
+
+				var e = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(DateAdd, DateParts.Hour, (double?)0, (DateTime?)DateTime.MinValue),
+						Expression.Constant(DateParts.Hour),
+					 	Expression.Convert(Expression.Divide(Expression.Convert(p, typeof(long)), Expression.Constant(3600000000000L)), typeof(double?)),
+						builder.Arguments[0]
+					);
+
+				e = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(DateAdd, DateParts.Nanosecond, (double?)0, (DateTime?)DateTime.MinValue),
+						Expression.Constant(DateParts.Nanosecond),
+					 	Expression.Convert(Expression.Modulo(Expression.Convert(p, typeof(long)), Expression.Constant(3600000000000L)), typeof(double?)),
+						e
+					);
+
+				var exp = builder.ConvertExpressionToSql(e, true);
+				builder.ResultExpression = exp;
+			}
+		}*/
 
 		internal sealed class DateTimeAddIntervalBuilderMicroseconds : IExtensionCallBuilder
 		{
@@ -214,6 +250,38 @@ namespace LinqToDB
 						Expression.Constant(DateParts.Millisecond),
 					 	Expression.Convert(p, typeof(double?)),
 						builder.Arguments[0]
+					);
+
+				var exp = builder.ConvertExpressionToSql(e, true);
+				builder.ResultExpression = exp;
+			}
+		}
+
+		internal sealed class DateTimeAddIntervalBuilderMillisecondsInParts : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var p = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(TimeSpanPart, TimeSpanParts.TotalMilliseconds, (TimeSpan?)TimeSpan.Zero),
+						Expression.Constant(TimeSpanParts.TotalMilliseconds),
+						builder.Arguments[1]
+					);
+
+				var e = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(DateAdd, DateParts.Hour, (double?)0, (DateTime?)DateTime.MinValue),
+						Expression.Constant(DateParts.Hour),
+					 	Expression.Convert(Expression.Divide(Expression.Convert(p, typeof(long)), Expression.Constant(3600000L)), typeof(double?)),
+						builder.Arguments[0]
+					);
+
+				e = Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(DateAdd, DateParts.Millisecond, (double?)0, (DateTime?)DateTime.MinValue),
+						Expression.Constant(DateParts.Millisecond),
+					 	Expression.Convert(Expression.Modulo(Expression.Convert(p, typeof(long)), Expression.Constant(3600000L)), typeof(double?)),
+						e
 					);
 
 				var exp = builder.ConvertExpressionToSql(e, true);
@@ -349,7 +417,7 @@ namespace LinqToDB
 		[Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderPostgreSQL))]
 		[Extension(PN.MySql,      "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMicroseconds))]
 		[Extension(PN.SQLite,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderSQLite))]
-		[Extension(PN.Firebird,	  "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
+		[Extension(PN.Firebird,	  "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMillisecondsInParts))]
 		[Extension(PN.DB2,        "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderMilliseconds))]
 		[Extension(PN.Informix,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderInformix))]
 		[Extension(PN.ClickHouse, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateTimeAddIntervalBuilderNanoseconds))]

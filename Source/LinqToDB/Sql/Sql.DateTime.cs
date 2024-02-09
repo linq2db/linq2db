@@ -64,6 +64,7 @@ namespace LinqToDB
 			Millisecond = 10,
 			Microsecond = 11,
 			Nanosecond  = 12,
+			Tick        = 13,
 		}
 
 		#region DatePart
@@ -78,6 +79,7 @@ namespace LinqToDB
 
 				builder.ResultExpression = new SqlFunction(typeof(int), builder.Expression,
 					new SqlExpression(partStr, Precedence.Primary), date);
+				//TODO
 			}
 
 			public static string DatePartToStr(DateParts part)
@@ -528,7 +530,17 @@ namespace LinqToDB
 									new SqlExpression("millisecond", Precedence.Primary), builder.Div(new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000_000), Precedence.Multiplicative), 1000_000), 
 										new SqlFunction(typeof(DateTime?), builder.Expression,
 											new SqlExpression("nanosecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000_000), Precedence.Multiplicative), "%", new SqlValue(1000_000), Precedence.Multiplicative), date)));
-				} 
+				}
+				else if (part == DateParts.Tick)
+				{
+					builder.ResultExpression =
+						new SqlFunction(typeof(DateTime?), builder.Expression,
+							new SqlExpression("hour", Precedence.Primary), new SqlExpression(typeof(int), "cast({0} as int)", Precedence.Multiplicative, builder.Div(number, 3600_000_000_0)),
+								new SqlFunction(typeof(DateTime?), builder.Expression,
+									new SqlExpression("millisecond", Precedence.Primary), builder.Div(new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000_0), Precedence.Multiplicative), 1000_0),
+										new SqlFunction(typeof(DateTime?), builder.Expression,
+											new SqlExpression("nanosecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000_0), Precedence.Multiplicative), "%", new SqlValue(1000_0), Precedence.Multiplicative), date)));
+				}
 				else
 				{
 					var partStr = DatePartBuilder.DatePartToStr(part);
@@ -808,6 +820,9 @@ namespace LinqToDB
 						function = "Add_Nano100";
 						number = builder.Div(number, 100);
 						break;
+					case DateParts.Tick:
+						function = "Add_Nano100";
+						break;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
@@ -824,36 +839,25 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
 
-				if (part == DateParts.Millisecond) // only needed in Firebird 2.5
+				switch (part)
 				{
-					builder.ResultExpression =
-						new SqlFunction(typeof(DateTime?), "DateAdd",
-							new SqlExpression("hour", Precedence.Primary), builder.Div(number, 3600_000),
-								new SqlFunction(typeof(DateTime?), "DateAdd",
-									new SqlExpression("millisecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000), Precedence.Multiplicative), date));
+					case DateParts.Quarter:
+						part = DateParts.Month;
+						number = builder.Mul(number, 3);
+						break;
+					case DateParts.DayOfYear:
+					case DateParts.WeekDay:
+						part = DateParts.Day;
+						break;
+					case DateParts.Week:
+						part = DateParts.Day;
+						number = builder.Mul(number, 7);
+						break;
 				}
-				else
-				{
-					switch (part)
-					{
-						case DateParts.Quarter:
-							part = DateParts.Month;
-							number = builder.Mul(number, 3);
-							break;
-						case DateParts.DayOfYear:
-						case DateParts.WeekDay:
-							part = DateParts.Day;
-							break;
-						case DateParts.Week:
-							part = DateParts.Day;
-							number = builder.Mul(number, 7);
-							break;
-					}
 
-					var partSql = new SqlExpression(part.ToString());
+				var partSql = new SqlExpression(part.ToString());
 
-					builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", partSql, number, date);
-				}
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", partSql, number, date);
 			}
 		}
 
@@ -946,6 +950,7 @@ namespace LinqToDB
 				DateParts.Microsecond   => date.Value.AddTicks((long)number.Value * 10000),
 #endif
 				DateParts.Nanosecond    => date.Value.AddTicks((long)number.Value / 100),
+				DateParts.Tick          => date.Value.AddTicks((long)number.Value),
 				_                       => throw new InvalidOperationException(),
 			};
 		}
