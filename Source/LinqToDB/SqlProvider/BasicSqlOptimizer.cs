@@ -2184,27 +2184,18 @@ namespace LinqToDB.SqlProvider
 					static SqlCondition ConvertNullInNullSubquery(
 						SelectQuery subQuery, SqlColumn col, SqlPredicate.InSubQuery inSubQuery, SqlCondition cond, bool isOr)
 					{
-						var newQuery = subQuery.Convert((subQuery,col.Expression), static (v, e) =>
+						var newQuery = subQuery.Convert((subQuery, col.Expression, IsAggregate: col.Expression.IsAggregationFunction()), static (v, e) =>
 						{
 							if (ReferenceEquals(e, v.Context.Expression))
 								return new SqlValue(1);
 
-							if (e is SqlWhereClause w && w == v.Context.subQuery.Where && !v.Context.subQuery.Select.Columns[0].Expression.IsAggregationFunction())
+							if (e is SqlWhereClause w && w == (v.Context.IsAggregate ? v.Context.subQuery.Having : v.Context.subQuery.Where))
 							{
 								var wc = new SqlWhereClause(new SqlSearchCondition(w.SearchCondition.Conditions));
 								wc.SearchCondition.Conditions.Add(new(
 									false,
-									new SqlPredicate.IsNull(v.Context.subQuery.Select.Columns[0].Expression, false)));
+									new SqlPredicate.IsNull(v.Context.Expression, false)));
 								return wc;
-							}
-
-							if (e is SqlWhereClause h && h == v.Context.subQuery.Having && v.Context.subQuery.Select.Columns[0].Expression.IsAggregationFunction())
-							{
-								var hc = new SqlWhereClause(new SqlSearchCondition(h.SearchCondition.Conditions));
-								hc.SearchCondition.Conditions.Add(new(
-									false,
-									new SqlPredicate.IsNull(v.Context.subQuery.Select.Columns[0].Expression, false)));
-								return hc;
 							}
 
 							return e;

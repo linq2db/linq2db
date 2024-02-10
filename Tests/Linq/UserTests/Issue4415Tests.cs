@@ -26,12 +26,6 @@ namespace Tests.UserTests.Test4415
 			public string? LanguageID { get; set; }
 
 			public string? Name { get; set; }
-
-			public string? AlternativeLanguageID { get; set; }
-
-			public int Order { get; set; }
-
-			public string? IsoCode { get; set; }
 		}
 
 		[Test]
@@ -40,8 +34,7 @@ namespace Tests.UserTests.Test4415
 			var ms = new FluentMappingBuilder()
 					.Entity<LanguageDTO>()
 						.HasTableName("Common_Language")
-						.Property(e => e.LanguageID).IsNullable().IsPrimaryKey()
-						.Property(e => e.AlternativeLanguageID).IsNullable()
+						.Property(e => e.LanguageID).IsNullable()
 					.Build()
 					.MappingSchema;
 
@@ -51,9 +44,42 @@ namespace Tests.UserTests.Test4415
 				{
 					new LanguageDTO
 					{
-						LanguageID    = "de",
+						LanguageID = "de",
 						Name = "deutsch"
+					},
+					new LanguageDTO
+					{
+						Name = "english"
 					}
+				});
+
+			var p = db.GetTable<LanguageDTO>();
+			var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID));
+			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
+			var lst = qry2.ToList();
+
+			Assert.AreEqual(2, lst.Count);
+		}
+
+		[Test]
+		public void TestIssue4415_Test2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
+		{
+			var ms = new FluentMappingBuilder()
+					.Entity<LanguageDTO>()
+						.HasTableName("Common_Language")
+						.Property(e => e.LanguageID).IsNotNull()
+					.Build()
+					.MappingSchema;
+
+			using var db = GetDataContext(configuration, ms);
+
+			using var tbl = db.CreateLocalTable(new[]
+				{
+					new LanguageDTO
+					{
+						LanguageID = "de",
+						Name = "deutsch"
+					},
 				});
 
 			var p = db.GetTable<LanguageDTO>();
@@ -65,13 +91,12 @@ namespace Tests.UserTests.Test4415
 		}
 
 		[Test]
-		public void TestIssue4415_Test2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
+		public void TestIssue4415_Test3([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
 		{
 			var ms = new FluentMappingBuilder()
 					.Entity<LanguageDTO>()
 						.HasTableName("Common_Language")
-						.Property(e => e.LanguageID).IsNotNull().IsPrimaryKey()
-						.Property(e => e.AlternativeLanguageID).IsNullable()
+						.Property(e => e.LanguageID)
 					.Build()
 					.MappingSchema;
 
@@ -81,14 +106,18 @@ namespace Tests.UserTests.Test4415
 				{
 					new LanguageDTO
 					{
-						LanguageID    = "de",
+						LanguageID = "de",
 						Name = "deutsch"
+					},
+					new LanguageDTO
+					{
+						Name = "english"
 					}
 				});
 
 			var p = db.GetTable<LanguageDTO>();
 			var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID));
-			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
+			var qry2 = p.Where(x => qry.Contains(Sql.AsNotNull(x.LanguageID)));
 			var lst = qry2.ToList();
 
 			Assert.AreEqual(1, lst.Count);
