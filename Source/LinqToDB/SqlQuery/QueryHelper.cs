@@ -1783,6 +1783,11 @@ namespace LinqToDB.SqlQuery
 			return new DbDataType(expr.SystemType!);
 		}
 
+		public static bool IsAggregationFunction(this ISqlExpression expr)
+		{
+			return expr is SqlFunction f && f.IsAggregate;
+		}
+
 		public static bool HasOuterReferences(ISet<ISqlTableSource> sources, ISqlExpression expr)
 		{
 			var outerElementFound = null != expr.Find(sources, static (sources, e) =>
