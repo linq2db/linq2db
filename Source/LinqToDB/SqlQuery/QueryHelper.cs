@@ -1429,12 +1429,12 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		public static bool IsAggregationOrWindowFunction(this IQueryElement expr)
+		public static bool IsAggregationOrWindowFunction(IQueryElement expr)
 		{
 			return IsAggregationFunction(expr) || IsWindowFunction(expr);
 		}
 
-		public static bool IsAggregationFunction(this IQueryElement expr)
+		public static bool IsAggregationFunction(IQueryElement expr)
 		{
 			if (expr is SqlFunction func)
 				return func.IsAggregate;
@@ -1469,6 +1469,22 @@ namespace LinqToDB.SqlQuery
 		public static bool ContainsAggregationOrWindowFunctionDeep(IQueryElement expr)
 		{
 			return null != expr.Find(e => IsAggregationFunction(e) || IsWindowFunction(e));
+		}
+
+		public static bool ContainsAggregationFunctionOneLevel(IQueryElement expr)
+		{
+			var found = false;
+			expr.VisitParentFirst(expr, (_, e) =>
+			{
+				if (found)
+					return true;
+				if (e is SqlColumn)
+					return false;
+				found = IsAggregationFunction(e);
+				return !found;
+			});
+
+			return found;
 		}
 
 		public static bool ContainsAggregationOrWindowFunctionOneLevel(IQueryElement expr)

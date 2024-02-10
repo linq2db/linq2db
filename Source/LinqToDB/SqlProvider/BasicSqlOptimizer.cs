@@ -2184,12 +2184,12 @@ namespace LinqToDB.SqlProvider
 					static SqlCondition ConvertNullInNullSubquery(
 						SelectQuery subQuery, SqlColumn col, SqlPredicate.InSubQuery inSubQuery, SqlCondition cond, bool isOr)
 					{
-						var newQuery = subQuery.Convert((subQuery, col.Expression, IsAggregate: col.Expression.IsAggregationFunction()), static (v, e) =>
+						var newQuery = subQuery.Convert((subQuery, col.Expression, HasAggregate: QueryHelper.ContainsAggregationFunctionOneLevel(col.Expression)), static (v, e) =>
 						{
 							if (ReferenceEquals(e, v.Context.Expression))
 								return new SqlValue(1);
 
-							if (e is SqlWhereClause w && w == (v.Context.IsAggregate ? v.Context.subQuery.Having : v.Context.subQuery.Where))
+							if (e is SqlWhereClause w && w == (v.Context.HasAggregate ? v.Context.subQuery.Having : v.Context.subQuery.Where))
 							{
 								var wc = new SqlWhereClause(new SqlSearchCondition(w.SearchCondition.Conditions));
 								wc.SearchCondition.Conditions.Add(new(

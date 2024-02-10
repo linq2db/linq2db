@@ -122,5 +122,39 @@ namespace Tests.UserTests.Test4415
 
 			Assert.AreEqual(1, lst.Count);
 		}
+
+		[Test]
+		public void TestIssue4415_Test4([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
+		{
+			var ms = new FluentMappingBuilder()
+					.Entity<LanguageDTO>()
+						.HasTableName("Common_Language")
+						.Property(e => e.LanguageID).IsNullable()
+					.Build()
+					.MappingSchema;
+
+			using var db = GetDataContext(configuration, ms);
+
+			using var tbl = db.CreateLocalTable(new[]
+				{
+					new LanguageDTO
+					{
+						LanguageID = "de",
+						Name = "deutsch"
+					},
+					new LanguageDTO
+					{
+						Name = "english"
+					}
+				});
+
+			var p = db.GetTable<LanguageDTO>();
+			// use complex column
+			var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID) + "test");
+			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
+			var lst = qry2.ToList();
+
+			Assert.AreEqual(1, lst.Count);
+		}
 	}
 }
