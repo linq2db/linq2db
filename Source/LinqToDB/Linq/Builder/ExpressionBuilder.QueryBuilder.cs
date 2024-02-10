@@ -270,11 +270,16 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression ToColumns(IBuildContext rootContext, Expression expression)
 		{
+			return ToColumns(rootContext.SelectQuery, expression);
+		}
+
+		public Expression ToColumns(SelectQuery rootQuery, Expression expression)
+		{
 			using var parentInfo = ParentInfoPool.Allocate();
 
 			var withColumns =
 				expression.Transform(
-					(builder: this, parentInfo: parentInfo.Value, rootQuery: rootContext.SelectQuery),
+					(builder: this, parentInfo: parentInfo.Value, rootQuery),
 					static (context, expr) =>
 					{
 						if (expr is SqlPlaceholderExpression { SelectQuery: { } } placeholder)

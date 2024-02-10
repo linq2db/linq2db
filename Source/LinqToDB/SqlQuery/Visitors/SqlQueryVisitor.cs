@@ -20,7 +20,7 @@ namespace LinqToDB.SqlQuery.Visitors
 	{
 		// contains replacement map of [old => new] elements
 		// cannot store self-mappings
-		Dictionary<IQueryElement, IQueryElement>? _replacements;
+		internal Dictionary<IQueryElement, IQueryElement>? _replacements;
 		// contains new replacement element
 		HashSet<IQueryElement>?                   _replaced;
 
@@ -118,11 +118,13 @@ namespace LinqToDB.SqlQuery.Visitors
 		public virtual IQueryElement ProcessElement(IQueryElement element)
 		{
 			var newElement = Visit(element);
-			if (!ReferenceEquals(newElement, element))
-			{
-				if (VisitMode == VisitMode.ReadOnly)
-					throw new InvalidOperationException("VisitMode is readonly but element changed.");
 
+			if (VisitMode == VisitMode.ReadOnly && !ReferenceEquals(newElement, element))
+				throw new InvalidOperationException("VisitMode is readonly but element changed.");
+
+			// Execute replacer to correct elements
+			if (_replacements?.Count > 0 && (VisitMode == VisitMode.Modify || VisitMode == VisitMode.Transform && !ReferenceEquals(newElement, element)))
+			{
 				if (_replacements != null)
 				{
 					// go through tree and correct references
@@ -200,7 +202,15 @@ namespace LinqToDB.SqlQuery.Visitors
 			replacement = null;
 
 			while (_replacements?.TryGetValue(element, out var current) == true)
+			{
+				if (ReferenceEquals(element, current))
+				{
+					// Self replacements stops visitor to go deeper
+					replacement = current;
+					break;
+				}
 				replacement = element = current;
+			}
 
 			return replacement != null;
 		}

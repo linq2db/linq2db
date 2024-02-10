@@ -5,6 +5,7 @@ using System.Diagnostics;
 namespace LinqToDB.SqlQuery
 {
 	using Visitors;
+	using Common;
 
 	public class SqlQueryColumnNestingCorrector : SqlQueryVisitor
 	{
@@ -78,7 +79,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		QueryNesting?   _parentQuery;
-		List<SqlColumn> _usedColumns = new();
+		HashSet<SqlColumn> _usedColumns = new(Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
 
 		public SqlQueryColumnNestingCorrector() : base(VisitMode.Modify)
 		{
@@ -92,7 +93,7 @@ namespace LinqToDB.SqlQuery
 			_usedColumns.Clear();
 		}
 
-		public IReadOnlyList<SqlColumn> UsedColumns => _usedColumns;
+		public IReadOnlyCollection<SqlColumn> UsedColumns => _usedColumns;
 
 		public IQueryElement CorrectColumnNesting(IQueryElement element)
 		{
@@ -152,10 +153,7 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
-			if (!_usedColumns.Contains(element))
-			{
-				_usedColumns.Add(element);
-			}
+			_usedColumns.Add(element);
 
 			var newElement = base.VisitSqlColumnReference(element);
 
@@ -181,10 +179,7 @@ namespace LinqToDB.SqlQuery
 
 			while (current is SqlColumn clmn)
 			{
-				if (!_usedColumns.Contains(clmn))
-				{
-					_usedColumns.Add(clmn);
-				}
+				_usedColumns.Add(clmn);
 
 				current = clmn.Expression;
 			}

@@ -6102,7 +6102,6 @@ LinqToDB.SqlQuery.SqlUpdateClause.SqlUpdateClause() -> void
 LinqToDB.SqlQuery.SqlUpdateClause.Table.get -> LinqToDB.SqlQuery.SqlTable?
 LinqToDB.SqlQuery.SqlUpdateClause.Table.set -> void
 LinqToDB.SqlQuery.SqlUpdateStatement
-LinqToDB.SqlQuery.SqlUpdateStatement.AfterSetAliases() -> void
 LinqToDB.SqlQuery.SqlUpdateStatement.Output.get -> LinqToDB.SqlQuery.SqlOutputClause?
 LinqToDB.SqlQuery.SqlUpdateStatement.Output.set -> void
 LinqToDB.SqlQuery.SqlUpdateStatement.SqlUpdateStatement(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> void

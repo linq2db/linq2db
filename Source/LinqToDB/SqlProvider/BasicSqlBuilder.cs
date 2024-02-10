@@ -65,6 +65,12 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
+		#region Build Flags
+
+		bool _disableAlias;
+
+		#endregion
+
 		#region Support Flags
 
 		public virtual bool IsNestedJoinSupported           => true;
@@ -2924,6 +2930,13 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlField:
 					{
 						var field = (SqlField)expr;
+
+						if (_disableAlias)
+						{
+							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+							break;
+						}
+
 						SqlObjectName? suffixName = null;
 
 						if (BuildFieldTableAlias(field) && buildTableName && field.Table != null)
@@ -3000,6 +3013,11 @@ namespace LinqToDB.SqlProvider
 #if DEBUG
 						var sql = Statement.SqlText;
 #endif
+						if (_disableAlias)
+						{
+							Convert(StringBuilder, column.Alias!, ConvertType.NameToQueryField);
+							break;
+						}
 
 						ISqlTableSource? table;
 						var currentStatement = Statement;
@@ -3243,7 +3261,11 @@ namespace LinqToDB.SqlProvider
 					throw new ArgumentOutOfRangeException(anchor.AnchorKind.ToString());
 			}
 
+			var saveDisableAlias = _disableAlias;
+			_disableAlias = true;
 			BuildExpression(anchor.SqlExpression, false, false, null, ref addAlias, false);
+
+			_disableAlias = saveDisableAlias;
 		}
 
 		protected virtual bool TryConvertParameterToSql(SqlParameterValue paramValue)
@@ -4163,7 +4185,7 @@ namespace LinqToDB.SqlProvider
 			throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
 		}
 
-		int _testReplaceNumber;
+		int  _testReplaceNumber;
 
 		void TryBuildSqlID(Sql.SqlID id)
 		{

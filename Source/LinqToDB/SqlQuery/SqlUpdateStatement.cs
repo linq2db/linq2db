@@ -85,44 +85,5 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public void AfterSetAliases()
-		{
-			if (Output?.OutputColumns != null)
-			{
-				var columnAliases = new Dictionary<string,string?>();
-
-				foreach (var item in Update.Items)
-				{
-					switch (item.Column)
-					{
-						case SqlColumn { Expression : SqlField field } col :
-							columnAliases.Add(field.PhysicalName, col.Alias);
-							break;
-						case SqlField field :
-							columnAliases.Add(field.PhysicalName, field.Alias);
-							break;
-					}
-				}
-
-				foreach (var column in Output.OutputColumns)
-				{
-					switch (column)
-					{
-						case SqlColumn { Expression : SqlField field } col:
-						{
-							if (columnAliases.TryGetValue(field.Name, out var alias) && alias != null && alias != col.Alias)
-								col.Alias = alias;
-							break;
-						}
-						case SqlField field:
-						{
-							if (columnAliases.TryGetValue(field.Name, out var alias) && alias != null && alias != field.Alias)
-								field.PhysicalName = alias;
-							break;
-						}
-					}
-				}
-			}
-		}
 	}
 }

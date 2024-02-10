@@ -571,6 +571,19 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression  FieldExpression { get; }
 			public Expression? ValueExpression { get; }
+
+			public SetExpressionEnvelope WithValueExpression(Expression? valueExpression)
+			{
+				if (valueExpression == null || ValueExpression == null)
+				{
+					if (ReferenceEquals(ValueExpression, valueExpression))
+						return this;
+				}
+				else if (ExpressionEqualityComparer.Instance.Equals(ValueExpression, valueExpression))
+					return this;
+
+				return new SetExpressionEnvelope(FieldExpression, valueExpression);
+			}
 		}
 
 		#endregion
@@ -667,62 +680,62 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			static IEnumerable<(Expression path, SqlGenericConstructorExpression generic)> FindForRightProjectionPath(SqlGenericConstructorExpression generic, Expression currentPath, Type objecType)
+			{
+				if (generic.Type == objecType)
+					yield return (currentPath, generic);
+
+				// search for nesting
+				foreach (var assignment in generic.Assignments)
+				{
+					if (assignment.Expression is SqlGenericConstructorExpression subGeneric)
+					{
+						var newPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
+						foreach (var sub in FindForRightProjectionPath(subGeneric, newPath, objecType))
+							yield return sub;
+					}
+				}
+			}
+
+			static Expression BuildDefaultOutputExpression(ExpressionBuilder builder, Type outputType, IBuildContext querySequence, IBuildContext insertedContext, IBuildContext deletedContext)
+			{
+				// populate all accessible fields, especially for CTE
+				var queryRef  = new ContextRefExpression(querySequence.ElementType, querySequence);
+				var allFields = builder.ConvertToSqlExpr(querySequence, queryRef);
+
+				if (allFields is not SqlGenericConstructorExpression constructorExpression)
+				{
+					throw new InvalidOperationException();
+				}
+
+				var querySequenceRef = new ContextRefExpression(constructorExpression.Type, querySequence);
+				var found = FindForRightProjectionPath(constructorExpression, querySequenceRef, outputType)
+					.ToList();
+
+				if (found.Count == 0)
+					throw new LinqToDBException("Could not find appropriate table in expression");
+				if (found.Count > 1)
+					throw new LinqToDBException("Ambiguous tables tables in expression");
+
+				var (foundPath, foundGeneric) = found.First();
+
+				var insertedRef = new ContextRefExpression(outputType, insertedContext, "inserted");
+				var deletedRef  = new ContextRefExpression(outputType, deletedContext, "deleted");
+				var returnType  = typeof(UpdateOutput<>).MakeGenericType(outputType);
+
+				var insertedExpr = builder.RemapToNewPath(foundPath, foundGeneric, insertedRef);
+				var deletedExpr  = builder.RemapToNewPath(foundPath, foundGeneric, deletedRef);
+
+				return
+					// new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
+					Expression.MemberInit(
+						Expression.New(returnType),
+						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Deleted))!, deletedExpr),
+						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Inserted))!, insertedExpr));
+			}
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				static IEnumerable<(Expression path, SqlGenericConstructorExpression generic)> FindForRightProjectionPath(SqlGenericConstructorExpression generic, Expression currentPath, Type objecType)
-				{
-					if (generic.Type == objecType)
-						yield return (currentPath, generic);
-
-					// search for nesting
-					foreach (var assignment in generic.Assignments)
-					{
-						if (assignment.Expression is SqlGenericConstructorExpression subGeneric)
-						{
-							var newPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
-							foreach (var sub in FindForRightProjectionPath(subGeneric, newPath, objecType))
-								yield return sub;
-						}
-					}
-				}
-
-				static Expression BuildDefaultOutputExpression(ExpressionBuilder builder, Type outputType, IBuildContext querySequence, IBuildContext insertedContext, IBuildContext deletedContext)
-				{
-					// populate all accessible fields, especially for CTE
-					var queryRef  = new ContextRefExpression(querySequence.ElementType, querySequence);
-					var allFields = builder.ConvertToSqlExpr(querySequence, queryRef);
-
-					if (allFields is not SqlGenericConstructorExpression constructorExpression)
-					{
-						throw new InvalidOperationException();
-					}
-
-					var querySequenceRef = new ContextRefExpression(constructorExpression.Type, querySequence);
-					var found = FindForRightProjectionPath(constructorExpression, querySequenceRef, outputType)
-						.ToList();
-
-					if (found.Count == 0)
-						throw new LinqToDBException("Could not find appropriate table in expression");
-					if (found.Count > 1)
-						throw new LinqToDBException("Ambiguous tables tables in expression");
-
-					var constructorProjection = found.First();
-
-					var insertedRef = new ContextRefExpression(outputType, insertedContext, "inserted");
-					var deletedRef  = new ContextRefExpression(outputType, deletedContext, "deleted");
-					var returnType  = typeof(UpdateOutput<>).MakeGenericType(outputType);
-
-					var insertedExpr = builder.RemapToNewPath(constructorProjection.path, constructorProjection.generic, insertedRef);
-					var deletedExpr  = builder.RemapToNewPath(constructorProjection.path, constructorProjection.generic, deletedRef);
-
-					return
-						// new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
-						Expression.MemberInit(
-							Expression.New(returnType),
-							Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Deleted))!, deletedExpr),
-							Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Inserted))!, insertedExpr));
-				}
-
 				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
 				{
 					FinalizeSetters();

@@ -30,6 +30,7 @@ namespace LinqToDB.SqlQuery
 		SelectQuery?    _applySelect;
 		SelectQuery?    _inSubquery;
 		bool            _isInRecursiveCte;
+		SelectQuery?    _updateQuery;
 
 		SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
 		SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
@@ -61,6 +62,7 @@ namespace LinqToDB.SqlQuery
 			_parentSelect      = default!;
 			_applySelect       = default!;
 			_inSubquery        = default!;
+			_updateQuery       = default!;
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
 			// Making it consistent in LINQ Translator is bad for performance and it is hard to implement task.
@@ -85,7 +87,7 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		static void RemoveNotUsedColumns(IReadOnlyList<SqlColumn> usedColumns, IQueryElement element)
+		static void RemoveNotUsedColumns(IReadOnlyCollection<SqlColumn> usedColumns, IQueryElement element)
 		{
 			element.Visit(usedColumns, static (uc, e) =>
 			{
@@ -117,6 +119,7 @@ namespace LinqToDB.SqlQuery
 			_applySelect       = default!;
 			_version           = default;
 			_isInRecursiveCte  = false;
+			_updateQuery       = default;
 
 			_columnNestingCorrector.Cleanup();
 			_orderByOptimizer.Cleanup();
@@ -309,6 +312,14 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return newElement;
+		}
+
+		protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+		{
+			_updateQuery = element.SelectQuery;
+			var result = base.VisitSqlUpdateStatement(element);
+			_updateQuery = null;
+			return result;
 		}
 
 		bool OptimizeUnions(SelectQuery selectQuery)
@@ -1075,7 +1086,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			// check that column has at least one reference
+			// check that column has at least one reference 
 			//
 
 			if (!parentQuery.GroupBy.IsEmpty)
@@ -1158,7 +1169,7 @@ namespace LinqToDB.SqlQuery
 				return false;
 			}
 
-			// Trying do do not mix query hints
+			// Trying to do not mix query hints
 			if (subQuery.SqlQueryExtensions?.Count > 0)
 			{
 				if (tableSource.Joins.Count > 0 || selectQuery.From.Tables.Count > 1)
@@ -1270,6 +1281,10 @@ namespace LinqToDB.SqlQuery
 
 			if (subQuery.Select.HasModifier)
 			{
+				// Do not optimize queries for update
+				if (_updateQuery == selectQuery)
+					return false;
+
 				if (tableSource.Joins.Count > 0)
 					return false;
 				if (selectQuery.From.Tables.Count > 1)

@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
 	using Visitors;
@@ -9,6 +11,8 @@ namespace LinqToDB.SqlQuery
 	{
 		class WrapQueryVisitor<TContext> : SqlQueryVisitor
 		{
+			IQueryElement       _root = default!;
+
 			public TContext                                         Context  { get; }
 			public Func<TContext, SelectQuery, IQueryElement?, int> WrapTest { get; }
 			public Action<TContext, IReadOnlyList<SelectQuery>>     OnWrap   { get; }
@@ -23,6 +27,14 @@ namespace LinqToDB.SqlQuery
 				Context  = context;
 				WrapTest = wrapTest;
 				OnWrap   = onWrap;
+			}
+
+			public override IQueryElement ProcessElement(IQueryElement element)
+			{
+				_root = element;
+				var result = base.ProcessElement(element);
+				_root = default!;
+				return result;
 			}
 
 			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
@@ -43,35 +55,39 @@ namespace LinqToDB.SqlQuery
 					queries.Add(newQuery);
 				}
 
-				var clonedQuery = VisitMode == VisitMode.Modify
-					? selectQuery
-					: selectQuery.Clone(
-						selectQuery,
-						static (_, _) => true);
-
-				queries.Add(clonedQuery);
+				queries.Add(selectQuery);
 
 				for (int i = queries.Count - 2; i >= 0; i--)
 				{
 					queries[i].From.Table(queries[i + 1]);
 				}
 
-				for (var index = 0; index < clonedQuery.Select.Columns.Count; index++)
+				for (var index = 0; index < selectQuery.Select.Columns.Count; index++)
 				{
-					var prevColumn = clonedQuery.Select.Columns[index];
-					var newColumn = prevColumn;
+					var prevColumn = selectQuery.Select.Columns[index];
+					var newColumn  = prevColumn;
 					for (int ic = ec - 1; ic >= 0; ic--)
 					{
 						newColumn = queries[ic].Select.AddNewColumn(newColumn);
 					}
-
-					NotifyReplaced(newColumn, prevColumn);
-					NotifyReplaced(newColumn, selectQuery.Select.Columns[index]);
 				}
+
+				var newRootQuery = queries[0];
+
+				for (var index = 0; index < newRootQuery.Select.Columns.Count; index++)
+				{
+					var newColumn      = newRootQuery.Select.Columns[index];
+					var originalColumn = selectQuery.Select.Columns[index];
+					NotifyReplaced(newColumn, originalColumn);
+				}
+
+				NotifyReplaced(newRootQuery, selectQuery);
+				// Idea that this will stop Replacer to modify newRootQuery
+				NotifyReplaced(newRootQuery, newRootQuery);
 
 				OnWrap(Context, queries);
 
-				return NotifyReplaced(queries[0], selectQuery);
+				return newRootQuery;
 			}
 		}
 
