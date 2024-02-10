@@ -1434,7 +1434,7 @@ namespace LinqToDB.SqlQuery
 			return IsAggregationFunction(expr) || IsWindowFunction(expr);
 		}
 
-		public static bool IsAggregationFunction(IQueryElement expr)
+		public static bool IsAggregationFunction(this IQueryElement expr)
 		{
 			if (expr is SqlFunction func)
 				return func.IsAggregate;
@@ -1781,11 +1781,6 @@ namespace LinqToDB.SqlQuery
 				return descriptor.GetDbDataType(true);
 
 			return new DbDataType(expr.SystemType!);
-		}
-
-		public static bool IsAggregationFunction(this ISqlExpression expr)
-		{
-			return expr is SqlFunction f && f.IsAggregate;
 		}
 
 		public static bool HasOuterReferences(ISet<ISqlTableSource> sources, ISqlExpression expr)
