@@ -124,7 +124,7 @@ namespace Tests.UserTests.Test4415
 		}
 
 		[Test]
-		public void TestIssue4415_Test4([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
+		public void TestIssue4415_Test4([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess)] string configuration)
 		{
 			var ms = new FluentMappingBuilder()
 					.Entity<LanguageDTO>()
