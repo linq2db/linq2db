@@ -578,16 +578,18 @@ namespace LinqToDB.SqlQuery
 		//
 		public class IsTrue : BaseNotExpr
 		{
-			public ISqlExpression TrueValue   { get; set; }
-			public ISqlExpression FalseValue  { get; set; }
-			public bool?          WithNull    { get; }
+			public ISqlExpression TrueValue    { get; set; }
+			public ISqlExpression FalseValue   { get; set; }
+			public bool?          WithNull     { get; }
+			public bool           OptimizeNull { get; set; }
 
-			public IsTrue(ISqlExpression exp1, ISqlExpression trueValue, ISqlExpression falseValue, bool? withNull, bool isNot)
+			public IsTrue(ISqlExpression exp1, ISqlExpression trueValue, ISqlExpression falseValue, bool? withNull, bool isNot, bool optimizeNull)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
-				TrueValue  = trueValue;
-				FalseValue = falseValue;
-				WithNull   = withNull;
+				TrueValue    = trueValue;
+				FalseValue   = falseValue;
+				WithNull     = withNull;
+				OptimizeNull = optimizeNull;
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -614,18 +616,19 @@ namespace LinqToDB.SqlQuery
 				}
 
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
-				if (WithNull == null || !Expr1.ShouldCheckForNull())
+
+				if ((OptimizeNull ? WithNull != true : WithNull == null) || !Expr1.ShouldCheckForNull())
 					return predicate;
 
 				var search = new SqlSearchCondition();
-				search.Conditions.Add(new SqlCondition(false, predicate, WithNull.Value));
+				search.Conditions.Add(new SqlCondition(false, predicate,                          WithNull.Value));
 				search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, !WithNull.Value), WithNull.Value));
 				return search;
 			}
 
 			public override IQueryElement Invert()
 			{
-				return new IsTrue(Expr1, TrueValue, FalseValue, !WithNull, !IsNot);
+				return new IsTrue(Expr1, TrueValue, FalseValue, !WithNull, !IsNot, OptimizeNull);
 			}
 
 			public override QueryElementType ElementType => QueryElementType.IsTruePredicate;
