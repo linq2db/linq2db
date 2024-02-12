@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+
+using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
@@ -15,40 +19,61 @@ namespace Tests.Linq
 	[TestFixture]
 	public class InSubqueryTests : TestBase
 	{
-		void AssertTest<T>(
-			ITestDataContext db,
-			bool             preferExists,
-			bool             compareResult,
-			IEnumerable<T>   expected,
-			IQueryable<T>    actual)
+		#region Helper functions
+
+		[ExpressionMethod(nameof(UseInQueryNullableImpl))]
+		static bool UseInQuery<T>(T? value, bool compareNullsAsValues)
+			where T: struct
 		{
-			if (compareResult)
-				AreEqual(expected, actual);
-			else
-				_ = actual.ToList();
-
-			if (compareResult == false)
-				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
-
-			if ((preferExists || db.SqlProviderFlags.IsExistsPreferableForContains) && !db.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
-				Assert.That(LastQuery, Is.Not.Contains(" IN ").And.Contains("EXISTS"));
-			else
-				Assert.That(LastQuery, Is.Not.Contains("EXISTS").And.Contains(" IN "));
+			throw new NotImplementedException();
 		}
+
+		[ExpressionMethod(nameof(UseInQueryImpl))]
+		static bool UseInQuery<T>(T value, bool compareNullsAsValues)
+			where T: struct
+		{
+			throw new NotImplementedException();
+		}
+
+		static Expression<Func<T?, bool, bool>> UseInQueryNullableImpl<T>()
+			where T: struct
+		{
+			return (value, compareNullsAsValues) => compareNullsAsValues || value != null;
+		}
+
+		static Expression<Func<T, bool, bool>> UseInQueryImpl<T>()
+			where T: struct
+		{
+			return (value, compareNullsAsValues) => compareNullsAsValues || Sql.ToNullable(value) != null;
+		}
+		
+		void AssertTest<T>(IQueryable<T> query, bool preferExists)
+		{
+			var db = Internals.GetDataContext(query) ?? throw new InvalidOperationException("Could not retrieve data context");
+
+			AssertQuery(query);
+
+			var sqlStr = query.ToString();
+
+			if (preferExists && !db.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
+				Assert.That(sqlStr, Is.Not.Contains(" IN ").And.Contains("EXISTS"));
+			else
+				Assert.That(sqlStr, Is.Not.Contains("EXISTS").And.Contains(" IN "));
+		}
+
+		#endregion
 
 		[Test]
 		public void InTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			AssertTest(db, preferExists, true,
-				from c in Child
-				where c.ParentID.In(Parent.Select(p => p.ParentID))
-				select c
-				,
+			var query = 
 				from c in db.Child
-				where c.ParentID.In(db.Parent.Select(p => p.ParentID))
-				select c);
+				where c.ParentID.In(db.Parent.Select(p => p.ParentID).Where(v => UseInQuery(v, compareNullsAsValues)))
+				select c;
+
+			AssertTest(query, preferExists);
 		}
 
 		[Test]
@@ -56,14 +81,12 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			AssertTest(db, preferExists, true,
-				from c in GrandChild
-				where c.ParentID.In(Parent.Select(p => p.Value1))
-				select c
-				,
+			var query = 
 				from c in db.GrandChild
-				where c.ParentID.In(db.Parent.Select(p => p.Value1))
-				select c);
+				where UseInQuery(c.ParentID, compareNullsAsValues) && c.ParentID.In(db.Parent.Select(p => p.Value1).Where(v => UseInQuery(v, compareNullsAsValues)))
+				select c;
+
+			AssertTest(query, true);
 		}
 
 		[Test]
@@ -71,14 +94,12 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			AssertTest(db, preferExists, true,
-				from c in Parent
-				where Parent.Select(p => p.Value1).Contains(1)
-				select c
-				,
+			var query =
 				from c in db.Parent
 				where db.Parent.Select(p => p.Value1).Contains(1)
-				select c);
+				select c;
+
+			AssertTest(query, preferExists);
 		}
 
 		[Test]
@@ -86,53 +107,52 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			AreEqual(
-				from c in Child
-				where c.ParentID.In(Parent.Select(p => p.ParentID).Take(100))
-				select c
-				,
+			var query =
 				from c in db.Child
-				where c.ParentID.In(db.Parent.Select(p => p.ParentID).Take(100))
-				select c);
+				where UseInQuery(c.ParentID, compareNullsAsValues) && c.ParentID.In(db.Parent.Select(p => p.ParentID).Where(v => UseInQuery(v, compareNullsAsValues)).Take(100))
+				select c;
 
-			if (compareNullsAsValues == false)
-				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
+			AssertTest(query, preferExists);
 		}
 
 		[Test]
-		public void ObjectInTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		public void ObjectInTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			AreEqual(
-				from c in Child
-				where new { c.ParentID, Value = c.ParentID }.In(Parent.Select(p => new { p.ParentID, Value = p.Value1 ?? -1 }))
-				select c
-				,
+			var query =
 				from c in db.Child
 				where new { c.ParentID, Value = c.ParentID }.In(db.Parent.Select(p => new { p.ParentID, Value = p.Value1 ?? -1 }))
-				select c);
+				select c;
 
-			if (compareNullsAsValues == false)
-				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
+			if (db.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
+			{
+				FluentActions.Invoking(() => AssertQuery(query)).Should().Throw<LinqException>();
+			}
+			else
+			{
+				AssertQuery(query);
+			}
 		}
 
 		[Test]
-		public void ObjectInWithTakeTest([DataSources(TestProvName.AllClickHouse)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		public void ObjectInWithTakeTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			AreEqual(
-				from c in Child
-				where new { c.ParentID, Value = c.ParentID }.In(Parent.Select(p => new { p.ParentID, Value = p.Value1 ?? 0 }).Take(100))
-				select c
-				,
+			var query =
 				from c in db.Child
 				where new { c.ParentID, Value = c.ParentID }.In(db.Parent.Select(p => new { p.ParentID, Value = p.Value1!.Value }).Take(100))
-				select c);
+				select c;
 
-			if (compareNullsAsValues == false)
-				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
+			if (db.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
+			{
+				FluentActions.Invoking(() => AssertQuery(query)).Should().Throw<LinqException>();
+			}
+			else
+			{
+				AssertQuery(query);
+			}
 		}
 
 		[Test]
@@ -160,9 +180,12 @@ namespace Tests.Linq
 
 			var n = 1;
 
-			AssertTest(db, preferExists, true,
-				from p in    Parent where    Child.Select(c => c.ParentID).Contains(p.ParentID + n) select p,
-				from p in db.Parent where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n) select p);
+			var query = 
+				from p in db.Parent 
+				where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n) 
+				select p;
+
+			AssertTest(query, preferExists);;
 		}
 
 		[Test]
@@ -181,9 +204,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { 1, 2, 4 }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { 1, 2, 3 }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, true,
-				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))));
+			var query = t1.Where(t => t.ID.In(t2.Select(p => p.ID)));
+
+			AssertTest(query, preferExists);
 		}
 
 		[Test]
@@ -194,9 +217,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { 1, 3 }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { 1, 2 }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, true,
-				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))).OrderBy(i => i),
-				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))).OrderBy(i => i));
+			var query = t1.Where(t => t.ID.NotIn(t2.Select(p => p.ID))).OrderBy(i => i);
+
+			AssertTest(query, preferExists);
 		}
 
 		[Test]
@@ -207,9 +230,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2       }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, true,
-				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => (int?)p.ID))),
-				t1.         Where(t => t.ID.In(t2.         Select(p => (int?)p.ID))));
+			var query = t1.Where(t => t.ID.In(t2.Select(p => (int?)p.ID)));
+
+			AssertTest(query, preferExists);
 		}
 
 		[Test]
@@ -220,9 +243,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2       }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, compareNullsAsValues,
-				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => (int?)p.ID))),
-				t1.         Where(t => t.ID.NotIn(t2.         Select(p => (int?)p.ID))));
+			var query = t1.Where(t => (compareNullsAsValues ? t.ID == null : false) || t.ID.NotIn(t2.Select(p => (int?)p.ID)));
+
+			AssertTest(query, preferExists);
 		}
 
 		[Test]
@@ -233,9 +256,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3 }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2 }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, true,
-				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => (int?)p.ID))),
-				t1.         Where(t => t.ID.NotIn(t2.         Select(p => (int?)p.ID))));
+			var query = t1.Where(t => UseInQuery(t.ID, compareNullsAsValues) && t.ID.NotIn(t2.Select(p => (int?)p.ID).Where(v => UseInQuery(v, compareNullsAsValues))));
+
+			AssertTest(query, preferExists);
 		}
 
 		[Test]
@@ -246,9 +269,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] {       1, 3       }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, true,
-				t1.ToList().Where(t => ((int?)t.ID).In(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => ((int?)t.ID).In(t2.         Select(p => p.ID))));
+			var query = t1.Where(t => ((int?)t.ID).In(t2.Select(p => p.ID)));
+
+			AssertTest(query, preferExists);
 		}
 
 		[Test]
@@ -260,9 +283,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, compareNullsAsValues,
-				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))));
+			var query = t1.Where(t => UseInQuery(t.ID, compareNullsAsValues) && t.ID.In(t2.Select(p => p.ID).Where(v => UseInQuery(v, compareNullsAsValues))));
+
+			AssertTest(query, true);
 		}
 
 		[Test]
@@ -273,9 +296,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2       }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, true,
-				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))));
+			var query = t1.Where(t => UseInQuery(t.ID, compareNullsAsValues) && t.ID.In(t2.Select(p => p.ID).Where(v => UseInQuery(v, compareNullsAsValues))));
+
+			AssertTest(query, true);
 		}
 
 		[Test]
@@ -286,9 +309,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3,      }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, true,
-				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))));
+			var query = t1.Where(t => t.ID.In(t2.Select(p => p.ID)));
+
+			AssertTest(query, true);
 		}
 
 		[Test]
@@ -299,9 +322,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6, null }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, compareNullsAsValues,
-				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))));
+			var query = t1.Where(t => UseInQuery(t.ID, compareNullsAsValues) && t.ID.NotIn(t2.Select(p => p.ID).Where(v => UseInQuery(v, compareNullsAsValues))));
+
+			AssertTest(query, true);
 		}
 
 		[Test]
@@ -312,9 +335,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", ((int?[])[ 1, 3, 4, 5       ]).Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", ((int?[])[ 1, 2, 4, 6, null ]).Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, compareNullsAsValues,
-				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))));
+			var query = t1.Where(t => t.ID.NotIn(t2.Select(p => p.ID)));
+
+			AssertTest(query, true);
 		}
 
 		[Test]
@@ -325,9 +348,9 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6       }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, compareNullsAsValues,
-				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))));
+			var query = t1.Where(t => t.ID.NotIn(t2.Select(p => p.ID)));
+
+			AssertTest(query, true);
 		}
 	}
 }

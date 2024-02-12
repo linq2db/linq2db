@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -715,6 +716,13 @@ namespace LinqToDB.Remote
 				}
 			}
 
+			void SerializeOptions(DataOptions options)
+			{
+				Append(options.LinqOptions.PreferExistsForScalar);
+				Append(options.SqlOptions.EnableConstantExpressionInOrderBy);
+				Append(options.SqlOptions.GenerateFinalAliases);
+			}
+
 			public string Serialize(
 				SqlStatement                 statement,
 				IReadOnlyParameterValues?    parameterValues,
@@ -733,9 +741,7 @@ namespace LinqToDB.Remote
 
 				// Serialize options.
 				//
-				Builder
-					.Append(CultureInfo.InvariantCulture, $"{options.SqlOptions.Pack()}")
-					.AppendLine();
+				SerializeOptions(options);
 
 				// Serialize statement.
 				//
@@ -1192,6 +1198,7 @@ namespace LinqToDB.Remote
 							Append(elem.Expr1);
 							Append(elem.IsNot);
 							Append(elem.SubQuery);
+							Append(elem.DoNotConvert);
 
 							break;
 						}
@@ -1662,6 +1669,17 @@ namespace LinqToDB.Remote
 			{
 			}
 
+			DataOptions DeserializeOptions(DataOptions options)
+			{
+				options = options
+					.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(ReadBool()))
+					.WithOptions<SqlOptions>(so =>
+						so.WithEnableConstantExpressionInOrderBy(ReadBool())
+							.WithGenerateFinalAliases(ReadBool()));
+
+				return options;
+			}
+
 			public LinqServiceQuery Deserialize(string str)
 			{
 				Str = str;
@@ -1693,7 +1711,7 @@ namespace LinqToDB.Remote
 
 				// Deserialize options.
 				//
-				var options = Options.WithOptions<SqlOptions>(o => o.Unpack(ReadInt()));
+				var options = DeserializeOptions(Options);
 
 				NextLine();
 
@@ -2096,11 +2114,12 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.InSubQueryPredicate :
 						{
-							var expr1    = Read<ISqlExpression>()!;
-							var isNot    = ReadBool();
-							var subQuery = Read<SelectQuery>()!;
+							var expr1        = Read<ISqlExpression>()!;
+							var isNot        = ReadBool();
+							var subQuery     = Read<SelectQuery>()!;
+							var doNotConvert = ReadBool();
 
-							obj = new SqlPredicate.InSubQuery(expr1, isNot, subQuery);
+							obj = new SqlPredicate.InSubQuery(expr1, isNot, subQuery, doNotConvert);
 
 							break;
 						}

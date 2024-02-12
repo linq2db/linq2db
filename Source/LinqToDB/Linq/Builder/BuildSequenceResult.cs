@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 			ErrorExpression = null;
 		}
 
-		public BuildSequenceResult(Expression? errorExpression)
+		public BuildSequenceResult(Expression? errorExpression, string? additionalDetails = null)
 		{
 			BuildContext    = null;
 			ErrorExpression = errorExpression;
@@ -22,11 +22,12 @@ namespace LinqToDB.Linq.Builder
 			ErrorExpression = null;
 		}
 
-		public static BuildSequenceResult NotSupported()                             => new();
-		public static BuildSequenceResult Error(Expression          errorExpression) => new(errorExpression);
-		public static BuildSequenceResult FromContext(IBuildContext buildContext)    => new(buildContext);
+		public static BuildSequenceResult NotSupported()                                                               => new();
+		public static BuildSequenceResult Error(Expression          errorExpression, string? additionalDetails = null) => new(errorExpression, additionalDetails);
+		public static BuildSequenceResult FromContext(IBuildContext buildContext) => new(buildContext);
 
-		public                          IBuildContext? BuildContext    { get; }
-		public                          Expression?    ErrorExpression { get; }
+		public IBuildContext? BuildContext      { get; }
+		public Expression?    ErrorExpression   { get; }
+		public string?        AdditionalDetails { get; }
 	}
 }

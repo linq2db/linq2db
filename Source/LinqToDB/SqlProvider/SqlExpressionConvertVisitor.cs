@@ -585,6 +585,130 @@ namespace LinqToDB.SqlProvider
 			return element.GetSqlExpression(EvaluationContext);
 		}
 
+		ISqlPredicate EmulateNullability(SqlPredicate.InSubQuery inPredicate)
+		{
+			var sc = new SqlSearchCondition(true);
+
+			var testExpr = inPredicate.Expr1;
+
+			var intTestSubQuery = inPredicate.SubQuery.Clone();
+			var inSubqueryExpr = intTestSubQuery.Select.Columns[0].Expression;
+
+			intTestSubQuery.Select.Columns.Clear();
+			intTestSubQuery.Select.AddNewColumn(new SqlValue(1));
+			intTestSubQuery.Where.SearchCondition.AddIsNull(inSubqueryExpr);
+
+			sc.AddAnd(sub => sub
+					.AddIsNull(testExpr)
+					.Add(new SqlPredicate.InSubQuery(new SqlValue(1), false, intTestSubQuery, doNotConvert: true))
+				)
+				.AddAnd(sub => sub
+					.AddIsNotNull(testExpr)
+					.Add(new SqlPredicate.InSubQuery(testExpr, false, inPredicate.SubQuery, doNotConvert: true))
+				);
+
+			if (inPredicate.IsNot)
+				return sc.MakeNot();
+
+			return sc;
+		}
+
+		ISqlPredicate ConvertToExists(SqlPredicate.InSubQuery inPredicate)
+		{
+			ISqlExpression[] testExpressions;
+			if (inPredicate.Expr1 is SqlRowExpression sqlRow)
+			{
+				testExpressions = sqlRow.Values;
+			}
+			else
+			{
+				testExpressions = [inPredicate.Expr1];
+			}
+
+			var subQuery = inPredicate.SubQuery;
+
+			if (inPredicate.SubQuery.Where.SearchCondition.IsOr)
+				throw new InvalidOperationException("Not expected root SearchCondition.");
+
+			if (GetVisitMode(subQuery) == VisitMode.Transform || subQuery.Where.SearchCondition.IsOr)
+			{
+				subQuery = subQuery.CloneQuery();
+				subQuery.Where.EnsureConjunction();
+			}
+
+			var predicates = new List<ISqlPredicate>(testExpressions.Length);
+
+			var sc = new SqlSearchCondition(false);
+
+			for (int i = 0; i < testExpressions.Length; i++)
+			{
+				var testValue = testExpressions[i];
+				var expr      = subQuery.Select.Columns[i].Expression;
+
+				//sc.AddIsNull(testValue, inPredicate.IsNot);
+				predicates.Add(new SqlPredicate.ExprExpr(testValue, SqlPredicate.Operator.Equal, expr, DataOptions.LinqOptions.CompareNullsAsValues ? true : null));
+			}
+
+			subQuery.Where.SearchCondition.AddRange(predicates);
+
+			sc.AddExists(subQuery, inPredicate.IsNot);
+
+			return sc;
+		}
+
+		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			if (predicate.DoNotConvert)
+				return base.VisitInSubQueryPredicate(predicate);
+
+			var newPredicate = base.VisitInSubQueryPredicate(predicate);
+
+			// preparing for remoting
+			if (SqlProviderFlags == null)
+				return newPredicate;
+
+			if (!ReferenceEquals(newPredicate, predicate))
+				return Visit(newPredicate);
+
+			var doNotSupportCorrelatedSubQueries = SqlProviderFlags.DoesNotSupportCorrelatedSubquery;
+
+			var testExpression  = predicate.Expr1;
+			var valueExpression = predicate.SubQuery.Select.Columns[0].Expression;
+
+			if (NullabilityContext.CanBeNull(testExpression) && NullabilityContext.CanBeNull(valueExpression))
+			{
+				if (doNotSupportCorrelatedSubQueries)
+				{
+					newPredicate = EmulateNullability(predicate);
+
+					if (!ReferenceEquals(newPredicate, predicate))
+						return Visit(newPredicate);
+				}
+				else
+				{
+					return Visit(ConvertToExists(predicate));
+				}
+			}
+
+			if (!doNotSupportCorrelatedSubQueries && (DataOptions.LinqOptions.PreferExistsForScalar || SqlProviderFlags.IsExistsPreferableForContains))
+			{
+				return Visit(ConvertToExists(predicate));
+			}
+
+			if (NullabilityContext.CanBeNull(testExpression) && !NullabilityContext.CanBeNull(valueExpression) && predicate.IsNot)
+			{
+				var withoutNull = new SqlPredicate.InSubQuery(testExpression, predicate.IsNot, predicate.SubQuery, true);
+
+				var sc = new SqlSearchCondition(predicate.IsNot)
+					.Add(new SqlPredicate.IsNull(testExpression, false))
+					.Add(withoutNull);
+
+				return Visit(sc);
+			}
+
+			return predicate;
+		}
+
 		protected override IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
 		{
 			var newElement = base.VisitBetweenPredicate(predicate);

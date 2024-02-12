@@ -338,5 +338,10 @@ namespace LinqToDB.SqlQuery
 			Having.Cleanup();
 			OrderBy.Cleanup();
 		}
+
+		public SelectQuery CloneQuery()
+		{
+			return this.Clone(e => ReferenceEquals(e, this));
+		}
 	}
 }

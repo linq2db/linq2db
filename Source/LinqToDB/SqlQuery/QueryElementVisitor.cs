@@ -2161,7 +2161,7 @@ namespace LinqToDB.SqlQuery
 					    !ReferenceEquals(predicate.Expr1, expr1) ||
 					    !ReferenceEquals(predicate.SubQuery, subQuery))
 					{
-						return NotifyReplaced(new SqlPredicate.InSubQuery(expr1, predicate.IsNot, subQuery), predicate);
+						return NotifyReplaced(new SqlPredicate.InSubQuery(expr1, predicate.IsNot, subQuery, predicate.DoNotConvert), predicate);
 					}
 
 					break;

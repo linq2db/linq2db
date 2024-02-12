@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlWhereClause : ClauseBase<SqlWhereClause>, IQueryElement
+	public class SqlWhereClause : ClauseBase<SqlWhereClause>
 	{
 		internal SqlWhereClause(SelectQuery selectQuery) : base(selectQuery)
 		{
@@ -18,29 +18,19 @@ namespace LinqToDB.SqlQuery
 
 		public bool IsEmpty => SearchCondition.Predicates.Count == 0;
 
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
+		public override QueryElementType ElementType => QueryElementType.WhereClause;
 
-		public QueryElementType ElementType => QueryElementType.WhereClause;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (SearchCondition.Predicates.Count == 0)
-				return writer;
+			{
+				return writer.DebugAppendUniqueId(this);
+			}
 
 			writer
+				.DebugAppendUniqueId(this)
 				.AppendLine()
 				.AppendLine("WHERE");
 

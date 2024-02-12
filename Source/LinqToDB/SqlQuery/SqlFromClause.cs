@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlFromClause : ClauseBase, IQueryElement
+	public class SqlFromClause : ClauseBase
 	{
 		#region Join
 
@@ -159,27 +159,11 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		#region Overrides
+		#region QueryElement Members
 
-#if OVERRIDETOSTRING
+		public override QueryElementType ElementType => QueryElementType.FromClause;
 
-			public override string ToString()
-			{
-				return this.ToDebugString(SelectQuery);
-			}
-
-#endif
-
-		#endregion
-
-		#region IQueryElement Members
-
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.FromClause;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			/*
 			if (writer.Length > 10240)

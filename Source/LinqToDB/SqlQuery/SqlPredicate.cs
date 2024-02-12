@@ -58,8 +58,8 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.NotPredicate;
 
-			public override bool          CanInvert() => false;
-			public override ISqlPredicate Invert()    => throw new InvalidOperationException();
+			public override bool          CanInvert(NullabilityContext nullability) => false;
+			public override ISqlPredicate Invert(NullabilityContext    nullability) => throw new InvalidOperationException();
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -103,8 +103,8 @@ namespace LinqToDB.SqlQuery
 				writer.Append("True");
 			}
 
-			public override bool CanInvert() => true;
-			public override ISqlPredicate Invert() => False;
+			public override bool          CanInvert(NullabilityContext nullability) => true;
+			public override ISqlPredicate Invert(NullabilityContext    nullability) => False;
 		
 		}
 
@@ -129,8 +129,8 @@ namespace LinqToDB.SqlQuery
 				writer.Append("False");
 			}
 
-			public override bool          CanInvert() => true;
-			public override ISqlPredicate Invert()    => True;
+			public override bool          CanInvert(NullabilityContext nullability) => true;
+			public override ISqlPredicate Invert(NullabilityContext    nullability) => True;
 		}
 
 		public class Expr : SqlPredicate
@@ -149,8 +149,8 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr1 { get; set; }
 
-			public override bool CanInvert() => false;
-			public override ISqlPredicate Invert() => throw new InvalidOperationException();
+			public override bool          CanInvert(NullabilityContext nullability) => true;
+			public override ISqlPredicate Invert(NullabilityContext    nullability) => throw new InvalidOperationException();
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -177,7 +177,7 @@ namespace LinqToDB.SqlQuery
 
 			public bool IsNot { get; }
 
-			public override bool CanInvert() => true;
+			public override bool CanInvert(NullabilityContext nullability) => true;
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -259,9 +259,9 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			public override bool CanInvert() => true;
+			public override bool CanInvert(NullabilityContext nullability) => true;
 
-			public override ISqlPredicate Invert()
+			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !WithNull);
 			}
@@ -389,7 +389,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override ISqlPredicate Invert()
+			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
 				return new Like(Expr1, !IsNot, Expr2, Escape);
 			}
@@ -447,7 +447,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override ISqlPredicate Invert()
+			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
 				return new SearchString(Expr1, !IsNot, Expr2, Kind, CaseSensitive);
 			}
@@ -504,7 +504,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override ISqlPredicate Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
+			public override ISqlPredicate Invert(NullabilityContext nullability) => new IsDistinct(Expr1, !IsNot, Expr2);
 
 			public override QueryElementType ElementType => QueryElementType.IsDistinctPredicate;
 
@@ -539,7 +539,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override ISqlPredicate Invert()
+			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
 				return new Between(Expr1, !IsNot, Expr2, Expr3);
 			}
@@ -609,7 +609,7 @@ namespace LinqToDB.SqlQuery
 				
 			}
 
-			public override ISqlPredicate Invert()
+			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
 				return new IsTrue(Expr1, TrueValue, FalseValue, !WithNull, !IsNot);
 			}
@@ -626,7 +626,7 @@ namespace LinqToDB.SqlQuery
 			{
 			}
 
-			public override ISqlPredicate Invert()
+			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
 				return new IsNull(Expr1, !IsNot);
 			}
@@ -648,13 +648,15 @@ namespace LinqToDB.SqlQuery
 		//
 		public class InSubQuery : BaseNotExpr
 		{
-			public InSubQuery(ISqlExpression exp1, bool isNot, SelectQuery subQuery)
+			public InSubQuery(ISqlExpression exp1, bool isNot, SelectQuery subQuery, bool doNotConvert)
 				: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 			{
-				SubQuery = subQuery;
+				SubQuery     = subQuery;
+				DoNotConvert = doNotConvert;
 			}
 
-			public SelectQuery SubQuery { get; private set; }
+			public bool        DoNotConvert { get; }
+			public SelectQuery SubQuery     { get; private set; }
 
 			public void Modify(ISqlExpression exp1, SelectQuery subQuery)
 			{
@@ -669,9 +671,14 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override ISqlPredicate Invert()
+			public override bool CanInvert(NullabilityContext nullability)
 			{
-				return new InSubQuery(Expr1, !IsNot, SubQuery);
+				return true;
+			}
+
+			public override ISqlPredicate Invert(NullabilityContext nullability)
+			{
+				return new InSubQuery(Expr1, !IsNot, SubQuery, DoNotConvert);
 			}
 
 			public override QueryElementType ElementType => QueryElementType.InSubQueryPredicate;
@@ -743,7 +750,7 @@ namespace LinqToDB.SqlQuery
 				return true;
 			}
 
-			public override ISqlPredicate Invert()
+			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
 				return new InList(Expr1, !WithNull, !IsNot, Values);
 			}
@@ -791,8 +798,8 @@ namespace LinqToDB.SqlQuery
 				Function = function;
 			}
 
-			public override bool CanInvert() => false;
-			public override ISqlPredicate Invert() => throw new InvalidOperationException();
+			public override bool          CanInvert(NullabilityContext nullability) => false;
+			public override ISqlPredicate Invert(NullabilityContext    nullability) => throw new InvalidOperationException();
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -817,8 +824,8 @@ namespace LinqToDB.SqlQuery
 
 		public int  Precedence { get; }
 
-		public abstract bool CanInvert();
-		public abstract ISqlPredicate Invert();
+		public abstract bool          CanInvert(NullabilityContext nullability);
+		public abstract ISqlPredicate Invert(NullabilityContext    nullability);
 
 		public abstract bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer);
 

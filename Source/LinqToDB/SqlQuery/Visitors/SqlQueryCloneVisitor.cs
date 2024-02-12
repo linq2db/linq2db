@@ -21,7 +21,7 @@ namespace LinqToDB.SqlQuery.Visitors
 
 		protected override bool ShouldReplace(IQueryElement element)
 		{
-			return base.ShouldReplace(element) && (_cloneFunc == null || _cloneFunc(element));
+			return base.ShouldReplace(element) || (_cloneFunc == null || _cloneFunc(element));
 		}
 
 	}

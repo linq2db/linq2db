@@ -212,6 +212,11 @@ LinqToDB.Expressions.SqlQueryRootExpression.ContextType.get -> System.Type!
 LinqToDB.Expressions.SqlQueryRootExpression.Equals(LinqToDB.Expressions.SqlQueryRootExpression? other) -> bool
 LinqToDB.Expressions.SqlQueryRootExpression.MappingSchema.get -> LinqToDB.Mapping.MappingSchema!
 LinqToDB.Expressions.SqlQueryRootExpression.SqlQueryRootExpression(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! contextType) -> void
+LinqToDB.Expressions.TagExpression
+LinqToDB.Expressions.TagExpression.InnerExpression.get -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.TagExpression.Tag.get -> object!
+LinqToDB.Expressions.TagExpression.TagExpression(System.Linq.Expressions.Expression! innerExpression, object! tag) -> void
+LinqToDB.Expressions.TagExpression.Update(System.Linq.Expressions.Expression! innerExpression, object! tag) -> LinqToDB.Expressions.TagExpression!
 LinqToDB.ExprParameterAttribute.ParameterKind.get -> LinqToDB.ExprParameterKind
 LinqToDB.ExprParameterAttribute.ParameterKind.set -> void
 LinqToDB.ExprParameterKind
@@ -735,7 +740,7 @@ LinqToDB.SqlQuery.SqlPredicate.TruePredicate.TruePredicate() -> void
 LinqToDB.SqlQuery.SqlQueryColumnNestingCorrector
 LinqToDB.SqlQuery.SqlQueryColumnNestingCorrector.CorrectColumnNesting(LinqToDB.SqlQuery.IQueryElement! element) -> LinqToDB.SqlQuery.IQueryElement!
 LinqToDB.SqlQuery.SqlQueryColumnNestingCorrector.SqlQueryColumnNestingCorrector() -> void
-LinqToDB.SqlQuery.SqlQueryColumnNestingCorrector.UsedColumns.get -> System.Collections.Generic.IReadOnlyList<LinqToDB.SqlQuery.SqlColumn!>!
+LinqToDB.SqlQuery.SqlQueryColumnNestingCorrector.UsedColumns.get -> System.Collections.Generic.IReadOnlyCollection<LinqToDB.SqlQuery.SqlColumn!>!
 LinqToDB.SqlQuery.SqlQueryExtension.Arguments.init -> void
 LinqToDB.SqlQuery.SqlQueryExtension.BuilderType.init -> void
 LinqToDB.SqlQuery.SqlQueryExtension.Configuration.init -> void
@@ -1057,6 +1062,12 @@ override LinqToDB.Expressions.SqlQueryRootExpression.GetHashCode() -> int
 override LinqToDB.Expressions.SqlQueryRootExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
 override LinqToDB.Expressions.SqlQueryRootExpression.ToString() -> string!
 override LinqToDB.Expressions.SqlQueryRootExpression.Type.get -> System.Type!
+override LinqToDB.Expressions.TagExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+override LinqToDB.Expressions.TagExpression.CanReduce.get -> bool
+override LinqToDB.Expressions.TagExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Expressions.TagExpression.Reduce() -> System.Linq.Expressions.Expression!
+override LinqToDB.Expressions.TagExpression.ToString() -> string!
+override LinqToDB.Expressions.TagExpression.Type.get -> System.Type!
 override LinqToDB.Mapping.AssociationDescriptor.ToString() -> string!
 override LinqToDB.Mapping.DynamicColumnInfo.MetadataToken.get -> int
 override LinqToDB.Mapping.DynamicColumnInfo.Module.get -> System.Reflection.Module!
@@ -1096,6 +1107,7 @@ override LinqToDB.Sql.TableExpressionAttribute.SetTable<TContext>(LinqToDB.DataO
 override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitBetweenPredicate(LinqToDB.SqlQuery.SqlPredicate.Between! predicate) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitExprExprPredicate(LinqToDB.SqlQuery.SqlPredicate.ExprExpr! predicate) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitInListPredicate(LinqToDB.SqlQuery.SqlPredicate.InList! predicate) -> LinqToDB.SqlQuery.IQueryElement!
+override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitInSubQueryPredicate(LinqToDB.SqlQuery.SqlPredicate.InSubQuery! predicate) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitIsNullPredicate(LinqToDB.SqlQuery.SqlPredicate.IsNull! predicate) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitIsTruePredicate(LinqToDB.SqlQuery.SqlPredicate.IsTrue! predicate) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitLikePredicate(LinqToDB.SqlQuery.SqlPredicate.Like! predicate) -> LinqToDB.SqlQuery.IQueryElement!
@@ -1109,6 +1121,7 @@ override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitSqlInlinedToSqlEx
 override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitSqlValue(LinqToDB.SqlQuery.SqlValue! element) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionOptimizerVisitor.Visit(LinqToDB.SqlQuery.IQueryElement? element) -> LinqToDB.SqlQuery.IQueryElement?
 override LinqToDB.SqlProvider.SqlExpressionOptimizerVisitor.VisitExprExprPredicate(LinqToDB.SqlQuery.SqlPredicate.ExprExpr! predicate) -> LinqToDB.SqlQuery.IQueryElement!
+override LinqToDB.SqlProvider.SqlExpressionOptimizerVisitor.VisitInSubQueryPredicate(LinqToDB.SqlQuery.SqlPredicate.InSubQuery! predicate) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionOptimizerVisitor.VisitIsDistinctPredicate(LinqToDB.SqlQuery.SqlPredicate.IsDistinct! predicate) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionOptimizerVisitor.VisitIsNullPredicate(LinqToDB.SqlQuery.SqlPredicate.IsNull! predicate) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionOptimizerVisitor.VisitIsTruePredicate(LinqToDB.SqlQuery.SqlPredicate.IsTrue! predicate) -> LinqToDB.SqlQuery.IQueryElement!
@@ -1133,6 +1146,7 @@ override LinqToDB.SqlQuery.SelectQueryOptimizerVisitor.VisitSqlOrderByClause(Lin
 override LinqToDB.SqlQuery.SelectQueryOptimizerVisitor.VisitSqlQuery(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlQuery.SelectQueryOptimizerVisitor.VisitSqlSetOperator(LinqToDB.SqlQuery.SqlSetOperator! element) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlQuery.SelectQueryOptimizerVisitor.VisitSqlTableSource(LinqToDB.SqlQuery.SqlTableSource! element) -> LinqToDB.SqlQuery.IQueryElement!
+override LinqToDB.SqlQuery.SelectQueryOptimizerVisitor.VisitSqlUpdateStatement(LinqToDB.SqlQuery.SqlUpdateStatement! element) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlQuery.SqlAnchor.ToString() -> string!
 override LinqToDB.SqlQuery.SqlBinaryExpression.CanBeNullable(LinqToDB.SqlQuery.NullabilityContext! nullability) -> bool
 override LinqToDB.SqlQuery.SqlBinaryExpression.ElementType.get -> LinqToDB.SqlQuery.QueryElementType
@@ -1845,6 +1859,7 @@ virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitSqlDefaultIfEmptyExpress
 virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitSqlGenericConstructorExpression(LinqToDB.Expressions.SqlGenericConstructorExpression! node) -> System.Linq.Expressions.Expression!
 virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitSqlPlaceholderExpression(LinqToDB.Expressions.SqlPlaceholderExpression! node) -> System.Linq.Expressions.Expression!
 virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitSqlQueryRootExpression(LinqToDB.Expressions.SqlQueryRootExpression! node) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitTagExpression(LinqToDB.Expressions.TagExpression! node) -> System.Linq.Expressions.Expression!
 virtual LinqToDB.Expressions.SqlQueryDependentAttribute.PrepareForCache(System.Linq.Expressions.Expression! expression, LinqToDB.Expressions.IExpressionEvaluator! evaluator) -> System.Linq.Expressions.Expression!
 virtual LinqToDB.Interceptors.Internal.EntityBindingInterceptor.ConvertConstructorExpression(LinqToDB.Expressions.SqlGenericConstructorExpression! expression) -> LinqToDB.Expressions.SqlGenericConstructorExpression!
 virtual LinqToDB.Sql.ExpressionAttribute.GetExpression<TContext>(TContext context, LinqToDB.IDataContext! dataContext, LinqToDB.Expressions.IExpressionEvaluator! evaluator, LinqToDB.SqlQuery.SelectQuery! query, System.Linq.Expressions.Expression! expression, System.Func<TContext, System.Linq.Expressions.Expression!, LinqToDB.Mapping.ColumnDescriptor?, System.Linq.Expressions.Expression!>! converter) -> System.Linq.Expressions.Expression!

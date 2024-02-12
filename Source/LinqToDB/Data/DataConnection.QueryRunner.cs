@@ -229,7 +229,7 @@ namespace LinqToDB.Data
 
 				for (var i = 0; i < cc; i++)
 				{
-					var optimizationContext = new OptimizationContext(evaluationContext, dataConnection.Options,
+					var optimizationContext = new OptimizationContext(evaluationContext, options,
 						dataConnection.DataProvider.SqlProviderFlags,
 						dataConnection.MappingSchema,
 						aliases,

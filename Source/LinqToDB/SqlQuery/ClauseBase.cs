@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.SqlQuery
 {
-	public abstract class ClauseBase
+	public abstract class ClauseBase : QueryElement
 	{
 		protected ClauseBase(SelectQuery? selectQuery)
 		{
@@ -13,7 +13,6 @@
 		public SqlGroupByClause GroupBy => SelectQuery.GroupBy;
 		public SqlWhereClause   Having  => SelectQuery.Having;
 		public SqlOrderByClause OrderBy => SelectQuery.OrderBy;
-		public SelectQuery      End() { return SelectQuery; }
 
 		protected internal SelectQuery SelectQuery { get; private set; } = null!;
 
@@ -23,7 +22,7 @@
 		}
 	}
 
-	public abstract class ClauseBase<T1>
+	public abstract class ClauseBase<T1> : QueryElement
 		where T1 : ClauseBase<T1>
 	{
 		protected ClauseBase(SelectQuery? selectQuery)
@@ -36,7 +35,6 @@
 		public SqlGroupByClause GroupBy => SelectQuery.GroupBy;
 		public SqlWhereClause   Having  => SelectQuery.Having;
 		public SqlOrderByClause OrderBy => SelectQuery.OrderBy;
-		public SelectQuery      End() { return SelectQuery; }
 
 		protected internal SelectQuery SelectQuery { get; private set; } = null!;
 

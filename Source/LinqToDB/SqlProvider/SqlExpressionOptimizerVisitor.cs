@@ -290,9 +290,9 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (predicate.Predicate.CanInvert())
+			if (predicate.Predicate.CanInvert(_nullabilityContext))
 			{
-				return Visit(predicate.Predicate.Invert());
+				return Visit(predicate.Predicate.Invert(_nullabilityContext));
 			}
 
 			return predicate;
@@ -760,6 +760,62 @@ namespace LinqToDB.SqlProvider
 				case SqlPredicate.Operator.Less           :
 				case SqlPredicate.Operator.LessOrEqual    :
 					return OptimizeCase(expr);
+			}
+
+			return predicate;
+		}
+
+		protected override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
+		{
+			var newElement = base.VisitSqlWhereClause(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			// Ensure top level is always AND
+
+			if (element.SearchCondition.IsOr)
+			{
+				SqlSearchCondition newSearchCondition;
+
+				if (element.SearchCondition.Predicates.Count == 0)
+				{
+					newSearchCondition = new SqlSearchCondition(false);
+				}
+				else if (element.SearchCondition.Predicates.Count == 1)
+				{
+					newSearchCondition = new SqlSearchCondition(false, element.SearchCondition.Predicates[0]);
+				}
+				else
+				{
+					newSearchCondition = new SqlSearchCondition(false, element.SearchCondition);
+				}
+
+				if (GetVisitMode(element) == VisitMode.Modify)
+				{
+					element.SearchCondition = newSearchCondition;
+				}
+				else
+				{
+					return new SqlWhereClause(newSearchCondition);
+				}
+			}
+
+			return element;
+		}
+
+		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			var optmimized = base.VisitInSubQueryPredicate(predicate);
+
+			if (!ReferenceEquals(optmimized, predicate))
+				return Visit(optmimized);
+
+			if (predicate.SubQuery.Where.SearchCondition.Predicates.Count == 1)
+			{
+				var firstPredicate = predicate.SubQuery.Where.SearchCondition.Predicates[0];
+				if (firstPredicate is SqlPredicate.FalsePredicate)
+					return firstPredicate;
 			}
 
 			return predicate;

@@ -22,7 +22,7 @@ namespace LinqToDB.Expressions
 	///     This API supports the linq2db infrastructure and is not intended to be used
 	///     directly from your code. This API may change or be removed in future releases.
 	/// </summary>
-	sealed class ExpressionEqualityComparer : IEqualityComparer<Expression>
+	public sealed class ExpressionEqualityComparer : IEqualityComparer<Expression>
 	{
 		public static ExpressionEqualityComparer Instance { get; } = new ExpressionEqualityComparer();
 

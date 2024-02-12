@@ -41,30 +41,18 @@ namespace LinqToDB.SqlQuery
 
 		public bool IsEmpty => Items.Count == 0;
 
-#if OVERRIDETOSTRING
+		#region QueryElement overrides
 
-		public override string ToString()
-		{
-			return this.ToDebugString(SelectQuery);
-		}
+		public override QueryElementType ElementType => QueryElementType.OrderByClause;
 
-#endif
-
-		#region IQueryElement Members
-
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.OrderByClause;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (Items.Count == 0)
 				return writer;
 
 			writer
 				.AppendLine()
-				.AppendLine(" ORDER BY");
+				.AppendLine("ORDER BY");
 
 			using(writer.WithScope())
 				for (var index = 0; index < Items.Count; index++)

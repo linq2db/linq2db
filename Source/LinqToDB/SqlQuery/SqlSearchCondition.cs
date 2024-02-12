@@ -106,12 +106,16 @@ namespace LinqToDB.SqlQuery
 
 		#region IInvertibleElement Members
 
-		public bool CanInvert()
+		public bool CanInvert(NullabilityContext nullability)
 		{
-			return Predicates.Count == 1;
+			var maxCount = Math.Max(Predicates.Count / 2, 2);
+			if (Predicates.Count > maxCount)
+				return false;
+
+			return Predicates.All(p => p is not SqlSearchCondition && p.CanInvert(nullability));
 		}
 
-		public ISqlPredicate Invert()
+		public ISqlPredicate Invert(NullabilityContext nullability)
 		{
 			if (Predicates.Count == 0)
 			{

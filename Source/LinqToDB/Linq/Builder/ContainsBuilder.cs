@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -38,7 +39,12 @@ namespace LinqToDB.Linq.Builder
 
 			var sequence = new SubQueryContext(buildResult.BuildContext);
 
-			return BuildSequenceResult.FromContext(new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence));
+			var containsContext = new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence);
+			var placeholder     = containsContext.CreatePlaceholder(ProjectFlags.SQL);
+			if (placeholder == null)
+				return BuildSequenceResult.Error(methodCall, "Provider does not support correlated subqueries.");
+
+			return BuildSequenceResult.FromContext(containsContext);
 		}
 
 		public static bool IsConstant(MethodCallExpression methodCall)
@@ -104,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
-			SqlPlaceholderExpression? CreatePlaceholder(ProjectFlags flags)
+			public SqlPlaceholderExpression? CreatePlaceholder(ProjectFlags flags)
 			{
 				var args  = _methodCall.Method.GetGenericArguments();
 				var param = Expression.Parameter(args[0], "param");
@@ -117,8 +123,7 @@ namespace LinqToDB.Linq.Builder
 				var contextRef   = new ContextRefExpression(args[0], InnerSequence);
 				var sequenceExpr = Builder.ConvertToSqlExpr(InnerSequence, contextRef, flags.SqlFlag());
 
-				var testPlaceholders     = ExpressionBuilder.CollectDistinctPlaceholders(testExpr);
-				var sequencePlaceholders = ExpressionBuilder.CollectDistinctPlaceholders(sequenceExpr);
+				var testPlaceholders     = ExpressionBuilder.CollectPlaceholders(testExpr);
 
 				ISqlPredicate predicate;
 
@@ -127,40 +132,13 @@ namespace LinqToDB.Linq.Builder
 				if (Parent != null)
 					placeholderQuery = Parent.SelectQuery;
 
-				var useExists = Builder.PreferExistsForScalar;
-
-				if (!useExists)
+				if (testPlaceholders.Count > 1)
 				{
-					if (testPlaceholders.Count == 1 && sequencePlaceholders.Count == 1)
+					if (Builder.DataContext.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
 					{
-						if (Builder.DataOptions.LinqOptions.CompareNullsAsValues)
-						{
-							var nullability = new NullabilityContext(placeholderQuery);
-							if (testPlaceholders[0].Sql.CanBeNullable(nullability))
-							{
-								useExists = true;
-							}
-						}
-					}
-					else
-					{
-						useExists = true;
-					}
-				}
-
-				if (!useExists)
-				{
-					if (!flags.IsTest())
-					{
-						var columns = Builder.ToColumns(InnerSequence, sequenceExpr);
+						return null;
 					}
 
-					var placeholder = Builder.UpdateNesting(placeholderContext, testPlaceholders[0]);
-
-					predicate = new SqlPredicate.InSubQuery(placeholder.Sql, false, InnerSequence.SelectQuery);
-				}
-				else
-				{
 					var condition = Expression.Lambda(ExpressionBuilder.Equal(MappingSchema, param, expr), param);
 					var sequence = Builder.BuildWhere(Parent, InnerSequence,
 						condition: condition, checkForSubQuery: true, enforceHaving: false, isTest: flags.IsTest(), false);
@@ -169,6 +147,27 @@ namespace LinqToDB.Linq.Builder
 						return null;
 
 					predicate = new SqlPredicate.FuncLike(SqlFunction.CreateExists(sequence.SelectQuery));
+				}
+				else
+				{
+					if (!flags.IsTest())
+					{
+						var columns = Builder.ToColumns(InnerSequence, sequenceExpr);
+					}
+
+					testPlaceholders = ExpressionBuilder.CollectPlaceholders(Builder.UpdateNesting(placeholderContext, testExpr));
+
+					ISqlExpression inExpr;
+					if (testPlaceholders.Count == 1)
+					{
+						inExpr = testPlaceholders[0].Sql;
+					}
+					else
+					{
+						inExpr = new SqlRowExpression(testPlaceholders.Select(p => p.Sql).ToArray());
+					}
+
+					predicate = new SqlPredicate.InSubQuery(inExpr, false, InnerSequence.SelectQuery, false);
 				}
 
 				var subQuerySql = new SqlSearchCondition(false, predicate);

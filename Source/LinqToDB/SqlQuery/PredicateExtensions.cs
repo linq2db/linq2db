@@ -14,11 +14,6 @@ namespace LinqToDB.SqlQuery
 			if (!isNot)
 				return predicate;
 
-			if (predicate.CanInvert())
-			{
-				return predicate.Invert();
-			}
-
 			return new SqlPredicate.Not(predicate);
 		}
 
@@ -56,14 +51,29 @@ namespace LinqToDB.SqlQuery
 			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Equal, expr2, compareNullsAsValues ? true : null));
 		}
 
+		public static SqlSearchCondition AddIsNull(this SqlSearchCondition search, ISqlExpression expr)
+		{
+			return search.Add(new SqlPredicate.IsNull(expr, false));
+		}
+
+		public static SqlSearchCondition AddIsNull(this SqlSearchCondition search, ISqlExpression expr, bool isNot)
+		{
+			return search.Add(new SqlPredicate.IsNull(expr, isNot));
+		}
+
+		public static SqlSearchCondition AddIsNotNull(this SqlSearchCondition search, ISqlExpression expr)
+		{
+			return search.Add(new SqlPredicate.IsNull(expr, true));
+		}
+
 		public static SqlSearchCondition AddNotEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, bool compareNullsAsValues)
 		{
 			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.NotEqual, expr2, compareNullsAsValues ? true : null));
 		}
 	
-		public static SqlSearchCondition AddExists(this SqlSearchCondition search, SelectQuery selectQuery)
+		public static SqlSearchCondition AddExists(this SqlSearchCondition search, SelectQuery selectQuery, bool isNot = false)
 		{
-			return search.Add(new SqlPredicate.FuncLike(SqlFunction.CreateExists(selectQuery)));
+			return search.Add(new SqlPredicate.FuncLike(SqlFunction.CreateExists(selectQuery)).MakeNot(isNot));
 		}
 	
 		public static SqlSearchCondition AddNotExists(this SqlSearchCondition search, SelectQuery selectQuery)

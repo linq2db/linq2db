@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -28,8 +29,6 @@ namespace LinqToDB.Linq.Builder
 		#region LinqOptions shortcuts
 
 		public bool CompareNullsAsValues => DataOptions.LinqOptions.CompareNullsAsValues;
-
-		public bool PreferExistsForScalar { get; set; }
 
 		#endregion
 
@@ -1721,6 +1720,9 @@ namespace LinqToDB.Linq.Builder
 				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false);
 			}
 
+			if (ex is ISqlPredicate expPredicate)
+				return expPredicate;
+
 			return new SqlPredicate.Expr(ex);
 		}
 
@@ -2133,7 +2135,7 @@ namespace LinqToDB.Linq.Builder
 								if (isnull.IsNot == localIsNot)
 									return CreatePlaceholder(context, new SqlSearchCondition(false, isnull), GetOriginalExpression());
 
-								return CreatePlaceholder(context, new SqlSearchCondition(false, (ISqlPredicate)isnull.Invert()), GetOriginalExpression());
+								return CreatePlaceholder(context, new SqlSearchCondition(false, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
 							}
 						}
 
@@ -2154,7 +2156,7 @@ namespace LinqToDB.Linq.Builder
 								if (isnull.IsNot == localIsNot)
 									return CreatePlaceholder(context, new SqlSearchCondition(false, isnull), GetOriginalExpression());
 
-								return CreatePlaceholder(context, new SqlSearchCondition(false, (ISqlPredicate)isnull.Invert()), GetOriginalExpression());
+								return CreatePlaceholder(context, new SqlSearchCondition(false, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
 							}
 						}
 
@@ -3286,17 +3288,8 @@ namespace LinqToDB.Linq.Builder
 						var e            = (UnaryExpression)expression;
 						var notCondition = new SqlSearchCondition();
 
-						var save = PreferExistsForScalar;
-						PreferExistsForScalar = true;
-						try
-						{
-							if (!BuildSearchCondition(context, e.Operand, flags, notCondition, out error))
-								return false;
-						}
-						finally
-						{
-							PreferExistsForScalar = save;
-						}
+						if (!BuildSearchCondition(context, e.Operand, flags, notCondition, out error))
+							return false;
 
 						searchCondition.Add(notCondition.MakeNot());
 					break;
@@ -4502,14 +4495,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				var counter = ++_makeCounter;
 
-				Debug.WriteLine($"({counter})ExecuteMake ({projectFlags}):");
+				Debug.WriteLine($"({counter.ToString(CultureInfo.InvariantCulture)})ExecuteMake ({projectFlags}):");
 				Debug.WriteLine($"\tCtx: {BuildContextDebuggingHelper.GetContextInfo(currentContext)}");
 				Debug.WriteLine($"\tPath: {path}");
 				Debug.WriteLine($"\tExpr: {expr}");
 
 				var result = context.MakeExpression(expr, projectFlags);
 
-				Debug.WriteLine($"({counter})Result ({projectFlags}): {result}");
+				Debug.WriteLine($"({counter.ToString(CultureInfo.InvariantCulture)})Result ({projectFlags}): {result}");
 				Debug.WriteLine("");
 
 				return result;

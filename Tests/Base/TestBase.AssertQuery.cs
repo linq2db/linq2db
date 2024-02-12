@@ -14,6 +14,8 @@ using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
+using NUnit.Framework;
+
 namespace Tests
 {
 	partial class TestBase
@@ -49,6 +51,14 @@ namespace Tests
 
 		class ApplyNullPropagationVisitor : ExpressionVisitorBase
 		{
+
+			protected bool CanBeNull(Type type)
+			{
+				if (type.IsValueType)
+					return false;
+				return true;
+			}
+
 			protected bool CanBeNull(Expression expression)
 			{
 				if (expression.Type.IsValueType)
@@ -62,6 +72,11 @@ namespace Tests
 					return ((ConstantExpression)expression).Value == null;
 				}
 
+				if (expression.NodeType == ExpressionType.MemberInit || expression.NodeType == ExpressionType.New)
+				{
+					return false;
+				}
+
 				if (expression is MethodCallExpression mc)
 				{
 					return true;
@@ -73,6 +88,12 @@ namespace Tests
 			protected bool IsLINQMethod(MethodInfo method)
 			{
 				return method.IsStatic && method.DeclaringType == typeof(Enumerable) || method.DeclaringType == typeof(Queryable);
+			}
+
+			[return: NotNullIfNotNull(nameof(node))]
+			public override Expression? Visit(Expression? node)
+			{
+				return base.Visit(node);
 			}
 
 			protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -108,11 +129,14 @@ namespace Tests
 
 			protected override Expression VisitMember(MemberExpression node)
 			{
-				if (node.Expression != null && CanBeNull(node.Expression))
+				if (node.Expression != null)
 				{
-					var checkedExoression = Visit(node.Expression);
-					return Expression.Condition(Expression.Equal(checkedExoression, Expression.Constant(null, checkedExoression.Type)),
-						Expression.Constant(DefaultValue.GetValue(node.Type), node.Type), node);
+					if (CanBeNull(node.Expression) || node.Member.IsNullableValueMember())
+					{
+						var checkedExoression = Visit(node.Expression);
+						return Expression.Condition(Expression.Equal(checkedExoression, Expression.Constant(null, checkedExoression.Type)),
+							Expression.Constant(DefaultValue.GetValue(node.Type), node.Type), node);
+					}
 				}
 
 				return base.VisitMember(node);
@@ -252,18 +276,31 @@ namespace Tests
 			var expr   = query.Expression;
 			var actual = query.ToArray();
 
-			var loaded = new Dictionary<Type, Expression>();
+			Dictionary<Expression, Expression>? loadedTables = null;
 
-			Expression RegisterLoaded(Type eType, Expression tableExpression)
+			Expression RegisterLoaded(IDataContext dc, Expression tableExpression)
 			{
-				if (!loaded.TryGetValue(eType, out var itemsExpression))
+				loadedTables ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
+
+				if (!loadedTables.TryGetValue(tableExpression, out var itemsExpression))
 				{
+					var eType   = tableExpression.Type.GetGenericArguments()[0];
 					var newCall = TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, tableExpression);
 					using (new DisableLogging())
 					{
-						var items = newCall.EvaluateExpression();
+						var transformed = newCall.Transform(e =>
+						{
+							if (e == ExpressionConstants.DataContextParam || e is SqlQueryRootExpression)
+							{
+								return Expression.Constant(dc, e.Type);
+							}
+
+							return e;
+						});
+
+						var items = transformed.EvaluateExpression();
 						itemsExpression = Expression.Constant(items, eType.MakeArrayType());
-						loaded.Add(eType, itemsExpression);
+						loadedTables.Add(tableExpression, itemsExpression);
 					}
 				}
 
@@ -279,15 +316,7 @@ namespace Tests
 			if (dc == null)
 				throw new InvalidOperationException("Could not retrieve DataContext from IQueryable.");
 
-			expr = expr.Transform(e =>
-			{
-				if (e == ExpressionConstants.DataContextParam || e is SqlQueryRootExpression)
-				{
-					return Expression.Constant(dc, e.Type);
-				}
-
-				return e;
-			});
+			expr = Internals.ExposeQueryExpression(dc, expr);
 
 			var newExpr = expr.Transform(e =>
 			{
@@ -300,13 +329,8 @@ namespace Tests
 
 					if (typeof(ITable<>).IsSameOrParentOf(mc.Type) || typeof(ILoadWithQueryable<,>).IsSameOrParentOf(mc.Type))
 					{
-						var entityType = mc.Method.ReturnType.GetGenericArguments()[0];
-
-						if (entityType != null)
-						{
-							var itemsExpression = RegisterLoaded(entityType, mc);
-							return new TransformInfo(itemsExpression);
-						}
+						var itemsExpression = RegisterLoaded(dc, mc);
+						return new TransformInfo(itemsExpression);
 					}
 
 					mc = RemapMethod(mc);
@@ -318,8 +342,7 @@ namespace Tests
 				{
 					if (typeof(ITable<>).IsSameOrParentOf(e.Type))
 					{
-						var entityType = e.Type.GetGenericArguments()[0];
-						var items = RegisterLoaded(entityType, e);
+						var items = RegisterLoaded(dc, e);
 						return new TransformInfo(items);
 					}
 				}

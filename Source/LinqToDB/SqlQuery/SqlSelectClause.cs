@@ -298,15 +298,11 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region IQueryElement Members
+		#region QueryElement overrides
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
+		public override QueryElementType ElementType => QueryElementType.SelectClause;
 
-		public QueryElementType ElementType => QueryElementType.SelectClause;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (!writer.AddVisited(this))
 				return writer.Append("...");

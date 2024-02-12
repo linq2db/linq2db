@@ -69,23 +69,11 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-#if OVERRIDETOSTRING
+		#region QueryElement overrides
 
-		public override string ToString()
-		{
-			return this.ToDebugString(SelectQuery);
-		}
+		public override QueryElementType ElementType => QueryElementType.GroupByClause;
 
-#endif
-
-		#region IQueryElement Members
-
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.GroupByClause;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (Items.Count == 0)
 				return writer;
