@@ -2063,7 +2063,7 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(element) || !ReferenceEquals(func, element.Function))
 					{
-						throw new InvalidCastException($"Converted FuncLikePredicate expression expected to be a Predicate expression but got {func.GetType()}.");
+						return NotifyReplaced(new SqlPredicate.FuncLike(func), element);
 					}
 
 					break;
