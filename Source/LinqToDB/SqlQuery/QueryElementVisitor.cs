@@ -2053,32 +2053,16 @@ namespace LinqToDB.SqlQuery
 				}
 				case VisitMode.Modify:
 				{
-					var func = Visit(element.Function);
-
-					if (!ReferenceEquals(func, element.Function))
-					{
-						if (func is SqlFunction function)
-						{
-							element.Modify(function);
-						}
-						else if (func is ISqlPredicate predicate)
-							return predicate;
-						else
-							throw new InvalidCastException($"Converted FuncLikePredicate expression expected to be a Predicate expression but got {func.GetType()}.");
-					}
+					element.Modify((SqlFunction)Visit(element.Function));
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var func = Visit(element.Function);
+					var func = (SqlFunction)Visit(element.Function);
 
 					if (ShouldReplace(element) || !ReferenceEquals(func, element.Function))
 					{
-						if (func is SqlFunction function)
-							return NotifyReplaced(new SqlPredicate.FuncLike(function), element);
-						if (func is ISqlPredicate predicate)
-							return NotifyReplaced(predicate, element);
 						throw new InvalidCastException($"Converted FuncLikePredicate expression expected to be a Predicate expression but got {func.GetType()}.");
 					}
 

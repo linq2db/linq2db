@@ -315,6 +315,26 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void Null_In_Null_Aggregation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3,      }.Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i, GV = i % 2 }));
+
+			var subQuery =
+				from t in t2
+				group t by t.GV
+				into g
+				select g.Min(x => x.ID);
+
+
+			var query = t1.Where(t => t.ID.In(subQuery));
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void Null_NotIn_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));

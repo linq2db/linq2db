@@ -497,6 +497,22 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
+		protected override IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
+		{
+			var funcElement = Visit(element.Function);
+
+			if (ReferenceEquals(funcElement, element.Function))
+				return element;
+
+			if (funcElement is SqlPredicate)
+				return funcElement;
+
+			if (funcElement is SqlFunction function)
+				return element.Update(function);
+
+			throw new InvalidCastException($"Converted FuncLikePredicate expression expected to be a Predicate expression but got {funcElement.GetType()}.");
+		}
+
 		protected override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			var newElement = base.VisitSqlFunction(element);
@@ -617,11 +633,13 @@ namespace LinqToDB.SqlProvider
 				{
 					if (element.Parameters.Length == 1 && element.Parameters[0] is SelectQuery query && query.Select.Columns.Count > 0)
 					{
-						var isAggregateQuery =
-									query.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
+						if (query.GroupBy.IsEmpty)
+						{
+							var isAggregateQuery = query.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
-						if (isAggregateQuery)
-							return new SqlValue(true);
+							if (isAggregateQuery)
+								return SqlPredicate.True;
+						}
 					}
 
 					break;

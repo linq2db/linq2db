@@ -813,6 +813,13 @@ namespace LinqToDB.SqlQuery
 			{
 				writer.AppendElement(Function);
 			}
+
+			public FuncLike Update(SqlFunction function)
+			{
+				if (ReferenceEquals(Function, function))
+					return this;
+				return new FuncLike(function);
+			}
 		}
 
 		protected SqlPredicate(int precedence)

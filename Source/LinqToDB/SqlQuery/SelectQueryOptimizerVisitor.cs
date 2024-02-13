@@ -1379,7 +1379,8 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (selectQuery == _inSubquery && subQuery.Select.HasModifier)
+			// Do not optimize t.Field IN (SELECT x FROM o)
+			if (selectQuery == _inSubquery && (subQuery.Select.HasModifier || !subQuery.GroupBy.IsEmpty || subQuery.HasSetOperators))
 			{
 				return false;
 			}
