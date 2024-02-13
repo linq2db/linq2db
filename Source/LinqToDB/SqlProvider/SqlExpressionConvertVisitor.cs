@@ -645,10 +645,10 @@ namespace LinqToDB.SqlProvider
 				var testValue = testExpressions[i];
 				var expr      = subQuery.Select.Columns[i].Expression;
 
-				//sc.AddIsNull(testValue, inPredicate.IsNot);
 				predicates.Add(new SqlPredicate.ExprExpr(testValue, SqlPredicate.Operator.Equal, expr, DataOptions.LinqOptions.CompareNullsAsValues ? true : null));
 			}
 
+			subQuery.Select.Columns.Clear();
 			subQuery.Where.SearchCondition.AddRange(predicates);
 
 			sc.AddExists(subQuery, inPredicate.IsNot);

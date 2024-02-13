@@ -1,12 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlQuery;
+	using Extensions;
+	using LinqToDB.Expressions;
 
 	sealed class ContainsBuilder : MethodCallBuilder
 	{
@@ -85,6 +87,33 @@ namespace LinqToDB.Linq.Builder
 				return new SqlSelectStatement(OuterQuery);
 			}
 
+
+			static IEnumerable<(Expression, SqlPlaceholderExpression)> EnumerateAssignments(Expression currentPath, Expression expr)
+			{
+				if (expr is SqlGenericConstructorExpression generic)
+				{
+					foreach (var assignment in generic.Assignments)
+					{
+						var memberInfo = currentPath.Type.GetMemberEx(assignment.MemberInfo);
+						if (memberInfo == null)
+							continue;
+
+						var newPath = Expression.MakeMemberAccess(currentPath, memberInfo);
+
+						if (assignment.Expression is SqlPlaceholderExpression placeholder)
+						{
+							yield return (newPath, placeholder);
+						}
+
+						if (assignment.Expression is SqlGenericConstructorExpression subGeneric)
+						{
+							foreach (var sub in EnumerateAssignments(newPath, subGeneric))
+								yield return sub;
+						}
+					}
+				}
+			}
+
 			SqlPlaceholderExpression? _cachedPlaceholder;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -112,18 +141,25 @@ namespace LinqToDB.Linq.Builder
 
 			public SqlPlaceholderExpression? CreatePlaceholder(ProjectFlags flags)
 			{
-				var args  = _methodCall.Method.GetGenericArguments();
-				var param = Expression.Parameter(args[0], "param");
-				var expr  = _methodCall.Arguments[1];
+				var args     = _methodCall.Method.GetGenericArguments();
+				var param    = Expression.Parameter(args[0], "param");
+				var expr     = _methodCall.Arguments[1];
+				var keysFlag = flags.SqlFlag().KeyFlag();
 
 				var placeholderContext = Parent ?? InnerSequence;
 
-				var testExpr = Builder.ConvertToSqlExpr(placeholderContext, expr, flags.SqlFlag() | ProjectFlags.Keys);
-
 				var contextRef   = new ContextRefExpression(args[0], InnerSequence);
-				var sequenceExpr = Builder.ConvertToSqlExpr(InnerSequence, contextRef, flags.SqlFlag());
+				var sequenceExpr = Builder.ConvertToSqlExpr(InnerSequence, contextRef, keysFlag);
 
-				var testPlaceholders     = ExpressionBuilder.CollectPlaceholders(testExpr);
+				var sequencePlaceholders = ExpressionBuilder.CollectPlaceholders(sequenceExpr);
+				if (sequencePlaceholders.Count == 0)
+				{
+					//TODO: better error handling
+					return null;
+				}
+
+				var testExpr         = Builder.ConvertToSqlExpr(placeholderContext, expr, keysFlag);
+				var testPlaceholders = ExpressionBuilder.CollectPlaceholders(testExpr);
 
 				ISqlPredicate predicate;
 
@@ -132,7 +168,23 @@ namespace LinqToDB.Linq.Builder
 				if (Parent != null)
 					placeholderQuery = Parent.SelectQuery;
 
-				if (testPlaceholders.Count > 1)
+				var useExists = testPlaceholders.Count != 1;
+
+				if (useExists && testPlaceholders.Count == 0)
+				{
+					var availableComparisons = EnumerateAssignments(expr, sequenceExpr).Take(2).ToList();
+					if (availableComparisons.Count == 1)
+					{
+						testExpr  = Builder.ConvertToSqlExpr(placeholderContext, availableComparisons[0].Item1, keysFlag);
+						if (testExpr is SqlPlaceholderExpression placeholder)
+						{
+							testPlaceholders.Add(placeholder);
+							useExists = false;
+						}
+					}
+				}
+
+				if (useExists)
 				{
 					if (Builder.DataContext.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
 					{
@@ -155,17 +207,10 @@ namespace LinqToDB.Linq.Builder
 						var columns = Builder.ToColumns(InnerSequence, sequenceExpr);
 					}
 
-					testPlaceholders = ExpressionBuilder.CollectPlaceholders(Builder.UpdateNesting(placeholderContext, testExpr));
+					var testPlaceholder = testPlaceholders[0];
+					testPlaceholder = Builder.UpdateNesting(placeholderContext, testPlaceholder);
 
-					ISqlExpression inExpr;
-					if (testPlaceholders.Count == 1)
-					{
-						inExpr = testPlaceholders[0].Sql;
-					}
-					else
-					{
-						inExpr = new SqlRowExpression(testPlaceholders.Select(p => p.Sql).ToArray());
-					}
+					var inExpr = testPlaceholder.Sql;
 
 					predicate = new SqlPredicate.InSubQuery(inExpr, false, InnerSequence.SelectQuery, false);
 				}

@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ProjectFlags KeyFlag(this ProjectFlags flags)
 		{
-			return (flags & FlagsToPreserve) | ProjectFlags.Keys;
+			return (flags & (FlagsToPreserve | ProjectFlags.SQL)) | ProjectFlags.Keys;
 		}
 
 		[DebuggerStepThrough]
