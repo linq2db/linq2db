@@ -269,14 +269,30 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case PseudoFunctions.TRY_CONVERT           : // toTypeOrNull
 				case PseudoFunctions.TRY_CONVERT_OR_DEFAULT: // coalesce(toTypeOrNull, defaultValue)
 				{
-					var toType       = (SqlDataType)func.Parameters[0];
+					var toTypeExpr   = func.Parameters[0];
+
+					DbDataType toType;
+					if (toTypeExpr is SqlDataType sqlDataType)
+					{
+						toType = sqlDataType.Type;
+					}
+					else if (toTypeExpr.SystemType == null)
+					{
+						throw new LinqToDBException($"Missing conversion function definition to type '{toTypeExpr}'");
+					}
+					else
+					{
+						sqlDataType = MappingSchema.GetDataType(toTypeExpr.SystemType);
+						toType      = sqlDataType.Type;
+					}
+
 					var value        = func.Parameters[2];
 					var defaultValue = func.Name == PseudoFunctions.TRY_CONVERT_OR_DEFAULT ? func.Parameters[3] : null;
 					var suffix       = func.Name != PseudoFunctions.CONVERT ? "OrNull" : null;
 
-					if (ClickHouseConvertFunctions.TryGetValue(toType.Type.DataType, out var name))
+					if (ClickHouseConvertFunctions.TryGetValue(toType.DataType, out var name))
 					{
-						switch (toType.Type.DataType)
+						switch (toType.DataType)
 						{
 							// special cases: String(N)
 							case DataType.VarChar :
@@ -304,7 +320,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true,
 										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
 										value,
-										new SqlValue((byte)(toType.Type.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
+										new SqlValue((byte)(toType.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
 
 								if (defaultValue != null)
 									newFunc = ConvertSqlFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
@@ -319,7 +335,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true,
 										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
 										value,
-										new SqlValue((byte)(toType.Type.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)));
+										new SqlValue((byte)(toType.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)));
 
 								if (defaultValue != null)
 									newFunc = ConvertSqlFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
@@ -340,7 +356,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						}
 					}
 
-					throw new LinqToDBException($"Missing conversion function definition to type '{toType.Type}'");
+					throw new LinqToDBException($"Missing conversion function definition to type '{toTypeExpr.SystemType}'");
 				}
 			}
 
