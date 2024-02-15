@@ -350,7 +350,7 @@ namespace LinqToDB.Linq.Builder
 			if (buildResult.BuildContext == null)
 			{
 				var errorExpr = buildResult.ErrorExpression ?? buildInfo.Expression;
-				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", SqlErrorExpression.PrepareExpressionString(errorExpr));
+				throw SqlErrorExpression.CreateException(errorExpr, buildResult.AdditionalDetails);
 			}
 			return buildResult.BuildContext;
 		}

@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
 	using Linq;
+	using Common;
 
 	public class SqlErrorExpression : Expression
 	{
@@ -79,7 +81,7 @@ namespace LinqToDB.Expressions
 
 			if (expression != null)
 			{
-				messageText = $"The LINQ expression could not be converted to SQL.\nExpression: '{PrepareExpressionString(expression)}'";
+				messageText = $"The LINQ expression could not be converted to SQL.\nExpression:\n{PrepareExpressionString(expression)}";
 				if (message != null)
 				{
 					messageText += $"\nAdditional details: '{message}'";
@@ -113,11 +115,24 @@ namespace LinqToDB.Expressions
 		[return: NotNullIfNotNull(nameof(expression))]
 		static Expression? PrepareExpression(Expression? expression)
 		{
+			Dictionary<Expression, string> usedNames = new (ExpressionEqualityComparer.Instance);
+
 			var transformed = expression.Transform(e =>
 			{
 				if (e is ContextRefExpression contextRef)
 				{
 					return Parameter(e.Type, contextRef.Alias ?? "x");
+				}
+
+				if (e is SqlQueryRootExpression)
+				{
+					if (!usedNames.TryGetValue(e, out var name))
+					{
+						Utils.MakeUniqueNames([e], usedNames.Values, _ => "db", (_, n, _) => name = n);
+						usedNames.Add(e, name!);
+					}
+
+					return Parameter(e.Type, name);
 				}
 
 				return e;

@@ -686,7 +686,7 @@ namespace LinqToDB.Expressions
 				_stringBuilder.AppendLine();
 				_stringBuilder.Append($".{method.Name}");
 				methodArguments = methodArguments.Skip(1).ToList();
-				if (method.Name is nameof(Enumerable.Cast) or nameof(Enumerable.OfType))
+				if (method.Name is nameof(Enumerable.Cast) or nameof(Enumerable.OfType) or nameof(DataExtensions.GetTable))
 				{
 					PrintGenericArguments(method, _stringBuilder);
 				}

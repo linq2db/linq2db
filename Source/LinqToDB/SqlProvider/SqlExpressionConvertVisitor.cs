@@ -974,16 +974,45 @@ namespace LinqToDB.SqlProvider
 
 			if (op is SqlPredicate.Operator.Overlaps)
 			{
-				//TODO: make it working if possible
-				/*
-				if (row1.Values.Length != 2 || row2.Values.Length != 2)
-					throw new LinqException("Unsupported SqlRow conversion from operator: " + op);
+				//TODO:: retest
 
-				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row1.Values[0], SqlPredicate.Operator.LessOrEqual, row2.Values[1], withNull: false)));
-				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row2.Values[0], SqlPredicate.Operator.LessOrEqual, row1.Values[1], withNull: false)));
-				*/
+				/*if (row1.Values.Length == 2 && row2.Values.Length == 2)
+				{
+					var rewrite = new SqlSearchCondition(true);
 
-				//return rewrite;
+					static void AddCase(SqlSearchCondition condition, (ISqlExpression start, ISqlExpression end) caseRow1, (ISqlExpression start, ISqlExpression end) caseRow2)
+					{
+						// (s1 <= e1) and (s2 <= e2) and ((s2 < e1 and e2 > s1) or (s1 < e2 and e1 > s2))
+
+						condition.AddAnd(subCase =>
+							subCase
+								.AddLessOrEqual(caseRow1.start, caseRow1.end, false)
+								.AddLessOrEqual(caseRow2.start, caseRow2.end, false)
+								.AddOr(x =>
+									x
+										.AddAnd(sub =>
+											sub
+												.AddLess(caseRow2.start, caseRow1.end, false)
+												.AddGreater(caseRow2.end, caseRow1.start, false)
+										)
+										.AddAnd(sub =>
+											sub
+												.AddLess(caseRow1.start, caseRow2.end, false)
+												.AddGreater(caseRow1.end, caseRow2.start, false)
+										)
+								));
+					}
+
+					// add possible permutations
+
+					AddCase(rewrite, (row1.Values[0], row1.Values[1]), (row2.Values[0], row2.Values[1]));
+					AddCase(rewrite, (row1.Values[0], row1.Values[1]), (row2.Values[1], row2.Values[0]));
+					AddCase(rewrite, (row1.Values[1], row1.Values[0]), (row2.Values[0], row2.Values[1]));
+					AddCase(rewrite, (row1.Values[1], row1.Values[0]), (row2.Values[1], row2.Values[0]));
+
+
+					return rewrite;
+				}*/
 			}
 
 			throw new LinqException("Unsupported SqlRow operator: " + op);

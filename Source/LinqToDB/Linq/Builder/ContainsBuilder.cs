@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 			var containsContext = new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence);
 			var placeholder     = containsContext.CreatePlaceholder(ProjectFlags.SQL);
 			if (placeholder == null)
-				return BuildSequenceResult.Error(methodCall, "Provider does not support correlated subqueries.");
+				return BuildSequenceResult.Error(methodCall, ErrorHelper.Error_Correlated_Subqueries);
 
 			return BuildSequenceResult.FromContext(containsContext);
 		}
