@@ -116,8 +116,8 @@ namespace LinqToDB.Linq.Builder
 			var join = new SqlFromClause.Join(joinType, collection.SelectQuery, collectionAlias, false, null);
 			sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
-			if (buildInfo.Parent == null && !SequenceHelper.IsSupportedSubqueryForModifier(sequence, collection))
-				return BuildSequenceResult.Error(methodCall);
+			if (buildInfo.Parent == null && !SequenceHelper.IsSupportedSubqueryForModifier(sequence, collection, out var errorMessage))
+				return BuildSequenceResult.Error(methodCall, errorMessage);
 
 			return BuildSequenceResult.FromContext(context);
 		}

@@ -1,4 +1,6 @@
-﻿using LinqToDB.Linq.Builder;
+﻿using System.Diagnostics.CodeAnalysis;
+
+using LinqToDB.Linq.Builder;
 using LinqToDB.SqlProvider;
 
 namespace LinqToDB.SqlQuery.Visitors
@@ -7,14 +9,19 @@ namespace LinqToDB.SqlQuery.Visitors
 	{
 		SelectQuery?     _parentQuery;
 		SqlProviderFlags _providerFlags = default!;
-		int?              _columnSubqueryLevel;
+		int?             _columnSubqueryLevel;
 
-		bool         _isValid;
+		bool    _isValid;
+		string? _errorMessage;
 
 		public bool IsValid
 		{
 			get => _isValid;
-			private set => _isValid = value;
+		}
+
+		public string? ErrorMessage
+		{
+			get => _errorMessage;
 		}
 
 		public SqlQueryValidatorVisitor() : base(VisitMode.ReadOnly)
@@ -27,6 +34,13 @@ namespace LinqToDB.SqlQuery.Visitors
 			_providerFlags       = default!;
 			_isValid             = true;
 			_columnSubqueryLevel = default;
+			_errorMessage        = default!;
+		}
+
+		public void SetInvlaid(string errorMessage)
+		{
+			_isValid      = false;
+			_errorMessage = errorMessage;
 		}
 
 		bool IsSubquery(SelectQuery selectQuery)
@@ -39,34 +53,53 @@ namespace LinqToDB.SqlQuery.Visitors
 			return true;
 		}
 
-		public bool IsValidQuery(IQueryElement element, SelectQuery? parentQuery, bool forColumn,
-			SqlProviderFlags                   providerFlags)
+		public bool IsValidQuery(
+			IQueryElement    element,       
+			SelectQuery?     parentQuery, 
+			bool             forColumn,
+			SqlProviderFlags providerFlags, 
+			out string?      errorMessage)
 		{
 			_isValid             = true;
+			_errorMessage        = default!;
 			_parentQuery         = parentQuery;
 			_providerFlags       = providerFlags;
 			_columnSubqueryLevel = forColumn ? 0 : null;
 
 			Visit(element);
 
+			errorMessage = _errorMessage;
+
 			return IsValid;
 		}
 
-		public bool IsValidSubQuery(SelectQuery selectQuery)
+		public bool IsValidSubQuery(SelectQuery selectQuery, [NotNullWhen(false)] out string? errorMessage)
 		{
 			if (_columnSubqueryLevel != null)
 			{
 				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
 				{
+					errorMessage = ErrorHelper.Error_Take_in_Subquery;
 					return false;
 				}
 
 				if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null)
 				{
+					errorMessage = ErrorHelper.Error_Skip_in_Subquery;
 					return false;
+				}
+
+				if (_providerFlags.DoesNotSupportCorrelatedSubquery)
+				{
+					if (QueryHelper.IsDependsOnOuterSources(selectQuery))
+					{
+						errorMessage = ErrorHelper.Error_Correlated_Subqueries;
+						return false;
+					}
 				}
 			}
 
+			errorMessage = null;
 			return true;
 		}
 
@@ -88,7 +121,14 @@ namespace LinqToDB.SqlQuery.Visitors
 				    element.JoinType == JoinType.FullApply  ||
 				    element.JoinType == JoinType.RightApply)
 				{
-					IsValid = false;
+					if (_providerFlags.DoesNotSupportCorrelatedSubquery)
+					{
+						SetInvlaid(ErrorHelper.Error_Correlated_Subqueries);
+					}
+					else
+					{
+						SetInvlaid(ErrorHelper.Error_OUTER_Joins);
+					}
 					return element;
 				}
 			}
@@ -104,7 +144,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				{
 					if (SequenceHelper.HasDependencyWithOuter(sq))
 					{
-						IsValid = false;
+						SetInvlaid(ErrorHelper.Error_Correlated_Subqueries);
 						return element;
 					}
 				}
@@ -119,9 +159,10 @@ namespace LinqToDB.SqlQuery.Visitors
 		{
 			if (IsSubquery(selectQuery))
 			{
-				if (!IsValidSubQuery(selectQuery))
+				string? errorMessage;
+				if (!IsValidSubQuery(selectQuery, out errorMessage))
 				{
-					IsValid = false;
+					SetInvlaid(errorMessage);
 					return selectQuery;
 				}
 			}

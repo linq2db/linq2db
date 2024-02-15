@@ -149,7 +149,7 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr1 { get; set; }
 
-			public override bool          CanInvert(NullabilityContext nullability) => true;
+			public override bool          CanInvert(NullabilityContext nullability) => false;
 			public override ISqlPredicate Invert(NullabilityContext    nullability) => throw new InvalidOperationException();
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)

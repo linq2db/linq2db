@@ -10,10 +10,11 @@ namespace LinqToDB.Linq.Builder
 			ErrorExpression = null;
 		}
 
-		public BuildSequenceResult(Expression? errorExpression, string? additionalDetails = null)
+		public BuildSequenceResult(Expression? errorExpression, string? additionalDetails)
 		{
-			BuildContext    = null;
-			ErrorExpression = errorExpression;
+			BuildContext      = null;
+			ErrorExpression   = errorExpression;
+			AdditionalDetails = additionalDetails;
 		}
 
 		public BuildSequenceResult()
@@ -29,5 +30,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext? BuildContext      { get; }
 		public Expression?    ErrorExpression   { get; }
 		public string?        AdditionalDetails { get; }
+
+		public bool IsSequence => BuildContext != null || ErrorExpression != null || AdditionalDetails != null;
 	}
 }

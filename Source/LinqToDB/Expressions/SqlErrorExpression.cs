@@ -5,24 +5,27 @@ using System.Linq.Expressions;
 namespace LinqToDB.Expressions
 {
 	using Linq;
-	using Linq.Builder;
 
 	public class SqlErrorExpression : Expression
 	{
-		public SqlErrorExpression(object? buildContext, Expression expression) : this(buildContext, expression, expression.Type)
-		{}
-
-		public SqlErrorExpression(object? buildContext, Expression? expression, Type resultType)
+		public SqlErrorExpression(object? buildContext, Expression? expression, string? message, Type resultType)
 		{
 			BuildContext = buildContext;
 			Expression   = expression;
+			Message      = message;
 			ResultType   = resultType;
 		}
 
-		public SqlErrorExpression(string message, Type resultType)
+		public SqlErrorExpression(object? buildContext, Expression expression) : this(buildContext, expression, null, expression.Type)
 		{
-			Message    = message;
-			ResultType = resultType;
+		}
+
+		public SqlErrorExpression(string message, Type resultType) : this(null, null, message, resultType)
+		{
+		}
+
+		public SqlErrorExpression(Expression? expression, string? message, Type resultType) : this(null, expression, message, resultType)
+		{
 		}
 
 		public object?        BuildContext { get; }
@@ -36,22 +39,19 @@ namespace LinqToDB.Expressions
 
 		public override Expression Reduce()
 		{
-			throw CreateError(Expression);
+			throw CreateException(Expression, Message);
 		}
 
 		public SqlErrorExpression WithType(Type type)
 		{
 			if (ResultType == type)
 				return this;
-			return new SqlErrorExpression(BuildContext, Expression, type);
+			return new SqlErrorExpression(BuildContext, Expression, Message, type);
 		}
 
 		public Exception CreateError()
 		{
-			if (Expression == null)
-				return CreateError(Message ?? "Unknown error.");
-
-			return CreateError(Expression);
+			return CreateException(Expression, Message);
 		}
 
 		public static SqlErrorExpression EnsureError(object? context, Expression expression)
@@ -65,7 +65,7 @@ namespace LinqToDB.Expressions
 		{
 			if (expression is SqlErrorExpression error)
 				return error.WithType(resultType);
-			return new SqlErrorExpression(null, expression, resultType);
+			return new SqlErrorExpression(null, expression, null, resultType);
 		}
 
 		public static Exception CreateError(string message)
@@ -73,14 +73,33 @@ namespace LinqToDB.Expressions
 			return new LinqException(message);
 		}
 
-		public static Exception CreateError(Expression? expression)
+		public static Exception CreateException(Expression? expression, string? message)
 		{
-			return new LinqException($"'{PrepareExpressionString(expression)}' cannot be converted to SQL.");
+			string messageText;
+
+			if (expression != null)
+			{
+				messageText = $"The LINQ expression could not be converted to SQL.\nExpression: '{PrepareExpressionString(expression)}'";
+				if (message != null)
+				{
+					messageText += $"\nAdditional details: '{message}'";
+				}
+			}
+			else if (message != null)
+			{
+				messageText = $"Translation error: '{message}'";
+			}
+			else
+			{
+				messageText = "Unknown translation error.";
+			}
+
+			return new LinqException(messageText);
 		}
 
-		public static void ThrowError(Expression expression)
+		public static void ThrowError(Expression expression, string? message)
 		{
-			throw CreateError(expression);
+			throw CreateException(expression, message);
 		}
 
 		public static string PrepareExpressionString(Expression? expression)

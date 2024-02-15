@@ -9,11 +9,11 @@
 	{
 		internal static readonly ObjectPool<SqlQueryValidatorVisitor> ValidationVisitorPool = new(() => new SqlQueryValidatorVisitor(), v => v.Cleanup(), 100);
 
-		public static bool IsValidQuery(SelectQuery selectQuery, SelectQuery? parentQuery, bool forColumn, SqlProviderFlags providerFlags)
+		public static bool IsValidQuery(SelectQuery selectQuery, SelectQuery? parentQuery, bool forColumn, SqlProviderFlags providerFlags, out string? errorMessage)
 		{
 			using var visitor = ValidationVisitorPool.Allocate();
 
-			return visitor.Value.IsValidQuery(selectQuery, parentQuery, forColumn, providerFlags);
+			return visitor.Value.IsValidQuery(selectQuery, parentQuery, forColumn, providerFlags, out errorMessage);
 		}
 	}
 }

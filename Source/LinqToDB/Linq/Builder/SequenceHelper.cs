@@ -852,8 +852,10 @@ namespace LinqToDB.Linq.Builder
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
-		public static bool IsSupportedSubqueryForModifier(IBuildContext parent, IBuildContext context)
+		public static bool IsSupportedSubqueryForModifier(IBuildContext parent, IBuildContext context, out string? errorMessage)
 		{
+			errorMessage = null;
+
 			// No check during recursion. Cloning may fail
 			if (parent.Builder.IsRecursiveBuild)
 				return true;
@@ -896,7 +898,7 @@ namespace LinqToDB.Linq.Builder
 				var optimizedQuery = (SelectQuery)visitor.Value.OptimizeQueries(clonedParentContext.SelectQuery, parent.Builder.DataContext.SqlProviderFlags, false, parent.Builder.DataOptions,
 					new EvaluationContext(), clonedParentContext.SelectQuery);
 
-				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, forColumn: false, parent.Builder.DataContext.SqlProviderFlags))
+				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, forColumn: false, parent.Builder.DataContext.SqlProviderFlags, out errorMessage))
 				{
 					return false;
 				}
@@ -929,13 +931,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static bool HasDependencyWithOuter(SelectQuery selectQuery)
 		{
-			foreach (var source in QueryHelper.EnumerateAccessibleSources(selectQuery))
-			{
-				if (source is SelectQuery sc && QueryHelper.IsDependsOnOuterSources(sc))
-					return true;
-			}
-
-			return false;
+			return QueryHelper.IsDependsOnOuterSources(selectQuery);
 		}
 
 		static IBuildContext UnwrapSubqueryContext(IBuildContext context)

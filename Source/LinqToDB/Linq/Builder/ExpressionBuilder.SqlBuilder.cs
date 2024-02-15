@@ -148,7 +148,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
-		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, ProjectFlags flags, out bool isSequence)
+		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, ProjectFlags flags, out bool isSequence, out string? errorMessage)
 		{
 			var info = new BuildInfo(context, expr, new SelectQuery())
 			{
@@ -157,15 +157,15 @@ namespace LinqToDB.Linq.Builder
 
 			var buildResult = TryBuildSequence(info);
 
-			isSequence = buildResult.ErrorExpression != null;
+			isSequence = buildResult.IsSequence;
 
 			if (buildResult.BuildContext != null)
 			{
-				isSequence = true;
-				if (!SequenceHelper.IsSupportedSubqueryForModifier(context, buildResult.BuildContext))
+				if (!SequenceHelper.IsSupportedSubqueryForModifier(context, buildResult.BuildContext, out errorMessage))
 					return null;
 			}
 
+			errorMessage = buildResult.AdditionalDetails;
 			return buildResult.BuildContext;
 		}
 
@@ -677,6 +677,10 @@ namespace LinqToDB.Linq.Builder
 			var newExpr = expression;
 
 			newExpr = MakeExpression(context, newExpr, flags);
+
+			if (newExpr is SqlErrorExpression)
+				return newExpr;
+
 			newExpr = ConvertSingleExpression(newExpr, flags.IsExpression());
 
 			var noConvert = newExpr.UnwrapConvert();
@@ -4630,6 +4634,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						var newCorrected = MakeExpression(rootContext.BuildContext, corrected, flags);
 
+						if (newCorrected is SqlErrorExpression)
+							newCorrected = corrected;
+
 						if (newCorrected is SqlPlaceholderExpression placeholder)
 						{
 							newCorrected = placeholder.WithTrackingPath(path);
@@ -4818,7 +4825,9 @@ namespace LinqToDB.Linq.Builder
 				if (!ExpressionEqualityComparer.Instance.Equals(expression, path))
 				{
 					// Do recursive again
-					expression = MakeExpression(currentContext, expression, flags);
+					var convertedAgain = MakeExpression(currentContext, expression, flags);
+					if (convertedAgain is not SqlErrorExpression)
+						expression = convertedAgain;
 				}
 				else
 				{
@@ -4841,10 +4850,17 @@ namespace LinqToDB.Linq.Builder
 							var subqueryExpression = TryGetSubQueryExpression(ctx, path, null, flags, out var isSequence);
 							if (subqueryExpression != null)
 							{
-								expression = MakeExpression(ctx, subqueryExpression, flags);
-								if (expression.Type != path.Type)
+								if (subqueryExpression is SqlErrorExpression)
 								{
-									expression = SqlAdjustTypeExpression.AdjustType(expression, path.Type, MappingSchema);
+									expression = subqueryExpression;
+								}
+								else
+								{
+									expression = MakeExpression(ctx, subqueryExpression, flags);
+									if (expression.Type != path.Type)
+									{
+										expression = SqlAdjustTypeExpression.AdjustType(expression, path.Type, MappingSchema);
+									}
 								}
 
 								handled = true;

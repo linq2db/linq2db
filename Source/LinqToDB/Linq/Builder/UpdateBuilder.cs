@@ -445,7 +445,7 @@ namespace LinqToDB.Linq.Builder
 						if (sqlExpr is SqlErrorExpression errorExpr)
 							throw errorExpr.CreateError();
 
-						throw SqlErrorExpression.CreateError(valueExpression);
+						throw SqlErrorExpression.CreateException(valueExpression, null);
 					}
 
 					var sql = createColumns
@@ -474,7 +474,7 @@ namespace LinqToDB.Linq.Builder
 				var correctedValue = builder.ParseGenericConstructor(valueExpression, ProjectFlags.SQL, null);
 
 				if (correctedValue is not SqlGenericConstructorExpression valueGeneric)
-					throw SqlErrorExpression.CreateError(valueExpression);
+					throw SqlErrorExpression.CreateException(valueExpression, null);
 
 				var pairs =
 					from f in fieldGeneric.Assignments

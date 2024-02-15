@@ -2120,8 +2120,14 @@ namespace LinqToDB.SqlQuery
 								if (!IsLimitedToOneRecord(sq, tsQuery, evaluationContext))
 									continue;
 
-								if (!SqlProviderHelper.IsValidQuery(tsQuery, parentQuery: sq, forColumn: true, _providerFlags))
+								if (!SqlProviderHelper.IsValidQuery(tsQuery, parentQuery: sq, forColumn: true, _providerFlags, out _))
 									continue;
+
+								if (_providerFlags.DoesNotSupportCorrelatedSubquery)
+								{
+									if (QueryHelper.IsDependsOnOuterSources(join))
+										continue;
+								}
 
 								if (!_providerFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)
 								{

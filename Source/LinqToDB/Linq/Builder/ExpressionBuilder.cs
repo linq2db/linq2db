@@ -330,13 +330,18 @@ namespace LinqToDB.Linq.Builder
 						RegisterSequenceExpression(result.BuildContext, originalExpression);
 					}
 
+					if (!result.IsSequence)
+					{
+						result = BuildSequenceResult.Error(originalExpression);
+					}
+
 					return result;
 				}
 
 				n = builder.BuildCounter;
 			}
 
-			return new BuildSequenceResult(originalExpression);
+			return BuildSequenceResult.NotSupported();
 		}
 
 		public IBuildContext BuildSequence(BuildInfo buildInfo)

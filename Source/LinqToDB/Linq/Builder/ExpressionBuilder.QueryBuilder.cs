@@ -479,6 +479,7 @@ namespace LinqToDB.Linq.Builder
 		sealed class SubQueryContextInfo
 		{
 			public Expression     SequenceExpression = null!;
+			public string?        ErrorMessage = null;
 			public IBuildContext? Context;
 			public bool           IsSequence;
 		}
@@ -562,9 +563,9 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var correctedForBuild = testExpression;
-			var ctx               = GetSubQuery(context, correctedForBuild, flags, out var isSequence);
+			var ctx               = GetSubQuery(context, correctedForBuild, flags, out var isSequence, out var errorMessage);
 
-			var info = new SubQueryContextInfo { SequenceExpression = testExpression, Context = ctx, IsSequence = isSequence };
+			var info = new SubQueryContextInfo { SequenceExpression = testExpression, Context = ctx, IsSequence = isSequence, ErrorMessage = errorMessage};
 
 			if (shouldCache)
 			{
@@ -604,7 +605,10 @@ namespace LinqToDB.Linq.Builder
 
 			var unwrapped = expr.Unwrap();
 
-			if (unwrapped is BinaryExpression or ConditionalExpression or DefaultExpression or DefaultValueExpression)
+			if (unwrapped is SqlErrorExpression)
+				return expr;
+
+			if (unwrapped is BinaryExpression or ConditionalExpression or DefaultExpression or DefaultValueExpression or SqlDefaultIfEmptyExpression)
 				return null;
 
 			if (unwrapped is SqlGenericConstructorExpression or ConstantExpression or SqlEagerLoadExpression)
@@ -640,7 +644,14 @@ namespace LinqToDB.Linq.Builder
 			isSequence = info.IsSequence;
 
 			if (info.Context == null)
+			{
+				if (isSequence)
+				{
+					return new SqlErrorExpression(expr, info.ErrorMessage, expr.Type);
+				}
+
 				return null;
+			}
 
 			if (!IsSingleElementContext(info.Context) && expr.Type.IsEnumerableType(info.Context.ElementType) && !flags.IsExtractProjection())
 			{
