@@ -803,7 +803,7 @@ namespace Tests.Linq
 		[Test]
 		public void SelectNullPropagationTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				AreEqual(
 					from p in Parent
@@ -901,7 +901,7 @@ namespace Tests.Linq
 		[Test]
 		public void SelectReverseNullPropagationTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				AreEqual(
 					from p in Parent

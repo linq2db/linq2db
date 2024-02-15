@@ -7,6 +7,7 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Interceptors;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
@@ -1133,7 +1134,7 @@ FROM
 					select new
 					{
 						m,
-						details = m.Details.Skip(1).Take(2).ToList()
+						details = m.Details.OrderBy(d => d.DetailId).Skip(1).Take(2).ToList()
 					};
 
 				AssertQuery(query);
@@ -1170,6 +1171,7 @@ FROM
 		}
 
 		[Test]
+		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void TestAggregateAverage([DataSources] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
@@ -1704,7 +1706,7 @@ FROM
 		[Test]
 		public void Issue3799Test([DataSources] string context)
 		{
-			using var db    = GetDataContext(context);
+			using var db    = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var table = db.CreateLocalTable<Test3799Item>(Test3799Item.TestData);
 
 			var result = table.Select(Test3799ItemModel.Selector).ToList();

@@ -674,7 +674,7 @@ namespace Tests.Linq
 		[Test]
 		public void Count9([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				Assert.AreEqual(
 					db.GetTable<Child2>().Select(ch => ch.Parent!.ParentID).ToList().Count(p => p == 1),

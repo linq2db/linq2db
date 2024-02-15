@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using FluentAssertions;
+
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
@@ -119,6 +122,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void Contains701([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -362,7 +366,7 @@ namespace Tests.Linq
 		{
 			var arr = Child.Take(2).ToArray();
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 				AreEqual(
 					from p in    GrandChild where arr.Contains(p.Child) select p,
 					from p in db.GrandChild where arr.Contains(p.Child) select p);

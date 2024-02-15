@@ -1171,18 +1171,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				AreEqual(
-					from p in Parent
+				var query = from p in db.Parent
 					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
 					into g
-					select g.Key
-					,
-					from p in db.Parent
-					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
-					into g
-					select g.Key);
-			}
+					select g.Key;
 
+				AssertQuery(query);
+			}
 		}
 
 		[Test]

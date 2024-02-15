@@ -299,7 +299,7 @@ namespace Tests.Linq
 		[Test]
 		public void DoubleJoin([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 				AreEqual(
 					from g in    GrandChild where g.Child!.Parent!.Value1 == 1 select g,
 					from g in db.GrandChild where g.Child!.Parent!.Value1 == 1 select g);
@@ -1230,7 +1230,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1614Test([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable<User>())
 			using (db.CreateLocalTable<Resource>())
 			using (db.CreateLocalTable<Lookup>())

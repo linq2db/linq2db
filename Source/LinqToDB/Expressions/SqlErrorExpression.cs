@@ -81,7 +81,17 @@ namespace LinqToDB.Expressions
 
 			if (expression != null)
 			{
-				messageText = $"The LINQ expression could not be converted to SQL.\nExpression:\n{PrepareExpressionString(expression)}";
+				var expressionMessage = PrepareExpressionString(expression);
+				if (expressionMessage.Contains("\n"))
+				{
+					expressionMessage = "\n" + expressionMessage;
+					messageText       = $"The LINQ expression could not be converted to SQL.\nExpression:\n{expressionMessage}";
+				}
+				else
+				{
+					messageText = $"The LINQ expression '{expressionMessage}' could not be converted to SQL.";
+				}
+
 				if (message != null)
 				{
 					messageText += $"\nAdditional details: '{message}'";

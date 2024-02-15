@@ -65,7 +65,11 @@ namespace LinqToDB.Linq.Builder
 				var sqlExpr = builder.BuildSqlExpression(sequence, body, ProjectFlags.SQL);
 
 				if (!SequenceHelper.IsSqlReady(sqlExpr))
+				{
+					if (sqlExpr is SqlErrorExpression errorExpr)
+						return BuildSequenceResult.Error(methodCall, errorExpr.Message);
 					return BuildSequenceResult.Error(methodCall);
+				}
 
 				placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
 

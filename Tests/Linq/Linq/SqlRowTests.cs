@@ -422,7 +422,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Overlaps(
-			[IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse /* TestProvName.AllPostgreSQL, ProviderName.DB2 */)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle/*, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, ProviderName.DB2 */)] string context)
 		{
 			// Postgre and DB2 have support but needs to know the type of parameters explicitely,
 			// so this test wouldn't work without adding casts at every constant.

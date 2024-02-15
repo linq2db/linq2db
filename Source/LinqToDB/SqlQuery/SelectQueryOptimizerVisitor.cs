@@ -1585,6 +1585,12 @@ namespace LinqToDB.SqlQuery
 					}
 					else if (joinTable.JoinType == JoinType.Left)
 					{
+						if (joinTable.Condition.Predicates.Count == 0)
+						{
+							// See 'Issue2199Tests.LeftJoinTests2'
+							return false;
+						}
+
 						moveConditionToQuery = false;
 					}
 					else

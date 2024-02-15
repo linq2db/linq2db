@@ -715,7 +715,11 @@ namespace LinqToDB.Linq.Builder
 				var method = Builder.MakeExpression(_context, node, localFlags);
 
 				if (method is SqlErrorExpression)
+				{
+					if (_flags.IsSql())
+						return method;
 					return base.VisitMethodCall(node);
+				}
 
 				if (!_flags.IsTest())
 					method = Builder.UpdateNesting(_context, method);

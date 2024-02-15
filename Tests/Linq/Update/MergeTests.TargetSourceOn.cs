@@ -404,7 +404,8 @@ namespace Tests.xUpdate
 						.Merge())!;
 
 				Assert.IsInstanceOf<LinqException>(exception);
-				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+
+				Assert.That(exception.Message,  Does.EndWith("'s.Field2' could not be converted to SQL."));
 			}
 		}
 	}

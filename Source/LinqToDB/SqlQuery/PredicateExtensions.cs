@@ -40,7 +40,12 @@ namespace LinqToDB.SqlQuery
 		{
 			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.GreaterOrEqual, expr2, compareNullsAsValues ? true : null));
 		}
-	
+
+		public static SqlSearchCondition AddLess(this SqlSearchCondition search, ISqlExpression expr1, ISqlExpression expr2, bool compareNullsAsValues)
+		{
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Less, expr2, compareNullsAsValues ? true : null));
+		}
+		
 		public static SqlSearchCondition AddLessOrEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, bool compareNullsAsValues)
 		{
 			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, compareNullsAsValues ? true : null));

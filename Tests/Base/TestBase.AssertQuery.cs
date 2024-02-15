@@ -288,17 +288,7 @@ namespace Tests
 					var newCall = TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, tableExpression);
 					using (new DisableLogging())
 					{
-						var transformed = newCall.Transform(e =>
-						{
-							if (e == ExpressionConstants.DataContextParam || e is SqlQueryRootExpression)
-							{
-								return Expression.Constant(dc, e.Type);
-							}
-
-							return e;
-						});
-
-						var items = transformed.EvaluateExpression();
+						var items = newCall.EvaluateExpression();
 						itemsExpression = Expression.Constant(items, eType.MakeArrayType());
 						loadedTables.Add(tableExpression, itemsExpression);
 					}
@@ -317,6 +307,16 @@ namespace Tests
 				throw new InvalidOperationException("Could not retrieve DataContext from IQueryable.");
 
 			expr = Internals.ExposeQueryExpression(dc, expr);
+
+			expr = expr.Transform(e =>
+			{
+				if (e == ExpressionConstants.DataContextParam || e is SqlQueryRootExpression)
+				{
+					return Expression.Constant(dc, e.Type);
+				}
+
+				return e;
+			});
 
 			var newExpr = expr.Transform(e =>
 			{

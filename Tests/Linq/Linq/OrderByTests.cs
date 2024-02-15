@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
@@ -378,6 +379,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void OrderByContinuous([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))

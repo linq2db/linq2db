@@ -316,7 +316,7 @@ namespace Tests.Linq
 		[Test]
 		public void EagerSameDetails([DataSources] string context, [Values] SetOperation operation)
 		{
-			using var db       = GetDataContext(context);
+			using var db       = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var disposal = InitTestData(db);
 
 			var authorTable = db.GetTable<Author>();
@@ -416,7 +416,7 @@ namespace Tests.Linq
 		[Test]
 		public void UsingDictionary([DataSources] string context, [Values] SetOperation operation)
 		{
-			using var db       = GetDataContext(context);
+			using var db       = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var disposal = InitTestData(db);
 
 			var authorTable = db.GetTable<Author>();

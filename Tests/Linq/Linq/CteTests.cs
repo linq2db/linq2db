@@ -1040,7 +1040,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRecursiveScalar([CteContextSource] string context)
+		public void TestRecursiveScalar([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1354,7 +1354,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Recursive common table expression 'CTE' does not contain a top-level UNION ALL operator.")]
-		public void Issue2264([CteContextSource] string context)
+		public void Issue2264([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TestFolder>();

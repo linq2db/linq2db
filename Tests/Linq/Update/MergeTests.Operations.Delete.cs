@@ -128,7 +128,7 @@ namespace Tests.xUpdate
 					.Merge())!;
 
 				Assert.IsInstanceOf<LinqException>(exception);
-				Assert.That(exception.Message,  Does.EndWith(".Field2' cannot be converted to SQL."));
+				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -220,7 +220,7 @@ namespace Tests.xUpdate
 					.Merge())!;
 
 				Assert.IsInstanceOf<LinqException>(exception);
-				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));
+				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -438,7 +438,7 @@ namespace Tests.xUpdate
 						.Merge())!;
 
 				Assert.IsInstanceOf<LinqException>(exception);
-				Assert.That(exception.Message, Does.EndWith(".Id' cannot be converted to SQL."));
+				Assert.That(exception.Message, Does.EndWith(".Id' could not be converted to SQL."));
 			}
 		}
 	}

@@ -52,7 +52,7 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var q =
 					from t in db.GrandChild.LoadWith(p => p.Child!.Parent)
@@ -68,7 +68,7 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWithAsTable2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var q =
 					from t in db.GrandChild.LoadWithAsTable(p => p.Child!.Parent)
@@ -255,7 +255,7 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith9([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var q =
 					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren)
@@ -503,7 +503,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
@@ -599,7 +599,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
@@ -659,7 +659,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
@@ -702,7 +702,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
@@ -735,7 +735,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
