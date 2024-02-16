@@ -768,7 +768,7 @@ namespace LinqToDB.SqlQuery
 							continue;
 					}
 
-					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending);
+					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending, item.IsPositioned);
 				}
 			}
 		}
@@ -904,14 +904,14 @@ namespace LinqToDB.SqlQuery
 					if (sql.OrderBy.IsEmpty)
 					{
 						if (partitionBy != null)
-							orderByItems.Add(new SqlOrderByItem(partitionBy[0], false));
+							orderByItems.Add(new SqlOrderByItem(partitionBy[0], false, false));
 						else if (!_providerFlags.IsRowNumberWithoutOrderBySupported)
 						{
 							if (sql.Select.Columns.Count == 0)
 							{
 								throw new InvalidOperationException("OrderBy not specified for limited recordset.");
 							}
-							orderByItems.Add(new SqlOrderByItem(sql.Select.Columns[0].Expression, false));
+							orderByItems.Add(new SqlOrderByItem(sql.Select.Columns[0].Expression, false, false));
 						}
 					}
 

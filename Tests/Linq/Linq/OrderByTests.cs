@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
@@ -523,7 +525,7 @@ namespace Tests.Linq
 		[Test]
 		public void OrderByConstant([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(false)))
+			using (var db = (TestDataConnection)GetDataContext(context))
 			{
 				var param = 2;
 				var query =
@@ -540,7 +542,7 @@ namespace Tests.Linq
 		[Test]
 		public void OrderByConstant2([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(false)))
+			using (var db = (TestDataConnection)GetDataContext(context))
 			{
 				var param = 2;
 				var query =
@@ -554,10 +556,53 @@ namespace Tests.Linq
 			}
 		}
 
+
+		[Test]
+		public void OrderByIndex([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var query =
+					from p in db.ComplexPerson
+					where p.ID.In(1, 3)
+					orderby Sql.OrderIndex(p.Name.LastName) descending, p.Name.FirstName descending
+					select new
+					{
+						p.ID, 
+						p.Name.LastName
+					};
+
+				query.ToArray();
+
+				db.LastQuery.Should().Contain("2 DESC");
+			}
+		}
+
+		[Test]
+		public void OrderByIndexInExpr([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var query =
+					from p in db.ComplexPerson
+					where Sql.OrderIndex(p.Name.LastName) == "Some"
+					select new
+					{
+						p.ID, 
+						p.Name.LastName
+					};
+
+				FluentActions.Enumerating(() => query)
+					.Should()
+					.Throw<LinqException>()
+					.WithMessage("The LINQ expression 'Sql.OrderIndex<string>(p.Name.LastName) == \"Some\"' could not be converted to SQL.");
+			}
+		}
+
 		[Test]
 		public void OrderByImmutableSubquery([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(false)))
+			using (var db = (TestDataConnection)GetDataContext(context))
 			{
 				var param = 2;
 

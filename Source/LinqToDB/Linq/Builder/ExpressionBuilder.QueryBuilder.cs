@@ -479,7 +479,7 @@ namespace LinqToDB.Linq.Builder
 		sealed class SubQueryContextInfo
 		{
 			public Expression     SequenceExpression = null!;
-			public string?        ErrorMessage = null;
+			public string?        ErrorMessage;
 			public IBuildContext? Context;
 			public bool           IsSequence;
 		}

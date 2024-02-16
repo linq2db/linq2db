@@ -1485,6 +1485,7 @@ namespace LinqToDB.Remote
 
 							Append(elem.Expression);
 							Append(elem.IsDescending);
+							Append(elem.IsPositioned);
 
 							break;
 						}
@@ -2481,8 +2482,9 @@ namespace LinqToDB.Remote
 						{
 							var expression   = Read<ISqlExpression>()!;
 							var isDescending = ReadBool();
+							var isPositioned = ReadBool();
 
-							obj = new SqlOrderByItem(expression, isDescending);
+							obj = new SqlOrderByItem(expression, isDescending, isPositioned);
 
 							break;
 						}

@@ -14,30 +14,31 @@ namespace LinqToDB.SqlQuery
 			Items.AddRange(items);
 		}
 
-		public SqlOrderByClause Expr(ISqlExpression expr, bool isDescending)
+		public SqlOrderByClause Expr(ISqlExpression expr, bool isDescending, bool isPositioned)
 		{
-			Add(expr, isDescending);
+			Add(expr, isDescending, isPositioned);
 			return this;
 		}
 
-		public SqlOrderByClause Expr     (ISqlExpression expr)               { return Expr(expr,  false);        }
-		public SqlOrderByClause ExprAsc  (ISqlExpression expr)               { return Expr(expr,  false);        }
-		public SqlOrderByClause ExprDesc (ISqlExpression expr)               { return Expr(expr,  true);         }
-		public SqlOrderByClause Field    (SqlField field, bool isDescending) { return Expr(field, isDescending); }
-		public SqlOrderByClause Field    (SqlField field)                    { return Expr(field, false);        }
-		public SqlOrderByClause FieldAsc (SqlField field)                    { return Expr(field, false);        }
-		public SqlOrderByClause FieldDesc(SqlField field)                    { return Expr(field, true);         }
+		public SqlOrderByClause Expr     (ISqlExpression expr, bool isPositioned = false) => Expr(expr, false, isPositioned);
+		public SqlOrderByClause ExprAsc  (ISqlExpression expr, bool isPositioned = false) => Expr(expr, false, isPositioned);
+		public SqlOrderByClause ExprDesc(ISqlExpression  expr, bool isPositioned = false) => Expr(expr, true, isPositioned);
 
-		void Add(ISqlExpression expr, bool isDescending)
+		public SqlOrderByClause Field(SqlField     field, bool isDescending, bool isPositioned) => Expr(field, isDescending, isPositioned);
+		public SqlOrderByClause Field(SqlField     field, bool isPositioned = false) => Expr(field, false, isPositioned);
+		public SqlOrderByClause FieldAsc (SqlField field, bool isPositioned = false) => Expr(field, false, isPositioned);
+		public SqlOrderByClause FieldDesc(SqlField field, bool isPositioned = false) => Expr(field, true, isPositioned);
+
+		void Add(ISqlExpression expr, bool isDescending, bool isPositioned)
 		{
 			foreach (var item in Items)
 				if (item.Expression.Equals(expr, (x, y) => !(x is SqlColumn col) || !col.Parent!.HasSetOperators || x == y))
 					return;
 
-			Items.Add(new SqlOrderByItem(expr, isDescending));
+			Items.Add(new SqlOrderByItem(expr, isDescending, isPositioned));
 		}
 
-		public List<SqlOrderByItem>  Items { get; private set; } = new();
+		public List<SqlOrderByItem> Items { get; } = [];
 
 		public bool IsEmpty => Items.Count == 0;
 

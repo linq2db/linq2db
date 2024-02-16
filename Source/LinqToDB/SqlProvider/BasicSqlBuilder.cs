@@ -2324,9 +2324,19 @@ namespace LinqToDB.SqlProvider
 			{
 				AppendIndent();
 
-				var item = selectQuery.OrderBy.Items[i];
+				var item            = selectQuery.OrderBy.Items[i];
+				var orderExpression = item.Expression;
 
-				BuildExpressionForOrderBy(item.Expression);
+				if (item.IsPositioned)
+				{
+					var idx = selectQuery.Select.Columns.FindIndex(c => c.Expression.Equals(item.Expression));
+					if (idx >= 0)
+					{
+						orderExpression = new SqlExpression(typeof(int), (idx + 1).ToString(CultureInfo.InvariantCulture));
+					}
+				}
+
+				BuildExpressionForOrderBy(orderExpression);
 
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");

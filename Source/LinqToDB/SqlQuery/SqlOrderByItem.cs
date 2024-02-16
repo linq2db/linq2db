@@ -2,46 +2,39 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlOrderByItem : IQueryElement
+	public class SqlOrderByItem : QueryElement
 	{
-		public SqlOrderByItem(ISqlExpression expression, bool isDescending)
+		public SqlOrderByItem(ISqlExpression expression, bool isDescending, bool isPositioned)
 		{
 			Expression   = expression;
 			IsDescending = isDescending;
+			IsPositioned = isPositioned;
 		}
 
 		public ISqlExpression Expression   { get; internal set; }
 		public bool           IsDescending { get; }
+		public bool           IsPositioned { get; }
 
 		#region Overrides
 
-#if OVERRIDETOSTRING
+		public override QueryElementType ElementType => QueryElementType.OrderByItem;
 
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
-		#endregion
-
-		#region IQueryElement Members
-
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-
-		public QueryElementType ElementType => QueryElementType.OrderByItem;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer.AppendElement(Expression);
+
+			if (IsPositioned)
+				writer.Append(":by_index");
 
 			if (IsDescending)
 				writer.Append(" DESC");
 
 			return writer;
+		}
+
+		public override string ToString()
+		{
+			return this.ToDebugString();
 		}
 
 		#endregion

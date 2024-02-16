@@ -1379,7 +1379,7 @@ namespace LinqToDB.SqlQuery
 					var e = (ISqlExpression)Visit(element.Expression);
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, e))
-						return NotifyReplaced(new SqlOrderByItem(e, element.IsDescending), element);
+						return NotifyReplaced(new SqlOrderByItem(e, element.IsDescending, element.IsPositioned), element);
 
 					break;
 				}

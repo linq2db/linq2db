@@ -717,7 +717,7 @@ namespace LinqToDB.SqlQuery
 							? oi
 							: new SqlOrderByItem(
 								new SqlFunction(oi.Expression.SystemType!, !oi.IsDescending ? "Min" : "Max", true, oi.Expression),
-								oi.IsDescending);
+								oi.IsDescending, oi.IsPositioned);
 				}
 
 				select.Select.OrderBy.Items.Clear();
@@ -1046,7 +1046,7 @@ namespace LinqToDB.SqlQuery
 					{
 						if (c.Expression.Equals(item.Expression))
 						{
-							currentQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending));
+							currentQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
 							prevQuery.OrderBy.Items.RemoveAt(index--);
 							break;
 						}
