@@ -84,8 +84,7 @@ namespace LinqToDB.Expressions
 				var expressionMessage = PrepareExpressionString(expression);
 				if (expressionMessage.Contains("\n"))
 				{
-					expressionMessage = "\n" + expressionMessage;
-					messageText       = $"The LINQ expression could not be converted to SQL.\nExpression:\n{expressionMessage}";
+					messageText = $"The LINQ expression could not be converted to SQL.\nExpression:\n{expressionMessage}";
 				}
 				else
 				{
