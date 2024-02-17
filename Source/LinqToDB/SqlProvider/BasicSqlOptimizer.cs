@@ -2399,7 +2399,7 @@ namespace LinqToDB.SqlProvider
 				&& Converter.TryConvertToString(patternRaw, out var patternRawValue))
 			{
 				if (patternRawValue == null)
-					return new SqlPredicate.IsTrue(new SqlValue(true), new SqlValue(true), new SqlValue(false), null, predicate.IsNot);
+					return new SqlPredicate.IsTrue(new SqlValue(true), new SqlValue(true), new SqlValue(false), null, predicate.IsNot, true);
 
 				var patternValue = LikeIsEscapeSupported
 					? EscapeLikeCharacters(patternRawValue, LikeEscapeCharacter)

@@ -1047,6 +1047,7 @@ namespace LinqToDB.Remote
 							Append(elem.TrueValue);
 							Append(elem.FalseValue);
 							Append(elem.WithNull == null ? 3 : elem.WithNull.Value ? 1 : 0);
+							Append(elem.OptimizeNull);
 
 							break;
 						}
@@ -1906,13 +1907,14 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.IsTruePredicate :
 						{
-							var expr1 = Read<ISqlExpression>()!;
-							var isNot = ReadBool();
-							var trueValue  = Read<ISqlExpression>()!;
-							var falseValue = Read<ISqlExpression>()!;
-							var withNull   = ReadInt();
+							var expr1        = Read<ISqlExpression>()!;
+							var isNot        = ReadBool();
+							var trueValue    = Read<ISqlExpression>()!;
+							var falseValue   = Read<ISqlExpression>()!;
+							var withNull     = ReadInt();
+							var optimizeNull = ReadBool();
 
-							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? null : withNull == 1, isNot);
+							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? null : withNull == 1, isNot, optimizeNull);
 
 							break;
 						}

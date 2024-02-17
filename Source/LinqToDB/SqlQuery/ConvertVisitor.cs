@@ -12,7 +12,7 @@ namespace LinqToDB.SqlQuery
 	public class ConvertVisitor<TContext>
 	{
 		// when true, only changed (and explicitly added) elements added to VisitedElements
-		// greatly reduce memory allocation for majority of cases, where there is nothing to replace
+		// greatly reduce memory allocation for the majority of cases, where there is nothing to replace
 		private bool                                                       _visitAll;
 		private Func<ConvertVisitor<TContext>,IQueryElement,IQueryElement> _convert;
 		private Func<ConvertVisitor<TContext>, bool>?                      _parentAction;
@@ -461,7 +461,7 @@ namespace LinqToDB.SqlQuery
 							t != null && !ReferenceEquals(p.TrueValue, t) ||
 							f != null && !ReferenceEquals(p.FalseValue, f)
 							)
-							newElement = new SqlPredicate.IsTrue(e ?? p.Expr1, t ?? p.TrueValue, f ?? p.FalseValue, p.WithNull, p.IsNot);
+							newElement = new SqlPredicate.IsTrue(e ?? p.Expr1, t ?? p.TrueValue, f ?? p.FalseValue, p.WithNull, p.IsNot, p.OptimizeNull);
 
 						break;
 					}
