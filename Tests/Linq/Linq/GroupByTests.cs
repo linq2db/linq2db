@@ -52,7 +52,7 @@ namespace Tests.Linq
 		{
 			using (new PreloadGroups(false))
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var q =
 					from ch in db.GrandChild
@@ -120,7 +120,7 @@ namespace Tests.Linq
 		public void Simple6([DataSources] string context)
 		{
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID);
 				var list = q.ToList();
@@ -189,7 +189,7 @@ namespace Tests.Linq
 		public void Simple11([DataSources] string context)
 		{
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var q1 = GrandChild
 					.GroupBy(ch => new { ParentID = ch.ParentID + 1, ch.ChildID }, ch => ch.ChildID);
@@ -1051,8 +1051,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void GroupByAssociation1022([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess /* Can be fixed*/)]
+			ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1069,8 +1070,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void GroupByAssociation1023([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess /* Can be fixed.*/)]
+			ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1093,8 +1095,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void GroupByAssociation1024([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess) /* Can be fixed. */]
+			ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1119,7 +1122,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupByAssociation2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1167,20 +1170,22 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void GroupByAggregate1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
-			{
-				var query = from p in db.Parent
-					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
-					into g
-					select g.Key;
-
-				AssertQuery(query);
-			}
+				AreEqual(
+					from p in Parent
+					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3 into g
+					select g.Key
+					,
+					from p in db.Parent
+					group p by  p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3 into g
+					select g.Key);
 		}
 
 		[Test]
+		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void GroupByAggregate11([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1197,6 +1202,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void GroupByAggregate12([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1340,18 +1346,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar4([DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		public void Scalar4([DataSources(ProviderName.SqlCe)] string context)
 		{
-			using var db = GetDataContext(context);
-
-			var query = from ch in db.Child
-				group ch by ch.ParentID into g
-				where g.Where(ch => ch.ParentID > 2).Select(ch => (int?)ch.ChildID).Min() != null
-				select g.Where(ch => ch.ParentID > 2).Select(ch => ch.ChildID).Min();
-
-			query.ToList();
-
-				/*
+			using (var db = GetDataContext(context))
 				AreEqual(
 					from ch in Child
 					group ch by ch.ParentID into g
@@ -1362,11 +1360,11 @@ namespace Tests.Linq
 					group ch by ch.ParentID into g
 					where g.Where(ch => ch.ParentID > 2).Select(ch => (int?)ch.ChildID).Min() != null
 					select g.Where(ch => ch.ParentID > 2).Select(ch => ch.ChildID).Min());
-		*/
 		}
 
 		[Test]
-		public void Scalar41([DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		public void Scalar41([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1414,7 +1412,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar6([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		//[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		public void Scalar6([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1886,7 +1885,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinGroupBy1([DataSources(ProviderName.Access)] string context)
+		public void JoinGroupBy1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1924,7 +1923,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByGroupBy([DataSources()] string context)
+		public void OrderByGroupBy([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2291,7 +2290,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1198Test([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue1198Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Issue1192Table>())
