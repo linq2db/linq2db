@@ -20,7 +20,8 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.Arguments.Count > 1)
 				sequence.SelectQuery.QueryName = (string?)builder.EvaluateExpression(methodCall.Arguments[1]);
 
-			sequence = new SubQueryContext(sequence);
+			if (!buildInfo.ForHints)
+				sequence = new SubQueryContext(sequence);
 
 			return BuildSequenceResult.FromContext(sequence);
 		}

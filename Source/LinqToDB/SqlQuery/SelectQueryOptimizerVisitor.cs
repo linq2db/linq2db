@@ -1172,6 +1172,10 @@ namespace LinqToDB.SqlQuery
 			// Trying to do not mix query hints
 			if (subQuery.SqlQueryExtensions?.Count > 0)
 			{
+				// See 'AccessTests.WithOwnerAccessOptionTest;
+				if (selectQuery.SqlQueryExtensions?.Count > 0)
+					return false;
+
 				if (tableSource.Joins.Count > 0 || selectQuery.From.Tables.Count > 1)
 					return false;
 			}
@@ -1587,8 +1591,12 @@ namespace LinqToDB.SqlQuery
 					{
 						if (joinTable.Condition.Predicates.Count == 0)
 						{
-							// See 'Issue2199Tests.LeftJoinTests2'
-							return false;
+							// See `PostgreSQLExtensionsTests.GenerateSeries`
+							if (subQuery.From.Tables[0].Joins.Count > 0)
+							{
+								// See 'Issue2199Tests.LeftJoinTests2'
+								return false;
+							}
 						}
 
 						moveConditionToQuery = false;

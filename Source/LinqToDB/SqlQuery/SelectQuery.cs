@@ -287,6 +287,9 @@ namespace LinqToDB.SqlQuery
 				.Append(SourceID)
 				.Append(')');
 
+			if (DoNotRemove)
+				writer.Append("DNR");
+
 			writer.Append(' ');
 
 			if (QueryName != null)

@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 			if (attrs.Any(a => a.Scope == Sql.QueryExtensionScope.TablesInScopeHint))
 				builder.TablesInScope = new();
 
-			var sequence = builder.BuildSequence(new(buildInfo, methodCall.Object ?? methodCall.Arguments[0]));
+			var sequence = builder.BuildSequence(new(buildInfo, methodCall.Object ?? methodCall.Arguments[0]) { ForHints = true });
 
 			for (var i = startIndex; i < list.Count; i++)
 			{
@@ -111,6 +111,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			List<SqlQueryExtension>? joinExtensions = null;
+			var convertedToSubquery = false;
 
 			foreach (var attr in attrs)
 			{
@@ -140,7 +141,15 @@ namespace LinqToDB.Linq.Builder
 						if (sequence is SetOperationBuilder.SetOperationContext { SubQuery.SelectQuery : { HasSetOperators: true } q })
 							attr.ExtendSubQuery(q.SetOperators[^1].SelectQuery.SqlQueryExtensions ??= new(), list);
 						else
+						{
+							if (!convertedToSubquery)
+							{
+								sequence = new SubQueryContext(sequence);
+								convertedToSubquery = true;
+							}
+
 							attr.ExtendSubQuery(sequence.SelectQuery.SqlQueryExtensions ??= new(), list);
+						}
 						break;
 					}
 					case Sql.QueryExtensionScope.QueryHint:
