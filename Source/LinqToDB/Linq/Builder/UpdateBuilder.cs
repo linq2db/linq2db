@@ -443,7 +443,7 @@ namespace LinqToDB.Linq.Builder
 					if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					{
 						if (sqlExpr is SqlErrorExpression errorExpr)
-							throw errorExpr.CreateError();
+							throw errorExpr.CreateException();
 
 						throw SqlErrorExpression.CreateException(valueExpression, null);
 					}

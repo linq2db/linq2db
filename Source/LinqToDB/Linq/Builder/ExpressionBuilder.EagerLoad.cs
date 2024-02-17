@@ -287,7 +287,7 @@ namespace LinqToDB.Linq.Builder
 						out var error);
 
 					if (predicateSql == null)
-						throw error!.CreateError();
+						throw error!.CreateException();
 
 					clonedParentContext.SelectQuery.Where.EnsureConjunction().Add(predicateSql);
 				}

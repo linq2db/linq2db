@@ -77,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 			if (!BuildSearchCondition(buildSequnce, expr, flags, sc, out var error))
 			{
 				if (parent == null && !isTest)
-					throw error.CreateError();
+					throw error.CreateException();
 				return null;
 			}
 
@@ -603,9 +603,9 @@ namespace LinqToDB.Linq.Builder
 			if (expr is not SqlPlaceholderExpression placeholder)
 			{
 				if (expr is SqlErrorExpression errorExpression)
-					throw errorExpression.CreateError();
+					throw errorExpression.CreateException();
 
-				throw CreateSqlError(context, expression).CreateError();
+				throw CreateSqlError(context, expression).CreateException();
 			}
 
 			return placeholder;
@@ -1782,9 +1782,9 @@ namespace LinqToDB.Linq.Builder
 			if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
 				return sc;
 			if (expr is SqlErrorExpression error)
-				throw error.CreateError();
+				throw error.CreateException();
 
-			throw new SqlErrorExpression($"Could not compare '{left}' with {right}", typeof(bool)).CreateError();
+			throw new SqlErrorExpression($"Could not compare '{left}' with {right}", typeof(bool)).CreateException();
 		}
 
 		Expression ConvertCompareExpression(IBuildContext? context, ExpressionType nodeType, Expression left, Expression right, ProjectFlags flags, Expression? originalExpression = null)
@@ -3229,7 +3229,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (!BuildSearchCondition(context, expression, flags, searchCondition, out var error))
 			{
-				throw error.CreateError();
+				throw error.CreateException();
 			}
 		}
 

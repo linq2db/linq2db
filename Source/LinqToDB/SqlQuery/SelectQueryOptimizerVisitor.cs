@@ -2085,6 +2085,15 @@ namespace LinqToDB.SqlQuery
 					return false;
 				}
 
+				if (!selectQuery.Where.IsEmpty)
+				{
+					if (selectQuery.Where.SearchCondition.Predicates.Any(predicate => predicate is not SqlPredicate.ExprExpr expExpr || expExpr.Operator != SqlPredicate.Operator.Equal))
+					{
+						// OuterApply cannot be converted in this case
+						return false; 
+					}
+				}
+
 				// provider can handle this query
 				return true;
 			}
@@ -2350,6 +2359,18 @@ namespace LinqToDB.SqlQuery
 					base.VisitIsTruePredicate(predicate);
 
 				return predicate;
+			}
+
+			protected override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+			{
+				if (element.IsPositioned)
+				{
+					// do not count complexity for positioned order item
+					if (ReferenceEquals(element.Expression, _expressionToCheck))
+						return element;
+				}
+
+				return base.VisitSqlOrderByItem(element);
 			}
 
 			readonly struct DoNotAllowScopeStruct : IDisposable

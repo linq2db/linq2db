@@ -51,7 +51,7 @@ namespace LinqToDB.Expressions
 			return new SqlErrorExpression(BuildContext, Expression, Message, type);
 		}
 
-		public Exception CreateError()
+		public Exception CreateException()
 		{
 			return CreateException(Expression, Message);
 		}
@@ -70,7 +70,7 @@ namespace LinqToDB.Expressions
 			return new SqlErrorExpression(null, expression, null, resultType);
 		}
 
-		public static Exception CreateError(string message)
+		public static Exception CreateException(string message)
 		{
 			return new LinqException(message);
 		}

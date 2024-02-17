@@ -579,6 +579,43 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OrderByIndexOptimization([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withIndex)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var query =
+					from p in db.ComplexPerson
+					where p.ID.In(1, 3)
+					select new
+					{
+						p.ID, 
+						CuttedName = p.Name.LastName.Substring(0, 3)
+					} into s
+					orderby withIndex ? Sql.OrderIndex(s.CuttedName) : s.CuttedName descending
+					select new
+					{
+						s.ID, 
+						s.CuttedName
+					};
+
+				query.ToArray();
+
+				var selectQuery = query.GetSelectQuery();
+
+				var firstSource = selectQuery.From.Tables[0].Source;
+
+				if (withIndex)
+				{
+					firstSource.Should().BeOfType<SqlTable>();
+				}
+				else
+				{
+					firstSource.Should().BeOfType<SelectQuery>();
+				}
+			}
+		}
+
+		[Test]
 		public void OrderByIndexInExpr([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))

@@ -45,6 +45,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				// create all columns
 				var sqlExpr = builder.BuildSqlExpression(outerSubqueryContext, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], subQueryContext), buildInfo.GetFlags());
+				SequenceHelper.EnsureNoErrors(sqlExpr);
 				sqlExpr = builder.UpdateNesting(outerSubqueryContext, sqlExpr);
 			}
 

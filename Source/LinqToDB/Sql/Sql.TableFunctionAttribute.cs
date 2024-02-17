@@ -73,7 +73,7 @@ namespace LinqToDB
 #pragma warning restore CS8619
 
 				if (error != null)
-					throw Expressions.SqlErrorExpression.EnsureError(null, error).CreateError();
+					throw Expressions.SqlErrorExpression.EnsureError(null, error).CreateException();
 			}
 
 			public override string GetObjectID()

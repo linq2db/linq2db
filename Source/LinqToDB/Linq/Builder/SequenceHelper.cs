@@ -847,6 +847,15 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
+		public static void EnsureNoErrors(Expression expression)
+		{
+			var found = expression.Find(1, (_, e) => e is SqlErrorExpression);
+			if (found != null)
+			{
+				throw ((SqlErrorExpression)found).CreateException();
+			}
+		}
+
 		/// <summary>
 		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/>
 		/// </summary>
