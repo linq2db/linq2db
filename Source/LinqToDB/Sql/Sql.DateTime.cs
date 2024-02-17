@@ -505,41 +505,11 @@ namespace LinqToDB
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number", true);
 
-				if (part == DateParts.Millisecond)
+				if (part == DateParts.Tick)
 				{
-					builder.ResultExpression =
-						new SqlFunction(typeof(DateTime?), builder.Expression,
-							new SqlExpression("hour", Precedence.Primary), builder.Div(number, 3600_000),
-								new SqlFunction(typeof(DateTime?), builder.Expression,
-									new SqlExpression("millisecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000), Precedence.Multiplicative), date));
-				}
-				else if (part == DateParts.Microsecond)
-				{
-					builder.ResultExpression = 
-						new SqlFunction(typeof(DateTime?), builder.Expression,
-							new SqlExpression("hour", Precedence.Primary), builder.Div(number, 3600_000_000),
-								new SqlFunction(typeof(DateTime?), builder.Expression,
-									new SqlExpression("microsecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000), Precedence.Multiplicative), date));
-				} 
-				else if (part == DateParts.Nanosecond)
-				{
-					builder.ResultExpression =
-						new SqlFunction(typeof(DateTime?), builder.Expression,
-							new SqlExpression("hour", Precedence.Primary), new SqlExpression(typeof(int), "cast({0} as int)", Precedence.Multiplicative, builder.Div(number, 3600_000_000_000)),
-								new SqlFunction(typeof(DateTime?), builder.Expression,
-									new SqlExpression("millisecond", Precedence.Primary), builder.Div(new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000_000), Precedence.Multiplicative), 1000_000), 
-										new SqlFunction(typeof(DateTime?), builder.Expression,
-											new SqlExpression("nanosecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000_000), Precedence.Multiplicative), "%", new SqlValue(1000_000), Precedence.Multiplicative), date)));
-				}
-				else if (part == DateParts.Tick)
-				{
-					builder.ResultExpression =
-						new SqlFunction(typeof(DateTime?), builder.Expression,
-							new SqlExpression("hour", Precedence.Primary), new SqlExpression(typeof(int), "cast({0} as int)", Precedence.Multiplicative, builder.Div(number, 3600_000_000_0)),
-								new SqlFunction(typeof(DateTime?), builder.Expression,
-									new SqlExpression("millisecond", Precedence.Primary), builder.Div(new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000_0), Precedence.Multiplicative), 1000_0),
-										new SqlFunction(typeof(DateTime?), builder.Expression,
-											new SqlExpression("nanosecond", Precedence.Primary), new SqlBinaryExpression(typeof(long), new SqlBinaryExpression(typeof(long), number, "%", new SqlValue(3600_000_000_0), Precedence.Multiplicative), "%", new SqlValue(1000_0), Precedence.Multiplicative), date)));
+					var partStr = "microsecond";
+					builder.ResultExpression = new SqlFunction(typeof(DateTime?), builder.Expression,
+						new SqlExpression(partStr, Precedence.Primary), builder.Div(number, 10), date);
 				}
 				else
 				{
@@ -1290,7 +1260,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(typeof(int), builder.Expression + "(nanosecond, {0}, {1}) / 100", startdate, endDate);
+				builder.ResultExpression = new SqlExpression(typeof(long), builder.Expression + "(nanosecond, {0}, {1}) / 100", startdate, endDate);
 			}
 		}
 
@@ -1301,7 +1271,7 @@ namespace LinqToDB
 				var startdate  = builder.GetExpression(0);
 				var endDate    = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlFunction(typeof(int), "Nano100_Between", startdate, endDate); ;
+				builder.ResultExpression = new SqlFunction(typeof(long), "Nano100_Between", startdate, endDate);
 			}
 		}
 
@@ -1312,7 +1282,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(typeof(int), builder.Expression + "(MICROSECOND, {0}, {1}) * 10", startdate, endDate);
+				builder.ResultExpression = new SqlExpression(typeof(long), builder.Expression + "(MICROSECOND, {0}, {1}) * 10", startdate, endDate);
 			}
 		}
 
@@ -1323,7 +1293,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(typeof(int), builder.Expression + "(microsecond, {0}, {1}) * 10", startdate, endDate);
+				builder.ResultExpression = new SqlExpression(typeof(long), builder.Expression + "(microsecond, {0}, {1}) * 10", startdate, endDate);
 			}
 		}
 
@@ -1334,7 +1304,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(typeof(int), builder.Expression + "(millisecond, {0}, {1}) * 10000", startdate, endDate);
+				builder.ResultExpression = new SqlExpression(typeof(long), builder.Expression + "(millisecond, {0}, {1}) * 10000", startdate, endDate);
 			}
 		}
 
@@ -1356,7 +1326,7 @@ namespace LinqToDB
 
 				var resultExpr = builder.Add<int>(secondsExpr, midnight);
 
-				resultExpr = builder.Add<int>(
+				resultExpr = builder.Add<TimeSpan>(
 					builder.Mul(resultExpr, 10000000),
 					builder.Mul(
 						builder.Sub<int>(
@@ -1376,7 +1346,7 @@ namespace LinqToDB
 				var endDate = builder.GetExpression(1);
 
 				var expStr = "round((julianday({1}) - julianday({0})) * 864000000000)";
-				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
+				builder.ResultExpression = new SqlExpression(typeof(long), expStr, startDate, endDate);
 			}
 		}
 
@@ -1387,7 +1357,7 @@ namespace LinqToDB
 				var startDate = builder.GetExpression(0);
 				var endDate = builder.GetExpression(1);
 				var expStr =  "({1}::timestamp - {0}::timestamp)";
-				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);
+				builder.ResultExpression = new SqlExpression(typeof(long), expStr, Precedence.Multiplicative, startDate, endDate);
 			}
 		}
 
@@ -1400,7 +1370,7 @@ namespace LinqToDB
 
 				var expStr = "DATEDIFF('s', {0}, {1}) * 10000000";
 
-				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
+				builder.ResultExpression = new SqlExpression(typeof(long), expStr, startDate, endDate);
 			}
 		}
 
@@ -1410,8 +1380,11 @@ namespace LinqToDB
 			{
 				var startDate = builder.GetExpression(0);
 				var endDate = builder.GetExpression(1);
+				// In Oracle, subtracting two DATE returns the number days between them (could be converted to INTERVAL with NUMTODSINTERVAL).
+				// Subtracting two TIMESTAMP returns an INTERVAL.
+				// Unfortunately, it's not possible to know based on C# type if an expression was mapped to `DATE` or `TIMESTAMP` in DB :(
 				var expStr = "(CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))";
-				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
+				builder.ResultExpression = new SqlExpression(typeof(long), expStr, startDate, endDate);
 			}
 		}
 
@@ -1431,7 +1404,6 @@ namespace LinqToDB
 			}
 		}
 
-		[CLSCompliant(false)]
 		[Extension(                 "DateDiff",      BuilderType = typeof(DateDiffIntervalBuilder))]
 		[Extension(PN.SqlServer,    "DateDiff_Big",  BuilderType = typeof(DateDiffIntervalBuilder))]
 		[Extension(PN.SqlCe,        "DateDiff",      BuilderType = typeof(DateDiffIntervalBuilder))]
@@ -1450,7 +1422,7 @@ namespace LinqToDB
 		[Extension(PN.Access,       "",              BuilderType = typeof(DateDiffIntervalBuilderAccess))]
 		[Extension(PN.ClickHouse,   "",              BuilderType = typeof(DateDiffIntervalBuilderClickHouse))]
 		/* Returns the Native Database Interval type, or the Timespan Ticks (100ns) */		
-		public static TimeSpan? DateDiffInterval(DateTime? startDate, DateTime? endDate)
+		internal static TimeSpan? DateDiffInterval(DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)
 				return null;

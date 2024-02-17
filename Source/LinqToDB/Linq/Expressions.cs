@@ -129,7 +129,7 @@ namespace LinqToDB.Linq
 
 		static UnaryExpression GetUnaryNode(Expression expr)
 		{
-			while (expr.NodeType == ExpressionType.Convert || expr.NodeType == ExpressionType.ConvertChecked || expr.NodeType == ExpressionType.TypeAs)
+			while (expr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs)
 				expr = ((UnaryExpression)expr).Operand;
 
 			if (expr is UnaryExpression unary)
