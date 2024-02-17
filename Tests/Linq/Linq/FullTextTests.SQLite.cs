@@ -70,8 +70,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
-				var subquery = db.GetTable<FtsTable>().Where(r => Sql.Ext.SQLite().Match(r, "something"));
-				var query = db.GetTable<FtsTable>().Where(r => subquery.Select(_ => Sql.Ext.SQLite().RowId(_)).Contains(Sql.Ext.SQLite().RowId(r)));
+				var subquery = db.GetTable<FtsTable>()
+					.Where(r => Sql.Ext.SQLite().Match(r, "something"));
+
+				var query = db.GetTable<FtsTable>()
+					.Where(r => subquery.Select(_ => Sql.Ext.SQLite().RowId(_)).Contains(Sql.Ext.SQLite().RowId(r)));
 
 				var results = query.ToList();
 				Assert.AreEqual(1, results.Count);

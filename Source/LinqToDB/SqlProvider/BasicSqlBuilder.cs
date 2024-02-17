@@ -3258,7 +3258,10 @@ namespace LinqToDB.SqlProvider
 
 					if (sqlField == table.All)
 					{
+						var save = _disableAlias;
+						_disableAlias = true;
 						BuildExpression(new SqlField(table, table.TableName.Name));
+						_disableAlias = save;
 					}
 					else
 					{
