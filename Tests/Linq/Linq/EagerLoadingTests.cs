@@ -1171,7 +1171,7 @@ FROM
 		}
 
 		[Test]
-		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void TestAggregateAverage([DataSources] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();

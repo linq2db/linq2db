@@ -4,10 +4,9 @@ using System.Linq;
 
 namespace Tests
 {
-	public class ThrowsForProviderAttribute<TException> : ThrowsWhenAttribute
-	where TException: Exception
+	public class ThrowsForProviderAttribute : ThrowsWhenAttribute
 	{
-		public ThrowsForProviderAttribute(params string[] providers) : base("context", typeof(TException), providers)
+		public ThrowsForProviderAttribute(Type exceptionType, params string[] providers) : base("context", exceptionType, providers)
 		{
 			var allProviders =
 				from p in providers

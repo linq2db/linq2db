@@ -381,7 +381,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider<LinqException>(TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void OrderByContinuous([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
