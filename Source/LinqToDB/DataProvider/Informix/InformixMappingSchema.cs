@@ -44,12 +44,20 @@ namespace LinqToDB.DataProvider.Informix
 				return TimeSpan.FromTicks(ticks);
 
 			var days = 0;
+#if NETSTANDARD2_1
 			var parts = raw.AsSpan();
+#else
+			var parts = raw;
+#endif
 			var idx = parts.IndexOf(' ');
 			if (idx > 0)
 			{
 				days = int.Parse(parts[0..idx], NumberStyles.None, CultureInfo.InvariantCulture);
+#if NETSTANDARD2_1
 				parts = parts.Slice(idx + 1);
+#else
+				parts = parts.Substring(idx + 1);
+#endif
 			}
 
 			var hours = int.Parse(parts[0..2], NumberStyles.None, CultureInfo.InvariantCulture);
