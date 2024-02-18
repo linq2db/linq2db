@@ -444,15 +444,15 @@ namespace LinqToDB
 						builder.Extension.Precedence = Precedence.Additive;
 						return;
 					case DateParts.Millisecond:
-						builder.Expression = "toUnixTimestamp64Milli({date}) % 1000";
+						builder.Expression = "toUnixTimestamp64Milli({date})";
 						builder.Extension.Precedence = Precedence.Multiplicative;
 						return;
 					case DateParts.Microsecond:
-						builder.Expression = "toUnixTimestamp64Nano({date}) % 1000";
+						builder.Expression = "toInt64(toUnixTimestamp64Nano({date}) / 1000)";
 						builder.Extension.Precedence = Precedence.Multiplicative;
 						return;
 					case DateParts.Tick:
-						builder.Expression = "toUnixTimestamp64Nano({date}) % 100";
+						builder.Expression = "toInt64(toUnixTimestamp64Nano({date}) / 100)";
 						builder.Extension.Precedence = Precedence.Multiplicative;
 						return;
 					case DateParts.Nanosecond:
@@ -1413,7 +1413,7 @@ namespace LinqToDB
 
 				builder.ResultExpression = new SqlExpression(
 					typeof(long?),
-					"(toUnixTimestamp64Nano(toDateTime64({1}, 3)) - toUnixTimestamp64Nano(toDateTime64({0}, 3))) / 100",
+					"toInt64((toUnixTimestamp64Nano(toDateTime64({1}, 3)) - toUnixTimestamp64Nano(toDateTime64({0}, 3))) / 100)",
 					Precedence.Subtraction,
 					startDate,
 					endDate);
