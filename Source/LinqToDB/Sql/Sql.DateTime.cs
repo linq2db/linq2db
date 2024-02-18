@@ -451,6 +451,10 @@ namespace LinqToDB
 						builder.Expression = "toUnixTimestamp64Nano({date}) % 1000";
 						builder.Extension.Precedence = Precedence.Multiplicative;
 						return;
+					case DateParts.Tick:
+						builder.Expression = "toUnixTimestamp64Nano({date}) % 100";
+						builder.Extension.Precedence = Precedence.Multiplicative;
+						return;
 					case DateParts.Nanosecond:
 						builder.Expression = "toUnixTimestamp64Nano({date})";
 						builder.Extension.Precedence = Precedence.Multiplicative;
