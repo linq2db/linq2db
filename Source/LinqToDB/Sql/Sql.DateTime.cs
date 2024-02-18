@@ -1413,7 +1413,7 @@ namespace LinqToDB
 
 				builder.ResultExpression = new SqlExpression(
 					typeof(long?),
-					"(toUnixTimestamp64Milli(toDateTime64({1}, 3)) - toUnixTimestamp64Milli(toDateTime64({0}, 3))) * 10000",
+					"(toUnixTimestamp64Nano(toDateTime64({1}, 3)) - toUnixTimestamp64Nano(toDateTime64({0}, 3))) / 100",
 					Precedence.Subtraction,
 					startDate,
 					endDate);
