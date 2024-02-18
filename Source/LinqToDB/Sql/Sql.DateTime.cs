@@ -255,6 +255,9 @@ namespace LinqToDB
 					case DateParts.Minute      : exprStr = "Minute({date})";                   break;
 					case DateParts.Second      : exprStr = "Second({date})";                   break;
 					case DateParts.Millisecond : exprStr = "Second({date}) * 1000";            break;
+					case DateParts.Microsecond : exprStr = "Second({date}) * 1000000";         break;
+					case DateParts.Tick        : exprStr = "Second({date}) * 10000000";        break;
+					case DateParts.Nanosecond  : exprStr = "Second({date}) * 1000000000";      break;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
@@ -868,6 +871,14 @@ namespace LinqToDB
 							date,
 							number);
 						break;
+					case DateParts.Tick:
+						builder.ResultExpression = new SqlExpression(
+							typeof(DateTime?),
+							"fromUnixTimestamp64Nano(toInt64(toUnixTimestamp64Nano(toDateTime64({0}, 9)) + toInt64({1}) * 100))",
+							Precedence.Primary,
+							date,
+							number);
+						break;
 					case DateParts.Nanosecond:
 						builder.ResultExpression = new SqlExpression(
 							typeof(DateTime?),
@@ -960,6 +971,7 @@ namespace LinqToDB
 					case DateParts.Second     : funcName = "Seconds_Between";                  break;
 					case DateParts.Millisecond: funcName = "Nano100_Between"; divider = 10000; break;
 					case DateParts.Microsecond: funcName = "Nano100_Between"; divider = 10;    break;
+					case DateParts.Tick:        funcName = "Nano100_Between";                  break;
 					case DateParts.Nanosecond : funcName = "Nano100_Between";                  break;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
