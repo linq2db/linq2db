@@ -137,7 +137,7 @@ namespace Tests.UserTests
 		[Test]
 		public void CteTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable<RateEntry>())
 			using (db.CreateLocalTable<RateLines>())
 			using (db.CreateLocalTable<RateLineItem>())
@@ -149,13 +149,13 @@ namespace Tests.UserTests
 						   where (rateEntry.TI_RateEndDate == null || rateEntry.TI_RateEndDate > Sql.CurrentTimestamp)
 						  && rateLineItem.TM_Type.In("MIN", "FLT", "BAS", "UNT")
 						   group rateLineItem by rateEntry
-					into _
+					into s
 						   select new RateCharges
 						   {
-							   RateEntry = _.Key,
-							   FlatRate = _.Sum(r => r.TM_Type.In("FLT", "BAS") ? r.TM_Value : 0),
-							   MinRate = _.Sum(r => r.TM_Type == "MIN" ? r.TM_Value : 0),
-							   VariableRate = _.Sum(r => r.TM_Type == "UNT" ? r.TM_Value : 0)
+							   RateEntry = s.Key,
+							   FlatRate = s.Sum(r => r.TM_Type.In("FLT", "BAS") ? r.TM_Value : 0),
+							   MinRate = s.Sum(r => r.TM_Type == "MIN" ? r.TM_Value : 0),
+							   VariableRate = s.Sum(r => r.TM_Type == "UNT" ? r.TM_Value : 0)
 						   }).AsCte("rateCost");
 
 				var query = from rateEntry in db.GetTable<RateEntry>()

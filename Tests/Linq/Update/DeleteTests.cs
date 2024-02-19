@@ -162,7 +162,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteMany2([DataSources] string context)
+		public void DeleteMany2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
