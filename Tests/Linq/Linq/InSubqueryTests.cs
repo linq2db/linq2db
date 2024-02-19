@@ -55,6 +55,8 @@ namespace Tests.Linq
 
 			var sqlStr = query.ToString();
 
+			preferExists = preferExists || db.SqlProviderFlags.IsExistsPreferableForContains;
+
 			if (preferExists && !db.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
 				Assert.That(sqlStr, Is.Not.Contains(" IN ").And.Contains("EXISTS"));
 			else
