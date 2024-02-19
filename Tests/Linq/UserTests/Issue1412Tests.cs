@@ -150,6 +150,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

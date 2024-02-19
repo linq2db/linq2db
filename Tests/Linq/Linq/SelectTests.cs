@@ -217,6 +217,8 @@ namespace Tests.Linq
 		}
 
 		// ProviderName.SqlServer2014 disabled due to:
+		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
+		[ActiveIssue("ClickHouse performs slow leading to timeout with specified provider", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MultipleSelect11([IncludeDataSources(
 			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSqlServer2019, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
