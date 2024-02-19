@@ -1172,10 +1172,6 @@ namespace LinqToDB.SqlQuery
 			// Trying to do not mix query hints
 			if (subQuery.SqlQueryExtensions?.Count > 0)
 			{
-				// See 'AccessTests.WithOwnerAccessOptionTest;
-				if (selectQuery.SqlQueryExtensions?.Count > 0)
-					return false;
-
 				if (tableSource.Joins.Count > 0 || selectQuery.From.Tables.Count > 1)
 					return false;
 			}
@@ -1906,14 +1902,25 @@ namespace LinqToDB.SqlQuery
 		{
 			var optimized = false;
 
-			foreach (var table in selectQuery.From.Tables)
+			for (var tableIndex = 0; tableIndex < selectQuery.From.Tables.Count; tableIndex++)
 			{
-				foreach (var join in table.Joins)
+				var table = selectQuery.From.Tables[tableIndex];
+				for (var joinIndex = 0; joinIndex < table.Joins.Count; joinIndex++)
 				{
-					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply|| join.JoinType == JoinType.RightApply)
+					var join = table.Joins[joinIndex];
+					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.FullApply || join.JoinType == JoinType.RightApply)
 					{
 						if (OptimizeApply(join, isApplySupported))
+						{
 							optimized = true;
+
+							if (join is { JoinType: JoinType.Inner, Condition.Predicates.Count: 0 })
+							{
+								selectQuery.From.Tables.Insert(tableIndex + 1, join.Table);
+								table.Joins.RemoveAt(joinIndex);
+								--joinIndex;
+							}
+						}
 					}
 				}
 			}

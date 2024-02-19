@@ -17,23 +17,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			
-			if (buildInfo.ForHints)
-			{
-				sequence                         = new AsSubqueryContext(sequence);
-				sequence.SelectQuery.DoNotRemove = true;
+			sequence.SelectQuery.DoNotRemove = true;
+			if (methodCall.Arguments.Count > 1)
+				sequence.SelectQuery.QueryName = (string?)builder.EvaluateExpression(methodCall.Arguments[1]);
 
-				if (methodCall.Arguments.Count > 1)
-					sequence.SelectQuery.QueryName = (string?)builder.EvaluateExpression(methodCall.Arguments[1]);
-			}
-			else
-			{
-				sequence.SelectQuery.DoNotRemove = true;
-				if (methodCall.Arguments.Count > 1)
-					sequence.SelectQuery.QueryName = (string?)builder.EvaluateExpression(methodCall.Arguments[1]);
-
-				sequence = new AsSubqueryContext(sequence);
-			}
-
+			sequence = new AsSubqueryContext(sequence);
 
 			return BuildSequenceResult.FromContext(sequence);
 		}

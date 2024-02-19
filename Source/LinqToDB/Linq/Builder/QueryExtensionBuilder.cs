@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 			if (attrs.Any(a => a.Scope == Sql.QueryExtensionScope.TablesInScopeHint))
 				builder.TablesInScope = new();
 
-			var sequence = builder.BuildSequence(new(buildInfo, methodCall.Object ?? methodCall.Arguments[0]) { ForHints = true });
+			var sequence = builder.BuildSequence(new(buildInfo, methodCall.Object ?? methodCall.Arguments[0]));
 
 			for (var i = startIndex; i < list.Count; i++)
 			{
@@ -141,16 +141,29 @@ namespace LinqToDB.Linq.Builder
 							attr.ExtendSubQuery(q.SetOperators[^1].SelectQuery.SqlQueryExtensions ??= new(), list);
 						else
 						{
-							if (sequence is not AsSubqueryContext)
-								sequence = new AsSubqueryContext(sequence);
+							var queryToUpdate = sequence.SelectQuery;
+							if (sequence is AsSubqueryContext subquery && sequence.SelectQuery.IsSimple)
+							{
+								queryToUpdate = subquery.SubQuery.SelectQuery;
+							}
 
-							attr.ExtendSubQuery(sequence.SelectQuery.SqlQueryExtensions ??= new(), list);
+							if (!queryToUpdate.IsSimple)
+							{
+								sequence                         = new SubQueryContext(sequence);
+								queryToUpdate                    = sequence.SelectQuery;
+							}
+
+							attr.ExtendSubQuery(queryToUpdate.SqlQueryExtensions ??= new(), list);
 						}
 						break;
 					}
 					case Sql.QueryExtensionScope.QueryHint:
 					{
 						attr.ExtendQuery(builder.SqlQueryExtensions ??= new(), list);
+						break;
+					}
+					case Sql.QueryExtensionScope.None:
+					{
 						break;
 					}
 				}

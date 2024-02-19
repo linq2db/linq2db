@@ -307,6 +307,8 @@ namespace LinqToDB.SqlQuery
 				foreach (IQueryElement u in SetOperators)
 					writer.AppendElement(u);
 
+			writer.AppendExtensions(SqlQueryExtensions);
+
 			writer.RemoveVisited(this);
 
 			return writer;

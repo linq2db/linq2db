@@ -55,7 +55,6 @@ namespace LinqToDB.Linq.Builder
 			var context = new SelectContext (buildInfo.Parent, body, sequence, buildInfo.IsSubQuery);
 #if DEBUG
 			context.Debug_MethodCall = methodCall;
-			Debug.WriteLine("BuildMethodCall Select:\n" + context.SelectQuery);
 #endif
 			return BuildSequenceResult.FromContext(context);
 		}

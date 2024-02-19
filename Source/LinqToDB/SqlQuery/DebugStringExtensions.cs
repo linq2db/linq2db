@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System.Collections.Generic;
+using System.Xml;
 
 namespace LinqToDB.SqlQuery
 {
@@ -11,6 +12,31 @@ namespace LinqToDB.SqlQuery
 				return writer;
 
 			element.ToString(writer);
+			return writer;
+		}
+
+		public static QueryElementTextWriter AppendExtensions(this QueryElementTextWriter writer, ICollection<SqlQueryExtension>? extensions)
+		{
+			if (extensions?.Count > 0)
+			{
+				writer.AppendLine();
+
+				foreach (var extension in extensions)
+				{
+					if (extension.Arguments.TryGetValue("hint", out var hintValue))
+					{
+						writer
+							.Append("/* ")
+							.Append(hintValue)
+							.AppendLine(" */");
+					}
+					else
+					{
+						writer.AppendLine("/*extension*/");
+					}
+				}
+			}
+
 			return writer;
 		}
 

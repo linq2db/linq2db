@@ -4,7 +4,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
-	sealed class BuildInfo
+	internal sealed class BuildInfo
 	{
 		public BuildInfo(IBuildContext? parent, Expression expression, SelectQuery selectQuery)
 		{
@@ -38,9 +38,8 @@ namespace LinqToDB.Linq.Builder
 		public bool           IsAssociation            { get; set; }
 		public JoinType       JoinType                 { get; set; }
 		public bool           IsSubQuery               => Parent != null;
-		public bool           ForHints                 { get; set; }
 
-		private bool _isAssociationBuilt;
+		bool _isAssociationBuilt;
 		public bool   IsAssociationBuilt
 		{
 			get => _isAssociationBuilt;
@@ -66,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 			set => _sourceCardinality = value;
 		}
 
-		private bool _isAggregation;
+		bool _isAggregation;
 
 		public bool IsAggregation
 		{
@@ -80,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 			set => _isAggregation = value;
 		}
 
-		private bool _aggregationTest;
+		bool _aggregationTest;
 
 		public bool AggregationTest
 		{
@@ -94,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 			set => _aggregationTest = value;
 		}
 
-		private bool _isTest;
+		bool _isTest;
 
 		public bool IsTest
 		{

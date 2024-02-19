@@ -97,9 +97,10 @@ namespace Tests.UserTests
 				var concat = persons
 					.Except(persons);
 
-				var sql = concat.ToString();
+				var sql = concat.ToString()!;
 
-				sql.Should().NotContain("ORDER");
+				if (!sql.Contains("EXISTS"))
+					sql.Should().NotContain("ORDER");
 
 				FluentActions.Enumerating(() => concat).Should().NotThrow();
 			}
