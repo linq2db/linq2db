@@ -2085,12 +2085,15 @@ namespace LinqToDB.SqlQuery
 					return false;
 				}
 
-				if (!selectQuery.Where.IsEmpty)
+				if (selectQuery.Select.TakeValue != null)
 				{
-					if (selectQuery.Where.SearchCondition.Predicates.Any(predicate => predicate is not SqlPredicate.ExprExpr expExpr || expExpr.Operator != SqlPredicate.Operator.Equal))
+					if (!selectQuery.Where.IsEmpty)
 					{
-						// OuterApply cannot be converted in this case
-						return false; 
+						if (selectQuery.Where.SearchCondition.Predicates.Any(predicate => predicate is not SqlPredicate.ExprExpr expExpr || expExpr.Operator != SqlPredicate.Operator.Equal))
+						{
+							// OuterApply cannot be converted in this case
+							return false;
+						}
 					}
 				}
 
