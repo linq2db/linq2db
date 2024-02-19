@@ -111,7 +111,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			List<SqlQueryExtension>? joinExtensions = null;
-			var convertedToSubquery = false;
 
 			foreach (var attr in attrs)
 			{
@@ -142,11 +141,8 @@ namespace LinqToDB.Linq.Builder
 							attr.ExtendSubQuery(q.SetOperators[^1].SelectQuery.SqlQueryExtensions ??= new(), list);
 						else
 						{
-							if (!convertedToSubquery)
-							{
-								sequence = new SubQueryContext(sequence);
-								convertedToSubquery = true;
-							}
+							if (sequence is not AsSubqueryContext)
+								sequence = new AsSubqueryContext(sequence);
 
 							attr.ExtendSubQuery(sequence.SelectQuery.SqlQueryExtensions ??= new(), list);
 						}

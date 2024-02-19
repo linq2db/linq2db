@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
@@ -13,17 +15,44 @@ namespace LinqToDB.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			
+			if (buildInfo.ForHints)
+			{
+				sequence                         = new AsSubqueryContext(sequence);
+				sequence.SelectQuery.DoNotRemove = true;
 
-			sequence.SelectQuery.DoNotRemove = true;
+				if (methodCall.Arguments.Count > 1)
+					sequence.SelectQuery.QueryName = (string?)builder.EvaluateExpression(methodCall.Arguments[1]);
+			}
+			else
+			{
+				sequence.SelectQuery.DoNotRemove = true;
+				if (methodCall.Arguments.Count > 1)
+					sequence.SelectQuery.QueryName = (string?)builder.EvaluateExpression(methodCall.Arguments[1]);
 
-			if (methodCall.Arguments.Count > 1)
-				sequence.SelectQuery.QueryName = (string?)builder.EvaluateExpression(methodCall.Arguments[1]);
+				sequence = new AsSubqueryContext(sequence);
+			}
 
-			if (!buildInfo.ForHints)
-				sequence = new SubQueryContext(sequence);
 
 			return BuildSequenceResult.FromContext(sequence);
+		}
+	}
+
+	class AsSubqueryContext : SubQueryContext
+	{
+		public AsSubqueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql) : base(subQuery, selectQuery, addToSql)
+		{
+		}
+
+		public AsSubqueryContext(IBuildContext subQuery, bool addToSql = true) : base(subQuery, addToSql)
+		{
+		}
+
+		public override IBuildContext Clone(CloningContext context)
+		{
+			var selectQuery = context.CloneElement(SelectQuery);
+			return new AsSubqueryContext(context.CloneContext(SubQuery), selectQuery, false);
 		}
 	}
 }
