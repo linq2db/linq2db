@@ -2565,6 +2565,8 @@ namespace LinqToDB.SqlQuery
 							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
 						};
 
+						NotifyReplaced(newTable.All, element.All);
+
 						for (var index = 0; index < newTable.Fields.Count; index++)
 						{
 							NotifyReplaced(newTable.Fields[index], element.Fields[index]);

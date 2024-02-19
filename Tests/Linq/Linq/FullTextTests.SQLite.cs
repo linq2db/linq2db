@@ -60,6 +60,9 @@ namespace Tests.Linq
 				else
 				{
 					var sql = query.ToString()!;
+
+					TestContext.WriteLine(sql);
+
 					Assert.That(sql.Contains("[r].[FTS5_TABLE] MATCH 'something'"));
 				}
 			}
