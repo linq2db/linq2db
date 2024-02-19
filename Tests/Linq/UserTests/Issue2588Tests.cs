@@ -17,7 +17,7 @@ namespace Tests.UserTests
 			[Column] public int Value { get; set; }
 		}
 
-		//TODO: Looks like ClickHouse processes query wrong
+		[ActiveIssue("Looks like ClickHouse processes query wrong", Configurations = [TestProvName.AllClickHouse])]
 		[Test]
 		public async Task AggregationWithNull([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
