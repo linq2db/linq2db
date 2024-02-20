@@ -16,6 +16,7 @@ namespace LinqToDB.SqlProvider
 		NullabilityContext _nullabilityContext = default!;
 		DataOptions        _dataOptions        = default!;
 		SqlProviderFlags?  _sqlProviderFlags;
+		ISqlPredicate?     _allowOptimize;
 
 		public SqlExpressionOptimizerVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform)
 		{
@@ -29,6 +30,7 @@ namespace LinqToDB.SqlProvider
 			_sqlProviderFlags   = sqlProviderFlags;
 			_dataOptions        = dataOptions;
 			IsModified          = false;
+			_allowOptimize      = default;
 
 			return ProcessElement(element);
 		}
@@ -86,6 +88,9 @@ namespace LinqToDB.SqlProvider
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
+
+			if (ReferenceEquals(_allowOptimize, element) && element.Predicates.Count == 1)
+				return element.Predicates[0];
 
 			if (GetVisitMode(element) == VisitMode.Modify)
 			{
@@ -286,7 +291,13 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
 		{
+			var saveAllow = _allowOptimize;
+			_allowOptimize = predicate.Predicate;
+
 			var newElement = base.VisitNotPredicate(predicate);
+
+			_allowOptimize = saveAllow;
+
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
