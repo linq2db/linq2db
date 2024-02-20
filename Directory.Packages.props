@@ -126,7 +126,7 @@
 		<PackageVersion Include="Npgsql"                                                Version="8.0.2"    />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net7.0' AND '$(TargetFramework)' == 'net8.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net7.0' AND '$(TargetFramework)' != 'net8.0' ">
 		<PackageVersion Include="Npgsql"                                                Version="7.0.6"         />
 	</ItemGroup>
 
