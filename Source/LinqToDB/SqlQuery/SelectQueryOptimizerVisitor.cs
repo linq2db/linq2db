@@ -1916,7 +1916,7 @@ namespace LinqToDB.SqlQuery
 
 							if (join is { JoinType: JoinType.Inner, Condition.Predicates.Count: 0 })
 							{
-								selectQuery.From.Tables.Insert(tableIndex + 1, join.Table);
+								selectQuery.From.Tables.Insert(tableIndex, join.Table);
 								table.Joins.RemoveAt(joinIndex);
 								--joinIndex;
 							}
