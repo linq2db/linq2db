@@ -1261,7 +1261,7 @@ namespace LinqToDB.SqlQuery
 					//
 
 					if (!subQuery.Select.Columns.All(sc =>
-						    selectQuery.Select.Columns.Any(pc => ReferenceEquals(pc.Expression, sc))))
+						    selectQuery.Select.Columns.Any(pc => ReferenceEquals(QueryHelper.UnwrapNullablity(pc.Expression), sc))))
 					{
 						return false;
 					}
