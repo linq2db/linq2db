@@ -342,6 +342,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						newExpression = RemapToNewPathSimple(builder, assignment.Expression, memberPath, flags);
 					}
+					else if (parsed is SqlErrorExpression)
+					{
+						newExpression = assignment.Expression;
+					}
 
 					if (!ReferenceEquals(assignment.Expression, newExpression))
 					{
@@ -372,7 +376,11 @@ namespace LinqToDB.Linq.Builder
 
 					Expression newExpression;
 
-					if (parameter.MemberInfo != null)
+					if (parameter.Expression is SqlErrorExpression)
+					{
+						newExpression = parameter.Expression;
+					}
+					else if (parameter.MemberInfo != null)
 					{
 						newExpression = Expression.MakeMemberAccess(currentPath, parameter.MemberInfo);
 					}
@@ -849,11 +857,17 @@ namespace LinqToDB.Linq.Builder
 
 		public static void EnsureNoErrors(Expression expression)
 		{
-			var found = expression.Find(1, (_, e) => e is SqlErrorExpression);
+			var found = FindError(expression);
 			if (found != null)
 			{
-				throw ((SqlErrorExpression)found).CreateException();
+				throw found.CreateException();
 			}
+		}
+
+		public static SqlErrorExpression? FindError(Expression expression)
+		{
+			var found = expression.Find(1, (_, e) => e is SqlErrorExpression) as SqlErrorExpression;
+			return found;
 		}
 
 		/// <summary>

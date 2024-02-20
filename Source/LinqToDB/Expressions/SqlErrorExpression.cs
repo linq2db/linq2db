@@ -30,10 +30,10 @@ namespace LinqToDB.Expressions
 		{
 		}
 
-		public object?        BuildContext { get; }
-		public Expression?    Expression   { get; }
-		public Type           ResultType   { get; }
-		public string?        Message      { get; }
+		public object?     BuildContext { get; }
+		public Expression? Expression   { get; }
+		public Type        ResultType   { get; }
+		public string?     Message      { get; }
 
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override Type           Type      => ResultType;

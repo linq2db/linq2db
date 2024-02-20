@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using FluentAssertions;
+
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -61,7 +64,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnTest1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void CalculatedColumnTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -77,7 +80,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnTest2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void CalculatedColumnTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -94,7 +97,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnTest3([DataSources(TestProvName.AllClickHouse)] string context)
+		public void CalculatedColumnTest3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -117,7 +120,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnTest4([DataSources(TestProvName.AllClickHouse)] string context)
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		public void CalculatedColumnTest4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -129,6 +133,22 @@ namespace Tests.Linq
 				Assert.That(l,                  Is.Not.Empty);
 				Assert.That(l[0].AsSqlFullName, Is.Not.Null);
 				Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
+			}
+		}
+
+		[Test]
+		public void CalculatedColumnTest5([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					db.GetTable<DoctorCalculated>()
+						.SelectMany(d => d.PersonDoctor)
+						.Select(d => d.FirstName);
+				var l = q.ToList();
+
+				l.Should().NotBeEmpty();
+				l[0].Should().NotBeNull();
 			}
 		}
 
