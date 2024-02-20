@@ -1116,6 +1116,7 @@ If you don't specify some property, CLI will use default value for current optio
 
 			private static NamingCliOption DefineNamingOption(string option, string help, NormalizationOptions? defaults, NormalizationOptions? t4defaults)
 			{
+#pragma warning disable CA1863 // Use 'CompositeFormat'
 				return new NamingCliOption(
 					option,
 					help,
@@ -1123,6 +1124,7 @@ If you don't specify some property, CLI will use default value for current optio
 					new[] { string.Format(CultureInfo.InvariantCulture, NAMING_EXAMPLE_TEMPLATE, option) },
 					defaults,
 					t4defaults);
+#pragma warning restore CA1863 // Use 'CompositeFormat'
 			}
 		}
 
