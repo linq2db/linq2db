@@ -18,6 +18,8 @@ namespace LinqToDB.Linq.Builder
 
 	partial class ExpressionBuilder
 	{
+		public static readonly ParameterExpression PreambleParam =
+			Expression.Parameter(typeof(object[]), "preamble");
 
 		void CollectDependencies(IBuildContext context, Expression expression, HashSet<Expression> dependencies)
 		{

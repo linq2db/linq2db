@@ -3696,35 +3696,6 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region Eager Loading
-
-		public static readonly ParameterExpression PreambleParam =
-			Expression.Parameter(typeof(object[]), "preamble");
-
-		public int RegisterPreamble<T>(
-			object?                                                                         data,
-			Func<object?, IDataContext, Expression, object?[]?, T>                          func,
-			Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<T>> funcAsync
-			)
-		{
-			throw new NotImplementedException();
-
-			/*_preambles ??= new();
-			_preambles.Add(
-				Tuple.Create<object?,
-					Func<object?, IDataContext, Expression, object?[]?, object?>,
-					Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>
-				>
-				(
-					data,
-					(d, dc, e, ps) => func(d, dc, e, ps),
-					async (d, dc, e, ps, ct) => await funcAsync(d, dc, e, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-				);
-			return _preambles.Count - 1;*/
-		}
-
-		#endregion
-
 		#region Query Filter
 
 		private Stack<Type[]>? _disabledFilters;
