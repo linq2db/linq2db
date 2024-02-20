@@ -187,7 +187,7 @@ namespace LinqToDB.SqlQuery
 						isModified = true;
 					}
 					
-					if (MoveOuterJoinsToSubQuery(selectQuery))
+					if (MoveOuterJoinsToSubQuery(selectQuery, processMultiColumn: false))
 					{
 						isModified = true;
 					}
@@ -196,6 +196,11 @@ namespace LinqToDB.SqlQuery
 					{
 						isModified = true;
 						EnsureReferencesCorrected(selectQuery);
+					}
+
+					if (MoveOuterJoinsToSubQuery(selectQuery, processMultiColumn: true))
+					{
+						isModified = true;
 					}
 
 					if (ResolveWeakJoins(selectQuery))
@@ -2111,7 +2116,7 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery)
+		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery, bool processMultiColumn)
 		{
 			if (!_providerFlags.IsSubQueryColumnSupported)
 				return false;
@@ -2144,10 +2149,13 @@ namespace LinqToDB.SqlQuery
 
 							if (join.Table.Source is SelectQuery tsQuery && tsQuery.Select.Columns.Count > 0)
 							{
-								if (tsQuery.Select.Columns.Count > 1 && ProviderOuterCanHandleSeveralColumnsQuery(tsQuery))
+								if (tsQuery.Select.Columns.Count > 1)
 								{
-									// provider can handle this query
-									continue;
+									if (!processMultiColumn || ProviderOuterCanHandleSeveralColumnsQuery(tsQuery))
+									{
+										// provider can handle this query
+										continue;
+									}
 								}
 
 								if (!IsLimitedToOneRecord(sq, tsQuery, evaluationContext))
