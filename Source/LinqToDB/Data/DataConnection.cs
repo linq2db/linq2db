@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
@@ -17,6 +19,8 @@ namespace LinqToDB.Data
 	using Expressions;
 	using Mapping;
 	using RetryPolicy;
+	using Tools;
+
 
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines.
@@ -484,6 +488,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		static void OnTraceInternal(TraceInfo info)
 		{
+			using var m = ActivityService.Start(ActivityID.OnTraceInternal);
+
 			var dc = info.DataConnection;
 
 			switch (info.TraceInfoStep)
@@ -498,8 +504,8 @@ namespace LinqToDB.Data
 				case TraceInfoStep.AfterExecute:
 					dc.WriteTraceLineConnection(
 						info.RecordsAffected != null
-							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
-							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
+							? FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n")
+							: FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n"),
 						dc.TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
@@ -508,7 +514,7 @@ namespace LinqToDB.Data
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Value.Append(info.TraceInfoStep);
+					sb.Value.Append(CultureInfo.InvariantCulture, $"{info.TraceInfoStep}");
 
 					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 					{
@@ -516,8 +522,8 @@ namespace LinqToDB.Data
 						{
 							sb.Value
 								.AppendLine()
-								.AppendLine($"Exception: {ex.GetType()}")
-								.AppendLine($"Message  : {ex.Message}")
+								.AppendLine(CultureInfo.InvariantCulture, $"Exception: {ex.GetType()}")
+								.AppendLine(CultureInfo.InvariantCulture, $"Message  : {ex.Message}")
 								.AppendLine(ex.StackTrace)
 								;
 						}
@@ -529,7 +535,7 @@ namespace LinqToDB.Data
 							// list contains any elements or not
 							sb.Value
 								.AppendLine()
-								.AppendFormat("Failed while tried to log failure of type {0}", ex.GetType())
+								.Append(CultureInfo.InvariantCulture, $"Failed while tried to log failure of type {ex.GetType()}")
 								;
 						}
 					}
@@ -557,10 +563,10 @@ namespace LinqToDB.Data
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Value.Append($"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
+					sb.Value.Append(CultureInfo.InvariantCulture, $"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
 
 					if (info.RecordsAffected != null)
-						sb.Value.Append($" Rows Count: {info.RecordsAffected}.");
+						sb.Value.Append(CultureInfo.InvariantCulture, $" Rows Count: {info.RecordsAffected}.");
 
 					sb.Value.AppendLine();
 
@@ -659,6 +665,7 @@ namespace LinqToDB.Data
 				if (_connection == null)
 				{
 					DbConnection connection;
+
 					if (_connectionFactory != null)
 						connection = _connectionFactory(Options);
 					else
@@ -674,12 +681,16 @@ namespace LinqToDB.Data
 
 				if (connect && _connection.State == ConnectionState.Closed)
 				{
-					_connectionInterceptor?.ConnectionOpening(new(this), _connection.Connection);
+					if (_connectionInterceptor != null)
+						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
+							_connectionInterceptor.ConnectionOpening(new(this), _connection.Connection);
 
 					_connection.Open();
 					_closeConnection = true;
 
-					_connectionInterceptor?.ConnectionOpened(new(this), _connection.Connection);
+					if (_connectionInterceptor != null)
+						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
+							_connectionInterceptor.ConnectionOpened(new(this), _connection.Connection);
 				}
 			}
 			catch (Exception ex)
@@ -706,7 +717,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void Close()
 		{
-			_dataContextInterceptor?.OnClosing(new (this));
+			if (_dataContextInterceptor != null)
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosing))
+					_dataContextInterceptor.OnClosing(new(this));
 
 			DisposeCommand();
 
@@ -727,7 +740,9 @@ namespace LinqToDB.Data
 					_connection.Close();
 			}
 
-			_dataContextInterceptor?.OnClosed(new (this));
+			if (_dataContextInterceptor != null)
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosed))
+					_dataContextInterceptor.OnClosed(new (this));
 		}
 
 		#endregion
@@ -767,7 +782,8 @@ namespace LinqToDB.Data
 		internal void CommitCommandInit()
 		{
 			if (_commandInterceptor != null)
-				_command = _commandInterceptor.CommandInitialized(new (this), _command!);
+				using (ActivityService.Start(ActivityID.CommandInterceptorCommandInitialized))
+					_command = _commandInterceptor.CommandInitialized(new (this), _command!);
 
 			LastQuery = _command!.CommandText;
 		}
@@ -834,13 +850,20 @@ namespace LinqToDB.Data
 		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
 			if (_commandInterceptor == null)
-				return command.ExecuteNonQuery();
+				using(ActivityService.Start(ActivityID.CommandExecuteNonQuery))
+					return command.ExecuteNonQuery();
 
-			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+			Option<int> result;
 
-			return result.HasValue
-				? result.Value
-				: command.ExecuteNonQuery();
+			using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
+				result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+
+			if (result.HasValue)
+				return result.Value;
+
+			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQuery);
+
+			return command.ExecuteNonQuery();
 		}
 
 		internal int ExecuteNonQuery()
@@ -905,8 +928,10 @@ namespace LinqToDB.Data
 			if (_commandInterceptor == null)
 				return customExecute(command);
 
-			// remove?
-			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+			Option<int> result;
+
+			using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
+				result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
 
 			return result.HasValue
 				? result.Value
@@ -979,11 +1004,15 @@ namespace LinqToDB.Data
 			var result = Option<object?>.None;
 
 			if (_commandInterceptor != null)
-				result = _commandInterceptor.ExecuteScalar(new (this), command, result);
+				using (ActivityService.Start(ActivityID.CommandInterceptorExecuteScalar))
+					result = _commandInterceptor.ExecuteScalar(new (this), command, result);
 
-			return result.HasValue
-				? result.Value
-				: command.ExecuteScalar();
+			if (result.HasValue)
+				return result.Value;
+
+			using var m = ActivityService.Start(ActivityID.CommandExecuteScalar);
+
+			return command.ExecuteScalar();
 		}
 
 		object? ExecuteScalar()
@@ -1051,14 +1080,24 @@ namespace LinqToDB.Data
 			var result = Option<DbDataReader>.None;
 
 			if (_commandInterceptor != null)
-				result = _commandInterceptor.ExecuteReader(new (this), _command!, commandBehavior, result);
+				using (ActivityService.Start(ActivityID.CommandInterceptorExecuteReader))
+					result = _commandInterceptor.ExecuteReader(new (this), _command!, commandBehavior, result);
 
-			var rd = result.HasValue
-				? result.Value
-				: _command!.ExecuteReader(commandBehavior);
+			DbDataReader? rd;
+
+			if (result.HasValue)
+			{
+				rd = result.Value;
+			}
+			else
+			{
+				using var m = ActivityService.Start(ActivityID.CommandExecuteReader);
+				rd = _command!.ExecuteReader(commandBehavior);
+			}
 
 			if (_commandInterceptor != null)
-				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
+				using (ActivityService.Start(ActivityID.CommandInterceptorAfterExecuteReader))
+					_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
 
 			var wrapper = new DataReaderWrapper(this, rd, _command!);
 
@@ -1346,7 +1385,7 @@ namespace LinqToDB.Data
 						TraceLevel    = TraceLevel.Info,
 						CommandText   = sql,
 						StartTime     = now,
-						ExecutionTime = sw!.Elapsed
+						ExecutionTime = sw?.Elapsed
 					});
 				}
 

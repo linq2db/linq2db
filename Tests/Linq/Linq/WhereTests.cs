@@ -1637,7 +1637,7 @@ namespace Tests.Linq
 					true);
 
 				// remote context doesn't have access to final SQL
-				if (!context.EndsWith(".LinqService"))
+				if (!context.IsRemote())
 					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}
@@ -1663,7 +1663,7 @@ namespace Tests.Linq
 					true);
 
 				// remote context doesn't have access to final SQL
-				if (!context.EndsWith(".LinqService"))
+				if (!context.IsRemote())
 					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}
@@ -1845,7 +1845,7 @@ namespace Tests.Linq
 		[Test]
 		public void CaseOptimization([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new List<WhereWithString>{new()
 			{
 				Id        = 1,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -145,7 +146,7 @@ namespace LinqToDB.Mapping
 				return AliasName!;
 
 			if (!string.IsNullOrEmpty(Configuration.Sql.AssociationAlias))
-				return string.Format(Configuration.Sql.AssociationAlias, MemberInfo.Name);
+				return string.Format(CultureInfo.InvariantCulture, Configuration.Sql.AssociationAlias, MemberInfo.Name);
 
 			return string.Empty;
 		}

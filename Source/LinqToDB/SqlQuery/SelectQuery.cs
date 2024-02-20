@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -93,10 +94,10 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
 		/// </summary>
-		public bool               DoNotRemove         { get; set; }
+		public bool                     DoNotRemove        { get; set; }
 		public string?                  QueryName          { get; set; }
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
-		public bool            DoNotSetAliases      { get; set; }
+		public bool                     DoNotSetAliases    { get; set; }
 
 		List<ISqlExpression[]>? _uniqueKeys;
 
@@ -105,7 +106,7 @@ namespace LinqToDB.SqlQuery
 		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
 		/// </summary>
 		public  List<ISqlExpression[]> UniqueKeys    => _uniqueKeys ??= new ();
-		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
+		public  bool                   HasUniqueKeys => _uniqueKeys?.Count > 0;
 
 		#endregion
 
@@ -308,10 +309,7 @@ namespace LinqToDB.SqlQuery
 
 			dic.Add(this, this);
 
-			sb
-				.Append('(')
-				.Append(SourceID)
-				.Append(") ");
+			sb.Append(CultureInfo.InvariantCulture, $"({SourceID}) ");
 
 			((IQueryElement)Select). ToString(sb, dic);
 			((IQueryElement)From).   ToString(sb, dic);

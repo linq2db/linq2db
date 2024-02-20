@@ -213,7 +213,11 @@ namespace LinqToDB.CodeModel
 			for (var i = 0; i < @namespace.Name.Count; i++)
 			{
 				var name = @namespace.Name[i];
-				var fullName = FixName(_globalTypeNames, name, n => string.Join(".", @namespace.Name.Take(i)) + (i > 0 ? "." : null) + n, false);
+				var fullName = FixName(
+					_globalTypeNames,
+					name,
+					n => string.Join(".", @namespace.Name.Take(i).Select(n => string.Format(CultureInfo.InvariantCulture, "{0}", n))) + (i > 0 ? "." : null) + n,
+					false);
 				_globalNames.Add(fullName);
 			}
 

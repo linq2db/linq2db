@@ -43,7 +43,7 @@ namespace LinqToDB.Remote
 
 					Type? enumType = null;
 
-					var li = ms.GetConverter(new(from), new(_stringType), false);
+					var li = ms.GetConverter(new(from), new(_stringType), false, ConversionType.Common);
 
 					if (li == null && from.IsEnum)
 					{
@@ -51,7 +51,7 @@ namespace LinqToDB.Remote
 						from     = Enum.GetUnderlyingType(from);
 					}
 
-					li ??= ms.GetConverter(new(from), new(_stringType), true)!;
+					li ??= ms.GetConverter(new(from), new(_stringType), true, ConversionType.Common)!;
 
 					var b  = li.CheckNullLambda.Body;
 					var ps = li.CheckNullLambda.Parameters;
@@ -94,7 +94,7 @@ namespace LinqToDB.Remote
 
 					Type? enumType = null;
 
-					var li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), false);
+					var li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), false, ConversionType.Common);
 
 					if (li == null && to.IsEnum)
 					{
@@ -102,7 +102,7 @@ namespace LinqToDB.Remote
 						to = Enum.GetUnderlyingType(to);
 					}
 
-					li ??= ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
+					li ??= ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true, ConversionType.Common)!;
 
 					var b  = li.CheckNullLambda.Body;
 					var ps = li.CheckNullLambda.Parameters;

@@ -48,6 +48,22 @@ namespace Tests
 		}
 		}
 
+	public sealed class CultureRegion : IDisposable
+	{
+		private readonly CultureInfo _original;
+
+		public CultureRegion(string culture)
+		{
+			_original = Thread.CurrentThread.CurrentCulture;
+			Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+		}
+
+		void IDisposable.Dispose()
+		{
+			Thread.CurrentThread.CurrentCulture = _original;
+		}
+	}
+
 	public class InvariantCultureRegion : IDisposable
 	{
 		private readonly CultureInfo? _original;
