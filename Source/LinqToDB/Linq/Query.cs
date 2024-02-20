@@ -508,6 +508,7 @@ namespace LinqToDB.Linq
 					if (dataContext is IExpressionPreprocessor preprocessor)
 						expr = preprocessor.ProcessExpression(expr);
 				}
+
 				dataOptions = dataContext.Options;
 
 				useCache = !dataOptions.LinqOptions.DisableQueryCache;

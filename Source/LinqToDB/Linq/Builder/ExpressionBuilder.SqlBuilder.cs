@@ -3696,6 +3696,8 @@ namespace LinqToDB.Linq.Builder
 		List<Tuple<Expression, CteContext>>? _ctes;
 		Dictionary<IQueryable, Expression>?  _ctesObjectMapping;
 
+		Dictionary<Expression, CteContext>? _recursiveCteContexts;
+
 		public CteContext RegisterCte(IQueryable? queryable, Expression? cteExpression, Func<CteClause> buildFunc)
 		{
 			if (cteExpression != null && queryable != null && (_ctesObjectMapping == null || !_ctesObjectMapping.ContainsKey(queryable)))
@@ -3746,36 +3748,22 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		/*
-		public Tuple<CteClause, IBuildContext?> BuildCte(Expression cteExpression, Func<CteClause?, Tuple<CteClause, IBuildContext?>> buildFunc)
+		public void RegisterRecursiveCteContext(CteContext cteContext, Expression cteExpression)
 		{
-			var value = FindRegisteredCteByExpression(cteExpression, out var idx);
-			if (value?.Item2 != null)
-				return value;
+			_recursiveCteContexts ??= new(ExpressionEqualityComparer.Instance);
 
-			value = buildFunc(value?.Item1);
-
-			if (idx != null)
-			{
-				_ctes!.RemoveAt(idx.Value);
-			}
-			else
-			{
-				_ctes ??= new List<Tuple<Expression, Tuple<CteClause, IBuildContext?>>>();
-			}
-
-			_ctes.Add(Tuple.Create(cteExpression, value));
-
-			return value;
+			_recursiveCteContexts.Add(cteExpression, cteContext);
 		}
-		*/
 
-		/*
-		public IBuildContext? GetCteContext(Expression cteExpression)
+		public CteContext? FindRegisteredRecursiveCteContext(Expression cteExpression)
 		{
-			return FindRegisteredCteByExpression(cteExpression, out _)?.Item2;
+			if (_recursiveCteContexts == null)
+				return null;
+
+			_recursiveCteContexts.TryGetValue(cteExpression, out var cteContext);
+
+			return cteContext;
 		}
-		*/
 
 		#endregion
 

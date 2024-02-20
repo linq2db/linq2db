@@ -35,30 +35,37 @@ namespace LinqToDB.Linq.Builder
 		static BuildSequenceResult BuildRecursiveCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var methodCallExpression = ((MethodCallExpression)buildInfo.Expression);
-			var elementType          = methodCallExpression.Method.GetGenericArguments()[0];
 
-			var parameters      = methodCallExpression.Method.GetParameters();
-			var isSecondVariant = parameters[1].ParameterType == typeof(string);
+			var cteContext  = builder.FindRegisteredRecursiveCteContext(methodCallExpression);
+			var elementType = methodCallExpression.Method.GetGenericArguments()[0];
 
-			var lambda    = methodCallExpression.Arguments[isSecondVariant ? 2 : 1].UnwrapLambda();
-			var tableName = builder.EvaluateExpression<string>(methodCallExpression.Arguments[isSecondVariant ? 1 : 2]);
-
-			var cteClause = new CteClause(null, elementType, true, tableName);
-			var cteContext = new CteContext(builder, null, cteClause, null!);
-
-			var cteBody = lambda.Body.Transform(e =>
+			if (cteContext == null)
 			{
-				if (e == lambda.Parameters[0])
+				var parameters      = methodCallExpression.Method.GetParameters();
+				var isSecondVariant = parameters[1].ParameterType == typeof(string);
+
+				var lambda    = methodCallExpression.Arguments[isSecondVariant ? 2 : 1].UnwrapLambda();
+				var tableName = builder.EvaluateExpression<string>(methodCallExpression.Arguments[isSecondVariant ? 1 : 2]);
+
+				var cteClause  = new CteClause(null, elementType, true, tableName);
+				cteContext = new CteContext(builder, null, cteClause, null!);
+
+				var cteBody = lambda.Body.Transform(e =>
 				{
-					var cteTableContext = new CteTableContext(builder, null, elementType, new SelectQuery(), cteContext, buildInfo.IsTest);
-					var cteTableContextRef = new ContextRefExpression(e.Type, cteTableContext);
-					return cteTableContextRef;
-				}
+					if (e == lambda.Parameters[0])
+					{
+						var cteTableContext    = new CteTableContext(builder, null, elementType, new SelectQuery(), cteContext, buildInfo.IsTest);
+						var cteTableContextRef = new ContextRefExpression(e.Type, cteTableContext);
+						return cteTableContextRef;
+					}
 
-				return e;
-			});
+					return e;
+				});
 
-			cteContext.CteExpression = cteBody;
+				cteContext.CteExpression = cteBody;
+				builder.RegisterRecursiveCteContext(cteContext, methodCallExpression);
+			}
+
 
 			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
 
