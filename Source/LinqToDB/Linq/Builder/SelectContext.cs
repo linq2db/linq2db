@@ -208,7 +208,6 @@ namespace LinqToDB.Linq.Builder
 
 		public override void CompleteColumns()
 		{
-			ExpressionBuilder.EnsureAggregateColumns(this, SelectQuery);
 		}
 
 		public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)

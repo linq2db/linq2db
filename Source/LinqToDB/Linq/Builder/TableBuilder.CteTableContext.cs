@@ -13,20 +13,26 @@ namespace LinqToDB.Linq.Builder
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 
-			string? name     = null;
+			var cteContext  = builder.FindRegisteredCteContext(methodCall);
+			var elementType = methodCall.Method.GetGenericArguments()[0];
 
-			var bodyExpr = methodCall.Arguments[0].Unwrap();
-			if (methodCall.Arguments.Count > 1)
+			if (cteContext == null)
 			{
-				name = methodCall.Arguments[1].EvaluateExpression<string>();
+				string? tableName = null;
+
+				var cteBody = methodCall.Arguments[0].Unwrap();
+				if (methodCall.Arguments.Count > 1)
+				{
+					tableName = methodCall.Arguments[1].EvaluateExpression<string>();
+				}
+
+				var cteClause = new CteClause(null, elementType, true, tableName);
+				cteContext               = new CteContext(builder, null, cteClause, null!);
+				cteContext.CteExpression = cteBody;
+
+				builder.RegisterCteContext(cteContext, methodCall);
 			}
 
-			// ensure prepared for SQL
-			bodyExpr = builder.ConvertExpression(bodyExpr);
-
-			var cteContext = builder.RegisterCte(null, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArguments()[0], false, name));
-
-			var elementType = methodCall.Method.GetGenericArguments()[0];
 			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
 
 			return BuildSequenceResult.FromContext(cteTableContext);
@@ -34,18 +40,18 @@ namespace LinqToDB.Linq.Builder
 
 		static BuildSequenceResult BuildRecursiveCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var methodCallExpression = ((MethodCallExpression)buildInfo.Expression);
+			var methodCall = ((MethodCallExpression)buildInfo.Expression);
 
-			var cteContext  = builder.FindRegisteredRecursiveCteContext(methodCallExpression);
-			var elementType = methodCallExpression.Method.GetGenericArguments()[0];
+			var cteContext  = builder.FindRegisteredCteContext(methodCall);
+			var elementType = methodCall.Method.GetGenericArguments()[0];
 
 			if (cteContext == null)
 			{
-				var parameters      = methodCallExpression.Method.GetParameters();
+				var parameters      = methodCall.Method.GetParameters();
 				var isSecondVariant = parameters[1].ParameterType == typeof(string);
 
-				var lambda    = methodCallExpression.Arguments[isSecondVariant ? 2 : 1].UnwrapLambda();
-				var tableName = builder.EvaluateExpression<string>(methodCallExpression.Arguments[isSecondVariant ? 1 : 2]);
+				var lambda    = methodCall.Arguments[isSecondVariant ? 2 : 1].UnwrapLambda();
+				var tableName = builder.EvaluateExpression<string>(methodCall.Arguments[isSecondVariant ? 1 : 2]);
 
 				var cteClause  = new CteClause(null, elementType, true, tableName);
 				cteContext = new CteContext(builder, null, cteClause, null!);
@@ -63,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 				});
 
 				cteContext.CteExpression = cteBody;
-				builder.RegisterRecursiveCteContext(cteContext, methodCallExpression);
+				builder.RegisterCteContext(cteContext, methodCall);
 			}
 
 

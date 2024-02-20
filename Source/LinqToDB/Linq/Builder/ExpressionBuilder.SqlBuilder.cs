@@ -3671,96 +3671,25 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		public static void EnsureAggregateColumns(IBuildContext context, SelectQuery query)
-		{
-			/*if (query.Select.Columns.Count == 0)
-			{
-				var sql = context.ConvertToSql(null, 0, ConvertFlags.All);
-				if (sql.Length > 0)
-				{
-					// Handling case when all columns are aggregates, it cause query to produce only single record and we have to include at least one aggregation in Select statement.
-					//
-					var allAggregate = sql.All(static s => QueryHelper.IsAggregationOrWindowFunction(s.Sql));
-					if (allAggregate)
-					{
-						query.Select.Add(sql[0].Sql, sql[0].MemberChain.FirstOrDefault()?.Name);
-					}
-				}
-			}*/
-			}
-
 		#endregion
 
 		#region CTE
 
-		List<Tuple<Expression, CteContext>>? _ctes;
-		Dictionary<IQueryable, Expression>?  _ctesObjectMapping;
+		Dictionary<Expression, CteContext>? _cteContexts;
 
-		Dictionary<Expression, CteContext>? _recursiveCteContexts;
-
-		public CteContext RegisterCte(IQueryable? queryable, Expression? cteExpression, Func<CteClause> buildFunc)
+		public void RegisterCteContext(CteContext cteContext, Expression cteExpression)
 		{
-			if (cteExpression != null && queryable != null && (_ctesObjectMapping == null || !_ctesObjectMapping.ContainsKey(queryable)))
-			{
-				_ctesObjectMapping ??= new Dictionary<IQueryable, Expression>();
+			_cteContexts ??= new(ExpressionEqualityComparer.Instance);
 
-				_ctesObjectMapping.Add(queryable, cteExpression);
-			}
-
-			if (cteExpression == null)
-			{
-				if (_ctesObjectMapping == null)
-					throw new InvalidOperationException();
-				cteExpression = _ctesObjectMapping[queryable!];
-			}
-
-			var value = FindRegisteredCteByExpression(cteExpression, out _);
-
-			if (value == null)
-			{
-				var cteClause = buildFunc();
-
-				value = new CteContext(this, null, cteClause, cteExpression);
-
-				_ctes ??= new();
-				_ctes.Add(Tuple.Create(cteExpression, value));
-			}
-
-			return value;
+			_cteContexts.Add(cteExpression, cteContext);
 		}
 
-		CteContext? FindRegisteredCteByExpression(Expression cteExpression, out int? idx)
+		public CteContext? FindRegisteredCteContext(Expression cteExpression)
 		{
-			if (_ctes != null)
-			{
-				for (var index = 0; index < _ctes.Count; index++)
-				{
-					var tuple = _ctes[index];
-					if (tuple.Item1.EqualsTo(cteExpression, OptimizationContext.GetSimpleEqualsToContext(false, ParametersContext.GetParametrized())))
-					{
-						idx = index;
-						return tuple.Item2;
-					}
-				}
-			}
-
-			idx = null;
-			return null;
-		}
-
-		public void RegisterRecursiveCteContext(CteContext cteContext, Expression cteExpression)
-		{
-			_recursiveCteContexts ??= new(ExpressionEqualityComparer.Instance);
-
-			_recursiveCteContexts.Add(cteExpression, cteContext);
-		}
-
-		public CteContext? FindRegisteredRecursiveCteContext(Expression cteExpression)
-		{
-			if (_recursiveCteContexts == null)
+			if (_cteContexts == null)
 				return null;
 
-			_recursiveCteContexts.TryGetValue(cteExpression, out var cteContext);
+			_cteContexts.TryGetValue(cteExpression, out var cteContext);
 
 			return cteContext;
 		}
