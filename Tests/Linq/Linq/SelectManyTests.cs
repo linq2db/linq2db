@@ -190,7 +190,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test31([DataSources] string context)
+		public void Test31([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -206,7 +206,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test32([DataSources] string context)
+		public void Test32([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

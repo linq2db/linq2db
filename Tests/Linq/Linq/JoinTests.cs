@@ -226,7 +226,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoin9([DataSources(TestProvName.AllAccess)] string context)
+		public void InnerJoin9([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -762,7 +762,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoin4([DataSources] string context)
+		public void LeftJoin4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -907,7 +907,7 @@ namespace Tests.Linq
 		[Test]
 		public void ReferenceJoin2([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 				AreEqual(
 					from g in    GrandChild
 						join c in    Child on g.Child equals c
@@ -1610,7 +1610,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 				var id2 = Parent.Skip(1).First().ParentID;
@@ -1651,6 +1651,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutConditions([DataSources(
+			TestProvName.AllClickHouse,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
@@ -1698,6 +1699,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(
+			TestProvName.AllClickHouse,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
@@ -1750,7 +1752,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 				var id2 = Parent.Skip(1).First().ParentID;
@@ -1845,7 +1847,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var actual =
 					from left in (
