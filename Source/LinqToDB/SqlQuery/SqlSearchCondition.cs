@@ -127,6 +127,17 @@ namespace LinqToDB.SqlQuery
 			return new SqlSearchCondition(!IsOr, newPredicates);
 		}
 
+		public bool IsTrue()
+		{
+			if (Predicates.Count == 0)
+				return true;
+
+			if (Predicates is [SqlPredicate.IsTrue])
+				return true;
+
+			return false;
+		}
+
 		#endregion
 
 		#region ISqlExpression Members

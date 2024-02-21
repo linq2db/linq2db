@@ -6,6 +6,8 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 using Tests.Model;
 
@@ -427,8 +429,6 @@ namespace Tests.xUpdate
 			{
 				PrepareData(db);
 
-				var table = GetTarget(db);
-
 				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
 							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
 							 select new TestMapping1()
@@ -449,6 +449,7 @@ namespace Tests.xUpdate
 				selectQuery.Select.Columns.Count.Should().Be(6);
 				selectQuery.Select.From.Tables.Should().HaveCount(1);
 				selectQuery.Select.From.Tables[0].Joins.Should().HaveCount(1);
+				selectQuery.Select.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Cross);
 
 				results.Should().HaveCount(16);
 			}

@@ -24,6 +24,10 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// CROSS APPLY.
 		/// </summary>
+		Cross,
+		/// <summary>
+		/// CROSS JOIN.
+		/// </summary>
 		CrossApply,
 		/// <summary>
 		/// OUTER APPLY.

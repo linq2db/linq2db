@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlJoinedTable : IQueryElement
+	public class SqlJoinedTable : QueryElement
 	{
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
 		{
@@ -32,24 +32,9 @@ namespace LinqToDB.SqlQuery
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 		public SourceCardinality        Cardinality        { get; set; }
 
-#if OVERRIDETOSTRING
+		public override QueryElementType ElementType => QueryElementType.JoinedTable;
 
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
-		#region IQueryElement Members
-
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-
-		public QueryElementType ElementType => QueryElementType.JoinedTable;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (!writer.AddVisited(this))
 				return writer.Append("...");
@@ -60,6 +45,7 @@ namespace LinqToDB.SqlQuery
 			switch (JoinType)
 			{
 				case JoinType.Inner      : writer.Append("INNER JOIN ");  break;
+				case JoinType.Cross      : writer.Append("CROSS JOIN ");  break;
 				case JoinType.Left       : writer.Append("LEFT JOIN ");   break;
 				case JoinType.CrossApply : writer.Append("CROSS APPLY "); break;
 				case JoinType.OuterApply : writer.Append("OUTER APPLY "); break;
@@ -92,16 +78,16 @@ namespace LinqToDB.SqlQuery
 					.Append(") ");
 			}
 
-			writer
-				.Append(" ON ");
-
-			writer.AppendElement(Condition);
+			if (JoinType != JoinType.Cross)
+			{
+				writer
+					.Append(" ON ")
+					.AppendElement(Condition);
+			}
 
 			writer.RemoveVisited(this);
 
 			return writer;
 		}
-
-		#endregion
 	}
 }

@@ -24,11 +24,6 @@ namespace LinqToDB.SqlQuery
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			if (SearchCondition.Predicates.Count == 0)
-			{
-				return writer.DebugAppendUniqueId(this);
-			}
-
 			writer
 				.DebugAppendUniqueId(this)
 				.AppendLine()

@@ -215,7 +215,7 @@ namespace LinqToDB.SqlQuery
 						EnsureReferencesCorrected(selectQuery);
 					}
 
-					if (CorrectJoins(selectQuery))
+					if (CorrectRecursiveCteJoins(selectQuery))
 					{
 						isModified = true;
 						EnsureReferencesCorrected(selectQuery);
@@ -518,13 +518,13 @@ namespace LinqToDB.SqlQuery
 		{
 			var isModified = false;
 
-			if (RemoveEmptyJoins(selectQuery))
+			if (CorrectEmptyInnerJoins(selectQuery))
 				isModified = true;
 
 			if (OptimizeGroupBy(selectQuery))
 				isModified = true;
 
-			if (RemoveEmptyJoins(selectQuery))
+			if (CorrectEmptyInnerJoins(selectQuery))
 				isModified = true;
 
 			if (OptimizeUnions(selectQuery))
@@ -1590,7 +1590,7 @@ namespace LinqToDB.SqlQuery
 					}
 					else if (joinTable.JoinType == JoinType.Left)
 					{
-						if (joinTable.Condition.Predicates.Count == 0)
+						if (joinTable.Condition.IsTrue())
 						{
 							// See `PostgreSQLExtensionsTests.GenerateSeries`
 							if (subQuery.From.Tables[0].Joins.Count > 0)
@@ -1782,7 +1782,7 @@ namespace LinqToDB.SqlQuery
 			return replaced;
 		}
 
-		bool CorrectJoins(SelectQuery selectQuery)
+		bool CorrectRecursiveCteJoins(SelectQuery selectQuery)
 		{
 			var isModified = false;
 
@@ -1907,24 +1907,15 @@ namespace LinqToDB.SqlQuery
 		{
 			var optimized = false;
 
-			for (var tableIndex = 0; tableIndex < selectQuery.From.Tables.Count; tableIndex++)
+			foreach (var table in selectQuery.From.Tables)
 			{
-				var table = selectQuery.From.Tables[tableIndex];
-				for (var joinIndex = 0; joinIndex < table.Joins.Count; joinIndex++)
+				foreach (var join in table.Joins)
 				{
-					var join = table.Joins[joinIndex];
 					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.FullApply || join.JoinType == JoinType.RightApply)
 					{
 						if (OptimizeApply(join, isApplySupported))
 						{
 							optimized = true;
-
-							if (join is { JoinType: JoinType.Inner, Condition.Predicates.Count: 0 })
-							{
-								selectQuery.From.Tables.Insert(tableIndex, join.Table);
-								table.Joins.RemoveAt(joinIndex);
-								--joinIndex;
-							}
 						}
 					}
 				}
@@ -1933,11 +1924,8 @@ namespace LinqToDB.SqlQuery
 			return optimized;
 		}
 
-		bool RemoveEmptyJoins(SelectQuery selectQuery)
+		bool CorrectEmptyInnerJoins(SelectQuery selectQuery)
 		{
-			if (_providerFlags.IsCrossJoinSupported)
-				return false;
-
 			var isModified = false;
 
 			for (var tableIndex = 0; tableIndex < selectQuery.From.Tables.Count; tableIndex++)
@@ -1946,12 +1934,29 @@ namespace LinqToDB.SqlQuery
 				for (var joinIndex = 0; joinIndex < table.Joins.Count; joinIndex++)
 				{
 					var join = table.Joins[joinIndex];
-					if (join.JoinType == JoinType.Inner && join.Condition.Predicates.Count == 0)
+					if (join.JoinType == JoinType.Inner && join.Condition.IsTrue())
 					{
-						selectQuery.From.Tables.Insert(tableIndex + 1, join.Table);
-						table.Joins.RemoveAt(joinIndex);
-						--joinIndex;
-						isModified = true;
+						if (_providerFlags.IsCrossJoinSupported)
+						{
+							join.JoinType = JoinType.Cross;
+							if (join.Table.Joins.Count > 0)
+							{
+								// move joins to the same level as parent table
+								for (var ij = 0; ij < join.Table.Joins.Count; ij++)
+								{
+									table.Joins.Insert(joinIndex + ij + 1, join.Table.Joins[ij]);
+								}
+								join.Table.Joins.Clear();
+							}
+							isModified = true;
+						}
+						else
+						{
+							selectQuery.From.Tables.Insert(tableIndex + 1, join.Table);
+							table.Joins.RemoveAt(joinIndex);
+							--joinIndex;
+							isModified = true;
+						}
 					}
 				}
 			}

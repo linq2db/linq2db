@@ -2147,7 +2147,7 @@ namespace LinqToDB.SqlProvider
 
 			if (buildOn)
 			{
-				if (condition.Predicates.Count != 0)
+				if (!condition.IsTrue())
 					BuildSearchCondition(Precedence.Unknown, condition, wrapCondition : false);
 				else
 					StringBuilder.Append("1=1");
@@ -2173,8 +2173,7 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (join.JoinType)
 			{
-				case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Predicates.IsNullOrEmpty() :
-										  StringBuilder.Append("CROSS JOIN ");  return false;
+				case JoinType.Cross     : StringBuilder.Append("CROSS JOIN ");  return false;
 				case JoinType.Inner     : StringBuilder.Append("INNER JOIN ");  return true;
 				case JoinType.Left      : StringBuilder.Append("LEFT JOIN ");   return true;
 				case JoinType.CrossApply: StringBuilder.Append("CROSS APPLY "); return false;
@@ -2193,10 +2192,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var condition = ConvertElement(selectQuery.Where.SearchCondition);
 
-			if (condition.Predicates.Count == 0)
-				return false;
-
-			if (condition.Predicates.Count == 1 && condition.Predicates[0].ElementType == QueryElementType.TruePredicate)
+			if (condition.IsTrue())
 				return false;
 
 			return true;
@@ -2290,7 +2286,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildHavingClause(SelectQuery selectQuery)
 		{
 			var condition = ConvertElement(selectQuery.Having.SearchCondition);
-			if (condition.Predicates.Count == 0)
+			if (condition.IsTrue())
 				return;
 
 			AppendIndent();
