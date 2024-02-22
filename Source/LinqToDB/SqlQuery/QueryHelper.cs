@@ -1199,41 +1199,41 @@ namespace LinqToDB.SqlQuery
 
 		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr)
 		{
-			if (expr is SqlColumn)
-				return false;
-
-			return ContainsAggregationOrWindowFunctionDeep(expr);
-		}
-
-		static bool ContainsAggregationOrWindowFunctionDeep(IQueryElement expr)
-		{
-			return null != expr.Find(e => IsAggregationFunction(e) || IsWindowFunction(e));
+			return ContainsExpressionInSameLevel(expr, e => IsWindowFunction(e) || IsAggregationFunction(e));
 		}
 
 		public static bool ContainsWindowFunction(IQueryElement expr)
 		{
-			if (expr is SqlColumn)
-				return false;
-
-			return ContainsWindowFunctionDeep(expr);
-		}
-
-		static bool ContainsWindowFunctionDeep(IQueryElement expr)
-		{
-			return null != expr.Find(IsWindowFunction);
+			return ContainsExpressionInSameLevel(expr, IsWindowFunction);
 		}
 
 		public static bool ContainsAggregationFunction(IQueryElement expr)
 		{
-			if (expr is SqlColumn)
-				return false;
-
-			return ContainsAggregationFunctionDeep(expr);
+			return ContainsExpressionInSameLevel(expr, IsAggregationFunction);
 		}
 
-		static bool ContainsAggregationFunctionDeep(IQueryElement expr)
+		static bool ContainsExpressionInSameLevel(IQueryElement expr, Func<ISqlExpression, bool> matchFunc)
 		{
-			return null != expr.Find(IsAggregationFunction);
+			var found = false;
+
+			expr.VisitParentFirst((e) =>
+			{
+				if (found)
+					return false;
+
+				if (e is SelectQuery)
+					return false;
+
+				if (expr is ISqlExpression sqlExpr && matchFunc(sqlExpr))
+				{
+					found = true;
+					return false;
+				}
+
+				return true;
+			});
+
+			return found;
 		}
 
 		/// <summary>

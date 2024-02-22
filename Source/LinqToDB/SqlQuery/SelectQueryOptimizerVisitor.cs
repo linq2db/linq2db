@@ -1109,11 +1109,6 @@ namespace LinqToDB.SqlQuery
 
 			if (!IsMovingUpValid(parentQuery, tableSource, subQuery, out var havingDetected))
 			{
-				if (!subQuery.GroupBy.IsEmpty && !parentQuery.Where.IsEmpty)
-				{
-
-				}
-
 				return false;
 			}
 
