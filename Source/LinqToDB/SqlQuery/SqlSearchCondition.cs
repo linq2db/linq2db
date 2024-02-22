@@ -132,7 +132,7 @@ namespace LinqToDB.SqlQuery
 			if (Predicates.Count == 0)
 				return true;
 
-			if (Predicates is [SqlPredicate.IsTrue])
+			if (Predicates[0].ElementType == QueryElementType.TruePredicate)
 				return true;
 
 			return false;

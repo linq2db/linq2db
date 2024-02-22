@@ -1469,6 +1469,7 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.FromClause    : Append(((SqlFromClause)   e).Tables);          break;
 					case QueryElementType.WhereClause   : Append(((SqlWhereClause)  e).SearchCondition); break;
+					case QueryElementType.HavingClause  : Append(((SqlHavingClause) e).SearchCondition); break;
 					case QueryElementType.GroupByClause :
 						{
 							Append((int)((SqlGroupByClause)e).GroupingType);
@@ -2151,7 +2152,7 @@ namespace LinqToDB.Remote
 							var select             = Read<SqlSelectClause>()!;
 							var where              = Read<SqlWhereClause>()!;
 							var groupBy            = Read<SqlGroupByClause>()!;
-							var having             = Read<SqlWhereClause>()!;
+							var having             = Read<SqlHavingClause>()!;
 							var orderBy            = Read<SqlOrderByClause>()!;
 							var parameterDependent = ReadBool();
 							var queryName          = ReadString();
@@ -2474,6 +2475,7 @@ namespace LinqToDB.Remote
 					}
 					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                break;
 					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);            break;
+					case QueryElementType.HavingClause  : obj = new SqlHavingClause (Read     <SqlSearchCondition>()!);            break;
 					case QueryElementType.GroupByClause : obj = new SqlGroupByClause((GroupingType)ReadInt(), ReadArray<ISqlExpression>()!); break;
 					case QueryElementType.GroupingSet   : obj = new SqlGroupingSet  (ReadArray<ISqlExpression>()!);                          break;
 					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>()!);                break;

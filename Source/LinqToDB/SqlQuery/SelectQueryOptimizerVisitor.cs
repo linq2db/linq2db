@@ -1053,17 +1053,7 @@ namespace LinqToDB.SqlQuery
 			return optimized;
 		}
 
-		static void ConcatSearchCondition(SqlWhereClause where1, SqlWhereClause where2)
-		{
-			var sc = where1.EnsureConjunction();
-
-			if (!where2.SearchCondition.IsOr)
-				sc.Predicates.AddRange(where2.SearchCondition.Predicates);
-			else
-				sc.Predicates.Add(where2.SearchCondition);
-		}
-
-		bool IsColumnExpressionValid(SelectQuery parentQuery, NullabilityContext nullability, SelectQuery subQuery, SqlColumn column, ISqlExpression columnExpression)
+		bool IsColumnExpressionAllowedToMoveUp(SelectQuery parentQuery, NullabilityContext nullability, SqlColumn column, ISqlExpression columnExpression, bool ignoreWhere)
 		{
 			if (columnExpression.ElementType == QueryElementType.Column ||
 			    columnExpression.ElementType == QueryElementType.SqlRawSqlTable ||
@@ -1075,77 +1065,19 @@ namespace LinqToDB.SqlQuery
 			var underlying = QueryHelper.UnwrapExpression(columnExpression, false);
 			if (!ReferenceEquals(underlying, columnExpression))
 			{
-				return IsColumnExpressionValid(parentQuery, nullability, subQuery, column, underlying);
+				return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, underlying, ignoreWhere);
 			}
 
 			if (underlying is SqlBinaryExpression binary)
 			{
 				if (QueryHelper.IsConstantFast(binary.Expr1))
 				{
-					return IsColumnExpressionValid(parentQuery, nullability, subQuery, column, binary.Expr2);
+					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr2, ignoreWhere);
 				}
 
 				if (QueryHelper.IsConstantFast(binary.Expr2))
 				{
-					return IsColumnExpressionValid(parentQuery, nullability, subQuery, column, binary.Expr1);
-				}
-			}
-
-			// check that column has at least one reference 
-			//
-
-			if (!parentQuery.GroupBy.IsEmpty)
-			{
-				if (parentQuery.GroupBy.HasElement(column))
-				{
-					if (QueryHelper.IsConstantFast(columnExpression))
-					{
-						if (parentQuery.Select.Columns.Count == 0 || null != parentQuery.Select.Find(e => ReferenceEquals(e, column)))
-						{
-							return false;
-						}
-					}
-					else
-					{
-						return false;
-					}
-				}
-			}
-
-			if (QueryHelper.IsAggregationOrWindowFunction(columnExpression))
-			{
-				if (!parentQuery.Where.IsEmpty)
-				{
-					if (parentQuery.Where.HasElement(column))
-					{
-						if (!subQuery.GroupBy.IsEmpty && parentQuery.Where.SearchCondition.IsAnd && QueryHelper.IsAggregationFunction(columnExpression) && !QueryHelper.IsWindowFunction(columnExpression))
-						{
-							// Trying to handle moving to Having
-							//
-							foreach (var p in parentQuery.Where.SearchCondition.Predicates)
-							{
-								if (p.HasElement(column))
-								{
-									if (p.ElementType != QueryElementType.ExprExprPredicate)
-										return false;
-
-									var exprExpr = (SqlPredicate.ExprExpr)p;
-									if (ReferenceEquals(QueryHelper.UnwrapNullablity(exprExpr.Expr1), column) || ReferenceEquals(QueryHelper.UnwrapNullablity(exprExpr.Expr2), column))
-										continue;
-
-									return false;
-								}
-							}
-						}
-						else
-							return false;
-					}
-				}
-
-				if (!parentQuery.Having.IsEmpty)
-				{
-					if (parentQuery.Having.HasElement(column))
-						return false;
+					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr1, ignoreWhere);
 				}
 			}
 
@@ -1154,13 +1086,14 @@ namespace LinqToDB.SqlQuery
 				_evaluationContext,
 				column.Parent,
 				_applySelect == parentQuery ? parentQuery.Where  : null,
-				_applySelect == parentQuery ? parentQuery.Select : null
+				_applySelect == parentQuery ? parentQuery.Select : null,
+				ignoreWhere ? parentQuery.Where : null
 				);
 
 			return allowed;
 		}
 
-		bool MoveSubQueryUp(SelectQuery selectQuery, SqlTableSource tableSource)
+		bool MoveSubQueryUp(SelectQuery parentQuery, SqlTableSource tableSource)
 		{
 			if (tableSource.Source is not SelectQuery subQuery)
 				return false;
@@ -1174,219 +1107,13 @@ namespace LinqToDB.SqlQuery
 				return false;
 			}
 
-			// Trying to do not mix query hints
-			if (subQuery.SqlQueryExtensions?.Count > 0)
+			if (!IsMovingUpValid(parentQuery, tableSource, subQuery, out var havingDetected))
 			{
-				if (tableSource.Joins.Count > 0 || selectQuery.From.Tables.Count > 1)
-					return false;
-			}
-
-			if (subQuery.From.Tables.Count > 1)
-			{
-				if (!_providerFlags.IsMultiTablesSupportsJoins)
+				if (!subQuery.GroupBy.IsEmpty && !parentQuery.Where.IsEmpty)
 				{
-					if (QueryHelper.EnumerateJoins(selectQuery).Any())
-						return false;
-				}
-			}
 
-			// // named sub-query cannot be removed
-			if (subQuery.QueryName != null
-				// parent also has name
-				&& (selectQuery.QueryName != null
-				// parent has other tables/sub-queries
-				|| selectQuery.From.Tables.Count > 1
-				|| selectQuery.From.Tables.Any(static t => t.Joins.Count > 0)))
-			{
-				return false;
-			}
-
-			if (_currentSetOperator?.SelectQuery == selectQuery || selectQuery.HasSetOperators)
-			{
-				// processing parent query as part of Set operation
-				//
-
-				if (subQuery.Select.HasModifier)
-					return false;
-
-				/*
-				if (!subQuery.Select.GroupBy.IsEmpty || !subQuery.Select.Where.IsEmpty)
-					return false;
-					*/
-
-				if (!subQuery.Select.OrderBy.IsEmpty)
-				{
-					return false;
 				}
 
-				/*
-				if (QueryHelper.EnumerateAccessibleSources(subQuery).Skip(1).Take(2).Count() > 1)
-					return false;
-			*/
-			}
-
-			if (!subQuery.GroupBy.IsEmpty && !selectQuery.GroupBy.IsEmpty)
-				return false;
-
-			// Do not allow moving search condition 
-			if (!subQuery.GroupBy.IsEmpty && !selectQuery.Where.IsEmpty)
-			{
-				return false;
-			}
-
-			if (selectQuery.Select.IsDistinct)
-			{
-				// Common check for Distincts
-
-				if (!subQuery.GroupBy.Having.IsEmpty)
-					return false;
-
-				if (subQuery.Select.SkipValue    != null || subQuery.Select.TakeValue    != null ||
-				    selectQuery.Select.SkipValue != null || selectQuery.Select.TakeValue != null)
-				{
-					return false;
-				}
-
-				// Common column check for Distincts
-
-				foreach (var parentColumn in selectQuery.Select.Columns)
-				{
-					if (parentColumn.Expression is not SqlColumn column || column.Parent != subQuery || QueryHelper.ContainsAggregationOrWindowFunction(parentColumn.Expression))
-					{
-						return false;
-					}
-				}
-			}
-
-			if (subQuery.Select.IsDistinct != selectQuery.Select.IsDistinct)
-			{
-				if (subQuery.Select.IsDistinct)
-				{
-					// Columns in parent query should match
-					//
-
-					if (!subQuery.Select.Columns.All(sc =>
-						    selectQuery.Select.Columns.Any(pc => ReferenceEquals(QueryHelper.UnwrapNullablity(pc.Expression), sc))))
-					{
-						return false;
-					}
-
-					if (selectQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
-					{
-						return false;
-					}
-				}
-				else
-				{
-					// handling case when we have two DISTINCT
-					// Note, columns already checked above
-					//
-				}
-			}
-
-			if (subQuery.Select.HasModifier)
-			{
-				// Do not optimize queries for update
-				if (_updateQuery == selectQuery)
-					return false;
-
-				if (tableSource.Joins.Count > 0)
-					return false;
-				if (selectQuery.From.Tables.Count > 1)
-					return false;
-
-				if (!selectQuery.Select.OrderBy.IsEmpty)
-					return false;
-
-				if (!selectQuery.Select.Where.IsEmpty)
-					return false;
-
-				if (selectQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
-				{
-					return false;
-				}
-			}
-
-			if (subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)
-			{
-				if (tableSource.Joins.Any(j => j.JoinType == JoinType.Right || j.JoinType == JoinType.RightApply ||
-				                               j.JoinType == JoinType.Full  || j.JoinType == JoinType.FullApply))
-				{
-					return false;
-				}
-			}
-
-			if (!_providerFlags.AcceptsOuterExpressionInAggregate)
-			{
-				if (QueryHelper.EnumerateJoins(subQuery).Any(j => j.JoinType != JoinType.Inner))
-				{
-					if (subQuery.Select.Columns.Any(c => IsInsideAggregate(selectQuery, c)))
-						return false;
-				}
-			}
-
-			var nullability = NullabilityContext.GetContext(selectQuery);
-
-			if (subQuery.Select.Columns.Any(c => !IsColumnExpressionValid(selectQuery, nullability, subQuery, c, c.Expression)))
-				return false;
-
-			if (!selectQuery.GroupBy.IsEmpty)
-			{
-				if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, nullability, subQuery, c, c.Expression)))
-					return false;
-			}
-
-			if (!selectQuery.GroupBy.IsEmpty && !subQuery.GroupBy.IsEmpty)
-				return false;
-
-			if (selectQuery.GroupBy.IsEmpty && !subQuery.GroupBy.IsEmpty)
-			{
-				if (tableSource.Joins.Count > 0)
-					return false;
-				if (selectQuery.From.Tables.Count > 1)
-					return false;
-
-				if (selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
-					return false;
-			}
-
-			if (subQuery.Select.TakeHints != null && selectQuery.Select.TakeValue != null)
-				return false;
-
-			if (subQuery.HasSetOperators)
-			{
-				if (selectQuery.HasSetOperators)
-					return false;
-
-				if (selectQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
-				{
-					if (subQuery.SetOperators.Any(so => so.Operation != SetOperation.UnionAll))
-						return false;
-				}
-
-				if (!selectQuery.Select.Where.IsEmpty || !selectQuery.Select.Having.IsEmpty || selectQuery.Select.HasModifier || !selectQuery.OrderBy.IsEmpty)
-					return false;
-
-				var operation = subQuery.SetOperators[0].Operation;
-
-				if (_currentSetOperator != null && _currentSetOperator.Operation != operation)
-					return false;
-
-				if (!subQuery.SetOperators.All(so => so.Operation == operation))
-					return false;
-			}
-
-			if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsWindowFunction(c.Expression)))
-			{
-				if (!selectQuery.IsSimpleOrSet)
-				{
-					return false;
-				}
-			}
-
-			// Do not optimize t.Field IN (SELECT x FROM o)
-			if (selectQuery == _inSubquery && (subQuery.Select.HasModifier || !subQuery.GroupBy.IsEmpty || subQuery.HasSetOperators))
-			{
 				return false;
 			}
 
@@ -1395,7 +1122,7 @@ namespace LinqToDB.SqlQuery
 			//
 
 #pragma warning disable CA1508 // Avoid dead conditional code : analyzer bug
-			selectQuery.QueryName ??= subQuery.QueryName;
+			parentQuery.QueryName ??= subQuery.QueryName;
 #pragma warning restore CA1508 // Avoid dead conditional code
 
 			if (subQuery.HasSetOperators)
@@ -1404,9 +1131,9 @@ namespace LinqToDB.SqlQuery
 					new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>
 						.Default);
 
-				for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
+				for (var i = 0; i < parentQuery.Select.Columns.Count; i++)
 				{
-					var scol = selectQuery.Select.Columns[i];
+					var scol = parentQuery.Select.Columns[i];
 
 					if (!newIndexes.ContainsKey(scol.Expression))
 						newIndexes[scol.Expression] = i;
@@ -1419,62 +1146,55 @@ namespace LinqToDB.SqlQuery
 
 				UpdateSetIndexes(newIndexes, subQuery, operation);
 
-				selectQuery.SetOperators.InsertRange(0, subQuery.SetOperators);
+				parentQuery.SetOperators.InsertRange(0, subQuery.SetOperators);
 				subQuery.SetOperators.Clear();
 			}
 
 			if (!subQuery.GroupBy.IsEmpty)
 			{
-				selectQuery.GroupBy.Items.AddRange(subQuery.GroupBy.Items);
-				selectQuery.GroupBy.GroupingType = subQuery.GroupBy.GroupingType;
+				parentQuery.GroupBy.Items.AddRange(subQuery.GroupBy.Items);
+				parentQuery.GroupBy.GroupingType = subQuery.GroupBy.GroupingType;
 
-				if (!selectQuery.Where.IsEmpty)
+				if (havingDetected?.Count > 0)
 				{
-					var hsc = selectQuery.Having.EnsureConjunction();
-					if (selectQuery.Where.SearchCondition.IsAnd)
-					{
-						foreach (var column in subQuery.Select.Columns)
-						{
-							if (QueryHelper.IsAggregationOrWindowFunction(column.Expression))
-							{
-								for (var i = 0; i < selectQuery.Where.SearchCondition.Predicates.Count; i++)
-								{
-									var p = selectQuery.Where.SearchCondition.Predicates[i];
-									if (p.HasElement(column) && p.ElementType == QueryElementType.ExprExprPredicate)
-									{
-										hsc.Add(p);
-										selectQuery.Where.SearchCondition.Predicates.RemoveAt(i);
-										--i;
-									}
-								}
-							}
-						}
-					}
+					// Should be checked earlier
+					if (havingDetected.Count != parentQuery.Where.SearchCondition.Predicates.Count)
+						throw new InvalidOperationException();
+
+					// move Where to Having
+					parentQuery.Having.SearchCondition.AddRange(parentQuery.Where.SearchCondition.Predicates);
+					parentQuery.Where.SearchCondition.Predicates.Clear();
 				}
 			}
 
 			if (!subQuery.Where.IsEmpty)
 			{
-				ConcatSearchCondition(selectQuery.Where, subQuery.Where);
+				parentQuery.Where.SearchCondition.Predicates.AddRange(subQuery.Where.SearchCondition.Predicates);
 			}
 
 			if (!subQuery.Having.IsEmpty)
 			{
-				ConcatSearchCondition(selectQuery.Having, subQuery.Having);
+				parentQuery.Having.SearchCondition.Predicates.AddRange(subQuery.Having.SearchCondition.Predicates);
 			}
 
 			if (subQuery.Select.IsDistinct)
-				selectQuery.Select.IsDistinct = true;
+				parentQuery.Select.IsDistinct = true;
 
 			if (subQuery.Select.TakeValue != null)
 			{
-				selectQuery.Select.Take(subQuery.Select.TakeValue, subQuery.Select.TakeHints);
+				parentQuery.Select.Take(subQuery.Select.TakeValue, subQuery.Select.TakeHints);
 			}
 
 			if (subQuery.Select.SkipValue != null)
 			{
-				selectQuery.Select.SkipValue = subQuery.Select.SkipValue;
+				parentQuery.Select.SkipValue = subQuery.Select.SkipValue;
 			}
+
+			if (parentQuery.Select.Columns.Count == 0)
+			{
+
+			}
+
 
 			/*if (selectQuery.Select.Columns.Count == 0)
 			{
@@ -1513,11 +1233,11 @@ namespace LinqToDB.SqlQuery
 
 			if (subQuery.From.Tables.Count > 1)
 			{
-				var idx = selectQuery.From.Tables.IndexOf(tableSource);
+				var idx = parentQuery.From.Tables.IndexOf(tableSource);
 				for (var i = subQuery.From.Tables.Count - 1; i >= 1; i--)
 				{
 					var subQueryTableSource = subQuery.From.Tables[i];
-					selectQuery.From.Tables.Insert(idx + 1, subQueryTableSource);
+					parentQuery.From.Tables.Insert(idx + 1, subQueryTableSource);
 				}
 
 				// Move joins to last table
@@ -1530,11 +1250,330 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			ApplySubQueryExtensions(selectQuery, subQuery);
+			ApplySubQueryExtensions(parentQuery, subQuery);
 
-			if (subQuery.OrderBy.Items.Count > 0 && !selectQuery.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.OrderBy.Items.Count > 0 && !parentQuery.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 			{
-				ApplySubsequentOrder(selectQuery, subQuery);
+				ApplySubsequentOrder(parentQuery, subQuery);
+			}
+
+			return true;
+		}
+
+		bool IsMovingUpValid(SelectQuery parentQuery, SqlTableSource tableSource, SelectQuery subQuery, out HashSet<ISqlPredicate>? havingDetected)
+		{
+			havingDetected = null;
+
+			if (subQuery.IsSimple && parentQuery.IsSimple)
+			{
+				if (parentQuery.Select.Columns.All(c => c.Expression is SqlColumn))
+				{
+					// shortcut
+					return true;
+				}
+			}
+
+			if (subQuery.From.Tables.Count > 1)
+			{
+				if (!_providerFlags.IsMultiTablesSupportsJoins)
+				{
+					if (QueryHelper.EnumerateJoins(parentQuery).Any())
+					{
+						// do not allow moving subquery with joins to multitable parent query
+						return false;
+					}
+				}
+			}
+
+			// Trying to do not mix query hints
+			if (subQuery.SqlQueryExtensions?.Count > 0)
+			{
+				if (tableSource.Joins.Count > 0 || parentQuery.From.Tables.Count > 1)
+					return false;
+			}
+
+			if (!parentQuery.GroupBy.IsEmpty && !subQuery.GroupBy.IsEmpty)
+				return false;
+
+			var nullability = NullabilityContext.GetContext(parentQuery);
+
+			// Check columns
+			//
+
+			foreach (var parentColumn in parentQuery.Select.Columns)
+			{
+				if (QueryHelper.ContainsAggregationFunction(parentColumn.Expression))
+				{
+					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || !subQuery.GroupBy.IsEmpty || !subQuery.Having.IsEmpty)
+					{
+						// not allowed to move to parent if it has aggregates
+						return false;
+					}
+				}
+
+				if (QueryHelper.ContainsWindowFunction(parentColumn.Expression))
+				{
+					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || !subQuery.Where.IsEmpty || !subQuery.Having.IsEmpty || !subQuery.GroupBy.IsEmpty)
+					{
+						// not allowed to break window
+						return false;
+					}
+				}
+
+			}
+
+			foreach (var column in subQuery.Select.Columns)
+			{
+				if (QueryHelper.ContainsWindowFunction(column.Expression))
+				{
+					if (!parentQuery.IsSimpleOrSet)
+					{
+						// not allowed to break query window 
+						return false;
+					}
+				}
+
+				if (QueryHelper.ContainsAggregationFunction(column.Expression))
+				{
+					if (parentQuery.Having.HasElement(column) || parentQuery.Select.GroupBy.HasElement(column))
+					{
+						// aggregate moving not allowed
+						return false;
+					}
+
+					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : true))
+					{
+						// Column expression is complex and Column has more than one reference
+						return false;
+					}
+				}
+				else
+				{
+					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : false))
+					{
+						// Column expression is complex and Column has more than one reference
+						return false;
+					}
+				}
+
+				if (QueryHelper.IsConstantFast(column.Expression))
+				{
+					// check that column has at least one reference 
+					//
+					if (parentQuery.GroupBy.HasElement(column))
+					{
+						if (parentQuery.Select.Columns.Count == 0 || parentQuery.Select.HasElement(column))
+						{
+							return false;
+						}
+					}
+				}
+			}
+
+			HashSet<ISqlExpression>? aggregates = null;
+
+			// Check possible moving Where to Having
+			//
+			if (!subQuery.GroupBy.IsEmpty)
+			{
+				if (!parentQuery.Where.IsEmpty)
+				{
+					foreach (var subColumn in subQuery.Select.Columns)
+					{
+						if (QueryHelper.IsAggregationFunction(subColumn.Expression))
+						{
+							aggregates ??= new(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+							aggregates.Add(subColumn);
+
+							for (var i = 0; i < parentQuery.Where.SearchCondition.Predicates.Count; i++)
+							{
+								var p = parentQuery.Where.SearchCondition.Predicates[i];
+								if (p.ElementType == QueryElementType.ExprExprPredicate)
+								{
+									if (p.HasElement(subColumn))
+									{
+										havingDetected ??= new(Utils.ObjectReferenceEqualityComparer<ISqlPredicate>.Default);
+										havingDetected.Add(p);
+									}
+								}
+								else
+								{
+									// no optimization allowed
+									return false;
+								}
+							}
+						}
+					}
+
+					if (havingDetected?.Count != parentQuery.Where.SearchCondition.Predicates.Count)
+					{
+						// everything should be moved to having
+						return false;
+					}
+				}
+			}
+
+			// named sub-query cannot be removed
+			if (subQuery.QueryName != null
+			    // parent also has name
+			    && (parentQuery.QueryName != null
+			        // parent has other tables/sub-queries
+			        || parentQuery.From.Tables.Count > 1
+			        || parentQuery.From.Tables.Any(static t => t.Joins.Count > 0)))
+			{
+				return false;
+			}
+
+			if (_currentSetOperator?.SelectQuery == parentQuery || parentQuery.HasSetOperators)
+			{
+				// processing parent query as part of Set operation
+				//
+
+				if (subQuery.Select.HasModifier)
+					return false;
+
+				if (!subQuery.Select.OrderBy.IsEmpty)
+				{
+					return false;
+				}
+			}
+
+			if (parentQuery.Select.IsDistinct)
+			{
+				// Common check for Distincts
+
+				if (!subQuery.GroupBy.Having.IsEmpty)
+					return false;
+
+				if (subQuery.Select.SkipValue    != null || subQuery.Select.TakeValue    != null ||
+				    parentQuery.Select.SkipValue != null || parentQuery.Select.TakeValue != null)
+				{
+					return false;
+				}
+
+				// Common column check for Distincts
+
+				foreach (var parentColumn in parentQuery.Select.Columns)
+				{
+					if (parentColumn.Expression is not SqlColumn column || column.Parent != subQuery || QueryHelper.ContainsAggregationOrWindowFunction(parentColumn.Expression))
+					{
+						return false;
+					}
+				}
+			}
+
+			if (subQuery.Select.IsDistinct != parentQuery.Select.IsDistinct)
+			{
+				if (subQuery.Select.IsDistinct)
+				{
+					// Columns in parent query should match
+					//
+
+					if (!subQuery.Select.Columns.All(sc =>
+						    parentQuery.Select.Columns.Any(pc => ReferenceEquals(QueryHelper.UnwrapNullablity(pc.Expression), sc))))
+					{
+						return false;
+					}
+
+					if (parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
+					{
+						return false;
+					}
+				}
+				else
+				{
+					// handling case when we have two DISTINCT
+					// Note, columns already checked above
+					//
+				}
+			}
+
+			if (subQuery.Select.HasModifier)
+			{
+				// Do not optimize queries for update
+				if (_updateQuery == parentQuery)
+					return false;
+
+				if (tableSource.Joins.Count > 0)
+					return false;
+				if (parentQuery.From.Tables.Count > 1)
+					return false;
+
+				if (!parentQuery.Select.OrderBy.IsEmpty)
+					return false;
+
+				if (!parentQuery.Select.Where.IsEmpty)
+					return false;
+
+				if (parentQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+				{
+					return false;
+				}
+			}
+
+			if (subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)
+			{
+				if (tableSource.Joins.Any(j => j.JoinType == JoinType.Right || j.JoinType == JoinType.RightApply ||
+				                               j.JoinType == JoinType.Full  || j.JoinType == JoinType.FullApply))
+				{
+					return false;
+				}
+			}
+
+			if (!_providerFlags.AcceptsOuterExpressionInAggregate)
+			{
+				if (QueryHelper.EnumerateJoins(subQuery).Any(j => j.JoinType != JoinType.Inner))
+				{
+					if (subQuery.Select.Columns.Any(c => IsInsideAggregate(parentQuery, c)))
+						return false;
+				}
+			}
+
+			if (parentQuery.GroupBy.IsEmpty && !subQuery.GroupBy.IsEmpty)
+			{
+				if (tableSource.Joins.Count > 0)
+					return false;
+				if (parentQuery.From.Tables.Count > 1)
+					return false;
+
+/*
+				throw new NotImplementedException();
+
+				if (selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
+					return false;
+*/
+			}
+
+			if (subQuery.Select.TakeHints != null && parentQuery.Select.TakeValue != null)
+				return false;
+
+			if (subQuery.HasSetOperators)
+			{
+				if (parentQuery.HasSetOperators)
+					return false;
+
+				if (parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
+				{
+					if (subQuery.SetOperators.Any(so => so.Operation != SetOperation.UnionAll))
+						return false;
+				}
+
+				if (!parentQuery.Select.Where.IsEmpty || !parentQuery.Select.Having.IsEmpty || parentQuery.Select.HasModifier || !parentQuery.OrderBy.IsEmpty)
+					return false;
+
+				var operation = subQuery.SetOperators[0].Operation;
+
+				if (_currentSetOperator != null && _currentSetOperator.Operation != operation)
+					return false;
+
+				if (!subQuery.SetOperators.All(so => so.Operation == operation))
+					return false;
+			}
+
+			// Do not optimize t.Field IN (SELECT x FROM o)
+			if (parentQuery == _inSubquery && (subQuery.Select.HasModifier || !subQuery.GroupBy.IsEmpty || subQuery.HasSetOperators))
+			{
+				return false;
 			}
 
 			return true;
@@ -1620,9 +1659,7 @@ namespace LinqToDB.SqlQuery
 					return false;
 			}
 
-			var nullability = NullabilityContext.GetContext(selectQuery);
-
-			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, nullability, subQuery, c, c.Expression)))
+			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 				return false;
 
 			// Actual modification starts from this point

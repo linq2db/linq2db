@@ -46,6 +46,7 @@
 				SetExpression,
 			FromClause,
 			WhereClause,
+			HavingClause,
 			GroupByClause,
 			OrderByClause,
 				OrderByItem,

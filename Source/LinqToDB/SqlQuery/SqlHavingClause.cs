@@ -1,15 +1,13 @@
-﻿using System;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
-	public class SqlWhereClause : ClauseBase<SqlWhereClause>
+	public class SqlHavingClause : ClauseBase<SqlHavingClause>
 	{
-		internal SqlWhereClause(SelectQuery selectQuery) : base(selectQuery)
+		internal SqlHavingClause(SelectQuery selectQuery) : base(selectQuery)
 		{
 			SearchCondition = new SqlSearchCondition();
 		}
 
-		internal SqlWhereClause(SqlSearchCondition searchCondition) : base(null)
+		internal SqlHavingClause(SqlSearchCondition searchCondition) : base(null)
 		{
 			SearchCondition = searchCondition;
 		}
@@ -20,7 +18,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public override QueryElementType ElementType => QueryElementType.WhereClause;
+		public override QueryElementType ElementType => QueryElementType.HavingClause;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
@@ -29,7 +27,7 @@ namespace LinqToDB.SqlQuery
 				writer
 					.DebugAppendUniqueId(this)
 					.AppendLine()
-					.AppendLine("WHERE");
+					.AppendLine("HAVING");
 
 				using (writer.WithScope())
 					writer.AppendElement(SearchCondition);

@@ -11,7 +11,7 @@
 		public SqlFromClause    From    => SelectQuery.From;
 		public SqlWhereClause   Where   => SelectQuery.Where;
 		public SqlGroupByClause GroupBy => SelectQuery.GroupBy;
-		public SqlWhereClause   Having  => SelectQuery.Having;
+		public SqlHavingClause  Having  => SelectQuery.Having;
 		public SqlOrderByClause OrderBy => SelectQuery.OrderBy;
 
 		protected internal SelectQuery SelectQuery { get; private set; } = null!;
@@ -33,7 +33,7 @@
 		public SqlSelectClause  Select  => SelectQuery.Select;
 		public SqlFromClause    From    => SelectQuery.From;
 		public SqlGroupByClause GroupBy => SelectQuery.GroupBy;
-		public SqlWhereClause   Having  => SelectQuery.Having;
+		public SqlHavingClause  Having  => SelectQuery.Having;
 		public SqlOrderByClause OrderBy => SelectQuery.OrderBy;
 
 		protected internal SelectQuery SelectQuery { get; private set; } = null!;

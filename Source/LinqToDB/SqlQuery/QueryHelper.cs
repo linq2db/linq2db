@@ -509,12 +509,41 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		public static void ConcatSearchCondition(this SqlHavingClause where, SqlSearchCondition search)
+		{
+			var sc = where.EnsureConjunction();
+
+			if (search.IsOr)
+			{
+				sc.Predicates.Add(search);
+			}
+			else
+			{
+				sc.Predicates.AddRange(search.Predicates);
+			}
+		}
+
 		/// <summary>
 		/// Ensures that expression is not A OR B but (A OR B)
 		/// Function makes all needed manipulations for that
 		/// </summary>
 		/// <param name="whereClause"></param>
 		public static SqlSearchCondition EnsureConjunction(this SqlWhereClause whereClause)
+		{
+			if (whereClause.SearchCondition.IsOr)
+			{
+				var old = whereClause.SearchCondition;
+				whereClause.SearchCondition = new SqlSearchCondition(false, old);
+			}
+			return whereClause.SearchCondition;
+		}
+
+		/// <summary>
+		/// Ensures that expression is not A OR B but (A OR B)
+		/// Function makes all needed manipulations for that
+		/// </summary>
+		/// <param name="whereClause"></param>
+		public static SqlSearchCondition EnsureConjunction(this SqlHavingClause whereClause)
 		{
 			if (whereClause.SearchCondition.IsOr)
 			{
@@ -1176,6 +1205,11 @@ namespace LinqToDB.SqlQuery
 			return ContainsAggregationOrWindowFunctionDeep(expr);
 		}
 
+		static bool ContainsAggregationOrWindowFunctionDeep(IQueryElement expr)
+		{
+			return null != expr.Find(e => IsAggregationFunction(e) || IsWindowFunction(e));
+		}
+
 		public static bool ContainsWindowFunction(IQueryElement expr)
 		{
 			if (expr is SqlColumn)
@@ -1189,9 +1223,17 @@ namespace LinqToDB.SqlQuery
 			return null != expr.Find(IsWindowFunction);
 		}
 
-		static bool ContainsAggregationOrWindowFunctionDeep(IQueryElement expr)
+		public static bool ContainsAggregationFunction(IQueryElement expr)
 		{
-			return null != expr.Find(e => IsAggregationFunction(e) || IsWindowFunction(e));
+			if (expr is SqlColumn)
+				return false;
+
+			return ContainsAggregationFunctionDeep(expr);
+		}
+
+		static bool ContainsAggregationFunctionDeep(IQueryElement expr)
+		{
+			return null != expr.Find(IsAggregationFunction);
 		}
 
 		/// <summary>

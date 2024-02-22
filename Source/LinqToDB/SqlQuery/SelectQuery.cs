@@ -34,7 +34,7 @@ namespace LinqToDB.SqlQuery
 			SqlFromClause                  from,
 			SqlWhereClause                 where,
 			SqlGroupByClause               groupBy,
-			SqlWhereClause                 having,
+			SqlHavingClause                having,
 			SqlOrderByClause               orderBy,
 			List<SqlSetOperator>?          setOperators,
 			List<ISqlExpression[]>?        uniqueKeys,
@@ -71,7 +71,7 @@ namespace LinqToDB.SqlQuery
 		public SqlFromClause    From    { get; internal set; } = null!;
 		public SqlWhereClause   Where   { get; internal set; } = null!;
 		public SqlGroupByClause GroupBy { get; internal set; } = null!;
-		public SqlWhereClause   Having  { get; internal set; } = null!;
+		public SqlHavingClause  Having  { get; internal set; } = null!;
 		public SqlOrderByClause OrderBy { get; internal set; } = null!;
 
 		private List<object>? _properties;

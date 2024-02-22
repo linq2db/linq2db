@@ -95,6 +95,7 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SetExpression             => VisitSqlSetExpression          ((SqlSetExpression          )element),
 				QueryElementType.FromClause                => VisitSqlFromClause             ((SqlFromClause             )element),
 				QueryElementType.WhereClause               => VisitSqlWhereClause            ((SqlWhereClause            )element),
+				QueryElementType.HavingClause              => VisitSqlHavingClause           ((SqlHavingClause           )element),
 				QueryElementType.GroupByClause             => VisitSqlGroupByClause          ((SqlGroupByClause          )element),
 				QueryElementType.OrderByClause             => VisitSqlOrderByClause          ((SqlOrderByClause          )element),
 				QueryElementType.OrderByItem               => VisitSqlOrderByItem            ((SqlOrderByItem            )element),
@@ -1492,6 +1493,40 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
+		protected virtual IQueryElement VisitSqlHavingClause(SqlHavingClause element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.SearchCondition);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.SearchCondition = (SqlSearchCondition)Visit(element.SearchCondition);
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var searchCond = (SqlSearchCondition)Visit(element.SearchCondition);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.SearchCondition, searchCond))
+					{
+						return NotifyReplaced(new SqlHavingClause(searchCond), element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected virtual IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			switch (GetVisitMode(element))
@@ -1918,7 +1953,7 @@ namespace LinqToDB.SqlQuery
 					var sc = (SqlSelectClause) Visit(selectQuery.Select );
 					var wc = (SqlWhereClause)  Visit(selectQuery.Where  );
 					var gc = (SqlGroupByClause)Visit(selectQuery.GroupBy);
-					var hc = (SqlWhereClause)  Visit(selectQuery.Having );
+					var hc = (SqlHavingClause) Visit(selectQuery.Having );
 					var oc = (SqlOrderByClause)Visit(selectQuery.OrderBy);
 
 					var so = selectQuery.HasSetOperators ? VisitElements    (selectQuery.SetOperators, VisitMode.Transform) : null;
@@ -1994,7 +2029,7 @@ namespace LinqToDB.SqlQuery
 
 						if (ReferenceEquals(hc, selectQuery.Having))
 						{
-							hc                 = new SqlWhereClause(nq);
+							hc                 = new SqlHavingClause(nq);
 							hc.SearchCondition = selectQuery.Having.SearchCondition;
 
 							NotifyReplaced(hc, selectQuery.Having);

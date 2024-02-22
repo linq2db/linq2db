@@ -148,6 +148,8 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
+		int _gettingSubquery;
+
 		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, ProjectFlags flags, out bool isSequence, out string? errorMessage)
 		{
 			var info = new BuildInfo(context, expr, new SelectQuery())
@@ -155,14 +157,19 @@ namespace LinqToDB.Linq.Builder
 				CreateSubQuery = true,
 			};
 
+			++_gettingSubquery;
 			var buildResult = TryBuildSequence(info);
+			--_gettingSubquery;
 
 			isSequence = buildResult.IsSequence;
 
 			if (buildResult.BuildContext != null)
 			{
-				if (!SequenceHelper.IsSupportedSubqueryForModifier(context, buildResult.BuildContext, out errorMessage))
-					return null;
+				if (_gettingSubquery == 0)
+				{
+					if (!SequenceHelper.IsSupportedSubqueryForModifier(context, buildResult.BuildContext, out errorMessage))
+						return null;
+				}
 			}
 
 			errorMessage = buildResult.AdditionalDetails;

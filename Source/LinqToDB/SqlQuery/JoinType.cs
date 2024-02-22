@@ -22,11 +22,11 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		Left,
 		/// <summary>
-		/// CROSS APPLY.
+		/// CROSS JOIN.
 		/// </summary>
 		Cross,
 		/// <summary>
-		/// CROSS JOIN.
+		/// CROSS APPLY.
 		/// </summary>
 		CrossApply,
 		/// <summary>

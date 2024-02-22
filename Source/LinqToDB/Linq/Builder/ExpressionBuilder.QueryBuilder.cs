@@ -408,10 +408,27 @@ namespace LinqToDB.Linq.Builder
 
 				if (attr != null && (!flags.HasFlag(ProjectFlags.Expression) || attr.ServerSideOnly || attr.Expression == "{0}"))
 				{
-					var transformed = attr.GetExpression((builder: this, context, flags),
+					var rootContext = context;
+					var rootSelectQuery = context.SelectQuery;
+
+					if (attr.IsAggregate)
+					{
+						var root = GetRootContext(context.Parent, new ContextRefExpression(context.ElementType, context), true);
+						if (root != null)
+						{
+							rootContext = root.BuildContext;
+						}
+
+						if (rootContext is GroupByBuilder.GroupByContext groupBy)
+						{
+							rootSelectQuery = groupBy.SubQuery.SelectQuery;
+						}
+					}
+
+					var transformed = attr.GetExpression((builder: this, context: rootContext, flags),
 						DataContext,
 						this,
-						context.SelectQuery, expr,
+						rootSelectQuery, expr,
 						static (context, e, descriptor) =>
 							context.builder.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
 
