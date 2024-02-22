@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlColumn : IEquatable<SqlColumn>, ISqlExpression
+	public class SqlColumn : SqlExpressionBase
 	{
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
 		{
@@ -51,27 +50,13 @@ namespace LinqToDB.SqlQuery
 			{
 				if (_expression == value)
 					return;
-				if (value == this)
+				if (ReferenceEquals(value, this))
 					throw new InvalidOperationException();
 				_expression = value;
-				_hashCode   = null;
 			}
 		}
 
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		SelectQuery? _parent;
-
-		public SelectQuery? Parent
-		{
-			get => _parent;
-			set
-			{
-				if (_parent == value)
-					return;
-				_parent   = value;
-				_hashCode = null;
-			}
-		}
+		public SelectQuery? Parent { get; set; }
 
 		internal string? RawAlias   { get; set; }
 
@@ -121,41 +106,6 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		int? _hashCode;
-
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
-		{
-			if (_hashCode.HasValue)
-				return _hashCode.Value;
-
-			var hashCode = Parent?.GetHashCode() ?? 0;
-
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
-
-			_hashCode = hashCode;
-
-			return hashCode;
-		}
-
-		public bool Equals(SqlColumn? other)
-		{
-			if (other == null)
-				return false;
-
-			if (ReferenceEquals(this, other))
-				return true;
-
-			if (!Equals(Parent, other.Parent))
-				return false;
-
-			if (Expression.Equals(other.Expression))
-				return false;
-
-			return false;
-		}
-
 		public override string ToString()
 		{
 #if OVERRIDETOSTRING
@@ -195,7 +145,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNullable(NullabilityContext nullability)
+		public override bool CanBeNullable(NullabilityContext nullability)
 		{
 			if (nullability.CanBeNull(this))
 				return true;
@@ -221,7 +171,7 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;
@@ -252,31 +202,14 @@ namespace LinqToDB.SqlQuery
 				comparer(this, other);
 		}
 
-		public int   Precedence => SqlQuery.Precedence.Primary;
-		public Type? SystemType => Expression.SystemType;
+		public override int   Precedence => SqlQuery.Precedence.Primary;
+		public override Type? SystemType => Expression.SystemType;
 
 		#endregion
 
-		#region IEquatable<ISqlExpression> Members
+		public override QueryElementType ElementType => QueryElementType.Column;
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			if (this == other)
-				return true;
-
-			return other is SqlColumn column && Equals(column);
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.Column;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			var parentIndex = -1;
 			if (Parent != null)
@@ -298,7 +231,5 @@ namespace LinqToDB.SqlQuery
 
 			return writer;
 		}
-
-		#endregion
 	}
 }

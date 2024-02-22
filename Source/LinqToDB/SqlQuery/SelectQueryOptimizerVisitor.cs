@@ -1190,20 +1190,16 @@ namespace LinqToDB.SqlQuery
 				parentQuery.Select.SkipValue = subQuery.Select.SkipValue;
 			}
 
+			/*
 			if (parentQuery.Select.Columns.Count == 0)
-			{
-
-			}
-
-
-			/*if (selectQuery.Select.Columns.Count == 0)
 			{
 				foreach(var column in subQuery.Select.Columns)
 				{
-					selectQuery.Select.AddColumn(column.Expression);
+					parentQuery.Select.AddColumn(column.Expression);
 				}
-			}*/
+			}
 
+			*/
 			foreach (var column in subQuery.Select.Columns)
 			{
 				NotifyReplaced(column.Expression, column);

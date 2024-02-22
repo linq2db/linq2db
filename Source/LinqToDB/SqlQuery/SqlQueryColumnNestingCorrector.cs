@@ -78,7 +78,8 @@ namespace LinqToDB.SqlQuery
 
 		}
 
-		QueryNesting?   _parentQuery;
+		QueryNesting?      _parentQuery;
+		SqlColumn?         _doNotAddToUsed;
 		HashSet<SqlColumn> _usedColumns = new(Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
 
 		public SqlQueryColumnNestingCorrector() : base(VisitMode.Modify)
@@ -97,6 +98,7 @@ namespace LinqToDB.SqlQuery
 
 		public IQueryElement CorrectColumnNesting(IQueryElement element)
 		{
+			Cleanup();
 			var result = Visit(element);
 			return result;
 		}
@@ -153,7 +155,10 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
-			_usedColumns.Add(element);
+			if (!ReferenceEquals(_doNotAddToUsed, element))
+			{
+				AppendColumns(element);
+			}
 
 			var newElement = base.VisitSqlColumnReference(element);
 
@@ -177,12 +182,27 @@ namespace LinqToDB.SqlQuery
 		{
 			var current = element;
 
-			while (current is SqlColumn clmn)
+			while (current is SqlColumn column)
 			{
-				_usedColumns.Add(clmn);
+				_usedColumns.Add(column);
 
-				current = clmn.Expression;
+				current = column.Expression;
 			}
+		}
+
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		{
+			var save = _doNotAddToUsed;
+
+			if (expression is SqlColumn sqlColumn && sqlColumn.Expression is SqlColumn)
+			{
+				_doNotAddToUsed = sqlColumn;
+			}
+
+			var newExpression =  base.VisitSqlColumnExpression(column, expression);
+			_doNotAddToUsed = save;
+
+			return newExpression;
 		}
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
