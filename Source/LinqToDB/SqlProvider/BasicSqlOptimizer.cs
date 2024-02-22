@@ -2184,17 +2184,17 @@ namespace LinqToDB.SqlProvider
 					static SqlCondition ConvertNullInNullSubquery(
 						SelectQuery subQuery, SqlColumn col, SqlPredicate.InSubQuery inSubQuery, SqlCondition cond, bool isOr)
 					{
-						var newQuery = subQuery.Convert((subQuery,col.Expression), static (v, e) =>
+						var newQuery = subQuery.Convert((subQuery, col.Expression, HasAggregate: QueryHelper.ContainsAggregationFunctionOneLevel(col.Expression)), static (v, e) =>
 						{
 							if (ReferenceEquals(e, v.Context.Expression))
 								return new SqlValue(1);
 
-							if (e is SqlWhereClause w && w == v.Context.subQuery.Where)
+							if (e is SqlWhereClause w && w == (v.Context.HasAggregate ? v.Context.subQuery.Having : v.Context.subQuery.Where))
 							{
 								var wc = new SqlWhereClause(new SqlSearchCondition(w.SearchCondition.Conditions));
 								wc.SearchCondition.Conditions.Add(new(
 									false,
-									new SqlPredicate.IsNull(v.Context.subQuery.Select.Columns[0].Expression, false)));
+									new SqlPredicate.IsNull(v.Context.Expression, false)));
 								return wc;
 							}
 
@@ -2399,7 +2399,7 @@ namespace LinqToDB.SqlProvider
 				&& Converter.TryConvertToString(patternRaw, out var patternRawValue))
 			{
 				if (patternRawValue == null)
-					return new SqlPredicate.IsTrue(new SqlValue(true), new SqlValue(true), new SqlValue(false), null, predicate.IsNot);
+					return new SqlPredicate.IsTrue(new SqlValue(true), new SqlValue(true), new SqlValue(false), null, predicate.IsNot, true);
 
 				var patternValue = LikeIsEscapeSupported
 					? EscapeLikeCharacters(patternRawValue, LikeEscapeCharacter)
