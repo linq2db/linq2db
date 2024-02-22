@@ -176,7 +176,6 @@ namespace LinqToDB.SqlQuery
 					OptimizeColumns(selectQuery);
 				}
 
-				var wasModified = false;
 				do
 				{
 					var currentVersion = _version;
@@ -242,16 +241,16 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-					wasModified = true;
-
 				} while (true);
 
-				if (saveParent == null && wasModified)
+				if (saveParent == null)
 				{
 					// do expression optimization again
 #if DEBUG
 					var before = selectQuery.ToDebugString();
 #endif
+					CorrectEmptyInnerJoinsRecursive(selectQuery);
+
 					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), _providerFlags, _dataOptions, selectQuery);
 				}
 
@@ -518,13 +517,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var isModified = false;
 
-			if (CorrectEmptyInnerJoins(selectQuery))
-				isModified = true;
-
 			if (OptimizeGroupBy(selectQuery))
-				isModified = true;
-
-			if (CorrectEmptyInnerJoins(selectQuery))
 				isModified = true;
 
 			if (OptimizeUnions(selectQuery))
@@ -1952,7 +1945,16 @@ namespace LinqToDB.SqlQuery
 			return optimized;
 		}
 
-		bool CorrectEmptyInnerJoins(SelectQuery selectQuery)
+		void CorrectEmptyInnerJoinsRecursive(SelectQuery selectQuery)
+		{
+			selectQuery.Visit(e =>
+			{
+				if (e is SelectQuery sq)
+					CorrectEmptyInnerJoinsInQuery(sq);
+			});
+		}
+
+		bool CorrectEmptyInnerJoinsInQuery(SelectQuery selectQuery)
 		{
 			var isModified = false;
 
@@ -1964,7 +1966,7 @@ namespace LinqToDB.SqlQuery
 					var join = table.Joins[joinIndex];
 					if (join.JoinType == JoinType.Inner && join.Condition.IsTrue())
 					{
-						if (_providerFlags.IsCrossJoinSupported)
+						if (_providerFlags.IsCrossJoinSupported && (table.Joins.Count > 1 || !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
 						{
 							join.JoinType = JoinType.Cross;
 							if (join.Table.Joins.Count > 0)
@@ -1978,7 +1980,7 @@ namespace LinqToDB.SqlQuery
 							}
 							isModified = true;
 						}
-						else
+						else if (table.Joins.Count == 1)
 						{
 							selectQuery.From.Tables.Insert(tableIndex + 1, join.Table);
 							table.Joins.RemoveAt(joinIndex);

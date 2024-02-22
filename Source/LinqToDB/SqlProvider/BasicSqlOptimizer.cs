@@ -802,7 +802,7 @@ namespace LinqToDB.SqlProvider
 
 			if (!query.Where.IsEmpty)
 			{
-				if (query.Where.Find(IsAggregationFunction) != null)
+				if (QueryHelper.ContainsAggregationFunction(query.Where))
 					return true;
 			}
 

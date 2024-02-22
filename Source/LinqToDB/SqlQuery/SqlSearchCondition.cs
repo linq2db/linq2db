@@ -112,7 +112,21 @@ namespace LinqToDB.SqlQuery
 			if (Predicates.Count > maxCount)
 				return false;
 
-			return Predicates.All(p => p is not SqlSearchCondition && p.CanInvert(nullability));
+			if (Predicates.Count > 1 && IsAnd)
+				return false;
+
+			return Predicates.All(p =>
+			{
+				if (p is not SqlSearchCondition)
+					return false;
+
+				if (p is SqlPredicate.ExprExpr exprExpr && (exprExpr.WithNull != null || exprExpr.WithNull == true))
+				{
+					return false;
+				}
+
+				return p.CanInvert(nullability);
+			});
 		}
 
 		public ISqlPredicate Invert(NullabilityContext nullability)

@@ -1224,7 +1224,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery)
 					return false;
 
-				if (expr is ISqlExpression sqlExpr && matchFunc(sqlExpr))
+				if (e is ISqlExpression sqlExpr && matchFunc(sqlExpr))
 				{
 					found = true;
 					return false;
