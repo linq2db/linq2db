@@ -5,7 +5,6 @@ using System.Diagnostics;
 namespace LinqToDB.SqlQuery
 {
 	using Visitors;
-	using Common;
 
 	public class SqlQueryColumnNestingCorrector : SqlQueryVisitor
 	{
@@ -78,9 +77,9 @@ namespace LinqToDB.SqlQuery
 
 		}
 
-		QueryNesting?      _parentQuery;
-		SqlColumn?         _doNotAddToUsed;
-		HashSet<SqlColumn> _usedColumns = new(Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
+		QueryNesting?      _parentQueryNesting;
+
+		public bool HasSelectQuery { get; private set; }
 
 		public SqlQueryColumnNestingCorrector() : base(VisitMode.Modify)
 		{
@@ -90,25 +89,23 @@ namespace LinqToDB.SqlQuery
 		{
 			base.Cleanup();
 
-			_parentQuery = null;
-			_usedColumns.Clear();
+			_parentQueryNesting = null;
 		}
-
-		public IReadOnlyCollection<SqlColumn> UsedColumns => _usedColumns;
 
 		public IQueryElement CorrectColumnNesting(IQueryElement element)
 		{
 			Cleanup();
+			HasSelectQuery = false;
 			var result = Visit(element);
 			return result;
 		}
 
 		ISqlExpression ProcessNesting(ISqlTableSource elementSource, ISqlExpression element)
 		{
-			if (_parentQuery == null)
+			if (_parentQueryNesting == null)
 				return element;
 
-			var current = _parentQuery;
+			var current = _parentQueryNesting;
 			while (current != null)
 			{
 				var found = current.FindNesting(elementSource);
@@ -143,11 +140,6 @@ namespace LinqToDB.SqlQuery
 			if (element.Table != null)
 			{
 				newElement = ProcessNesting(element.Table, element);
-
-				if (!ReferenceEquals(newElement, element))
-				{
-					AppendColumns((ISqlExpression)newElement);
-				}
 			}
 
 			return newElement;
@@ -155,11 +147,6 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
-			if (!ReferenceEquals(_doNotAddToUsed, element))
-			{
-				AppendColumns(element);
-			}
-
 			var newElement = base.VisitSqlColumnReference(element);
 
 			if (!ReferenceEquals(newElement, element))
@@ -168,78 +155,29 @@ namespace LinqToDB.SqlQuery
 			if (element.Parent != null)
 			{
 				newElement = ProcessNesting(element.Parent, element);
-
-				if (!ReferenceEquals(newElement, element))
-				{
-					AppendColumns((ISqlExpression)newElement);
-				}
 			}
 
 			return newElement;
 		}
 
-		void AppendColumns(ISqlExpression element)
-		{
-			var current = element;
-
-			while (current is SqlColumn column)
-			{
-				_usedColumns.Add(column);
-
-				current = column.Expression;
-			}
-		}
-
-		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
-		{
-			var save = _doNotAddToUsed;
-
-			if (expression is SqlColumn sqlColumn && sqlColumn.Expression is SqlColumn)
-			{
-				_doNotAddToUsed = sqlColumn;
-			}
-
-			var newExpression =  base.VisitSqlColumnExpression(column, expression);
-			_doNotAddToUsed = save;
-
-			return newExpression;
-		}
-
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			var saveQuery = _parentQuery;
+			HasSelectQuery = true;
 
-			if (_parentQuery == null || selectQuery.HasSetOperators || selectQuery.Select.IsDistinct)
-			{
-				foreach (var c in selectQuery.Select.Columns)
-				{
-					AppendColumns(c);
-				}
-			}
+			var saveQueryNesting = _parentQueryNesting;
 
-			if (selectQuery.HasSetOperators)
-			{
-				foreach (var so in selectQuery.SetOperators)
-				{
-					foreach (var c in so.SelectQuery.Select.Columns)
-					{
-						AppendColumns(c);
-					}
-				}
-			}
-
-			_parentQuery = new QueryNesting(saveQuery, selectQuery);
+			_parentQueryNesting = new QueryNesting(saveQueryNesting, selectQuery);
 
 			var newQuery = base.VisitSqlQuery(selectQuery);
 
-			_parentQuery = saveQuery;
+			_parentQueryNesting = saveQueryNesting;
 
 			return newQuery;
 		}
 
 		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
-			_ = new QueryNesting(_parentQuery, element.Source);
+			_ = new QueryNesting(_parentQueryNesting, element.Source);
 
 			var newElement = base.VisitSqlTableSource(element);
 

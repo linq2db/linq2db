@@ -19,6 +19,7 @@ namespace LinqToDB.SqlQuery
 		SqlProviderFlags  _providerFlags     = default!;
 		DataOptions       _dataOptions       = default!;
 		EvaluationContext _evaluationContext = default!;
+		IQueryElement     _root              = default!;
 		IQueryElement     _rootElement       = default!;
 		IQueryElement[]   _dependencies      = default!;
 		SelectQuery?      _correcting;
@@ -33,6 +34,7 @@ namespace LinqToDB.SqlQuery
 		SelectQuery?    _updateQuery;
 
 		SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
+		SqlQueryColumnUsageCollector   _columnUsageCollector        = new();
 		SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
 		MovingComplexityVisitor        _movingComplexityVisitor     = new();
 		SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor  = new(true);
@@ -42,8 +44,13 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public IQueryElement OptimizeQueries(IQueryElement root, SqlProviderFlags providerFlags, bool removeWeakJoins, DataOptions dataOptions,
-			EvaluationContext evaluationContext, IQueryElement rootElement,
+		public IQueryElement Optimize(
+			IQueryElement          root,         
+			IQueryElement          rootElement,
+			SqlProviderFlags       providerFlags, 
+			bool                   removeWeakJoins, 
+			DataOptions            dataOptions,
+			EvaluationContext      evaluationContext,
 			params IQueryElement[] dependencies)
 		{
 #if DEBUG
@@ -53,42 +60,60 @@ namespace LinqToDB.SqlQuery
 			}
 #endif
 
-			_providerFlags     = providerFlags;
-			_removeWeakJoins   = removeWeakJoins;
-			_dataOptions       = dataOptions;
-			_evaluationContext = evaluationContext;
-			_rootElement       = rootElement;
-			_dependencies      = dependencies;
-			_parentSelect      = default!;
-			_applySelect       = default!;
-			_inSubquery        = default!;
-			_updateQuery       = default!;
+			_providerFlags      = providerFlags;
+			_removeWeakJoins    = removeWeakJoins;
+			_dataOptions        = dataOptions;
+			_evaluationContext  = evaluationContext;
+			_root               = root;
+			_rootElement        = rootElement;
+			_dependencies       = dependencies;
+			_parentSelect       = default!;
+			_applySelect        = default!;
+			_inSubquery         = default!;
+			_updateQuery        = default!;
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
 			// Making it consistent in LINQ Translator is bad for performance and it is hard to implement task.
+			// Function also detects that optimizations is needed
 			//
-			var result = _columnNestingCorrector.CorrectColumnNesting(root);
-
-			RemoveNotUsedColumns(_columnNestingCorrector.UsedColumns, result);
-
-			do
+			if (CorrectColumnsNesting())
 			{
-				result = ProcessElement(result);
+				do
+				{
+					ProcessElement(_root);
 
-				_orderByOptimizer.OptimizeOrderBy(result, _providerFlags);
-				if (!_orderByOptimizer.IsOptimized)
-					break;
+					_orderByOptimizer.OptimizeOrderBy(_root, _providerFlags);
+					if (!_orderByOptimizer.IsOptimized)
+						break;
 
-			} while (true);
+				} while (true);
 
-			// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
-			JoinsOptimizer.UnnestJoins(result);
+				if (removeWeakJoins)
+				{
+					// It means that we fully optimize query
+					_columnUsageCollector.CollectUsedColumns(_rootElement);
+					RemoveNotUsedColumns(_columnUsageCollector.UsedColumns, _root);
+				}
 
-			return result;
+				// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
+				JoinsOptimizer.UnnestJoins(_root);
+			}
+
+			return _root;
+		}
+
+		bool CorrectColumnsNesting()
+		{
+			_columnNestingCorrector.CorrectColumnNesting(_root);
+
+			return _columnNestingCorrector.HasSelectQuery;
 		}
 
 		static void RemoveNotUsedColumns(IReadOnlyCollection<SqlColumn> usedColumns, IQueryElement element)
 		{
+			if (usedColumns.Count == 0)
+				return;
+
 			element.Visit(usedColumns, static (uc, e) =>
 			{
 				if (e is SqlSelectClause select)
@@ -98,8 +123,7 @@ namespace LinqToDB.SqlQuery
 						var column = select.Columns[i];
 						if (!uc.Contains(column))
 						{
-							if (select.Columns.Count > 1 && !QueryHelper.IsAggregationOrWindowFunction(column.Expression))
-								select.Columns.RemoveAt(i);
+							select.Columns.RemoveAt(i);
 						}
 					}
 				}
@@ -110,18 +134,20 @@ namespace LinqToDB.SqlQuery
 		{
 			base.Cleanup();
 
-			_providerFlags     = default!;
-			_dataOptions       = default!;
-			_evaluationContext = default!;
-			_rootElement       = default!;
-			_dependencies      = default!;
-			_parentSelect      = default!;
-			_applySelect       = default!;
-			_version           = default;
-			_isInRecursiveCte  = false;
-			_updateQuery       = default;
+			_providerFlags      = default!;
+			_dataOptions        = default!;
+			_evaluationContext  = default!;
+			_root               = default!;
+			_rootElement        = default!;
+			_dependencies       = default!;
+			_parentSelect       = default!;
+			_applySelect        = default!;
+			_version            = default;
+			_isInRecursiveCte   = false;
+			_updateQuery        = default;
 
 			_columnNestingCorrector.Cleanup();
+			_columnUsageCollector.Cleanup();
 			_orderByOptimizer.Cleanup();
 			_movingComplexityVisitor.Cleanup();
 			_expressionOptimizerVisitor.Cleanup();

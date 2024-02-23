@@ -918,8 +918,14 @@ namespace LinqToDB.Linq.Builder
 
 				#endif
 
-				var optimizedQuery = (SelectQuery)visitor.Value.OptimizeQueries(clonedParentContext.SelectQuery, parent.Builder.DataContext.SqlProviderFlags, false, parent.Builder.DataOptions,
-					new EvaluationContext(), clonedParentContext.SelectQuery);
+				var optimizedQuery = (SelectQuery)visitor.Value.OptimizeQueries(
+					root : clonedParentContext.SelectQuery,
+					rootElement : clonedParentContext.SelectQuery,
+					providerFlags : parent.Builder.DataContext.SqlProviderFlags,
+					removeWeakJoins : false,
+					dataOptions : parent.Builder.DataOptions,
+					evaluationContext : new EvaluationContext()
+				);
 
 				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, forColumn: false, parent.Builder.DataContext.SqlProviderFlags, out errorMessage))
 				{

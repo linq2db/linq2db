@@ -1785,7 +1785,7 @@ namespace LinqToDB.SqlProvider
 				QueryHelper.DebugCheckNesting(statementBefore, false);
 #endif
 
-			var result = visitor.Value.OptimizeQueries(startFrom, SqlProviderFlags, true, dataOptions, evaluationContext, root);
+			var result = visitor.Value.Optimize(startFrom, root, SqlProviderFlags, true, dataOptions, evaluationContext);
 
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
