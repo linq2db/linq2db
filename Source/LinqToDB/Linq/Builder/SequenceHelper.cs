@@ -918,7 +918,7 @@ namespace LinqToDB.Linq.Builder
 
 				#endif
 
-				var optimizedQuery = (SelectQuery)visitor.Value.OptimizeQueries(
+				var optimizedQuery = (SelectQuery)visitor.Value.Optimize(
 					root : clonedParentContext.SelectQuery,
 					rootElement : clonedParentContext.SelectQuery,
 					providerFlags : parent.Builder.DataContext.SqlProviderFlags,
