@@ -572,7 +572,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var expr = (SqlPredicate.IsTrue)(IQueryElement)element;
 					// TODO: children Clone called before _objectTree update (original cloning logic)
-					_objectTree.Add(element, clone = new SqlPredicate.IsTrue(Clone(expr.Expr1), expr.TrueValue, expr.FalseValue, expr.WithNull, expr.IsNot));
+					_objectTree.Add(element, clone = new SqlPredicate.IsTrue(Clone(expr.Expr1), expr.TrueValue, expr.FalseValue, expr.WithNull, expr.IsNot, expr.OptimizeNull));
 					break;
 				}
 
