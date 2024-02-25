@@ -1005,6 +1005,21 @@ namespace LinqToDB.SqlQuery
 								}
 							}
 
+							if (!sql.GroupBy.IsEmpty)
+							{
+								// we can only optimize SqlPredicate.ExprExpr
+								if (predicate is not SqlPredicate.ExprExpr expExpr)
+								{
+									return optimized;
+								}
+
+								// check that used key in grouping
+								if (!sql.GroupBy.Items.Any(gi => QueryHelper.SameWithoutNullablity(gi, expExpr.Expr1) || QueryHelper.SameWithoutNullablity(gi, expExpr.Expr2)))
+								{
+									return optimized;
+								}
+							}
+
 							toRemove ??= new List<ISqlPredicate>();
 							toRemove.Add(predicate);
 						}

@@ -1528,6 +1528,17 @@ namespace LinqToDB.SqlQuery
 			return expr;
 		}
 
+		public static bool SameWithoutNullablity(ISqlExpression expr1, ISqlExpression expr2)
+		{
+			if (ReferenceEquals(expr1, expr2))
+				return true;
+
+			if (ReferenceEquals(UnwrapNullablity(expr1), UnwrapNullablity(expr2)))
+				return true;
+
+			return false;
+		}
+
 		public static bool HasTable(IQueryElement element, int sourceId)
 		{
 			return null != element.Find(e => e is SqlTableSource ts && ts.SourceID == sourceId);
