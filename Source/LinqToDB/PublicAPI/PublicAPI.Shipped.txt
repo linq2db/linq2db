@@ -5863,7 +5863,6 @@ LinqToDB.SqlQuery.SqlPredicate.IsNull.IsNull(LinqToDB.SqlQuery.ISqlExpression! e
 LinqToDB.SqlQuery.SqlPredicate.IsTrue
 LinqToDB.SqlQuery.SqlPredicate.IsTrue.FalseValue.get -> LinqToDB.SqlQuery.ISqlExpression!
 LinqToDB.SqlQuery.SqlPredicate.IsTrue.FalseValue.set -> void
-LinqToDB.SqlQuery.SqlPredicate.IsTrue.IsTrue(LinqToDB.SqlQuery.ISqlExpression! exp1, LinqToDB.SqlQuery.ISqlExpression! trueValue, LinqToDB.SqlQuery.ISqlExpression! falseValue, bool? withNull, bool isNot) -> void
 LinqToDB.SqlQuery.SqlPredicate.IsTrue.Reduce() -> LinqToDB.SqlQuery.ISqlPredicate!
 LinqToDB.SqlQuery.SqlPredicate.IsTrue.TrueValue.get -> LinqToDB.SqlQuery.ISqlExpression!
 LinqToDB.SqlQuery.SqlPredicate.IsTrue.TrueValue.set -> void
@@ -10608,3 +10607,7 @@ static readonly LinqToDB.Expressions.ExpressionInstances.HashMultiplier -> Syste
 static readonly LinqToDB.Expressions.ExpressionInstances.NullIDataContext -> System.Linq.Expressions.Expression!
 virtual LinqToDB.SqlProvider.BasicSqlBuilder.BuildExpressionForOrderBy(LinqToDB.SqlQuery.ISqlExpression! expr) -> void
 virtual LinqToDB.Tools.ActivityBase.DisposeAsync() -> System.Threading.Tasks.ValueTask
+LinqToDB.SqlQuery.SqlPredicate.IsTrue.IsTrue(LinqToDB.SqlQuery.ISqlExpression! exp1, LinqToDB.SqlQuery.ISqlExpression! trueValue, LinqToDB.SqlQuery.ISqlExpression! falseValue, bool? withNull, bool isNot, bool optimizeNull) -> void
+LinqToDB.SqlQuery.SqlPredicate.IsTrue.OptimizeNull.get -> bool
+LinqToDB.SqlQuery.SqlPredicate.IsTrue.OptimizeNull.set -> void
+static LinqToDB.SqlQuery.QueryHelper.ContainsAggregationFunctionOneLevel(LinqToDB.SqlQuery.IQueryElement! expr) -> bool

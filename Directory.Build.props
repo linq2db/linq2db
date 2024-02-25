@@ -49,7 +49,7 @@
 	<PropertyGroup Label="Code Analysis Setup">
 		<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
 		<!--enable on release build only to not slowdown development/testing-->
-		<!-- <RunAnalyzersDuringBuild Condition="$(Configuration) != 'Debug'">true</RunAnalyzersDuringBuild> -->
+		<RunAnalyzersDuringBuild Condition="$(Configuration) != 'Debug'">true</RunAnalyzersDuringBuild>
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 
 		<AnalysisLevel>preview-All</AnalysisLevel>
@@ -63,7 +63,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net6.0' ">
 		<PackageReference Include="PolySharp" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
 		<PackageReference Include="Meziantou.Analyzer" />
