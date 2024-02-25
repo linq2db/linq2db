@@ -126,6 +126,11 @@ namespace LinqToDB.SqlQuery
 							select.Columns.RemoveAt(i);
 						}
 					}
+
+					if (!select.GroupBy.IsEmpty && select.Columns.Count == 0)
+					{
+						select.AddNew(new SqlValue(1));
+					}
 				}
 			});
 		}
