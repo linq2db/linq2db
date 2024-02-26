@@ -2188,9 +2188,9 @@ namespace LinqToDB.SqlProvider
 
 		#region Where Clause
 
-		protected virtual bool ShouldBuildWhere(SelectQuery selectQuery)
+		protected virtual bool ShouldBuildWhere(SelectQuery selectQuery, out SqlSearchCondition condition)
 		{
-			var condition = ConvertElement(selectQuery.Where.SearchCondition);
+			condition = ConvertElement(selectQuery.Where.SearchCondition);
 
 			if (condition.IsTrue())
 				return false;
@@ -2200,7 +2200,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildWhereClause(SelectQuery selectQuery)
 		{
-			if (!ShouldBuildWhere(selectQuery))
+			if (!ShouldBuildWhere(selectQuery, out var searchCondition))
 				return;
 
 			AppendIndent();
@@ -2209,7 +2209,7 @@ namespace LinqToDB.SqlProvider
 
 			Indent++;
 			AppendIndent();
-			BuildWhereSearchCondition(selectQuery, selectQuery.Where.SearchCondition);
+			BuildWhereSearchCondition(selectQuery, searchCondition);
 			Indent--;
 
 			StringBuilder.AppendLine();
