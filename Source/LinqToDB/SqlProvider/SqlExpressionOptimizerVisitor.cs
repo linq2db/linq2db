@@ -695,11 +695,6 @@ namespace LinqToDB.SqlProvider
 				return SqlPredicate.MakeBool((value == null) != predicate.IsNot);
 			}
 
-			newPredicate = OptimizeCase(predicate);
-
-			if (!ReferenceEquals(newPredicate, predicate))
-				return Visit(newPredicate);
-
 			return predicate;
 		}
 
@@ -867,40 +862,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			throw new InvalidOperationException();
-		}
-
-		ISqlPredicate OptimizeCase(SqlPredicate.IsNull isNull)
-		{
-			/*if (QueryHelper.UnwrapNullablity(isNull.Expr1) is SqlFunction func && func.Name == "CASE")
-			{
-				var sc = new SqlSearchCondition();
-
-				//TODO: I still do not understand why we do not created QueryElement for CASE function
-				if (func.Parameters.Length == 3)
-				{
-					var trueParam  = func.Parameters[1];
-					var falseParam = func.Parameters[2];
-
-					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(trueParam, isNull.IsNot), true));
-					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(falseParam, isNull.IsNot), true));
-				}
-				else if (func.Parameters.Length == 5)
-				{
-					var trueParam    = func.Parameters[1];
-					var falseParam   = func.Parameters[3];
-					var defaultParam = func.Parameters[4];
-
-					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(trueParam, isNull.IsNot), true));
-					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(falseParam, isNull.IsNot), true));
-					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(defaultParam, isNull.IsNot), true));
-				}
-				else
-					return isNull;
-
-				return sc;
-			}*/
-
-			return isNull;
 		}
 
 		ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr)

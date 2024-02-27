@@ -287,7 +287,7 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-				if (WithNull == null)
+				if (WithNull == null || nullability.IsEmpty)
 					return this;
 
 				if (!nullability.CanBeNull(Expr1) && !nullability.CanBeNull(Expr2))

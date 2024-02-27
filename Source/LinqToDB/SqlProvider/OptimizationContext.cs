@@ -117,9 +117,14 @@ namespace LinqToDB.SqlProvider
 			if (element == null)
 				return null;
 
-			var newElement = _optimizerVisitor.Optimize(Context, nullabilityContext, _sqlProviderFlags, _dataOptions, element);
+			// if parameters are not initialized, it means that query already optimized in SelectQueryOptimizerVisitor
+			var newElement = !Context.IsParametersInitialized
+				? element
+				: _optimizerVisitor.Optimize(Context, nullabilityContext, _sqlProviderFlags, _dataOptions, element);
+
 			var result = (T)_convertVisitor.Convert(this, nullabilityContext, _sqlProviderFlags, _dataOptions, _mappingSchema, newElement);
-			if (!ReferenceEquals(result, newElement))
+
+			if (_convertVisitor.NeedsOptimization)
 				result = (T)_optimizerVisitor.Optimize(Context, nullabilityContext, _sqlProviderFlags, _dataOptions, result);
 
 			return result;

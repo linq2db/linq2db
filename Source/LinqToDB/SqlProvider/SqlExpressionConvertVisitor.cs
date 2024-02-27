@@ -21,6 +21,8 @@ namespace LinqToDB.SqlProvider
 		protected DataOptions         DataOptions         = default!;
 		protected MappingSchema       MappingSchema       = default!;
 
+		public bool NeedsOptimization { get; protected set; }
+
 		protected SqlProviderFlags? SqlProviderFlags;
 
 		readonly SqlDataType _typeWrapper = new(default(DbDataType));
@@ -42,6 +44,20 @@ namespace LinqToDB.SqlProvider
 			MappingSchema       = mappingSchema;
 
 			return ProcessElement(element);
+		}
+
+		public override void Cleanup()
+		{
+			base.Cleanup();
+
+			OptimizationContext = default!;
+			EvaluationContext   = default!;
+			NullabilityContext  = default!;
+			SqlProviderFlags    = default;
+			DataOptions         = default!;
+			MappingSchema       = default!;
+
+			NeedsOptimization = false;
 		}
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
@@ -85,7 +101,10 @@ namespace LinqToDB.SqlProvider
 			var newElement = base.VisitExprExprPredicate(predicate);
 
 			if (!ReferenceEquals(newElement, predicate))
+			{
+				NeedsOptimization = true;
 				return Visit(newElement);
+			}
 
 			return ConvertExprExprPredicate(predicate);
 		}
@@ -100,13 +119,17 @@ namespace LinqToDB.SqlProvider
 
 				var newPredicate = ConvertRowExprExpr(predicate, EvaluationContext);
 				if (!ReferenceEquals(newPredicate, predicate))
+				{
+					NeedsOptimization = true;
 					return Visit(newPredicate);
+				}
 			}
 
 			var reduced = predicate.Reduce(NullabilityContext, EvaluationContext);
 
 			if (!ReferenceEquals(reduced, predicate))
 			{
+				NeedsOptimization = true;
 				return Visit(reduced);
 			}
 
@@ -446,9 +469,6 @@ namespace LinqToDB.SqlProvider
 
 			if (NullabilityContext.IsEmpty)
 				return predicate;
-
-			if (!NullabilityContext.CanBeNull(predicate.Expr1))
-				return SqlPredicate.MakeBool(predicate.IsNot);
 
 			if (QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression sqlRow)
 			{
