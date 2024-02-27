@@ -1674,5 +1674,22 @@ namespace Tests.Linq
 				CheckTakeGlobalParams(db);
 			}
 		}
+
+		[Test]
+		public void SkipTakeCaching([DataSources] string context, [Values(1, 2)] int skip, [Values(1, 2)] int take)
+		{
+			using var db = GetDataContext(context);
+
+			var cacheMissCount = Query<Parent>.CacheMissCount;
+
+			var result = db.Parent
+				.OrderBy(t => t.Value1)
+				.Skip(skip)
+				.Take(take)
+				.ToArray();
+
+			if (skip > 1 || take > 1)
+				Query<Parent>.CacheMissCount.Should().Be(cacheMissCount);
+		}
 	}
 }
