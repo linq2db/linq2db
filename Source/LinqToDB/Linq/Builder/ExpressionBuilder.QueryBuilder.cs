@@ -435,6 +435,9 @@ namespace LinqToDB.Linq.Builder
 					if (transformed is SqlPlaceholderExpression placeholder)
 					{
 						RegisterExtensionAccessors(expr);
+
+						placeholder = placeholder.WithSql(PosProcessCustomExpression(expr, placeholder.Sql));
+
 						return placeholder.WithPath(expr);
 					}
 

@@ -437,16 +437,6 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
-		protected override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
-		{
-			var newElement = base.VisitIsTruePredicate(predicate);
-
-			if (!ReferenceEquals(newElement, predicate))
-				return Visit(newElement);
-
-			return predicate.Reduce(NullabilityContext);
-		}
-
 		protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
 			var newElement = base.VisitIsNullPredicate(predicate);

@@ -2449,17 +2449,6 @@ namespace LinqToDB.SqlQuery
 				return predicate;
 			}
 
-			protected override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
-			{
-				var reduced = predicate.Reduce(_nullability);
-				if (!ReferenceEquals(reduced, predicate))
-					Visit(reduced);
-				else
-					base.VisitIsTruePredicate(predicate);
-
-				return predicate;
-			}
-
 			protected override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
 			{
 				if (element.IsPositioned)

@@ -387,7 +387,7 @@ namespace LinqToDB.Linq.Builder
 
 						builder.RegisterExtensionAccessors(methodCall);
 
-						sql = placeholder.Sql;
+						sql = builder.PosProcessCustomExpression(methodCall, placeholder.Sql);
 					}
 					else
 					{

@@ -185,11 +185,11 @@ namespace Tests.Linq
 				Assert.That(LastQuery, Is.Not.Contains(" NULL"));
 
 			AreEqual(
-				[ data[value switch { null => 0, true => 1, false => 2 }] ]
+				value is null ? [] : [ data[value switch { true => 1, false => 2 }] ]
 				,
 				from t in tt
 				where Sql.AsNotNull(t.Value) == value
-				select t);
+				select t, allowEmpty: true);
 
 			if (value is not null)
 				Assert.That(LastQuery, Is.Not.Contains(" NULL"));
@@ -205,7 +205,7 @@ namespace Tests.Linq
 				Assert.That(LastQuery, Contains.Substring("IS NULL"));
 
 			AreEqual(
-				value switch { null => [data[1], data[2]], true => [data[2]], false => [data[1]] }
+				value switch { null => data, true => [data[2]], false => [data[1]] }
 				,
 				from t in tt
 				where Sql.AsNotNull(t.Value) != value

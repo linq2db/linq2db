@@ -679,22 +679,6 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlExpression(SqlExpression element)
-		{
-			var newElement = base.VisitSqlExpression(element);
-
-			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
-
-			if (element.Expr      == "{0}" && element.Parameters.Length == 1 &&
-			    element.CanBeNull == element.Parameters[0].CanBeNullable(_nullabilityContext))
-			{
-				return SqlNullabilityExpression.ApplyNullability(element.Parameters[0], element.CanBeNull);
-			}
-
-			return element;
-		}
-
 		protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
 			var newPredicate = base.VisitIsNullPredicate(predicate);

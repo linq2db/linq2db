@@ -68,6 +68,7 @@ namespace LinqToDB.SqlProvider
 		#region Build Flags
 
 		bool _disableAlias;
+		int  _insideNotPredicate;
 
 		#endregion
 
@@ -2564,6 +2565,10 @@ namespace LinqToDB.SqlProvider
 					BuildInListPredicate(predicate);
 					break;
 
+				case QueryElementType.IsTruePredicate:
+					BuildPredicate(((SqlPredicate.IsTrue)predicate).Reduce(NullabilityContext, _insideNotPredicate > 0));
+					break;
+
 				case QueryElementType.FuncLikePredicate:
 					BuildExpression(((SqlPredicate.FuncLike)predicate).Function.Precedence, ((SqlPredicate.FuncLike)predicate).Function);
 					break;
@@ -2578,7 +2583,11 @@ namespace LinqToDB.SqlProvider
 
 						StringBuilder.Append("NOT ");
 
+						++_insideNotPredicate;
+
 						BuildPredicate(p.Precedence, GetPrecedence(p.Predicate), p.Predicate);
+
+						--_insideNotPredicate;
 
 						break;
 					}

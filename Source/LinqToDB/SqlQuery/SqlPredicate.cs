@@ -586,10 +586,10 @@ namespace LinqToDB.SqlQuery
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
-				writer.AppendElement(Reduce(writer.Nullability));
+				writer.AppendElement(Reduce(writer.Nullability, true));
 			}
 
-			public ISqlPredicate Reduce(NullabilityContext nullability)
+			public ISqlPredicate Reduce(NullabilityContext nullability, bool insideNot)
 			{
 				if (Expr1.ElementType == QueryElementType.SearchCondition)
 				{
@@ -597,13 +597,25 @@ namespace LinqToDB.SqlQuery
 				}
 
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
+
 				if (WithNull == null || !Expr1.ShouldCheckForNull(nullability))
 					return predicate;
+
+				if (!insideNot)
+				{
+					if (WithNull == false)
+						return predicate;
+				}
 
 				var search = new SqlSearchCondition(WithNull.Value);
 
 				search.Predicates.Add(predicate);
 				search.Predicates.Add(new IsNull(Expr1, !WithNull.Value));
+
+				if (search.IsOr)
+				{
+					search = new SqlSearchCondition(false, search);
+				}
 
 				return search;
 				

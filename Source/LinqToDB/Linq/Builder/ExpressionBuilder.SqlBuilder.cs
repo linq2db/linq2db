@@ -1401,7 +1401,28 @@ namespace LinqToDB.Linq.Builder
 			{
 				RegisterExtensionAccessors(mc);
 
+				placeholder = placeholder.WithSql(PosProcessCustomExpression(mc, placeholder.Sql));
+
 				sqlExpression = placeholder.WithPath(mc);
+			}
+
+			return sqlExpression;
+		}
+
+		public ISqlExpression PosProcessCustomExpression(Expression expression, ISqlExpression sqlExpression)
+		{
+			if (sqlExpression is SqlExpression { Expr: "{0}", Parameters.Length: 1 } expr)
+			{
+				if (expression is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && (
+					    mc.Method.Name is nameof(Sql.AsNullable) 
+						    or nameof(Sql.AsNotNull) 
+						    or nameof(Sql.AsNotNullable) 
+						    or nameof(Sql.ToNullable) 
+						    or nameof(Sql.ToNotNullable)
+				    ))
+				{
+					return SqlNullabilityExpression.ApplyNullability(expr.Parameters[0], expr.CanBeNull);
+				}
 			}
 
 			return sqlExpression;
@@ -2289,11 +2310,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					bool?           value;
 					ISqlExpression? expression  = null;
-					var             isNullable  = false;
 
 					if (IsBooleanConstant(left, out value))
 					{
-						isNullable  = typeof(bool?) == left.Type || rOriginal.CanBeNullable(nullability);
 						if (l.ElementType != QueryElementType.SqlParameter)
 						{
 							expression = rOriginal;
@@ -2301,7 +2320,6 @@ namespace LinqToDB.Linq.Builder
 					}
 					else if (IsBooleanConstant(right, out value))
 					{
-						isNullable        = typeof(bool?) == right.Type || lOriginal.CanBeNullable(nullability);
 						if (r.ElementType != QueryElementType.SqlParameter)
 						{
 							expression = lOriginal;
@@ -2326,8 +2344,7 @@ namespace LinqToDB.Linq.Builder
 						if (trueValue.ElementType  == QueryElementType.SqlValue &&
 						    falseValue.ElementType == QueryElementType.SqlValue)
 						{
-							var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues &&
-							                    (isNullable || NeedNullCheck(expression))
+							var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues
 								? withNull
 								: (bool?)null;
 							predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
