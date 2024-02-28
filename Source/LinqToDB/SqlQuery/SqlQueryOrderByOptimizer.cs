@@ -15,7 +15,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool IsOptimized => _optimized;
 
-		public SqlQueryOrderByOptimizer() : base(VisitMode.Modify)
+		public SqlQueryOrderByOptimizer() : base(VisitMode.Modify, null)
 		{
 		}
 

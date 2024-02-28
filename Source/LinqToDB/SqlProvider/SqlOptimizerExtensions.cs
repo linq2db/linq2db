@@ -7,10 +7,10 @@
 	internal static class SqlOptimizerExtensions
 	{
 		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
-			MappingSchema mappingSchema, DataOptions dataOptions, AliasesContext aliases, EvaluationContext context)
+			MappingSchema mappingSchema, DataOptions dataOptions, AliasesContext aliases, EvaluationContext evaluationContext)
 		{
 			var optimizationContext = new OptimizationContext(
-				context,
+				evaluationContext,
 				dataOptions,
 				sqlProviderFlags: null,
 				mappingSchema,

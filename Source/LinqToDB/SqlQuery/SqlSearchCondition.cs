@@ -53,12 +53,11 @@ namespace LinqToDB.SqlQuery
 			if (!writer.AddVisited(this))
 				return writer.Append("...");
 
-			/*writer.Append("sc=");
+			writer
+				.Append("sc=")
+				.DebugAppendUniqueId(this);
 
-			writer.DebugAppendUniqueId(this);*/
-
-			if (IsOr)
-				writer.Append('(');
+			writer.Append('(');
 
 			var isFirst = true;
 			foreach (IQueryElement c in Predicates)
@@ -80,8 +79,7 @@ namespace LinqToDB.SqlQuery
 
 			writer.RemoveVisited(this);
 
-			if (IsOr)
-				writer.Append(')');
+			writer.Append(')');
 
 			return writer;
 		}

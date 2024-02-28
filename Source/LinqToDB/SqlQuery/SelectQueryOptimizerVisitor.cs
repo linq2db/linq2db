@@ -40,7 +40,7 @@ namespace LinqToDB.SqlQuery
 		SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor  = new(true);
 		MovingOuterPredicateVisitor    _movingOuterPredicateVisitor = new();
 
-		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify)
+		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify, null)
 		{
 		}
 
@@ -200,7 +200,7 @@ namespace LinqToDB.SqlQuery
 					var before = selectQuery.ToDebugString();
 #endif
 					// only once
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), _providerFlags, _dataOptions, selectQuery);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery);
 				}
 				else
 				{
@@ -282,7 +282,7 @@ namespace LinqToDB.SqlQuery
 #endif
 					CorrectEmptyInnerJoinsRecursive(selectQuery);
 
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), _providerFlags, _dataOptions, selectQuery);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery);
 				}
 
 				if (saveSetOperatorCount != (selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0))

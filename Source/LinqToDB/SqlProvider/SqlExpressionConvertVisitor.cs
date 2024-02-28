@@ -16,32 +16,28 @@ namespace LinqToDB.SqlProvider
 	public class SqlExpressionConvertVisitor : SqlQueryVisitor
 	{
 		protected OptimizationContext OptimizationContext = default!;
-		protected EvaluationContext   EvaluationContext   = default!;
 		protected NullabilityContext  NullabilityContext  = default!;
-		protected DataOptions         DataOptions         = default!;
-		protected MappingSchema       MappingSchema       = default!;
 
-		public bool NeedsOptimization { get; protected set; }
-
-		protected SqlProviderFlags? SqlProviderFlags;
+		protected EvaluationContext EvaluationContext => OptimizationContext.EvaluationContext;
+		protected DataOptions       DataOptions       => OptimizationContext.DataOptions;
+		protected MappingSchema     MappingSchema     => OptimizationContext.MappingSchema;
+		protected SqlProviderFlags? SqlProviderFlags  => OptimizationContext.SqlProviderFlags;
 
 		readonly SqlDataType _typeWrapper = new(default(DbDataType));
 
-		public SqlExpressionConvertVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform)
+		public SqlExpressionConvertVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
 		}
 
 		public virtual bool CanCompareSearchConditions => false;
 
-		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, SqlProviderFlags? sqlProviderFlags, DataOptions dataOptions, MappingSchema mappingSchema, IQueryElement element)
+		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element)
 		{
 			Cleanup();
+
 			OptimizationContext = optimizationContext;
-			EvaluationContext   = optimizationContext.Context;
 			NullabilityContext  = nullabilityContext;
-			SqlProviderFlags    = sqlProviderFlags;
-			DataOptions         = dataOptions;
-			MappingSchema       = mappingSchema;
+			SetTransformationInfo(optimizationContext.TransformationInfo);
 
 			return ProcessElement(element);
 		}
@@ -51,13 +47,7 @@ namespace LinqToDB.SqlProvider
 			base.Cleanup();
 
 			OptimizationContext = default!;
-			EvaluationContext   = default!;
 			NullabilityContext  = default!;
-			SqlProviderFlags    = default;
-			DataOptions         = default!;
-			MappingSchema       = default!;
-
-			NeedsOptimization = false;
 		}
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
@@ -96,14 +86,18 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
+		protected IQueryElement Optimize(IQueryElement element)
+		{
+			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, element);
+		}
+
 		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			var newElement = base.VisitExprExprPredicate(predicate);
 
 			if (!ReferenceEquals(newElement, predicate))
 			{
-				NeedsOptimization = true;
-				return Visit(newElement);
+				return Visit(Optimize(newElement));
 			}
 
 			return ConvertExprExprPredicate(predicate);
@@ -120,8 +114,7 @@ namespace LinqToDB.SqlProvider
 				var newPredicate = ConvertRowExprExpr(predicate, EvaluationContext);
 				if (!ReferenceEquals(newPredicate, predicate))
 				{
-					NeedsOptimization = true;
-					return Visit(newPredicate);
+					return Visit(Optimize(newPredicate));
 				}
 			}
 
@@ -129,8 +122,7 @@ namespace LinqToDB.SqlProvider
 
 			if (!ReferenceEquals(reduced, predicate))
 			{
-				NeedsOptimization = true;
-				return Visit(reduced);
+				return Visit(Optimize(reduced));
 			}
 
 			if (!CanCompareSearchConditions && (predicate.Expr1.ElementType == QueryElementType.SearchCondition ||
@@ -331,7 +323,8 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		public virtual bool   LikeIsEscapeSupported       => true;
 
-		protected static  string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
+		protected static string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
+
 		/// <summary>
 		/// Characters with special meaning in LIKE predicate (defined by <see cref="LikeCharactersToEscape"/>) that should be escaped to be used as matched character.
 		/// Default: <c>["%", "_", "?", "*", "#", "[", "]"]</c>.
@@ -536,15 +529,6 @@ namespace LinqToDB.SqlProvider
 				case PseudoFunctions.TO_UPPER: return func.WithName("Upper");
 				case PseudoFunctions.REPLACE:  return func.WithName("Replace");
 				case PseudoFunctions.COALESCE: return func.WithName("Coalesce");
-
-				case "ConvertToCaseCompareTo":
-				{
-					return new SqlFunction(func.SystemType, "CASE",
-						new SqlSearchCondition().AddGreater(func.Parameters[0], func.Parameters[1], DataOptions.LinqOptions.CompareNullsAsValues), new SqlValue(1),
-						new SqlSearchCondition().AddEqual(func.Parameters[0], func.Parameters[1], DataOptions.LinqOptions.CompareNullsAsValues),
-						new SqlValue(0),
-						new SqlValue(-1)) { CanBeNull = false };
-				}
 			}
 
 			return func;
@@ -663,7 +647,7 @@ namespace LinqToDB.SqlProvider
 
 			sc.AddExists(subQuery, inPredicate.IsNot);
 
-			return sc;
+			return  (ISqlPredicate)Optimize(sc);
 		}
 
 		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)

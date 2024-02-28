@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider
 		bool _needCast;
 		bool _inModifier;
 
-		public WrapParametersVisitor(VisitMode visitMode) : base(visitMode)
+		public WrapParametersVisitor(VisitMode visitMode) : base(visitMode, null)
 		{
 		}
 

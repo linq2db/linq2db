@@ -4,7 +4,7 @@ namespace LinqToDB.SqlQuery.Visitors
 {
 	public class SqlQueryCloneVisitorBase : SqlQueryVisitor
 	{
-		public SqlQueryCloneVisitorBase() : base(VisitMode.Transform)
+		public SqlQueryCloneVisitorBase() : base(VisitMode.Transform, null)
 		{
 		}
 

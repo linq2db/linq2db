@@ -15,27 +15,23 @@ namespace LinqToDB.SqlProvider
 		EvaluationContext  _evaluationContext  = default!;
 		NullabilityContext _nullabilityContext = default!;
 		DataOptions        _dataOptions        = default!;
-		SqlProviderFlags?  _sqlProviderFlags;
 		ISqlPredicate?     _allowOptimize;
 
-		public SqlExpressionOptimizerVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform)
+		public SqlExpressionOptimizerVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
 		}
 
-		public virtual IQueryElement Optimize(EvaluationContext evaluationContext, NullabilityContext nullabilityContext, SqlProviderFlags? sqlProviderFlags, DataOptions dataOptions, IQueryElement element)
+		public virtual IQueryElement Optimize(EvaluationContext evaluationContext, NullabilityContext nullabilityContext, IVisitorTransformationInfo? transformationInfo, DataOptions dataOptions, IQueryElement element)
 		{
 			Cleanup();
 			_evaluationContext  = evaluationContext;
 			_nullabilityContext = nullabilityContext;
-			_sqlProviderFlags   = sqlProviderFlags;
 			_dataOptions        = dataOptions;
-			IsModified          = false;
 			_allowOptimize      = default;
+			SetTransformationInfo(transformationInfo);
 
 			return ProcessElement(element);
 		}
-
-		public bool IsModified { get; private set; }
 
 		[return: NotNullIfNotNull(nameof(element))]
 		public override IQueryElement? Visit(IQueryElement? element)
@@ -45,15 +41,7 @@ namespace LinqToDB.SqlProvider
 
 			var newElement = base.Visit(element);
 
-			if (!ReferenceEquals(newElement, element))
-				MarkModified();
-
 			return newElement;
-		}
-
-		protected void MarkModified()
-		{
-			IsModified = true;
 		}
 
 		protected override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)

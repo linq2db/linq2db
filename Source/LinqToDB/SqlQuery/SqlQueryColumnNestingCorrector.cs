@@ -81,7 +81,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool HasSelectQuery { get; private set; }
 
-		public SqlQueryColumnNestingCorrector() : base(VisitMode.Modify)
+		public SqlQueryColumnNestingCorrector() : base(VisitMode.Modify, null)
 		{
 		}
 

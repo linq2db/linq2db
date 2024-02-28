@@ -4,7 +4,7 @@ namespace LinqToDB.SqlQuery.Visitors
 {
 	public abstract class SqlQueryConvertVisitorBase : SqlQueryVisitor
 	{
-		protected SqlQueryConvertVisitorBase(bool allowMutation) : base(allowMutation ? VisitMode.Modify : VisitMode.Transform)
+		protected SqlQueryConvertVisitorBase(bool allowMutation, IVisitorTransformationInfo? transformationInfo) : base(allowMutation ? VisitMode.Modify : VisitMode.Transform, transformationInfo)
 		{
 		}
 
@@ -14,17 +14,6 @@ namespace LinqToDB.SqlQuery.Visitors
 
 		public List<IQueryElement>? Stack         { get; protected set; }
 		public IQueryElement?       ParentElement => Stack?.Count > 0 ? Stack[^1] : null;
-
-		public void RegisterReplacements(IReadOnlyDictionary<IQueryElement, IQueryElement> replacements)
-		{
-			AddReplacements(replacements);
-		}
-
-		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
-		{
-			AddReplacement(oldElement, newElement);
-			return base.NotifyReplaced(newElement, oldElement);
-		}
 
 		public override IQueryElement? Visit(IQueryElement? element)
 		{

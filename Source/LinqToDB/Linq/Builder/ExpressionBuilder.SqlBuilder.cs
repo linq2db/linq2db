@@ -3066,6 +3066,20 @@ namespace LinqToDB.Linq.Builder
 			Type                                  toType,
 			Func<TContext,string, ISqlExpression> getSql)
 		{
+			static ISqlPredicate CorrectNullability(SqlPredicate.ExprExpr exprExpr)
+			{
+				if (exprExpr.Expr2 is SqlValue { Value: null })
+				{
+					exprExpr.Expr1 = SqlNullabilityExpression.ApplyNullability(exprExpr.Expr1, true);
+				}
+				else if (exprExpr.Expr1 is SqlValue { Value: null })
+				{
+					exprExpr.Expr2 = SqlNullabilityExpression.ApplyNullability(exprExpr.Expr2, true);
+				}
+
+				return exprExpr;
+			}
+
 			var mapping = new List<InheritanceMapping>(inheritanceMapping.Count);
 			foreach (var m in inheritanceMapping)
 				if (m.Type == toType && !m.IsDefault)
@@ -3092,11 +3106,14 @@ namespace LinqToDB.Linq.Builder
 							foreach (var m in inheritanceMapping.Where(static m => !m.IsDefault))
 							{
 								cond.Predicates.Add(
-									new SqlPredicate.ExprExpr(
-										getSql(getSqlContext, m.DiscriminatorName),
-										SqlPredicate.Operator.NotEqual,
-										MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code),
-										DataOptions.LinqOptions.CompareNullsAsValues ? true : null));
+									CorrectNullability(
+										new SqlPredicate.ExprExpr(
+											getSql(getSqlContext, m.DiscriminatorName),
+											SqlPredicate.Operator.NotEqual,
+											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code),
+											DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+									)
+								);
 							}
 						}
 						else
@@ -3107,11 +3124,14 @@ namespace LinqToDB.Linq.Builder
 								if (toType.IsSameOrParentOf(m.Type))
 								{
 									sc.Predicates.Add(
-										new SqlPredicate.ExprExpr(
-											getSql(getSqlContext, m.DiscriminatorName),
-											SqlPredicate.Operator.Equal,
-											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code),
-											DataOptions.LinqOptions.CompareNullsAsValues ? true : null));
+										CorrectNullability(
+											new SqlPredicate.ExprExpr(
+												getSql(getSqlContext, m.DiscriminatorName),
+												SqlPredicate.Operator.Equal,
+												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code),
+												DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+										)
+									);
 								}
 							}
 
@@ -3126,18 +3146,13 @@ namespace LinqToDB.Linq.Builder
 					var discriminatorSql = getSql(getSqlContext, mapping[0].DiscriminatorName);
 					var sqlValue = MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code);
 
-					if (QueryHelper.IsNullValue(sqlValue))
-					{
-						if (!discriminatorSql.CanBeNullable(NullabilityContext.NonQuery))
-							discriminatorSql = new SqlNullabilityExpression(discriminatorSql, true);
-						return new SqlPredicate.IsNull(discriminatorSql, false);
-					}
-
-					return new SqlPredicate.ExprExpr(
-						discriminatorSql,
-						SqlPredicate.Operator.Equal,
-						sqlValue,
-						DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+					return CorrectNullability(
+						new SqlPredicate.ExprExpr(
+							discriminatorSql,
+							SqlPredicate.Operator.Equal,
+							sqlValue,
+							DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+					);
 				}
 				default:
 					{

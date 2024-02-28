@@ -1,19 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
-	public class CteClause : IQueryElement
+	public class CteClause : QueryElement
 	{
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-
 		public static int CteIDCounter;
 
 		public List<SqlField> Fields { get; internal set; }
@@ -72,16 +67,17 @@ namespace LinqToDB.SqlQuery
 			Fields     = fields.ToList();
 		}
 
-		public QueryElementType ElementType => QueryElementType.CteClause;
+		public override QueryElementType ElementType => QueryElementType.CteClause;
 
-		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			return writer
+					.DebugAppendUniqueId(this)
 				.Append("CTE(")
 				.Append(CteID)
-				.Append(", ")
+				.Append(", \"")
 				.Append(Name)
-				.Append(")")
+				.Append("\")")
 				;
 		}
 

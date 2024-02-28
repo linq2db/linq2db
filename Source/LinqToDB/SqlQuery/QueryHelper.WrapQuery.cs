@@ -22,7 +22,7 @@ namespace LinqToDB.SqlQuery
 				TContext                                         context,
 				Func<TContext, SelectQuery, IQueryElement?, int> wrapTest,
 				Action<TContext, IReadOnlyList<SelectQuery>>     onWrap
-				) : base(visitMode)
+				) : base(visitMode, null)
 			{
 				Context  = context;
 				WrapTest = wrapTest;

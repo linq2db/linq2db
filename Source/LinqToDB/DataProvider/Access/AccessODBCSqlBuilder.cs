@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.Access
 				&& selectQuery != null
 				&& Statement.QueryType == QueryType.Select
 				&& Statement.SelectQuery == selectQuery
-				&& p.GetParameterValue(OptimizationContext.Context.ParameterValues).ProviderValue == null)
+				&& p.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues).ProviderValue == null)
 			{
 				expr = new SqlValue(p.Type, null);
 			}

@@ -1484,7 +1484,13 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.SqlParameter:
 				{
-					return !((SqlParameter)element).IsQueryParameter || !((SqlParameter)element).NeedsCast;
+					var param = (SqlParameter)element;
+					if (!param.IsQueryParameter)
+						return true;
+					if (param.NeedsCast)
+						return true;
+
+					return false;
 				}
 				case QueryElementType.SqlQuery:
 				{
@@ -1611,8 +1617,8 @@ namespace LinqToDB.SqlProvider
 		{
 			// make skip take as parameters or evaluate otherwise
 
-			takeExpr = optimizationContext.ConvertAll(selectQuery.Select.TakeValue, nullability);
-			skipExpr = optimizationContext.ConvertAll(selectQuery.Select.SkipValue, nullability);
+			takeExpr = optimizationContext.OptimizeAll(selectQuery.Select.TakeValue, nullability);
+			skipExpr = optimizationContext.OptimizeAll(selectQuery.Select.SkipValue, nullability);
 
 			if (takeExpr != null)
 			{
@@ -1622,7 +1628,7 @@ namespace LinqToDB.SqlProvider
 				{
 					if (takeExpr.ElementType != QueryElementType.SqlParameter && takeExpr.ElementType != QueryElementType.SqlValue)
 					{
-						var takeValue = takeExpr.EvaluateExpression(optimizationContext.Context)!;
+						var takeValue = takeExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
 						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
 						{
 							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr)
@@ -1631,7 +1637,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 				else if (takeExpr.ElementType != QueryElementType.SqlValue)
-					takeExpr = new SqlValue(takeExpr.EvaluateExpression(optimizationContext.Context)!);
+					takeExpr = new SqlValue(takeExpr.EvaluateExpression(optimizationContext.EvaluationContext)!);
 			}
 
 			if (skipExpr != null)
@@ -1643,7 +1649,7 @@ namespace LinqToDB.SqlProvider
 				{
 					if (skipExpr.ElementType != QueryElementType.SqlParameter && skipExpr.ElementType != QueryElementType.SqlValue)
 					{
-						var skipValue = skipExpr.EvaluateExpression(optimizationContext.Context)!;
+						var skipValue = skipExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
 						var skipParameter = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
 						{
 							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(skipExpr)
@@ -1652,7 +1658,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 				else if (skipExpr.ElementType != QueryElementType.SqlValue)
-					skipExpr = new SqlValue(skipExpr.EvaluateExpression(optimizationContext.Context)!);
+					skipExpr = new SqlValue(skipExpr.EvaluateExpression(optimizationContext.EvaluationContext)!);
 			}
 		}
 

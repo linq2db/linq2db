@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.SqlServer
 							new SqlPredicate.ExprExpr(
 								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
 									typeof(string), "LEFT", predicate.Expr1,
-									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+									new SqlFunction(typeof(int), "LEN", predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
 								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.SqlServer
 							new SqlPredicate.ExprExpr(
 								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
 									typeof(string), "RIGHT", predicate.Expr1,
-									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+									new SqlFunction(typeof(int), "LEN", predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
 								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null

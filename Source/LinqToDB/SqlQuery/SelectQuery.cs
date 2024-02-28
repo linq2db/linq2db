@@ -9,7 +9,7 @@ namespace LinqToDB.SqlQuery
 	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SelectQuery : ISqlTableSource
+	public class SelectQuery : SqlExpressionBase, ISqlTableSource
 	{
 		#region Init
 
@@ -172,56 +172,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region Overrides
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString(this);
-		}
-
-#endif
-
-		#endregion
-
-		#region ISqlExpression Members
-
-		public bool CanBeNullable(NullabilityContext nullability)
-		{
-			foreach(var column in Select.Columns)
-				if (column.CanBeNullable(nullability))
-					return true;
-
-			var allAggregation = Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
-			if (allAggregation)
-				return false;
-
-			return true;
-		}
-
-		public int Precedence => SqlQuery.Precedence.Unknown;
-
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
-		{
-			return this == other;
-		}
-
-		public Type? SystemType
-		{
-			get
-			{
-				if (Select.Columns.Count == 1)
-					return Select.Columns[0].SystemType;
-
-				if (From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
-					return From.Tables[0].SystemType;
-
-				return null;
-			}
-		}
-
-		#endregion
 
 		#region IEquatable<ISqlExpression> Members
 
@@ -267,20 +217,50 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region IQueryElement Members
+		#region Overrides
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
+		public override QueryElementType ElementType => QueryElementType.SqlQuery;
 
-		public QueryElementType ElementType => QueryElementType.SqlQuery;
+		public override bool CanBeNullable(NullabilityContext nullability)
+		{
+			foreach(var column in Select.Columns)
+				if (column.CanBeNullable(nullability))
+					return true;
 
-		public string SqlText => this.ToDebugString(this);
+			var allAggregation = Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
+			if (allAggregation)
+				return false;
 
-		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
+			return true;
+		}
+
+		public override int Precedence => SqlQuery.Precedence.Unknown;
+
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		{
+			return ReferenceEquals(this, other);
+		}
+
+		public override Type? SystemType
+		{
+			get
+			{
+				if (Select.Columns.Count == 1)
+					return Select.Columns[0].SystemType;
+
+				if (From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
+					return From.Tables[0].SystemType;
+
+				return null;
+			}
+		}
+
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (!writer.AddVisited(this))
 				return writer.Append("...");
+
+			writer.DebugAppendUniqueId(this);
 
 			writer
 				.Append('(')
@@ -317,6 +297,8 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region Debug
+
+		public string SqlText => this.ToDebugString(this);
 
 		internal void EnsureFindTables()
 		{

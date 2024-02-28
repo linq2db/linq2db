@@ -1816,7 +1816,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlRawSqlTable  :
 
-					var rawSqlTable = ConvertElement((SqlRawSqlTable)table);
+					var rawSqlTable = (SqlRawSqlTable)table;
 
 					var appendParentheses = _selectDetector.IsMatch(rawSqlTable.SQL);
 					var multiLine         = appendParentheses || rawSqlTable.SQL.Contains('\n');
@@ -1866,7 +1866,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
 			valuesTable = ConvertElement(valuesTable);
-			var rows = valuesTable.BuildRows(OptimizationContext.Context);
+			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
 			if (rows?.Count > 0)
 			{
 				StringBuilder.Append(OpenParens);
@@ -2698,7 +2698,7 @@ namespace LinqToDB.SqlProvider
 			// Handle x.In(IEnumerable variable)
 			if (values.Count == 1 && values[0] is SqlParameter pr)
 			{
-				var prValue = pr.GetParameterValue(OptimizationContext.Context.ParameterValues).ProviderValue;
+				var prValue = pr.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues).ProviderValue;
 				switch (prValue)
 				{
 					case null:
@@ -2839,7 +2839,7 @@ namespace LinqToDB.SqlProvider
 
 					if (checkNull)
 					{
-						if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(OptimizationContext.Context, out var evaluated))
+						if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(OptimizationContext.EvaluationContext, out var evaluated))
 							val = evaluated;
 
 						if (val == null)
@@ -2983,7 +2983,7 @@ namespace LinqToDB.SqlProvider
 									//SqlQuery.GetTableSource(field.Table);
 #endif
 									if (throwExceptionIfTableNotFound)
-										throw new SqlException("Table '{0}' not found.", field.Table);
+										throw new SqlException("Table '{0}' not found.", field.Table.ToDebugString());
 								}
 							}
 							else
@@ -3131,7 +3131,7 @@ namespace LinqToDB.SqlProvider
 
 						if (inlining)
 						{
-							var paramValue = parm.GetParameterValue(OptimizationContext.Context.ParameterValues);
+							var paramValue = parm.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 							if (!TryConvertParameterToSql(paramValue))
 								inlining = false;
 						}

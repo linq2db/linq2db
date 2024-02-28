@@ -6,7 +6,7 @@ namespace LinqToDB.SqlQuery
 	using Mapping;
 
 	//TODO: Investigate how to implement only ISqlTableSource interface
-	public class SqlRawSqlTable : SqlTable, IQueryElement
+	public class SqlRawSqlTable : SqlTable
 	{
 		public string SQL { get; }
 
@@ -51,9 +51,10 @@ namespace LinqToDB.SqlQuery
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
+				.DebugAppendUniqueId(this)
 				.AppendLine("(")
 				.Append(SQL)
 				.Append(')')
@@ -62,10 +63,6 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
 
 		#region IQueryElement Members
 

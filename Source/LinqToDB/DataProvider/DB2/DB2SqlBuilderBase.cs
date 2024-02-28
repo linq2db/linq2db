@@ -409,7 +409,7 @@ END");
 
 			if (parameter.NeedsCast)
 			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.Context.ParameterValues);
+				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 
 				// TODO: temporary guard against cast to unknown type (Variant)
 				if (paramValue.DbDataType.DataType   == DataType.Undefined &&

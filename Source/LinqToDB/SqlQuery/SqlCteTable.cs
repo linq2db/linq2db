@@ -90,9 +90,12 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
-				.Append("Table")
+				.DebugAppendUniqueId(this)
+				.Append("CteTable(")
 				.AppendElement(Cte)
-				.Append('[').Append(SourceID).Append(']');
+				.Append('[').Append(SourceID).Append(']')
+				.Append(')');
+
 			return writer;
 		}
 

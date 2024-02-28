@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 		SelectQuery?                _parentSelectQuery;
 		readonly HashSet<SqlColumn> _usedColumns = new(Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
 
-		public SqlQueryColumnUsageCollector() : base(VisitMode.ReadOnly)
+		public SqlQueryColumnUsageCollector() : base(VisitMode.ReadOnly, null)
 		{
 		}
 

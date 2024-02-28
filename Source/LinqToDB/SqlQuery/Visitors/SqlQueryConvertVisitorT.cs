@@ -8,7 +8,7 @@ namespace LinqToDB.SqlQuery.Visitors
 
 		public TContext Context { get; private set; } = default!;
 
-		public SqlQueryConvertVisitor(bool allowMutation) : base(allowMutation)
+		public SqlQueryConvertVisitor(bool allowMutation) : base(allowMutation, null)
 		{
 		}
 

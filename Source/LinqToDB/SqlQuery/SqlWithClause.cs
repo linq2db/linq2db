@@ -72,16 +72,20 @@ namespace LinqToDB.SqlQuery
 						writer.Append(' ');
 					}
 
-					writer.AppendLine("AS");
-					writer.AppendLine("(");
-
 					using (writer.WithScope())
 					{
-						writer.AppendElement(cte.Body!);
-					}
+						writer.AppendLine("AS");
+						writer.AppendLine("(");
 
-					writer.AppendLine();
-					writer.Append(')');
+						using (writer.WithScope())
+						{
+							writer.AppendElement(cte.Body!);
+						}
+
+						writer.AppendLine();
+						writer.Append(')');
+					}
+					
 				}
 
 				writer.AppendLine();

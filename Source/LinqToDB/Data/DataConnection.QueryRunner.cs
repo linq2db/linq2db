@@ -212,7 +212,10 @@ namespace LinqToDB.Data
 				var commands = new CommandWithParameters[cc];
 
 				if (!statement.IsParameterDependent)
-					statement.IsParameterDependent = sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, statement);
+				{
+					if (sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, statement))
+						statement.IsParameterDependent = true;
+				}
 
 				// optimize, optionally with parameters
 				var evaluationContext = new EvaluationContext(statement.IsParameterDependent ? parameterValues : null);

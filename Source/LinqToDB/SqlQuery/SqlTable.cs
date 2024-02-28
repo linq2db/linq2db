@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 	using Data;
 	using Mapping;
 
-	public class SqlTable : ISqlTableSource
+	public class SqlTable : SqlExpressionBase, ISqlTableSource
 	{
 		#region Init
 
@@ -152,11 +152,34 @@ namespace LinqToDB.SqlQuery
 
 		#region Overrides
 
-		public override string ToString()
+		public override QueryElementType ElementType => QueryElementType.SqlTable;
+
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return this.ToDebugString();
+			if (TableName.Server   != null) writer.Append('[').Append(TableName.Server).Append("].");
+			if (TableName.Database != null) writer.Append('[').Append(TableName.Database).Append("].");
+			if (TableName.Schema   != null) writer.Append('[').Append(TableName.Schema).Append("].");
+			return writer.Append('[').Append(Expression ?? TableName.Name).Append('(').Append(SourceID).Append(")]");
 		}
 
+		public override bool Equals(ISqlExpression? other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			if (ReferenceEquals(this, other))
+				return true;
+
+			if (other is not SqlTable otherTable)
+				return false;
+
+			return ObjectType == otherTable.ObjectType &&
+			       TableName  == otherTable.TableName  &&
+			       Alias      == otherTable.Alias;
+		}
+
+		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+
+		public override int Precedence => LinqToDB.SqlQuery.Precedence.Primary;
+		public override Type SystemType => ObjectType;
+		
 		#endregion
 
 		#region Public Members
@@ -177,6 +200,8 @@ namespace LinqToDB.SqlQuery
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         TableOptions      TableOptions   { get; set; }
 		public virtual string?           ID             { get; set; }
+
+		public bool CanBeNull { get; set; } = true;
 
 		/// <summary>
 		/// Custom SQL expression format string (used together with <see cref="TableArguments"/>) to
@@ -281,56 +306,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region IQueryElement Members
-
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-
-		public virtual QueryElementType ElementType => QueryElementType.SqlTable;
-
-		public virtual QueryElementTextWriter ToString(QueryElementTextWriter writer)
-		{
-			if (TableName.Server   != null) writer.Append('[').Append(TableName.Server).Append("].");
-			if (TableName.Database != null) writer.Append('[').Append(TableName.Database).Append("].");
-			if (TableName.Schema   != null) writer.Append('[').Append(TableName.Schema).Append("].");
-			return writer.Append('[').Append(Expression ?? TableName.Name).Append('(').Append(SourceID).Append(")]");
-		}
-
-		#endregion
-
-		#region ISqlExpression Members
-
-		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
-
-		public bool CanBeNull { get; set; } = true;
-
-		int  ISqlExpression.Precedence => Precedence.Primary;
-		Type ISqlExpression.SystemType => ObjectType;
-
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
-		{
-			return Equals(this, other);
-		}
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			if (ReferenceEquals(this, other))
-				return true;
-
-			if (other is not SqlTable otherTable)
-				return false;
-
-			return ObjectType == otherTable.ObjectType &&
-			       TableName  == otherTable.TableName  &&
-			       Alias      == otherTable.Alias;
-		}
-
-		#endregion
 
 		#region System tables
 

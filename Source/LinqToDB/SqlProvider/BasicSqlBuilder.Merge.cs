@@ -197,8 +197,6 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildMergeSourceQuery(NullabilityContext nullability, SqlTableLikeSource mergeSource)
 		{
-			mergeSource = ConvertElement(mergeSource);
-
 			BuildPhysicalTable(mergeSource.Source, null);
 
 			BuildMergeAsSourceClause(nullability, mergeSource);
@@ -206,7 +204,6 @@ namespace LinqToDB.SqlProvider
 
 		private void BuildMergeAsSourceClause(NullabilityContext nullability, SqlTableLikeSource mergeSource)
 		{
-			mergeSource = ConvertElement(mergeSource);
 			StringBuilder.Append(' ');
 
 			BuildObjectName(StringBuilder, new (mergeSource.Name), ConvertType.NameToQueryTable, true, TableOptions.NotSet);
@@ -240,7 +237,7 @@ namespace LinqToDB.SqlProvider
 		private void BuildMergeSourceEnumerable(NullabilityContext nullability, SqlMergeStatement merge)
 		{
 			merge = ConvertElement(merge);
-			var rows = merge.Source.SourceEnumerable!.BuildRows(OptimizationContext.Context);
+			var rows = merge.Source.SourceEnumerable!.BuildRows(OptimizationContext.EvaluationContext);
 			if (rows.Count > 0)
 			{
 				StringBuilder.Append('(');

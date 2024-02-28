@@ -750,7 +750,16 @@ namespace LinqToDB.Remote
 				visitor.Visit(statement);
 
 				if (DelayedObjects.Count > 0)
-					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
+				{
+					var    first = DelayedObjects.First();
+					string displayName;
+					if (first.Key is IQueryElement element)
+						displayName = element.ToDebugString();
+					else
+						displayName = first.Key.GetType().Name;
+
+					throw new LinqToDBException($"QuerySerializer error. Unknown object '{displayName}'.");
+				}
 
 				Builder.AppendLine();
 

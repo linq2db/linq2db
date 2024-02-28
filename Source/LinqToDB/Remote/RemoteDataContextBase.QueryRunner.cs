@@ -122,11 +122,12 @@ namespace LinqToDB.Remote
 
 							var value = parameterValue.ProviderValue;
 
-							if(value != null)
-								if (value is string str)
-									value = FormattableString.Invariant($"'{str.Replace("'", "''")}'");
-							else if (value is char chr)
-								value = FormattableString.Invariant($"'{(chr == '\'' ? "''" : chr)}'");
+							value = value switch
+							{
+								string str => FormattableString.Invariant($"'{str.Replace("'", "''")}'"),
+								char chr   => FormattableString.Invariant($"'{(chr == '\'' ? "''" : chr)}'"),
+								_ => value
+							};
 
 							sb.Value.AppendLine(CultureInfo.InvariantCulture, $"-- SET {p.Name} = {value}");
 						}

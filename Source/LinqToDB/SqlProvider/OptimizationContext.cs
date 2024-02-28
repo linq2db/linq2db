@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.SqlProvider
 {
 	using Common;
@@ -16,16 +18,21 @@ namespace LinqToDB.SqlProvider
 		private List<SqlParameter>?                              _actualParameters;
 		private Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
 
-		readonly DataOptions                   _dataOptions;
-		readonly SqlProviderFlags?             _sqlProviderFlags;
-		readonly MappingSchema                 _mappingSchema;
-		readonly SqlExpressionOptimizerVisitor _optimizerVisitor;
-		readonly SqlExpressionConvertVisitor   _convertVisitor;
+		public DataOptions                   DataOptions      { get; }
+		public SqlProviderFlags?             SqlProviderFlags { get; }
+		public MappingSchema                 MappingSchema    { get; }
+		public SqlExpressionConvertVisitor   ConvertVisitor   { get; }
+		public SqlExpressionOptimizerVisitor OptimizerVisitor { get; }
 
-		readonly Func<IQueryParametersNormalizer> _parametersNormalizerFactory;
+		readonly Func<IQueryParametersNormalizer>           _parametersNormalizerFactory;
+
+		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfo => 
+			_transformationInfo ??= new SqlQueryVisitor.VisitorTransformationInfo();
+
+		SqlQueryVisitor.IVisitorTransformationInfo? _transformationInfo;
 
 		public OptimizationContext(
-			EvaluationContext                context,
+			EvaluationContext                evaluationContext,
 			DataOptions                      dataOptions,
 			SqlProviderFlags?                sqlProviderFlags,
 			MappingSchema                    mappingSchema,
@@ -35,19 +42,18 @@ namespace LinqToDB.SqlProvider
 			bool                             isParameterOrderDepended,
 			Func<IQueryParametersNormalizer> parametersNormalizerFactory)
 		{
-			Context                      = context;
-			_dataOptions                 = dataOptions;
-			_sqlProviderFlags            = sqlProviderFlags;
-			_mappingSchema               = mappingSchema;
+			EvaluationContext            = evaluationContext;
+			DataOptions                  = dataOptions;
+			SqlProviderFlags             = sqlProviderFlags;
+			MappingSchema                = mappingSchema;
 			Aliases                      = aliases ?? throw new ArgumentNullException(nameof(aliases));
-			_optimizerVisitor            = optimizerVisitor;
-			_convertVisitor              = convertVisitor;
+			OptimizerVisitor             = optimizerVisitor;
+			ConvertVisitor               = convertVisitor;
 			IsParameterOrderDependent    = isParameterOrderDepended;
-			_optimizerVisitor            = optimizerVisitor;
 			_parametersNormalizerFactory = parametersNormalizerFactory;
 		}
 
-		public EvaluationContext Context                   { get; }
+		public EvaluationContext EvaluationContext                   { get; }
 		public bool              IsParameterOrderDependent { get; }
 		public AliasesContext    Aliases                   { get; }
 
@@ -118,14 +124,11 @@ namespace LinqToDB.SqlProvider
 				return null;
 
 			// if parameters are not initialized, it means that query already optimized in SelectQueryOptimizerVisitor
-			var newElement = !Context.IsParametersInitialized
+			var newElement = !EvaluationContext.IsParametersInitialized
 				? element
-				: _optimizerVisitor.Optimize(Context, nullabilityContext, _sqlProviderFlags, _dataOptions, element);
+				: OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element);
 
-			var result = (T)_convertVisitor.Convert(this, nullabilityContext, _sqlProviderFlags, _dataOptions, _mappingSchema, newElement);
-
-			if (_convertVisitor.NeedsOptimization)
-				result = (T)_optimizerVisitor.Optimize(Context, nullabilityContext, _sqlProviderFlags, _dataOptions, result);
+			var result = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement);
 
 			return result;
 		}
@@ -137,7 +140,7 @@ namespace LinqToDB.SqlProvider
 			if (element == null)
 				return null;
 
-			var newElement = _optimizerVisitor.Optimize(Context, nullabilityContext, _sqlProviderFlags, _dataOptions, element);
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element);
 
 			return (T)newElement;
 		}

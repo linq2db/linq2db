@@ -1895,7 +1895,24 @@ namespace LinqToDB.Linq
 
 		#region Provider specific functions
 
-		[Sql.Function(IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		class ConvertToCaseCompareToBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var str   = builder.GetExpression("str");
+				var value = builder.GetExpression("value");
+
+				var compareNullsAsValues = builder.DataContext.Options.LinqOptions.CompareNullsAsValues;
+
+				builder.ResultExpression = new SqlFunction(typeof(int), "CASE",
+					new SqlSearchCondition().AddGreater(str, value, compareNullsAsValues), new SqlValue(1),
+					new SqlSearchCondition().AddEqual(str, value, compareNullsAsValues),
+					new SqlValue(0),
+					new SqlValue(-1)) { CanBeNull = false };
+			}
+		}
+
+		[Sql.Extension(builderType: typeof(ConvertToCaseCompareToBuilder))]
 		public static int? ConvertToCaseCompareTo(string? str, string? value)
 		{
 			return str == null || value == null ? (int?)null : str.CompareTo(value);

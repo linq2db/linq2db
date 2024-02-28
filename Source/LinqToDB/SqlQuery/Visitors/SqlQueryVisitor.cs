@@ -7,6 +7,8 @@ namespace LinqToDB.SqlQuery.Visitors
 	using Common;
 	using SqlQuery;
 
+
+
 	/// <summary>
 	/// This base visitor implements:
 	/// <list type="bullet">
@@ -18,65 +20,21 @@ namespace LinqToDB.SqlQuery.Visitors
 	/// </summary>
 	public abstract class SqlQueryVisitor : QueryElementVisitor
 	{
-		// contains replacement map of [old => new] elements
-		// cannot store self-mappings
-		internal Dictionary<IQueryElement, IQueryElement>? _replacements;
-		// contains new replacement element
-		HashSet<IQueryElement>?                   _replaced;
+		IVisitorTransformationInfo? _transformationInfo;
 
-		/// <summary>
-		/// Visitor replaces elements in visited tree with new elements from <see cref="_replacements"/> replacement map.
-		/// Separate replace-only visitor used to avoid side-effects from parent <see cref="SqlQueryVisitor"/> implementor.
-		/// </summary>
-		sealed class Replacer : QueryElementVisitor
+		public interface IVisitorTransformationInfo
 		{
-			readonly SqlQueryVisitor _queryVisitor;
+			bool GetReplacement(IQueryElement   element, [NotNullWhen(true)] out IQueryElement? replacement);
+			bool IsReplaced(IQueryElement       element);
+			void RegisterReplaced(IQueryElement newElement, IQueryElement oldElement);
 
-			public Replacer(SqlQueryVisitor queryVisitor) : base(queryVisitor.VisitMode)
-			{
-				_queryVisitor = queryVisitor;
-			}
-
-			public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
-			{
-				return _queryVisitor.NotifyReplaced(newElement, oldElement);
-			}
-
-			public override VisitMode GetVisitMode(IQueryElement element)
-			{
-				var visitMode = VisitMode;
-
-				if (visitMode == VisitMode.ReadOnly)
-					return VisitMode.ReadOnly;
-
-				// when element was already replaced with new instance, we don't need to replace it again and can modify it inplace
-				if (visitMode == VisitMode.Transform && _queryVisitor._replaced?.Contains(element) == true)
-					return VisitMode.Modify;
-
-				return visitMode;
-			}
-
-			[return: NotNullIfNotNull(nameof(element))]
-			public override IQueryElement? Visit(IQueryElement? element)
-			{
-				if (element != null && _queryVisitor.GetReplacement(element, out var newElement))
-					return newElement;
-
-				return base.Visit(element);
-			}
-
-			// CteClause reference not visited by main dispatcher
-			protected override IQueryElement VisitCteClauseReference(CteClause element)
-			{
-				if (_queryVisitor.GetReplacement(element, out var newElement))
-					return newElement;
-
-				return base.VisitCteClauseReference(element);
-			}
+			int         Version { get; }
+			public void GetReplacements(Dictionary<IQueryElement, IQueryElement> objectTree);
 		}
 
-		protected SqlQueryVisitor(VisitMode visitMode) : base(visitMode)
+		protected SqlQueryVisitor(VisitMode visitMode, IVisitorTransformationInfo? transformationInfo) : base(visitMode)
 		{
+			SetTransformationInfo(transformationInfo);
 		}
 
 		/// <summary>
@@ -84,8 +42,12 @@ namespace LinqToDB.SqlQuery.Visitors
 		/// </summary>
 		public virtual void Cleanup()
 		{
-			_replacements = null;
-			_replaced     = null;
+			_transformationInfo = null;
+		}
+
+		protected void SetTransformationInfo(IVisitorTransformationInfo? transformationInfo)
+		{
+			_transformationInfo = transformationInfo;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -106,7 +68,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				return VisitMode.ReadOnly;
 
 			// when element was already replaced with new instance, we don't need to replace it again and can modify it inplace
-			if (visitMode == VisitMode.Transform && _replaced?.Contains(element) == true)
+			if (visitMode == VisitMode.Transform && _transformationInfo?.IsReplaced(element) == true)
 				return VisitMode.Modify;
 
 			return visitMode;
@@ -117,15 +79,17 @@ namespace LinqToDB.SqlQuery.Visitors
 		/// </summary>
 		public virtual IQueryElement ProcessElement(IQueryElement element)
 		{
+			var version = _transformationInfo?.Version ?? -1;
+
 			var newElement = Visit(element);
 
 			if (VisitMode == VisitMode.ReadOnly && !ReferenceEquals(newElement, element))
 				throw new InvalidOperationException("VisitMode is readonly but element changed.");
 
 			// Execute replacer to correct elements
-			if (_replacements?.Count > 0 && (VisitMode == VisitMode.Modify || VisitMode == VisitMode.Transform && !ReferenceEquals(newElement, element)))
+			if ((_transformationInfo?.Version ?? -1) != version && (VisitMode == VisitMode.Modify || VisitMode == VisitMode.Transform && !ReferenceEquals(newElement, element)))
 			{
-				if (_replacements != null)
+				if (_transformationInfo != null)
 				{
 					// go through tree and correct references
 					var replacer  = new Replacer(this);
@@ -150,29 +114,15 @@ namespace LinqToDB.SqlQuery.Visitors
 			return base.VisitCteClauseReference(element);
 		}
 
-		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
-		{
-			AddReplacement(oldElement, newElement);
-
-			return base.NotifyReplaced(newElement, oldElement);
-		}
-
 		/// <summary>
 		/// Remembers element replacement.
 		/// </summary>
-		protected void AddReplacement(IQueryElement oldElement, IQueryElement newElement)
+		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
 		{
-			_replacements ??= new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+			_transformationInfo ??= new VisitorTransformationInfo();
+			_transformationInfo.RegisterReplaced(newElement, oldElement);
 
-			_replaced ??= new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
-			_replaced.Add(newElement);
-
-			// adding new replacement instance means incorrect visitor use
-#if NET6_0_OR_GREATER
-			_replacements.TryAdd(oldElement, newElement);
-#else
-			_replacements[oldElement] = newElement;
-#endif
+			return base.NotifyReplaced(newElement, oldElement);
 		}
 
 		/// <summary>
@@ -180,17 +130,14 @@ namespace LinqToDB.SqlQuery.Visitors
 		/// </summary>
 		protected void AddReplacements(IReadOnlyDictionary<IQueryElement, IQueryElement> replacements)
 		{
-			_replacements ??= new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
-
-			_replaced ??= new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+			_transformationInfo ??= new VisitorTransformationInfo();
 
 			foreach (var pair in replacements)
 			{
 				if (ReferenceEquals(pair.Key, pair.Value))
 					throw new ArgumentException($"{nameof(replacements)} contains entry with key == value");
 
-				_replacements.Add(pair.Key, pair.Value);
-				_replaced.Add(pair.Value);
+				_transformationInfo.RegisterReplaced(pair.Value, pair.Key);
 			}
 		}
 
@@ -199,20 +146,13 @@ namespace LinqToDB.SqlQuery.Visitors
 		/// </summary>
 		protected bool GetReplacement(IQueryElement element, [NotNullWhen(true)] out IQueryElement? replacement)
 		{
-			replacement = null;
-
-			while (_replacements?.TryGetValue(element, out var current) == true)
+			if (_transformationInfo == null)
 			{
-				if (ReferenceEquals(element, current))
-				{
-					// Self replacements stops visitor to go deeper
-					replacement = current;
-					break;
-				}
-				replacement = element = current;
+				replacement = null;
+				return false;
 			}
 
-			return replacement != null;
+			return _transformationInfo.GetReplacement(element, out replacement);
 		}
 
 		/// <summary>
@@ -220,16 +160,114 @@ namespace LinqToDB.SqlQuery.Visitors
 		/// </summary>
 		public void GetReplacements(Dictionary<IQueryElement, IQueryElement> objectTree)
 		{
-			if (_replacements != null)
-			{
-				foreach (var pair in _replacements)
-				{
-					if (ReferenceEquals(pair.Key, pair.Value))
-						throw new ArgumentException($"{nameof(objectTree)} contains entry with key == value");
+			_transformationInfo?.GetReplacements(objectTree);
+		}
 
-					objectTree[pair.Key] = pair.Value;
+		/// <summary>
+		/// Visitor replaces elements in visited tree with new elements from <see cref="_transformationInfo"/> replacement map.
+		/// Separate replace-only visitor used to avoid side-effects from parent <see cref="SqlQueryVisitor"/> implementor.
+		/// </summary>
+		sealed class Replacer : QueryElementVisitor
+		{
+			readonly SqlQueryVisitor _queryVisitor;
+
+			public Replacer(SqlQueryVisitor queryVisitor) : base(queryVisitor.VisitMode)
+			{
+				_queryVisitor = queryVisitor;
+			}
+
+			public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
+			{
+				return _queryVisitor.NotifyReplaced(newElement, oldElement);
+			}
+
+			public override VisitMode GetVisitMode(IQueryElement element)
+			{
+				var visitMode = VisitMode;
+
+				if (visitMode == VisitMode.ReadOnly)
+					return VisitMode.ReadOnly;
+
+				// when element was already replaced with new instance, we don't need to replace it again and can modify it inplace
+				if (visitMode == VisitMode.Transform && _queryVisitor._transformationInfo?.IsReplaced(element) == true)
+					return VisitMode.Modify;
+
+				return visitMode;
+			}
+
+			[return: NotNullIfNotNull(nameof(element))]
+			public override IQueryElement? Visit(IQueryElement? element)
+			{
+				if (element != null && _queryVisitor.GetReplacement(element, out var newElement))
+					return newElement;
+
+				return base.Visit(element);
+			}
+
+			// CteClause reference not visited by main dispatcher
+			protected override IQueryElement VisitCteClauseReference(CteClause element)
+			{
+				if (_queryVisitor.GetReplacement(element, out var newElement))
+					return newElement;
+
+				return base.VisitCteClauseReference(element);
+			}
+		}
+
+		public class VisitorTransformationInfo : IVisitorTransformationInfo
+		{
+			Dictionary<IQueryElement, IQueryElement>? _replacements;
+			HashSet<IQueryElement>?                   _replaced;
+			int                                       _version;
+
+			public bool GetReplacement(IQueryElement element, [NotNullWhen(true)] out IQueryElement? replacement)
+			{
+				replacement = null;
+
+				while (_replacements?.TryGetValue(element, out var current) == true)
+				{
+					if (ReferenceEquals(element, current))
+					{
+						// Self replacements stops visitor to go deeper
+						replacement = current;
+						break;
+					}
+					replacement = element = current;
+				}
+
+				return replacement != null;
+			}
+
+			public bool IsReplaced(IQueryElement element)
+			{
+				return _replaced?.Contains(element) == true;
+			}
+
+			public void RegisterReplaced(IQueryElement newElement, IQueryElement oldElement)
+			{
+				_replacements ??= new Dictionary<IQueryElement, IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+				_replaced     ??= new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+				_replacements[oldElement] = newElement;
+				_replaced.Add(newElement);
+				_version++;
+			}
+
+			public int Version => _version;
+			public void GetReplacements(Dictionary<IQueryElement, IQueryElement> objectTree)
+			{
+				if (_replacements != null)
+				{
+					foreach (var pair in _replacements)
+					{
+						if (ReferenceEquals(pair.Key, pair.Value))
+							throw new ArgumentException($"{nameof(objectTree)} contains entry with key == value");
+
+						objectTree[pair.Key] = pair.Value;
+					}
 				}
 			}
 		}
+
 	}
 }
