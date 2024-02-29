@@ -601,10 +601,9 @@ namespace LinqToDB.SqlProvider
 					.Add(new SqlPredicate.InSubQuery(testExpr, false, inPredicate.SubQuery, doNotConvert: true))
 				);
 
-			if (inPredicate.IsNot)
-				return sc.MakeNot();
+			var result = Optimize(sc.MakeNot(inPredicate.IsNot));
 
-			return sc;
+			return (ISqlPredicate)result;
 		}
 
 		ISqlPredicate ConvertToExists(SqlPredicate.InSubQuery inPredicate)
