@@ -393,7 +393,8 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext               valuesContext,
 			List<SetExpressionEnvelope> envelopes,
 			List<SqlSetExpression>      items,
-			bool                        createColumns
+			bool                        createColumns,
+			bool                        forceParameters = false
 			)
 		{
 			ISqlExpression GetFieldExpression(Expression fieldExpr, bool isPureExpression)
@@ -438,7 +439,7 @@ namespace LinqToDB.Linq.Builder
 						valueExpression = Expression.Convert(valueExpression, fieldExpression.Type);
 					}
 
-					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor, forceParameter : true);
+					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor, forceParameter : forceParameters);
 
 					if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					{

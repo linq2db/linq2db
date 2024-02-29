@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 						mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type),
 						setterExpression, setterExpressions);
 
-					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, false);
+					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, createColumns: false, forceParameters: false);
 				}
 				else
 				{
