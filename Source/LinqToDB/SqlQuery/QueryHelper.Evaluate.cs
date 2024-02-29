@@ -406,6 +406,22 @@ namespace LinqToDB.SqlQuery
 					return false;
 				}
 
+				case QueryElementType.SqlExpression:
+				{
+					var sqlExpression = (SqlExpression)expr;
+
+					if (sqlExpression is { Expr: "{0}", Parameters.Length: 1 })
+					{
+						if (sqlExpression.Parameters[0].TryEvaluateExpression(context, out var evaluated))
+						{
+							result = evaluated;
+							return true;
+						}
+					}
+
+					return false;
+				}
+
 				default:
 				{
 					return false;

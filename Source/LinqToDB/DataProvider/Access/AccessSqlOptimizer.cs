@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -19,6 +20,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
+			statement = CorrectMultiTableQueries(statement);
 			statement = CorrectInnerJoins(statement);
 			statement = CorrectExistsAndIn(statement, dataOptions);
 
@@ -39,6 +41,50 @@ namespace LinqToDB.DataProvider.Access
 
 			if (!statement.SelectQuery.OrderBy.IsEmpty)
 				statement.SelectQuery.OrderBy.Items.Clear();
+
+			return statement;
+		}
+
+		SqlStatement CorrectMultiTableQueries(SqlStatement statement)
+		{
+			var isModified = false;
+
+			statement.Visit(e =>
+			{
+				if (e.ElementType == QueryElementType.SqlQuery)
+				{
+					var sqlQuery = (SelectQuery)e;
+
+					if (sqlQuery.From.Tables.Count > 1)
+					{
+						// if multitable query has joins, we need to move tables to subquery and left joins on the current level
+						//
+						if (sqlQuery.From.Tables.Any(t => t.Joins.Count > 0))
+						{
+							var sub = new SelectQuery { DoNotRemove = true };
+
+							sub.From.Tables.AddRange(sqlQuery.From.Tables);
+
+							sqlQuery.From.Tables.Clear();
+
+							sqlQuery.From.Tables.Add(new SqlTableSource(sub, "sub", sub.From.Tables.SelectMany(t => t.Joins).ToArray()));
+
+							sub.From.Tables.ForEach(t => t.Joins.Clear());
+
+							isModified = true;
+						}
+					}
+						
+				}
+
+			});
+
+			if (isModified)
+			{
+				var corrector = new SqlQueryColumnNestingCorrector();
+				corrector.CorrectColumnNesting(statement);
+			}
+				
 
 			return statement;
 		}

@@ -3138,8 +3138,7 @@ namespace LinqToDB.SqlProvider
 
 						if (!inlining)
 						{
-							var newParm = OptimizationContext.AddParameter(parm);
-							BuildParameter(newParm);
+							BuildParameter(parm);
 						}
 
 						break;
@@ -3290,7 +3289,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildParameter(SqlParameter parameter)
 		{
-			Convert(StringBuilder, parameter.Name!, ConvertType.NameToQueryParameter);
+			var newParm = OptimizationContext.AddParameter(parameter);
+			Convert(StringBuilder, newParm.Name!, ConvertType.NameToQueryParameter);
 		}
 
 		void BuildFormatValues(string format, IReadOnlyList<ISqlExpression>? parameters, int precedence)

@@ -40,14 +40,9 @@ namespace LinqToDB.DataProvider.Access
 			if (statement.QueryType != QueryType.Select || statement.SelectQuery == null)
 				return statement;
 
-			// there is no need in visitors for this fix as issue scope is very narrow
-			foreach (var column in statement.SelectQuery.Select.Columns)
-			{
-				var expr = QueryHelper.UnwrapExpression(column.Expression, false);
+			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
-				if (expr is SqlParameter || (expr is SqlValue v && v.Value == null))
-					column.Expression = new SqlFunction(typeof(object), "CVar", false, true, Precedence.Primary, ParametersNullabilityType.SameAsFirstParameter, null, column.Expression);
-			}
+			statement = (SqlStatement)visitor.ProcessElement(statement);
 
 			return statement;
 		}

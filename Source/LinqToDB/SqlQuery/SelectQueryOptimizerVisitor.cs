@@ -93,10 +93,10 @@ namespace LinqToDB.SqlQuery
 					// It means that we fully optimize query
 					_columnUsageCollector.CollectUsedColumns(_rootElement);
 					RemoveNotUsedColumns(_columnUsageCollector.UsedColumns, _root);
-				}
 
-				// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
-				JoinsOptimizer.UnnestJoins(_root);
+					// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
+					JoinsOptimizer.UnnestJoins(_root);
+				}
 			}
 
 			return _root;
@@ -2004,9 +2004,9 @@ namespace LinqToDB.SqlQuery
 		{
 			var isModified = false;
 
-			for (var tableIndex = 0; tableIndex < selectQuery.From.Tables.Count; tableIndex++)
+			for (var queryTableIndex = 0; queryTableIndex < selectQuery.From.Tables.Count; queryTableIndex++)
 			{
-				var table = selectQuery.From.Tables[tableIndex];
+				var table = selectQuery.From.Tables[queryTableIndex];
 				for (var joinIndex = 0; joinIndex < table.Joins.Count; joinIndex++)
 				{
 					var join = table.Joins[joinIndex];
@@ -2026,10 +2026,19 @@ namespace LinqToDB.SqlQuery
 							}
 							isModified = true;
 						}
-						else if (table.Joins.Count == 1)
+						else 
 						{
-							selectQuery.From.Tables.Insert(tableIndex + 1, join.Table);
+							selectQuery.From.Tables.Insert(queryTableIndex + 1, join.Table);
 							table.Joins.RemoveAt(joinIndex);
+
+							// move joins INNER JOIN table from parent
+							for (var ij = 0; ij < table.Joins.Count; ij++)
+							{
+								join.Table.Joins.Insert(ij, table.Joins[ij]);
+							}
+
+							table.Joins.Clear();
+
 							--joinIndex;
 							isModified = true;
 						}

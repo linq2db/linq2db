@@ -558,7 +558,10 @@ namespace Tests.DataProvider
 
 				query.ToList();
 
-				Assert.That(db.LastQuery, needsWrap ? Does.Contain("CVar") : Does.Not.Contain("CVar"));
+				if (isParameter)
+					Assert.That(db.LastQuery, needsWrap ? Does.Contain("CVar") : Does.Not.Contain("CVar"));
+				else
+					Assert.That(db.LastQuery, needsWrap ? Does.Contain("IIF(False") : Does.Not.Contain("IIF(False"));
 			}
 			else
 			{

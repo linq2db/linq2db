@@ -1413,15 +1413,22 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (sqlExpression is SqlExpression { Expr: "{0}", Parameters.Length: 1 } expr)
 			{
-				if (expression is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && (
-					    mc.Method.Name is nameof(Sql.AsNullable) 
-						    or nameof(Sql.AsNotNull) 
-						    or nameof(Sql.AsNotNullable) 
-						    or nameof(Sql.ToNullable) 
-						    or nameof(Sql.ToNotNullable)
-				    ))
+				if (expression is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql))
 				{
-					return SqlNullabilityExpression.ApplyNullability(expr.Parameters[0], expr.CanBeNull);
+					if (mc.Method.Name is nameof(Sql.AsNullable)
+						or nameof(Sql.AsNotNull)
+						or nameof(Sql.AsNotNullable)
+						or nameof(Sql.ToNullable)
+						or nameof(Sql.ToNotNullable)
+					)
+					{
+						return SqlNullabilityExpression.ApplyNullability(expr.Parameters[0], expr.CanBeNull);
+					}
+
+					if (mc.Method.Name is nameof(Sql.ToSql) or nameof(Sql.AsSql))
+					{
+						return expr.Parameters[0];
+					}
 				}
 			}
 
