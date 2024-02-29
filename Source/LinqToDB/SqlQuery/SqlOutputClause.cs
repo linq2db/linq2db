@@ -53,7 +53,7 @@ namespace LinqToDB.SqlQuery
 			if (HasOutput)
 			{
 
-				using (writer.WithScope())
+				using (writer.IndentScope())
 				{
 					var first = true;
 
@@ -74,7 +74,7 @@ namespace LinqToDB.SqlQuery
 
 				if (OutputColumns != null)
 				{
-					using (writer.WithScope())
+					using (writer.IndentScope())
 					{
 						var first = true;
 
@@ -98,7 +98,7 @@ namespace LinqToDB.SqlQuery
 						.AppendLine(OutputTable.TableName.Name)
 						.AppendLine('(');
 
-					using (writer.WithScope())
+					using (writer.IndentScope())
 					{
 						var firstColumn = true;
 						if (HasOutputItems)

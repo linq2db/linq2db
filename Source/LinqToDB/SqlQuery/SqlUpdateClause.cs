@@ -52,7 +52,7 @@ namespace LinqToDB.SqlQuery
 				.Append("SET ")
 				.AppendLine();
 
-			using (writer.WithScope())
+			using (writer.IndentScope())
 				foreach (var e in Items)
 				{
 					writer

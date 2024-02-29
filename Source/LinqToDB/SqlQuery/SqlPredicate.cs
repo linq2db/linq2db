@@ -702,9 +702,19 @@ namespace LinqToDB.SqlQuery
 
 				if (IsNot) writer.Append(" NOT");
 
-				writer.Append(" IN (")
-					.AppendElement(SubQuery)
-					.Append(')');
+				writer.Append(" IN");
+				writer.AppendLine();
+				using (writer.IndentScope())
+				{
+					writer.AppendLine('(');
+					using (writer.IndentScope())
+					{
+						writer.AppendElement(SubQuery);
+					}
+					writer.AppendLine();
+					writer.Append(')');
+				}
+	
 			}
 
 			public void Deconstruct(out ISqlExpression exp1, out bool isNot, out SelectQuery subQuery)

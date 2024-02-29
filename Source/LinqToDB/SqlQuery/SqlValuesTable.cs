@@ -180,7 +180,7 @@ namespace LinqToDB.SqlQuery
 				writer.Append("VALUES");
 				writer.AppendLine();
 
-				using (writer.WithScope())
+				using (writer.IndentScope())
 					for (var i = 0; i < rows.Count; i++)
 					{
 						// limit number of printed records

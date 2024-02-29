@@ -63,7 +63,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SqlTextWriter.IndentScope WithScope()
+		public SqlTextWriter.IndentScope IndentScope()
 		{
 			return _writer.Indent();
 		}

@@ -57,7 +57,7 @@ namespace LinqToDB.SqlQuery
 				.Append("$CASE$")
 				.AppendLine();
 
-			using (writer.WithScope())
+			using (writer.IndentScope())
 			{
 				foreach (var c in Cases)
 				{

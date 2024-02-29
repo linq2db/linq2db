@@ -29,7 +29,7 @@
 					.AppendLine()
 					.AppendLine("HAVING");
 
-				using (writer.WithScope())
+				using (writer.IndentScope())
 					writer.AppendElement(SearchCondition);
 
 			}

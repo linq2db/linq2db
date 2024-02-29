@@ -54,7 +54,7 @@ namespace LinqToDB.SqlQuery
 				return writer.Append("...");
 
 			writer
-				.Append("sc=")
+				//.Append("sc=")
 				.DebugAppendUniqueId(this);
 
 			writer.Append('(');
@@ -144,7 +144,7 @@ namespace LinqToDB.SqlQuery
 			if (Predicates.Count == 0)
 				return true;
 
-			if (Predicates[0].ElementType == QueryElementType.TruePredicate)
+			if (Predicates is [{ ElementType: QueryElementType.TruePredicate }])
 				return true;
 
 			return false;

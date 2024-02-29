@@ -55,7 +55,7 @@ namespace LinqToDB.SqlQuery
 				.AppendLine()
 				.AppendLine("ORDER BY");
 
-			using(writer.WithScope())
+			using(writer.IndentScope())
 				for (var index = 0; index < Items.Count; index++)
 				{
 					var item = Items[index];

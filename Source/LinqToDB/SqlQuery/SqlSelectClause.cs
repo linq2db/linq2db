@@ -340,7 +340,7 @@ namespace LinqToDB.SqlQuery
 
 			if (Columns.Count == 0)
 			{
-				using(writer.WithScope())
+				using(writer.IndentScope())
 					writer.AppendLine("*");
 			}
 			else
@@ -367,7 +367,7 @@ namespace LinqToDB.SqlQuery
 					maxLength = Math.Max(maxLength, columnName.Length);
 				}
 
-				using(writer.WithScope())
+				using(writer.IndentScope())
 					for (var index = 0; index < Columns.Count; index++)
 					{
 						var c          = Columns[index];
@@ -376,7 +376,7 @@ namespace LinqToDB.SqlQuery
 							.Append(' ', maxLength - columnName.Length)
 							.Append(" = ");
 
-						using (writer.WithScope())
+						using (writer.IndentScope())
 							writer.AppendElement(c.Expression);
 
 						if (writer.ToString(writer.Length - 1, 1) != "?" && c.Expression.CanBeNullable(writer.Nullability))

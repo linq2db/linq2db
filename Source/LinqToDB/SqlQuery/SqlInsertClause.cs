@@ -47,7 +47,7 @@ namespace LinqToDB.SqlQuery
 				.Append(" VALUES ")
 				.AppendLine();
 
-			using(writer.WithScope())
+			using(writer.IndentScope())
 				for (var index = 0; index < Items.Count; index++)
 				{
 					var e = Items[index];

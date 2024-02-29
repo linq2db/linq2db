@@ -60,7 +60,7 @@ namespace LinqToDB.SqlQuery
 				.AppendElement(PrimaryExpression)
 				.AppendLine();
 
-			using (writer.WithScope())
+			using (writer.IndentScope())
 			{
 				foreach (var c in Cases)
 				{

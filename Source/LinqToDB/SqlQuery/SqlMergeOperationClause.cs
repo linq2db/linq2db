@@ -82,7 +82,7 @@ namespace LinqToDB.SqlQuery
 
 					writer.AppendLine(" THEN INSERT");
 
-					using (writer.WithScope())
+					using (writer.IndentScope())
 						for (var index = 0; index < Items.Count; index++)
 						{
 							var item = Items[index];
@@ -105,7 +105,7 @@ namespace LinqToDB.SqlQuery
 
 					writer.AppendLine(" THEN UPDATE");
 
-					using (writer.WithScope())
+					using (writer.IndentScope())
 						for (var index = 0; index < Items.Count; index++)
 						{
 							var item = Items[index];
@@ -128,7 +128,7 @@ namespace LinqToDB.SqlQuery
 
 					writer.AppendLine(" THEN UPDATE");
 
-					using (writer.WithScope())
+					using (writer.IndentScope())
 						for (var index = 0; index < Items.Count; index++)
 						{
 							var item = Items[index];

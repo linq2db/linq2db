@@ -31,7 +31,7 @@ namespace LinqToDB.SqlQuery
 					.AppendLine()
 					.AppendLine("WHERE");
 
-				using (writer.WithScope())
+				using (writer.IndentScope())
 					writer.AppendElement(SearchCondition);
 
 			}

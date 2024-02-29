@@ -99,7 +99,7 @@ namespace LinqToDB.SqlQuery
 					throw new InvalidOperationException($"Unexpected grouping type: {GroupingType}");
 			}
 
-			using(writer.WithScope())
+			using(writer.IndentScope())
 			{
 				for (var index = 0; index < Items.Count; index++)
 				{

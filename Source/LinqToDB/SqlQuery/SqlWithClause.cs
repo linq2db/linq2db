@@ -30,7 +30,7 @@ namespace LinqToDB.SqlQuery
 						writer.Append(',').AppendLine();
 					}
 
-					using (writer.WithScope())
+					using (writer.IndentScope())
 						writer.AppendElement(cte);
 
 					if (cte.Fields.Count > 3)
@@ -38,7 +38,7 @@ namespace LinqToDB.SqlQuery
 						writer.AppendLine();
 						writer.AppendLine("(");
 
-						using (writer.WithScope())
+						using (writer.IndentScope())
 						{
 							var firstField = true;
 							foreach (var field in cte.Fields)
@@ -72,12 +72,12 @@ namespace LinqToDB.SqlQuery
 						writer.Append(' ');
 					}
 
-					using (writer.WithScope())
+					using (writer.IndentScope())
 					{
 						writer.AppendLine("AS");
 						writer.AppendLine("(");
 
-						using (writer.WithScope())
+						using (writer.IndentScope())
 						{
 							writer.AppendElement(cte.Body!);
 						}

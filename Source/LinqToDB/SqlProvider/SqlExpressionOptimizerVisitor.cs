@@ -670,8 +670,12 @@ namespace LinqToDB.SqlProvider
 		protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
 			var newPredicate = base.VisitIsNullPredicate(predicate);
+
 			if (!ReferenceEquals(newPredicate, predicate))
 				return Visit(newPredicate);
+
+			if (_nullabilityContext.IsEmpty)
+				return predicate;
 
 			if (!predicate.Expr1.CanBeNullable(_nullabilityContext))
 			{

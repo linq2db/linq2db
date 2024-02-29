@@ -171,7 +171,7 @@ namespace LinqToDB.SqlQuery
 			if (Source is SelectQuery)
 			{
 				writer.AppendLine("(");
-				using (writer.WithScope())
+				using (writer.IndentScope())
 					writer.AppendElement(Source);
 				writer.AppendLine();
 				writer.Append(")");
