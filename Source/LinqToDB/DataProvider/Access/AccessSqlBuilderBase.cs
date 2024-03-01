@@ -296,5 +296,29 @@ namespace LinqToDB.DataProvider.Access
 		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
 		{
 		}
+
+		protected override void BuildParameter(SqlParameter parameter)
+		{
+			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
+			{
+				base.BuildParameter(parameter);
+				return;
+			}
+
+			if (parameter.NeedsCast)
+			{
+				var saveStep = BuildStep;
+				BuildStep = Step.TypedExpression;
+
+				StringBuilder.Append("CVar(");
+				base.BuildParameter(parameter);
+				StringBuilder.Append(')');
+				BuildStep = saveStep;
+
+				return;
+			}
+
+			base.BuildParameter(parameter);
+		}
 	}
 }

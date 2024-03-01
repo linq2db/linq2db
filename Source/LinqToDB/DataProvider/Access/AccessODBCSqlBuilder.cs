@@ -48,30 +48,5 @@ namespace LinqToDB.DataProvider.Access
 
 			return base.GetProviderTypeName(dataContext, parameter);
 		}
-
-		protected override void BuildParameter(SqlParameter parameter)
-		{
-			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
-			{
-				base.BuildParameter(parameter);
-				return;
-			}
-
-			if (parameter.NeedsCast)
-			{
-				var saveStep = BuildStep;
-				BuildStep = Step.TypedExpression;
-
-				StringBuilder.Append("CVar(");
-				base.BuildParameter(parameter);
-				StringBuilder.Append(')');
-				BuildStep = saveStep;
-
-				return;
-			}
-
-			base.BuildParameter(parameter);
-		}
-
 	}
 }
