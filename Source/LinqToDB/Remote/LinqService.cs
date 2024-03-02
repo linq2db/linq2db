@@ -529,11 +529,12 @@ namespace LinqToDB.Remote
 
 		sealed class QueryContext(SqlStatement statement, DataOptions dataOptions) : IQueryContext
 		{
-			public SqlStatement    Statement   { get; } = statement;
-			public object?         Context     { get; set; }
-			public SqlParameter[]? Parameters  { get; set; }
-			public AliasesContext? Aliases     { get; set; }
-			public DataOptions     DataOptions { get; } = dataOptions;
+			public SqlStatement    Statement       { get; } = statement;
+			public object?         Context         { get; set; }
+			public bool            IsContinuousRun { get; set; }
+			public SqlParameter[]? Parameters      { get; set; }
+			public AliasesContext? Aliases         { get; set; }
+			public DataOptions     DataOptions     { get; } = dataOptions;
 		}
 
 		#endregion

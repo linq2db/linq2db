@@ -242,7 +242,7 @@ namespace LinqToDB.Linq.Builder
 					currentPlaceholders.Add(p);
 
 					var updated = builder.UpdateNesting(query, p);
-					query.GroupBy.Expr(updated.Sql);
+					query.GroupBy.Items.Add(updated.Sql);
 				}
 			}
 		}

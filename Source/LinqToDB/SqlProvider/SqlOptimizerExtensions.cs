@@ -18,11 +18,12 @@
 				optimizer.CreateOptimizerVisitor(false),
 				optimizer.CreateConvertVisitor(false),
 				isParameterOrderDepended: false,
+				isAlreadyOptimizedAndConverted: false,
 				static () => NoopQueryParametersNormalizer.Instance);
 
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
-			var newStatement = optimizationContext.ConvertAll(statement, nullability);
+			var newStatement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
 
 			return newStatement;
 		}
@@ -32,7 +33,7 @@
 		{
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
-			var newStatement = optimizationContext.ConvertAll(statement, nullability);
+			var newStatement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
 
 			return newStatement;
 		}

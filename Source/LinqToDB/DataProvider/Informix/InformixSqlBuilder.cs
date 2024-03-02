@@ -27,8 +27,6 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSqlBuilder(this);
 		}
 
-		protected override bool SupportsNullInColumn => false;
-
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
@@ -331,22 +329,6 @@ namespace LinqToDB.DataProvider.Informix
 			}
 			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
 			StringBuilder.Append(')');
-		}
-
-		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)
-		{
-			var newExpr = base.WrapBooleanExpression(expr);
-			if (!ReferenceEquals(newExpr, expr))
-			{
-				var sqlDataType = new SqlDataType(DataType.Boolean);
-				return new SqlFunction(typeof(bool), PseudoFunctions.CONVERT, false, sqlDataType, sqlDataType,
-					newExpr)
-				{
-					DoNotOptimize = true
-				};
-			}
-
-			return newExpr;
 		}
 
 		protected override bool IsReserved(string word)

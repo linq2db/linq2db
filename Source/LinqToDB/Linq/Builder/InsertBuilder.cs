@@ -284,7 +284,7 @@ namespace LinqToDB.Linq.Builder
 
 						var sqlExpr = Builder.ConvertToSqlExpr(selectContext, outputRef);
 						if (sqlExpr is SqlPlaceholderExpression)
-							outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr));
+							outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 						else
 							UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
 

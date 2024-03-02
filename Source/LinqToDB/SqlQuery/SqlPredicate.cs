@@ -266,7 +266,7 @@ namespace LinqToDB.SqlQuery
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !WithNull);
 			}
 
-			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context)
+			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context, bool insideNot)
 			{
 				ISqlPredicate MakeWithoutNulls()
 				{

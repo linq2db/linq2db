@@ -68,7 +68,9 @@ namespace LinqToDB.Remote
 					query.Aliases!,
 					sqlOptimizer.CreateOptimizerVisitor(false),
 					sqlOptimizer.CreateConvertVisitor(false),
-					false, static () => NoopQueryParametersNormalizer.Instance);
+					isParameterOrderDepended : false,
+					isAlreadyOptimizedAndConverted : true,
+					static () => NoopQueryParametersNormalizer.Instance);
 
 				for (var i = 0; i < cc; i++)
 				{

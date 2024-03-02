@@ -39,8 +39,15 @@ namespace LinqToDB.SqlQuery
 
 			column.Expression.VisitParentFirst(this, (v, e) =>
 			{
-				if (e is SelectQuery)
+				if (e is SelectQuery selectQuery)
+				{
+					foreach(var ec in selectQuery.Select.Columns)
+					{
+						_usedColumns.Add(ec);
+					}
+
 					return false;
+				}
 
 				if (e is SqlColumn c)
 				{
@@ -144,11 +151,11 @@ namespace LinqToDB.SqlQuery
 			var saveParentQuery = _parentSelectQuery;
 			_parentSelectQuery  = selectQuery;
 
-			var newQuery = base.VisitSqlQuery(selectQuery);
+			base.VisitSqlQuery(selectQuery);
 
 			_parentSelectQuery  = saveParentQuery;
 
-			return newQuery;
+			return selectQuery;
 		}
 
 	}

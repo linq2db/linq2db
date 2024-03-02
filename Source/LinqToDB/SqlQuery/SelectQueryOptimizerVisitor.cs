@@ -31,6 +31,7 @@ namespace LinqToDB.SqlQuery
 		SelectQuery?    _applySelect;
 		SelectQuery?    _inSubquery;
 		bool            _isInRecursiveCte;
+		bool            _isInsideNot;
 		SelectQuery?    _updateQuery;
 
 		SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
@@ -60,17 +61,18 @@ namespace LinqToDB.SqlQuery
 			}
 #endif
 
-			_providerFlags      = providerFlags;
-			_removeWeakJoins    = removeWeakJoins;
-			_dataOptions        = dataOptions;
-			_evaluationContext  = evaluationContext;
-			_root               = root;
-			_rootElement        = rootElement;
-			_dependencies       = dependencies;
-			_parentSelect       = default!;
-			_applySelect        = default!;
-			_inSubquery         = default!;
-			_updateQuery        = default!;
+			_providerFlags     = providerFlags;
+			_removeWeakJoins   = removeWeakJoins;
+			_dataOptions       = dataOptions;
+			_evaluationContext = evaluationContext;
+			_root              = root;
+			_rootElement       = rootElement;
+			_isInsideNot       = false;
+			_dependencies      = dependencies;
+			_parentSelect      = default!;
+			_applySelect       = default!;
+			_inSubquery        = default!;
+			_updateQuery       = default!;
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
 			// Making it consistent in LINQ Translator is bad for performance and it is hard to implement task.
@@ -123,7 +125,15 @@ namespace LinqToDB.SqlQuery
 						var column = select.Columns[i];
 						if (!uc.Contains(column))
 						{
-							select.Columns.RemoveAt(i);
+							var remove = true;
+
+							if (select.SelectQuery.From.Tables.Count == 0 && select.Columns.Count == 1)
+							{
+								remove = false;
+							}
+
+							if (remove)
+								select.Columns.RemoveAt(i);
 						}
 					}
 
@@ -185,8 +195,10 @@ namespace LinqToDB.SqlQuery
 		{
 			var saveSetOperatorCount = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
 			var saveParent           = _parentSelect;
+			var saveIsInsideNot      = _isInsideNot;
 
 			_parentSelect = selectQuery;
+			_isInsideNot = false;
 
 			var newQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
 
@@ -200,7 +212,7 @@ namespace LinqToDB.SqlQuery
 					var before = selectQuery.ToDebugString();
 #endif
 					// only once
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery, visitQueries: true, isInsideNot : false);
 				}
 				else
 				{
@@ -282,7 +294,7 @@ namespace LinqToDB.SqlQuery
 #endif
 					CorrectEmptyInnerJoinsRecursive(selectQuery);
 
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery, visitQueries : true, isInsideNot : false);
 				}
 
 				if (saveSetOperatorCount != (selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0))
@@ -294,6 +306,8 @@ namespace LinqToDB.SqlQuery
 
 				_parentSelect = saveParent;
 			}
+
+			_isInsideNot = saveIsInsideNot;
 
 			return newQuery;
 		}
@@ -2374,13 +2388,14 @@ namespace LinqToDB.SqlQuery
 
 		class MovingComplexityVisitor : QueryElementVisitor
 		{
-			ISqlExpression       _expressionToCheck = default!;
-			IQueryElement?[]     _ignore            = default!;
-			NullabilityContext   _nullability       = default!;
-			EvaluationContext    _evaluationContext = default!;
-			int                  _foundCount;
-			bool                 _notAllowedScope;
-			bool                 _doNotAllow;
+			ISqlExpression     _expressionToCheck = default!;
+			IQueryElement?[]   _ignore            = default!;
+			NullabilityContext _nullability       = default!;
+			EvaluationContext  _evaluationContext = default!;
+			bool               _isInsideNot;
+			int                _foundCount;
+			bool               _notAllowedScope;
+			bool               _doNotAllow;
 
 			public bool DoNotAllow
 			{
@@ -2400,6 +2415,7 @@ namespace LinqToDB.SqlQuery
 				_nullability       = default!;
 				_evaluationContext = default!;
 				_foundCount        = 0;
+				_isInsideNot       = default;
 			}
 
 			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, NullabilityContext nullability, 
@@ -2411,6 +2427,7 @@ namespace LinqToDB.SqlQuery
 				_evaluationContext = evaluationContext;
 				_doNotAllow        = default;
 				_foundCount        = 0;
+				_isInsideNot       = default;
 
 				Visit(parent);
 
@@ -2449,7 +2466,7 @@ namespace LinqToDB.SqlQuery
 
 			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 			{
-				var reduced = predicate.Reduce(_nullability, _evaluationContext);
+				var reduced = predicate.Reduce(_nullability, _evaluationContext, _isInsideNot);
 				if (!ReferenceEquals(reduced, predicate))
 					Visit(reduced);
 				else
@@ -2468,6 +2485,27 @@ namespace LinqToDB.SqlQuery
 				}
 
 				return base.VisitSqlOrderByItem(element);
+			}
+
+			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			{
+				var saveIsInsideNot = _isInsideNot;
+				_isInsideNot = false;
+				var newElement =  base.VisitSqlQuery(selectQuery);
+				_isInsideNot = saveIsInsideNot;
+				return newElement;
+			}
+
+			protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
+			{
+				var saveValue = _isInsideNot;
+				_isInsideNot = true;
+
+				var result = base.VisitNotPredicate(predicate);
+
+				_isInsideNot = saveValue;
+
+				return result;
 			}
 
 			readonly struct DoNotAllowScopeStruct : IDisposable

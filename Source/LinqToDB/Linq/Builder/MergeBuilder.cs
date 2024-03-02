@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 					var outputSetters = new List<UpdateBuilder.SetExpressionEnvelope>();
 					UpdateBuilder.ParseSetter(builder, destinationRef, outputExpression, outputSetters);
 					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.SourceContext,
-						mergeContext.TargetContext, outputSetters, mergeContext.Merge.Output.OutputItems, false);
+						mergeContext.TargetContext, outputSetters, mergeContext.Merge.Output.OutputItems, createColumns : false);
 
 					mergeContext.Merge.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
 					mergeContext.OutputExpression = outputExpression;

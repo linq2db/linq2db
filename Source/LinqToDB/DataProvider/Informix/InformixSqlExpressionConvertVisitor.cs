@@ -12,6 +12,8 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
+		protected override bool SupportsNullInColumn => false;
+
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
 			//Informix cannot process parameter in Like template (only Informix provider, not InformixDB2)
@@ -48,7 +50,7 @@ namespace LinqToDB.DataProvider.Informix
 			switch (func.Name)
 			{
 				// passing parameter to NVL will result in "A syntax error has occurred." error from server
-				case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false);
+				case PseudoFunctions.COALESCE : return ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false);
 			}
 
 			func = ConvertFunctionParameters(func, false);
@@ -130,5 +132,22 @@ namespace LinqToDB.DataProvider.Informix
 
 			return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, argument, toType);
 		}
+
+		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)
+		{
+			var newExpr = base.WrapBooleanExpression(expr);
+			if (!ReferenceEquals(newExpr, expr))
+			{
+				var sqlDataType = new SqlDataType(DataType.Boolean);
+				return new SqlFunction(typeof(bool), PseudoFunctions.CONVERT, false, sqlDataType, sqlDataType,
+					newExpr)
+				{
+					DoNotOptimize = true
+				};
+			}
+
+			return newExpr;
+		}
+
 	}
 }

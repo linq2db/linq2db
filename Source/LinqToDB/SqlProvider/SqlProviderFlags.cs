@@ -443,6 +443,12 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order =  50)]
 		public bool IsAccessBuggyLeftJoinConstantNullability { get; set; }
 
+		/// <summary>
+		/// Indicates that provider supports boolean type.
+		/// </summary>
+		[DataMember(Order =  51)]
+		public bool SupportsBooleanType { get; set; }
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
@@ -496,6 +502,7 @@ namespace LinqToDB.SqlProvider
 				^ IsMultiTablesSupportsJoins                           .GetHashCode()
 				^ IsCTESupportsOrdering                                .GetHashCode()
 				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
+				^ SupportsBooleanType                                  .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -549,6 +556,7 @@ namespace LinqToDB.SqlProvider
 				&& IsMultiTablesSupportsJoins                            == other.IsMultiTablesSupportsJoins
 				&& IsCTESupportsOrdering                                 == other.IsCTESupportsOrdering
 				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
+				&& SupportsBooleanType                                   == other.SupportsBooleanType
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

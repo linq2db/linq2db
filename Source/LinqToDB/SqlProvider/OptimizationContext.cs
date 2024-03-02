@@ -31,6 +31,11 @@ namespace LinqToDB.SqlProvider
 
 		SqlQueryVisitor.IVisitorTransformationInfo? _transformationInfo;
 
+		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfoConvert => 
+			_transformationInfoConvert ??= new SqlQueryVisitor.VisitorTransformationInfo();
+
+		SqlQueryVisitor.IVisitorTransformationInfo? _transformationInfoConvert;
+
 		public OptimizationContext(
 			EvaluationContext                evaluationContext,
 			DataOptions                      dataOptions,
@@ -40,22 +45,25 @@ namespace LinqToDB.SqlProvider
 			SqlExpressionOptimizerVisitor    optimizerVisitor,
 			SqlExpressionConvertVisitor      convertVisitor,
 			bool                             isParameterOrderDepended,
+			bool                             isAlreadyOptimizedAndConverted,
 			Func<IQueryParametersNormalizer> parametersNormalizerFactory)
 		{
-			EvaluationContext            = evaluationContext;
-			DataOptions                  = dataOptions;
-			SqlProviderFlags             = sqlProviderFlags;
-			MappingSchema                = mappingSchema;
-			Aliases                      = aliases ?? throw new ArgumentNullException(nameof(aliases));
-			OptimizerVisitor             = optimizerVisitor;
-			ConvertVisitor               = convertVisitor;
-			IsParameterOrderDependent    = isParameterOrderDepended;
-			_parametersNormalizerFactory = parametersNormalizerFactory;
+			EvaluationContext              = evaluationContext;
+			DataOptions                    = dataOptions;
+			SqlProviderFlags               = sqlProviderFlags;
+			MappingSchema                  = mappingSchema;
+			Aliases                        = aliases ?? throw new ArgumentNullException(nameof(aliases));
+			OptimizerVisitor               = optimizerVisitor;
+			ConvertVisitor                 = convertVisitor;
+			IsParameterOrderDependent      = isParameterOrderDepended;
+			IsAlreadyOptimizedAndConverted = isAlreadyOptimizedAndConverted;
+			_parametersNormalizerFactory   = parametersNormalizerFactory;
 		}
 
-		public EvaluationContext EvaluationContext                   { get; }
-		public bool              IsParameterOrderDependent { get; }
-		public AliasesContext    Aliases                   { get; }
+		public EvaluationContext EvaluationContext              { get; }
+		public bool              IsParameterOrderDependent      { get; }
+		public bool              IsAlreadyOptimizedAndConverted { get; }
+		public AliasesContext    Aliases                        { get; }
 
 		public bool HasParameters() => _actualParameters?.Count > 0;
 
@@ -116,31 +124,43 @@ namespace LinqToDB.SqlProvider
 			_parametersNormalizer = null;
 		}
 
-		[return: NotNullIfNotNull(nameof(element))]
-		public T? ConvertAll<T>(T? element, NullabilityContext nullabilityContext)
+		[return : NotNullIfNotNull(nameof(element))]
+		public T OptimizeAndConvertAll<T>(T element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement
 		{
-			if (element == null)
-				return null;
-
-			// if parameters are not initialized, it means that query already optimized in SelectQueryOptimizerVisitor
-			var newElement = !EvaluationContext.IsParametersInitialized
-				? element
-				: OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element);
-
-			var result = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement);
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element, visitQueries : true, isInsideNot : false);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true, isInsideNot : false, checkBoolean: false);
 
 			return result;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public T? OptimizeAll<T>(T? element, NullabilityContext nullabilityContext)
+		public T? OptimizeAndConvert<T>(T? element, NullabilityContext nullabilityContext, bool isInsideNot, bool checkBoolean)
 			where T : class, IQueryElement
 		{
+			if (IsAlreadyOptimizedAndConverted)
+				return element;
+
 			if (element == null)
 				return null;
 
-			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element);
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element, false, isInsideNot);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, false, isInsideNot, checkBoolean);
+
+			return result;
+		}
+
+		[return: NotNullIfNotNull(nameof(element))]
+		public T? Optimize<T>(T? element, NullabilityContext nullabilityContext, bool isInsideNot)
+			where T : class, IQueryElement
+		{
+			if (IsAlreadyOptimizedAndConverted)
+				return element;
+
+			if (element == null)
+				return null;
+
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element, false, isInsideNot);
 
 			return (T)newElement;
 		}

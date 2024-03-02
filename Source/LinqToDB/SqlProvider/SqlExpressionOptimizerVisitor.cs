@@ -16,21 +16,36 @@ namespace LinqToDB.SqlProvider
 		NullabilityContext _nullabilityContext = default!;
 		DataOptions        _dataOptions        = default!;
 		ISqlPredicate?     _allowOptimize;
+		bool               _visitQueries;
+		bool               _isInsideNot;
 
 		public SqlExpressionOptimizerVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
 		}
 
-		public virtual IQueryElement Optimize(EvaluationContext evaluationContext, NullabilityContext nullabilityContext, IVisitorTransformationInfo? transformationInfo, DataOptions dataOptions, IQueryElement element)
+		public virtual IQueryElement Optimize(EvaluationContext evaluationContext, NullabilityContext nullabilityContext, IVisitorTransformationInfo? transformationInfo, DataOptions dataOptions, IQueryElement element, bool visitQueries, bool isInsideNot)
 		{
 			Cleanup();
 			_evaluationContext  = evaluationContext;
 			_nullabilityContext = nullabilityContext;
 			_dataOptions        = dataOptions;
 			_allowOptimize      = default;
+			_visitQueries       = visitQueries;
+			_isInsideNot        = isInsideNot;
 			SetTransformationInfo(transformationInfo);
 
 			return ProcessElement(element);
+		}
+
+		public override void Cleanup()
+		{
+			base.Cleanup();
+			_visitQueries       = default;
+			_isInsideNot        = default;
+			_evaluationContext  = default!;
+			_nullabilityContext = default!;
+			_dataOptions        = default!;
+			_allowOptimize      = default;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -277,21 +292,50 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
+		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		{
+			if (!_visitQueries)
+				return selectQuery;
+
+			var saveInsideNot = _isInsideNot;
+			_isInsideNot = false;
+
+			var result = base.VisitSqlQuery(selectQuery);
+
+			_isInsideNot = saveInsideNot;
+
+			return result;
+		}
+
 		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
 		{
-			var saveAllow = _allowOptimize;
-			_allowOptimize = predicate.Predicate;
-
-			var newElement = base.VisitNotPredicate(predicate);
-
-			_allowOptimize = saveAllow;
-
-			if (!ReferenceEquals(newElement, predicate))
-				return Visit(newElement);
-
 			if (predicate.Predicate.CanInvert(_nullabilityContext))
 			{
 				return Visit(predicate.Predicate.Invert(_nullabilityContext));
+			}
+
+			var saveInsideNot = _isInsideNot;
+			var saveAllow     = _allowOptimize;
+
+			_isInsideNot     = true;
+			_allowOptimize = predicate.Predicate;
+			var newInnerPredicate = (ISqlPredicate)Visit(predicate.Predicate);
+			_isInsideNot     = saveInsideNot;
+			_allowOptimize = saveAllow;
+
+			if (newInnerPredicate.CanInvert(_nullabilityContext))
+			{
+				return Visit(newInnerPredicate.Invert(_nullabilityContext));
+			}
+
+			if (!ReferenceEquals(newInnerPredicate, predicate.Predicate))
+			{
+				if (GetVisitMode(predicate) == VisitMode.Transform)
+				{
+					return new SqlPredicate.Not(newInnerPredicate);
+				}
+
+				predicate.Modify(newInnerPredicate);
 			}
 
 			return predicate;
@@ -721,6 +765,13 @@ namespace LinqToDB.SqlProvider
 			if (predicate.TryEvaluateExpression(_evaluationContext, out var value) && value is bool boolValue)
 			{
 				return SqlPredicate.MakeBool(boolValue);
+			}
+
+			var reduced = predicate.Reduce(_nullabilityContext, _evaluationContext, _isInsideNot);
+
+			if (!ReferenceEquals(reduced, predicate))
+			{
+				return Visit(reduced);
 			}
 
 			var expr = predicate;

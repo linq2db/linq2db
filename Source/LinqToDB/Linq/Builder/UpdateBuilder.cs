@@ -393,8 +393,7 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext               valuesContext,
 			List<SetExpressionEnvelope> envelopes,
 			List<SqlSetExpression>      items,
-			bool                        createColumns,
-			bool                        forceParameters = false
+			bool                        createColumns
 			)
 		{
 			ISqlExpression GetFieldExpression(Expression fieldExpr, bool isPureExpression)
@@ -439,7 +438,7 @@ namespace LinqToDB.Linq.Builder
 						valueExpression = Expression.Convert(valueExpression, fieldExpression.Type);
 					}
 
-					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor, forceParameter : forceParameters);
+					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor, forceParameter: envelope.ForceParameter);
 
 					if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					{
@@ -501,7 +500,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (hasConversion)
 				{
-					envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression));
+					envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, true));
 				}
 				else
 				{
@@ -516,7 +515,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 					else
-						envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression));
+						envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, true));
 				}
 			}
 		}
@@ -564,14 +563,16 @@ namespace LinqToDB.Linq.Builder
 		[DebuggerDisplay("{FieldExpression} = {ValueExpression}")]
 		public sealed class SetExpressionEnvelope
 		{
-			public SetExpressionEnvelope(Expression fieldExpression, Expression? valueExpression)
+			public SetExpressionEnvelope(Expression fieldExpression, Expression? valueExpression, bool forceParameter)
 			{
 				FieldExpression = fieldExpression;
 				ValueExpression = valueExpression;
+				ForceParameter  = forceParameter;
 			}
 
 			public Expression  FieldExpression { get; }
 			public Expression? ValueExpression { get; }
+			public bool        ForceParameter  { get; }
 
 			public SetExpressionEnvelope WithValueExpression(Expression? valueExpression)
 			{
@@ -583,7 +584,7 @@ namespace LinqToDB.Linq.Builder
 				else if (ExpressionEqualityComparer.Instance.Equals(ValueExpression, valueExpression))
 					return this;
 
-				return new SetExpressionEnvelope(FieldExpression, valueExpression);
+				return new SetExpressionEnvelope(FieldExpression, valueExpression, ForceParameter);
 			}
 		}
 
@@ -766,7 +767,7 @@ namespace LinqToDB.Linq.Builder
 						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery);
 
 						if (sqlExpr is SqlPlaceholderExpression)
-							outputExpressions.Add(new SetExpressionEnvelope(sqlExpr, sqlExpr));
+							outputExpressions.Add(new SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 						else
 							ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
 
@@ -833,7 +834,7 @@ namespace LinqToDB.Linq.Builder
 
 					// we have first lambda as whole update field part
 
-					updateContext.SetExpressions.Add(new SetExpressionEnvelope(extractExpr, null));
+					updateContext.SetExpressions.Add(new SetExpressionEnvelope(extractExpr, null, false));
 				}
 				else
 				{

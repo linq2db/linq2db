@@ -32,10 +32,19 @@ namespace Tests.Linq
 			var sb           = new StringBuilder();
 
 			sqlBuilder.BuildSql(0, query, sb,
-				new OptimizationContext(new EvaluationContext(), dataContext.Options, dataContext.SqlProviderFlags,
-					dataContext.MappingSchema, new AliasesContext(), sqlOptimizer.CreateOptimizerVisitor(false),
-					sqlOptimizer.CreateConvertVisitor(false), false,
-					connection.DataProvider.GetQueryParameterNormalizer));
+				new OptimizationContext(
+					evaluationContext : new EvaluationContext(),
+					dataOptions : dataContext.Options,
+					sqlProviderFlags : dataContext.SqlProviderFlags,
+					mappingSchema : dataContext.MappingSchema,
+					aliases : new AliasesContext(),
+					optimizerVisitor : sqlOptimizer.CreateOptimizerVisitor(false),
+					convertVisitor : sqlOptimizer.CreateConvertVisitor(false),
+					isParameterOrderDepended : false,
+					isAlreadyOptimizedAndConverted : false,
+					parametersNormalizerFactory : connection.DataProvider.GetQueryParameterNormalizer
+				)
+			);
 
 			return connection.Query<T>(sb.ToString());
 		}

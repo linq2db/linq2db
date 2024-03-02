@@ -509,7 +509,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				AppendIndent();
 
-				var expr = WrapBooleanExpression(items[i]);
+				var expr = items[i];
 				BuildExpression(expr);
 
 				if (i + 1 < items.Count)

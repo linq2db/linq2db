@@ -46,12 +46,12 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Could not retrieve table information from query.");
 
 			UpdateBuilder.InitializeSetExpressions(builder, tableContext, sequence,
-				insertExpressions, insertOrUpdateStatement.Insert.Items, false);
+				insertExpressions, insertOrUpdateStatement.Insert.Items, createColumns : false);
 
 			if (updateExpressions != null)
 			{
 				UpdateBuilder.InitializeSetExpressions(builder, tableContext, sequence,
-					updateExpressions, insertOrUpdateStatement.Update.Items, false);
+					updateExpressions, insertOrUpdateStatement.Update.Items, createColumns : false);
 			}
 
 			insertOrUpdateStatement.Insert.Into  = tableContext.SqlTable;

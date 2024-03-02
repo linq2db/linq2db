@@ -6,15 +6,18 @@ using System.Linq;
 
 namespace LinqToDB.SqlProvider
 {
-	using LinqToDB.Common;
-	using LinqToDB.Extensions;
-	using LinqToDB.Linq;
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
-	using LinqToDB.SqlQuery.Visitors;
+	using Common;
+	using Extensions;
+	using Linq;
+	using Mapping;
+	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	public class SqlExpressionConvertVisitor : SqlQueryVisitor
 	{
+		protected bool IsInsideNot;
+		protected bool VisitQueries;
+
 		protected OptimizationContext OptimizationContext = default!;
 		protected NullabilityContext  NullabilityContext  = default!;
 
@@ -29,17 +32,29 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
-		public virtual bool CanCompareSearchConditions => false;
+		public virtual    bool CanCompareSearchConditions => false;
+		protected virtual bool SupportsBooleanInColumn    => false;
+		protected virtual bool SupportsNullInColumn       => true;
 
-		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element)
+		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries, bool isInsideNot,
+			bool                                                 checkBoolean)
 		{
 			Cleanup();
 
+			IsInsideNot         = isInsideNot;
 			OptimizationContext = optimizationContext;
 			NullabilityContext  = nullabilityContext;
-			SetTransformationInfo(optimizationContext.TransformationInfo);
+			VisitQueries        = visitQueries;
+			SetTransformationInfo(optimizationContext.TransformationInfoConvert);
 
-			return ProcessElement(element);
+			var newElement = ProcessElement(element);
+
+			if (checkBoolean)
+			{
+				newElement = WrapBooleanExpression((ISqlExpression)newElement);
+			}
+
+			return newElement;
 		}
 
 		public override void Cleanup()
@@ -48,16 +63,51 @@ namespace LinqToDB.SqlProvider
 
 			OptimizationContext = default!;
 			NullabilityContext  = default!;
+			IsInsideNot         = default;
+			VisitQueries        = default;
 		}
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			var newElement = base.VisitSqlColumnExpression(column, expression);
 
+			newElement = WrapBooleanExpression(newElement);
 			if (!ReferenceEquals(newElement, expression))
-				return (ISqlExpression)Visit(newElement);
+				expression = (ISqlExpression)Visit(Optimize(newElement));
+
+			newElement = WrapColumnExpression(expression);
+			if (!ReferenceEquals(newElement, expression))
+			{
+				expression = (ISqlExpression)Visit(Optimize(newElement));
+			}
 
 			return expression;
+		}
+
+		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		{
+			if (!VisitQueries)
+				return selectQuery;
+
+			var saveIsInsideNot = IsInsideNot;
+			IsInsideNot = false;
+
+			var newQuery = base.VisitSqlQuery(selectQuery);
+
+			IsInsideNot = saveIsInsideNot;
+			return newQuery;
+		}
+
+		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
+		{
+			var saveIsInsideNot = IsInsideNot;
+			IsInsideNot = true;
+
+			var newPredicate = base.VisitNotPredicate(predicate);
+
+			IsInsideNot = saveIsInsideNot;
+
+			return newPredicate;
 		}
 
 		protected override IQueryElement VisitSqlValue(SqlValue element)
@@ -88,7 +138,7 @@ namespace LinqToDB.SqlProvider
 
 		protected IQueryElement Optimize(IQueryElement element)
 		{
-			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, element);
+			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, element, VisitQueries, IsInsideNot);
 		}
 
 		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
@@ -100,12 +150,20 @@ namespace LinqToDB.SqlProvider
 				return Visit(Optimize(newElement));
 			}
 
-			return ConvertExprExprPredicate(predicate);
+			var newPredicate = ConvertExprExprPredicate(predicate);
+			if (!ReferenceEquals(newPredicate, predicate))
+			{
+				newPredicate = Optimize(newPredicate);
+				newPredicate = Visit(newPredicate);
+			}
+
+			return newPredicate;
 		}
 
 		public virtual IQueryElement ConvertExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
-			if (predicate.Expr1.ElementType == QueryElementType.SqlRow)
+			var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
+			if (unwrapped.ElementType == QueryElementType.SqlRow)
 			{
 				// Do not convert for remote context
 				if (SqlProviderFlags == null)
@@ -116,13 +174,6 @@ namespace LinqToDB.SqlProvider
 				{
 					return Visit(Optimize(newPredicate));
 				}
-			}
-
-			var reduced = predicate.Reduce(NullabilityContext, EvaluationContext);
-
-			if (!ReferenceEquals(reduced, predicate))
-			{
-				return Visit(Optimize(reduced));
 			}
 
 			if (!CanCompareSearchConditions && (predicate.Expr1.ElementType == QueryElementType.SearchCondition ||
@@ -231,7 +282,7 @@ namespace LinqToDB.SqlProvider
 							if (sc.Predicates.Count == 0)
 								return SqlPredicate.MakeBool(predicate.IsNot);
 
-							return sc.MakeNot(predicate.IsNot);
+							return Optimize(sc.MakeNot(predicate.IsNot));
 						}
 					}
 
@@ -274,7 +325,7 @@ namespace LinqToDB.SqlProvider
 						if (sc.Predicates.Count == 0)
 							return SqlPredicate.MakeBool(predicate.IsNot);
 
-						return sc.MakeNot(predicate.IsNot);
+						return Optimize(sc.MakeNot(predicate.IsNot));
 					}
 				}
 			}
@@ -289,7 +340,14 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			return ConvertSearchStringPredicate(predicate);
+			var newPredicate = (IQueryElement)ConvertSearchStringPredicate(predicate);
+			if (!ReferenceEquals(newPredicate, predicate))
+			{
+				newPredicate = Optimize(newPredicate);
+				newPredicate = Visit(newPredicate);
+			}
+
+			return newPredicate;
 		}
 
 		public virtual ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
@@ -453,6 +511,8 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
+		#region Visitor overrides
+
 		protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
 			var newElement = base.VisitIsNullPredicate(predicate);
@@ -482,9 +542,8 @@ namespace LinqToDB.SqlProvider
 				return Visit(newElement);
 
 			newElement = ConvertSqlFunction(element);
-
 			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
+				return Visit(Optimize(newElement));
 
 			return element;
 		}
@@ -496,8 +555,172 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			return ConvertSqlExpression(element);
+			newElement = ConvertSqlExpression(element);
+			if (!ReferenceEquals(newElement, element))
+			{
+				newElement = Visit(Optimize(newElement));
+			}
+
+			return newElement;
 		}
+
+		protected override IQueryElement VisitLikePredicate(SqlPredicate.Like predicate)
+		{
+			var newElement = base.VisitLikePredicate(predicate);
+
+			if (!ReferenceEquals(newElement, predicate))
+				return Visit(newElement);
+
+			newElement = ConvertLikePredicate(predicate);
+			if (!ReferenceEquals(newElement, predicate))
+			{
+				newElement = Visit(Optimize(newElement));
+			}
+			return newElement;
+		}
+
+		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
+		{
+			var newElement = base.VisitSqlBinaryExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			newElement = ConvertSqlBinaryExpression(element);
+			if (!ReferenceEquals(newElement, element))
+			{
+				newElement = Visit(Optimize(newElement));
+			}
+			return newElement;
+		}
+
+		protected override IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
+		{
+			var newElement = base.VisitSqlInlinedSqlExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			newElement = element.GetSqlExpression(EvaluationContext);
+			if (!ReferenceEquals(newElement, element))
+			{
+				newElement = Visit(Optimize(newElement));
+			}
+			return newElement;
+		}
+
+		protected override IQueryElement VisitSqlInlinedToSqlExpression(SqlInlinedToSqlExpression element)
+		{
+			var newElement = base.VisitSqlInlinedToSqlExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			newElement = element.GetSqlExpression(EvaluationContext);
+			if (!ReferenceEquals(newElement, element))
+			{
+				newElement = Visit(Optimize(newElement));
+			}
+			return newElement;
+		}
+
+		protected override IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
+		{
+			var newElement = base.VisitBetweenPredicate(predicate);
+
+			if (!ReferenceEquals(newElement, predicate))
+				return Visit(newElement);
+
+			if (SqlProviderFlags?.RowConstructorSupport.HasFlag(RowFeature.Between) != true && QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression)
+			{
+				return Visit(Optimize(ConvertBetweenPredicate(predicate)));
+			}
+
+			return newElement;
+		}
+
+		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			if (predicate.DoNotConvert)
+				return base.VisitInSubQueryPredicate(predicate);
+
+			var newPredicate = base.VisitInSubQueryPredicate(predicate);
+
+			// preparing for remoting
+			if (SqlProviderFlags == null)
+				return newPredicate;
+
+			if (!ReferenceEquals(newPredicate, predicate))
+				return Visit(newPredicate);
+
+			var doNotSupportCorrelatedSubQueries = SqlProviderFlags.DoesNotSupportCorrelatedSubquery;
+
+			var testExpression  = predicate.Expr1;
+			var valueExpression = predicate.SubQuery.Select.Columns[0].Expression;
+
+			if (NullabilityContext.CanBeNull(testExpression) && NullabilityContext.CanBeNull(valueExpression))
+			{
+				if (doNotSupportCorrelatedSubQueries)
+				{
+					newPredicate = EmulateNullability(predicate);
+
+					if (!ReferenceEquals(newPredicate, predicate))
+						return Visit(newPredicate);
+				}
+				else
+				{
+					return Visit(ConvertToExists(predicate));
+				}
+			}
+
+			if (!doNotSupportCorrelatedSubQueries && (DataOptions.LinqOptions.PreferExistsForScalar || SqlProviderFlags.IsExistsPreferableForContains))
+			{
+				return Visit(ConvertToExists(predicate));
+			}
+
+			if (NullabilityContext.CanBeNull(testExpression) && !NullabilityContext.CanBeNull(valueExpression) && predicate.IsNot)
+			{
+				var withoutNull = new SqlPredicate.InSubQuery(testExpression, predicate.IsNot, predicate.SubQuery, true);
+
+				var sc = new SqlSearchCondition(predicate.IsNot)
+					.Add(new SqlPredicate.IsNull(testExpression, false))
+					.Add(withoutNull);
+
+				return Visit(sc);
+			}
+
+			return predicate;
+		}
+
+		protected override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+		{
+			var newElement = (SqlOrderByItem)base.VisitSqlOrderByItem(element);
+
+			var wrapped = WrapBooleanExpression(newElement.Expression);
+
+			if (!ReferenceEquals(wrapped, newElement.Expression))
+			{
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Expression = wrapped;
+				}
+				else
+				{
+					newElement = new SqlOrderByItem(wrapped, newElement.IsDescending, newElement.IsPositioned);
+				}
+			}
+
+			return newElement;
+		}
+
+		protected override ISqlExpression VisitSqlGroupByItem(ISqlExpression element)
+		{
+			var newItem = base.VisitSqlGroupByItem(element);
+
+			return WrapBooleanExpression(newItem);
+		}
+
+		#endregion Visitor overrides
 
 		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
 		{
@@ -534,49 +757,9 @@ namespace LinqToDB.SqlProvider
 			return func;
 		}
 
-		protected override IQueryElement VisitLikePredicate(SqlPredicate.Like predicate)
-		{
-			var newElement = base.VisitLikePredicate(predicate);
-
-			if (!ReferenceEquals(newElement, predicate))
-				return Visit(newElement);
-
-			return ConvertLikePredicate(predicate);
-		}
-
 		public virtual ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
 			return predicate;
-		}
-
-		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
-		{
-			var newElement = base.VisitSqlBinaryExpression(element);
-
-			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
-
-			return ConvertSqlBinaryExpression(element);
-		}
-
-		protected override IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
-		{
-			var newElement = base.VisitSqlInlinedSqlExpression(element);
-
-			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
-
-			return element.GetSqlExpression(EvaluationContext);
-		}
-
-		protected override IQueryElement VisitSqlInlinedToSqlExpression(SqlInlinedToSqlExpression element)
-		{
-			var newElement = base.VisitSqlInlinedToSqlExpression(element);
-
-			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
-
-			return element.GetSqlExpression(EvaluationContext);
 		}
 
 		ISqlPredicate EmulateNullability(SqlPredicate.InSubQuery inPredicate)
@@ -646,75 +829,11 @@ namespace LinqToDB.SqlProvider
 
 			sc.AddExists(subQuery, inPredicate.IsNot);
 
-			return  (ISqlPredicate)Optimize(sc);
-		}
+			var result = Optimize(sc);
 
-		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
-		{
-			if (predicate.DoNotConvert)
-				return base.VisitInSubQueryPredicate(predicate);
+			result = Visit(result);
 
-			var newPredicate = base.VisitInSubQueryPredicate(predicate);
-
-			// preparing for remoting
-			if (SqlProviderFlags == null)
-				return newPredicate;
-
-			if (!ReferenceEquals(newPredicate, predicate))
-				return Visit(newPredicate);
-
-			var doNotSupportCorrelatedSubQueries = SqlProviderFlags.DoesNotSupportCorrelatedSubquery;
-
-			var testExpression  = predicate.Expr1;
-			var valueExpression = predicate.SubQuery.Select.Columns[0].Expression;
-
-			if (NullabilityContext.CanBeNull(testExpression) && NullabilityContext.CanBeNull(valueExpression))
-			{
-				if (doNotSupportCorrelatedSubQueries)
-				{
-					newPredicate = EmulateNullability(predicate);
-
-					if (!ReferenceEquals(newPredicate, predicate))
-						return Visit(newPredicate);
-				}
-				else
-				{
-					return Visit(ConvertToExists(predicate));
-				}
-			}
-
-			if (!doNotSupportCorrelatedSubQueries && (DataOptions.LinqOptions.PreferExistsForScalar || SqlProviderFlags.IsExistsPreferableForContains))
-			{
-				return Visit(ConvertToExists(predicate));
-			}
-
-			if (NullabilityContext.CanBeNull(testExpression) && !NullabilityContext.CanBeNull(valueExpression) && predicate.IsNot)
-			{
-				var withoutNull = new SqlPredicate.InSubQuery(testExpression, predicate.IsNot, predicate.SubQuery, true);
-
-				var sc = new SqlSearchCondition(predicate.IsNot)
-					.Add(new SqlPredicate.IsNull(testExpression, false))
-					.Add(withoutNull);
-
-				return Visit(sc);
-			}
-
-			return predicate;
-		}
-
-		protected override IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
-		{
-			var newElement = base.VisitBetweenPredicate(predicate);
-
-			if (!ReferenceEquals(newElement, predicate))
-				return Visit(newElement);
-
-			if (SqlProviderFlags?.RowConstructorSupport.HasFlag(RowFeature.Between) != true && predicate.Expr1 is SqlRowExpression)
-			{
-				return ConvertBetweenPredicate(predicate);
-			}
-
-			return newElement;
+			return (ISqlPredicate)result;
 		}
 
 		public virtual ISqlPredicate ConvertBetweenPredicate(SqlPredicate.Between between)
@@ -769,6 +888,42 @@ namespace LinqToDB.SqlProvider
 
 			return element;
 		}
+
+		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr)
+		{
+			if (SqlProviderFlags == null || SqlProviderFlags.SupportsBooleanType)
+				return expr;
+
+			if (expr.SystemType == typeof(bool))
+			{
+				if (QueryHelper.UnwrapNullablity(expr) is ISqlPredicate)
+				{
+					expr = new SqlFunction(typeof(bool), "CASE", expr, new SqlValue(true), new SqlValue(false))
+						{
+							DoNotOptimize = true
+						};
+
+					expr = (ISqlExpression)Visit(expr);
+				}
+			}
+
+			return expr;
+		}
+
+		protected virtual ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			if (!SupportsNullInColumn && expr is SqlValue sqlValue && sqlValue.Value == null)
+			{
+				var sqlDataType = new SqlDataType(sqlValue.ValueType);
+				return new SqlFunction(sqlValue.ValueType.SystemType, PseudoFunctions.CONVERT, false, sqlDataType, sqlDataType, sqlValue)
+				{
+					DoNotOptimize = true
+				};
+			}
+
+			return expr;
+		}
+
 
 		#region DataTypes
 

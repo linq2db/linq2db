@@ -10,7 +10,8 @@
 		{
 		}
 
-		public override bool CanCompareSearchConditions => true;
+		protected override bool SupportsNullInColumn       => false;
+		public override    bool CanCompareSearchConditions => true;
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{

@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 		}
 
+		protected override bool SupportsNullInColumn => false;
 		public override bool CanCompareSearchConditions => true;
 
 		static string[] DB2LikeCharactersToEscape = {"%", "_"};

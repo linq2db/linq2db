@@ -30,8 +30,6 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected abstract DB2Version Version { get; }
 
-		protected override bool SupportsNullInColumn => false;
-
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)

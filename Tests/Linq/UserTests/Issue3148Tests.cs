@@ -457,7 +457,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestDefaultExpression_16([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var query1 = db.Person
 					.GroupBy(_ => new { _.LastName, f1 = default(int), f2 = default(Gender?), f3 = default(string) })

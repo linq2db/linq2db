@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 					UpdateBuilder.ParseSetter(builder,
 						mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type), setterExpression,
 						setterExpressions);
-					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, false);
+					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, createColumns : false);
 				}
 				else
 				{

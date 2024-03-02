@@ -454,6 +454,17 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 		#endregion
 
+		protected override bool CanSkipRootAliases(SqlStatement statement)
+		{
+			if (statement.SelectQuery != null)
+			{
+				if (statement.SelectQuery.HasSetOperators)
+					return false;
+			}
+
+			return base.CanSkipRootAliases(statement);
+		}
+
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 
 		protected override bool IsValuesSyntaxSupported => false;
@@ -589,6 +600,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		protected override void BuildExpressionForOrderBy(ISqlExpression expr)
 		{
+			expr = ConvertElement(expr, true);
+
 			if (DataOptions.SqlOptions.EnableConstantExpressionInOrderBy && expr.SystemType == typeof(int) && expr is SqlValue(var value))
 				StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 			else

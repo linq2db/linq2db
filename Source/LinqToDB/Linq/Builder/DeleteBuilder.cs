@@ -101,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 					var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 					UpdateBuilder.ParseSetter(builder, destinationRef, outputBody, outputExpressions);
 
-					UpdateBuilder.InitializeSetExpressions(builder, destinationContext, sequence, outputExpressions, deleteStatement.Output.OutputItems, false);
+					UpdateBuilder.InitializeSetExpressions(builder, destinationContext, sequence, outputExpressions, deleteStatement.Output.OutputItems, createColumns : false);
 
 					deleteStatement.Output.OutputTable = destinationContext.SqlTable;
 				}
@@ -195,12 +195,12 @@ namespace LinqToDB.Linq.Builder
 						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery);
 
 						if (sqlExpr is SqlPlaceholderExpression)
-							outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr));
+							outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 						else
 							UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
 
 						var setItems = new List<SqlSetExpression>();
-						UpdateBuilder.InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);
+						UpdateBuilder.InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, createColumns : false);
 
 						DeleteStatement.Output!.OutputColumns = setItems.Select(c => c.Column).ToList();
 

@@ -236,7 +236,7 @@ namespace LinqToDB.SqlProvider
 
 		private void BuildMergeSourceEnumerable(NullabilityContext nullability, SqlMergeStatement merge)
 		{
-			merge = ConvertElement(merge);
+			merge = ConvertElement(merge, checkBoolean : false);
 			var rows = merge.Source.SourceEnumerable!.BuildRows(OptimizationContext.EvaluationContext);
 			if (rows.Count > 0)
 			{

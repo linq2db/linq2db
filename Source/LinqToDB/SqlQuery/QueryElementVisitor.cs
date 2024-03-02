@@ -1425,25 +1425,30 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
+		protected virtual ISqlExpression VisitSqlGroupByItem(ISqlExpression element)
+		{
+			return (ISqlExpression) Visit(element);
+		}
+
 		protected virtual IQueryElement VisitSqlGroupByClause(SqlGroupByClause element)
 		{
 			switch (GetVisitMode(element))
 			{
 				case VisitMode.ReadOnly:
 				{
-					VisitElements(element.Items, VisitMode.ReadOnly);
+					VisitElements(element.Items, VisitMode.ReadOnly, VisitSqlGroupByItem);
 
 					break;
 				}
 				case VisitMode.Modify:
 				{
-					VisitElements(element.Items, VisitMode.Modify);
+					VisitElements(element.Items, VisitMode.Modify, VisitSqlGroupByItem);
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var items = VisitElements(element.Items, VisitMode.Transform);
+					var items = VisitElements(element.Items, VisitMode.Transform, VisitSqlGroupByItem);
 
 					if (ShouldReplace(element) || element.Items != items)
 					{
@@ -3204,6 +3209,83 @@ namespace LinqToDB.SqlQuery
 		}
 
 		/// <summary>
+		/// Visits list of query elements and applies transformation.
+		/// </summary>
+		/// <param name="list1">List to visit.</param>
+		/// <param name="transformFunc">Transformation function.</param>
+		/// <returns>
+		/// Return value depends on <paramref name="mode"/> value:
+		/// <list type="bullet">
+		/// <item><c>null</c> when <paramref name="list1"/> is <c>null</c>;</item>
+		/// <item><see cref="VisitMode.ReadOnly"/>: returns input list <paramref name="list1"/> instance;</item>
+		/// <item><see cref="VisitMode.Modify"/>: returns input list <paramref name="list1"/> instance, could contain inplace list item replacements;</item>
+		/// <item><see cref="VisitMode.Transform"/>: returns new list instance when there were changes to list items; otherwise returns original list.</item>
+		/// </list>
+		/// </returns>
+		[return: NotNullIfNotNull(nameof(list1))]
+		protected List<T>? VisitElements<T>(List<T>? list1, VisitMode mode, Func<T, T> transformFunc)
+			where T : class, IQueryElement
+		{
+			if (list1 == null)
+				return null;
+
+			switch (mode)
+			{
+				case VisitMode.ReadOnly:
+				{
+					foreach (var t in list1)
+					{
+						_ = transformFunc(t);
+					}
+
+					return list1;
+				}
+
+				case VisitMode.Modify:
+				{
+					for (var i = 0; i < list1.Count; i++)
+					{
+						list1[i] = transformFunc(list1[i]);
+					}
+
+					return list1;
+				}
+
+				case VisitMode.Transform:
+				{
+					List<T>? list2 = null;
+
+					for (var i = 0; i < list1.Count; i++)
+					{
+						var elem1 = list1[i];
+						var elem2 = transformFunc(elem1);
+
+						if (!ReferenceEquals(elem1, elem2))
+						{
+							if (list2 == null)
+							{
+								list2 = new List<T>(list1.Count);
+
+								for (var j = 0; j < i; j++)
+									list2.Add(list1[j]);
+							}
+
+							list2.Add(elem2);
+						}
+						else if (list2 != null)
+							list2.Add(elem1);
+					}
+
+					return list2 ?? list1;
+				}
+
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+		}
+
+
+		/// <summary>
 		/// Visits list of arrays of query elements.
 		/// </summary>
 		/// <returns>
@@ -3280,5 +3362,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
 	}
 }
