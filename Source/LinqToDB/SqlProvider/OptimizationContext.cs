@@ -128,7 +128,7 @@ namespace LinqToDB.SqlProvider
 		public T OptimizeAndConvertAll<T>(T element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement
 		{
-			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element, visitQueries : true, isInsideNot : false);
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element, visitQueries : true, isInsideNot : false, reduceBinary: false);
 			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true, isInsideNot : false, checkBoolean: false);
 
 			return result;
@@ -144,20 +144,20 @@ namespace LinqToDB.SqlProvider
 			if (element == null)
 				return null;
 
-			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element, false, isInsideNot);
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element, visitQueries : false, isInsideNot, reduceBinary : false);
 			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, false, isInsideNot, checkBoolean);
 
 			return result;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public T? Optimize<T>(T? element, NullabilityContext nullabilityContext, bool isInsideNot)
+		public T? Optimize<T>(T? element, NullabilityContext nullabilityContext, bool isInsideNot, bool reduceBinary)
 			where T : class, IQueryElement
 		{
 			if (element == null)
 				return null;
 
-			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, element, false, isInsideNot);
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, reduceBinary ? null : TransformationInfo, DataOptions, element, false, isInsideNot, reduceBinary);
 
 			return (T)newElement;
 		}

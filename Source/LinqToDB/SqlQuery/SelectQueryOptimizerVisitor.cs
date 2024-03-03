@@ -212,7 +212,7 @@ namespace LinqToDB.SqlQuery
 					var before = selectQuery.ToDebugString();
 #endif
 					// only once
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery, visitQueries: true, isInsideNot : false);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery, visitQueries : true, isInsideNot : false, reduceBinary: false);
 				}
 				else
 				{
@@ -294,7 +294,7 @@ namespace LinqToDB.SqlQuery
 #endif
 					CorrectEmptyInnerJoinsRecursive(selectQuery);
 
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery, visitQueries : true, isInsideNot : false);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery, visitQueries : true, isInsideNot : false, reduceBinary: false);
 				}
 
 				if (saveSetOperatorCount != (selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0))

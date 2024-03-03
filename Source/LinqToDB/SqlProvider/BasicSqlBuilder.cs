@@ -68,7 +68,8 @@ namespace LinqToDB.SqlProvider
 		#region Build Flags
 
 		bool _disableAlias;
-		bool  _isInsideNot;
+		bool _isInsideNot;
+		int  _binaryOptimized;
 
 		#endregion
 
@@ -143,6 +144,15 @@ namespace LinqToDB.SqlProvider
 			where T : class, IQueryElement
 		{
 			return OptimizationContext.OptimizeAndConvert(element, NullabilityContext, _isInsideNot, checkBoolean);
+		}
+
+		[return: NotNullIfNotNull(nameof(element))]
+		public IQueryElement? Optimize(IQueryElement? element, bool reduceBinary)
+		{
+			if (element == null)
+				return null;
+
+			return OptimizationContext.Optimize(element, NullabilityContext, _isInsideNot, reduceBinary);
 		}
 
 		#endregion
@@ -2117,7 +2127,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool ShouldBuildWhere(SelectQuery selectQuery, out SqlSearchCondition condition)
 		{
-			condition = ConvertElement(selectQuery.Where.SearchCondition, checkBoolean : false);
+			condition = PrepareSearchCondition(selectQuery.Where.SearchCondition);
 
 			if (condition.IsTrue())
 				return false;
@@ -2134,12 +2144,16 @@ namespace LinqToDB.SqlProvider
 
 			StringBuilder.Append("WHERE").AppendLine();
 
+			++_binaryOptimized;
+
 			Indent++;
 			AppendIndent();
 			BuildWhereSearchCondition(selectQuery, searchCondition);
 			Indent--;
 
 			StringBuilder.AppendLine();
+
+			--_binaryOptimized;
 		}
 
 		#endregion
@@ -2212,9 +2226,11 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildHavingClause(SelectQuery selectQuery)
 		{
-			var condition = ConvertElement(selectQuery.Having.SearchCondition, checkBoolean : false);
+			var condition = PrepareSearchCondition(selectQuery.Having.SearchCondition);
 			if (condition.IsTrue())
 				return;
+
+			++_binaryOptimized;
 
 			AppendIndent();
 
@@ -2226,6 +2242,8 @@ namespace LinqToDB.SqlProvider
 			Indent--;
 
 			StringBuilder.AppendLine();
+
+			--_binaryOptimized;
 		}
 
 		#endregion
@@ -2385,7 +2403,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSearchCondition(SqlSearchCondition condition, bool wrapCondition)
 		{
-			condition = ConvertElement(condition, checkBoolean : false);
+			condition = PrepareSearchCondition(condition);
 
 			var len = StringBuilder.Length;
 			var parentPrecedence = condition.Precedence;
@@ -2429,8 +2447,6 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSearchCondition(int parentPrecedence, SqlSearchCondition condition, bool wrapCondition)
 		{
-			condition = ConvertElement(condition, checkBoolean : false);
-
 			var wrap = Wrap(GetPrecedence(condition as ISqlExpression), parentPrecedence);
 
 			if (wrap) StringBuilder.Append('(');
@@ -2821,25 +2837,43 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		protected SqlSearchCondition PrepareSearchCondition(SqlSearchCondition searchCondition)
+		{
+			if (_binaryOptimized > 0)
+				return searchCondition;
+
+			var condition = ConvertElement(searchCondition, checkBoolean : false);
+			var optimized = Optimize(condition, true);
+
+			if (optimized is SqlSearchCondition optimizedCondition)
+				condition = optimizedCondition;
+			else
+				condition = new SqlSearchCondition().Add((ISqlPredicate)optimized);
+
+			return condition;
+		}
+
 		protected void BuildPredicate(int parentPrecedence, int precedence, ISqlPredicate predicate)
 		{
-			if (predicate.ElementType == QueryElementType.ExprExprPredicate)
+			if (_binaryOptimized == 0)
 			{
-				var reduced = ((SqlPredicate.ExprExpr)predicate).Reduce(NullabilityContext, OptimizationContext.EvaluationContext, _isInsideNot);
-
-				if (!ReferenceEquals(reduced, predicate))
+				var optimized = Optimize(predicate, true);
+				if (!ReferenceEquals(optimized, predicate))
 				{
-					reduced = OptimizationContext.Optimize(reduced, NullabilityContext, _isInsideNot);
-					BuildPredicate(parentPrecedence, GetPrecedence(reduced), reduced);
-					return;
+					predicate  = (ISqlPredicate)optimized;
+					precedence = GetPrecedence(predicate);
 				}
 			}
+
+			++_binaryOptimized;
 
 			var wrap = Wrap(precedence, parentPrecedence);
 
 			if (wrap) StringBuilder.Append('(');
 			BuildPredicate(predicate);
 			if (wrap) StringBuilder.Append(')');
+
+			--_binaryOptimized;
 		}
 
 		protected virtual void BuildLikePredicate(SqlPredicate.Like predicate)

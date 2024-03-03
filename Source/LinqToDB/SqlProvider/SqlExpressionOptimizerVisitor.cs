@@ -18,12 +18,21 @@ namespace LinqToDB.SqlProvider
 		ISqlPredicate?     _allowOptimize;
 		bool               _visitQueries;
 		bool               _isInsideNot;
+		bool               _reduceBinary;
 
 		public SqlExpressionOptimizerVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
 		}
 
-		public virtual IQueryElement Optimize(EvaluationContext evaluationContext, NullabilityContext nullabilityContext, IVisitorTransformationInfo? transformationInfo, DataOptions dataOptions, IQueryElement element, bool visitQueries, bool isInsideNot)
+		public virtual IQueryElement Optimize(
+			EvaluationContext           evaluationContext, 
+			NullabilityContext          nullabilityContext, 
+			IVisitorTransformationInfo? transformationInfo, 
+			DataOptions                 dataOptions,
+			IQueryElement               element,           
+			bool                        visitQueries,       
+			bool                        isInsideNot,        
+			bool                        reduceBinary)
 		{
 			Cleanup();
 			_evaluationContext  = evaluationContext;
@@ -32,6 +41,7 @@ namespace LinqToDB.SqlProvider
 			_allowOptimize      = default;
 			_visitQueries       = visitQueries;
 			_isInsideNot        = isInsideNot;
+			_reduceBinary       = reduceBinary;
 			SetTransformationInfo(transformationInfo);
 
 			return ProcessElement(element);
@@ -765,6 +775,16 @@ namespace LinqToDB.SqlProvider
 			if (predicate.TryEvaluateExpression(_evaluationContext, out var value) && value is bool boolValue)
 			{
 				return SqlPredicate.MakeBool(boolValue);
+			}
+
+			if (_reduceBinary)
+			{
+				var reduced = predicate.Reduce(_nullabilityContext, _evaluationContext, _isInsideNot);
+
+				if (!ReferenceEquals(reduced, predicate))
+				{
+					return Visit(reduced);
+				}
 			}
 
 			var expr = predicate;

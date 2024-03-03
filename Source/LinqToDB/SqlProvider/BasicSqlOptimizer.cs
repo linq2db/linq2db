@@ -1617,8 +1617,8 @@ namespace LinqToDB.SqlProvider
 		{
 			// make skip take as parameters or evaluate otherwise
 
-			takeExpr = optimizationContext.Optimize(selectQuery.Select.TakeValue, nullability, isInsideNot: false);
-			skipExpr = optimizationContext.Optimize(selectQuery.Select.SkipValue, nullability, isInsideNot: false);
+			takeExpr = optimizationContext.Optimize(selectQuery.Select.TakeValue, nullability, isInsideNot: false, false);
+			skipExpr = optimizationContext.Optimize(selectQuery.Select.SkipValue, nullability, isInsideNot: false, false);
 
 			if (takeExpr != null)
 			{
