@@ -124,59 +124,6 @@ namespace LinqToDB.DataProvider.Access
 				.Append(expr.IsNot ? '0' : '1');
 		}
 
-		protected override void BuildFunction(SqlFunction func)
-		{
-			switch (func.Name)
-			{
-				case "Coalesce"  :
-
-					if (func.Parameters.Length > 2)
-					{
-						var parms = new ISqlExpression[func.Parameters.Length - 1];
-
-						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
-						BuildFunction(new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
-							new SqlFunction(func.SystemType, func.Name, parms)));
-						return;
-					}
-
-					var sc = new SqlSearchCondition();
-
-					sc.Predicates.Add(new SqlPredicate.IsNull(func.Parameters[0], false));
-
-					func = new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0]);
-
-					break;
-
-				case "CASE"      : func = ConvertCase(func.SystemType, func.Parameters, 0); break;
-				case "CharIndex" :
-					func = func.Parameters.Length == 2?
-						new SqlFunction(func.SystemType, "InStr", new SqlValue(1),    func.Parameters[1], func.Parameters[0], new SqlValue(1)):
-						new SqlFunction(func.SystemType, "InStr", func.Parameters[2], func.Parameters[1], func.Parameters[0], new SqlValue(1));
-					break;
-			}
-
-			base.BuildFunction(func);
-		}
-
-		SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
-		{
-			var len = parameters.Length - start;
-
-			if (len < 2)
-				throw new SqlException("CASE statement is not supported by the {0}.", GetType().Name);
-
-			return new SqlFunction(systemType, "IIF",
-				parameters[start],
-				parameters[start + 1],
-				len switch
-				{
-					2 => parameters[start                          + 1],
-					3 => parameters[start                          + 2],
-					_ => ConvertCase(systemType, parameters, start + 2)
-				});
-		}
-
 		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
 			SqlUpdateClause                                    updateClause)
 		{

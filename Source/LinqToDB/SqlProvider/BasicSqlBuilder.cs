@@ -844,11 +844,13 @@ namespace LinqToDB.SqlProvider
 
 				if (expr.Expression != null)
 				{
+					var updateExpression = ConvertElement(expr.Expression, checkBoolean : false);
+
 					StringBuilder.Append(" = ");
 
 					var addAlias = false;
 
-					BuildColumnExpression(selectQuery, expr.Expression, null, ref addAlias);
+					BuildColumnExpression(selectQuery, updateExpression, null, ref addAlias);
 				}
 			}
 
@@ -1098,7 +1100,7 @@ namespace LinqToDB.SqlProvider
 					AppendIndent();
 					BuildExpression(expr.Column, false, true);
 					StringBuilder.Append(" = ");
-					BuildExpression(expr.Expression!, true, true);
+					BuildExpression(ConvertElement(expr.Expression!, false), true, true);
 				}
 
 				Indent--;
@@ -2246,7 +2248,7 @@ namespace LinqToDB.SqlProvider
 				AppendIndent();
 
 				var item            = selectQuery.OrderBy.Items[i];
-				var orderExpression = item.Expression;
+				var orderExpression = ConvertElement(item.Expression, true);
 
 				if (item.IsPositioned)
 				{
@@ -2821,6 +2823,18 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildPredicate(int parentPrecedence, int precedence, ISqlPredicate predicate)
 		{
+			if (predicate.ElementType == QueryElementType.ExprExprPredicate)
+			{
+				var reduced = ((SqlPredicate.ExprExpr)predicate).Reduce(NullabilityContext, OptimizationContext.EvaluationContext, _isInsideNot);
+
+				if (!ReferenceEquals(reduced, predicate))
+				{
+					reduced = OptimizationContext.Optimize(reduced, NullabilityContext, _isInsideNot);
+					BuildPredicate(parentPrecedence, GetPrecedence(reduced), reduced);
+					return;
+				}
+			}
+
 			var wrap = Wrap(precedence, parentPrecedence);
 
 			if (wrap) StringBuilder.Append('(');

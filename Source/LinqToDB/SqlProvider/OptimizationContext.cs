@@ -154,9 +154,6 @@ namespace LinqToDB.SqlProvider
 		public T? Optimize<T>(T? element, NullabilityContext nullabilityContext, bool isInsideNot)
 			where T : class, IQueryElement
 		{
-			if (IsAlreadyOptimizedAndConverted)
-				return element;
-
 			if (element == null)
 				return null;
 

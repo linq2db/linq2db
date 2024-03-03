@@ -344,6 +344,9 @@ namespace LinqToDB.SqlQuery
 					}
 					else
 					{
+						if (insideNot)
+							return this;
+
 						var search = new SqlSearchCondition(true)
 							.Add(MakeWithoutNulls())
 							.Add(new IsNull(Expr1, false))

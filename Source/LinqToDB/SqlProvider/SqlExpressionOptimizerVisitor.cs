@@ -767,13 +767,6 @@ namespace LinqToDB.SqlProvider
 				return SqlPredicate.MakeBool(boolValue);
 			}
 
-			var reduced = predicate.Reduce(_nullabilityContext, _evaluationContext, _isInsideNot);
-
-			if (!ReferenceEquals(reduced, predicate))
-			{
-				return Visit(reduced);
-			}
-
 			var expr = predicate;
 
 			if (expr.WithNull == null && (expr.Operator == SqlPredicate.Operator.Equal || expr.Operator == SqlPredicate.Operator.NotEqual))

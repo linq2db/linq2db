@@ -198,6 +198,18 @@ namespace LinqToDB.Data
 				if (needsSync)
 				{
 					Monitor.Enter(query);
+
+					if (query.Context != null)
+					{
+						try
+						{
+							return new PreparedQuery((CommandWithParameters[])query.Context, query.Statement, dataConnection.GetNextCommandHints(!forGetSqlText));
+						}
+						finally
+						{
+							Monitor.Exit(query);
+						}
+					}
 				}
 
 				try
@@ -252,11 +264,6 @@ namespace LinqToDB.Data
 						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
 						isAlreadyOptimizedAndConverted: optimizeAndConvertAll,
 						dataConnection.DataProvider.GetQueryParameterNormalizer);
-
-					if (statement is SqlSelectStatement)
-					{
-
-					}
 
 					if (optimizeAndConvertAll)
 					{
