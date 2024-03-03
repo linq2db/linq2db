@@ -86,61 +86,61 @@ namespace Tests
 
 			try
 			{
-			TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
+				TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
 
-			TestContext.WriteLine("CLR Version: {0}...", Environment.Version);
+				TestContext.WriteLine("CLR Version: {0}...", Environment.Version);
 
-			var traceCount = 0;
+				var traceCount = 0;
 
-			DataConnection.TurnTraceSwitchOn();
-			DataConnection.WriteTraceLine = (message, name, level) =>
-			{
-				if (message?.StartsWith("BeforeExecute") == true)
-					LastQuery = message;
-
-				var ctx   = CustomTestContext.Get();
-
-				if (ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED) != true)
+				DataConnection.TurnTraceSwitchOn();
+				DataConnection.WriteTraceLine = (message, name, level) =>
 				{
 					if (message?.StartsWith("BeforeExecute") == true)
+						LastQuery = message;
+
+					var ctx = CustomTestContext.Get();
+
+					if (ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED) != true)
 					{
-						var baseline = ctx.Get<StringBuilder>(CustomTestContext.BASELINE);
-						if (baseline == null)
+						if (message?.StartsWith("BeforeExecute") == true)
 						{
-							baseline = new StringBuilder();
-							ctx.Set(CustomTestContext.BASELINE, baseline);
+							var baseline = ctx.Get<StringBuilder>(CustomTestContext.BASELINE);
+							if (baseline == null)
+							{
+								baseline = new StringBuilder();
+								ctx.Set(CustomTestContext.BASELINE, baseline);
+							}
+
+							baseline.AppendLine(message);
+						}
+					}
+
+					if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
+					{
+						var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+						if (trace == null)
+						{
+							trace = new StringBuilder();
+							ctx.Set(CustomTestContext.TRACE, trace);
 						}
 
-						baseline.AppendLine(message);
+						lock (trace)
+							trace.AppendLine($"{name}: {message}");
+
+						if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
+						{
+							ctx.Set(CustomTestContext.LIMITED, true);
+							TestContext.WriteLine("{0}: {1}", name, message);
+							Debug.WriteLine(message, name);
+						}
+
+						traceCount++;
 					}
-				}
+				};
 
-				if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
-				{
-					var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-					if (trace == null)
-					{
-						trace = new StringBuilder();
-						ctx.Set(CustomTestContext.TRACE, trace);
-					}
-
-					lock (trace)
-						trace.AppendLine($"{name}: {message}");
-
-					if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
-					{
-						ctx.Set(CustomTestContext.LIMITED, true);
-						TestContext.WriteLine("{0}: {1}", name, message);
-						Debug.WriteLine(message, name);
-					}
-
-					traceCount++;
-				}
-			};
-
-			Configuration.Linq.TraceMapperExpression = false;
-			// Configuration.Linq.GenerateExpressionTest  = true;
-			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
+				Configuration.Linq.TraceMapperExpression = false;
+				// Configuration.Linq.GenerateExpressionTest  = true;
+				var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 
 #if NETFRAMEWORK
 			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
@@ -154,19 +154,19 @@ namespace Tests
 			}
 #endif
 
-			Environment.CurrentDirectory = assemblyPath;
+				Environment.CurrentDirectory = assemblyPath;
 
-			TestExternals.Log($"CurrentDirectory          : {Environment.CurrentDirectory}");
+				TestExternals.Log($"CurrentDirectory          : {Environment.CurrentDirectory}");
 
-			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json")!;
-			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json")!;
+				var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json")!;
+				var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json")!;
 
-			TestExternals.Log($"dataProvidersJsonFile     : {dataProvidersJsonFile}");
-			TestExternals.Log($"userDataProvidersJsonFile : {userDataProvidersJsonFile}");
+				TestExternals.Log($"dataProvidersJsonFile     : {dataProvidersJsonFile}");
+				TestExternals.Log($"userDataProvidersJsonFile : {userDataProvidersJsonFile}");
 
-			var dataProvidersJson     = File.ReadAllText(dataProvidersJsonFile);
-			var userDataProvidersJson =
-				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
+				var dataProvidersJson = File.ReadAllText(dataProvidersJsonFile);
+				var userDataProvidersJson =
+					File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
 				var configName = GetConfigName();
 
@@ -176,50 +176,50 @@ namespace Tests
 #endif
 
 #if !DEBUG
-			Console.WriteLine("UserDataProviders.json:");
-			Console.WriteLine(userDataProvidersJson);
+				Console.WriteLine("UserDataProviders.json:");
+				Console.WriteLine(userDataProvidersJson);
 #endif
 
-			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
+				var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
 
-			testSettings.Connections ??= new();
+				testSettings.Connections ??= new();
 
-			CopyDatabases();
+				CopyDatabases();
 
-			DisableRemoteContext = testSettings.DisableRemoteContext == true;
-			UserProviders        = new HashSet<string>(testSettings.Providers ?? [], StringComparer.OrdinalIgnoreCase);
-			SkipCategories       = new HashSet<string>(testSettings.Skip      ?? [], StringComparer.OrdinalIgnoreCase);
+				DisableRemoteContext = testSettings.DisableRemoteContext == true;
+				UserProviders        = new HashSet<string>(testSettings.Providers ?? [], StringComparer.OrdinalIgnoreCase);
+				SkipCategories       = new HashSet<string>(testSettings.Skip      ?? [], StringComparer.OrdinalIgnoreCase);
 
-			var logLevel = testSettings.TraceLevel;
-			var traceLevel = TraceLevel.Info;
+				var logLevel   = testSettings.TraceLevel;
+				var traceLevel = TraceLevel.Info;
 
-			if (!string.IsNullOrEmpty(logLevel))
-				if (!Enum.TryParse(logLevel, true, out traceLevel))
-					traceLevel = TraceLevel.Info;
+				if (!string.IsNullOrEmpty(logLevel))
+					if (!Enum.TryParse(logLevel, true, out traceLevel))
+						traceLevel = TraceLevel.Info;
 
-			if (!string.IsNullOrEmpty(testSettings.NoLinqService))
-				DataSourcesBaseAttribute.NoLinqService = ConvertTo<bool>.From(testSettings.NoLinqService);
+				if (!string.IsNullOrEmpty(testSettings.NoLinqService))
+					DataSourcesBaseAttribute.NoLinqService = ConvertTo<bool>.From(testSettings.NoLinqService);
 
-			DataConnection.TurnTraceSwitchOn(traceLevel);
+				DataConnection.TurnTraceSwitchOn(traceLevel);
 
-			TestContext.WriteLine("Connection strings:");
-			TestExternals.Log("Connection strings:");
+				TestContext.WriteLine("Connection strings:");
+				TestExternals.Log("Connection strings:");
 
 #if !NETFRAMEWORK
-			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
+				TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
-			foreach (var provider in testSettings.Connections/*.Where(c => UserProviders.Contains(c.Key))*/)
-			{
-				if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
-					throw new InvalidOperationException($"Provider: {provider.Key}. ConnectionString should be provided.");
+				foreach (var provider in testSettings.Connections/*.Where(c => UserProviders.Contains(c.Key))*/)
+				{
+					if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
+						throw new InvalidOperationException($"Provider: {provider.Key}. ConnectionString should be provided.");
 
-				TestContext.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+					TestContext.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
-				TxtSettings.Instance.AddConnectionString(
-					provider.Key, provider.Value.Provider ?? "", provider.Value.ConnectionString);
-			}
+					TxtSettings.Instance.AddConnectionString(
+						provider.Key, provider.Value.Provider ?? "", provider.Value.ConnectionString);
+				}
 
-			DataConnection.DefaultSettings = TxtSettings.Instance;
+				DataConnection.DefaultSettings = TxtSettings.Instance;
 #else
 			foreach (var provider in testSettings.Connections)
 			{
@@ -238,24 +238,24 @@ namespace Tests
 			}
 #endif
 
-			TestContext.WriteLine("Providers:");
-			TestExternals.Log("Providers:");
+				TestContext.WriteLine("Providers:");
+				TestExternals.Log("Providers:");
 
-			foreach (var userProvider in UserProviders)
-			{
-				TestContext.WriteLine($"\t{userProvider}");
-				TestExternals.Log($"\t{userProvider}");
-			}
+				foreach (var userProvider in UserProviders)
+				{
+					TestContext.WriteLine($"\t{userProvider}");
+					TestExternals.Log($"\t{userProvider}");
+				}
 
-			DefaultProvider = testSettings.DefaultConfiguration;
+				DefaultProvider = testSettings.DefaultConfiguration;
 
-			if (!string.IsNullOrEmpty(DefaultProvider))
-			{
-				DataConnection.DefaultConfiguration = DefaultProvider;
+				if (!string.IsNullOrEmpty(DefaultProvider))
+				{
+					DataConnection.DefaultConfiguration = DefaultProvider;
 #if !NETFRAMEWORK
-				TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
+					TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
-			}
+				}
 
 #if NETFRAMEWORK
 			LinqToDB.Remote.LinqService.TypeResolver = str =>
@@ -269,12 +269,12 @@ namespace Tests
 			};
 #endif
 
-			// baselines
-			if (!string.IsNullOrWhiteSpace(testSettings.BaselinesPath))
-			{
-				var baselinesPath = Path.GetFullPath(testSettings.BaselinesPath);
+				// baselines
+				if (!string.IsNullOrWhiteSpace(testSettings.BaselinesPath))
+				{
+					var baselinesPath = Path.GetFullPath(testSettings.BaselinesPath);
 
-				if (Directory.Exists(baselinesPath))
+					if (Directory.Exists(baselinesPath))
 					{
 						BaselinesPath = baselinesPath;
 						StoreMetrics  = testSettings.StoreMetrics;

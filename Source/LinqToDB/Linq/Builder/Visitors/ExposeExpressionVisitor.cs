@@ -215,9 +215,11 @@ namespace LinqToDB.Linq.Builder.Visitors
 							if (newArgument.Type != argument.Type)
 								newArgument = Expression.Convert(newArgument, argument.Type);
 
-							newArguments ??= arguments.ToArray();
-
-							newArguments[i] = newArgument;
+							if (!ReferenceEquals(newArgument, argument))
+							{
+								newArguments ??= arguments.ToArray();
+								newArguments[i] = newArgument;
+							}
 						}
 					}
 				}
