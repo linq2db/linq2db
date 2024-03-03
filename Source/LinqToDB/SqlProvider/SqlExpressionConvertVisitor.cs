@@ -218,7 +218,15 @@ namespace LinqToDB.SqlProvider
 				return Visit(newElement);
 
 			if (predicate.Expr1.ElementType == QueryElementType.SqlRow)
-				return ConvertRowInList(predicate);
+			{
+				var converted = ConvertRowInList(predicate);
+				if (!ReferenceEquals(converted, predicate))
+				{
+					converted = (ISqlPredicate)Optimize(converted);
+					converted = (ISqlPredicate)Visit(converted);
+					return converted;
+				}
+			}
 
 			if (predicate.Values.Count == 0)
 				return SqlPredicate.MakeBool(predicate.IsNot);
