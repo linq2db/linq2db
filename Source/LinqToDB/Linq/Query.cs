@@ -579,6 +579,7 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
+#if DEBUG
 		static void CheckCachedExpression(Expression? expression)
 		{
 			if (expression == null)
@@ -588,7 +589,6 @@ namespace LinqToDB.Linq
 			visitor.Visit(expression);
 		}
 
-#if DEBUG
 		class CachedConstantsCheckVisitor : ExpressionVisitorBase
 		{
 			protected override Expression VisitMethodCall(MethodCallExpression node)
