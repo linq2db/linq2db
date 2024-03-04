@@ -19,8 +19,6 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 	class ExposeExpressionVisitor : ExpressionVisitorBase, IExpressionEvaluator
 	{
-		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods       = new ();
-
 		static ObjectPool<IsCompilableVisitor> _isCompilableVisitorPool = new(() => new IsCompilableVisitor(), v => v.Cleanup(), 100);
 
 		IDataContext                      _dataContext         = default!;
@@ -178,25 +176,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 					return Visit(newNode);
 			}
 
-			var mi = node.Method.GetGenericMethodDefinitionCached();
-			var dependentParameters = _queryDependentMethods.GetOrAdd(
-				mi, static mi =>
-				{
-					var parameters = mi.GetParameters();
-					if (parameters.Length == 0)
-						return null;
-					SqlQueryDependentAttribute?[]? attributes = null;
-					for (var i = 0; i < parameters.Length; i++)
-					{
-						var attr = parameters[i].GetAttribute<SqlQueryDependentAttribute>();
-						if (attr != null)
-						{
-							attributes    ??= new SqlQueryDependentAttribute[parameters.Length];
-							attributes[i] =   attr;
-						}
-					}
-					return attributes;
-				});
+			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependedAttributes(node.Method);
 
 			if (dependentParameters != null)
 			{
@@ -532,9 +512,9 @@ namespace LinqToDB.Linq.Builder.Visitors
 				return expr;
 			}
 
-			if (node.Member.DeclaringType == typeof(TimeSpan))
+			if (node.Member.DeclaringType == typeof(TimeSpan) && node.Expression != null)
 			{
-				switch (node.Expression!.NodeType)
+				switch (node.Expression.NodeType)
 				{
 					case ExpressionType.Subtract:
 					case ExpressionType.SubtractChecked:

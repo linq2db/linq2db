@@ -587,7 +587,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!useSql)
 				{
-					var converted = Builder.ConvertSingleExpression(node, _flags.IsExpression());
+					var converted = Builder.ConvertExpression(node);
 					if (!ReferenceEquals(converted, node))
 					{
 						var accept = true;
@@ -733,7 +733,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!localFlags.IsSql())
 				{
-					var converted = Builder.ConvertSingleExpression(node, localFlags.IsExpression());
+					var converted = Builder.ConvertExpression(node);
 					if (!ReferenceEquals(converted, node))
 					{
 						var accept = true;

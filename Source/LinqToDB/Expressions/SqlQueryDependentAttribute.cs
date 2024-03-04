@@ -34,7 +34,7 @@ namespace LinqToDB.Expressions
 			if (obj1 is RawSqlString str1 && obj2 is RawSqlString str2)
 				return str1.Format == str2.Format;
 
-			if (obj1 is IEnumerable list1 && obj2 is IEnumerable list2)
+			if (obj1 is not string && obj1 is IEnumerable list1 && obj2 is IEnumerable list2)
 			{
 				var enum1 = list1.GetEnumerator();
 				var enum2 = list2.GetEnumerator();
@@ -66,7 +66,6 @@ namespace LinqToDB.Expressions
 		/// <param name="expr2"></param>
 		/// <param name="comparer">Default function for comparing expressions.</param>
 		/// <returns>Result of comparison</returns>
-		[Obsolete("Not used in current codebase.")]
 		public virtual bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2,
 			Func<TContext, Expression, Expression, bool> comparer)
 		{
@@ -96,11 +95,6 @@ namespace LinqToDB.Expressions
 					var newValue = PrepareForCache(arg, evaluator);
 					if (!ReferenceEquals(newValue, arg))
 					{
-						if (newValue.Type != elementType)
-						{
-							newValue = Expression.Convert(newValue, elementType);
-						}
-
 						newExpressions ??= arrayInit.Expressions.ToArray();
 
 						newExpressions[i] = newValue;
@@ -114,7 +108,7 @@ namespace LinqToDB.Expressions
 			}
 
 			if (evaluator.CanBeEvaluated(expression))
-				return Expression.Constant(evaluator.Evaluate(expression));
+				return Expression.Constant(evaluator.Evaluate(expression), expression.Type);
 
 			return expression;
 		}

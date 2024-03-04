@@ -180,23 +180,6 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertExpression
 
-		interface IConvertHelper
-		{
-			Expression ConvertNull(MemberExpression expression);
-		}
-
-		sealed class ConvertHelper<T> : IConvertHelper
-			where T : struct
-		{
-			public Expression ConvertNull(MemberExpression expression)
-			{
-				return Expression.Call(
-					null,
-					MemberHelper.MethodOf<T?>(p => Sql.ToNotNull(p)),
-					expression.Expression!);
-			}
-		}
-
 		public Expression ConvertExpression(Expression expression)
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
@@ -221,245 +204,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return expression;
-		}
-
-		private TransformInfo ConvertExpressionTransformer(Expression e, bool inProjection, bool checkOther)
-		{
-			if (checkOther && (CanBeConstant(e) || CanBeCompiled(e, inProjection)))
-				//if ((CanBeConstant(e) || CanBeCompiled(e)) && !PreferServerSide(e))
-				return new TransformInfo(e, true);
-
-			switch (e.NodeType)
-			{
-				//This is to handle VB's weird expression generation when dealing with nullable properties.
-				case ExpressionType.Coalesce:
-				{
-					var b = (BinaryExpression)e;
-
-					if (b.Left is BinaryExpression equalityLeft && b.Right is ConstantExpression constantRight)
-						if (equalityLeft.Type.IsNullable())
-							if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
-								if (constantRight.Value is bool val && val == false)
-									return new TransformInfo(equalityLeft, false);
-
-					break;
-				}
-
-				case ExpressionType.New:
-				{
-					var ex = ConvertNew((NewExpression)e);
-					if (ex != null)
-						return new TransformInfo(ConvertExpression(ex));
-					break;
-				}
-
-				case ExpressionType.Call:
-				{
-					var expr = (MethodCallExpression)e;
-
-					if (expr.Method.IsSqlPropertyMethodEx())
-					{
-						// transform Sql.Property into member access
-						if (expr.Arguments[1].Type != typeof(string))
-							throw new ArgumentException("Only strings are allowed for member name in Sql.Property expressions.");
-
-						var entity           = ConvertExpression(expr.Arguments[0].UnwrapConvertToObject());
-						var memberName       = (string)expr.Arguments[1].EvaluateExpression()!;
-						var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type, DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
-
-						var memberInfo = entityDescriptor[memberName]?.MemberInfo;
-						if (memberInfo == null)
-						{
-							foreach (var a in entityDescriptor.Associations)
-							{
-								if (a.MemberInfo.Name == memberName)
-								{
-									if (memberInfo != null)
-										throw new InvalidOperationException("Sequence contains more than one element");
-									memberInfo = a.MemberInfo;
-								}
-							}
-						}
-
-						if (memberInfo == null)
-							memberInfo = MemberHelper.GetMemberInfo(expr);
-
-						return new TransformInfo(ConvertExpression(Expression.MakeMemberAccess(entity, memberInfo)));
-					}
-
-					var cm = ConvertMethod(expr);
-					if (cm != null)
-						return new TransformInfo(ConvertExpression(cm));
-					break;
-				}
-
-				case ExpressionType.MemberAccess:
-				{
-					var ma = (MemberExpression)e;
-					var l  = Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member);
-
-					if (l != null)
-					{
-						var body = l.Body.Unwrap();
-						var expr = body.Transform(ma, static (ma, wpi) => wpi.NodeType == ExpressionType.Parameter ? ma.Expression! : wpi);
-
-						if (expr.Type != e.Type)
-						{
-							//expr = new ChangeTypeExpression(expr, e.Type);
-							expr = Expression.Convert(expr, e.Type);
-						}
-
-						//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
-						return new TransformInfo(ConvertExpression(expr));
-					}
-
-					if (ma.Member.IsNullableValueMember())
-					{
-						var ntype  = typeof(ConvertHelper<>).MakeGenericType(ma.Type);
-						var helper = (IConvertHelper)Activator.CreateInstance(ntype)!;
-						var expr   = helper.ConvertNull(ma);
-
-						return new TransformInfo(ConvertExpression(expr));
-					}
-
-					if (ma.Member.DeclaringType == typeof(TimeSpan))
-					{
-						switch (ma.Expression!.NodeType)
-						{
-							case ExpressionType.Subtract:
-							case ExpressionType.SubtractChecked:
-
-								Sql.DateParts datePart;
-
-								switch (ma.Member.Name)
-								{
-									case "TotalMilliseconds": datePart = Sql.DateParts.Millisecond; break;
-									case "TotalSeconds"     : datePart = Sql.DateParts.Second;      break;
-									case "TotalMinutes"     : datePart = Sql.DateParts.Minute;      break;
-									case "TotalHours"       : datePart = Sql.DateParts.Hour;        break;
-									case "TotalDays"        : datePart = Sql.DateParts.Day;         break;
-									default                 : return new TransformInfo(e);
-								}
-
-								var ex = (BinaryExpression)ma.Expression;
-								if (ex.Left.Type == typeof(DateTime)
-									&& ex.Right.Type == typeof(DateTime))
-								{
-									var method = MemberHelper.MethodOf(
-												() => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
-
-									var call   =
-												Expression.Convert(
-													Expression.Call(
-														null,
-														method,
-														Expression.Constant(datePart),
-														Expression.Convert(ex.Right, typeof(DateTime?)),
-														Expression.Convert(ex.Left,  typeof(DateTime?))),
-													typeof(double));
-
-									return new TransformInfo(ConvertExpression(call));
-								}
-								else
-								{
-									var method = MemberHelper.MethodOf(
-												() => Sql.DateDiff(Sql.DateParts.Day, DateTimeOffset.MinValue, DateTimeOffset.MinValue));
-
-									var call   =
-												Expression.Convert(
-													Expression.Call(
-														null,
-														method,
-														Expression.Constant(datePart),
-														Expression.Convert(ex.Right, typeof(DateTimeOffset?)),
-														Expression.Convert(ex.Left,  typeof(DateTimeOffset?))),
-													typeof(double));
-
-									return new TransformInfo(ConvertExpression(call));
-								}
-						}
-					}
-
-					break;
-				}
-
-				default:
-				{
-					if (e is BinaryExpression binary)
-					{
-						var l = Expressions.ConvertBinary(MappingSchema, binary);
-						if (l != null)
-						{
-							var body = l.Body.Unwrap();
-							var expr = body.Transform((l, binary), static (context, wpi) =>
-								{
-									if (wpi.NodeType == ExpressionType.Parameter)
-									{
-										if (context.l.Parameters[0] == wpi)
-											return context.binary.Left;
-										if (context.l.Parameters[1] == wpi)
-											return context.binary.Right;
-									}
-
-									return wpi;
-								});
-
-							if (expr.Type != e.Type)
-								expr = new ChangeTypeExpression(expr, e.Type);
-
-							return new TransformInfo(ConvertExpression(expr));
-						}
-					}
-					break;
-				}
-			}
-
-			return new TransformInfo(e);
-		}
-
-		Expression? ConvertMethod(MethodCallExpression pi)
-		{
-			LambdaExpression? lambda = null;
-
-			if (!pi.Method.IsStatic && pi.Object != null && pi.Object.Type != pi.Method.DeclaringType)
-			{
-				var concreteTypeMemberInfo = pi.Object.Type.GetMemberEx(pi.Method);
-				if (concreteTypeMemberInfo != null)
-					lambda = Expressions.ConvertMember(MappingSchema, pi.Object.Type, concreteTypeMemberInfo);
-			}
-
-			lambda ??= Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
-
-			return lambda == null ? null : OptimizationContext.ConvertMethod(pi, lambda);
-		}
-
-		Expression? ConvertNew(NewExpression pi)
-		{
-			var lambda = Expressions.ConvertMember(MappingSchema, pi.Type, pi.Constructor!);
-
-			if (lambda != null)
-			{
-				var ef    = lambda.Body.Unwrap();
-				var parms = new Dictionary<string,int>(lambda.Parameters.Count);
-				var pn    = 0;
-
-				foreach (var p in lambda.Parameters)
-					parms.Add(p.Name!, pn++);
-
-				return ef.Transform((pi, parms), static (context, wpi) =>
-				{
-					if (wpi.NodeType == ExpressionType.Parameter)
-					{
-						var pe   = (ParameterExpression)wpi;
-						var n    = context.parms[pe.Name!];
-						return context.pi.Arguments[n];
-					}
-
-					return wpi;
-				});
-			}
-
-			return null;
 		}
 
 		#endregion
@@ -1120,41 +864,43 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Call:
 				{
-					var e = (MethodCallExpression)expression;
+					var mc = (MethodCallExpression)expression;
 
-					var expr = ConvertMethod(e);
+					var expr = ConvertExpression(expression);
 
-					if (expr != null)
+					if (!ReferenceEquals(expr, expression))
+					{
 						return ConvertToSqlExpr(context, expr, flags : flags, unwrap : unwrap, columnDescriptor : columnDescriptor, isPureExpression : isPureExpression, alias : alias);
+					}
 
-					var attr = e.Method.GetExpressionAttribute(MappingSchema);
+					var attr = mc.Method.GetExpressionAttribute(MappingSchema);
 
 					if (attr != null)
 					{
 						// Otherwise should be handled by MakeExpression
-						if (IsSequence(context, e))
+						if (IsSequence(context, mc))
 						{
 							if (attr.ServerSideOnly)
-								return SqlErrorExpression.EnsureError(e, e.Type);
+								return SqlErrorExpression.EnsureError(mc, mc.Type);
 							break;
 						}
-						return ConvertExtensionToSql(context!, flags, attr, e, checkAggregateRoot: true);
+						return ConvertExtensionToSql(context!, flags, attr, mc, checkAggregateRoot: true);
 					}
 
-					if (e.Method.IsSqlPropertyMethodEx())
+					if (mc.Method.IsSqlPropertyMethodEx())
 						return CreatePlaceholder(context, ConvertToSql(context, ConvertExpression(expression), unwrap: unwrap), expression, alias : alias);
 
-					if (e.Method.DeclaringType == typeof(string) && e.Method.Name == "Format")
+					if (mc.Method.DeclaringType == typeof(string) && mc.Method.Name == "Format")
 					{
-						var sqlExpression = TryConvertFormatToSql(context, e, isPureExpression, flags);
+						var sqlExpression = TryConvertFormatToSql(context, mc, isPureExpression, flags);
 						if (sqlExpression != null)
 							return CreatePlaceholder(context, sqlExpression, expression, alias : alias);
 						break;
 					}
 
-					if (e.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
+					if (mc.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
 					{
-						var sqlExpr = ConvertToSqlExpr(context, e.Arguments[0], flags : flags,
+						var sqlExpr = ConvertToSqlExpr(context, mc.Arguments[0], flags : flags,
 							unwrap : unwrap, columnDescriptor : columnDescriptor, isPureExpression : isPureExpression, alias : alias);
 
 						if (sqlExpr is SqlPlaceholderExpression placeholderExpression)
@@ -1166,7 +912,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (context != null)
 					{
-						var newExpr = HandleExtension(context, e, flags);
+						var newExpr = HandleExtension(context, mc, flags);
 						expression = newExpr;
 					}
 

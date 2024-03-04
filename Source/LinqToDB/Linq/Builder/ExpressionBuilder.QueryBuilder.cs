@@ -408,6 +408,12 @@ namespace LinqToDB.Linq.Builder
 
 				if (attr != null && (!flags.HasFlag(ProjectFlags.Expression) || attr.ServerSideOnly || attr.Expression == "{0}"))
 				{
+					var converted = ConvertExpression(expr);
+					if (!ReferenceEquals(converted, expr))
+					{
+						return converted;
+					}
+
 					var rootContext = context;
 					var rootSelectQuery = context.SelectQuery;
 
@@ -475,8 +481,13 @@ namespace LinqToDB.Linq.Builder
 					Register(mc.Object);
 				}
 
-				foreach (var arg in mc.Arguments)
+				var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependedAttributes(mc.Method);
+				for (var index = 0; index < mc.Arguments.Count; index++)
 				{
+					if (dependentParameters != null && dependentParameters[index] != null)
+						continue;
+
+					var arg = mc.Arguments[index];
 					Register(arg);
 				}
 			}

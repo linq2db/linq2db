@@ -406,10 +406,39 @@ namespace LinqToDB.Expressions
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
 
-			for (var i = 0; i < expr1.Arguments.Count; i++)
+			var dependedParameters = SqlQueryDependentAttributeHelper.GetQueryDependedAttributes(expr1.Method);
+
+			if (dependedParameters == null)
 			{
-				if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))
-					return false;
+				for (var i = 0; i < expr1.Arguments.Count; i++)
+				{
+					if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))
+						return false;
+				}
+			}
+			else
+			{
+				for (var i = 0; i < expr1.Arguments.Count; i++)
+				{
+					var dependentAttribute = dependedParameters[i];
+					var arg1 = expr1.Arguments[i];
+					var arg2 = expr2.Arguments[i];
+
+					if (dependentAttribute != null)
+					{
+						if (!info.IsParametrized(arg1))
+						{
+							if (!dependentAttribute.ExpressionsEqual(info, arg1, arg2, static (info, e1, e2) => e1.EqualsTo(e2, info)))
+								return false;
+						}
+					}
+					else
+					{
+						if (!DefaultCompareArguments(arg1, arg2, info))
+							return false;
+					}
+				}
+
 			}
 
 			if (!CompareMemberExpression(expr1.Method, info))

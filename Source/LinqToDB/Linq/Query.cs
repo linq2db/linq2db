@@ -584,26 +584,53 @@ namespace LinqToDB.Linq
 			if (expression == null)
 				return;
 
-			expression.Visit(1, (_, e) =>
+			var visitor = new CachedConstantsCheckVisitor();
+			visitor.Visit(expression);
+		}
+
+#if DEBUG
+		class CachedConstantsCheckVisitor : ExpressionVisitorBase
+		{
+			protected override Expression VisitMethodCall(MethodCallExpression node)
 			{
-				if (e is ConstantExpression constExpr)
+				var dependedParameters = SqlQueryDependentAttributeHelper.GetQueryDependedAttributes(node.Method);
+				if (dependedParameters == null)
+					return base.VisitMethodCall(node);
+
+				Visit(node.Object);
+
+				for (var index = 0; index < dependedParameters.Count; index++)
 				{
-					if (!constExpr.Type.IsScalar() && constExpr.Value != null)
+					var dependedParameter = dependedParameters[index];
+					if (dependedParameter == null)
 					{
-						if (!constExpr.Value.GetType().IsScalar())
-						{
-							if (constExpr.Value is Array)
-								return;
-
-							if (constExpr.Value is FormattableString)
-								return;
-
-							throw new InvalidOperationException($"Constant '{e}' is not replaced.");
-						}
+						Visit(node.Arguments[index]);
 					}
 				}
-			} );
+
+				return node;
+			}
+
+			protected override Expression VisitConstant(ConstantExpression node)
+			{
+				if (!node.Type.IsScalar() && node.Value != null)
+				{
+					if (!node.Value.GetType().IsScalar())
+					{
+						if (node.Value is Array)
+							return node;
+
+						if (node.Value is FormattableString)
+							return node;
+
+						throw new InvalidOperationException($"Constant '{node}' is not replaced.");
+					}
+				}
+
+				return base.VisitConstant(node);
+			}
 		}
+#endif
 
 		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)
 		{
