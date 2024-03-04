@@ -185,35 +185,28 @@ namespace LinqToDB.Data
 
 			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, bool forGetSqlText, int startIndent = 0)
 			{
-				if (query.Context != null)
-				{
-					return new PreparedQuery((CommandWithParameters[])query.Context, query.Statement, dataConnection.GetNextCommandHints(!forGetSqlText));
-				}
-
-				var statement = query.Statement;
-				var options = query.DataOptions ?? dataConnection.Options;
-
-				var needsSync = !query.IsContinuousRun;
-
-				if (needsSync)
-				{
-					Monitor.Enter(query);
-
-					if (query.Context != null)
-					{
-						try
-						{
-							return new PreparedQuery((CommandWithParameters[])query.Context, query.Statement, dataConnection.GetNextCommandHints(!forGetSqlText));
-						}
-						finally
-						{
-							Monitor.Exit(query);
-						}
-					}
-				}
+				bool aquiredLock = false;
+				Monitor.Enter(query, ref aquiredLock);
 
 				try
 				{
+					var statement = query.Statement;
+					var options   = query.DataOptions ?? dataConnection.Options;
+
+					if (query.Context is CommandWithParameters[] context)
+					{
+						return new PreparedQuery(context, statement, dataConnection.GetNextCommandHints(!forGetSqlText));
+					}
+
+					var continuousRun = query.IsContinuousRun;
+
+					if (continuousRun)
+					{
+						// query will not modify statement, release lock
+						Monitor.Exit(query);
+						aquiredLock = false;
+					}
+
 					var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (options);
 					var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
 
@@ -228,10 +221,13 @@ namespace LinqToDB.Data
 						statement.IsParameterDependent = true;
 					}
 
-					if (!statement.IsParameterDependent)
+					if (!continuousRun)
 					{
-						if (sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, statement))
-							statement.IsParameterDependent = true;
+						if (!statement.IsParameterDependent)
+						{
+							if (sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, statement))
+								statement.IsParameterDependent = true;
+						}
 					}
 
 					var cc = sqlBuilder.CommandCount(statement);
@@ -246,7 +242,7 @@ namespace LinqToDB.Data
 						SqlStatement.PrepareQueryAndAliases(statement, query.Aliases, out aliases);
 					}
 
-					var optimizeAndConvertAll = !statement.IsParameterDependent;
+					var optimizeAndConvertAll = !continuousRun && !statement.IsParameterDependent;
 					// We can optimize and convert all queries at once, because they are not parameter dependent.
 
 					var optimizeVisitor = sqlOptimizer.CreateOptimizerVisitor(optimizeAndConvertAll);
@@ -297,10 +293,8 @@ namespace LinqToDB.Data
 				}
 				finally
 				{
-					if (needsSync)
-					{
+					if (aquiredLock)
 						Monitor.Exit(query);
-					}
 				}
 			}
 

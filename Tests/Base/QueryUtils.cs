@@ -68,6 +68,11 @@ namespace Tests
 			return Query<T>.CacheMissCount;
 		}
 
+		public static void ClearCache<T>(this IQueryable<T> _)
+		{
+			Query<T>.ClearCache();
+		}
+
 		public static Expression GetCacheExpression<T>(this IQueryable<T> query)
 		{
 			var expression = query.Expression;

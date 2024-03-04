@@ -648,6 +648,19 @@ namespace LinqToDB.Linq
 
 	public class QueryInfo : IQueryContext
 	{
+		#if DEBUG
+
+		// For debugging purposes only in multithreading environment
+		static          long _uniqueIdCounter;
+		public readonly long UniqueId;
+
+		public QueryInfo()
+		{
+			UniqueId = Interlocked.Increment(ref _uniqueIdCounter);
+		}
+
+		#endif
+
 		public SqlStatement    Statement       { get; set; } = null!;
 		public object?         Context         { get; set; }
 		public bool            IsContinuousRun { get; set; }
