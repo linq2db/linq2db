@@ -1364,6 +1364,20 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
+				if (!parentQuery.GroupBy.IsEmpty)
+				{
+					if (QueryHelper.UnwrapNullablity(parentColumn.Expression) is SqlColumn sc && sc.Parent == subQuery)
+					{
+						var expr = QueryHelper.UnwrapNullablity(sc.Expression);
+
+						// not allowed to move complex expressions for grouping
+						if (expr.ElementType != QueryElementType.SqlField && expr.ElementType != QueryElementType.Column)
+						{
+							return false;
+						}
+					}
+
+				}
 			}
 
 			foreach (var column in subQuery.Select.Columns)

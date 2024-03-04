@@ -173,7 +173,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4284")]
-		public void Select_GroupBy_SelectAgain([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2017)] string context)
+		public void Select_GroupBy_SelectAgain([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2017, ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

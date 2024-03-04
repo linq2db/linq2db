@@ -25,14 +25,21 @@ namespace LinqToDB.DataProvider.SqlCe
 			switch (element.Operation)
 			{
 				case "%":
-					return element.Expr1.SystemType!.IsIntegerType()?
-						element :
-						new SqlBinaryExpression(
+				{
+					var exprType = QueryHelper.GetDbDataType(element.Expr1);
+
+					if (!exprType.SystemType.IsIntegerType())
+					{
+						return new SqlBinaryExpression(
 							typeof(int),
-							new SqlFunction(typeof(int), "Convert", SqlDataType.Int32, element.Expr1),
+							PseudoFunctions.MakeConvert(new SqlDataType(DataType.Int32, typeof(int)), new SqlDataType(exprType), element.Expr1),
 							element.Operation,
 							element.Expr2,
 							element.Precedence);
+					}
+
+					break;
+				}
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
@@ -134,22 +141,23 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override ISqlExpression ConvertConversion(SqlFunction func)
 		{
 			var toType   = func.Parameters[0];
-			var argument = func.Parameters[1];
+			var fromType = func.Parameters[1];
+			var argument = func.Parameters[2];
 
 			switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 			{
 				case TypeCode.UInt64:
-					if (argument.SystemType!.IsFloatType())
-						return new SqlFunction(
-							func.SystemType,
-							func.Name,
-							false,
-							func.Precedence,
-							toType,
-							new SqlFunction(func.SystemType, "Floor", argument));
+				{
+					var argumentType = QueryHelper.GetDbDataType(argument);
+					var toDbType = QueryHelper.GetDbDataType(toType);
+
+					if (argumentType.SystemType.IsFloatType())
+					{
+						return PseudoFunctions.MakeConvert(new SqlDataType(toDbType), new SqlDataType(argumentType), new SqlFunction(func.SystemType, "Floor", argument));
+					}
 
 					break;
-
+				}
 				case TypeCode.DateTime:
 					var type1 = argument.SystemType!.ToUnderlying();
 

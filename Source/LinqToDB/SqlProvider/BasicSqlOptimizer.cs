@@ -1233,7 +1233,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected SqlUpdateStatement DetachUpdateTableFromUpdateQuery(SqlUpdateStatement updateStatement, DataOptions dataOptions, bool moveToJoin, bool addNewSource, out SqlTableSource newSource)
+		protected static SqlUpdateStatement DetachUpdateTableFromUpdateQuery(SqlUpdateStatement updateStatement, DataOptions dataOptions, bool moveToJoin, bool addNewSource, out SqlTableSource newSource)
 		{
 			var updateTable = updateStatement.Update.Table;
 			if (updateTable == null)

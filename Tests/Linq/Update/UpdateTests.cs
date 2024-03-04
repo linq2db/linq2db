@@ -307,7 +307,8 @@ namespace Tests.xUpdate
 			[DataSources(
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
