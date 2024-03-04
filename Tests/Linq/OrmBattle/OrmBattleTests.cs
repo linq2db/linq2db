@@ -650,7 +650,7 @@ namespace Tests.OrmBattle
 		}
 
 		[Test]
-		public void OrderBySelectManyTest([NorthwindDataContext] string context)
+		public void OrderBySelectManyTest([NorthwindDataContext(true)] string context)
 		{
 			Setup(context);
 			var result =
