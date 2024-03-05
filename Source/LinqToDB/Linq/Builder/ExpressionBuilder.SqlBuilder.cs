@@ -432,8 +432,6 @@ namespace LinqToDB.Linq.Builder
 			if (newExpr is SqlErrorExpression)
 				return newExpr;
 
-			newExpr = ConvertSingleExpression(newExpr, flags.IsExpression());
-
 			var noConvert = newExpr.UnwrapConvert();
 			if (typeof(ISqlExpression).IsSameOrParentOf(newExpr.Type) || typeof(ISqlExpression).IsSameOrParentOf(noConvert.Type))
 			{
@@ -515,7 +513,8 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					result = ConvertToSqlInternal(context, newExpr, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
+					newExpr = ConvertSingleExpression(newExpr, flags.IsExpression());
+					result  = ConvertToSqlInternal(context, newExpr, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
 				}
 			}
 
@@ -1147,7 +1146,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				RegisterExtensionAccessors(mc);
 
-				placeholder = placeholder.WithSql(PosProcessCustomExpression(mc, placeholder.Sql));
+				placeholder = placeholder.WithSql(PosProcessCustomExpression(mc, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
 
 				sqlExpression = placeholder.WithPath(mc);
 			}
@@ -1155,27 +1154,17 @@ namespace LinqToDB.Linq.Builder
 			return sqlExpression;
 		}
 
-		public ISqlExpression PosProcessCustomExpression(Expression expression, ISqlExpression sqlExpression)
+		public ISqlExpression PosProcessCustomExpression(Expression expression, ISqlExpression sqlExpression, NullabilityContext nullabilityContext)
 		{
 			if (sqlExpression is SqlExpression { Expr: "{0}", Parameters.Length: 1 } expr)
 			{
-				if (expression is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql))
-				{
-					if (mc.Method.Name is nameof(Sql.AsNullable)
-						or nameof(Sql.AsNotNull)
-						or nameof(Sql.AsNotNullable)
-						or nameof(Sql.ToNullable)
-						or nameof(Sql.ToNotNullable)
-					)
-					{
-						return SqlNullabilityExpression.ApplyNullability(expr.Parameters[0], expr.CanBeNull);
-					}
+				var expressionNull = nullabilityContext.CanBeNull(sqlExpression);
+				var argNull        = nullabilityContext.CanBeNull(expr.Parameters[0]);
 
-					if (mc.Method.Name is nameof(Sql.ToSql) or nameof(Sql.AsSql))
-					{
-						return expr.Parameters[0];
-					}
-				}
+				if (expressionNull != argNull)
+					return SqlNullabilityExpression.ApplyNullability(expr.Parameters[0], expressionNull);
+
+				return expr.Parameters[0];
 			}
 
 			return sqlExpression;

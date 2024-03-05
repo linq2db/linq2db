@@ -460,14 +460,6 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMember(MemberExpression node)
 			{
-				var l = Expressions.ConvertMember(_mappingSchema, node.Expression?.Type, node.Member);
-
-				if (l != null)
-				{
-					Visit(l.Body);
-					return node;
-				}
-
 				var attr = node.Member.GetExpressionAttribute(_mappingSchema);
 				if (attr != null && attr.ServerSideOnly)
 				{
@@ -480,14 +472,6 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMethodCall(MethodCallExpression node)
 			{
-				var l = Expressions.ConvertMember(_mappingSchema, node.Object?.Type, node.Method);
-
-				if (l != null)
-				{
-					Visit(l.Body);
-					return node;
-				}
-
 				var attr = node.Method.GetExpressionAttribute(_mappingSchema);
 				if (attr?.ServerSideOnly == true)
 				{

@@ -3369,7 +3369,16 @@ namespace LinqToDB.SqlProvider
 			if (value is Sql.SqlID id)
 				TryBuildSqlID(id);
 			else
-				MappingSchema.ConvertToSqlValue(StringBuilder, dataType, DataOptions, value);
+			{
+				if (!MappingSchema.TryConvertToSql(StringBuilder, dataType, DataOptions, value))
+				{
+					if (dataType == null)
+					{
+						throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+					}
+					BuildParameter(new SqlParameter(dataType.Type, "value", value));
+				}
+			}
 		}
 
 		#endregion

@@ -709,8 +709,8 @@ namespace LinqToDB.Linq
 			{ M(() => DateTime.Now.Minute            ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Minute,      obj)!.Value     )) },
 			{ M(() => DateTime.Now.Second            ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Second,      obj)!.Value     )) },
 			{ M(() => DateTime.Now.Millisecond       ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Millisecond, obj)!.Value     )) },
-			{ M(() => DateTime.Now.Date              ), N(() => L<DateTime,DateTime>       ((DateTime obj)            => Sql.Convert2(Sql.Types.Date,                obj)        )) },
-			{ M(() => DateTime.Now.TimeOfDay         ), N(() => L<DateTime,TimeSpan>       ((DateTime obj)            => Sql.DateToTime(Sql.Convert2(Sql.Types.Time, obj))!.Value)) },
+			{ M(() => DateTime.Now.Date              ), N(() => L<DateTime,DateTime>       ((DateTime obj)            => Sql.Convert(Sql.Types.Date,                obj)        )) },
+			{ M(() => DateTime.Now.TimeOfDay         ), N(() => L<DateTime,TimeSpan>       ((DateTime obj)            => Sql.DateToTime(Sql.Convert(Sql.Types.Time, obj))!.Value)) },
 			{ M(() => DateTime.Now.AddYears       (0)), N(() => L<DateTime,int,DateTime>   ((DateTime obj,int p0)     => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value  )) },
 			{ M(() => DateTime.Now.AddMonths      (0)), N(() => L<DateTime,int,DateTime>   ((DateTime obj,int p0)     => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value  )) },
 			{ M(() => DateTime.Now.AddDays        (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Day,         p0, obj)!.Value  )) },
@@ -742,8 +742,8 @@ namespace LinqToDB.Linq
 			{ M(() => DateTimeOffset.Now.Minute            ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Minute,      obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.Second            ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Second,      obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.Millisecond       ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Millisecond, obj)!.Value    )) },
-			{ M(() => DateTimeOffset.Now.Date              ), N(() => L<DateTimeOffset,DateTime>             ((DateTimeOffset obj)            => Sql.Convert2(Sql.Types.Date,                obj)           )) },
-			{ M(() => DateTimeOffset.Now.TimeOfDay         ), N(() => L<DateTimeOffset,TimeSpan>             ((DateTimeOffset obj)            => Sql.DateToTime(Sql.Convert2(Sql.Types.Time, obj))!.Value   )) },
+			{ M(() => DateTimeOffset.Now.Date              ), N(() => L<DateTimeOffset,DateTime>             ((DateTimeOffset obj)            => Sql.Convert(Sql.Types.Date,                obj)           )) },
+			{ M(() => DateTimeOffset.Now.TimeOfDay         ), N(() => L<DateTimeOffset,TimeSpan>             ((DateTimeOffset obj)            => Sql.DateToTime(Sql.Convert(Sql.Types.Time, obj))!.Value   )) },
 			{ M(() => DateTimeOffset.Now.AddYears       (0)), N(() => L<DateTimeOffset,int,DateTimeOffset>   ((DateTimeOffset obj,int p0)     => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value )) },
 			{ M(() => DateTimeOffset.Now.AddMonths      (0)), N(() => L<DateTimeOffset,int,DateTimeOffset>   ((DateTimeOffset obj,int p0)     => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value )) },
 			{ M(() => DateTimeOffset.Now.AddDays        (0)), N(() => L<DateTimeOffset,double,DateTimeOffset>((DateTimeOffset obj,double p0)  => Sql.DateAdd(Sql.DateParts.Day,         p0, obj)!.Value )) },
@@ -1411,11 +1411,11 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>       ((int? p0)                 => Sql.PadRight(" ", p0, ' '))) },
 
 					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(
-						Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p),  7,  2) + Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p),  5, 2) + Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 3, 2) + Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 1, 2) + "-" +
-						Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 11,  2) + Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p),  9, 2) + "-" +
-						Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 15,  2) + Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 13, 2) + "-" +
-						Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 17,  4) + "-" +
-						Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 21, 12)))) },
+						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  7,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  5, 2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 3, 2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 1, 2) + "-" +
+						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 11,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  9, 2) + "-" +
+						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 15,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 13, 2) + "-" +
+						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 17,  4) + "-" +
+						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 21, 12)))) },
 
 					{ M(() => Sql.Cot  (0)),   N(() => L<double?,double?>(v => Sql.Cos(v) / Sql.Sin(v) )) },
 					{ M(() => Sql.Log10(0.0)), N(() => L<double?,double?>(v => Sql.Log(10, v)          )) },

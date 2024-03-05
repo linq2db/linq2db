@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
-			statement = (SqlStatement)visitor.ProcessElement(statement);
+			statement = (SqlStatement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.All);
 
 			return statement;
 		}

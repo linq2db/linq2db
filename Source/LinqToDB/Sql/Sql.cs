@@ -289,14 +289,6 @@ namespace LinqToDB
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
-		// TODO: v5 remove. bltoolkit legacy which duplicates Convert function above (without ServerSideOnly, but it shouldn't matter)
-		[CLSCompliant(false)]
-		[Function(PseudoFunctions.CONVERT, 0, 2, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsThirdParameter)]
-		public static TTo Convert2<TTo,TFrom>(TTo to, TFrom from)
-		{
-			return Common.ConvertTo<TTo>.From(from);
-		}
-
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.CONVERT, 1, 2, 0, IsPure = true)]
 		public static TTo Convert<TTo,TFrom>(TFrom obj)

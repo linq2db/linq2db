@@ -7,11 +7,34 @@ namespace LinqToDB.DataProvider
 
 	public class WrapParametersVisitor : SqlQueryVisitor
 	{
-		bool _needCast;
-		bool _inModifier;
+		bool      _needCast;
+		bool      _inModifier;
+		bool      _inInsert;
+		WrapFlags _wrapFlags;
 
+		[Flags]
+		public enum WrapFlags
+		{
+			None          = 0,
+			InSelect      = 1 << 0,
+			InUpdateSet   = 1 << 1,
+			InInsertValue = 1 << 2,
+			InOutput      = 1 << 3,
+			InMerge       = 1 << 4,
+
+			All = InSelect | InUpdateSet | InInsertValue | InOutput | InMerge
+		}
+	
 		public WrapParametersVisitor(VisitMode visitMode) : base(visitMode, null)
 		{
+		}
+
+		public IQueryElement WrapParameters(IQueryElement element, WrapFlags wrapFlags)
+		{
+			_wrapFlags = wrapFlags;
+			var result = ProcessElement(element);
+
+			return result;
 		}
 
 		readonly struct NeedCastScope : IDisposable
@@ -35,6 +58,11 @@ namespace LinqToDB.DataProvider
 		NeedCastScope NeedCast(bool needCast)
 		{
 			return new NeedCastScope(this, needCast);
+		}
+
+		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		{
+			return base.VisitExprExprPredicate(predicate);
 		}
 
 		protected override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
@@ -61,7 +89,7 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
-			using var scope = NeedCast(true);
+			using var scope = NeedCast(_wrapFlags.HasFlag(WrapFlags.InSelect));
 			return base.VisitSqlColumnExpression(column, expression);
 		}
 
@@ -99,10 +127,10 @@ namespace LinqToDB.DataProvider
 			return base.VisitSqlFunction(element);
 		}
 
-		protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
-			using var scope = NeedCast(true);
-			return base.VisitSqlUpdateStatement(element);
+			using var scope = NeedCast(_wrapFlags.HasFlag(_inInsert ? WrapFlags.InInsertValue : WrapFlags.InUpdateSet));
+			return base.VisitSqlSetExpression(element);
 		}
 
 		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
@@ -124,21 +152,25 @@ namespace LinqToDB.DataProvider
 			return base.VisitSqlParameter(sqlParameter);
 		}
 
-		protected override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+		protected override IQueryElement VisitSqlInsertClause(SqlInsertClause element)
 		{
-			using var scope = NeedCast(true);
-			return base.VisitSqlInsertOrUpdateStatement(element);
+			var save = _inInsert;
+			_inInsert = true;
+			var result = base.VisitSqlInsertClause(element);
+			_inInsert = save;
+
+			return result;
 		}
 
 		protected override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
 		{
-			using var scope = NeedCast(true);
+			using var scope = NeedCast(_wrapFlags.HasFlag(WrapFlags.InOutput));
 			return base.VisitSqlOutputClause(element);
 		}
 
 		protected override IQueryElement VisitSqlMergeOperationClause(SqlMergeOperationClause element)
 		{
-			using var scope = NeedCast(true);
+			using var scope = NeedCast(_wrapFlags.HasFlag(WrapFlags.InMerge));
 			return base.VisitSqlMergeOperationClause(element);
 		}
 	}

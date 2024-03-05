@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -44,7 +46,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var t1 = db.Types2.Where(r => r.ID == 1).First();
+				var saved = db.Types2.First(r => r.ID == 1);
+
+				var t1 = db.Types2.First(r => r.ID == 1);
 
 				t1.BoolValue = !t1.BoolValue;
 
@@ -57,6 +61,12 @@ namespace Tests.Linq
 				t1.BoolValue = !t1.BoolValue;
 
 				db.Update(t1);
+
+				var current = db.Types2.First(r => r.ID == 1);
+
+
+				// If this test fails, Data for MathFunctionsTests will be corrupted.
+				saved.Should().Be(current);
 			}
 		}
 

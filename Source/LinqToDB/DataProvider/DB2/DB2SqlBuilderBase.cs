@@ -12,6 +12,8 @@ namespace LinqToDB.DataProvider.DB2
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using Common;
+
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
@@ -410,8 +412,8 @@ END");
 				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 
 				// TODO: temporary guard against cast to unknown type (Variant)
-				if (paramValue.DbDataType.DataType   == DataType.Undefined &&
-				    paramValue.DbDataType.SystemType == typeof(object))
+				var dbDataType = paramValue.DbDataType;
+				if (dbDataType.DataType == DataType.Undefined)
 				{
 					base.BuildParameter(parameter);
 					return;
@@ -419,7 +421,30 @@ END");
 
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;
-				BuildTypedExpression(new SqlDataType(paramValue.DbDataType), parameter);
+
+				if (paramValue.ProviderValue is byte[] bytes)
+				{
+					dbDataType = dbDataType.WithLength(bytes.Length);
+				}
+				else if (paramValue.ProviderValue is string str)
+				{
+					dbDataType = dbDataType.WithLength(str.Length);
+				}
+				else if (paramValue.ProviderValue is decimal d)
+				{
+					if (dbDataType.Precision == null)
+						dbDataType = dbDataType.WithPrecision(DecimalHelper.GetPrecision(d));
+					if (dbDataType.Scale == null)
+						dbDataType = dbDataType.WithScale(DecimalHelper.GetScale(d));
+				}
+
+				if (dbDataType.Length > 32672)
+				{
+					base.BuildParameter(parameter);
+					return;
+				}
+
+				BuildTypedExpression(new SqlDataType(dbDataType), parameter);
 				BuildStep = saveStep;
 
 				return;

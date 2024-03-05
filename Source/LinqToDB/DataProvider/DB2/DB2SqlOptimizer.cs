@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
-			statement = (SqlStatement)visitor.ProcessElement(statement);
+			statement = (SqlStatement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.InSelect | WrapParametersVisitor.WrapFlags.InInsertValue);
 
 			return statement;
 		}

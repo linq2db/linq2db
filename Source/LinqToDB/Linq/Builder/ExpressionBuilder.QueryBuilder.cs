@@ -442,7 +442,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						RegisterExtensionAccessors(expr);
 
-						placeholder = placeholder.WithSql(PosProcessCustomExpression(expr, placeholder.Sql));
+						placeholder = placeholder.WithSql(PosProcessCustomExpression(expr, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
 
 						return placeholder.WithPath(expr);
 					}
