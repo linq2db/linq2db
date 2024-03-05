@@ -28,7 +28,7 @@ namespace LinqToDB.Expressions
 				{
 					var value1 = main(expr2, dataContext, null);
 					var value2 = substituted(expr2, dataContext, null);
-					result = ReferenceEquals(value1, value2);
+					result = value1 == null && value2 == null || value1 != null && value1.Equals(value2);
 
 					if (!result)
 						break;
