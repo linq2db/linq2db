@@ -624,8 +624,10 @@ namespace LinqToDB.Linq
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Trim     (obj))) },
 
 #if NET6_0_OR_GREATER
-			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimRight(obj))) },
-			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimLeft (obj))) },
+			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimRight(obj)))     },
+			{ M(() => "".TrimEnd    (' ')     ), N(() => L<string,char,string?>            ((string obj,char ch)                      =>     TrimRight(obj, ch))) },
+			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimLeft (obj)))     },
+			{ M(() => "".TrimStart  (' ')     ), N(() => L<string,char,string?>            ((string obj,char ch)                      =>     TrimLeft (obj, ch))) },
 #endif
 			{ M(() => "".TrimEnd    ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimRight(obj, ch))) },
 			{ M(() => "".TrimStart  ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimLeft (obj, ch))) },

@@ -826,6 +826,12 @@ namespace LinqToDB.Linq.Builder
 						valueType = valueType.AsNullable();
 					}
 
+					if (placeholder.Type != valueType && valueType.IsNullable() && placeholder.Type == valueType.ToNullableUnderlying())
+					{
+						// let ConvertFromDataReaderExpression handle default value
+						valueType = placeholder.Type;
+					}
+
 					var readerExpression = (Expression)new ConvertFromDataReaderExpression(valueType, placeholder.Index.Value,
 						columnDescriptor?.ValueConverter, DataReaderParam, canBeNull);
 

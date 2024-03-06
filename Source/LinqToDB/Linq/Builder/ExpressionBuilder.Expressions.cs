@@ -736,18 +736,7 @@ namespace LinqToDB.Linq.Builder
 					var converted = Builder.ConvertExpression(node);
 					if (!ReferenceEquals(converted, node))
 					{
-						var accept = true;
-						if (_flags.IsExpression() && !Builder.PreferServerSide(converted, false))
-						{
-							using var _ = NeedForce(true);
-
-							var expandedMethod = base.VisitMethodCall(node);
-							if (Builder.CanBeCompiled(expandedMethod, true))
-								accept = false;
-						}
-
-						if (accept)
-							return TranslateExpression(node, useSql : true);
+						return Visit(converted);
 					}
 				}
 
