@@ -1747,7 +1747,7 @@ FROM
 		}
 
 		[Test]
-		public void Issue4057_Sync([DataSources] string context)
+		public void Issue4057_Sync([DataSources(false)] string context)
 		{
 			DataOptions options;
 			using (var db = GetDataContext(context))
