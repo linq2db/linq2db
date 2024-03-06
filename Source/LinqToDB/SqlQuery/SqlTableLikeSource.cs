@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlTableLikeSource : ISqlTableSource
+	public class SqlTableLikeSource : SqlSourceBase
 	{
 		public SqlTableLikeSource()
 		{
-			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
 
 		internal SqlTableLikeSource(
 			int                   id,
 			SqlValuesTable?       sourceEnumerable,
 			SelectQuery?          sourceQuery,
-			IEnumerable<SqlField> sourceFields)
+			IEnumerable<SqlField> sourceFields) : base(id)
 		{
-			SourceID         = id;
 			SourceEnumerable = sourceEnumerable;
 			SourceQuery      = sourceQuery;
 
@@ -37,7 +34,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlValuesTable?  SourceEnumerable { get; internal set; }
 		public SelectQuery?     SourceQuery      { get; internal set; }
-		public ISqlTableSource  Source => (ISqlTableSource?)SourceQuery ?? SourceEnumerable!;
+		public override ISqlTableSource  Source => (ISqlTableSource?)SourceQuery ?? SourceEnumerable!;
 
 		public bool IsParameterDependent
 		{
@@ -50,49 +47,29 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		#region IQueryElement
+		#region SqlSourceBase overrides
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-
-		QueryElementType IQueryElement.ElementType => QueryElementType.SqlTableLikeSource;
-
-		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		public override QueryElementType       ElementType => QueryElementType.SqlTableLikeSource;
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			return writer.AppendElement(Source);
 		}
 
-		#endregion
+		public override SqlTableType SqlTableType => SqlTableType.MergeSource;
 
-		#region ISqlTableSource
-
-		SqlTableType ISqlTableSource.SqlTableType => SqlTableType.MergeSource;
-
-		SqlField? _all;
-		SqlField ISqlTableSource.All => _all ??= SqlField.All(this);
-
-		public int SourceID { get; }
-
-		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty) => throw new NotImplementedException();
+		SqlField?                _all;
+		public override SqlField All => _all ??= SqlField.All(this);
 
 		#endregion
 
-		#region ISqlExpression
+		#region SqlExpressionBase overrides
 
-		public bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();
-
-		int ISqlExpression.Precedence => throw new NotImplementedException();
-
-		Type ISqlExpression.SystemType => throw new NotImplementedException();
-
-		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
-
-		#endregion
-
-		#region IEquatable
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
+		public override IList<ISqlExpression> GetKeys(bool allIfEmpty) => throw new NotImplementedException();
+		public override bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();
+		public override int Precedence => throw new NotImplementedException();
+		public override Type SystemType => throw new NotImplementedException();
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
+		public override bool Equals(ISqlExpression? other) => throw new NotImplementedException();
 
 		#endregion
 
