@@ -1200,7 +1200,7 @@ namespace LinqToDB.SqlQuery
 
 			if (!subQuery.GroupBy.IsEmpty)
 			{
-				parentQuery.GroupBy.Items.AddRange(subQuery.GroupBy.Items);
+				parentQuery.GroupBy.Items.InsertRange(0, subQuery.GroupBy.Items);
 				parentQuery.GroupBy.GroupingType = subQuery.GroupBy.GroupingType;
 
 				if (havingDetected?.Count > 0)
@@ -1210,14 +1210,14 @@ namespace LinqToDB.SqlQuery
 						throw new InvalidOperationException();
 
 					// move Where to Having
-					parentQuery.Having.SearchCondition.AddRange(parentQuery.Where.SearchCondition.Predicates);
+					parentQuery.Having.SearchCondition.Predicates.InsertRange(0, parentQuery.Where.SearchCondition.Predicates);
 					parentQuery.Where.SearchCondition.Predicates.Clear();
 				}
 			}
 
 			if (!subQuery.Where.IsEmpty)
 			{
-				parentQuery.Where.SearchCondition.Predicates.AddRange(subQuery.Where.SearchCondition.Predicates);
+				parentQuery.Where.SearchCondition.Predicates.InsertRange(0, subQuery.Where.SearchCondition.Predicates);
 			}
 
 			if (!subQuery.Having.IsEmpty)
@@ -1238,16 +1238,6 @@ namespace LinqToDB.SqlQuery
 				parentQuery.Select.SkipValue = subQuery.Select.SkipValue;
 			}
 
-			/*
-			if (parentQuery.Select.Columns.Count == 0)
-			{
-				foreach(var column in subQuery.Select.Columns)
-				{
-					parentQuery.Select.AddColumn(column.Expression);
-				}
-			}
-
-			*/
 			foreach (var column in subQuery.Select.Columns)
 			{
 				NotifyReplaced(column.Expression, column);
