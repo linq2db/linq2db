@@ -2298,9 +2298,7 @@ namespace LinqToDB.SqlQuery
 											MoveDuplicateUsageToSubQuery(sq);
 											// will be processed in the next step
 											ti = -1;
-
 											isValid = false;
-
 											break;
 										}	
 									}
@@ -2311,6 +2309,16 @@ namespace LinqToDB.SqlQuery
 										{
 											if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
 											{
+												if (_providerFlags.IsApplyJoinSupported)
+												{
+													// Well, provider can process this query as OUTER APPLY
+													isValid = false;
+													break;
+												}
+
+												MoveDuplicateUsageToSubQuery(sq);
+												// will be processed in the next step
+												ti      = -1;
 												isValid = false;
 												break;
 											}

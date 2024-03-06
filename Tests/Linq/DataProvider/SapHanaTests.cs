@@ -10,6 +10,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SapHana;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -689,15 +690,13 @@ namespace Tests.DataProvider
 
 			[CalculationViewInputParametersExpression]
 			public LinqToDB.ITable<FIT_CA_PARAM_TEST> CaParamTest(
-				int ipIntMandatory, double ipDoubleMandatory, string ipStringMandatory,
-				int? ipIntOptional, double? ipDoubleOptional, string ipStringOptional)
+				[SqlQueryDependent] int  ipIntMandatory, [SqlQueryDependent] double  ipDoubleMandatory, [SqlQueryDependent] string ipStringMandatory,
+				[SqlQueryDependent] int? ipIntOptional,  [SqlQueryDependent] double? ipDoubleOptional,  [SqlQueryDependent] string ipStringOptional)
 			{
-				return this.GetTable<FIT_CA_PARAM_TEST>(
-					this,
-					(MethodInfo) MethodBase.GetCurrentMethod()!,
+				return this.TableFromExpression(() => CaParamTest(
 					ipIntMandatory, ipDoubleMandatory,
 					ipStringMandatory, ipIntOptional,
-					ipDoubleOptional, ipStringOptional);
+					ipDoubleOptional, ipStringOptional));
 			}
 		}
 

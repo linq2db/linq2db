@@ -304,9 +304,6 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			if (!_visitQueries)
-				return selectQuery;
-
 			var saveInsideNot = _isInsideNot;
 			_isInsideNot = false;
 
@@ -315,6 +312,14 @@ namespace LinqToDB.SqlProvider
 			_isInsideNot = saveInsideNot;
 
 			return result;
+		}
+
+		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		{
+			if (!_visitQueries)
+				return element;
+
+			return base.VisitSqlTableSource(element);
 		}
 
 		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)

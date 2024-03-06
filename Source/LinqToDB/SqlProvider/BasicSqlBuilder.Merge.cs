@@ -236,16 +236,16 @@ namespace LinqToDB.SqlProvider
 
 		private void BuildMergeSourceEnumerable(NullabilityContext nullability, SqlMergeStatement merge)
 		{
-			merge = ConvertElement(merge, checkBoolean : false);
-			var rows = merge.Source.SourceEnumerable!.BuildRows(OptimizationContext.EvaluationContext);
+			var sourceEnumerable = ConvertElement(merge.Source.SourceEnumerable, checkBoolean : false);
+			var rows = sourceEnumerable!.BuildRows(OptimizationContext.EvaluationContext);
 			if (rows.Count > 0)
 			{
 				StringBuilder.Append('(');
 
 				if (IsValuesSyntaxSupported)
-					BuildValues(merge.Source.SourceEnumerable, rows);
+					BuildValues(sourceEnumerable, rows);
 				else
-					BuildValuesAsSelectsUnion(merge.Source.SourceFields, merge.Source.SourceEnumerable, rows);
+					BuildValuesAsSelectsUnion(merge.Source.SourceFields, sourceEnumerable, rows);
 
 				StringBuilder.Append(')');
 			}
