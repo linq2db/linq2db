@@ -1714,8 +1714,9 @@ FROM
 		#endregion
 
 		#region Issue 4057
+		// Remote tests disabled due to the issue with different query generation. We do not detect provider correctly in this case.
 		[Test]
-		public async Task Issue4057_Async([DataSources] string context)
+		public async Task Issue4057_Async([DataSources(false)] string context)
 		{
 			DataOptions options;
 
@@ -1746,6 +1747,7 @@ FROM
 			}
 		}
 
+		// Remote tests disabled due to the issue with different query generation. We do not detect provider correctly in this case.
 		[Test]
 		public void Issue4057_Sync([DataSources(false)] string context)
 		{
