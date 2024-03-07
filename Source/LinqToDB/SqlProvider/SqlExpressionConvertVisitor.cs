@@ -758,7 +758,7 @@ namespace LinqToDB.SqlProvider
 
 				case PseudoFunctions.CONVERT_FORMAT:
 				{
-					return new SqlFunction(func.SystemType, "Convert", func.Parameters);
+					return new SqlFunction(func.SystemType, "Convert", func.Parameters[0], func.Parameters[2], func.Parameters[3]);
 				}
 
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
