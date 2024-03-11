@@ -277,7 +277,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllOracle,
-				TestProvName.AllMySql,
 				TestProvName.AllSQLite,
 				ProviderName.Access,
 				TestProvName.AllSapHana)]
@@ -969,7 +968,6 @@ namespace Tests.xUpdate
 				TestProvName.AllSapHana,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
-				TestProvName.AllMySql,
 				TestProvName.AllSybase,
 				TestProvName.AllOracle)]
 			string context)
@@ -1120,17 +1118,17 @@ namespace Tests.xUpdate
 				});
 
 				var query = db.GetTable<Parent1>()
-						.Where(_ => _.ParentID == id)
-						.Select(_ => new Parent1()
+						.Where(p => p.ParentID == id)
+						.Select(p => new Parent1()
 						{
-							ParentID = _.ParentID
+							ParentID = p.ParentID
 						});
 
 				var queryResult = new Lazy<Parent1>(() => query.First());
 
 				var cnt = db.GetTable<Parent1>()
-						.Where(_ => _.ParentID == id && query.Count() > 0)
-						.Update(_ => new Parent1()
+						.Where(p => p.ParentID == id && query.Count() > 0)
+						.Update(p => new Parent1()
 						{
 							Value1 = queryResult.Value.ParentID
 						});

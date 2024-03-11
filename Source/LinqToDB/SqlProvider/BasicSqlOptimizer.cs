@@ -1236,6 +1236,7 @@ namespace LinqToDB.SqlProvider
 		protected static SqlUpdateStatement DetachUpdateTableFromUpdateQuery(SqlUpdateStatement updateStatement, DataOptions dataOptions, bool moveToJoin, bool addNewSource, out SqlTableSource newSource)
 		{
 			var updateTable = updateStatement.Update.Table;
+			var alias       = updateStatement.Update.TableSource?.Alias;
 			if (updateTable == null)
 				throw new InvalidOperationException();
 
@@ -1243,11 +1244,14 @@ namespace LinqToDB.SqlProvider
 
 			var replacements = new Dictionary<IQueryElement, IQueryElement>();
 			var clonedTable = updateTable.Clone(replacements);
-			replacements.Remove(updateTable);
+			//replacements.Remove(updateTable);
 
-			updateStatement.Replace(replacements, updateStatement.SelectQuery.Select, updateStatement.SelectQuery.From);
+			updateStatement.SelectQuery.Replace(replacements);
 
-			newSource = new SqlTableSource(clonedTable, "u");
+			newSource                          = new SqlTableSource(updateTable, alias ?? "u");
+			updateStatement.Update.Table       = updateTable;
+			updateStatement.Update.TableSource = newSource;
+
 
 			if (moveToJoin)
 			{
@@ -1273,7 +1277,7 @@ namespace LinqToDB.SqlProvider
 					dataOptions);
 			}
 
-			updateStatement.Update.Table = clonedTable;
+
 
 			return updateStatement;
 		}
@@ -1369,8 +1373,17 @@ namespace LinqToDB.SqlProvider
 
 						OptimizeQueries(statement, statement, dataOptions, new EvaluationContext());
 					}
+					else if (leaveUpdateTableInQuery)
+					{
+						var ts = new SqlTableSource(tableToUpdate, "u");
+						statement.Update.TableSource = ts;
+						statement.SelectQuery.From.Tables.Insert(0, ts);
+					}
 				}
-			
+				else
+				{
+					statement.Update.TableSource = firstTable;
+				}
 			}
 
 			CorrectUpdateSetters(statement);

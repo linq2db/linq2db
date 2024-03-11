@@ -74,7 +74,9 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			if (selectQuery.Select.SkipValue == null)
+			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+
+			if (skipExpr == null)
 				base.BuildOffsetLimit(selectQuery);
 			else
 			{
@@ -82,10 +84,10 @@ namespace LinqToDB.DataProvider.MySql
 					.AppendFormat(
 						CultureInfo.InvariantCulture,
 						"LIMIT {0}, {1}",
-						WithStringBuilderBuildExpression(selectQuery.Select.SkipValue),
-						selectQuery.Select.TakeValue == null ?
+						WithStringBuilderBuildExpression(skipExpr),
+						takeExpr == null ?
 							(object)long.MaxValue :
-							WithStringBuilderBuildExpression(selectQuery.Select.TakeValue))
+							WithStringBuilderBuildExpression(takeExpr))
 					.AppendLine();
 			}
 		}

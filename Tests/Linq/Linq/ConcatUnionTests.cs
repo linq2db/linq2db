@@ -535,9 +535,9 @@ namespace Tests.Linq
 
 			AreEqual(
 				(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-				(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() })),
+				(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() })),
 				(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-				(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() })), sort: e => e.OrderBy(x => x.ch == null).ThenBy(x => x.ParentID));
+				(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() })), sort: e => e.OrderBy(x => x.ch == null).ThenBy(x => x.ParentID));
 		}
 
 		[Test]
@@ -560,11 +560,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() }))
+					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() }))
 					.Select(p => new { p.ParentID, p.p, p.ch })
 					,
 					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() }))
+					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() }))
 					.Select(p => new { p.ParentID, p.p, p.ch }));
 		}
 

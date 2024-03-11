@@ -466,7 +466,7 @@ namespace Tests.Linq
 					(
 						from p in db.Parent
 						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
+						let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 						select new
 						{
 							p.ParentID,
@@ -499,8 +499,8 @@ namespace Tests.Linq
 					,
 					(
 						from p in db.Parent
-						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
+						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
+						let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 						select new
 						{
 							p.ParentID,
