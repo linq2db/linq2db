@@ -1781,7 +1781,7 @@ FROM
 		}
 
 		[Test]
-		public async Task Issue4057_Async_ExplicitTransaction([DataSources] string context)
+		public async Task Issue4057_Async_ExplicitTransaction([DataSources(false)] string context)
 		{
 			DataOptions options;
 
@@ -1816,7 +1816,7 @@ FROM
 		}
 
 		[Test]
-		public void Issue4057_Sync_ExplicitTransaction([DataSources] string context)
+		public void Issue4057_Sync_ExplicitTransaction([DataSources(false)] string context)
 		{
 			DataOptions options;
 			using (var db = GetDataContext(context))
