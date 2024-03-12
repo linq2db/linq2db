@@ -210,12 +210,6 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildExpression
 
-		public ISqlExpression ConvertToSqlExpression(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool isPureExpression)
-		{
-			var expr = ConvertExpression(expression);
-			return ConvertToSql(context, expr, unwrap: false, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
-		}
-
 		public Expression ConvertToExtensionSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor)
 		{
 			expression = expression.UnwrapConvertToObject();
@@ -246,7 +240,14 @@ namespace LinqToDB.Linq.Builder
 
 				if (result is SqlPlaceholderExpression)
 				{
+					if (result.Type != expression.Type)
+					{
+						result = Expression.Convert(result, expression.Type);
+						result = ConvertToSqlExpr(contextRef.BuildContext, result, flags: flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor: columnDescriptor);
+					}
+
 					result = UpdateNesting(context, result);
+
 					return result;
 				}
 			}
@@ -931,7 +932,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					var exposed = ExposeSingleExpression(expression, false);
+					var exposed = ConvertSingleExpression(expression, false);
 
 					if (!ReferenceEquals(exposed, expression))
 					{

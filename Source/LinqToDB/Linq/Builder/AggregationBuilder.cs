@@ -448,9 +448,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				if ((_aggregationType != AggregationType.Sum && _aggregationType != AggregationType.Count) && !expression.Type.IsNullableType())
 				{
+					var checkExpression = expression;
+
+					if (expression.Type.IsValueType && !expression.Type.IsNullable())
+					{
+						checkExpression = Expression.Convert(expression, expression.Type.AsNullable());
+					}
+
 					expression = Expression.Block(
 						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)),
-							Expression.Equal(expression, Expression.Default(expression.Type)),
+							Expression.Equal(checkExpression, Expression.Default(checkExpression.Type)),
 							Expression.Constant(_methodName)),
 						expression);
 				}

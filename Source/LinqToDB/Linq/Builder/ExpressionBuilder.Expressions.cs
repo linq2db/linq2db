@@ -731,14 +731,19 @@ namespace LinqToDB.Linq.Builder
 				if (!ReferenceEquals(newNode, node))
 					return Visit(newNode);
 
-				if (!localFlags.IsSql())
+				var converted = Builder.ConvertExpression(node);
+				if (!ReferenceEquals(converted, node))
 				{
-					var converted = Builder.ConvertExpression(node);
-					if (!ReferenceEquals(converted, node))
+					if (!_flags.IsSql() && !Builder.PreferServerSide(node, false))
 					{
-						return Visit(converted);
+						var translatedWithArguments = base.VisitMethodCall(node);
+						if (Builder.CanBeCompiled(translatedWithArguments, true))
+							return translatedWithArguments;
 					}
+
+					return Visit(converted);
 				}
+
 
 				if ((_buildFlags & BuildFlags.ForceAssignments) != 0 && _flags.IsSql())
 				{

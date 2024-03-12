@@ -9,19 +9,15 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using Data;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
-	using Reflection;
 	using LinqToDB.Common.Internal;
 
 	public class ExpressionTreeOptimizationContext
 	{
-		HashSet<Expression>? _visitedExpressions;
-
 		public IDataContext  DataContext   { get; }
 		public MappingSchema MappingSchema { get; }
 
@@ -59,11 +55,6 @@ namespace LinqToDB.Linq.Builder
 					_equalsToContextFalse.Reset();
 				return _equalsToContextFalse;
 			}
-		}
-
-		public void ClearVisitedCache()
-		{
-			_visitedExpressions?.Clear();
 		}
 
 		public Expression AggregateExpression(Expression expression)
@@ -599,8 +590,10 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					if (_allowedParameters == null || !_allowedParameters.Any(ps => ps.Contains(node)))
+					if (node != ExpressionBuilder.ExpressionParam && (_allowedParameters == null || !_allowedParameters.Any(ps => ps.Contains(node))))
+					{
 						CanBeCompiledFlag = false;
+					}
 				}
 
 				return node;
@@ -825,193 +818,6 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
-
-		static Expression AliasCall(Expression expression, string alias)
-		{
-			return Expression.Call(Methods.LinqToDB.SqlExt.Alias.MakeGenericMethod(expression.Type), expression,
-				Expression.Constant(alias));
-		}
-
-		public TransformInfo ExposeExpressionTransformer(Expression expr)
-		{
-			switch (expr.NodeType)
-			{
-				case ExpressionType.ArrayLength:
-				{
-					var ue = (UnaryExpression)expr;
-					var ll = Expressions.ConvertMember(MappingSchema, ue.Operand?.Type, ue.Operand!.Type.GetProperty(nameof(Array.Length))!);
-					if (ll != null)
-					{
-						var ex = ConvertMemberExpression(expr, ue.Operand!, ll);
-
-						return new TransformInfo(ex, false, true);
-					}
-
-					break;
-				}
-				case ExpressionType.MemberAccess:
-				{
-					var me = (MemberExpression)expr;
-
-					if (me.Member.IsNullableHasValueMember())
-					{
-						return new TransformInfo(Expression.NotEqual(me.Expression!, Expression.Constant(null, me.Expression!.Type)), false, true);
-					}
-
-					//if (me.Member.IsNullableValueMember())
-					//{
-					//	return new TransformInfo(Expression.Convert(me.Expression!, me.Type), false, true);
-					//}
-
-					/*
-					if (CanBeCompiled(expr, true))
-						break;
-						*/
-
-					var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedType!, me.Member, out var alias);
-
-					if (l != null)
-					{
-						var ex = ConvertMemberExpression(expr, me.Expression!, l);
-
-						return new TransformInfo(AliasCall(ex, alias!), false, true);
-					}
-
-					l = Expressions.ConvertMember(MappingSchema, me.Member.ReflectedType!, me.Member);
-
-					if (l != null)
-					{
-						var ex = ConvertMemberExpression(expr, me.Expression!, l);
-
-						return new TransformInfo(ex, false, true);
-					}
-
-					break;
-				}
-
-				case ExpressionType.Convert:
-				{
-					var ex = (UnaryExpression)expr;
-					if (ex.Method != null)
-					{
-						var l = ConvertMethodExpression(ex.Method.DeclaringType!, ex.Method, out var alias);
-						if (l != null)
-						{
-							var exposed = l.GetBody(ex.Operand);
-							return new TransformInfo(exposed, false, true);
-						}
-					}
-
-					break;
-				}
-
-				case ExpressionType.Constant:
-				{
-					var c = (ConstantExpression)expr;
-
-					if (c.Value is IQueryable queryable && !(queryable is ITable))
-					{
-						var e = queryable.Expression;
-
-						if (!(_visitedExpressions ??= new ()).Contains(e))
-						{
-							_visitedExpressions.Add(e);
-							return new TransformInfo(e, false, true);
-						}
-					}
-
-					break;
-				}
-
-				case ExpressionType.Invoke:
-				{
-					var invocation = (InvocationExpression)expr;
-					if (invocation.Expression.NodeType == ExpressionType.Call)
-					{
-						var mc = (MethodCallExpression)invocation.Expression;
-						if (mc.Method.Name == "Compile" &&
-							typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType!))
-						{
-							if (mc.Object.EvaluateExpression() is LambdaExpression lambds)
-							{
-								var newBody = lambds.Body;
-								if (invocation.Arguments.Count > 0)
-								{
-									var map = new Dictionary<Expression, Expression>();
-									for (int i = 0; i < invocation.Arguments.Count; i++)
-										map.Add(lambds.Parameters[i], invocation.Arguments[i]);
-
-									newBody = lambds.Body.Transform(map, static (map, se) =>
-									{
-										if (se.NodeType == ExpressionType.Parameter &&
-													map.TryGetValue(se, out var newExpr))
-											return newExpr;
-										return se;
-									});
-								}
-
-								return new TransformInfo(newBody, false, true);
-							}
-						}
-					}
-					break;
-				}
-
-				case ExpressionType.Call:
-				{
-					var call = (MethodCallExpression)expr;
-
-					var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
-
-					if (l != null)
-					{
-						var converted = ConvertMethod(call, l);
-						return new TransformInfo(converted, false, true);
-					}
-
-					break;
-				}
-			}
-
-			return new TransformInfo(expr, false);
-		}
-
-		private static Expression ConvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
-		{
-			var body  = l.Body.Unwrap();
-			var parms = l.Parameters.ToDictionary(p => p);
-			var ex    = body.Transform(
-					(parms, root),
-					static (context, wpi) =>
-					{
-						if (wpi.NodeType == ExpressionType.Parameter && context.parms.ContainsKey((ParameterExpression)wpi))
-						{
-							if (wpi.Type.IsSameOrParentOf(context.root.Type))
-							{
-								return context.root;
-							}
-
-							if (ExpressionConstants.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
-							{
-								if (ExpressionConstants.DataContextParam.Type != wpi.Type)
-									return Expression.Convert(ExpressionConstants.DataContextParam, wpi.Type);
-								return ExpressionConstants.DataContextParam;
-							}
-
-							throw new LinqToDBException($"Can't convert {wpi} to expression.");
-						}
-
-						return wpi;
-					});
-
-			if (ex.Type != expr.Type)
-			{
-				//ex = new ChangeTypeExpression(ex, expr.Type);
-				ex = Expression.Convert(ex, expr.Type);
-			}
-
-			return ex;
-		}
 
 		public LambdaExpression? ConvertMethodExpression(Type type, MemberInfo mi, out string? alias)
 		{

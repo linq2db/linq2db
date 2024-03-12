@@ -1714,7 +1714,6 @@ namespace LinqToDB
 		public static IQueryable<TResult> QueryFromExpression<TResult>(
 			this IDataContext                     dataContext,
 			Expression<Func<IQueryable<TResult>>> expression)
-			where TResult : notnull
 		{
 			return new ExpressionQueryImpl<TResult>(dataContext, expression.Body);
 		}

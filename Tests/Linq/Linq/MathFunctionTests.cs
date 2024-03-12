@@ -246,6 +246,15 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void Round4Sql([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in from p in Types select Math.Round((double)p.MoneyValue, 1) where t    != 0 select Math.Round(t, 5),
+					from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1) where t != 0 select Sql.AsSql(Math.Round(t, 5)));
+		}
+
+		[Test]
 		public void Round5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

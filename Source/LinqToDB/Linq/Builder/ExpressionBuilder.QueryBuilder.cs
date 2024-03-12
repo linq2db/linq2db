@@ -406,14 +406,8 @@ namespace LinqToDB.Linq.Builder
 
 				var attr = memberInfo.GetExpressionAttribute(MappingSchema);
 
-				if (attr != null && (!flags.HasFlag(ProjectFlags.Expression) || attr.ServerSideOnly || attr.Expression == "{0}"))
+				if (attr != null)
 				{
-					var converted = ConvertExpression(expr);
-					if (!ReferenceEquals(converted, expr))
-					{
-						return converted;
-					}
-
 					var rootContext = context;
 					var rootSelectQuery = context.SelectQuery;
 

@@ -492,6 +492,12 @@ namespace LinqToDB
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number", true);
 
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
 				builder.ResultExpression = new SqlFunction(typeof(DateTime?), builder.Expression,
 					new SqlExpression(partStr, Precedence.Primary), number, date);
 			}
@@ -504,6 +510,12 @@ namespace LinqToDB
 				var part   = builder.GetValue<DateParts>("part");
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
+
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				string expStr;
 				switch (part)
@@ -537,6 +549,12 @@ namespace LinqToDB
 				var part   = builder.GetValue<DateParts>("part");
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
+
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				string expStr;
 
@@ -572,6 +590,12 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
 
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
 				string expStr;
 				switch (part)
 				{
@@ -601,6 +625,12 @@ namespace LinqToDB
 				var part   = builder.GetValue<DateParts>("part");
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
+
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				string expStr;
 				switch (part)
@@ -635,6 +665,12 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
 
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
 				string expStr;
 				switch (part)
 				{
@@ -666,6 +702,12 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
 
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
 				string expStr = "strftime('%Y-%m-%d %H:%M:%f', {0},";
 				switch (part)
 				{
@@ -696,6 +738,12 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
 
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
 				var partStr = part switch
 				{
 					DateParts.Year      => "yyyy",
@@ -722,6 +770,12 @@ namespace LinqToDB
 				var part   = builder.GetValue<DateParts>("part");
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
+
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				string function;
 				switch (part)
@@ -768,6 +822,12 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
 
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
 				switch (part)
 				{
 					case DateParts.Quarter   :
@@ -797,6 +857,12 @@ namespace LinqToDB
 				var part   = builder.GetValue<DateParts>("part");
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
+
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				string? function = null;
 				switch (part)
@@ -872,6 +938,13 @@ namespace LinqToDB
 				var part      = builder.GetValue<DateParts>(0);
 				var startdate = builder.GetExpression(1);
 				var endDate   = builder.GetExpression(2);
+
+				if (startdate is null || endDate is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
 				var partSql   = new SqlExpression(DatePartBuilder.DatePartToStr(part), Precedence.Primary);
 
 				builder.ResultExpression = new SqlFunction(typeof(int), builder.Expression, partSql, startdate, endDate);
@@ -886,6 +959,12 @@ namespace LinqToDB
 				var startdate  = builder.GetExpression(1);
 				var endDate    = builder.GetExpression(2);
 				var divider    = 1;
+
+				if (startdate is null || endDate is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				string funcName;
 				switch (part)
@@ -914,6 +993,12 @@ namespace LinqToDB
 				var part       = builder.GetValue<DateParts>(0);
 				var startDate  = builder.GetExpression(1);
 				var endDate    = builder.GetExpression(2);
+
+				if (startDate is null || endDate is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				var secondsExpr = builder.Mul<int>(builder.Sub<int>(
 						new SqlFunction(typeof(int), "Days", endDate),
@@ -956,6 +1041,12 @@ namespace LinqToDB
 				var part = builder.GetValue<DateParts>(0);
 				var startDate = builder.GetExpression(1);
 				var endDate = builder.GetExpression(2);
+
+				if (startDate is null || endDate is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				var expStr = "round((julianday({1}) - julianday({0}))";
 				expStr += part switch
@@ -1002,6 +1093,12 @@ namespace LinqToDB
 				var startDate = builder.GetExpression(1);
 				var endDate = builder.GetExpression(2);
 
+				if (startDate is null || endDate is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
 				var expStr = "DATEDIFF('";
 
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
@@ -1035,6 +1132,13 @@ namespace LinqToDB
 				var part = builder.GetValue<DateParts>(0);
 				var startDate = builder.GetExpression(1);
 				var endDate = builder.GetExpression(2);
+
+				if (startDate is null || endDate is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
 				var expStr = part switch
 				{
 					// DateParts.Year        => "({1} - {0}) / 365",
@@ -1066,6 +1170,12 @@ namespace LinqToDB
 				var part       = builder.GetValue<DateParts>(0);
 				var startDate  = builder.GetExpression(1);
 				var endDate    = builder.GetExpression(2);
+
+				if (startDate is null || endDate is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				string? unit = null;
 				switch (part)

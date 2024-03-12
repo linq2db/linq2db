@@ -551,7 +551,7 @@ namespace LinqToDB
 		/// </code>
 		/// </example>
 		[Extension(builderType: typeof(AliasExprBuilder), ServerSideOnly = true)]
-		public static string AliasExpr() => throw new InvalidOperationException("AliasExpr should not be used outside LINQ Query");
+		public static ISqlExpression AliasExpr() => SqlAliasPlaceholder.Instance;
 
 		sealed class ExprBuilder : IExtensionCallBuilder
 		{

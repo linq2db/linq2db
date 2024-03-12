@@ -521,7 +521,8 @@ namespace Tests.Linq
 				var query =
 					from c in db.FromSql<int>($"select {1} {Sql.AliasExpr()}")
 					select c;
-				Assert.Throws<Npgsql.PostgresException>(() => query.ToArray());
+
+				Assert.Throws<InvalidOperationException>(() => query.ToArray());
 			}
 		}
 

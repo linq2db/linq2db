@@ -137,7 +137,6 @@ namespace LinqToDB.Linq.Builder
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
 			Expression           = expression;
-			_optimizationContext.ClearVisitedCache();
 		}
 
 		#endregion
@@ -438,11 +437,6 @@ namespace LinqToDB.Linq.Builder
 			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, expression, false, optimizeConditions, compactBinary);
 
 			return result;
-		}
-
-		public Expression ExposeSingleExpression(Expression expression, bool inProjection)
-		{
-			return _optimizationContext.ExposeExpressionTransformer(expression).Expression;
 		}
 
 		#endregion
