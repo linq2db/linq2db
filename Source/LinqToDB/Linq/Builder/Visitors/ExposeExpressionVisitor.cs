@@ -444,11 +444,6 @@ namespace LinqToDB.Linq.Builder.Visitors
 				var converted = ConvertMemberAccess(node);
 				if (converted != null)
 					return Visit(converted);
-
-				if (node.Member.IsNullableHasValueMember())
-				{
-					return Visit(Expression.NotEqual(node.Expression!, Expression.Constant(null, node.Expression!.Type)));
-				}
 			}
 
 			if (typeof(IDataContext).IsSameOrParentOf(node.Type))

@@ -945,6 +945,18 @@ namespace LinqToDB.Linq.Builder
 						expression = newExpr;
 					}
 
+					var memberExpression = (MemberExpression)expression;
+					if (memberExpression.Member.IsNullableHasValueMember())
+					{
+						var converted = ConvertToSqlExpr(context, Expression.NotEqual(memberExpression.Expression!, Expression.Constant(null, memberExpression.Expression!.Type)), 
+							flags : flags, unwrap : unwrap, columnDescriptor : columnDescriptor, isPureExpression : isPureExpression, alias : alias);
+
+						if (converted is SqlPlaceholderExpression placeholder)
+						{
+							expression = placeholder.WithPath(expression);
+						}
+					}
+
 					break;
 				}
 

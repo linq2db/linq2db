@@ -388,6 +388,53 @@ namespace LinqToDB.Linq.Builder
 			return null != expression.Find(0, (_, e) => e is SqlErrorExpression);
 		}
 
+
+		public Expression ConvertExtension(Sql.ExpressionAttribute attr, IBuildContext context, Expression expr, ProjectFlags flags)
+		{
+			var rootContext     = context;
+			var rootSelectQuery = context.SelectQuery;
+
+			if (attr.IsAggregate)
+			{
+				var root = GetRootContext(context.Parent, new ContextRefExpression(context.ElementType, context), true);
+				if (root != null)
+				{
+					rootContext = root.BuildContext;
+				}
+
+				if (rootContext is GroupByBuilder.GroupByContext groupBy)
+				{
+					rootSelectQuery = groupBy.SubQuery.SelectQuery;
+				}
+			}
+
+			var transformed = attr.GetExpression((builder: this, context: rootContext, flags),
+				DataContext,
+				this,
+				rootSelectQuery, expr,
+				static (context, e, descriptor) =>
+					context.builder.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
+
+			if (transformed is SqlPlaceholderExpression placeholder)
+			{
+				RegisterExtensionAccessors(expr);
+
+				placeholder = placeholder.WithSql(PosProcessCustomExpression(expr, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
+
+				return placeholder.WithPath(expr);
+			}
+
+			if (attr.ServerSideOnly)
+			{
+				if (transformed is SqlErrorExpression errorExpr)
+					return SqlErrorExpression.EnsureError(errorExpr, expr.Type);
+				return SqlErrorExpression.EnsureError(expr, expr.Type);
+			}
+
+			return expr;
+		}
+
+
 		public Expression HandleExtension(IBuildContext context, Expression expr, ProjectFlags flags)
 		{
 			// Handling ExpressionAttribute
@@ -408,45 +455,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (attr != null)
 				{
-					var rootContext = context;
-					var rootSelectQuery = context.SelectQuery;
-
-					if (attr.IsAggregate)
-					{
-						var root = GetRootContext(context.Parent, new ContextRefExpression(context.ElementType, context), true);
-						if (root != null)
-						{
-							rootContext = root.BuildContext;
-						}
-
-						if (rootContext is GroupByBuilder.GroupByContext groupBy)
-						{
-							rootSelectQuery = groupBy.SubQuery.SelectQuery;
-						}
-					}
-
-					var transformed = attr.GetExpression((builder: this, context: rootContext, flags),
-						DataContext,
-						this,
-						rootSelectQuery, expr,
-						static (context, e, descriptor) =>
-							context.builder.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
-
-					if (transformed is SqlPlaceholderExpression placeholder)
-					{
-						RegisterExtensionAccessors(expr);
-
-						placeholder = placeholder.WithSql(PosProcessCustomExpression(expr, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
-
-						return placeholder.WithPath(expr);
-					}
-
-					if (attr.ServerSideOnly)
-					{
-						if (transformed is SqlErrorExpression errorExpr)
-							return SqlErrorExpression.EnsureError(errorExpr, expr.Type);
-						return SqlErrorExpression.EnsureError(expr, expr.Type);
-					}
+					return ConvertExtension(attr, context, expr, flags);
 				}
 			}
 

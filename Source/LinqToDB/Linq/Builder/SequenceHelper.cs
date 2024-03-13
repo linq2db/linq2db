@@ -864,6 +864,11 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		public static bool HasError(Expression expression)
+		{
+			return FindError(expression) != null;
+		}
+
 		public static SqlErrorExpression? FindError(Expression expression)
 		{
 			var found = expression.Find(1, (_, e) => e is SqlErrorExpression) as SqlErrorExpression;

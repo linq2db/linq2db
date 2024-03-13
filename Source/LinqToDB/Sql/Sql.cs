@@ -170,24 +170,24 @@ namespace LinqToDB
 		}
 
 		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
+		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
+		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T? compareTo) where T : class
 		{
 			return value != null && compareTo != null && EqualityComparer<T>.Default.Equals(value, compareTo) ? null : value;
 		}
 
 		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
+		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
+		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T compareTo) where T : struct
 		{
 			return value.HasValue && EqualityComparer<T>.Default.Equals(value.Value, compareTo) ? null : value;
 		}
 
 		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
+		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
+		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T? compareTo) where T : struct
 		{
 			return value.HasValue && compareTo.HasValue && EqualityComparer<T>.Default.Equals(value.Value, compareTo.Value) ? null : value;

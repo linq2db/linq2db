@@ -568,6 +568,18 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMember(MemberExpression node)
 			{
+				var attr = node.Member.GetExpressionAttribute(MappingSchema);
+
+				if (attr != null)
+				{
+					if (attr.ServerSideOnly || _flags.IsSql() || attr.PreferServerSide)
+					{
+						var converted = Builder.ConvertExtension(attr, _context, node, _flags.SqlFlag());
+						if (!ReferenceEquals(converted, node))
+							return Visit(converted);
+					}
+				}
+
 				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, true))
 				{
 					var translatedForced = TranslateExpression(node, alias: node.Member.Name, useSql : true);
@@ -578,36 +590,7 @@ namespace LinqToDB.Linq.Builder
 					return base.VisitMember(node);
 				}
 
-				var handled = Builder.HandleExtension(_context, node, _flags);
-
-				if (!ExpressionEqualityComparer.Instance.Equals(handled, node))
-					return Visit(handled);
-
 				var useSql = IsForcedToConvert(node) || _flags.IsSql();
-
-				if (!useSql)
-				{
-					var converted = Builder.ConvertExpression(node);
-					if (!ReferenceEquals(converted, node))
-					{
-						var accept = true;
-						if (_flags.IsExpression())
-						{
-							using var _ = NeedForce(true);
-
-							var expandedMethod = base.VisitMember(node);
-							if (Builder.CanBeCompiled(expandedMethod, true))
-								accept = false;
-						}
-
-						if (accept)
-						{
-							var translatedConverted = TranslateExpression(node, alias: node.Member.Name, useSql : true);
-
-							return translatedConverted;
-						}
-					}
-				}
 
 				var translated = TranslateExpression(node, alias: node.Member.Name, useSql : useSql);
 
@@ -689,20 +672,23 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMethodCall(MethodCallExpression node)
 			{
-				if (node.Method.Name == nameof(Sql.Alias) && node.Method.DeclaringType == typeof(Sql))
+				if (node.Method.DeclaringType == typeof(Sql))
 				{
-					var saveAlias = _alias;
+					if (node.Method.Name == nameof(Sql.Alias))
+					{
+						var saveAlias = _alias;
 
-					_alias = node.Arguments[1].EvaluateExpression() as string;
+						_alias = node.Arguments[1].EvaluateExpression() as string;
 
-					var aliasedNode = Visit(node.Arguments[0]);
+						var aliasedNode = Visit(node.Arguments[0]);
 
-					if (!string.IsNullOrEmpty(_alias) && aliasedNode is SqlPlaceholderExpression placeholder)
-						aliasedNode = placeholder.WithAlias(_alias);
+						if (!string.IsNullOrEmpty(_alias) && aliasedNode is SqlPlaceholderExpression placeholder)
+							aliasedNode = placeholder.WithAlias(_alias);
 
-					_alias = saveAlias;
+						_alias = saveAlias;
 
-					return aliasedNode;
+						return aliasedNode;
+					}
 				}
 
 				var localFlags = _flags;
@@ -727,12 +713,29 @@ namespace LinqToDB.Linq.Builder
 				if (!ReferenceEquals(method, node))
 					return Visit(method);
 
-				var newNode = Builder.HandleExtension(_context, node, localFlags);
-				if (!ReferenceEquals(newNode, node))
-					return Visit(newNode);
+				var attr = node.Method.GetExpressionAttribute(MappingSchema);
 
-				var converted = Builder.ConvertExpression(node);
-				if (!ReferenceEquals(converted, node))
+				if (attr != null)
+				{
+					// Handling AsNullable<T>, AsNotNull<T>, AsNotNullable<T>, ToNullable<T>, ToNotNull<T>, ToNotNullable<T>
+					if (!_flags.IsSql() && !attr.ServerSideOnly && attr.Expression == "{0}" && node.Method.DeclaringType == typeof(Sql))
+					{
+						var converted = Visit(node.Arguments[0]);
+						if (converted.Type != node.Type)
+							converted = Expression.Convert(converted, node.Type);
+						return converted;
+					}
+
+					if (attr.ServerSideOnly || _flags.IsSql() || attr.PreferServerSide)
+					{
+						var converted = Builder.ConvertExtension(attr, _context, node, _flags.SqlFlag());
+						if (!ReferenceEquals(converted, node))
+							return Visit(converted);
+					}
+				}
+
+				var newNode = Builder.ConvertExpression(node);
+				if (!ReferenceEquals(newNode, node))
 				{
 					if (!_flags.IsSql() && !Builder.PreferServerSide(node, false))
 					{
@@ -741,7 +744,7 @@ namespace LinqToDB.Linq.Builder
 							return translatedWithArguments;
 					}
 
-					return Visit(converted);
+					return Visit(newNode);
 				}
 
 
