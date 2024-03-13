@@ -412,8 +412,8 @@ namespace LinqToDB.Linq.Builder
 				DataContext,
 				this,
 				rootSelectQuery, expr,
-				static (context, e, descriptor) =>
-					context.builder.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
+				static (context, e, descriptor, inline) =>
+					context.builder.ConvertToExtensionSql(context.context, context.flags, e, descriptor, inline));
 
 			if (transformed is SqlPlaceholderExpression placeholder)
 			{

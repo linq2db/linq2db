@@ -380,7 +380,7 @@ namespace LinqToDB.Linq.Builder
 							builder,
 							placeholderSelect,
 							methodCall,
-							static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor));
+							static (ctx, e, descriptor, inline) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor, inline));
 
 						if (sqlExpr is not SqlPlaceholderExpression placeholder)
 							return BuildSequenceResult.Error(methodCall);

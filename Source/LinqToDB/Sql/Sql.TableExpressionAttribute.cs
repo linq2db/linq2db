@@ -45,7 +45,7 @@ namespace LinqToDB
 				set => base.Name = value;
 			}
 
-			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
+			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, ExpressionAttribute.ConvertFunc<TContext> converter)
 			{
 				table.SqlTableType = SqlTableType.Expression;
 				var expressionStr  = table.Expression = Expression ?? methodCall.Method.Name!;
@@ -56,8 +56,8 @@ namespace LinqToDB
 					throw new LinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");
 
 				// Add two fake expressions, TableName and Alias
-				knownExpressions.Insert(0, null);
-				knownExpressions.Insert(0, null);
+				knownExpressions.Insert(0, (null, null));
+				knownExpressions.Insert(0, (null, null));
 
 				if (Schema != null || Database != null || Server != null || Package != null)
 					table.TableName = new SqlObjectName(

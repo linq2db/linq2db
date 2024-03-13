@@ -990,12 +990,12 @@ namespace LinqToDB
 			}
 
 			public override Expression GetExpression<TContext>(
-				TContext                                                  context,
-				IDataContext                                              dataContext,
-				IExpressionEvaluator                                      evaluator,
-				SelectQuery                                               query,
-				Expression                                                expression,
-				Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
+				TContext              context,
+				IDataContext          dataContext,
+				IExpressionEvaluator  evaluator,
+				SelectQuery           query,
+				Expression            expression,
+				ConvertFunc<TContext> converter)
 			{
 				var expressionStr = Expression;
 				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true,
@@ -1007,7 +1007,9 @@ namespace LinqToDB
 
 				for (var i = 0; i < knownExpressions.Count; i++)
 				{
-					var converted = converter(context, knownExpressions[i]!, null);
+					var pair      = knownExpressions[i];
+
+					var converted = converter(context, pair.expression!, null, pair.parameter?.DoNotParametrize);
 
 					if (converted is not SqlPlaceholderExpression placeholder)
 						return converted;

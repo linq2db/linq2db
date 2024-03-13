@@ -127,9 +127,9 @@ namespace LinqToDB.Linq.Builder
 				builder, 
 				placeholderSelect, 
 				methodCall,
-				static (ctx, e, descriptor) =>
+				static (ctx, e, descriptor, inline) =>
 				{
-					var result = ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor);
+					var result = ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor, inline);
 					result = ctx.builder.UpdateNesting(ctx.forselect, result);
 					return result;
 				});

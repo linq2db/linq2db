@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var converted = data.Expression.Unwrap() switch
 						{
-							LambdaExpression lex => builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), lex, null),
+							LambdaExpression lex => builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), lex, null, null),
 							var ex => builder.ConvertToSqlExpr(sequence, ex)
 						};
 
@@ -91,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else if (data.Expression is LambdaExpression le)
 					{
-						var converted = builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), le, null);
+						var converted = builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), le, null, null);
 
 						if (converted is SqlPlaceholderExpression placeholder)
 							data.SqlExpression = placeholder.Sql;

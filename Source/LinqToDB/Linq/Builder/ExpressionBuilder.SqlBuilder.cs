@@ -210,51 +210,62 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildExpression
 
-		public Expression ConvertToExtensionSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor)
+		public Expression ConvertToExtensionSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor, bool? inlineParameters)
 		{
-			expression = expression.UnwrapConvertToObject();
-			var unwrapped = expression.Unwrap();
-
-			if (unwrapped is LambdaExpression lambda)
+			var saveInline = DataContext.InlineParameters;
+			try
 			{
-				var contextRefExpression = new ContextRefExpression(lambda.Parameters[0].Type, context);
+				if (inlineParameters == true)
+					DataContext.InlineParameters = true;
 
-				/*var aggregationRoot = GetRootContext(context, contextRefExpression, true);
+				expression = expression.UnwrapConvertToObject();
+				var unwrapped = expression.Unwrap();
+
+				if (unwrapped is LambdaExpression lambda)
+				{
+					var contextRefExpression = new ContextRefExpression(lambda.Parameters[0].Type, context);
+
+					/*var aggregationRoot = GetRootContext(context, contextRefExpression, true);
 
 				if (aggregationRoot is null)
 				{
 					throw new LinqException("Could not retrieve aggregation context.");
 				}*/
 
-				var body = lambda.GetBody(contextRefExpression);
+					var body = lambda.GetBody(contextRefExpression);
 
-				return ConvertToSqlExpr(context, body, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
-			}
-
-			if (unwrapped is ContextRefExpression contextRef)
-			{
-				contextRef = contextRef.WithType(contextRef.BuildContext.ElementType);
-
-				var result = ConvertToSqlExpr(contextRef.BuildContext, contextRef,
-					flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
-
-				if (result is SqlPlaceholderExpression)
-				{
-					if (result.Type != expression.Type)
-					{
-						result = Expression.Convert(result, expression.Type);
-						result = ConvertToSqlExpr(contextRef.BuildContext, result, flags: flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor: columnDescriptor);
-					}
-
-					result = UpdateNesting(context, result);
-
-					return result;
+					return ConvertToSqlExpr(context, body, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
 				}
+
+				if (unwrapped is ContextRefExpression contextRef)
+				{
+					contextRef = contextRef.WithType(contextRef.BuildContext.ElementType);
+
+					var result = ConvertToSqlExpr(contextRef.BuildContext, contextRef,
+						flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
+
+					if (result is SqlPlaceholderExpression)
+					{
+						if (result.Type != expression.Type)
+						{
+							result = Expression.Convert(result, expression.Type);
+							result = ConvertToSqlExpr(contextRef.BuildContext, result, flags: flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor: columnDescriptor);
+						}
+
+						result = UpdateNesting(context, result);
+
+						return result;
+					}
+				}
+
+				var converted = ConvertToSqlExpr(context, expression, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
+
+				return converted;
 			}
-
-			var converted = ConvertToSqlExpr(context, expression, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
-
-			return converted;
+			finally
+			{
+				DataContext.InlineParameters = saveInline;
+			}
 		}
 
 		[DebuggerDisplay("S: {SelectQuery?.SourceID} F: {Flags}, E: {Expression}, C: {Context}")]
@@ -1151,7 +1162,7 @@ namespace LinqToDB.Linq.Builder
 				this,
 				currentContext.SelectQuery,
 				mc,
-				static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
+				static (context, e, descriptor, inline) => context.this_.ConvertToExtensionSql(context.context, context.flags, e, descriptor, inline));
 
 			DataContext.InlineParameters = inlineParameters;
 

@@ -235,17 +235,17 @@ namespace LinqToDB
 			public static readonly SqlExpression UnknownExpression = new ("!!!");
 
 			public static void PrepareParameterValues<TContext>(
-				TContext                                               context,
-				MappingSchema                                          mappingSchema,
-				Expression                                             expression,
-				ref string?                                            expressionStr,
-				bool                                                   includeInstance,
-				out List<Expression?>                                  knownExpressions,
-				bool                                                   ignoreGenericParameters,
-				out List<SqlDataType>?                                 genericTypes,
-				Func<TContext,Expression,ColumnDescriptor?,Expression> converter)
+				TContext                                                              context,
+				MappingSchema                                                         mappingSchema,
+				Expression                                                            expression,
+				ref string?                                                           expressionStr,
+				bool                                                                  includeInstance,
+				out List<(Expression? expression, ExprParameterAttribute? parameter)> knownExpressions,
+				bool                                                                  ignoreGenericParameters,
+				out List<SqlDataType>?                                                genericTypes,
+				ConvertFunc<TContext>                                                 converter)
 			{
-				knownExpressions = new List<Expression?>();
+				knownExpressions = new List<(Expression?, ExprParameterAttribute?)>();
 				genericTypes     = null;
 
 				if (expression.NodeType == ExpressionType.Call)
@@ -254,7 +254,7 @@ namespace LinqToDB
 					expressionStr ??= mc.Method.Name;
 
 					if (includeInstance && !mc.Method.IsStatic)
-						knownExpressions.Add(mc.Object);
+						knownExpressions.Add((mc.Object, null));
 
 					ParameterInfo[]? pis = null;
 
@@ -262,24 +262,27 @@ namespace LinqToDB
 					{
 						var arg = mc.Arguments[i];
 
+						pis ??= mc.Method.GetParameters();
+						var p              = pis[i];
+						var paramAttribute = p.GetAttributes<ExprParameterAttribute>().FirstOrDefault();
+
 						if (arg is NewArrayExpression nae)
 						{
-							pis ??= mc.Method.GetParameters();
-
-							var p = pis[i];
-
 							if (p.HasAttribute<ParamArrayAttribute>())
 							{
-								knownExpressions.AddRange(nae.Expressions);
+								foreach (var e in nae.Expressions)
+								{
+									knownExpressions.Add((e, paramAttribute));
+								}
 							}
 							else
 							{
-								knownExpressions.Add(nae);
+								knownExpressions.Add((nae, paramAttribute));
 							}
 						}
 						else
 						{
-							knownExpressions.Add(arg);
+							knownExpressions.Add((arg, paramAttribute));
 						}
 					}
 
@@ -300,7 +303,9 @@ namespace LinqToDB
 									{
 										if (pi[i].ParameterType == t)
 										{
-											var converted = converter(context, mc.Arguments[i], null);
+											var paramAttribute = pi[i].GetAttributes<ExprParameterAttribute>().FirstOrDefault();
+
+											var converted      = converter(context, mc.Arguments[i], null, paramAttribute?.DoNotParametrize);
 											if (converted is SqlPlaceholderExpression placeholder)
 											{
 												var dbType = placeholder.Sql.GetExpressionType();
@@ -328,7 +333,9 @@ namespace LinqToDB
 									{
 										if (pi[i].ParameterType == t)
 										{
-											var converted = converter(context, mc.Arguments[i], null);
+											var paramAttribute = pi[i].GetAttributes<ExprParameterAttribute>().FirstOrDefault();
+
+											var converted = converter(context, mc.Arguments[i], null, paramAttribute?.DoNotParametrize);
 											if (converted is SqlPlaceholderExpression placeholder)
 											{
 												var dbType = placeholder.Sql.GetExpressionType();
@@ -349,19 +356,20 @@ namespace LinqToDB
 					var me = (MemberExpression) expression;
 					expressionStr ??= me.Member.Name;
 					if (me.Expression != null)
-						knownExpressions.Add(me.Expression);
+						knownExpressions.Add((me.Expression, null));
 				}
 			}
 
-			public static ISqlExpression?[] PrepareArguments<TContext>(
-				TContext                                               context,
-				string                                                 expressionStr,
-				int[]?                                                 argIndices,
-				bool                                                   addDefault,
-				List<Expression?>                                      knownExpressions,
-				List<SqlDataType>?                                     genericTypes,
-				Func<TContext,Expression,ColumnDescriptor?,Expression> converter,
-				out Expression?                                        error)
+			public delegate Expression ConvertFunc<TContext>(TContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool? inlineParameters);
+
+			public static ISqlExpression?[] PrepareArguments<TContext>(TContext   context,
+				string                                                            expressionStr,
+				int[]?                                                            argIndices,
+				bool                                                              addDefault,
+				List<(Expression? expression, ExprParameterAttribute? parameter)> knownExpressions,
+				List<SqlDataType>?                                                genericTypes,
+				ConvertFunc<TContext>                                             converter,
+				out Expression?                                                   error)
 			{
 				var parms = new List<ISqlExpression?>();
 				var ctx   = WritableContext.Create((found: false, error: (Expression?)null), (context, expressionStr, argIndices, knownExpressions, genericTypes, converter, parms));
@@ -407,10 +415,10 @@ namespace LinqToDB
 							}
 							else
 							{
-								var expr = ctx.StaticValue.knownExpressions[argIdx];
-								if (expr != null)
+								var (expression, parameter) = ctx.StaticValue.knownExpressions[argIdx];
+								if (expression != null)
 								{
-									var converted = ctx.StaticValue.converter(ctx.StaticValue.context, expr, null);
+									var converted = ctx.StaticValue.converter(ctx.StaticValue.context, expression, null, parameter?.DoNotParametrize);
 									if (converted is SqlPlaceholderExpression placeholder)
 									{
 										paramExpr = placeholder.Sql;
@@ -418,7 +426,7 @@ namespace LinqToDB
 									else
 									{
 										paramExpr          = null;
-										ctx.WriteableValue = (true, expr);
+										ctx.WriteableValue = (true, expression);
 									}
 								}
 							}
@@ -461,10 +469,10 @@ namespace LinqToDB
 								}
 								else
 								{
-									var expr = knownExpressions[argIdx];
-									if (expr != null)
+									var (expression, parameter) = knownExpressions[argIdx];
+									if (expression != null)
 									{
-										var converted = converter(context, expr, null);
+										var converted = converter(context, expression, null, parameter?.DoNotParametrize);
 										if (converted is SqlPlaceholderExpression placeholder)
 										{
 											paramExpr = placeholder.Sql;
@@ -476,6 +484,7 @@ namespace LinqToDB
 												ctx.WriteableValue = (true, error);
 											paramExpr = null;
 										}
+					
 									}
 								}
 
@@ -487,19 +496,19 @@ namespace LinqToDB
 					{
 						if (addDefault)
 						{
-							foreach (var e in knownExpressions)
+							foreach (var (expression, parameter) in knownExpressions)
 							{
-								if (e == null)
+								if (expression == null)
 									parms.Add(null);
 								else
 								{
-									var converted = converter(context, e, null);
+									var converted = converter(context, expression, null, parameter?.DoNotParametrize);
 
 									if (converted is SqlPlaceholderExpression placeholder)
 										parms.Add(placeholder.Sql);
 									else
 									{
-										error = e;
+										error = expression;
 									}
 								}
 							}
@@ -520,12 +529,12 @@ namespace LinqToDB
 			}
 
 			public virtual Expression GetExpression<TContext>(
-				TContext                                                  context,
-				IDataContext                                              dataContext,
-				IExpressionEvaluator                                      evaluator,
-				SelectQuery                                               query,
-				Expression                                                expression,
-				Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
+				TContext              context,
+				IDataContext          dataContext,
+				IExpressionEvaluator  evaluator,
+				SelectQuery           query,
+				Expression            expression,
+				ConvertFunc<TContext> converter)
 			{
 				var expressionStr = Expression;
 				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes, converter);
