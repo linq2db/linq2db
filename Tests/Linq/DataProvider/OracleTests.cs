@@ -4300,7 +4300,7 @@ END convert_bool;");
 		}
 
 		[Test]
-		public void Issue4172Test1([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
+		public void Issue4172Test1([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
@@ -4317,7 +4317,7 @@ END convert_bool;");
 		}
 
 		[Test]
-		public void Issue4172Test2([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
+		public void Issue4172Test2([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
@@ -4329,6 +4329,40 @@ END convert_bool;");
 				 from u in users
 				 where u.ROLE != Role.Unknown
 				 select u).ToList();
+
+			Assert.True(data.Count == 1, "Incorrect count");
+		}
+
+		[Test]
+		public void Issue4172Test1Swap([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
+
+			users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
+
+			// Should return Unknown Role users
+			var data = (
+				from u in users
+				where Role.Unknown == u.ROLE
+				select u).ToList();
+
+			Assert.True(data.Count == 0, "Incorrect count");
+		}
+
+		[Test]
+		public void Issue4172Test2Swap([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
+
+			users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
+
+			// Should return Known Role users
+			var data = (
+				from u in users
+				where Role.Unknown != u.ROLE
+				select u).ToList();
 
 			Assert.True(data.Count == 1, "Incorrect count");
 		}
