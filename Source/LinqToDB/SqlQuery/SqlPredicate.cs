@@ -58,8 +58,8 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.NotPredicate;
 
-			public override bool          CanInvert(NullabilityContext nullability) => false;
-			public override ISqlPredicate Invert(NullabilityContext    nullability) => throw new InvalidOperationException();
+			public override bool          CanInvert(NullabilityContext nullability) => true;
+			public override ISqlPredicate Invert(NullabilityContext    nullability) => Predicate;
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
