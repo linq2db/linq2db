@@ -69,7 +69,19 @@ namespace LinqToDB.DataProvider.SqlCe
 
 					if (hasUpdateTableInQuery || updateStatement.SelectQuery.From.Tables.Count > 0)
 					{
-						throw new LinqToDBException("SqlCe does not support UPDATE query with JOIN.");
+						var isAllowed = false;
+
+						if (hasUpdateTableInQuery && updateStatement.SelectQuery.From.Tables is [{ Source: SqlTable tableInQuery }] && tableInQuery == updateStatement.Update.Table)
+						{
+							isAllowed                          = true;
+							updateStatement.Update.TableSource = null;
+
+							//TODO: weird idea to use alias for update table
+							updateStatement.Update.Table.Alias = "$F";
+						}
+
+						if (!isAllowed)
+							throw new LinqToDBException("SqlCe does not support UPDATE query with JOIN.");
 					}
 				}
 
