@@ -186,10 +186,10 @@ namespace LinqToDB.Data
 			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, bool forGetSqlText, int startIndent = 0)
 			{
 				bool aquiredLock = false;
-				Monitor.Enter(query, ref aquiredLock);
-
 				try
 				{
+					Monitor.Enter(query, ref aquiredLock);
+
 					var statement = query.Statement;
 					var options   = query.DataOptions ?? dataConnection.Options;
 

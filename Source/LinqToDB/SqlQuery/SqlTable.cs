@@ -19,6 +19,7 @@ namespace LinqToDB.SqlQuery
 			SourceID   = sourceId ?? Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 			ObjectType = objectType;
 			TableName  = tableName;
+			_all       = SqlField.All(this);
 		}
 
 		internal SqlTable(
@@ -45,6 +46,8 @@ namespace LinqToDB.SqlQuery
 			SqlTableType   = sqlTableType;
 			TableArguments = tableArguments;
 			TableOptions   = tableOptions;
+
+			_all ??= SqlField.All(this);
 		}
 
 		#endregion
@@ -111,6 +114,8 @@ namespace LinqToDB.SqlQuery
 				var cd = entityDescriptor[identityField.Name]!;
 				SequenceAttributes = cd.SequenceName == null ? null : new[] { cd.SequenceName };
 			}
+
+			_all ??= SqlField.All(this);
 		}
 
 		#endregion
@@ -131,6 +136,8 @@ namespace LinqToDB.SqlQuery
 
 			Expression         = table.Expression;
 			TableArguments     = table.TableArguments;
+
+			_all ??= SqlField.All(this);
 		}
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
@@ -146,6 +153,8 @@ namespace LinqToDB.SqlQuery
 			SqlTableType       = table.SqlTableType;
 			TableArguments     = tableArguments;
 			SqlQueryExtensions = table.SqlQueryExtensions;
+
+			_all ??= SqlField.All(this);
 		}
 
 		#endregion
@@ -238,8 +247,8 @@ namespace LinqToDB.SqlQuery
 
 		public SequenceNameAttribute[]? SequenceAttributes { get; protected internal set; }
 
-		private SqlField? _all;
-		public  SqlField   All => _all ??= SqlField.All(this);
+		SqlField?       _all;
+		public SqlField All => _all!;
 
 		public SqlField? GetIdentityField()
 		{
