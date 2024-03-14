@@ -2144,16 +2144,12 @@ namespace LinqToDB.SqlProvider
 
 			StringBuilder.Append("WHERE").AppendLine();
 
-			++_binaryOptimized;
-
 			Indent++;
 			AppendIndent();
 			BuildWhereSearchCondition(selectQuery, searchCondition);
 			Indent--;
 
 			StringBuilder.AppendLine();
-
-			--_binaryOptimized;
 		}
 
 		#endregion
