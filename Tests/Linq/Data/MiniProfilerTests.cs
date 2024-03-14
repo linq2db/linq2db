@@ -1130,8 +1130,10 @@ namespace Tests.Data
 				// provider-specific type classes
 				if (!provider.Adapter.IsIDSProvider)
 				{
+#pragma warning disable CS0618 // Type or member is obsolete
 					var ifxTSVal = db.Execute<IfxTimeSpan>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType IS NOT NULL");
 					Assert.AreEqual(ifxTSVal, db.Execute<IfxTimeSpan>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType  = ?", new DataParameter("@p", ifxTSVal, DataType.Time)));
+#pragma warning restore CS0618 // Type or member is obsolete
 					var rawValue = db.Execute<object>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType  = ?", new DataParameter("@p", ifxTSVal, DataType.Time));
 					Assert.True    (rawValue is TimeSpan);
 					Assert.AreEqual((TimeSpan)ifxTSVal, rawValue);

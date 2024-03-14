@@ -71,9 +71,13 @@ public class TestsInitialization
 				return DbProviderFactories.GetFactory("IBM.Data.DB2").GetType().Assembly;
 
 			if (requestedAssembly.Name == "IBM.Data.Informix")
+			{
 				// chose your red or blue pill carefully
 				//return DbProviderFactories.GetFactory("IBM.Data.Informix").GetType().Assembly;
+#pragma warning disable CS0618 // Type or member is obsolete
 				return typeof(IBM.Data.Informix.IfxTimeSpan).Assembly;
+#pragma warning restore CS0618 // Type or member is obsolete
+			}
 
 			return null;
 		};

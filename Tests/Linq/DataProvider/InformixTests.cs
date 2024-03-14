@@ -73,7 +73,9 @@ namespace Tests.DataProvider
 					if (!isIDSProvider)
 					{
 						Assert.That(TestType<IfxDecimal?> (conn, "decimalDataType" , DataType.Decimal), Is.EqualTo(new IfxDecimal(9999999m)));
+#pragma warning disable CS0618 // Type or member is obsolete
 						Assert.That(TestType<IfxTimeSpan?>(conn, "intervalDataType", DataType.Time)   , Is.EqualTo(new IfxTimeSpan(new TimeSpan(12, 12, 12))));
+#pragma warning restore CS0618 // Type or member is obsolete
 					}
 				}
 #endif

@@ -451,8 +451,8 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					(from p in Parent
 					from g in p.GrandChildren
-					join c in db.Child on g.ChildID equals c.ChildID
-					join t in db.Types on c.ParentID equals t.ID
+					join c in Child on g.ChildID equals c.ChildID
+					join t in Types on c.ParentID equals t.ID
 					select c).Count(),
 					(from p in db.Parent
 					from g in p.GrandChildren
