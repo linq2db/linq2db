@@ -547,10 +547,35 @@ namespace LinqToDB
 			}
 		}
 
-		[Function(                            PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		class SqlCeRightBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var stringExpr = builder.GetExpression(0);
+				var lengthExpr = builder.GetExpression(1);
+
+				if (stringExpr == null || lengthExpr == null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
+				// SUBSTRING(someStr, LEN(someStr) - (len - 1), len)
+
+				var startExpr = new SqlBinaryExpression(lengthExpr.SystemType, 
+					new SqlFunction(lengthExpr.SystemType, "LEN", stringExpr), "-",
+					new SqlBinaryExpression(lengthExpr.SystemType, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction), 
+					Precedence.Subtraction);
+
+				builder.ResultExpression = new SqlFunction(stringExpr.SystemType, "SUBSTRING", false, true, stringExpr, startExpr, lengthExpr);
+			}
+		}
+
+		[Function("RIGHT",                    PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "RightStr",  PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.ClickHouse, "rightUTF8", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Extension(PN.Oracle,    "",          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(OracleRightBuilder))]
+		[Extension(PN.SqlCe,     "",          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(SqlCeRightBuilder))]
 		public static string? Right(string? str, int? length)
 		{
 			if (length == null || str == null) return null;
