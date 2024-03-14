@@ -568,7 +568,7 @@ namespace LinqToDB.SqlQuery
 			return joinedTable.Condition;
 		}
 
-		public static bool IsEqualTables([NotNullWhen(true)] SqlTable? table1, [NotNullWhen(true)] SqlTable? table2)
+		public static bool IsEqualTables([NotNullWhen(true)] SqlTable? table1, [NotNullWhen(true)] SqlTable? table2, bool withExtensions = true)
 		{
 			if (table1 == null || table2 == null)
 				return false;
@@ -578,7 +578,7 @@ namespace LinqToDB.SqlQuery
 				table1.TableName    == table2.TableName  &&
 				table1.Expression   == table2.Expression;
 
-			if (result)
+			if (result && withExtensions)
 			{
 				result =
 					(table1.SqlQueryExtensions == null || table1.SqlQueryExtensions.Count == 0) &&

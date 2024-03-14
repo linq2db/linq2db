@@ -874,6 +874,9 @@ namespace LinqToDB.SqlProvider
 			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
 				return false;
 
+			if (table.SqlQueryExtensions?.Count > 0)
+				return false;
+
 			for (int i = 0; i < query.From.Tables.Count; i++)
 			{
 				var ts = query.From.Tables[i];

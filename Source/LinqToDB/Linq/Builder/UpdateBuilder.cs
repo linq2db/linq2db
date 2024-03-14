@@ -183,6 +183,9 @@ namespace LinqToDB.Linq.Builder
 							throw new LinqException("Cannot retrieve Table for update.");
 						}
 
+						if (intoTableContext.SqlTable.SqlQueryExtensions?.Count > 0)
+							throw new LinqToDBException("Could not update table which has Query extensions.");
+
 						if (sequenceTableContext == null)
 						{
 							// trying to detect join table
@@ -226,21 +229,21 @@ namespace LinqToDB.Linq.Builder
 							sequenceTableContext = collectedTables.First();
 						}
 
-						if (!QueryHelper.IsEqualTables(sequenceTableContext.SqlTable, intoTableContext.SqlTable))
+						if (QueryHelper.IsEqualTables(sequenceTableContext.SqlTable, intoTableContext.SqlTable, false))
+						{
+							intoTableContext = sequenceTableContext;
+						}
+						else
 						{
 							// create join between tables
 							//
 
 							var sequenceRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, sequenceTableContext);
-							var intoRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, into);
+							var intoRef     = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, into);
 
 							var compareSearchCondition = builder.GenerateComparison(sequenceTableContext, sequenceRef, intoRef);
 							sequenceTableContext.SelectQuery.Where.ConcatSearchCondition(compareSearchCondition);
 							updateStatement.Update.HasComparison = true;
-						}
-						else
-						{
-							intoTableContext = sequenceTableContext;
 						}
 
 						updateContext.TargetTable = intoTableContext;
