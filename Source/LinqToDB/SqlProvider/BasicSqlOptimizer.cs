@@ -1176,7 +1176,6 @@ namespace LinqToDB.SqlProvider
 							innerQuery.Select.Columns.Clear();
 
 							innerQuery.Select.AddNew(ex);
-							innerQuery.RemoveNotUnusedColumns();
 
 							ex = innerQuery;
 						}
@@ -1188,6 +1187,19 @@ namespace LinqToDB.SqlProvider
 						item.Expression = ex;
 						newUpdateStatement.Update.Items.Add(item);
 					}
+
+					foreach (var setExpression in newUpdateStatement.Update.Items)
+					{
+						var column = setExpression.Column;
+						if (column is SqlRowExpression)
+							continue;
+
+						var field = QueryHelper.GetUnderlyingField(column);
+						if (field == null)
+							throw new LinqToDBException("Expression {column} cannot be used for update field");
+
+						setExpression.Column = field;
+					}
 				}
 
 				if (updateStatement.Output != null)
@@ -1197,8 +1209,6 @@ namespace LinqToDB.SqlProvider
 
 				newUpdateStatement.Update.Table = updateStatement.Update.Table;
 				newUpdateStatement.With         = updateStatement.With;
-
-				clonedQuery.RemoveNotUnusedColumns();
 
 				newUpdateStatement.SelectQuery.Where.SearchCondition.AddExists(clonedQuery);
 

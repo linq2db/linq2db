@@ -275,9 +275,6 @@ namespace Tests.xUpdate
 				TestProvName.AllClickHouse,
 				ProviderName.SqlCe,
 				ProviderName.DB2,
-				TestProvName.AllFirebird,
-				TestProvName.AllOracle,
-				TestProvName.AllSQLite,
 				ProviderName.Access,
 				TestProvName.AllSapHana)]
 			string context)
@@ -351,9 +348,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
-				TestProvName.AllOracle,
-				TestProvName.AllSQLite,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -376,9 +370,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
-				TestProvName.AllOracle,
-				TestProvName.AllSQLite,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -401,9 +392,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
-				TestProvName.AllOracle,
-				TestProvName.AllSQLite,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -829,9 +817,6 @@ namespace Tests.xUpdate
 				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllSQLite,
-				TestProvName.AllFirebird,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana)]
 			string context)
@@ -931,9 +916,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana)]
 			string context)
@@ -966,10 +948,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana,
-				TestProvName.AllFirebird,
-				TestProvName.AllSQLite,
-				TestProvName.AllSybase,
-				TestProvName.AllOracle)]
+				TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1004,11 +983,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana,
-				TestProvName.AllFirebird,
-				TestProvName.AllSQLite,
-				TestProvName.AllMySql,
-				TestProvName.AllSybase,
-				TestProvName.AllOracle)]
+				TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1045,7 +1020,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
-				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana)]
 			string context)

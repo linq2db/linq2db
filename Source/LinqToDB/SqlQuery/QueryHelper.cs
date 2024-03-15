@@ -1357,35 +1357,6 @@ namespace LinqToDB.SqlQuery
 			return new DbDataType(expr.SystemType!);
 		}
 
-		static void RemoveNotUnusedColumnsInternal(SelectQuery selectQuery, SelectQuery parentQuery)
-		{
-			for (int i = 0; i < selectQuery.From.Tables.Count; i++)
-			{
-				var table = selectQuery.From.Tables[i];
-				if (table.Source is SelectQuery sc)
-				{
-					for (int c = 0; c < sc.Select.Columns.Count; )
-					{
-						var column = sc.Select.Columns[c];
-
-						if (IsDependsOn(selectQuery, column, new HashSet<IQueryElement> { table }))
-							c++;
-						else
-						{
-							sc.Select.Columns.RemoveAt(c);
-						}
-					}
-
-					RemoveNotUnusedColumnsInternal(sc, parentQuery);
-				}
-			}
-		}
-
-		public static void RemoveNotUnusedColumns(this SelectQuery selectQuery)
-		{
-			RemoveNotUnusedColumnsInternal(selectQuery, selectQuery);
-		}
-
 		public static SelectQuery GetInnerQuery(this SelectQuery selectQuery)
 		{
 			if (selectQuery.IsSimple)
