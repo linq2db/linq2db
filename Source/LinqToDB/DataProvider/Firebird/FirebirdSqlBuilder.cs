@@ -222,8 +222,7 @@ namespace LinqToDB.DataProvider.Firebird
 				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 
 				// TODO: temporary guard against cast to unknown type (Variant)
-				if (paramValue.DbDataType.DataType   == DataType.Undefined &&
-				    paramValue.DbDataType.SystemType == typeof(object))
+				if (paramValue.DbDataType.DataType   == DataType.Undefined)
 				{
 					base.BuildParameter(parameter);
 					return;
