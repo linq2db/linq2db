@@ -1657,6 +1657,9 @@ namespace LinqToDB.SqlQuery
 			if (!subQuery.GroupBy.IsEmpty)
 				return false;
 
+			if (!_providerFlags.IsNestedJoinsSupported && subQuery.From.Tables[0].Joins.Count > 0)
+				return false;
+
 			var moveConditionToQuery = joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply;
 
 			if (joinTable.JoinType != JoinType.Inner)

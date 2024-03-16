@@ -65,6 +65,7 @@ namespace LinqToDB.DataProvider
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
 				IsCountDistinctSupported             = false,
+				IsNestedJoinsSupported               = true,
 				AcceptsOuterExpressionInAggregate    = true,
 				IsUpdateFromSupported                = true,
 				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,

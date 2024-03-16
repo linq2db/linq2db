@@ -449,6 +449,21 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order =  51)]
 		public bool SupportsBooleanType { get; set; }
 
+		/// <summary>
+		/// Provider supports nested joins
+		/// <code>
+		/// A JOIN (B JOIN C ON ?) ON ?
+		/// </code>
+		/// otherwise nested join replaced with sub-query
+		/// <code>
+		/// A JOIN (SELECT ? FROM B JOIN C ON ?) ON ?
+		/// </code>.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// </summary>
+		[DataMember(Order = 52), DefaultValue(true)]
+		public bool IsNestedJoinsSupported { get; set; } = true;
+
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
@@ -483,6 +498,7 @@ namespace LinqToDB.SqlProvider
 				^ IsAllSetOperationsSupported                          .GetHashCode()
 				^ IsDistinctSetOperationsSupported                     .GetHashCode()
 				^ IsCountDistinctSupported                             .GetHashCode()
+				^ IsNestedJoinsSupported                               .GetHashCode()
 				^ IsUpdateFromSupported                                .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel                      .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate                    .GetHashCode()
@@ -537,6 +553,7 @@ namespace LinqToDB.SqlProvider
 				&& IsAllSetOperationsSupported                           == other.IsAllSetOperationsSupported
 				&& IsDistinctSetOperationsSupported                      == other.IsDistinctSetOperationsSupported
 				&& IsCountDistinctSupported                              == other.IsCountDistinctSupported
+				&& IsNestedJoinsSupported                                == other.IsNestedJoinsSupported
 				&& IsUpdateFromSupported                                 == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel                       == other.DefaultMultiQueryIsolationLevel
 				&& AcceptsOuterExpressionInAggregate                     == other.AcceptsOuterExpressionInAggregate
