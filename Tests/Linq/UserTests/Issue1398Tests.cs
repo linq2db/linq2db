@@ -79,7 +79,7 @@ namespace Tests.UserTests
 
 				Task.WaitAll(tasks.ToArray());
 
-				Assert.AreEqual(db.GetTable<InsertTable>().Count(), db.GetTable<InsertTable>().GroupBy(_ => _.Value).Count());
+				Assert.That(db.GetTable<InsertTable>().GroupBy(_ => _.Value).Count(), Is.EqualTo(db.GetTable<InsertTable>().Count()));
 			}
 		}
 

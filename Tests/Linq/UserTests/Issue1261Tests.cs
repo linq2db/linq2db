@@ -18,7 +18,7 @@ namespace Tests.UserTests
 				var q1 = q.All(x => x.ChildID == 11 && x.GrandChildID == 777);
 				var q2 = q.All(x => x.GrandChildID == 777 && x.ChildID == 11);
 
-				Assert.AreEqual(q1, q2);
+				Assert.That(q2, Is.EqualTo(q1));
 			}
 		}
 	}

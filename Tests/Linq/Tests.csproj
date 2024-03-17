@@ -7,6 +7,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
+
+		<PackageReference Include="NUnit.Analyzers" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">

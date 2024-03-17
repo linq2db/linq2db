@@ -22,8 +22,11 @@ namespace Tests.Linq
 				p = "Tester";
 				var person2 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
 
-				Assert.That(person1.FirstName, Is.EqualTo("John"));
-				Assert.That(person2.FirstName, Is.EqualTo("Tester"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(person1.FirstName, Is.EqualTo("John"));
+					Assert.That(person2.FirstName, Is.EqualTo("Tester"));
+				});
 			}
 		}
 

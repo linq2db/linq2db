@@ -107,10 +107,13 @@ namespace Tests.Linq
 
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(1, result[0].y);
-				Assert.IsNull(result[0].x.value);
-				Assert.IsNull(result[0].x.id);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].y, Is.EqualTo(1));
+					Assert.That(result[0].x.value, Is.Null);
+					Assert.That(result[0].x.id, Is.Null);
+				});
 			}
 		}
 
@@ -146,10 +149,13 @@ namespace Tests.Linq
 
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(1, result[0].y);
-				Assert.IsNull(result[0].x.value);
-				Assert.IsNull(result[0].x.id);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].y, Is.EqualTo(1));
+					Assert.That(result[0].x.value, Is.Null);
+					Assert.That(result[0].x.id, Is.Null);
+				});
 			}
 		}
 
@@ -183,10 +189,13 @@ namespace Tests.Linq
 
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(1, result[0].y);
-				Assert.IsNull(result[0].x.value);
-				Assert.IsNull(result[0].x.id);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].y, Is.EqualTo(1));
+					Assert.That(result[0].x.value, Is.Null);
+					Assert.That(result[0].x.id, Is.Null);
+				});
 			}
 		}
 	}

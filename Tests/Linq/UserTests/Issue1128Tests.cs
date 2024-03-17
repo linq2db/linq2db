@@ -54,9 +54,12 @@ namespace Tests.UserTests
 			var ed3 = ms.GetEntityDescriptor(typeof(AttributeBase));
 			var ed4 = ms.GetEntityDescriptor(typeof(AttributeBase));
 
-			Assert.AreEqual(ed1.Name.Name, ed2.Name.Name);
-			Assert.AreEqual(ed3.Name.Name, ed4.Name.Name);
-			Assert.AreEqual(ed1.Name.Name, ed4.Name.Name);
+			Assert.Multiple(() =>
+			{
+				Assert.That(ed2.Name.Name, Is.EqualTo(ed1.Name.Name));
+				Assert.That(ed4.Name.Name, Is.EqualTo(ed3.Name.Name));
+			});
+			Assert.That(ed4.Name.Name, Is.EqualTo(ed1.Name.Name));
 		}
 
 		[Test]
@@ -69,7 +72,7 @@ namespace Tests.UserTests
 			{
 				var res = db.Insert<FluentBase>(new FluentDerived { Id = 1 });
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, res);
+					Assert.That(res, Is.EqualTo(1));
 			}
 		}
 
@@ -83,7 +86,7 @@ namespace Tests.UserTests
 			{
 				var res = db.Insert<AttributeBase>(new AttributeDerived { Id = 1 });
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, res);
+					Assert.That(res, Is.EqualTo(1));
 			}
 		}
 	}

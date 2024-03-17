@@ -121,99 +121,95 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void Where4([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent
-						.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()),
-					db.Parent
-						.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()));
-		}
+		//public void Where4([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			   Parent
+		//				.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()),
+		//			db.Parent
+		//				.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()));
+		//}
 
 		//[Test]
-		public void Where5([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent
-						.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()),
-					db.Parent
-						.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()));
-		}
+		//public void Where5([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			   Parent
+		//				.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()),
+		//			db.Parent
+		//				.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()));
+		//}
 
 		//[Test]
-		public void Where6([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent
-						.Select(p => p.Children. Where(c => c.ParentID > 1))
-						.Where (t => t.Any()),
-					db.Parent
-						.Select(p => p.Children. Where(c => c.ParentID > 1))
-						.Where (t => t.Any()));
-		}
+		//public void Where6([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			   Parent
+		//				.Select(p => p.Children. Where(c => c.ParentID > 1))
+		//				.Where (t => t.Any()),
+		//			db.Parent
+		//				.Select(p => p.Children. Where(c => c.ParentID > 1))
+		//				.Where (t => t.Any()));
+		//}
 
 		[Test]
 		public void Any1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Any(p => p.children1.Any()),
+				Assert.That(
 					db.Parent
 						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Any(p => p.children1.Any()));
+						.Any(p => p.children1.Any()), Is.EqualTo(Parent
+						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
+						.Any(p => p.children1.Any())));
 		}
 
 		[Test]
 		public void Any2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => p.Children.Where(c => c.ParentID > 1))
-						.Any(p => p.Any()),
+				Assert.That(
 					db.Parent
 						.Select(p => p.Children.Where(c => c.ParentID > 1))
-						.Any(p => p.Any()));
+						.Any(p => p.Any()), Is.EqualTo(Parent
+						.Select(p => p.Children.Where(c => c.ParentID > 1))
+						.Any(p => p.Any())));
 		}
 
 		[Test]
 		public void Any3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Where(p => p.children1.Any())
-						.Any(),
+				Assert.That(
 					db.Parent
 						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
 						.Where(p => p.children1.Any())
-						.Any());
+						.Any(), Is.EqualTo(Parent
+						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
+						.Where(p => p.children1.Any())
+						.Any()));
 		}
 
 		//[Test]
-		public void Any4([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Where(p => p.children1.Any())
-						.Any(),
-					db.Parent
-						.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Where(p => p.children1.Any())
-						.Any());
-		}
+		//public void Any4([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		Assert.That(
+		//			db.Parent
+		//				.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
+		//				.Where(p => p.children1.Any())
+		//				.Any(), Is.EqualTo(Parent
+		//				.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
+		//				.Where(p => p.children1.Any())
+		//				.Any()));
+		//}
 
 		[Test]
 		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
@@ -571,16 +567,7 @@ namespace Tests.Linq
 		public void LetTest10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					(
-						from p in Parent
-						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-						select new
-						{
-							First = ch1.FirstOrDefault()
-						}
-					).Any()
-					,
+				Assert.That(
 					(
 						from p in db.Parent
 						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
@@ -588,7 +575,15 @@ namespace Tests.Linq
 						{
 							First = ch1.FirstOrDefault()
 						}
-					).Any());
+					).Any(), Is.EqualTo((
+						from p in Parent
+						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
+						select new
+						{
+							First = ch1.FirstOrDefault()
+						}
+					).Any()
+));
 		}
 
 		[Test]
@@ -689,7 +684,7 @@ namespace Tests.Linq
 							 || (ulong )EnumByte.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -735,7 +730,7 @@ namespace Tests.Linq
 							 || (ulong )EnumSByte.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -781,7 +776,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt16.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -827,7 +822,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt16.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -873,7 +868,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt32.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -919,7 +914,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt32.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -965,7 +960,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt64.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -1011,7 +1006,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt64.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 

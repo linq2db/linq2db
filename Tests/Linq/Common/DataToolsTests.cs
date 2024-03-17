@@ -77,7 +77,7 @@ namespace Tests.Common
 		[TestCaseSource(nameof(_escapeUnterminatedBracketTestData))]
 		public void EscapeUnterminatedBracket(string testString, string expectedResult)
 		{
-			Assert.AreEqual(expectedResult, DataTools.EscapeUnterminatedBracket(testString));
+			Assert.That(DataTools.EscapeUnterminatedBracket(testString), Is.EqualTo(expectedResult));
 		}
 
 		[TestCaseSource(nameof(_convertStringToSqlTestData))]
@@ -93,7 +93,7 @@ namespace Tests.Common
 				testString,
 				extraEscapes);
 
-			Assert.AreEqual(expected, sb.ToString());
+			Assert.That(sb.ToString(), Is.EqualTo(expected));
 		}
 	}
 }

@@ -44,8 +44,11 @@ namespace Tests.UserTests
 				var ed1 = newMs.GetEntityDescriptor(typeof(Class2));
 				var ed2 = db.MappingSchema.GetEntityDescriptor(typeof(Class2));
 
-				Assert.AreEqual("Class2Table", ed1.Name.Name);
-				Assert.AreEqual("Class2Table", ed2.Name.Name);
+				Assert.Multiple(() =>
+				{
+					Assert.That(ed1.Name.Name, Is.EqualTo("Class2Table"));
+					Assert.That(ed2.Name.Name, Is.EqualTo("Class2Table"));
+				});
 			}
 		}
 	}

@@ -354,8 +354,11 @@ namespace Tests.xUpdate
 				var result1 = GetTypes1(db).OrderBy(_ => _.Id).ToList();
 				var result2 = GetTypes2(db).OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(InitialTypes1Data.Length, result1.Count);
-				Assert.AreEqual(InitialTypes2Data.Length, result2.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result1, Has.Count.EqualTo(InitialTypes1Data.Length));
+					Assert.That(result2, Has.Count.EqualTo(InitialTypes2Data.Length));
+				});
 
 				var provider = GetProviderName(context, out var _);
 				for (var i = 0; i < InitialTypes1Data.Length; i++)
@@ -372,17 +375,20 @@ namespace Tests.xUpdate
 
 		private void AssertTypesRow(MergeTypes expected, MergeTypes actual, string provider, bool isIDS)
 		{
-			Assert.AreEqual(expected.Id, actual.Id);
-			Assert.AreEqual(expected.FieldInt32, actual.FieldInt32);
+			Assert.Multiple(() =>
+			{
+				Assert.That(actual.Id, Is.EqualTo(expected.Id));
+				Assert.That(actual.FieldInt32, Is.EqualTo(expected.FieldInt32));
+			});
 
 			if (!provider.IsAnyOf(TestProvName.AllAccess))
-				Assert.AreEqual(expected.FieldInt64, actual.FieldInt64);
+				Assert.That(actual.FieldInt64, Is.EqualTo(expected.FieldInt64));
 
 			if (!provider.IsAnyOf(TestProvName.AllSybase))
 				if (!provider.IsAnyOf(TestProvName.AllAccess))
-					Assert.AreEqual(expected.FieldBoolean, actual.FieldBoolean);
+					Assert.That(actual.FieldBoolean, Is.EqualTo(expected.FieldBoolean));
 				else
-					Assert.AreEqual(expected.FieldBoolean ?? false, actual.FieldBoolean);
+					Assert.That(actual.FieldBoolean, Is.EqualTo(expected.FieldBoolean ?? false));
 
 			AssertString(expected.FieldString, actual.FieldString, provider, isIDS);
 			AssertNString(expected.FieldNString, actual.FieldNString, provider);
@@ -391,10 +397,10 @@ namespace Tests.xUpdate
 
 			AssertNChar(expected.FieldChar, actual.FieldChar, provider);
 
-			Assert.AreEqual(expected.FieldFloat, actual.FieldFloat);
+			Assert.That(actual.FieldFloat, Is.EqualTo(expected.FieldFloat));
 
 			if (!provider.IsAnyOf(TestProvName.AllFirebird))
-				Assert.AreEqual(expected.FieldDouble, actual.FieldDouble);
+				Assert.That(actual.FieldDouble, Is.EqualTo(expected.FieldDouble));
 
 			AssertDateTime(expected.FieldDateTime, actual.FieldDateTime, provider);
 
@@ -403,27 +409,27 @@ namespace Tests.xUpdate
 			AssertBinary(expected.FieldBinary, actual.FieldBinary, provider);
 
 			if (!provider.IsAnyOf(TestProvName.AllInformix))
-				Assert.AreEqual(expected.FieldGuid, actual.FieldGuid);
+				Assert.That(actual.FieldGuid, Is.EqualTo(expected.FieldGuid));
 
 			if (!provider.IsAnyOf(TestProvName.AllSQLite))
-				Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
+				Assert.That(actual.FieldDecimal, Is.EqualTo(expected.FieldDecimal));
 
 			if (   !provider.IsAnyOf(TestProvName.AllSqlServer2005)
 				&& provider != ProviderName.SqlCe
 				&& !provider.IsAnyOf(TestProvName.AllOracle))
-				Assert.AreEqual(expected.FieldDate, actual.FieldDate);
+				Assert.That(actual.FieldDate, Is.EqualTo(expected.FieldDate));
 
 			AssertTime(expected.FieldTime, actual.FieldTime, provider);
 
 			if (expected.FieldEnumString == StringEnum.Value4)
-				Assert.IsNull(actual.FieldEnumString);
+				Assert.That(actual.FieldEnumString, Is.Null);
 			else
-				Assert.AreEqual(expected.FieldEnumString, actual.FieldEnumString);
+				Assert.That(actual.FieldEnumString, Is.EqualTo(expected.FieldEnumString));
 
 			if (expected.FieldEnumNumber == NumberEnum.Value4)
-				Assert.IsNull(actual.FieldEnumNumber);
+				Assert.That(actual.FieldEnumNumber, Is.Null);
 			else
-				Assert.AreEqual(expected.FieldEnumNumber, actual.FieldEnumNumber);
+				Assert.That(actual.FieldEnumNumber, Is.EqualTo(expected.FieldEnumNumber));
 		}
 
 		private static void AssertNString(string? expected, string? actual, string provider)
@@ -436,7 +442,7 @@ namespace Tests.xUpdate
 			}
 
 			if (!provider.IsAnyOf(TestProvName.AllInformix))
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 		}
 
 		private static void AssertBinary(byte[]? expected, byte[]? actual, string provider)
@@ -465,7 +471,7 @@ namespace Tests.xUpdate
 				}
 			}
 
-			Assert.AreEqual(expected, actual);
+			Assert.That(actual, Is.EqualTo(expected));
 		}
 
 		private static void AssertDateTimeOffset(DateTimeOffset? expected, DateTimeOffset? actual, string provider)
@@ -486,7 +492,7 @@ namespace Tests.xUpdate
 				&& !provider.IsAnyOf(TestProvName.AllSybase)
 				&& !provider.IsAnyOf(TestProvName.AllSapHana)
 				&& !provider.IsAnyOf(ProviderName.DB2))
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 		}
 
 		private static void AssertChar(char? expected, char? actual, string provider)
@@ -500,7 +506,7 @@ namespace Tests.xUpdate
 					expected = '\0';
 			}
 
-			Assert.AreEqual(expected, actual);
+			Assert.That(actual, Is.EqualTo(expected));
 		}
 
 		private static void AssertNChar(char? expected, char? actual, string provider)
@@ -514,7 +520,7 @@ namespace Tests.xUpdate
 					expected = '\0';
 			}
 
-			Assert.AreEqual(expected, actual);
+			Assert.That(actual, Is.EqualTo(expected));
 		}
 
 		private static void AssertDateTime(DateTime? expected, DateTime? actual, string provider)
@@ -550,7 +556,7 @@ namespace Tests.xUpdate
 					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
 			}
 
-			Assert.AreEqual(expected, actual);
+			Assert.That(actual, Is.EqualTo(expected));
 		}
 
 		private static void AssertString(string? expected, string? actual, string provider, bool isIDS)
@@ -569,7 +575,7 @@ namespace Tests.xUpdate
 				}
 			}
 
-			Assert.AreEqual(expected, actual);
+			Assert.That(actual, Is.EqualTo(expected));
 		}
 
 		private static void AssertTime(TimeSpan? expected, TimeSpan? actual, string provider)
@@ -634,7 +640,7 @@ namespace Tests.xUpdate
 				}
 			}
 
-			Assert.AreEqual(expected, actual);
+			Assert.That(actual, Is.EqualTo(expected));
 		}
 
 		[Test]
@@ -658,8 +664,11 @@ namespace Tests.xUpdate
 				var result1 = GetTypes1(db).OrderBy(_ => _.Id).ToList();
 				var result2 = GetTypes2(db).OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(InitialTypes1Data.Length, result1.Count);
-				Assert.AreEqual(InitialTypes2Data.Length, result2.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result1, Has.Count.EqualTo(InitialTypes1Data.Length));
+					Assert.That(result2, Has.Count.EqualTo(InitialTypes2Data.Length));
+				});
 
 				var provider = GetProviderName(context, out var _);
 				for (var i = 0; i < InitialTypes1Data.Length; i++)

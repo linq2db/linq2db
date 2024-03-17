@@ -18,7 +18,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class MultiThreadingTests : TestBase
 	{
-		public static void DumpObject(object? obj)
+		private static void DumpObject(object? obj)
 		{
 			if (obj == null)
 				return;
@@ -44,7 +44,7 @@ namespace Tests.Linq
 			}
 		}
 
-		public void ConcurrentRunner<TParam, TResult>(DataConnection dc, string context, int threadsPerParam, Func<DataConnection, TParam, TResult> queryFunc,
+		private void ConcurrentRunner<TParam, TResult>(DataConnection dc, string context, int threadsPerParam, Func<DataConnection, TParam, TResult> queryFunc,
 			Action<TResult, TParam> checkAction, params TParam[] parameters)
 		{
 			var threadCount = threadsPerParam * parameters.Length;

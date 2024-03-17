@@ -50,11 +50,11 @@ namespace Tests.UserTests
 				db.Insert(obj2);
 
 				var loaded1 = db.GetTable<RepresentTable>().First(e => e.Name == "Some1");
-				Assert.AreEqual(true, loaded1.Values["IsDeleted"]);
+				Assert.That(loaded1.Values["IsDeleted"], Is.EqualTo(true));
 
 
 				var loaded2 = db.GetTable<RepresentTable>().First(e => e.Name == "Some2");
-				Assert.AreEqual(false, loaded2.Values["IsDeleted"]);
+				Assert.That(loaded2.Values["IsDeleted"], Is.EqualTo(false));
 			}
 		}
 	}

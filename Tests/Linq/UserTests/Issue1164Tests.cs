@@ -19,8 +19,8 @@ namespace Tests.UserTests
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 
 				var schema = schemaProvider.GetSchema(db);
-				
-				Assert.IsNotNull(schema);
+
+				Assert.That(schema, Is.Not.Null);
 			}
 		}
 
@@ -34,7 +34,7 @@ namespace Tests.UserTests
 
 				var schema = schemaProvider.GetSchema(db);
 
-				Assert.IsNotNull(schema);
+				Assert.That(schema, Is.Not.Null);
 			}
 		}
 	}

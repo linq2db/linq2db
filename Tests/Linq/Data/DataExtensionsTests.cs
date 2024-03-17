@@ -43,7 +43,7 @@ namespace Tests.Data
 			{
 				var list = conn.Query<DateTimeOffset>("SELECT CURRENT_TIMESTAMP").ToList();
 
-				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -60,7 +60,7 @@ namespace Tests.Data
 			{
 				var list = conn.Query<QueryObject>("SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
-				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -77,7 +77,7 @@ namespace Tests.Data
 					},
 					"SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
-				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -89,8 +89,11 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr1 }), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr2 }), Is.EqualTo(arr2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr1 }), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr2 }), Is.EqualTo(arr2));
+				});
 			}
 		}
 
@@ -205,12 +208,12 @@ namespace Tests.Data
 						};
 
 					var array = query.ToArray();
-					Assert.IsTrue(array.Length > 0);
+					Assert.That(array, Is.Not.Empty);
 
 					foreach (var row in array)
 					{
 						var ids = row.List.ToArray();
-						Assert.IsTrue(ids.Length > 0);
+						Assert.That(ids, Is.Not.Empty);
 					}
 				}
 			}
@@ -245,7 +248,7 @@ namespace Tests.Data
 			{
 				var list = conn.Query<QueryStruct>("SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
-				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -257,11 +260,11 @@ namespace Tests.Data
 			{
 				var n = reader.Execute<int>();
 
-				Assert.AreEqual(1, n);
+				Assert.That(n, Is.EqualTo(1));
 
 				var s = reader.Query<string>();
 
-				Assert.AreEqual("2", s.First());
+				Assert.That(s.First(), Is.EqualTo("2"));
 			}
 		}
 
@@ -286,7 +289,7 @@ namespace Tests.Data
 				conn.AddMappingSchema(ms);
 				var n = conn.Execute<long>("SELECT @p", new { p = new TwoValues { Value1 = 1, Value2 = 2 } });
 
-				Assert.AreEqual(1L << 16 | 2, n);
+				Assert.That(n, Is.EqualTo(1L << 16 | 2));
 			}
 		}
 
@@ -304,7 +307,7 @@ namespace Tests.Data
 			{
 				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
 
-				Assert.AreEqual(null, n);
+				Assert.That(n, Is.EqualTo(null));
 			}
 		}
 
@@ -328,7 +331,7 @@ namespace Tests.Data
 			{
 				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
 
-				Assert.AreEqual(null, n);
+				Assert.That(n, Is.EqualTo(null));
 			}
 		}
 

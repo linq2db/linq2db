@@ -107,7 +107,7 @@ namespace Tests.UserTests
 										__face_ref1 = db.GetTable<Qwerty>().Where(q => q.Id == x.ref1).Select(q => q.asdfgh).FirstOrDefault()
 									}).Take(2).ToArray();
 
-				Assert.NotNull(ref1);
+				Assert.That(ref1, Is.Not.Null);
 			}
 
 		}
@@ -164,7 +164,7 @@ namespace Tests.UserTests
 										__face_y1_q1_ref1 = db.GetTable<Qwerty>().Where(q => q.Id == x.y1.q1.ref1).Select(q => q.asdfgh).FirstOrDefault()
 									}).Take(2).ToArray();
 
-				Assert.NotNull(ref1);
+				Assert.That(ref1, Is.Not.Null);
 			}
 
 
