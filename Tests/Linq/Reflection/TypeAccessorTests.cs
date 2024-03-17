@@ -126,7 +126,9 @@ namespace Tests.Reflection
 		[Test]
 		public void GetterTest()
 		{
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 			var ma = ta["Prop1"];
 
 			Assert.That(ma.HasGetter, Is.True);
@@ -136,7 +138,9 @@ namespace Tests.Reflection
 		[Test]
 		public void SetterTest()
 		{
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 			var ma = ta["Prop3"];
 
 			Assert.That(ma.HasGetter, Is.False);

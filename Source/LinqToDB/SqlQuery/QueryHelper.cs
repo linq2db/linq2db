@@ -1419,7 +1419,7 @@ namespace LinqToDB.SqlQuery
 
 			if (result != null && lastMatchPosition < format.Length)
 			{
-				var value = StripDoubleQuotes(format.Substring(lastMatchPosition, format.Length - lastMatchPosition));
+				var value = StripDoubleQuotes(format.Substring(lastMatchPosition));
 				result = new SqlBinaryExpression(typeof(string),
 					result, "+", new SqlValue(typeof(string), value), Precedence.Additive);
 			}

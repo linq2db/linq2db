@@ -58,9 +58,11 @@ namespace Tests.Reflection
 			CustomAttributeExtensions.GetCustomAttribute<Attribute>(dc);
 			CustomAttributeExtensions.GetCustomAttribute<Attribute>(dc, true);
 			CustomAttributeExtensions.GetCustomAttribute<Attribute>(dc, false);
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			CustomAttributeExtensions.GetCustomAttribute(dc, typeof(Attribute));
 			CustomAttributeExtensions.GetCustomAttribute(dc, typeof(Attribute), true);
 			CustomAttributeExtensions.GetCustomAttribute(dc, typeof(Attribute), false);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 
 			CustomAttributeExtensions.GetCustomAttributes<Attribute>(dc);
 			CustomAttributeExtensions.GetCustomAttributes<Attribute>(dc, true);
@@ -68,9 +70,11 @@ namespace Tests.Reflection
 			CustomAttributeExtensions.GetCustomAttributes(dc);
 			CustomAttributeExtensions.GetCustomAttributes(dc, true);
 			CustomAttributeExtensions.GetCustomAttributes(dc, false);
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			CustomAttributeExtensions.GetCustomAttributes(dc, typeof(Attribute));
 			CustomAttributeExtensions.GetCustomAttributes(dc, typeof(Attribute), true);
 			CustomAttributeExtensions.GetCustomAttributes(dc, typeof(Attribute), false);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 
 			AttributesExtensions.GetAttribute<Attribute>(dc, true);
 			AttributesExtensions.GetAttribute<Attribute>(dc,false);

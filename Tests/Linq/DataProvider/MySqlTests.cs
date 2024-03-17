@@ -1266,7 +1266,7 @@ namespace Tests.DataProvider
 				if (context.IsAnyOf(TestProvName.AllMySqlConnector) && procedure.ResultException != null)
 				{
 					Assert.False       (procedure.IsLoaded);
-					Assert.IsInstanceOf(typeof(InvalidOperationException), procedure.ResultException);
+					Assert.IsInstanceOf<InvalidOperationException>(procedure.ResultException);
 					Assert.AreEqual    ("There is no current result set.", procedure.ResultException.Message);
 				}
 				else
