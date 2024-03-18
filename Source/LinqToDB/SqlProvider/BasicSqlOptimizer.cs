@@ -1265,7 +1265,6 @@ namespace LinqToDB.SqlProvider
 			updateStatement.Update.Table       = updateTable;
 			updateStatement.Update.TableSource = newSource;
 
-
 			if (moveToJoin)
 			{
 				var currentSource = updateStatement.SelectQuery.From.Tables[0];
@@ -1289,8 +1288,6 @@ namespace LinqToDB.SqlProvider
 				ApplyUpdateTableComparison(updateStatement.SelectQuery, updateStatement.Update, clonedTable,
 					dataOptions);
 			}
-
-
 
 			return updateStatement;
 		}

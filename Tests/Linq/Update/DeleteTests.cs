@@ -199,6 +199,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, "Correlated DELETE not supported by ClickHouse")]
 		[Test]
 		public void DeleteMany3([DataSources] string context)
 		{

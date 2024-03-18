@@ -36,6 +36,11 @@ namespace Tests
 			return new ThrowsWhenCommand(command, this);
 		}
 
+		public virtual bool ExpectsFirst(object parameterValue)
+		{
+			return parameterValue is string strValue && !strValue.EndsWith(TestBase.LinqServiceSuffix);
+		}
+
 		public virtual bool ExpectsException(object parameterValue)
 		{
 			if (parameterValue is string strValue && ExpectedValue is string expectedStrValue)
@@ -79,6 +84,7 @@ namespace Tests
 			public override TestResult Execute(TestExecutionContext context)
 			{
 				var expectsException = false;
+				var expectsFirst     = true;
 
 				if (context.CurrentTest.Method != null)
 				{
@@ -91,6 +97,11 @@ namespace Tests
 					if (parameterValue != null)
 					{
 						expectsException = _attribute.ExpectsException(parameterValue);
+
+						if (expectsException)
+						{
+							expectsFirst = _attribute.ExpectsFirst(parameterValue);
+						}
 					}
 				}
 
@@ -104,7 +115,11 @@ namespace Tests
 					{
 						testResult.SetResult(ResultState.Failure, $"Expected a <{_attribute.ExpectedException}> to be thrown, but no exception was thrown");
 					}
-					else if (!testResult.Message.StartsWith(_attribute.ExpectedException.FullName!))
+					else if (expectsFirst && !testResult.Message.StartsWith(_attribute.ExpectedException.FullName!))
+					{
+						testResult.SetResult(ResultState.Failure, $"Expected a <{_attribute.ExpectedException}> to be thrown, but found: '{testResult.Message}'");
+					}
+					else if (!expectsFirst && !testResult.Message.Contains(_attribute.ExpectedException.FullName!))
 					{
 						testResult.SetResult(ResultState.Failure, $"Expected a <{_attribute.ExpectedException}> to be thrown, but found: '{testResult.Message}'");
 					}

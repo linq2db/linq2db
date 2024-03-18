@@ -443,6 +443,21 @@ namespace LinqToDB.SqlProvider
 		public bool SupportsBooleanType { get; set; }
 
 		/// <summary>
+		/// Provider supports nested joins
+		/// <code>
+		/// A JOIN (B JOIN C ON ?) ON ?
+		/// </code>
+		/// otherwise nested join replaced with sub-query
+		/// <code>
+		/// A JOIN (SELECT ? FROM B JOIN C ON ?) ON ?
+		/// </code>.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// </summary>
+		[DataMember(Order = 52), DefaultValue(true)]
+		public bool IsNestedJoinsSupported { get; set; } = true;
+
+
+		/// <summary>
 		/// Provider supports COUNT(DISTINCT column) function. Otherwise, it will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
@@ -491,6 +506,7 @@ namespace LinqToDB.SqlProvider
 				^ IsAllSetOperationsSupported                          .GetHashCode()
 				^ IsDistinctSetOperationsSupported                     .GetHashCode()
 				^ IsCountDistinctSupported                             .GetHashCode()
+				^ IsNestedJoinsSupported                               .GetHashCode()
 				^ IsAggregationDistinctSupported                       .GetHashCode()
 				^ IsUpdateFromSupported                                .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel                      .GetHashCode()
@@ -546,6 +562,7 @@ namespace LinqToDB.SqlProvider
 				&& IsAllSetOperationsSupported                           == other.IsAllSetOperationsSupported
 				&& IsDistinctSetOperationsSupported                      == other.IsDistinctSetOperationsSupported
 				&& IsCountDistinctSupported                              == other.IsCountDistinctSupported
+				&& IsNestedJoinsSupported                                == other.IsNestedJoinsSupported
 				&& IsAggregationDistinctSupported                        == other.IsAggregationDistinctSupported
 				&& IsUpdateFromSupported                                 == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel                       == other.DefaultMultiQueryIsolationLevel

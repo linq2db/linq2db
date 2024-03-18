@@ -446,18 +446,6 @@ namespace Tests.DataProvider
 				}
 			}
 
-#if NET6_0_OR_GREATER
-			// DateOnly
-			Test<DateOnly>(DataType.Text     , -1, TestData.DateOnly, TestData.DateOnly);
-			Test<DateOnly>(DataType.NText    , -1, TestData.DateOnly, TestData.DateOnly);
-			Test<DateOnly>(DataType.Char     , -1, TestData.DateOnly, TestData.DateOnly);
-			Test<DateOnly>(DataType.NChar    , -1, TestData.DateOnly, TestData.DateOnly);
-			Test<DateOnly>(DataType.VarChar  , -1, TestData.DateOnly, TestData.DateOnly);
-			Test<DateOnly>(DataType.NVarChar , -1, TestData.DateOnly, TestData.DateOnly);
-			Test<DateOnly>(DataType.Date     , -1, TestData.DateOnly, TestData.DateOnly);
-			Test<DateOnly>(DataType.Undefined, -1, TestData.DateOnly, TestData.DateOnly);
-#endif
-
 			void Test<TValue>(DataType dataType, int precision, TValue value, TValue expected)
 			{
 				var ms = new MappingSchema();
@@ -489,5 +477,54 @@ namespace Tests.DataProvider
 				Assert.AreEqual(1, interceptor.Parameters.Length);
 			}
 		}
+
+#if NET6_0_OR_GREATER
+		[Test]
+		public void TestLiteralsAndParameters_DateOnly([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var interceptor = new SaveCommandInterceptor();
+
+			// DateOnly
+			Test<DateOnly>(DataType.Text     , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.NText    , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.Char     , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.NChar    , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.VarChar  , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.NVarChar , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.Date     , -1, TestData.DateOnly, TestData.DateOnly);
+			Test<DateOnly>(DataType.Undefined, -1, TestData.DateOnly, TestData.DateOnly);
+
+			void Test<TValue>(DataType dataType, int precision, TValue value, TValue expected)
+			{
+				var ms = new MappingSchema();
+
+				new FluentMappingBuilder(ms)
+					.Entity<LiteralsTestTable<TValue>>()
+						.Property(e => e.Value)
+							.HasDataType(dataType)
+							.HasPrecision(precision)
+					.Build();
+
+				using var db = GetDataContext(context, ms);
+
+				db.AddInterceptor(interceptor);
+
+				db.InlineParameters = true;
+
+				var data = new LiteralsTestTable<TValue>[] { new() { Value = value } }.AsQueryable(db).ToArray();
+				Assert.AreEqual(expected, data[0].Value);
+				Assert.AreEqual(0, interceptor.Parameters.Length);
+
+				db.InlineParameters = false;
+
+				data = (from x in db.FromSqlScalar<int>($"select 1 as one")
+						from y in new LiteralsTestTable<TValue>[] { new() { Value = value } }
+						select y).ToArray();
+
+				Assert.AreEqual(expected, data[0].Value);
+				Assert.AreEqual(1, interceptor.Parameters.Length);
+			}
+		}
+#endif
 	}
 }
