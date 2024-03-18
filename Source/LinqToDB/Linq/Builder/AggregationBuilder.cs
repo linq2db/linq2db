@@ -518,7 +518,9 @@ namespace LinqToDB.Linq.Builder
 							}
 							else
 							{
+#pragma warning disable CA1508
 								if (filterSqlExpression != null)
+#pragma warning restore CA1508
 								{
 									sql = new SqlFunction(returnType, "CASE", filterSqlExpression, new SqlValue(1), new SqlValue(returnType, null));
 								}								
@@ -546,7 +548,9 @@ namespace LinqToDB.Linq.Builder
 							if (valueExpression == null)
 								throw new InvalidOperationException();
 
+#pragma warning disable CA1508
 							if (filterSqlExpression != null)
+#pragma warning restore CA1508
 							{
 								sql = new SqlFunction(returnType, "CASE", filterSqlExpression, valueSqlExpression!, new SqlValue(returnType, null));
 							}
