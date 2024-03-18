@@ -68,8 +68,7 @@ namespace LinqToDB.Linq.Builder
 			if (argumentCount > 1)
 			{
 				var filterLambda = methodCall.Arguments[1].UnwrapLambda();
-				sequence = builder.BuildWhere(buildInfo.Parent, sequence, filterLambda, false, false, buildInfo.IsTest,
-					isAggregationTest : buildInfo.AggregationTest);
+				sequence = builder.BuildWhere(buildInfo.Parent, sequence, filterLambda, false, false, buildInfo.IsTest);
 
 				if (sequence == null)
 					return BuildSequenceResult.Error(methodCall);

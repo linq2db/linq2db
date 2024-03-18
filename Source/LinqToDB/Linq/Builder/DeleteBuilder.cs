@@ -37,8 +37,8 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.Arguments.Count == 2 && deleteType == DeleteContext.DeleteTypeEnum.Delete)
 			{
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
-					condition: (LambdaExpression)methodCall.Arguments[1].Unwrap(), checkForSubQuery: false,
-					enforceHaving: false, isTest: buildInfo.IsTest, isAggregationTest: buildInfo.AggregationTest);
+					condition : (LambdaExpression)methodCall.Arguments[1].Unwrap(), checkForSubQuery : false,
+					enforceHaving : false, isTest : buildInfo.IsTest);
 
 				if (sequence == null)
 					return BuildSequenceResult.Error(methodCall);

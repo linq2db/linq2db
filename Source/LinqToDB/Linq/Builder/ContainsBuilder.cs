@@ -193,7 +193,7 @@ namespace LinqToDB.Linq.Builder
 
 					var condition = Expression.Lambda(ExpressionBuilder.Equal(MappingSchema, param, expr), param);
 					var sequence = Builder.BuildWhere(Parent, InnerSequence,
-						condition: condition, checkForSubQuery: true, enforceHaving: false, isTest: flags.IsTest(), false);
+						condition : condition, checkForSubQuery : true, enforceHaving : false, isTest : flags.IsTest());
 
 					if (sequence == null)
 						return null;

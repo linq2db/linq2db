@@ -116,8 +116,8 @@ namespace LinqToDB.Linq.Builder
 					if (setterExpr is LambdaExpression && methodCall.Arguments.Count == 3 && updateType == UpdateTypeEnum.Update)
 					{
 						sequence = builder.BuildWhere(buildInfo.Parent, sequence,
-							condition: methodCall.Arguments[1].UnwrapLambda(), checkForSubQuery: false,
-							enforceHaving: false, isTest: buildInfo.IsTest, isAggregationTest: buildInfo.AggregationTest);
+							condition : methodCall.Arguments[1].UnwrapLambda(), checkForSubQuery : false,
+							enforceHaving : false, isTest : buildInfo.IsTest);
 
 						if (sequence == null)
 							return BuildSequenceResult.Error(methodCall);

@@ -79,20 +79,6 @@ namespace LinqToDB.Linq.Builder
 			set => _isAggregation = value;
 		}
 
-		bool _aggregationTest;
-
-		public bool AggregationTest
-		{
-			get
-			{
-				if (_aggregationTest || SequenceInfo == null)
-					return _aggregationTest;
-				return SequenceInfo.AggregationTest;
-			}
-
-			set => _aggregationTest = value;
-		}
-
 		bool _isTest;
 
 		public bool IsTest

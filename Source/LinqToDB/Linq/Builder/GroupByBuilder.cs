@@ -587,9 +587,6 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
-				if (buildInfo.AggregationTest)
-					return new AggregationRoot(Element);
-
 				if (!buildInfo.IsSubQuery)
 					return this;
 
@@ -712,19 +709,5 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
-
-		public class AggregationRoot : PassThroughContext
-		{
-			public AggregationRoot(IBuildContext context) : base(new CloningContext().CloneContext(context))
-			{
-				SelectQuery.From.Tables.Clear();
-				SelectQuery.Select.Columns.Clear();
-			}
-
-			public override IBuildContext Clone(CloningContext context)
-			{
-				return new AggregationRoot(context.CloneContext(Context));
-			}
-		}
 	}
 }

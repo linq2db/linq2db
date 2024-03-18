@@ -190,9 +190,10 @@ namespace LinqToDB.Linq.Builder
 			isDistinct         = false;
 			valueExpression    = null;
 
-			var builder    = context.Builder;
-			var chain      = new List<MethodCallExpression>();
-			var current    = expression;
+			List<MethodCallExpression>? chain = null;
+
+			var builder = context.Builder;
+			var current = expression;
 
 			ContextRefExpression? contextRef;
 
@@ -215,6 +216,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (methodCall.IsQueryable(AllowedNames))
 					{
+						chain ??= new List<MethodCallExpression>();
 						chain.Add(methodCall);
 						current = methodCall.Arguments[0];
 						continue;
@@ -232,68 +234,71 @@ namespace LinqToDB.Linq.Builder
 			groupByContext = groupBy;
 
 			var currentRef = contextRef;
-			
-			for (int i = chain.Count - 1; i >= 0; i--)
+
+			if (chain != null)
 			{
-				var method = chain[i];
-				if (method.IsQueryable(nameof(Queryable.Distinct)))
+				for (int i = chain.Count - 1; i >= 0; i--)
 				{
-					// Distinct should be the first method in the chain
-					if (i != 0)
+					var method = chain[i];
+					if (method.IsQueryable(nameof(Queryable.Distinct)))
 					{
-						return false;
-					}
+						// Distinct should be the first method in the chain
+						if (i != 0)
+						{
+							return false;
+						}
 
-					if (aggregationType is AggregationType.Average or AggregationType.Sum or AggregationType.Min or AggregationType.Max)
-					{
-						if (!builder.DataContext.SqlProviderFlags.IsAggregationDistinctSupported)
+						if (aggregationType is AggregationType.Average or AggregationType.Sum or AggregationType.Min or AggregationType.Max)
+						{
+							if (!builder.DataContext.SqlProviderFlags.IsAggregationDistinctSupported)
+							{
+								return false;
+							}
+						}
+						else if (aggregationType == AggregationType.Count)
+						{
+							if (!builder.DataContext.SqlProviderFlags.IsCountDistinctSupported)
+							{
+								return false;
+							}
+						}
+						else
 						{
 							return false;
 						}
+
+						isDistinct = true;
 					}
-					else if (aggregationType == AggregationType.Count)
+					else if (method.IsQueryable(nameof(Queryable.Select)))
 					{
-						if (!builder.DataContext.SqlProviderFlags.IsCountDistinctSupported)
+						// do not support complex projections
+						if (method.Arguments.Count != 2)
 						{
 							return false;
 						}
+
+						var body = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
+
+						var selectContext = new SelectContext(buildInfo.Parent, body, contextRef.BuildContext, false);
+						currentRef = new ContextRefExpression(selectContext.ElementType, selectContext);
+					}
+					else if (method.IsQueryable(nameof(Queryable.Where)))
+					{
+						if (aggregationType is not (AggregationType.Count or AggregationType.Sum or AggregationType.Average or AggregationType.Min or AggregationType.Max))
+						{
+							return false;
+						}
+
+						var filter = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
+						if (filterExpression == null)
+							filterExpression = filter;
+						else
+							filterExpression = Expression.AndAlso(filterExpression, filter);
 					}
 					else
 					{
 						return false;
 					}
-
-					isDistinct = true;
-				}
-				else if (method.IsQueryable(nameof(Queryable.Select)))
-				{
-					// do not support complex projections
-					if (method.Arguments.Count != 2)
-					{
-						return false;
-					}
-
-					var body = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
-
-					var selectContext = new SelectContext(buildInfo.Parent, body, contextRef.BuildContext, false);
-					currentRef = new ContextRefExpression(selectContext.ElementType, selectContext);
-				}
-				else if (method.IsQueryable(nameof(Queryable.Where)))
-				{
-					if (aggregationType is not (AggregationType.Count or AggregationType.Sum or AggregationType.Average or AggregationType.Min or AggregationType.Max))
-					{
-						return false;
-					}
-
-					var filter = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
-					if (filterExpression == null)
-						filterExpression = filter;
-					else
-						filterExpression = Expression.AndAlso(filterExpression, filter);
-				}
-				else
-				{
-					return false;
 				}
 			}
 
@@ -388,8 +393,7 @@ namespace LinqToDB.Linq.Builder
 					if (argumentsCount == 2)
 					{
 						var lambda = methodCall.Arguments[1].UnwrapLambda();
-						sequence = builder.BuildWhere(null, sequence, lambda, false, false, buildInfo.IsTest,
-							buildInfo.IsAggregation);
+						sequence = builder.BuildWhere(null, sequence, lambda, false, false, buildInfo.IsTest);
 
 						if (sequence == null)
 							return BuildSequenceResult.Error(methodCall);
@@ -470,7 +474,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (inputFilterLambda != null)
 					{
-						sequence = builder.BuildWhere(buildInfo.Parent, sequence, inputFilterLambda, false, false, buildInfo.IsTest, false);
+						sequence = builder.BuildWhere(buildInfo.Parent, sequence, inputFilterLambda, false, false, buildInfo.IsTest);
 						if (sequence == null)
 							return BuildSequenceResult.Error(methodCall);
 					}

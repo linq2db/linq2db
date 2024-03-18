@@ -42,8 +42,8 @@ namespace LinqToDB.Linq.Builder
 					condition = Expression.Lambda(Expression.Not(condition.Body), condition.Name, condition.Parameters);
 
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
-					condition: condition, checkForSubQuery: true, enforceHaving: false,
-					isTest: buildInfo.IsTest, buildInfo.AggregationTest);
+					condition : condition, checkForSubQuery : true, enforceHaving : false,
+					isTest : buildInfo.IsTest);
 
 				if (sequence == null)
 					return BuildSequenceResult.Error(methodCall);
