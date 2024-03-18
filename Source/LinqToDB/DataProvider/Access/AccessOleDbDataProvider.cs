@@ -37,7 +37,10 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsMultiTablesSupportsJoins                   = false;
 			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability     = true;
 
-			SetCharField            ("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
+			SqlProviderFlags.IsCountDistinctSupported                     = false;
+			SqlProviderFlags.IsAggregationDistinctSupported               = false;
+
+			SetCharField("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("DBTYPE_WCHAR", DataTools.GetCharExpression);
 
 			SetProviderField<DbDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));

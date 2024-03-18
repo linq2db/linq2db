@@ -100,7 +100,7 @@ namespace Tests.UserTests
 
 				var str = sqlCondos.ToString();
 
-				str.Should().Contain("Count(*)", AtLeast.Twice());
+				str.Should().Contain("COUNT(*)", AtLeast.Twice());
 			}
 		}
 	}

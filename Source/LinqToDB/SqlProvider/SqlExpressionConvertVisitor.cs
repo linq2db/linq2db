@@ -739,9 +739,8 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (func.Name)
 			{
-				case "Average": return new SqlFunction(func.SystemType, "Avg", func.Parameters);
-				case "Max":
-				case "Min":
+				case "MAX":
+				case "MIN":
 				{
 					if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
 					{

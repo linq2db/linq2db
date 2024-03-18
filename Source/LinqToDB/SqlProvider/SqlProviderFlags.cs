@@ -239,13 +239,6 @@ namespace LinqToDB.SqlProvider
 		public bool IsDistinctSetOperationsSupported      { get; set; }
 
 		/// <summary>
-		/// Provider supports COUNT(DISTINCT column) function. Otherwise it will be emulated.
-		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
-		/// </summary>
-		[DataMember(Order = 32)]
-		public bool IsCountDistinctSupported              { get; set; }
-
-		/// <summary>
 		/// Provider supports aggregated expression with Outer reference
 		/// <code>
 		/// SELECT
@@ -449,6 +442,21 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order =  51)]
 		public bool SupportsBooleanType { get; set; }
 
+		/// <summary>
+		/// Provider supports COUNT(DISTINCT column) function. Otherwise, it will be emulated.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// </summary>
+		[DataMember(Order = 60)]
+		public bool IsCountDistinctSupported { get; set; }
+
+		/// <summary>
+		/// Provider supports SUM/AVG/MIN/MAX(DISTINCT column) function. Otherwise, it will be emulated.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// </summary>
+		[DataMember(Order = 61)]
+		public bool IsAggregationDistinctSupported { get; set; }
+
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
@@ -483,6 +491,7 @@ namespace LinqToDB.SqlProvider
 				^ IsAllSetOperationsSupported                          .GetHashCode()
 				^ IsDistinctSetOperationsSupported                     .GetHashCode()
 				^ IsCountDistinctSupported                             .GetHashCode()
+				^ IsAggregationDistinctSupported                       .GetHashCode()
 				^ IsUpdateFromSupported                                .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel                      .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate                    .GetHashCode()
@@ -537,6 +546,7 @@ namespace LinqToDB.SqlProvider
 				&& IsAllSetOperationsSupported                           == other.IsAllSetOperationsSupported
 				&& IsDistinctSetOperationsSupported                      == other.IsDistinctSetOperationsSupported
 				&& IsCountDistinctSupported                              == other.IsCountDistinctSupported
+				&& IsAggregationDistinctSupported                        == other.IsAggregationDistinctSupported
 				&& IsUpdateFromSupported                                 == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel                       == other.DefaultMultiQueryIsolationLevel
 				&& AcceptsOuterExpressionInAggregate                     == other.AcceptsOuterExpressionInAggregate

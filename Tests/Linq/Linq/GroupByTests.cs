@@ -825,6 +825,178 @@ namespace Tests.Linq
 					});
 		}
 
+		class AggregationData
+		{
+			public int GroupId { get; set; }
+			public double? DataValue   { get; set; }
+
+			public static AggregationData[] Data = new[]
+			{
+				new AggregationData { GroupId = 1, DataValue = 1 },
+				new AggregationData { GroupId = 1, DataValue = null },
+				new AggregationData { GroupId = 1, DataValue = 3 },
+				new AggregationData { GroupId = 1, DataValue = 1 },
+				new AggregationData { GroupId = 1, DataValue = 5 },
+				new AggregationData { GroupId = 1, DataValue = 6 },
+
+				new AggregationData { GroupId = 2, DataValue = 7 },
+				new AggregationData { GroupId = 2, DataValue = 8 },
+				new AggregationData { GroupId = 2, DataValue = 9 },
+				new AggregationData { GroupId = 2, DataValue = null },
+				new AggregationData { GroupId = 2, DataValue = 11 },
+				new AggregationData { GroupId = 2, DataValue = 7 },
+
+				new AggregationData { GroupId = 3, DataValue = 13 },
+				new AggregationData { GroupId = 3, DataValue = 16 },
+				new AggregationData { GroupId = 3, DataValue = 16 },
+				new AggregationData { GroupId = 3, DataValue = 16 },
+				new AggregationData { GroupId = 3, DataValue = null },
+				new AggregationData { GroupId = 3, DataValue = 18 },
+			};
+		}
+
+		[Test]
+		public void CountInGroup([DataSources] string context)
+		{
+			var data = AggregationData.Data;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				where t.DataValue != null
+				group t by t.GroupId
+				into g
+				let filtered = g.Where(x => x.DataValue % 2 == 0)
+				let filteredDistinct = filtered.Select(x => x.DataValue).Distinct()
+				let nonfilteredDistinct = g.Select(x => x.DataValue).Distinct()
+				select new
+				{
+					GroupId                  = g.Key,
+					Simple                   = g.Count(),
+					WithFilter               = g.Count(x => x.DataValue % 2 == 0),
+					Projection               = g.Select(x => x.DataValue).Count(),
+					Distinct                 = g.Select(x => x.DataValue).Distinct().Count(),
+					DistinctWithFilter       = g.Select(x => x.DataValue).Distinct().Count(x => x % 2 == 0),
+					FilterDistinct           = g.Select(x => x.DataValue).Where(x => x      % 2 == 0).Distinct().Count(),
+					FilterDistinctWithFilter = g.Select(x => x.DataValue).Where(x => x      % 2 == 0).Distinct().Count(x => x % 2 == 0),
+					
+					SubFilter           = filtered.Count(),
+					SubFilterDistinct   = filteredDistinct.Count(),
+					SubNoFilterDistinct = nonfilteredDistinct.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void SumInGroup([DataSources] string context)
+		{
+			var data = AggregationData.Data;
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = 
+				from t in table
+				group t by new { t.GroupId }  into g
+				select new
+				{
+					GroupId          = g.Key,
+					Simple           = g.Sum(x => x.DataValue),
+					Projection       = g.Select(x => x.DataValue).Sum(),
+					Filter           = g.Where(x => x.DataValue % 2 == 0).Sum(x => x.DataValue),
+					FilterProjection = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Sum(),
+					Distinct         = g.Select(x=> x.DataValue).Distinct().Sum(),
+					FilterDistinct1   = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Sum(),
+					FilterDistinct2   = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Sum(x => x),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void MinInGroup([DataSources] string context)
+		{
+			var data = AggregationData.Data;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				group t by new { t.GroupId }  into g
+				select new
+				{
+					GroupId          = g.Key,
+					Simple           = g.Min(x => x.DataValue),
+					Projection       = g.Select(x => x.DataValue).Min(),
+					Filter           = g.Where(x => x.DataValue % 2 == 0).Min(x => x.DataValue),
+					FilterProjection = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Min(),
+					Distinct         = g.Select(x=> x.DataValue).Distinct().Min(),
+					FilterDistinct1  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Min(),
+					FilterDistinct2  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Min(x => x),
+				};
+
+			AssertQuery(query);
+		}
+
+
+		[Test]
+		public void MaxInGroup([DataSources] string context)
+		{
+			var data = AggregationData.Data;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				group t by new { t.GroupId }  into g
+				select new
+				{
+					GroupId          = g.Key,
+					Simple           = g.Max(x => x.DataValue),
+					Projection       = g.Select(x => x.DataValue).Max(),
+					Filter           = g.Where(x => x.DataValue % 2 == 0).Max(x => x.DataValue),
+					FilterProjection = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Max(),
+					Distinct         = g.Select(x=> x.DataValue).Distinct().Max(),
+					FilterDistinct1  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Max(),
+					FilterDistinct2  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Max(x => x),
+				};
+
+			AssertQuery(query);
+		}
+
+
+		[Test]
+		public void AverageInGroup([DataSources] string context)
+		{
+			var data = AggregationData.Data;
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = 
+				from t in table
+				where t.DataValue != null
+				group t by t.GroupId into g
+				select new
+				{
+					GroupId          = g.Key,
+					Simple           = g.Average(x => x.DataValue),
+					Projection       = g.Select(x => x.DataValue).Average(),
+					Filter           = g.Where(x => x.DataValue % 2 == 0).Average(x => x.DataValue),
+					FilterProjection = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Average(),
+					Distinct         = Math.Round((decimal)g.Select(x=> x.DataValue).Distinct().Average()!, 4),
+					FilterDistinct1  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Average(),
+					FilterDistinct2  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Average(x => x),
+				};
+
+			AssertQuery(query);
+		}
+
 
 		[Test]
 		public void SelectMax([DataSources] string context)

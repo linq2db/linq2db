@@ -37,7 +37,10 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsMultiTablesSupportsJoins                   = false;
 			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability     = true;
 
-			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
+			SqlProviderFlags.IsCountDistinctSupported       = false;
+			SqlProviderFlags.IsAggregationDistinctSupported = false;
+
+			SetCharField("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
 			SetToType<DbDataReader, sbyte , int>  ("INTEGER" , (r, i) => unchecked((sbyte )r.GetInt32(i)));

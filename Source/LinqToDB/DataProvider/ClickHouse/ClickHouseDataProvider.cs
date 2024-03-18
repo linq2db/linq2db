@@ -47,7 +47,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsCountDistinctSupported          = true;
 			SqlProviderFlags.DoesNotSupportCorrelatedSubquery  = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 

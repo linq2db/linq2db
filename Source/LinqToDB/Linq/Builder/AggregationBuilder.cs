@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -48,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 				case "LongCount":
 				{
 					aggregationType = AggregationType.Count;
-					functionName    = "Count";
+					functionName    = "COUNT";
 					break;
 				}
 				case "LongCountAsync":
@@ -56,7 +60,7 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = typeof(long);
 					aggregationType = AggregationType.Count;
-					functionName    = "Count";
+					functionName    = "COUNT";
 					break;
 				}
 				case "CountAsync":
@@ -64,13 +68,13 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = typeof(int);
 					aggregationType = AggregationType.Count;
-					functionName    = "Count";
+					functionName    = "COUNT";
 					break;
 				}
 				case "Min":
 				{
 					aggregationType = AggregationType.Min;
-					functionName    = "Min";
+					functionName    = "MIN";
 					break;
 				}
 				case "MinAsync":
@@ -78,13 +82,13 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Min;
-					functionName    = "Min";
+					functionName    = "MIN";
 					break;
 				}
 				case "Max":
 				{
 					aggregationType = AggregationType.Max;
-					functionName    = "Max";
+					functionName    = "MAX";
 					break;
 				}
 				case "MaxAsync":
@@ -92,13 +96,13 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Max;
-					functionName    = "Max";
+					functionName    = "MAX";
 					break;
 				}
 				case "Sum":
 				{
 					aggregationType = AggregationType.Sum;
-					functionName    = "Sum";
+					functionName    = "SUM";
 					break;
 				}
 				case "SumAsync":
@@ -106,13 +110,13 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Sum;
-					functionName    = "Sum";
+					functionName    = "SUM";
 					break;
 				}
 				case "Average":
 				{
 					aggregationType = AggregationType.Average;
-					functionName    = "Average";
+					functionName    = "AVG";
 					break;
 				}
 				case "AverageAsync":
@@ -120,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Average;
-					functionName    = "Average";
+					functionName    = "AVG";
 					break;
 				}
 				default:
@@ -151,6 +155,191 @@ namespace LinqToDB.Linq.Builder
 
 		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
+			return true;
+		}
+
+		static string[] AllowedNames = [nameof(Queryable.Select), nameof(Queryable.Where), nameof(Queryable.Distinct)];
+
+		internal class AggregationInfo
+		{
+			public ISqlExpression?                DistinctValue      { get; set; }
+			public ISqlExpression?                ValueSqlExpression { get; set; }
+			public bool                           IsDistinct         { get; set; }
+			public GroupByBuilder.GroupByContext? GroupByContext     { get; set; }
+			public Expression?                    FilterExpression   { get; set; }
+			public Expression?                    ValueExpression    { get; set; }
+		}
+
+		bool GetSmiplifiedAggregationInfo(
+			AggregationType                                        aggregationType, 
+			IBuildContext                                          context, 
+			BuildInfo                                              buildInfo, 
+			Expression                                             expression,
+			LambdaExpression?                                      inputValueLambda,
+			LambdaExpression?                                      inputFilterLambda,
+			out                     Expression?                    filterExpression,
+			[NotNullWhen(true)] out GroupByBuilder.GroupByContext? groupByContext,
+			out                     Expression?                    valueExpression,
+			out                     ISqlExpression?                valueSqlExpression,
+			out                     bool                           isDistinct
+		)
+		{
+			filterExpression   = null;
+			groupByContext     = null;
+			valueSqlExpression = null;
+			isDistinct         = false;
+			valueExpression    = null;
+
+			var builder    = context.Builder;
+			var chain      = new List<MethodCallExpression>();
+			var current    = expression;
+
+			ContextRefExpression? contextRef;
+
+			while (true)
+			{
+				if (current is ContextRefExpression refExpression)
+				{
+					var root = builder.CorrectRoot(refExpression.BuildContext, current);
+					if (ExpressionEqualityComparer.Instance.Equals(root, current))
+					{
+						contextRef = refExpression;
+						break;
+					}
+
+					current = root;
+					continue;
+				}
+
+				if (current is MethodCallExpression methodCall)
+				{
+					if (methodCall.IsQueryable(AllowedNames))
+					{
+						chain.Add(methodCall);
+						current = methodCall.Arguments[0];
+						continue;
+					}
+				}
+
+				return false;
+			}
+
+			if (contextRef is not { BuildContext: GroupByBuilder.GroupByContext groupBy })
+			{
+				return false;
+			}
+
+			groupByContext = groupBy;
+
+			var currentRef = contextRef;
+			
+			for (int i = chain.Count - 1; i >= 0; i--)
+			{
+				var method = chain[i];
+				if (method.IsQueryable(nameof(Queryable.Distinct)))
+				{
+					// Distinct should be the first method in the chain
+					if (i != 0)
+					{
+						return false;
+					}
+
+					if (aggregationType is AggregationType.Average or AggregationType.Sum or AggregationType.Min or AggregationType.Max)
+					{
+						if (!builder.DataContext.SqlProviderFlags.IsAggregationDistinctSupported)
+						{
+							return false;
+						}
+					}
+					else if (aggregationType == AggregationType.Count)
+					{
+						if (!builder.DataContext.SqlProviderFlags.IsCountDistinctSupported)
+						{
+							return false;
+						}
+					}
+					else
+					{
+						return false;
+					}
+
+					isDistinct = true;
+				}
+				else if (method.IsQueryable(nameof(Queryable.Select)))
+				{
+					// do not support complex projections
+					if (method.Arguments.Count != 2)
+					{
+						return false;
+					}
+
+					var body = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
+
+					var selectContext = new SelectContext(buildInfo.Parent, body, contextRef.BuildContext, false);
+					currentRef = new ContextRefExpression(selectContext.ElementType, selectContext);
+				}
+				else if (method.IsQueryable(nameof(Queryable.Where)))
+				{
+					if (aggregationType is not (AggregationType.Count or AggregationType.Sum or AggregationType.Average or AggregationType.Min or AggregationType.Max))
+					{
+						return false;
+					}
+
+					var filter = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
+					if (filterExpression == null)
+						filterExpression = filter;
+					else
+						filterExpression = Expression.AndAlso(filterExpression, filter);
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			valueExpression = currentRef;
+
+			if (inputValueLambda != null)
+			{
+				valueExpression = SequenceHelper.PrepareBody(inputValueLambda, currentRef.BuildContext);
+			}
+
+			if (aggregationType != AggregationType.Count || isDistinct)
+			{
+				var convertedExpr = builder.ConvertToSqlExpr(groupByContext.SubQuery, valueExpression, buildInfo.GetFlags());
+
+				if (!SequenceHelper.IsSqlReady(convertedExpr))
+				{
+					return false;
+				}
+
+				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(convertedExpr);
+
+				if (placeholders.Count != 1)
+				{
+					return false;
+				}
+
+				valueSqlExpression = placeholders[0].Sql;
+			}
+
+			if (inputFilterLambda != null)
+			{
+				var filter = SequenceHelper.PrepareBody(inputFilterLambda, currentRef.BuildContext);
+				if (filterExpression == null)
+					filterExpression = filter;
+				else
+					filterExpression = Expression.AndAlso(filterExpression, filter);
+			}
+
+			if (inputFilterLambda != null || filterExpression != null)
+			{
+				if (aggregationType == AggregationType.Count && isDistinct)
+				{
+					return false;
+				}
+			}
+
 			return true;
 		}
 
@@ -239,70 +428,37 @@ namespace LinqToDB.Linq.Builder
 			{
 				var isSimple = false;
 
-				IBuildContext?      sequence            = null;
-				IBuildContext?      placeholderSequence = null;
+				IBuildContext? sequence;
+				IBuildContext? placeholderSequence;
 
-				var parentContext       = buildInfo.Parent!;
-				var placeholderSelect   = parentContext.SelectQuery;
+				var                 parentContext     = buildInfo.Parent!;
+				var                 placeholderSelect = parentContext.SelectQuery;
+				Expression?         valueExpression;
+				ISqlExpression?     valueSqlExpression;
+				Expression?         filterExpression;
+				LambdaExpression?   inputFilterLambda   = null;
+				LambdaExpression?   inputValueLambda    = null;
+				SqlSearchCondition? filterSqlExpression = null;
 
-				using var testQuery = ExpressionBuilder.QueryPool.Allocate();
-				var testSequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, testQuery.Value)
-					{ AggregationTest = true, IsAggregation = true, IsTest = true });
-
-				if (testSequenceResult.BuildContext == null)
-					return testSequenceResult;
-
-				var testSequence = testSequenceResult.BuildContext;
-
-				// It means that as root we have used fake context
-				var testSelectQuery = testSequence.SelectQuery;
-
-				testSelectQuery = testSelectQuery.GetInnerQuery();
-
-				if (testSelectQuery.From.Tables.Count == 0)
+				if (argumentsCount > 1 && aggregationType is AggregationType.Average or AggregationType.Max or AggregationType.Min or AggregationType.Sum)
 				{
-					var valid = true;
-					if (!testSelectQuery.Where.IsEmpty)
-					{
-						valid = false;
-						/* TODO: we can inject predicate into function if provider supports that
-						switch (methodName)
-						{
-								case "Sum":
-								{
-									filter = testSelectQuery.
-								}
-							}
-						*/
-					}
-
-					if (valid)
-					{
-						var sequenceResult = builder.TryBuildSequence(
-							new BuildInfo(buildInfo, sequenceArgument)
-								{ CreateSubQuery = false, IsAggregation = true });
-
-						if (sequenceResult.BuildContext == null)
-							return sequenceResult;
-
-						sequence = sequenceResult.BuildContext;
-
-						var sequenceRef = new ContextRefExpression(sequence.ElementType, sequence);
-
-						var rootContext = builder.GetRootContext(buildInfo.Parent, sequenceRef, true);
-
-						placeholderSequence = rootContext?.BuildContext ?? sequence;
-
-						if (placeholderSequence is GroupByBuilder.GroupByContext groupCtx)
-						{
-							placeholderSequence = groupCtx.SubQuery;
-							placeholderSelect   = groupCtx.Element.SelectQuery;
-							isSimple            = true;
-						}
-					}
+					inputValueLambda = methodCall.Arguments[1].UnwrapLambda();
 				}
 
-				if (sequence is null)
+				if (argumentsCount > 1 && aggregationType == AggregationType.Count)
+				{
+					inputFilterLambda = methodCall.Arguments[1].UnwrapLambda();
+				}
+
+				if (GetSmiplifiedAggregationInfo(aggregationType, buildInfo.Parent!, buildInfo, sequenceArgument, inputValueLambda, inputFilterLambda, out filterExpression, out var groupByContext, out valueExpression, out valueSqlExpression, out var isDistinct))
+				{
+					isSimple = true;
+
+					placeholderSequence = groupByContext.SubQuery;
+					placeholderSelect   = groupByContext.Element.SelectQuery;
+					sequence            = groupByContext;
+				}
+				else
 				{
 					var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
 
@@ -312,90 +468,147 @@ namespace LinqToDB.Linq.Builder
 					sequence = sequenceResult.BuildContext;
 					sequence = new SubQueryContext(sequence);
 
-					placeholderSequence ??= sequence;
-
-					if (sequence is GroupByBuilder.GroupByContext groupByContext)
+					if (inputFilterLambda != null)
 					{
-						placeholderSequence = groupByContext.SubQuery;
+						sequence = builder.BuildWhere(buildInfo.Parent, sequence, inputFilterLambda, false, false, buildInfo.IsTest, false);
+						if (sequence == null)
+							return BuildSequenceResult.Error(methodCall);
 					}
-				}
 
-				placeholderSequence ??= sequence;
+					valueSqlExpression = null;
+					if (inputValueLambda != null)
+					{
+						valueExpression = SequenceHelper.PrepareBody(inputValueLambda, sequence);
+					}
+					else
+					{
+						valueExpression = new ContextRefExpression(sequence.ElementType, sequence);
+					}
 
-				Expression valueExpression;
-				if (argumentsCount == 2)
-				{
-					var lambda = methodCall.Arguments[1].UnwrapLambda();
-					valueExpression = SequenceHelper.PrepareBody(lambda, sequence);
-				}
-				else
-				{
-					var valueType = TypeHelper.GetEnumerableElementType(methodCall.Method.GetParameters()[0].ParameterType);
-
-					valueExpression = new ContextRefExpression(valueType, sequence);
+					placeholderSequence = sequence;
 				}
 
 				context = new AggregationContext(buildInfo.Parent, placeholderSequence, aggregationType, functionName, returnType);
 
-				ISqlExpression sql;
+				ISqlExpression? sql = null;
 
-				if (aggregationType == AggregationType.Count)
+				if (isSimple && filterExpression != null)
 				{
-					if (argumentsCount == 2)
-					{
-						var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression,
-							buildInfo.GetFlags());
+					var sqlExpr = builder.ConvertToSqlExpr(placeholderSequence, filterExpression, buildInfo.GetFlags());
 
+					if (sqlExpr is not SqlPlaceholderExpression { Sql: SqlSearchCondition searchCondition })
+						return BuildSequenceResult.Error(filterExpression);
+
+					filterSqlExpression = searchCondition;
+				}
+
+				switch (aggregationType)
+				{
+					case AggregationType.Count:
+					{
 						if (isSimple)
 						{
-							sql = new SqlFunction(returnType, "CASE", sqlPlaceholder.Sql, new SqlValue(1),
-								new SqlValue(returnType, null));
+							if (isDistinct)
+							{
+								sql = new SqlExpression("DISTINCT {0}", valueSqlExpression!);
+							}
+							else
+							{
+								if (filterSqlExpression != null)
+								{
+									sql = new SqlFunction(returnType, "CASE", filterSqlExpression, new SqlValue(1), new SqlValue(returnType, null));
+								}								
+								else
+								{
+									sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
+								}
+							}
+
 						}
 						else
 						{
-							if (sqlPlaceholder.Sql is not SqlSearchCondition sc)
-								throw new InvalidOperationException(
-									$"Expected SearchCondition, but found: '{sqlPlaceholder.Sql}'");
-
 							sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
-
-							if (!buildInfo.IsTest)
-								placeholderSequence.SelectQuery.Where.ConcatSearchCondition(sc);
 						}
-					}
-					else
-					{
-						// OR sql = new SqlValue(typeof(int), 1);
-						sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
-					}
 
-					sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = true };
-				}
-				else
-				{
-					if (definition != null)
+						break;
+					}
+					case AggregationType.Min:
+					case AggregationType.Max:
+					case AggregationType.Sum:
+					case AggregationType.Average:
 					{
-						var sqlExpr = definition.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()),
-							builder.DataContext,
-							builder,
-							placeholderSelect,
-							methodCall,
-							static (ctx, e, descriptor, inline) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor, inline));
+						if (isSimple)
+						{
+							if (valueExpression == null)
+								throw new InvalidOperationException();
 
-						if (sqlExpr is not SqlPlaceholderExpression placeholder)
+							if (filterSqlExpression != null)
+							{
+								sql = new SqlFunction(returnType, "CASE", filterSqlExpression, valueSqlExpression!, new SqlValue(returnType, null));
+							}
+							else
+							{
+								sql = valueSqlExpression!;
+							}
+
+							if (isDistinct)
+							{
+								sql = new SqlExpression("DISTINCT {0}", sql);
+							}
+						}
+						else
+						{
+							if (valueExpression == null)
+								throw new InvalidOperationException();
+
+							var sqlExpr = builder.ConvertToSqlExpr(placeholderSequence, valueExpression, buildInfo.GetFlags());
+							if (!SequenceHelper.IsSqlReady(sqlExpr))
+								return BuildSequenceResult.Error(valueExpression);
+
+							var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
+							if (placeholders.Count != 1)
+								return BuildSequenceResult.Error(valueExpression);
+
+							valueSqlExpression = placeholders[0].Sql;
+
+							sql = valueSqlExpression;
+						}
+						break;
+					}
+					case AggregationType.Custom:
+					{
+						if (definition != null)
+						{
+							var sqlExpr = definition.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()),
+								builder.DataContext,
+								builder,
+								placeholderSelect,
+								methodCall,
+								static (ctx, e, descriptor, inline) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor, inline));
+
+							if (sqlExpr is not SqlPlaceholderExpression placeholder)
+								return BuildSequenceResult.Error(methodCall);
+
+							builder.RegisterExtensionAccessors(methodCall);
+
+							sql = builder.PosProcessCustomExpression(methodCall, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery));
+						}
+						else
+						{
 							return BuildSequenceResult.Error(methodCall);
+						}
 
-						builder.RegisterExtensionAccessors(methodCall);
+						break;
+					}
+					
+				}
 
-						sql = builder.PosProcessCustomExpression(methodCall, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery));
-					}
-					else
-					{
-						var sqlPlaceholder =
-							builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression, buildInfo.GetFlags());
-						sql = sqlPlaceholder.Sql;
-						sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = true };
-					}
+				if (sql == null)
+					throw new InvalidOperationException();
+
+				if (definition == null)
+				{
+					sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = true };
 				}
 
 				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);

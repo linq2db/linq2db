@@ -53,7 +53,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			Provider = provider;
 
 			SqlProviderFlags.IsDistinctOrderBySupported         = false;
-			SqlProviderFlags.IsCountDistinctSupported           = true;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate  = false;
 			SqlProviderFlags.OutputDeleteUseSpecialTable        = true;
 			SqlProviderFlags.OutputInsertUseSpecialTable        = true;
