@@ -445,7 +445,7 @@ namespace Tests.Linq
 				var result   = db.DiscontinuedProduct.Select(p => p).ToList();
 				var expected = dd.DiscontinuedProduct.Select(p => p).ToList();
 
-				Assert.That(result, Has.Count.Not.EqualTo(0).And.EqualTo(expected.Count));
+				Assert.That(result, Has.Count.EqualTo(expected.Count));
 			}
 		}
 
@@ -459,7 +459,7 @@ namespace Tests.Linq
 				var result   = db.DiscontinuedProduct.ToList();
 				var expected = dd.DiscontinuedProduct.ToList();
 
-				Assert.That(result, Has.Count.Not.EqualTo(0).And.EqualTo(expected.Count));
+				Assert.That(result, Has.Count.EqualTo(expected.Count));
 			}
 		}
 

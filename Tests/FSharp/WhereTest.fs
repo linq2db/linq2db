@@ -85,7 +85,7 @@ let LoadSingleDeeplyComplexPerson (db : IDataContext) =
     Assert.That(john.Name, Is.Not.Null)
     Assert.That(john.Name.FirstName, Is.EqualTo "John")
     Assert.That(john.Name.MiddleName, Is.Null)
-    Assert.That(john.Name.LastName, Is.EqualTo "Pupkin")
+    Assert.That(john.Name.LastName, Is.EqualTo { Value = "Pupkin" })
     Assert.That(john.Gender, Is.EqualTo "M")
 
 let LoadColumnOfDeeplyComplexPerson (db : IDataContext) =
