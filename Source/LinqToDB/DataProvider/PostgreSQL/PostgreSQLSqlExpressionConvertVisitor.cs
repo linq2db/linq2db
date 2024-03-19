@@ -31,6 +31,25 @@
 			{
 				case "^": return new SqlBinaryExpression(element.SystemType, element.Expr1, "#", element.Expr2);
 				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
+				case "%":
+				{
+					// PostgreSQL '%' operator supports only decimal and numeric types
+
+					var fromType = QueryHelper.GetDbDataType(element.Expr1);
+					if (fromType.SystemType.ToNullableUnderlying() != typeof(decimal))
+					{
+						var toType          = MappingSchema.GetDataType(typeof(decimal));
+						var fromSqlDataType = new SqlDataType(fromType);
+						var newExpr1        = PseudoFunctions.MakeConvert(toType, fromSqlDataType, element.Expr1);
+						var systemType      = typeof(decimal);
+						if (fromType.SystemType.IsNullable())
+							systemType = systemType.AsNullable();
+
+						var newExpr =  PseudoFunctions.MakeConvert(fromSqlDataType, toType, new SqlBinaryExpression(systemType, newExpr1, element.Operation, element.Expr2));
+						return Visit(Optimize(newExpr));
+					}
+					break;
+				}
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
