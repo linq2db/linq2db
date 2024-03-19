@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
@@ -18,46 +17,42 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSqlExpressionConvertVisitor(allowModify);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions)
 		{
-			return statement.QueryType switch
-			{
-				QueryType.Update => PrepareUpdateStatement((SqlUpdateStatement)statement),
-				_ => statement,
-			};
+			if (statement.QueryType == QueryType.Update)
+				return CorrectSybaseUpdate((SqlUpdateStatement)statement, dataOptions);
+
+			return base.FinalizeUpdate(statement, dataOptions);
 		}
 
-		static SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
+		SqlUpdateStatement CorrectSybaseUpdate(SqlUpdateStatement statement, DataOptions dataOptions)
 		{
-			var tableToUpdate = statement.Update.Table;
+			if (statement.SelectQuery.Select.TakeValue != null)
+				throw new LinqToDBException("The Sybase ASE does not support the UPDATE statement with the TOP clause.");
 
-			if (tableToUpdate == null)
-				return statement;
+			if (statement.SelectQuery.Select.SkipValue != null)
+				throw new LinqToDBException("The Sybase ASE does not support the UPDATE statement with the SKIP clause.");
 
-			if (statement.SelectQuery.From.Tables.Count > 0)
+			CorrectUpdateSetters(statement);
+
+			var isInCompatible = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery).Any(t =>
 			{
-				if (ReferenceEquals(tableToUpdate, statement.SelectQuery.From.Tables[0].Source))
-					return statement;
+				if (t != statement.SelectQuery && t is SelectQuery)
+					return true;
+				if (t is SqlTable table && !ReferenceEquals(table, statement.Update.Table) && QueryHelper.IsEqualTables(table, statement.Update.Table))
+					return true;
+				return false;
+			});
 
-				var sourceTable = statement.SelectQuery.From.Tables[0];
-
-				for (int i = 0; i < sourceTable.Joins.Count; i++)
-				{
-					var join = sourceTable.Joins[i];
-					if (ReferenceEquals(join.Table.Source, tableToUpdate))
-					{
-						var sources = new[] { tableToUpdate };
-						if (sourceTable.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOnSources(j, sources)))
-							break;
-						statement.SelectQuery.From.Tables.Insert(0, join.Table);
-						statement.SelectQuery.Where.EnsureConjunction()
-							.Add(join.Condition);
-
-						sourceTable.Joins.RemoveAt(i);
-
-						break;
-					}
-				}
+			if (isInCompatible)
+			{
+				statement = GetAlternativeUpdate(statement, dataOptions);
+			}
+			else
+			{
+				var hasTableInQuery = QueryHelper.HasTableInQuery(statement.SelectQuery, statement.Update.Table!);
+				if (hasTableInQuery && !RemoveUpdateTableIfPossible(statement.SelectQuery, statement.Update.Table!, out _))
+					statement = GetAlternativeUpdate(statement, dataOptions);
 			}
 
 			return statement;

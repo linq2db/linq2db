@@ -669,7 +669,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation1([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation1([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -690,7 +690,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -711,7 +711,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation2([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation2([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -732,7 +732,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation3([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation3([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -753,7 +753,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation4([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation4([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -910,6 +910,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP clause.")]
 		public void UpdateTop(
 			[DataSources(
 				TestProvName.AllAccess,
@@ -1013,6 +1014,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP clause.")]
 		public void TestUpdateTakeNotOrdered(
 			[DataSources(
 				TestProvName.AllAccess,
@@ -1078,7 +1080,6 @@ namespace Tests.xUpdate
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
-				TestProvName.AllSybase,
 				TestProvName.AllSapHana)]
 			string context)
 		{

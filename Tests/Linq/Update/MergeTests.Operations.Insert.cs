@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -425,7 +426,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource(false, ProviderName.DB2)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = (DataConnection)GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -447,9 +448,19 @@ namespace Tests.xUpdate
 
 				var selectQuery = source.GetSelectQuery();
 				selectQuery.Select.Columns.Count.Should().Be(6);
-				selectQuery.Select.From.Tables.Should().HaveCount(1);
-				selectQuery.Select.From.Tables[0].Joins.Should().HaveCount(1);
-				selectQuery.Select.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Cross);
+
+				if (db.DataProvider.SqlProviderFlags.IsCrossJoinSupported)
+				{
+					selectQuery.Select.From.Tables.Should().HaveCount(1);
+					selectQuery.Select.From.Tables[0].Joins.Should().HaveCount(1);
+					selectQuery.Select.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Cross);
+				}
+				else
+				{
+					selectQuery.Select.From.Tables.Should().HaveCount(2);
+					selectQuery.Select.From.Tables[0].Joins.Should().HaveCount(0);
+					selectQuery.Select.From.Tables[1].Joins.Should().HaveCount(0);
+				}
 
 				results.Should().HaveCount(16);
 			}

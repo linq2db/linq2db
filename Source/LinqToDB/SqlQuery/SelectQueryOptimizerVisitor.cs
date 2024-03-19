@@ -1706,8 +1706,17 @@ namespace LinqToDB.SqlQuery
 						return false;
 				}
 
-				if (!subQuery.Select.Columns.All(c => c.Expression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression))
+				if (!subQuery.Select.Columns.All(c =>
+				    {
+					    if (c.Expression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression)
+						    return true;
+					    if (c.Expression is SqlFunction func)
+						    return !func.IsAggregate;
+					    return false;
+				    }))
+				{
 					return false;
+				}
 			}
 
 			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
