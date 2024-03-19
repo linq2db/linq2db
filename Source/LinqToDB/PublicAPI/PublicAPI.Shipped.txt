@@ -6286,7 +6286,6 @@ override LinqToDB.DataProvider.BulkCopyReader<T>.Current.get -> object!
 override LinqToDB.DataProvider.BulkCopyReader<T>.MoveNext() -> bool
 override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.BulkCopy<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source) -> LinqToDB.Data.BulkCopyRowsCopied!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
-override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.CreateConnectionInternal(string! connectionString) -> System.Data.Common.DbConnection!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.GetQueryParameterNormalizer() -> LinqToDB.DataProvider.IQueryParametersNormalizer!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
