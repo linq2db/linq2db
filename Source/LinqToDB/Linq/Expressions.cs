@@ -2032,7 +2032,27 @@ namespace LinqToDB.Linq
 		//
 		[CLSCompliant(false)]
 		[Sql.Function("Round", 0, 1)]
-		public static T AccessRound<T>(T value, int? precision) { return value; }
+		public static double? AccessRound(double? value, int? precision)
+		{
+			if (value is null)
+				return null;
+			if (precision is null)
+				return value;
+
+			return (double?)Math.Round((decimal)value.Value, precision.Value);
+		}
+
+		[CLSCompliant(false)]
+		[Sql.Function("Round", 0, 1)]
+		public static decimal? AccessRound(decimal? value, int? precision)
+		{
+			if (value is null)
+				return null;
+			if (precision is null)
+				return value;
+
+			return Math.Round((decimal)value.Value, precision.Value);
+		}
 
 		// Firebird
 		//

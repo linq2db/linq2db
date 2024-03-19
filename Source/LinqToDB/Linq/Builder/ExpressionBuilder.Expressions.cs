@@ -271,7 +271,7 @@ namespace LinqToDB.Linq.Builder
 				if (!expression.Type.IsValueType && !expression.Type.IsSameOrParentOf(translated.Type) && !translated.Type.IsSameOrParentOf(expression.Type))
 					return expression;
 
-				if (translated is SqlErrorExpression)
+				if (SequenceHelper.HasError(translated))
 				{
 					return expression;
 				}

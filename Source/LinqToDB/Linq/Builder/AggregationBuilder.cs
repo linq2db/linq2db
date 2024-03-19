@@ -170,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression?                    ValueExpression    { get; set; }
 		}
 
-		bool GetSmiplifiedAggregationInfo(
+		bool GetSimplifiedAggregationInfo(
 			AggregationType                                        aggregationType, 
 			IBuildContext                                          context, 
 			BuildInfo                                              buildInfo, 
@@ -214,6 +214,12 @@ namespace LinqToDB.Linq.Builder
 
 				if (current is MethodCallExpression methodCall)
 				{
+					if (methodCall.IsQueryable(nameof(Queryable.AsQueryable)))
+					{
+						current = methodCall.Arguments[0];
+						continue;
+					}
+
 					if (methodCall.IsQueryable(AllowedNames))
 					{
 						chain ??= new List<MethodCallExpression>();
@@ -294,6 +300,10 @@ namespace LinqToDB.Linq.Builder
 							filterExpression = filter;
 						else
 							filterExpression = Expression.AndAlso(filterExpression, filter);
+					}
+					else if (method.IsQueryable(nameof(Queryable.AsQueryable)))
+					{
+						continue;
 					}
 					else
 					{
@@ -454,7 +464,7 @@ namespace LinqToDB.Linq.Builder
 					inputFilterLambda = methodCall.Arguments[1].UnwrapLambda();
 				}
 
-				if (GetSmiplifiedAggregationInfo(aggregationType, buildInfo.Parent!, buildInfo, sequenceArgument, inputValueLambda, inputFilterLambda, out filterExpression, out var groupByContext, out valueExpression, out valueSqlExpression, out var isDistinct))
+				if (GetSimplifiedAggregationInfo(aggregationType, buildInfo.Parent!, buildInfo, sequenceArgument, inputValueLambda, inputFilterLambda, out filterExpression, out var groupByContext, out valueExpression, out valueSqlExpression, out var isDistinct))
 				{
 					isSimple = true;
 
