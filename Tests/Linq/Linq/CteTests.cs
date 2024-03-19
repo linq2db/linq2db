@@ -122,8 +122,9 @@ namespace Tests.Linq
 			}
 		}
 
+		// MariaDB allows CTE ordering but do not respect it
 		[Test]
-		public void WithOrderBy([CteContextSource] string context)
+		public void WithOrderBy([CteContextSource(ProviderName.MariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
