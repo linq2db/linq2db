@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 		/// <summary>
-		/// Performs full-text search query against against speficied table and returns search results.
+		/// Performs full-text search query against specified table and returns search results.
 		/// Example: "table('search query')".
 		/// </summary>
 		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
