@@ -297,11 +297,11 @@ namespace Tests.Linq
 			var result = db.Person.Where(r => r.ID == 3 && values.Contains(r.MiddleName)).ToArray();
 
 			if (values.Length == 0)
-				Assert.AreEqual(0, result.Length);
+				Assert.That(result, Is.Empty);
 			else
 			{
-				Assert.AreEqual(1, result.Length);
-				Assert.AreEqual(3, result[0].ID);
+				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(result[0].ID, Is.EqualTo(3));
 			}
 		}
 
@@ -326,8 +326,8 @@ namespace Tests.Linq
 
 			var result = db.Person.Where(r => r.ID == 4 && !values.Contains(r.MiddleName)).ToArray();
 
-			Assert.AreEqual(1, result.Length);
-			Assert.AreEqual(4, result[0].ID);
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].ID, Is.EqualTo(4));
 		}
 	}
 }

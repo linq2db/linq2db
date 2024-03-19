@@ -191,7 +191,7 @@ namespace Tests.UserTests
 			}, TestProvName.AllSqlServer, ddl: true);
 		}
 
-		public async Task TestTableFQN<TTable>(
+		private async Task TestTableFQN<TTable>(
 			string context,
 			bool withServer, bool withDatabase, bool withSchema,
 			Func<IDataContext, ITable<TTable>, string?, string?, string?, Task> operation,

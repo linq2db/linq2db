@@ -178,21 +178,21 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void ContractLinqManyInsertWithIdentity()
-		{
-			using (var db = GetDataContext("Oracle"))
-			{
-				db.BeginTransaction();
+		//public void ContractLinqManyInsertWithIdentity()
+		//{
+		//	using (var db = GetDataContext("Oracle"))
+		//	{
+		//		db.BeginTransaction();
 
-				var user = new User { Name = "user" };
-				user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
+		//		var user = new User { Name = "user" };
+		//		user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
 
-				db.GetTable<User>().InsertWithIdentity(db.GetTable<Contract>(), x => new Contract
-				{
-					UserId = x.Id, ContractNo = 1, Name = "contract"
-				});
-			}
-		}
+		//		db.GetTable<User>().InsertWithIdentity(db.GetTable<Contract>(), x => new Contract
+		//		{
+		//			UserId = x.Id, ContractNo = 1, Name = "contract"
+		//		});
+		//	}
+		//}
 
 		[Test]
 		public void SequenceNameTest([IncludeDataSources(false, TestProvName.AllOracle)]
@@ -206,11 +206,11 @@ namespace Tests.Linq
 			var user = new User { Name = "user" };
 			user.Id = Convert.ToInt64(db.InsertWithIdentity(user));
 
-			Assert.True(db.LastQuery?.Contains($"\"{schema}\".\"sq_test_user\".nextval"));
+			Assert.That(db.LastQuery?.Contains($"\"{schema}\".\"sq_test_user\".nextval"), Is.True);
 
 			db.Insert(new Contract { UserId = user.Id, ContractNo = 1, Name = "contract1" });
 
-			Assert.True(db.LastQuery?.Contains("\t\"sq_test_user_contract\".nextval"));
+			Assert.That(db.LastQuery?.Contains("\t\"sq_test_user_contract\".nextval"), Is.True);
 		}
 	}
 }

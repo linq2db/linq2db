@@ -65,11 +65,14 @@ namespace Tests.UserTests
 
 					var recordsAfter = db.GetTable<AllTypes>().Count();
 
-					// schema request shouldn't execute procedure
-					Assert.AreEqual(recordsBefore, recordsAfter);
+					Assert.Multiple(() =>
+					{
+						// schema request shouldn't execute procedure
+						Assert.That(recordsAfter, Is.EqualTo(recordsBefore));
 
-					// schema provider should find our procedure for real
-					Assert.AreEqual(1, schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"));
+						// schema provider should find our procedure for real
+						Assert.That(schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"), Is.EqualTo(1));
+					});
 				}
 				finally
 				{
@@ -111,11 +114,14 @@ namespace Tests.UserTests
 
 				var recordsAfter = db.GetTable<AllTypes>().Count();
 
-				// schema request shouldn't execute procedure
-				Assert.AreEqual(recordsBefore, recordsAfter);
+				Assert.Multiple(() =>
+				{
+					// schema request shouldn't execute procedure
+					Assert.That(recordsAfter, Is.EqualTo(recordsBefore));
 
-				// schema provider should find our procedure for real
-				Assert.AreEqual(1, schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"));
+					// schema provider should find our procedure for real
+					Assert.That(schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -137,11 +143,11 @@ namespace Tests.UserTests
 					GetTables = false
 				}))!;
 
-				Assert.IsInstanceOf<InvalidOperationException>(ex);
-				Assert.IsTrue(
+				Assert.That(ex, Is.InstanceOf<InvalidOperationException>());
+				Assert.That(
 					ex.Message.Contains("requires the command to have a transaction")
 					|| ex.Message.Contains("команда имела транзакцию") //for those who accidentally installed a russian localization of Sql Server :)
-					);
+, Is.True);
 			}
 		}
 
@@ -160,8 +166,8 @@ namespace Tests.UserTests
 					GetTables = false
 				}))!;
 
-				Assert.IsInstanceOf<LinqToDBException>(ex);
-				Assert.AreEqual("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false", ex.Message);
+				Assert.That(ex, Is.InstanceOf<LinqToDBException>());
+				Assert.That(ex.Message, Is.EqualTo("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false"));
 			}
 		}
 	}

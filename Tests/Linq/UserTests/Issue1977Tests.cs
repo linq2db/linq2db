@@ -53,7 +53,7 @@ namespace Tests.UserTests
 					}
 				);
 
-				Assert.True(itemsQuery.ToArray().All(r => r.equals));
+				Assert.That(itemsQuery.ToArray().All(r => r.equals), Is.True);
 			}
 		}
 	}

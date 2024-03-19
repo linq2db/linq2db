@@ -528,29 +528,29 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void Union54([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })),
-					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })));
-		}
+		//public void Union54([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
+		//			(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })),
+		//			(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
+		//			(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })));
+		//}
 
 		//[Test]
-		public void Union541([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() }))
-					.Select(p => new { p.ParentID, p.p, p.ch })
-					,
-					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() }))
-					.Select(p => new { p.ParentID, p.p, p.ch }));
-		}
+		//public void Union541([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
+		//			(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() }))
+		//			.Select(p => new { p.ParentID, p.p, p.ch })
+		//			,
+		//			(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
+		//			(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() }))
+		//			.Select(p => new { p.ParentID, p.p, p.ch }));
+		//}
 
 		[Test]
 		public void ObjectUnion1([DataSources] string context)
@@ -564,15 +564,15 @@ namespace Tests.Linq
 		}
 
 		//////[Test]
-		public void ObjectUnion2([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from p1 in    Parent where p1.ParentID >  3 select p1).Union(
-					(from p2 in    Parent where p2.ParentID <= 3 select (Parent?)null)),
-					(from p1 in db.Parent where p1.ParentID >  3 select p1).Union(
-					(from p2 in db.Parent where p2.ParentID <= 3 select (Parent?)null)));
-		}
+		//public void ObjectUnion2([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			(from p1 in    Parent where p1.ParentID >  3 select p1).Union(
+		//			(from p2 in    Parent where p2.ParentID <= 3 select (Parent?)null)),
+		//			(from p1 in db.Parent where p1.ParentID >  3 select p1).Union(
+		//			(from p2 in db.Parent where p2.ParentID <= 3 select (Parent?)null)));
+		//}
 
 		[Test]
 		public void ObjectUnion3([DataSources] string context)
@@ -586,26 +586,26 @@ namespace Tests.Linq
 		}
 
 		//////[Test]
-		public void ObjectUnion4([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from p1 in    Parent where p1.ParentID >  3 select new { p = new { p = p1, p1.ParentID } }).Union(
-					(from p2 in    Parent where p2.ParentID <= 3 select new { p = new { p = p2, p2.ParentID } })),
-					(from p1 in db.Parent where p1.ParentID >  3 select new { p = new { p = p1, p1.ParentID } }).Union(
-					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, p2.ParentID } })));
-		}
+		//public void ObjectUnion4([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			(from p1 in    Parent where p1.ParentID >  3 select new { p = new { p = p1, p1.ParentID } }).Union(
+		//			(from p2 in    Parent where p2.ParentID <= 3 select new { p = new { p = p2, p2.ParentID } })),
+		//			(from p1 in db.Parent where p1.ParentID >  3 select new { p = new { p = p1, p1.ParentID } }).Union(
+		//			(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, p2.ParentID } })));
+		//}
 
 		//////[Test]
-		public void ObjectUnion5([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from p1 in    Parent where p1.ParentID >  3 select new { p = new { p = p1, ParentID = p1.ParentID + 1 } }).Union(
-					(from p2 in    Parent where p2.ParentID <= 3 select new { p = new { p = p2, ParentID = p2.ParentID + 1 } })),
-					(from p1 in db.Parent where p1.ParentID >  3 select new { p = new { p = p1, ParentID = p1.ParentID + 1 } }).Union(
-					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, ParentID = p2.ParentID + 1 } })));
-		}
+		//public void ObjectUnion5([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			(from p1 in    Parent where p1.ParentID >  3 select new { p = new { p = p1, ParentID = p1.ParentID + 1 } }).Union(
+		//			(from p2 in    Parent where p2.ParentID <= 3 select new { p = new { p = p2, ParentID = p2.ParentID + 1 } })),
+		//			(from p1 in db.Parent where p1.ParentID >  3 select new { p = new { p = p1, ParentID = p1.ParentID + 1 } }).Union(
+		//			(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, ParentID = p2.ParentID + 1 } })));
+		//}
 
 		[Test]
 		public void ObjectUnion([NorthwindDataContext] string context)
@@ -660,7 +660,7 @@ namespace Tests.Linq
 					select new { t1, t2 };
 
 				var join1Sql = join1.ToString();
-				Assert.IsNotNull(join1Sql);
+				Assert.That(join1Sql, Is.Not.Null);
 
 				var join2 =
 					from t2 in context.GetTable<TestEntity2>()
@@ -672,12 +672,12 @@ namespace Tests.Linq
 					select new { t1, t2 };
 
 				var join2Sql = join2.ToString();
-				Assert.IsNotNull(join2Sql);
+				Assert.That(join2Sql, Is.Not.Null);
 
 				var fullJoin = join1.Concat(join2);
 
 				var fullJoinSql = fullJoin.ToString(); // BLToolkit.Data.Linq.LinqException : Types in Concat are constructed incompatibly.
-				Assert.IsNotNull(fullJoinSql);
+				Assert.That(fullJoinSql, Is.Not.Null);
 			}
 		}
 
@@ -1122,11 +1122,14 @@ namespace Tests.Linq
 			var i3 = sql.IndexOf("INTERSECT");
 			var i4 = sql.IndexOf("INTERSECT ALL");
 			var i5 = sql.IndexOf("EXCEPT");
-			Assert.AreNotEqual(-1, i1);
-			Assert.Less(i1, i2);
-			Assert.Less(i2, i3);
-			Assert.Less(i3, i4);
-			Assert.Less(i4, i5);
+			Assert.That(i1, Is.Not.EqualTo(-1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(i1, Is.LessThan(i2));
+				Assert.That(i2, Is.LessThan(i3));
+				Assert.That(i3, Is.LessThan(i4));
+				Assert.That(i4, Is.LessThan(i5));
+			});
 
 			// queries order correct
 			i1 = sql.IndexOf("q1");
@@ -1134,11 +1137,14 @@ namespace Tests.Linq
 			i3 = sql.IndexOf("q3");
 			i4 = sql.IndexOf("q4");
 			i5 = sql.IndexOf("q5");
-			Assert.AreNotEqual(-1, i1);
-			Assert.Less(i1, i2);
-			Assert.Less(i2, i3);
-			Assert.Less(i3, i4);
-			Assert.Less(i4, i5);
+			Assert.That(i1, Is.Not.EqualTo(-1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(i1, Is.LessThan(i2));
+				Assert.That(i2, Is.LessThan(i3));
+				Assert.That(i3, Is.LessThan(i4));
+				Assert.That(i4, Is.LessThan(i5));
+			});
 		}
 
 		public record class  Issue3357RecordClass (int Id, string FirstName, string LastName);
@@ -1211,9 +1217,12 @@ namespace Tests.Linq
 
 			var res = tb.Concat(tb).ToArray();
 
-			Assert.AreEqual(2, res.Length);
-			Assert.AreEqual("one two", res[0].FullName);
-			Assert.AreEqual("one two", res[1].FullName);
+			Assert.That(res, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].FullName, Is.EqualTo("one two"));
+				Assert.That(res[1].FullName, Is.EqualTo("one two"));
+			});
 		}
 
 		[Test(Description = "calculated column in set select")]
@@ -1234,15 +1243,21 @@ namespace Tests.Linq
 
 			var res = query1.Concat(query2).ToArray().OrderBy(r => r.Id).ToArray();
 
-			Assert.AreEqual(2        , res.Length);
-			Assert.AreEqual("one two", res[0].Text);
-			Assert.AreEqual("text"   , res[1].Text);
+			Assert.That(res, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].Text, Is.EqualTo("one two"));
+				Assert.That(res[1].Text, Is.EqualTo("text"));
+			});
 
 			res = query2.Concat(query1).ToArray().OrderBy(r => r.Id).ToArray();
 
-			Assert.AreEqual(2        , res.Length);
-			Assert.AreEqual("one two", res[0].Text);
-			Assert.AreEqual("text"   , res[1].Text);
+			Assert.That(res, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].Text, Is.EqualTo("one two"));
+				Assert.That(res[1].Text, Is.EqualTo("text"));
+			});
 		}
 
 		[Test(Description = "NullReferenceException : Object reference not set to an instance of an object.")]
@@ -1342,9 +1357,12 @@ namespace Tests.Linq
 
 			var result = query1.Concat(query2).ToArray();
 
-			Assert.AreEqual(2, result.Length);
-			Assert.AreEqual(1, result.Select(r => r.Name.Marker == "id=1").Count());
-			Assert.AreEqual(1, result.Select(r => r.Name.Marker == "id=2").Count());
+			Assert.That(result, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Select(r => r.Name.Marker == "id=1").Count(), Is.EqualTo(1));
+				Assert.That(result.Select(r => r.Name.Marker == "id=2").Count(), Is.EqualTo(1));
+			});
 		}
 
 		public class Issue2948MyModel
@@ -1475,14 +1493,14 @@ namespace Tests.Linq
 
 			var res = db.Person.LoadWith(p => p.Patient).Concat(db.Person.LoadWith(p => p.Patient).Take(2)).ToArray();
 
-			Assert.AreEqual(6, res.Length);
-			Assert.AreEqual(2, res.Where(r => r.ID == 2).Count());
+			Assert.That(res, Has.Length.EqualTo(6));
+			Assert.That(res.Where(r => r.ID == 2).Count(), Is.EqualTo(2));
 			var pat = res.Where(r => r.ID == 2).First();
-			Assert.IsNotNull(pat.Patient);
-			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
+			Assert.That(pat.Patient, Is.Not.Null);
+			Assert.That(pat.Patient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
 			pat = res.Where(r => r.ID == 2).Skip(1).First();
-			Assert.IsNotNull(pat.Patient);
-			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
+			Assert.That(pat.Patient, Is.Not.Null);
+			Assert.That(pat.Patient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
 		}
 
 		[ActiveIssue(2511)]
@@ -1504,12 +1522,12 @@ namespace Tests.Linq
 				.Concat(db.Person.LoadWith(p => p.Patient))
 				.ToArray();
 
-			Assert.AreEqual(6, res.Length);
+			Assert.That(res, Has.Length.EqualTo(6));
 			var pat = res.Where(r => r.ID == 2).First();
-			Assert.IsNull(pat.Patient);
+			Assert.That(pat.Patient, Is.Null);
 			pat = res.Where(r => r.ID == 2).Skip(1).Single();
-			Assert.IsNotNull(pat.Patient);
-			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
+			Assert.That(pat.Patient, Is.Not.Null);
+			Assert.That(pat.Patient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
 		}
 
 		[Test(Description = "Working version of Issue2511_Query2")]
@@ -1529,11 +1547,11 @@ namespace Tests.Linq
 				.Concat(db.Person.LoadWith(p => p.Patient))
 				.ToArray();
 
-			Assert.AreEqual(6, res.Length);
+			Assert.That(res, Has.Length.EqualTo(6));
 			var pat = res.Where(r => r.ID == 2).First();
-			Assert.IsNull(pat.Patient);
+			Assert.That(pat.Patient, Is.Null);
 			pat = res.Where(r => r.ID == 2).Skip(1).Single();
-			Assert.IsNull(pat.Patient);
+			Assert.That(pat.Patient, Is.Null);
 		}
 
 		// ClickHouse developers themself doesn't know how their aliases work, so there will be no workaround

@@ -22,7 +22,7 @@ namespace Tests.Common
 			{
 				finalList.Add(enumerable2.ToList());
 			}
-			Assert.AreEqual(new int[][] { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7, 8 }, new[] { 9 } }, finalList);
+			Assert.That(finalList, Is.EqualTo(new int[][] { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7, 8 }, new[] { 9 } }));
 		}
 
 		[Test]
@@ -34,7 +34,7 @@ namespace Tests.Common
 			foreach (var enumerable2 in enumerables)
 			{
 				var array1 = enumerable2.ToList();
-				Assert.AreEqual(new int[] { 0, 1, 2 }, array1);
+				Assert.That(array1, Is.EqualTo(new int[] { 0, 1, 2 }));
 				Assert.Throws<InvalidOperationException>(() =>
 				{
 					var array2 = enumerable2.ToList();
@@ -57,7 +57,7 @@ namespace Tests.Common
 					array1.Add(elem);
 				finalList.Add(array1);
 			}
-			Assert.AreEqual(new int[][] { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7, 8 }, new[] { 9 } }, finalList);
+			Assert.That(finalList, Is.EqualTo(new int[][] { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7, 8 }, new[] { 9 } }));
 		}
 
 		[Test]
@@ -71,7 +71,7 @@ namespace Tests.Common
 				var array1 = new List<int>();
 				await foreach (var elem in enumerable2)
 					array1.Add(elem);
-				Assert.AreEqual(new int[] { 0, 1, 2 }, array1);
+				Assert.That(array1, Is.EqualTo(new int[] { 0, 1, 2 }));
 				Assert.ThrowsAsync<InvalidOperationException>(async () =>
 				{
 					await foreach (var _ in enumerable2) { }

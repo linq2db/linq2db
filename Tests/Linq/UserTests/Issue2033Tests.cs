@@ -624,7 +624,7 @@ namespace Tests.UserTests
 			public string? BadgeNumber { get; set; }
 		}
 
-		public static IQueryable<AllowedNcCodeOutput> GetAllowedNcCode(WipDB wipDB)
+		private static IQueryable<AllowedNcCodeOutput> GetAllowedNcCode(WipDB wipDB)
 		{
 			return (from ncCode in wipDB.NcCode
 				join ncGroupMember in wipDB.NcGroupMember
@@ -641,7 +641,7 @@ namespace Tests.UserTests
 				}).Distinct().AsCte(nameof(GetAllowedNcCode));
 		}
 
-		public static IQueryable<ProductionFailedNcDataOutput> FindProductionFailedNcData(WipDB wipDB,
+		private static IQueryable<ProductionFailedNcDataOutput> FindProductionFailedNcData(WipDB wipDB,
 			IQueryable<AllowedNcCodeOutput> ncCode)
 		{
 			return (from ncData in wipDB.NcData
@@ -673,7 +673,7 @@ namespace Tests.UserTests
 				}).AsCte(nameof(FindProductionFailedNcData));
 		}
 
-		public static IQueryable<FilterByTestOperationOutput> FilterByTestOperation(WipDB wipDB,
+		private static IQueryable<FilterByTestOperationOutput> FilterByTestOperation(WipDB wipDB,
 			IQueryable<ProductionFailedNcDataOutput> input)
 		{
 			return (from inputItem in input
@@ -703,7 +703,7 @@ namespace Tests.UserTests
 				}).AsCte(nameof(FilterByTestOperation));
 		}
 
-		public static IQueryable<GetAdditionalDataOutput> GetAdditionalData(WipDB wipDB,
+		private static IQueryable<GetAdditionalDataOutput> GetAdditionalData(WipDB wipDB,
 			IQueryable<FilterByTestOperationOutput> input)
 		{
 			return (from inputItem in input

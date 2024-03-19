@@ -23,146 +23,179 @@ namespace Tests.DataProvider
 
 				var proc = schema.Procedures.Where(_ => _.ProcedureName == "Person_SelectByKey").Single();
 
-				Assert.IsNull(proc.CatalogName);
-				Assert.AreEqual(false, proc.IsAggregateFunction);
-				Assert.AreEqual(true, proc.IsDefaultSchema);
-				Assert.AreEqual(false, proc.IsFunction);
-				Assert.AreEqual(true, proc.IsLoaded);
-				Assert.AreEqual(false, proc.IsResultDynamic);
-				Assert.AreEqual(false, proc.IsTableFunction);
-				Assert.AreEqual("Person_SelectByKey", proc.MemberName);
-				Assert.AreEqual("Person_SelectByKey", proc.ProcedureName);
-				Assert.IsNull(proc.ResultException);
-				Assert.IsNull(proc.SchemaName);
-				Assert.IsNotNull(proc.SimilarTables);
-				Assert.AreEqual(isODBC ? 0 : 2, proc.SimilarTables!.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(proc.CatalogName, Is.Null);
+					Assert.That(proc.IsAggregateFunction, Is.EqualTo(false));
+					Assert.That(proc.IsDefaultSchema, Is.EqualTo(true));
+					Assert.That(proc.IsFunction, Is.EqualTo(false));
+					Assert.That(proc.IsLoaded, Is.EqualTo(true));
+					Assert.That(proc.IsResultDynamic, Is.EqualTo(false));
+					Assert.That(proc.IsTableFunction, Is.EqualTo(false));
+					Assert.That(proc.MemberName, Is.EqualTo("Person_SelectByKey"));
+					Assert.That(proc.ProcedureName, Is.EqualTo("Person_SelectByKey"));
+					Assert.That(proc.ResultException, Is.Null);
+					Assert.That(proc.SchemaName, Is.Null);
+					Assert.That(proc.SimilarTables, Is.Not.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(proc.SimilarTables!, Has.Count.EqualTo(isODBC ? 0 : 2));
 
-				Assert.AreEqual(1, proc.Parameters.Count);
-				Assert.AreEqual(DataType.Int32, proc.Parameters[0].DataType);
-				Assert.AreEqual(true, proc.Parameters[0].IsIn);
-				Assert.AreEqual(true, proc.Parameters[0].IsNullable);
-				Assert.AreEqual(false, proc.Parameters[0].IsOut);
-				Assert.AreEqual(false, proc.Parameters[0].IsResult);
-				Assert.AreEqual("@id", proc.Parameters[0].ParameterName);
-				Assert.AreEqual("int?", proc.Parameters[0].ParameterType);
-				Assert.IsNull(proc.Parameters[0].ProviderSpecificType);
-				Assert.AreEqual("@id", proc.Parameters[0].SchemaName);
-				Assert.AreEqual(context.IsAnyOf(ProviderName.Access) ? "Long" : "INTEGER", proc.Parameters[0].SchemaType);
-				Assert.IsNull(proc.Parameters[0].Size);
-				Assert.AreEqual(typeof(int), proc.Parameters[0].SystemType);
+					Assert.That(proc.Parameters, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(proc.Parameters[0].DataType, Is.EqualTo(DataType.Int32));
+					Assert.That(proc.Parameters[0].IsIn, Is.EqualTo(true));
+					Assert.That(proc.Parameters[0].IsNullable, Is.EqualTo(true));
+					Assert.That(proc.Parameters[0].IsOut, Is.EqualTo(false));
+					Assert.That(proc.Parameters[0].IsResult, Is.EqualTo(false));
+					Assert.That(proc.Parameters[0].ParameterName, Is.EqualTo("@id"));
+					Assert.That(proc.Parameters[0].ParameterType, Is.EqualTo("int?"));
+					Assert.That(proc.Parameters[0].ProviderSpecificType, Is.Null);
+					Assert.That(proc.Parameters[0].SchemaName, Is.EqualTo("@id"));
+					Assert.That(proc.Parameters[0].SchemaType, Is.EqualTo(context.IsAnyOf(ProviderName.Access) ? "Long" : "INTEGER"));
+					Assert.That(proc.Parameters[0].Size, Is.Null);
+					Assert.That(proc.Parameters[0].SystemType, Is.EqualTo(typeof(int)));
 
-				Assert.IsNotNull(proc.ResultTable);
-				Assert.IsNull(proc.ResultTable!.CatalogName);
-				Assert.IsNull(proc.ResultTable.Description);
-				Assert.IsNotNull(proc.ResultTable.ForeignKeys);
-				Assert.AreEqual(0, proc.ResultTable.ForeignKeys.Count);
-				Assert.IsNull(proc.ResultTable.ID);
-				Assert.AreEqual(false, proc.ResultTable.IsDefaultSchema);
-				Assert.AreEqual(true, proc.ResultTable.IsProcedureResult);
-				Assert.AreEqual(false, proc.ResultTable.IsProviderSpecific);
-				Assert.AreEqual(false, proc.ResultTable.IsView);
-				Assert.IsNull(proc.ResultTable.SchemaName);
-				Assert.IsNull(proc.ResultTable.TableName);
-				Assert.AreEqual("Person_SelectByKeyResult", proc.ResultTable.TypeName);
+					Assert.That(proc.ResultTable, Is.Not.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(proc.ResultTable!.CatalogName, Is.Null);
+					Assert.That(proc.ResultTable.Description, Is.Null);
+					Assert.That(proc.ResultTable.ForeignKeys, Is.Not.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(proc.ResultTable.ForeignKeys, Is.Empty);
+					Assert.That(proc.ResultTable.ID, Is.Null);
+					Assert.That(proc.ResultTable.IsDefaultSchema, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.IsProcedureResult, Is.EqualTo(true));
+					Assert.That(proc.ResultTable.IsProviderSpecific, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.IsView, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.SchemaName, Is.Null);
+					Assert.That(proc.ResultTable.TableName, Is.Null);
+					Assert.That(proc.ResultTable.TypeName, Is.EqualTo("Person_SelectByKeyResult"));
 
-				Assert.IsNotNull(proc.ResultTable.Columns);
+					Assert.That(proc.ResultTable.Columns, Is.Not.Null);
+				});
 
-				Assert.AreEqual(5, proc.ResultTable.Columns.Count);
+				Assert.That(proc.ResultTable.Columns, Has.Count.EqualTo(5));
 
-				Assert.AreEqual("PersonID", proc.ResultTable.Columns[0].ColumnName);
-				Assert.AreEqual(isODBC ? "COUNTER" : "Long", proc.ResultTable.Columns[0].ColumnType);
-				Assert.AreEqual(DataType.Int32, proc.ResultTable.Columns[0].DataType);
-				Assert.IsNull(proc.ResultTable.Columns[0].Description);
-				Assert.AreEqual(true, proc.ResultTable.Columns[0].IsIdentity);
-				Assert.AreEqual(false, proc.ResultTable.Columns[0].IsNullable);
-				Assert.AreEqual(false, proc.ResultTable.Columns[0].IsPrimaryKey);
-				Assert.IsNull(proc.ResultTable.Columns[0].Length);
-				Assert.AreEqual("PersonID", proc.ResultTable.Columns[0].MemberName);
-				Assert.AreEqual("int", proc.ResultTable.Columns[0].MemberType);
-				Assert.IsNull(proc.ResultTable.Columns[0].Precision);
-				Assert.AreEqual(0, proc.ResultTable.Columns[0].PrimaryKeyOrder);
-				Assert.IsNull(proc.ResultTable.Columns[0].ProviderSpecificType);
-				Assert.IsNull(proc.ResultTable.Columns[0].Scale);
-				Assert.AreEqual(false, proc.ResultTable.Columns[0].SkipOnInsert);
-				Assert.AreEqual(false, proc.ResultTable.Columns[0].SkipOnUpdate);
-				Assert.AreEqual(typeof(int), proc.ResultTable.Columns[0].SystemType);
-				Assert.AreEqual(proc.ResultTable, proc.ResultTable.Columns[0].Table);
+				Assert.Multiple(() =>
+				{
+					Assert.That(proc.ResultTable.Columns[0].ColumnName, Is.EqualTo("PersonID"));
+					Assert.That(proc.ResultTable.Columns[0].ColumnType, Is.EqualTo(isODBC ? "COUNTER" : "Long"));
+					Assert.That(proc.ResultTable.Columns[0].DataType, Is.EqualTo(DataType.Int32));
+					Assert.That(proc.ResultTable.Columns[0].Description, Is.Null);
+					Assert.That(proc.ResultTable.Columns[0].IsIdentity, Is.EqualTo(true));
+					Assert.That(proc.ResultTable.Columns[0].IsNullable, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[0].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[0].Length, Is.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(proc.ResultTable.Columns[0].MemberName, Is.EqualTo("PersonID"));
+					Assert.That(proc.ResultTable.Columns[0].MemberType, Is.EqualTo("int"));
+					Assert.That(proc.ResultTable.Columns[0].Precision, Is.Null);
+					Assert.That(proc.ResultTable.Columns[0].PrimaryKeyOrder, Is.EqualTo(0));
+					Assert.That(proc.ResultTable.Columns[0].ProviderSpecificType, Is.Null);
+					Assert.That(proc.ResultTable.Columns[0].Scale, Is.Null);
+					Assert.That(proc.ResultTable.Columns[0].SkipOnInsert, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[0].SkipOnUpdate, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[0].SystemType, Is.EqualTo(typeof(int)));
+					Assert.That(proc.ResultTable.Columns[0].Table, Is.EqualTo(proc.ResultTable));
 
-				Assert.AreEqual("FirstName", proc.ResultTable.Columns[1].ColumnName);
-				Assert.AreEqual(isODBC ? "VARCHAR(255)" : "VarChar(50)", proc.ResultTable.Columns[1].ColumnType);
-				Assert.AreEqual(DataType.VarChar, proc.ResultTable.Columns[1].DataType);
-				Assert.IsNull(proc.ResultTable.Columns[1].Description);
-				Assert.AreEqual(false, proc.ResultTable.Columns[1].IsIdentity);
-				Assert.AreEqual(true, proc.ResultTable.Columns[1].IsNullable);
-				Assert.AreEqual(false, proc.ResultTable.Columns[1].IsPrimaryKey);
-				Assert.IsNull(proc.ResultTable.Columns[1].Length);
-				Assert.AreEqual("FirstName", proc.ResultTable.Columns[1].MemberName);
-				Assert.AreEqual("string", proc.ResultTable.Columns[1].MemberType);
-				Assert.IsNull(proc.ResultTable.Columns[1].Precision);
-				Assert.AreEqual(0, proc.ResultTable.Columns[1].PrimaryKeyOrder);
-				Assert.IsNull(proc.ResultTable.Columns[1].ProviderSpecificType);
-				Assert.IsNull(proc.ResultTable.Columns[1].Scale);
-				Assert.AreEqual(false, proc.ResultTable.Columns[1].SkipOnInsert);
-				Assert.AreEqual(false, proc.ResultTable.Columns[1].SkipOnUpdate);
-				Assert.AreEqual(typeof(string), proc.ResultTable.Columns[1].SystemType);
-				Assert.AreEqual(proc.ResultTable, proc.ResultTable.Columns[1].Table);
+					Assert.That(proc.ResultTable.Columns[1].ColumnName, Is.EqualTo("FirstName"));
+					Assert.That(proc.ResultTable.Columns[1].ColumnType, Is.EqualTo(isODBC ? "VARCHAR(255)" : "VarChar(50)"));
+					Assert.That(proc.ResultTable.Columns[1].DataType, Is.EqualTo(DataType.VarChar));
+					Assert.That(proc.ResultTable.Columns[1].Description, Is.Null);
+					Assert.That(proc.ResultTable.Columns[1].IsIdentity, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[1].IsNullable, Is.EqualTo(true));
+					Assert.That(proc.ResultTable.Columns[1].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[1].Length, Is.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(proc.ResultTable.Columns[1].MemberName, Is.EqualTo("FirstName"));
+					Assert.That(proc.ResultTable.Columns[1].MemberType, Is.EqualTo("string"));
+					Assert.That(proc.ResultTable.Columns[1].Precision, Is.Null);
+					Assert.That(proc.ResultTable.Columns[1].PrimaryKeyOrder, Is.EqualTo(0));
+					Assert.That(proc.ResultTable.Columns[1].ProviderSpecificType, Is.Null);
+					Assert.That(proc.ResultTable.Columns[1].Scale, Is.Null);
+					Assert.That(proc.ResultTable.Columns[1].SkipOnInsert, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[1].SkipOnUpdate, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[1].SystemType, Is.EqualTo(typeof(string)));
+					Assert.That(proc.ResultTable.Columns[1].Table, Is.EqualTo(proc.ResultTable));
 
-				Assert.AreEqual("LastName", proc.ResultTable.Columns[2].ColumnName);
-				Assert.AreEqual(isODBC ? "VARCHAR(255)" : "VarChar(50)", proc.ResultTable.Columns[2].ColumnType);
-				Assert.AreEqual(DataType.VarChar, proc.ResultTable.Columns[2].DataType);
-				Assert.IsNull(proc.ResultTable.Columns[2].Description);
-				Assert.AreEqual(false, proc.ResultTable.Columns[2].IsIdentity);
-				Assert.AreEqual(true, proc.ResultTable.Columns[2].IsNullable);
-				Assert.AreEqual(false, proc.ResultTable.Columns[2].IsPrimaryKey);
-				Assert.IsNull(proc.ResultTable.Columns[2].Length);
-				Assert.AreEqual("LastName", proc.ResultTable.Columns[2].MemberName);
-				Assert.AreEqual("string", proc.ResultTable.Columns[2].MemberType);
-				Assert.IsNull(proc.ResultTable.Columns[2].Precision);
-				Assert.AreEqual(0, proc.ResultTable.Columns[2].PrimaryKeyOrder);
-				Assert.IsNull(proc.ResultTable.Columns[2].ProviderSpecificType);
-				Assert.IsNull(proc.ResultTable.Columns[2].Scale);
-				Assert.AreEqual(false, proc.ResultTable.Columns[2].SkipOnInsert);
-				Assert.AreEqual(false, proc.ResultTable.Columns[2].SkipOnUpdate);
-				Assert.AreEqual(typeof(string), proc.ResultTable.Columns[2].SystemType);
-				Assert.AreEqual(proc.ResultTable, proc.ResultTable.Columns[2].Table);
+					Assert.That(proc.ResultTable.Columns[2].ColumnName, Is.EqualTo("LastName"));
+					Assert.That(proc.ResultTable.Columns[2].ColumnType, Is.EqualTo(isODBC ? "VARCHAR(255)" : "VarChar(50)"));
+					Assert.That(proc.ResultTable.Columns[2].DataType, Is.EqualTo(DataType.VarChar));
+					Assert.That(proc.ResultTable.Columns[2].Description, Is.Null);
+					Assert.That(proc.ResultTable.Columns[2].IsIdentity, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[2].IsNullable, Is.EqualTo(true));
+					Assert.That(proc.ResultTable.Columns[2].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[2].Length, Is.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(proc.ResultTable.Columns[2].MemberName, Is.EqualTo("LastName"));
+					Assert.That(proc.ResultTable.Columns[2].MemberType, Is.EqualTo("string"));
+					Assert.That(proc.ResultTable.Columns[2].Precision, Is.Null);
+					Assert.That(proc.ResultTable.Columns[2].PrimaryKeyOrder, Is.EqualTo(0));
+					Assert.That(proc.ResultTable.Columns[2].ProviderSpecificType, Is.Null);
+					Assert.That(proc.ResultTable.Columns[2].Scale, Is.Null);
+					Assert.That(proc.ResultTable.Columns[2].SkipOnInsert, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[2].SkipOnUpdate, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[2].SystemType, Is.EqualTo(typeof(string)));
+					Assert.That(proc.ResultTable.Columns[2].Table, Is.EqualTo(proc.ResultTable));
 
-				Assert.AreEqual("MiddleName", proc.ResultTable.Columns[3].ColumnName);
-				Assert.AreEqual(isODBC ? "VARCHAR(255)" : "VarChar(50)", proc.ResultTable.Columns[3].ColumnType);
-				Assert.AreEqual(DataType.VarChar, proc.ResultTable.Columns[3].DataType);
-				Assert.IsNull(proc.ResultTable.Columns[3].Description);
-				Assert.AreEqual(false, proc.ResultTable.Columns[3].IsIdentity);
-				Assert.AreEqual(true, proc.ResultTable.Columns[3].IsNullable);
-				Assert.AreEqual(false, proc.ResultTable.Columns[3].IsPrimaryKey);
-				Assert.IsNull(proc.ResultTable.Columns[3].Length);
-				Assert.AreEqual("MiddleName", proc.ResultTable.Columns[3].MemberName);
-				Assert.AreEqual("string", proc.ResultTable.Columns[3].MemberType);
-				Assert.IsNull(proc.ResultTable.Columns[3].Precision);
-				Assert.AreEqual(0, proc.ResultTable.Columns[3].PrimaryKeyOrder);
-				Assert.IsNull(proc.ResultTable.Columns[3].ProviderSpecificType);
-				Assert.IsNull(proc.ResultTable.Columns[3].Scale);
-				Assert.AreEqual(false, proc.ResultTable.Columns[3].SkipOnInsert);
-				Assert.AreEqual(false, proc.ResultTable.Columns[3].SkipOnUpdate);
-				Assert.AreEqual(typeof(string), proc.ResultTable.Columns[3].SystemType);
-				Assert.AreEqual(proc.ResultTable, proc.ResultTable.Columns[3].Table);
+					Assert.That(proc.ResultTable.Columns[3].ColumnName, Is.EqualTo("MiddleName"));
+					Assert.That(proc.ResultTable.Columns[3].ColumnType, Is.EqualTo(isODBC ? "VARCHAR(255)" : "VarChar(50)"));
+					Assert.That(proc.ResultTable.Columns[3].DataType, Is.EqualTo(DataType.VarChar));
+					Assert.That(proc.ResultTable.Columns[3].Description, Is.Null);
+					Assert.That(proc.ResultTable.Columns[3].IsIdentity, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[3].IsNullable, Is.EqualTo(true));
+					Assert.That(proc.ResultTable.Columns[3].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[3].Length, Is.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(proc.ResultTable.Columns[3].MemberName, Is.EqualTo("MiddleName"));
+					Assert.That(proc.ResultTable.Columns[3].MemberType, Is.EqualTo("string"));
+					Assert.That(proc.ResultTable.Columns[3].Precision, Is.Null);
+					Assert.That(proc.ResultTable.Columns[3].PrimaryKeyOrder, Is.EqualTo(0));
+					Assert.That(proc.ResultTable.Columns[3].ProviderSpecificType, Is.Null);
+					Assert.That(proc.ResultTable.Columns[3].Scale, Is.Null);
+					Assert.That(proc.ResultTable.Columns[3].SkipOnInsert, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[3].SkipOnUpdate, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[3].SystemType, Is.EqualTo(typeof(string)));
+					Assert.That(proc.ResultTable.Columns[3].Table, Is.EqualTo(proc.ResultTable));
 
-				Assert.AreEqual("Gender", proc.ResultTable.Columns[4].ColumnName);
-				Assert.AreEqual(isODBC ? "VARCHAR(255)" : "VarChar(1)", proc.ResultTable.Columns[4].ColumnType);
-				Assert.AreEqual(DataType.VarChar, proc.ResultTable.Columns[4].DataType);
-				Assert.IsNull(proc.ResultTable.Columns[4].Description);
-				Assert.AreEqual(false, proc.ResultTable.Columns[4].IsIdentity);
-				Assert.AreEqual(true, proc.ResultTable.Columns[4].IsNullable);
-				Assert.AreEqual(false, proc.ResultTable.Columns[4].IsPrimaryKey);
-				Assert.IsNull(proc.ResultTable.Columns[4].Length);
-				Assert.AreEqual("Gender", proc.ResultTable.Columns[4].MemberName);
-				Assert.AreEqual("string", proc.ResultTable.Columns[4].MemberType);
-				Assert.IsNull(proc.ResultTable.Columns[4].Precision);
-				Assert.AreEqual(0, proc.ResultTable.Columns[4].PrimaryKeyOrder);
-				Assert.IsNull(proc.ResultTable.Columns[4].ProviderSpecificType);
-				Assert.IsNull(proc.ResultTable.Columns[4].Scale);
-				Assert.AreEqual(false, proc.ResultTable.Columns[4].SkipOnInsert);
-				Assert.AreEqual(false, proc.ResultTable.Columns[4].SkipOnUpdate);
-				Assert.AreEqual(isODBC ? typeof(string) : typeof(char), proc.ResultTable.Columns[4].SystemType);
-				Assert.AreEqual(proc.ResultTable, proc.ResultTable.Columns[4].Table);
+					Assert.That(proc.ResultTable.Columns[4].ColumnName, Is.EqualTo("Gender"));
+					Assert.That(proc.ResultTable.Columns[4].ColumnType, Is.EqualTo(isODBC ? "VARCHAR(255)" : "VarChar(1)"));
+					Assert.That(proc.ResultTable.Columns[4].DataType, Is.EqualTo(DataType.VarChar));
+					Assert.That(proc.ResultTable.Columns[4].Description, Is.Null);
+					Assert.That(proc.ResultTable.Columns[4].IsIdentity, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[4].IsNullable, Is.EqualTo(true));
+					Assert.That(proc.ResultTable.Columns[4].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[4].Length, Is.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(proc.ResultTable.Columns[4].MemberName, Is.EqualTo("Gender"));
+					Assert.That(proc.ResultTable.Columns[4].MemberType, Is.EqualTo("string"));
+					Assert.That(proc.ResultTable.Columns[4].Precision, Is.Null);
+					Assert.That(proc.ResultTable.Columns[4].PrimaryKeyOrder, Is.EqualTo(0));
+					Assert.That(proc.ResultTable.Columns[4].ProviderSpecificType, Is.Null);
+					Assert.That(proc.ResultTable.Columns[4].Scale, Is.Null);
+					Assert.That(proc.ResultTable.Columns[4].SkipOnInsert, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[4].SkipOnUpdate, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[4].SystemType, Is.EqualTo(isODBC ? typeof(string) : typeof(char)));
+					Assert.That(proc.ResultTable.Columns[4].Table, Is.EqualTo(proc.ResultTable));
+				});
 			}
 		}
 
@@ -180,12 +213,15 @@ namespace Tests.DataProvider
 					Gender     = Gender.Female,
 				});
 
-				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id).Count());
+				Assert.That(db.Person.Where(_ => _.ID == id).Count(), Is.EqualTo(1));
 
 				var cnt = Person_Delete(db, id, context.IsAnyOf(ProviderName.AccessOdbc));
 
-				Assert.AreEqual(0, db.Person.Where(_ => _.ID == id).Count());
-				Assert.AreEqual(1, cnt);
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Person.Where(_ => _.ID == id).Count(), Is.EqualTo(0));
+					Assert.That(cnt, Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -203,19 +239,22 @@ namespace Tests.DataProvider
 					Gender     = Gender.Female,
 				});
 
-				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id).Count());
+				Assert.That(db.Person.Where(_ => _.ID == id).Count(), Is.EqualTo(1));
 
 				var cnt = Person_Update(db, id, "new first", "new middle", "new last", 'U', context.IsAnyOf(ProviderName.AccessOdbc));
 
-				Assert.AreEqual(1, cnt);
+				Assert.That(cnt, Is.EqualTo(1));
 
 				var record = db.Person.Where(_ => _.ID == id).Single();
 
-				Assert.AreEqual(cnt           , record.ID);
-				Assert.AreEqual("new first"   , record.FirstName);
-				Assert.AreEqual("new middle"  , record.MiddleName);
-				Assert.AreEqual("new last"    , record.LastName);
-				Assert.AreEqual(Gender.Unknown, record.Gender);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ID, Is.EqualTo(cnt));
+					Assert.That(record.FirstName, Is.EqualTo("new first"));
+					Assert.That(record.MiddleName, Is.EqualTo("new middle"));
+					Assert.That(record.LastName, Is.EqualTo("new last"));
+					Assert.That(record.Gender, Is.EqualTo(Gender.Unknown));
+				});
 			}
 		}
 
@@ -229,14 +268,17 @@ namespace Tests.DataProvider
 
 				var cnt = Person_Insert(db, "new first", "new middle", "new last", 'U', context.IsAnyOf(ProviderName.AccessOdbc));
 
-				Assert.AreEqual(1, cnt);
+				Assert.That(cnt, Is.EqualTo(1));
 
 				var record = db.Person.Where(_ => _.ID > maxId).Single();
 
-				Assert.AreEqual("new first"   , record.FirstName);
-				Assert.AreEqual("new middle"  , record.MiddleName);
-				Assert.AreEqual("new last"    , record.LastName);
-				Assert.AreEqual(Gender.Unknown, record.Gender);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.FirstName, Is.EqualTo("new first"));
+					Assert.That(record.MiddleName, Is.EqualTo("new middle"));
+					Assert.That(record.LastName, Is.EqualTo("new last"));
+					Assert.That(record.Gender, Is.EqualTo(Gender.Unknown));
+				});
 			}
 		}
 
@@ -246,13 +288,16 @@ namespace Tests.DataProvider
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				Assert.AreEqual(0, db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count());
+				Assert.That(db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count(), Is.EqualTo(0));
 
 				var cnt = ThisProcedureNotVisibleFromODBC(db, context.IsAnyOf(ProviderName.AccessOdbc));
 
-				Assert.AreEqual(1, cnt);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt, Is.EqualTo(1));
 
-				Assert.AreEqual(1, db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count());
+					Assert.That(db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count(), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -262,13 +307,16 @@ namespace Tests.DataProvider
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				Assert.AreEqual(0, db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count());
+				Assert.That(db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count(), Is.EqualTo(0));
 
 				var cnt = AddIssue792Record(db, 100500, context.IsAnyOf(ProviderName.AccessOdbc));
 
-				Assert.AreEqual(1, cnt);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt, Is.EqualTo(1));
 
-				Assert.AreEqual(1, db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count());
+					Assert.That(db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count(), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -280,9 +328,12 @@ namespace Tests.DataProvider
 			{
 				var res = Scalar_DataReader(db, context.IsAnyOf(ProviderName.AccessOdbc));
 
-				Assert.AreEqual(1      , res.Count);
-				Assert.AreEqual(12345  , res[0].intField);
-				Assert.AreEqual("54321", res[0].stringField);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].intField, Is.EqualTo(12345));
+					Assert.That(res[0].stringField, Is.EqualTo("54321"));
+				});
 			}
 		}
 
@@ -322,7 +373,7 @@ namespace Tests.DataProvider
 				var query     = db.Person.Where(_ => _.FirstName == firstName && _.LastName == lastName);
 				var res       = Person_SelectByName(db, firstName, lastName, context.IsAnyOf(ProviderName.AccessOdbc));
 
-				Assert.AreEqual(1, query.Count());
+				Assert.That(query.Count(), Is.EqualTo(1));
 				AreEqual(query, res);
 			}
 		}
@@ -338,7 +389,7 @@ namespace Tests.DataProvider
 				var query     = db.Person.Where(_ => _.FirstName.Contains(firstName) && _.LastName.Contains(lastName));
 				var res       = Person_SelectListByName(db, $"%{firstName}%", $"%{lastName}%", context.IsAnyOf(ProviderName.AccessOdbc));
 
-				Assert.AreEqual(2, query.Count());
+				Assert.That(query.Count(), Is.EqualTo(2));
 				AreEqual(query.OrderBy(_ => _.ID), res.OrderBy(_ => _.ID));
 			}
 		}
@@ -387,7 +438,7 @@ namespace Tests.DataProvider
 									});
 				var res = Patient_SelectByName(db, firstName, lastName, context.IsAnyOf(ProviderName.AccessOdbc));
 
-				Assert.AreEqual(1, query.Count());
+				Assert.That(query.Count(), Is.EqualTo(1));
 				AreEqual(
 					query.OrderBy(_ => _.PersonID),
 					res  .OrderBy(_ => _.PersonID),
@@ -396,7 +447,7 @@ namespace Tests.DataProvider
 		}
 
 		#region Procedures
-		public static int Person_Delete(DataConnection dataConnection, int id, bool odbc)
+		private static int Person_Delete(DataConnection dataConnection, int id, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_Delete(?) }" : "[Person_Delete]";
 			return dataConnection.ExecuteProc(
@@ -404,7 +455,7 @@ namespace Tests.DataProvider
 				new DataParameter("@id", id, DataType.Int32));
 		}
 
-		public static int Person_Update(DataConnection dataConnection, int id, string firstName, string? midleName, string lastName, char gender, bool odbc)
+		private static int Person_Update(DataConnection dataConnection, int id, string firstName, string? midleName, string lastName, char gender, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_Update(?, ?, ?, ?, ?) }" : "Person_Update";
 			return dataConnection.ExecuteProc(
@@ -416,7 +467,7 @@ namespace Tests.DataProvider
 				new DataParameter("gender"   , gender   , DataType.Char));
 		}
 
-		public static int Person_Insert(DataConnection dataConnection, string firstName, string? midleName, string lastName, char gender, bool odbc)
+		private static int Person_Insert(DataConnection dataConnection, string firstName, string? midleName, string lastName, char gender, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_Insert(?, ?, ?, ?) }" : "Person_Insert";
 			return dataConnection.ExecuteProc(
@@ -427,13 +478,13 @@ namespace Tests.DataProvider
 				new DataParameter("gender"   , gender   , DataType.Char));
 		}
 
-		public static int ThisProcedureNotVisibleFromODBC(DataConnection dataConnection, bool odbc)
+		private static int ThisProcedureNotVisibleFromODBC(DataConnection dataConnection, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL ThisProcedureNotVisibleFromODBC() }" : "ThisProcedureNotVisibleFromODBC";
 			return dataConnection.ExecuteProc(commandText);
 		}
 
-		public static int AddIssue792Record(DataConnection dataConnection, int? unused, bool odbc)
+		private static int AddIssue792Record(DataConnection dataConnection, int? unused, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL AddIssue792Record(?) }" : "AddIssue792Record";
 			return dataConnection.ExecuteProc(
@@ -441,7 +492,7 @@ namespace Tests.DataProvider
 				new DataParameter("unused", unused, DataType.Int32));
 		}
 
-		public static List<Scalar_DataReaderResult> Scalar_DataReader(DataConnection dataConnection, bool odbc)
+		private static List<Scalar_DataReaderResult> Scalar_DataReader(DataConnection dataConnection, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Scalar_DataReader() }" : "Scalar_DataReader";
 			return dataConnection.QueryProc<Scalar_DataReaderResult>(commandText).ToList();
@@ -453,7 +504,7 @@ namespace Tests.DataProvider
 			public string? stringField { get; set; }
 		}
 
-		public static List<Person> Person_SelectByKey(DataConnection dataConnection, int id, bool odbc)
+		private static List<Person> Person_SelectByKey(DataConnection dataConnection, int id, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectByKey(?) }" : "Person_SelectByKey";
 			return dataConnection.QueryProc<Person>(
@@ -461,13 +512,13 @@ namespace Tests.DataProvider
 				new DataParameter("id", id, DataType.Int32)).ToList();
 		}
 
-		public static List<Person> Person_SelectAll(DataConnection dataConnection, bool odbc)
+		private static List<Person> Person_SelectAll(DataConnection dataConnection, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectAll() }" : "Person_SelectAll";
 			return dataConnection.QueryProc<Person>(commandText).ToList();
 		}
 
-		public static List<Person> Person_SelectByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
+		private static List<Person> Person_SelectByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectByName(?, ?) }" : "Person_SelectByName";
 			return dataConnection.QueryProc<Person>(
@@ -476,7 +527,7 @@ namespace Tests.DataProvider
 				new DataParameter("lastName" , lastName , DataType.VarChar)).ToList();
 		}
 
-		public static List<Person> Person_SelectListByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
+		private static List<Person> Person_SelectListByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectListByName(?, ?) }" : "Person_SelectListByName";
 			return dataConnection.QueryProc<Person>(
@@ -485,13 +536,13 @@ namespace Tests.DataProvider
 				new DataParameter("lastName" , lastName , DataType.VarChar)).ToList();
 		}
 
-		public static List<PatientResult> Patient_SelectAll(DataConnection dataConnection, bool odbc)
+		private static List<PatientResult> Patient_SelectAll(DataConnection dataConnection, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Patient_SelectAll() }" : "Patient_SelectAll";
 			return dataConnection.QueryProc<PatientResult>(commandText).ToList();
 		}
 
-		public static List<PatientResult> Patient_SelectByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
+		private static List<PatientResult> Patient_SelectByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Patient_SelectByName(?, ?) }" : "Patient_SelectByName";
 			return dataConnection.QueryProc<PatientResult>(

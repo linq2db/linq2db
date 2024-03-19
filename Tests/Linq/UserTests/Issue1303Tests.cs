@@ -41,9 +41,12 @@ namespace Tests.UserTests
 
 				var byId     = tbl.Where(_ => _.ID == 1).Single();
 
-				Assert.AreEqual(1, byId.ID);
-				Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byId.Array!));
-				Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byId.Binary!.ToArray()));
+				Assert.Multiple(() =>
+				{
+					Assert.That(byId.ID, Is.EqualTo(1));
+					Assert.That(new byte[] { 1, 2, 3 }.SequenceEqual(byId.Array!), Is.True);
+					Assert.That(new byte[] { 4, 5 }.SequenceEqual(byId.Binary!.ToArray()), Is.True);
+				});
 
 				// Informix: doesn't support blobs in conditions
 				if (!context.IsAnyOf(TestProvName.AllInformix))
@@ -51,13 +54,16 @@ namespace Tests.UserTests
 					var byArray  = tbl.Where(_ => _.Array  == new byte[] { 1, 2, 3 })         .Single();
 					var byBinary = tbl.Where(_ => _.Binary == new Binary(new byte[] { 4, 5 })).Single();
 
-					Assert.AreEqual(1, byArray.ID);
-					Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byArray.Array!));
-					Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byArray.Binary!.ToArray()));
+					Assert.Multiple(() =>
+					{
+						Assert.That(byArray.ID, Is.EqualTo(1));
+						Assert.That(new byte[] { 1, 2, 3 }.SequenceEqual(byArray.Array!), Is.True);
+						Assert.That(new byte[] { 4, 5 }.SequenceEqual(byArray.Binary!.ToArray()), Is.True);
 
-					Assert.AreEqual(1, byBinary.ID);
-					Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byBinary.Array!));
-					Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byBinary.Binary!.ToArray()));
+						Assert.That(byBinary.ID, Is.EqualTo(1));
+						Assert.That(new byte[] { 1, 2, 3 }.SequenceEqual(byBinary.Array!), Is.True);
+						Assert.That(new byte[] { 4, 5 }.SequenceEqual(byBinary.Binary!.ToArray()), Is.True);
+					});
 				}
 			}
 		}

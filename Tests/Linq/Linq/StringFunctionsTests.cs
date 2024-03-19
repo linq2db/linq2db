@@ -273,7 +273,7 @@ namespace Tests.Linq
 				var expected2 = AggregateStrings(" -> ", data.Select(t => t.Value1).Reverse());
 
 				// as we don't order aggregation, we should expect unstable results
-				Assert.True(expected1 == actual || expected2 == actual, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
+				Assert.That(expected1 == actual || expected2 == actual, Is.True, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
 		}
 
@@ -287,19 +287,19 @@ namespace Tests.Linq
 			{
 				var actualAsc   = table.Select(t => t.Value1).StringAggregate(" -> ").OrderBy().ToValue();
 				var expectedAsc = AggregateStrings(" -> ", data.Select(t => t.Value1).OrderBy(d => d));
-				Assert.AreEqual(expectedAsc, actualAsc);
+				Assert.That(actualAsc, Is.EqualTo(expectedAsc));
 
 				var actualAscExpr   = table.Select(t => t.Value1).StringAggregate(" -> ").OrderBy(d => d).ToValue();
 				var expectedAscExpr = AggregateStrings(" -> ", data.Select(t => t.Value1).OrderBy(d => d));
-				Assert.AreEqual(expectedAscExpr, actualAscExpr);
+				Assert.That(actualAscExpr, Is.EqualTo(expectedAscExpr));
 
 				var actualDesc   = table.Select(t => t.Value1).StringAggregate(" -> ").OrderByDescending().ToValue();
 				var expectedDesc = AggregateStrings(" -> ", data.Select(t => t.Value1).OrderByDescending(d => d));
-				Assert.AreEqual(expectedDesc, actualDesc);
+				Assert.That(actualDesc, Is.EqualTo(expectedDesc));
 
 				var actualDescExpr   = table.Select(t => t.Value1).StringAggregate(" -> ").OrderByDescending(d => d).ToValue();
 				var expectedDescExpr = AggregateStrings(" -> ", data.Select(t => t.Value1).OrderByDescending(d => d));
-				Assert.AreEqual(expectedDescExpr, actualDescExpr);
+				Assert.That(actualDescExpr, Is.EqualTo(expectedDescExpr));
 			}
 		}
 
@@ -316,7 +316,7 @@ namespace Tests.Linq
 				var expected2 = AggregateStrings(" -> ", data.Select(t => t.Value1).Reverse());
 
 				// as we don't order aggregation, we should expect unstable results
-				Assert.True(expected1 == actual || expected2 == actual, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
+				Assert.That(expected1 == actual || expected2 == actual, Is.True, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
 		}
 
@@ -346,14 +346,20 @@ namespace Tests.Linq
 				//AreEqual(expected, query);
 
 				var result = query.ToArray();
-				Assert.AreEqual(3, result.Length);
-				Assert.AreEqual(2, result[0].Count);
-				Assert.AreEqual(2, result[1].Count);
-				Assert.AreEqual(2, result[2].Count);
+				Assert.That(result, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Count, Is.EqualTo(2));
+					Assert.That(result[1].Count, Is.EqualTo(2));
+					Assert.That(result[2].Count, Is.EqualTo(2));
 
-				Assert.That(result[0].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
-				Assert.That(result[1].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
-				Assert.That(result[2].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
+					Assert.That(result[0].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[1].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
+					Assert.That(result[2].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
+				});
 			}
 		}
 
@@ -377,22 +383,22 @@ namespace Tests.Linq
 				var actualOne   = query.Select(t => Sql.ConcatStrings(" -> ", t.Value2));
 				var expectedOne = data .Select(t => Sql.ConcatStrings(" -> ", t.Value2));
 
-				Assert.AreEqual(expectedOne, actualOne);
+				Assert.That(actualOne, Is.EqualTo(expectedOne));
 
 				var actualOneNull   = query.Select(t => Sql.ConcatStrings(" -> ", t.Value3));
 				var expectedOneNull = data .Select(t => Sql.ConcatStrings(" -> ", t.Value3));
 
-				Assert.AreEqual(expectedOneNull, actualOneNull);
+				Assert.That(actualOneNull, Is.EqualTo(expectedOneNull));
 
 				var actual   = query.Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value1, t.Value2));
 				var expected = data .Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value1, t.Value2));
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				var actualAllEmpty   = query.Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value3));
 				var expectedAllEmpty = data .Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value3));
 
-				Assert.AreEqual(expectedAllEmpty, actualAllEmpty);
+				Assert.That(actualAllEmpty, Is.EqualTo(expectedAllEmpty));
 			}
 		}
 
@@ -420,7 +426,7 @@ namespace Tests.Linq
 				var expected2 = AggregateStrings(" -> ", data.Select(t => t.Value4).Reverse());
 
 				// as we don't order aggregation, we should expect unstable results
-				Assert.True(expected1 == actual || expected2 == actual, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
+				Assert.That(expected1 == actual || expected2 == actual, Is.True, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
 		}
 
@@ -437,7 +443,7 @@ namespace Tests.Linq
 				var expected2 = AggregateStrings(" -> ", data.Select(t => t.Value4).Reverse());
 
 				// as we don't order aggregation, we should expect unstable results
-				Assert.True(expected1 == actual || expected2 == actual, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
+				Assert.That(expected1 == actual || expected2 == actual, Is.True, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
 		}
 

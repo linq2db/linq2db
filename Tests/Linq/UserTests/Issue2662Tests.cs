@@ -48,7 +48,7 @@ namespace Tests.UserTests
 					into grp
 					select new {grp.Key, c1 = grp.Count(), c2 = grp.Distinct().Count()};
 
-				Assert.AreEqual(expected, query);
+				Assert.That(query, Is.EqualTo(expected));
 			}
 		}
 	}

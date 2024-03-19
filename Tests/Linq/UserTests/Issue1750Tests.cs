@@ -34,8 +34,8 @@ namespace Tests.UserTests
 						((includeX && p.Value1 == 1) || (includeY && p.Value1 == 2) || (includeZ && p.ParentID % 2 == 0))
 					select p).ToArray();
 
-				if (expected.Length == 0) 
-					Assert.AreEqual(expected.Length, query.Count());
+				if (expected.Length == 0)
+					Assert.That(query.Count(), Is.EqualTo(expected.Length));
 				else
 					AreEqual(expected, query);
 			}

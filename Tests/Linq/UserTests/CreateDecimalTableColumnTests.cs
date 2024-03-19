@@ -19,8 +19,11 @@ namespace Tests.UserTests
 
 			var table = new SqlTable(schema.GetEntityDescriptor(typeof(Foo)));
 
-			Assert.That(table.Fields.Single().Type!.Precision, Is.EqualTo(19));
-			Assert.That(table.Fields.Single().Type!.Scale, Is.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(table.Fields.Single().Type!.Precision, Is.EqualTo(19));
+				Assert.That(table.Fields.Single().Type!.Scale, Is.EqualTo(4));
+			});
 		}
 
 		sealed class Foo

@@ -112,7 +112,7 @@ namespace Tests.UserTests
 						.FirstOrDefault()
 				})
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 
 			// validate that the prior statement executed as a single query, not two distinct queries
 			var baselines = GetCurrentBaselines();

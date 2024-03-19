@@ -116,10 +116,10 @@ namespace Tests.UserTests
 
 		// no u can't
 		//[Test]
-		public void CanDisposeDataContext([IssueContextSource(false)] string context)
-		{
-			AreEqual(Person.Where(_ => _.ID == 1), GetPersonsFromDisposed2(context));
-		}
+		//public void CanDisposeDataContext([IssueContextSource(false)] string context)
+		//{
+		//	AreEqual(Person.Where(_ => _.ID == 1), GetPersonsFromDisposed2(context));
+		//}
 
 		[Test]
 		public void ConnectionPoolException1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)

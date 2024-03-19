@@ -78,7 +78,7 @@ namespace Tests.UserTests
 						.FirstOrDefault()
 				})
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 
 			// validate that the prior statement executed as a single query, not two distinct queries
 			// LastQuery will only return a single query, so if it was split into two queries, not all name fields would be present

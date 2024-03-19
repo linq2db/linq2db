@@ -65,7 +65,7 @@ namespace Tests.UserTests
 			TestContext.WriteLine(query2);
 			TestContext.WriteLine(query3);
 
-			Assert.AreEqual(query1, query2);
+			Assert.That(query2, Is.EqualTo(query1));
 		}
 	}
 }

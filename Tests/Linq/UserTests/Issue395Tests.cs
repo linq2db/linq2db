@@ -30,20 +30,23 @@ namespace Tests.UserTests
 
 				var data = allData.First();
 
-				// ok
-				Assert.That(data.Via1,
-							Is.EqualTo(first.Where(x => x.ShipCountry == data.ShipCountry).Sum(x => x.Via1)),
-							"first aggregation sum mismatch");
+				Assert.Multiple(() =>
+				{
+					// ok
+					Assert.That(data.Via1,
+								Is.EqualTo(first.Where(x => x.ShipCountry == data.ShipCountry).Sum(x => x.Via1)),
+								"first aggregation sum mismatch");
 
-				// ok
-				Assert.That(data.Via2,
-							Is.EqualTo(second.Where(x => x.ShipCountry == data.ShipCountry).Sum(x => x.Via2)),
-							"second aggregation sum mismatch");
+					// ok
+					Assert.That(data.Via2,
+								Is.EqualTo(second.Where(x => x.ShipCountry == data.ShipCountry).Sum(x => x.Via2)),
+								"second aggregation sum mismatch");
 
-				// asserts
-				Assert.That(data.Via3,
-							Is.EqualTo(third.Where(x => x.ShipCountry == data.ShipCountry).Sum(x => x.Via3)),
-							"third aggregation sum mismatch");
+					// asserts
+					Assert.That(data.Via3,
+								Is.EqualTo(third.Where(x => x.ShipCountry == data.ShipCountry).Sum(x => x.Via3)),
+								"third aggregation sum mismatch");
+				});
 			}
 		}
 	}

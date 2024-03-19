@@ -100,7 +100,7 @@ namespace Tests.xUpdate
 					record.inserted.Field1.Should().Be(10);
 				}
 
-				Assert.AreEqual(1, cnt);
+				Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -123,7 +123,7 @@ namespace Tests.xUpdate
 				var hasRecord = false;
 				await foreach (var record in outputRows)
 				{
-					Assert.False(hasRecord);
+					Assert.That(hasRecord, Is.False);
 					hasRecord = true;
 
 					record.deleted.Id.Should().Be(0);
@@ -132,7 +132,7 @@ namespace Tests.xUpdate
 					record.inserted.Field1.Should().Be(10);
 				}
 
-				Assert.True(hasRecord);
+				Assert.That(hasRecord, Is.True);
 			}
 		}
 

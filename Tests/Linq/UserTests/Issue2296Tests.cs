@@ -37,7 +37,7 @@ namespace Tests.UserTests
 
 				var actual = dbQuery.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 	}

@@ -35,8 +35,11 @@ namespace Tests.xUpdate
 				var source = table.Single();
 				var result = destTable.Single();
 
-				Assert.That(source.Value,      Is.EqualTo(result.Value));
-				Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				Assert.Multiple(() =>
+				{
+					Assert.That(source.Value, Is.EqualTo(result.Value));
+					Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				});
 			}
 		}
 
@@ -54,8 +57,11 @@ namespace Tests.xUpdate
 				var source = table.Single();
 				var result = destTable.Single();
 
-				Assert.That(source.Value,      Is.EqualTo(result.Value));
-				Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				Assert.Multiple(() =>
+				{
+					Assert.That(source.Value, Is.EqualTo(result.Value));
+					Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				});
 			}
 		}
 
@@ -73,8 +79,11 @@ namespace Tests.xUpdate
 				var source = table.Single();
 				var result = destTable.Single();
 
-				Assert.That(source.Value,      Is.EqualTo(result.Value));
-				Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				Assert.Multiple(() =>
+				{
+					Assert.That(source.Value, Is.EqualTo(result.Value));
+					Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				});
 			}
 		}
 
@@ -93,8 +102,11 @@ namespace Tests.xUpdate
 				var source = table.Single();
 				var result = destTable.Single();
 
-				Assert.That(source.Value,      Is.EqualTo(result.Value));
-				Assert.That(result.OtherValue, Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(source.Value, Is.EqualTo(result.Value));
+					Assert.That(result.OtherValue, Is.Null);
+				});
 			}
 		}
 
@@ -116,8 +128,11 @@ namespace Tests.xUpdate
 				var source = table.Single();
 				var result = destTable.Single();
 
-				Assert.That(source.Value,      Is.EqualTo(result.Value - 2));
-				Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue - 2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(source.Value, Is.EqualTo(result.Value - 2));
+					Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue - 2));
+				});
 			}
 		}
 	}

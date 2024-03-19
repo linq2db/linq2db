@@ -56,7 +56,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(size, rows, context);
 
-				Assert.AreEqual(size + 4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(size + 4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -65,12 +65,15 @@ namespace Tests.xUpdate
 
 				for (var i = 4; i < size + 4; i++)
 				{
-					Assert.AreEqual(i + 1, result[i].Id);
-					Assert.AreEqual(i + 2, result[i].Field1);
-					Assert.AreEqual(i + 3, result[i].Field2);
-					Assert.IsNull(result[i].Field3);
-					Assert.AreEqual(i + 5, result[i].Field4);
-					Assert.IsNull(result[i].Field5);
+					Assert.Multiple(() =>
+					{
+						Assert.That(result[i].Id, Is.EqualTo(i + 1));
+						Assert.That(result[i].Field1, Is.EqualTo(i + 2));
+						Assert.That(result[i].Field2, Is.EqualTo(i + 3));
+						Assert.That(result[i].Field3, Is.Null);
+						Assert.That(result[i].Field4, Is.EqualTo(i + 5));
+						Assert.That(result[i].Field5, Is.Null);
+					});
 				}
 			}
 		}

@@ -2956,15 +2956,15 @@ namespace Tests.xUpdate
 				.UpdateWithOutput(a => new Test3697Item() { Value = 1 }, (d, i) => i.Id)
 				.ToArray();
 
-			Assert.AreEqual(1, result.Length);
-			Assert.AreEqual(1, result[0]);
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0], Is.EqualTo(1));
 
 			result = records.InnerJoin(items, (a, b) => a.Id == b.TestId, (a, b) => b)
 				.UpdateWithOutput(a => new Test3697Item() { Value = 1 }, (d, i) => i.Id)
 				.ToArray();
 
-			Assert.AreEqual(1, result.Length);
-			Assert.AreEqual(1, result[0]);
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0], Is.EqualTo(1));
 		}
 		#endregion
 	}

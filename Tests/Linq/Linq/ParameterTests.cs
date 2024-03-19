@@ -40,10 +40,10 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				int? id = null;
-				Assert.AreEqual(0, db.Person.Where(_ => _.ID == id).Count());
+				Assert.That(db.Person.Where(_ => _.ID == id).Count(), Is.EqualTo(0));
 
 				id = 1;
-				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id).Count());
+				Assert.That(db.Person.Where(_ => _.ID == id).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -53,7 +53,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var id = 1;
-				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id || _.ID <= id || _.ID == id).Count());
+				Assert.That(db.Person.Where(_ => _.ID == id || _.ID <= id || _.ID == id).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -69,10 +69,13 @@ namespace Tests.Linq
 
 				var queryInlined = query.InlineParameters();
 
+				Assert.Multiple(() =>
+				{
 #pragma warning disable CS0618 // Type or member is obsolete
-				Assert.That(query.GetStatement().CollectParameters().Length,        Is.EqualTo(1));
-				Assert.That(queryInlined.GetStatement().CollectParameters().Length, Is.EqualTo(0));
+					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(1));
+					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
 #pragma warning restore CS0618 // Type or member is obsolete
+				});
 			}
 		}
 
@@ -419,26 +422,43 @@ namespace Tests.Linq
 				{
 					Issue404? usage = null;
 					var allUsages = !usage.HasValue;
-					var res1 = Test()!;
-					Assert.AreEqual(1, res1.Id);
-					Assert.AreEqual(3, res1.Values!.Count);
-					Assert.AreEqual(3, res1.Values.Where(v => v.FirstTableId == 1).Count());
+					var res1 = Test();
+					Assert.That(res1, Is.Not.Null);
+					Assert.That(res1.Values, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(res1.Id, Is.EqualTo(1));
+						Assert.That(res1.Values, Has.Count.EqualTo(3));
+						Assert.That(res1.Values.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(3));
+					});
 
 					usage = Issue404.Value1;
 					allUsages = false;
-					var res2 = Test()!;
-					Assert.AreEqual(1, res2.Id);
-					Assert.AreEqual(2, res2.Values!.Count);
-					Assert.AreEqual(2, res2.Values.Where(v => v.Usage == usage).Count());
-					Assert.AreEqual(2, res2.Values.Where(v => v.FirstTableId == 1).Count());
+					var res2 = Test();
+					Assert.That(res2, Is.Not.Null);
+					Assert.That(res2.Values, Is.Not.Null);
+
+					Assert.Multiple(() =>
+					{
+						Assert.That(res2.Id, Is.EqualTo(1));
+						Assert.That(res2.Values, Has.Count.EqualTo(2));
+						Assert.That(res2.Values.Where(v => v.Usage == usage).Count(), Is.EqualTo(2));
+						Assert.That(res2.Values.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(2));
+					});
 
 					usage = Issue404.Value2;
 					allUsages = false;
-					var res3 = Test()!;
-					Assert.AreEqual(1, res2.Id);
-					Assert.AreEqual(1, res3.Values!.Count);
-					Assert.AreEqual(1, res3.Values.Where(v => v.Usage == usage).Count());
-					Assert.AreEqual(1, res3.Values.Where(v => v.FirstTableId == 1).Count());
+					var res3 = Test();
+
+					Assert.That(res3, Is.Not.Null);
+					Assert.That(res3.Values, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(res2.Id, Is.EqualTo(1));
+						Assert.That(res3.Values, Has.Count.EqualTo(1));
+						Assert.That(res3.Values.Where(v => v.Usage == usage).Count(), Is.EqualTo(1));
+						Assert.That(res3.Values.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(1));
+					});
 
 					FirstTable? Test()
 					{
@@ -1242,11 +1262,14 @@ namespace Tests.Linq
 				_param      = 1;
 				var persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
-				Assert.AreEqual(1, _cnt1);
-				Assert.AreEqual(1, _cnt2);
-				Assert.AreEqual(1, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons[0].ID, Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(1));
+					Assert.That(_cnt2, Is.EqualTo(1));
+					Assert.That(_cnt3, Is.EqualTo(1));
+				});
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1254,13 +1277,16 @@ namespace Tests.Linq
 				_param  = 2;
 				persons = Query(db);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
-				Assert.AreEqual(3, _cnt1);
-				Assert.AreEqual(1, _cnt2);
-				Assert.AreEqual(1, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(3));
+					Assert.That(_cnt2, Is.EqualTo(1));
+					Assert.That(_cnt3, Is.EqualTo(1));
+				});
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1268,12 +1294,15 @@ namespace Tests.Linq
 				_param  = 3;
 				persons = Query(db);
 
-				Assert.AreEqual(2, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
-				Assert.AreEqual(5, _cnt1);
-				Assert.AreEqual(3, _cnt2);
-				Assert.AreEqual(1, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(5));
+					Assert.That(_cnt2, Is.EqualTo(3));
+					Assert.That(_cnt3, Is.EqualTo(1));
+				});
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1281,11 +1310,14 @@ namespace Tests.Linq
 				_param  = 1;
 				persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
-				Assert.AreEqual(4, _cnt1);
-				Assert.AreEqual(2, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons[0].ID, Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(4));
+					Assert.That(_cnt2, Is.EqualTo(2));
+					Assert.That(_cnt3, Is.EqualTo(2));
+				});
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1293,12 +1325,15 @@ namespace Tests.Linq
 				_param  = 3;
 				persons = Query(db);
 
-				Assert.AreEqual(2, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
-				Assert.AreEqual(2, _cnt1);
-				Assert.AreEqual(2, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(2));
+					Assert.That(_cnt2, Is.EqualTo(2));
+					Assert.That(_cnt3, Is.EqualTo(2));
+				});
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1306,13 +1341,16 @@ namespace Tests.Linq
 				_param  = 2;
 				persons = Query(db);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
-				Assert.AreEqual(4, _cnt1);
-				Assert.AreEqual(3, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(4));
+					Assert.That(_cnt2, Is.EqualTo(3));
+					Assert.That(_cnt3, Is.EqualTo(2));
+				});
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1365,40 +1403,40 @@ namespace Tests.Linq
 				_param      = 1;
 				var persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(1));
 				//Assert.AreEqual(1, _cnt1);
 
 				_cnt1   = 0;
 				_param  = 2;
 				persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(2, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(2));
 				//Assert.AreEqual(1, _cnt1);
 
 				_cnt1   = 0;
 				_param  = 3;
 				persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(3, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(3));
 				//Assert.AreEqual(1, _cnt1);
 
 				_cnt1   = 0;
 				_param  = 4;
 				persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(4, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(4));
 				//Assert.AreEqual(1, _cnt1);
 
 				_cnt1   = 0;
 				_param  = 1;
 				persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(1));
 				//Assert.AreEqual(1, _cnt1);
 			}
 
@@ -1435,51 +1473,63 @@ namespace Tests.Linq
 			Task.WaitAll(tasks);
 		}
 
-		public void TestRunner(string context, int thread)
+		private void TestRunner(string context, int thread)
 		{
 			using (var db = GetDataContext(context))
 			{
 				_params[thread] = 1;
 				var persons = Query(db, thread);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(1));
 
 				_params[thread] = 2;
 				persons = Query(db, thread);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
+				Assert.That(persons, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
+				});
 
 				_params[thread] = 3;
 				persons = Query(db, thread);
 
-				Assert.AreEqual(2, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
+				Assert.That(persons, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
+				});
 
 				_params[thread] = 1;
 				persons = Query(db, thread);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(1));
 
 				_params[thread] = 3;
 				persons = Query(db, thread);
 
-				Assert.AreEqual(2, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
+				Assert.That(persons, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
+				});
 
 				_params[thread] = 2;
 				persons = Query(db, thread);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
+				Assert.That(persons, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
+				});
 			}
 
 			List<Person> Query(ITestDataContext db, int thread)
@@ -1532,17 +1582,23 @@ namespace Tests.Linq
 				_param      = 1;
 				var persons = Query(db);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.True(persons.All(p => p.ID != _param));
-				Assert.AreEqual(1, _cnt);
+				Assert.That(persons, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.All(p => p.ID != _param), Is.True);
+					Assert.That(_cnt, Is.EqualTo(1));
+				});
 
 				_cnt    = 0;
 				_param  = 2;
 				persons = Query(db);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.True(persons.All(p => p.ID != _param));
-				Assert.AreEqual(1, _cnt);
+				Assert.That(persons, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.All(p => p.ID != _param), Is.True);
+					Assert.That(_cnt, Is.EqualTo(1));
+				});
 			}
 
 			List<Person> Query(ITestDataContext db)

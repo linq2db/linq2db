@@ -53,15 +53,18 @@ namespace Tests.UserTests
 
 			// Parse field name and data type from SQL.
 			var fields = GetFieldDataTypes(createSQL);
-			Assert.AreEqual(6, fields.Count);
+			Assert.That(fields, Has.Count.EqualTo(6));
 
-			// Check that correct data types were generated.
-			Assert.AreEqual(fields["TestDateTime2"], "DateTime2");
-			Assert.AreEqual(fields["TestDateTimeOffset"], "DateTimeOffset");
-			Assert.AreEqual(fields["TestTime"], "Time");
-			Assert.AreEqual(fields["TestDefaultPrecision"], "DateTime2");
-			Assert.AreEqual(fields["TestNonDefaultPrecision"], "DateTime2(0)");
-			Assert.AreEqual(fields["TestNonZeroPrecision"], "DateTime2(1)");
+			Assert.Multiple(() =>
+			{
+				// Check that correct data types were generated.
+				Assert.That(fields["TestDateTime2"], Is.EqualTo("DateTime2"));
+				Assert.That(fields["TestDateTimeOffset"], Is.EqualTo("DateTimeOffset"));
+				Assert.That(fields["TestTime"], Is.EqualTo("Time"));
+				Assert.That(fields["TestDefaultPrecision"], Is.EqualTo("DateTime2"));
+				Assert.That(fields["TestNonDefaultPrecision"], Is.EqualTo("DateTime2(0)"));
+				Assert.That(fields["TestNonZeroPrecision"], Is.EqualTo("DateTime2(1)"));
+			});
 		}
 
 		/// <summary>

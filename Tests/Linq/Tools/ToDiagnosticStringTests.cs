@@ -16,14 +16,14 @@ namespace Tests.Tools
 
 			TestContext.Write(str);
 
-			Assert.AreEqual(str.Replace("\r", "").Replace("\n", ""), @"Count : 3
+			Assert.That(@"Count : 3
 +-------+
 | Value |
 +-------+
 |     1 |
 |     2 |
 |   222 |
-+-------+".Replace("\r", "").Replace("\n", ""));
++-------+".Replace("\r", "").Replace("\n", ""), Is.EqualTo(str.Replace("\r", "").Replace("\n", "")));
 		}
 
 		sealed class TestDiagnostic
@@ -47,7 +47,7 @@ namespace Tests.Tools
 
 			TestContext.Write(str);
 
-			Assert.AreEqual(str.Replace("\r", "").Replace("\n", ""), @"Count : 4
+			Assert.That(@"Count : 4
 +---------------------+--------------+-----------------------------+
 | DateTimeValue       | DecimalValue | StringValue                 |
 +---------------------+--------------+-----------------------------+
@@ -55,7 +55,7 @@ namespace Tests.Tools
 | 2016-11-13 12:00:00 |           11 | lkajsd laskdj asd           |
 | 2016-11-22 12:00:00 |        111.3 | dakasdlkjjkasd  djkadlskdj  |
 | 2016-10-23 12:00:00 |      1111111 | dkjdkdjkl102398 3 1231233   |
-+---------------------+--------------+-----------------------------+".Replace("\r", "").Replace("\n", ""));
++---------------------+--------------+-----------------------------+".Replace("\r", "").Replace("\n", ""), Is.EqualTo(str.Replace("\r", "").Replace("\n", "")));
 		}
 	}
 }

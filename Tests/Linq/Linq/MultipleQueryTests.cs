@@ -10,22 +10,22 @@ namespace Tests.Linq
 	public class MultipleQueryTests : TestBase
 	{
 		//[Test]
-		public void Test1([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent select p.Children,
-					from p in db.Parent select p.Children);
-		}
+		//public void Test1([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			from p in    Parent select p.Children,
+		//			from p in db.Parent select p.Children);
+		//}
 
 		//[Test]
-		public void Test2([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent select p.Children.ToList(),
-					from p in db.Parent select p.Children.ToList());
-		}
+		//public void Test2([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			from p in    Parent select p.Children.ToList(),
+		//			from p in db.Parent select p.Children.ToList());
+		//}
 
 		[Test]
 		public void Test3([DataSources] string context)

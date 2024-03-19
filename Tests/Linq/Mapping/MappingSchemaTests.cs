@@ -26,7 +26,7 @@ namespace Tests.Mapping
 
 			var c = ms.GetConverter<int?,int>()!;
 
-			Assert.AreEqual(-1, c(null));
+			Assert.That(c(null), Is.EqualTo(-1));
 		}
 
 		[Test]
@@ -41,10 +41,13 @@ namespace Tests.Mapping
 			var c1 = ms1.GetConverter<int?,int>()!;
 			var c2 = ms2.GetConverter<int?,int>()!;
 
-			Assert.AreEqual( 4, c1(2));
-			Assert.AreEqual( 0, c1(null));
-			Assert.AreEqual( 4, c2(2));
-			Assert.AreEqual(-1, c2(null));
+			Assert.Multiple(() =>
+			{
+				Assert.That(c1(2), Is.EqualTo(4));
+				Assert.That(c1(null), Is.EqualTo(0));
+				Assert.That(c2(2), Is.EqualTo(4));
+				Assert.That(c2(null), Is.EqualTo(-1));
+			});
 		}
 
 		[Test]
@@ -59,10 +62,13 @@ namespace Tests.Mapping
 			var c1 = ms1.GetConverter<int?,int>()!;
 			var c2 = ms2.GetConverter<int?,int>()!;
 
-			Assert.AreEqual( 4, c1(2));
-			Assert.AreEqual( 0, c1(null));
-			Assert.AreEqual( 4, c2(2));
-			Assert.AreEqual(-1, c2(null));
+			Assert.Multiple(() =>
+			{
+				Assert.That(c1(2), Is.EqualTo(4));
+				Assert.That(c1(null), Is.EqualTo(0));
+				Assert.That(c2(2), Is.EqualTo(4));
+				Assert.That(c2(null), Is.EqualTo(-1));
+			});
 		}
 
 		[Test]
@@ -77,8 +83,11 @@ namespace Tests.Mapping
 			var c1 = ms1.GetConverter<int?,int>()!;
 			var c2 = ms2.GetConverter<int?,int>()!;
 
-			Assert.AreEqual(-1, c1(null));
-			Assert.AreEqual(-2, c2(null));
+			Assert.Multiple(() =>
+			{
+				Assert.That(c1(null), Is.EqualTo(-1));
+				Assert.That(c2(null), Is.EqualTo(-2));
+			});
 		}
 
 		[Test]
@@ -97,9 +106,12 @@ namespace Tests.Mapping
 				var c1 = ms1.GetConverter<DateTime,string>()!;
 				var c2 = ms2.GetConverter<DateTime,string>()!;
 
-				Assert.AreEqual("01/20/2012 16:30:40",  c0(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)));
-				Assert.AreEqual("1/20/2012 4:30:40",    c1(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)));
-				Assert.AreEqual("20.01.2012 16:30:40",  c2(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)));
+				Assert.Multiple(() =>
+				{
+					Assert.That(c0(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("01/20/2012 16:30:40"));
+					Assert.That(c1(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("1/20/2012 4:30:40"));
+					Assert.That(c2(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("20.01.2012 16:30:40"));
+				});
 			}
 
 			Convert<string,DateTime>.Expression = s => DateTime.Parse(s, DateTimeFormatInfo.InvariantInfo);
@@ -112,9 +124,12 @@ namespace Tests.Mapping
 				var c1 = ms1.GetConverter<string,DateTime>()!;
 				var c2 = ms2.GetConverter<string,DateTime>()!;
 
-				Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), c0("01/20/2012 16:30:40"));
-				Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), c1("1/20/2012 4:30:40 PM"));
-				Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), c2("20.01.2012 16:30:40"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(c0("01/20/2012 16:30:40"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
+					Assert.That(c1("1/20/2012 4:30:40 PM"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
+					Assert.That(c2("20.01.2012 16:30:40"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
+				});
 			}
 		}
 
@@ -132,13 +147,16 @@ namespace Tests.Mapping
 			ci.DateTimeFormat.ShortTimePattern = "HH:mm:ss";
 
 			ms.SetCultureInfo(ci);
-			Assert.AreEqual("20.01.2012 16:30:40",                 ms.GetConverter<DateTime,string>()!(new DateTime(2012, 1, 20, 16, 30, 40)));
-			Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), ms.GetConverter<string,DateTime>()!("20.01.2012 16:30:40"));
-			Assert.AreEqual("100000,999",                          ms.GetConverter<decimal,string> ()!(100000.999m));
-			Assert.AreEqual(100000.999m,                           ms.GetConverter<string,decimal> ()!("100000,999"));
-			//Assert.AreEqual(100000.999m,                           ConvertTo<decimal>.From("100000.999")); this will fail if System Locale is ru-RU
-			Assert.AreEqual("100000,999",                          ms.GetConverter<double,string>  ()!(100000.999));
-			Assert.AreEqual(100000.999,                            ms.GetConverter<string,double>  ()!("100000,999"));
+			Assert.Multiple(() =>
+			{
+				Assert.That(ms.GetConverter<DateTime, string>()!(new DateTime(2012, 1, 20, 16, 30, 40)), Is.EqualTo("20.01.2012 16:30:40"));
+				Assert.That(ms.GetConverter<string, DateTime>()!("20.01.2012 16:30:40"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
+				Assert.That(ms.GetConverter<decimal, string>()!(100000.999m), Is.EqualTo("100000,999"));
+				Assert.That(ms.GetConverter<string, decimal>()!("100000,999"), Is.EqualTo(100000.999m));
+				//Assert.AreEqual(100000.999m,                           ConvertTo<decimal>.From("100000.999")); this will fail if System Locale is ru-RU
+				Assert.That(ms.GetConverter<double, string>()!(100000.999), Is.EqualTo("100000,999"));
+				Assert.That(ms.GetConverter<string, double>()!("100000,999"), Is.EqualTo(100000.999));
+			});
 		}
 
 		sealed class AttrTest
@@ -158,9 +176,12 @@ namespace Tests.Mapping
 				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
-			Assert.That(attrs.Length,   Is.EqualTo(2));
-			Assert.That(attrs[0].Value, Is.EqualTo(2));
-			Assert.That(attrs[1].Value, Is.EqualTo(1));
+			Assert.That(attrs, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(attrs[0].Value, Is.EqualTo(2));
+				Assert.That(attrs[1].Value, Is.EqualTo(1));
+			});
 		}
 
 		[Test]
@@ -172,10 +193,13 @@ namespace Tests.Mapping
 				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
-			Assert.That(attrs.Length,   Is.EqualTo(3));
-			Assert.That(attrs[0].Value, Is.EqualTo(2));
-			Assert.That(attrs[1].Value, Is.EqualTo(3));
-			Assert.That(attrs[2].Value, Is.EqualTo(1));
+			Assert.That(attrs, Has.Length.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(attrs[0].Value, Is.EqualTo(2));
+				Assert.That(attrs[1].Value, Is.EqualTo(3));
+				Assert.That(attrs[2].Value, Is.EqualTo(1));
+			});
 		}
 
 		[Test]
@@ -187,10 +211,13 @@ namespace Tests.Mapping
 				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
-			Assert.That(attrs.Length,   Is.EqualTo(3));
-			Assert.That(attrs[0].Value, Is.EqualTo(3));
-			Assert.That(attrs[1].Value, Is.EqualTo(2));
-			Assert.That(attrs[2].Value, Is.EqualTo(1));
+			Assert.That(attrs, Has.Length.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(attrs[0].Value, Is.EqualTo(3));
+				Assert.That(attrs[1].Value, Is.EqualTo(2));
+				Assert.That(attrs[2].Value, Is.EqualTo(1));
+			});
 		}
 
 		[Test]
@@ -200,7 +227,7 @@ namespace Tests.Mapping
 				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
-			Assert.AreEqual(1, attrs.Length);
+			Assert.That(attrs, Has.Length.EqualTo(1));
 		}
 
 		[Test]
@@ -210,7 +237,7 @@ namespace Tests.Mapping
 				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
-			Assert.That(attrs.Length,   Is.EqualTo(1));
+			Assert.That(attrs, Has.Length.EqualTo(1));
 			Assert.That(attrs[0].Value, Is.EqualTo(1));
 		}
 
@@ -239,11 +266,14 @@ namespace Tests.Mapping
 				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
-			Assert.That(attrs.Length,   Is.EqualTo(4));
-			Assert.That(attrs[0].Value, Is.EqualTo(2));
-			Assert.That(attrs[1].Value, Is.EqualTo(30));
-			Assert.That(attrs[2].Value, Is.EqualTo(3));
-			Assert.That(attrs[3].Value, Is.EqualTo(1));
+			Assert.That(attrs, Has.Length.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(attrs[0].Value, Is.EqualTo(2));
+				Assert.That(attrs[1].Value, Is.EqualTo(30));
+				Assert.That(attrs[2].Value, Is.EqualTo(3));
+				Assert.That(attrs[3].Value, Is.EqualTo(1));
+			});
 		}
 
 		[Test]
@@ -258,11 +288,14 @@ namespace Tests.Mapping
 				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
-			Assert.That(attrs.Length,   Is.EqualTo(4));
-			Assert.That(attrs[0].Value, Is.EqualTo(2));
-			Assert.That(attrs[1].Value, Is.EqualTo(30));
-			Assert.That(attrs[2].Value, Is.EqualTo(3));
-			Assert.That(attrs[3].Value, Is.EqualTo(1));
+			Assert.That(attrs, Has.Length.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(attrs[0].Value, Is.EqualTo(2));
+				Assert.That(attrs[1].Value, Is.EqualTo(30));
+				Assert.That(attrs[2].Value, Is.EqualTo(3));
+				Assert.That(attrs[3].Value, Is.EqualTo(1));
+			});
 		}
 
 		[Test]
@@ -275,11 +308,14 @@ namespace Tests.Mapping
 				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
-			Assert.That(attrs.Length,   Is.EqualTo(4));
-			Assert.That(attrs[1].Value, Is.EqualTo(3));
-			Assert.That(attrs[0].Value, Is.EqualTo(30));
-			Assert.That(attrs[2].Value, Is.EqualTo(2));
-			Assert.That(attrs[3].Value, Is.EqualTo(1));
+			Assert.That(attrs, Has.Length.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(attrs[1].Value, Is.EqualTo(3));
+				Assert.That(attrs[0].Value, Is.EqualTo(30));
+				Assert.That(attrs[2].Value, Is.EqualTo(2));
+				Assert.That(attrs[3].Value, Is.EqualTo(1));
+			});
 		}
 
 		enum Enum1
@@ -310,7 +346,7 @@ namespace Tests.Mapping
 			var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(schema, typeof(Enum1?))!;
 			Assert.That(mapType, Is.EqualTo(typeof(int?)));
 			var convertedValue = Converter.ChangeType(null, mapType, schema);
-			Assert.IsNull(convertedValue);
+			Assert.That(convertedValue, Is.Null);
 		}
 
 		public class PkTable
@@ -335,9 +371,12 @@ namespace Tests.Mapping
 			var ed = MappingSchema.Default.GetEntityDescriptor(typeof(FkTable));
 			var c  = ed.Columns.Single(_ => _.ColumnName == "ParentId");
 
-			Assert.False(c.IsPrimaryKey);
-			Assert.False(c.IsIdentity);
-			Assert.AreEqual(DataType.DateTime, c.DataType);
+			Assert.Multiple(() =>
+			{
+				Assert.That(c.IsPrimaryKey, Is.False);
+				Assert.That(c.IsIdentity, Is.False);
+				Assert.That(c.DataType, Is.EqualTo(DataType.DateTime));
+			});
 		}
 
 		[Repeat(100)]

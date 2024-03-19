@@ -45,7 +45,7 @@ namespace Tests.Samples
 					};
 
 				var data = query.ToArray();
-				Assert.IsNotEmpty(data);
+				Assert.That(data, Is.Not.Empty);
 			}
 		}
 	}

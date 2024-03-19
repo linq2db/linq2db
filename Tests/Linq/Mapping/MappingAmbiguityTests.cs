@@ -43,7 +43,7 @@ namespace Tests.Mapping
 			{
 				var sql = db.LastQuery!;
 
-				Assert.AreEqual(@"CREATE TABLE IF NOT EXISTS [TestTable]
+				Assert.That(sql.Replace("\r", ""), Is.EqualTo(@"CREATE TABLE IF NOT EXISTS [TestTable]
 (
 	[ID]      INTEGER       NOT NULL,
 	[Field1]  INTEGER       NOT NULL,
@@ -55,7 +55,7 @@ namespace Tests.Mapping
 
 	CONSTRAINT [PK_TestTable] PRIMARY KEY ([ID])
 )
-".Replace("\r", ""), sql.Replace("\r", ""));
+".Replace("\r", "")));
 			}
 		}
 
@@ -74,9 +74,9 @@ namespace Tests.Mapping
 					.Merge();
 
 				if (context.IsAnyOf(TestProvName.AllOracleNative))
-					Assert.AreEqual(-1, res);
+					Assert.That(res, Is.EqualTo(-1));
 				else
-					Assert.AreEqual(0, res);
+					Assert.That(res, Is.EqualTo(0));
 			}
 		}
 	}

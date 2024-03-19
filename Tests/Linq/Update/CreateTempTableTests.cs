@@ -202,7 +202,7 @@ namespace Tests.xUpdate
 				{
 					tableExists = false;
 				}
-				Assert.AreEqual(false, tableExists);
+				Assert.That(tableExists, Is.EqualTo(false));
 			}
 		}
 
@@ -255,7 +255,7 @@ namespace Tests.xUpdate
 				{
 					tableExists = false;
 				}
-				Assert.AreEqual(false, tableExists);
+				Assert.That(tableExists, Is.EqualTo(false));
 			}
 		}
 
@@ -351,17 +351,23 @@ namespace Tests.xUpdate
 			var records1 = table.OrderBy(r => r.Id).ToArray();
 			var records2 = tmp.OrderBy(r => r.Id).ToArray();
 
-			Assert.AreEqual(2, records1.Length);
-			Assert.AreEqual(1, records1[0].Id);
-			Assert.AreEqual("value", records1[0].Value);
-			Assert.AreEqual(2, records1[1].Id);
-			Assert.AreEqual("value 2", records1[1].Value);
+			Assert.That(records1, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(records1[0].Id, Is.EqualTo(1));
+				Assert.That(records1[0].Value, Is.EqualTo("value"));
+				Assert.That(records1[1].Id, Is.EqualTo(2));
+				Assert.That(records1[1].Value, Is.EqualTo("value 2"));
 
-			Assert.AreEqual(2, records2.Length);
-			Assert.AreEqual(1, records2[0].Id);
-			Assert.AreEqual("value", records2[0].Value);
-			Assert.AreEqual(2, records2[1].Id);
-			Assert.AreEqual("renamed 2", records2[1].Value);
+				Assert.That(records2, Has.Length.EqualTo(2));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(records2[0].Id, Is.EqualTo(1));
+				Assert.That(records2[0].Value, Is.EqualTo("value"));
+				Assert.That(records2[1].Id, Is.EqualTo(2));
+				Assert.That(records2[1].Value, Is.EqualTo("renamed 2"));
+			});
 		}
 
 		[Test]
@@ -390,7 +396,7 @@ namespace Tests.xUpdate
 				select t
 			).ToList();
 
-			Assert.That(list.Count, Is.EqualTo(1));
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 
 		[Test]
@@ -419,7 +425,7 @@ namespace Tests.xUpdate
 				select t
 			).ToList();
 
-			Assert.That(list.Count, Is.EqualTo(1));
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 
 		[Test]
@@ -448,7 +454,7 @@ namespace Tests.xUpdate
 				select t
 			).ToListAsync();
 
-			Assert.That(list.Count, Is.EqualTo(1));
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 
 		[Test]
@@ -477,7 +483,7 @@ namespace Tests.xUpdate
 				select t
 			).ToListAsync();
 
-			Assert.That(list.Count, Is.EqualTo(1));
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 	}
 }

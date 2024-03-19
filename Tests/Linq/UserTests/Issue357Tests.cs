@@ -35,8 +35,8 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 				var dt = db.GetTable<AllTypes2>().First(t => t.ID == 2);
-				Assert.IsNotNull(dt);
-				Assert.IsNotNull(dt.DateTime);
+				Assert.That(dt, Is.Not.Null);
+				Assert.That(dt.DateTime, Is.Not.Null);
 			}
 		}
 	}

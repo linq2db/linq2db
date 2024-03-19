@@ -37,8 +37,11 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
-				Assert.That(conn.ConfigurationString, Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(conn.ConfigurationString, Is.Null);
+				});
 			}
 		}
 
@@ -47,8 +50,11 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
-				Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+				});
 			}
 		}
 
@@ -62,8 +68,11 @@ namespace Tests.Data
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
-				Assert.That(conn.ConfigurationString, Is.EqualTo(context));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(conn.ConfigurationString, Is.EqualTo(context));
+				});
 
 				if (context.EndsWith(".2005"))
 				{
@@ -279,11 +288,17 @@ namespace Tests.Data
 					null,
 					async (args, cn, се) => await Task.Run(() => openedAsync = true)));
 
-				Assert.False(opened);
-				Assert.False(openedAsync);
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
-				Assert.True(opened);
-				Assert.False(openedAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.False);
+					Assert.That(openedAsync, Is.False);
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.True);
+					Assert.That(openedAsync, Is.False);
+				});
 			}
 		}
 
@@ -300,11 +315,17 @@ namespace Tests.Data
 					null,
 					async (args, cn, ct) => await Task.Run(() => openedAsync = true, ct)));
 
-				Assert.False(opened);
-				Assert.False(openedAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.False);
+					Assert.That(openedAsync, Is.False);
+				});
 				await conn.SelectAsync(() => 1);
-				Assert.False(opened);
-				Assert.True(openedAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.False);
+					Assert.That(openedAsync, Is.True);
+				});
 			}
 		}
 
@@ -333,8 +354,11 @@ namespace Tests.Data
 			collection.AddLinqToDB((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<IDataContext>()!;
-			Assert.True(con is DataConnection);
-			Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
+			Assert.Multiple(() =>
+			{
+				Assert.That(con is DataConnection, Is.True);
+				Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
+			});
 		}
 
 		[Test]
@@ -420,8 +444,11 @@ namespace Tests.Data
 			var serviceProvider = collection.BuildServiceProvider();
 			var c1 = serviceProvider.GetService<DbConnection1>()!;
 			var c2 = serviceProvider.GetService<DbConnection2>()!;
-			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
-			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+			Assert.Multiple(() =>
+			{
+				Assert.That(c1.ConfigurationString, Is.EqualTo(context));
+				Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+			});
 		}
 
 		// informix connection limits interfere with test
@@ -522,11 +549,17 @@ namespace Tests.Data
 					}, ct),
 					null));
 
-				Assert.False(open);
-				Assert.False(openAsync);
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
-				Assert.True(open);
-				Assert.False(openAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.False);
+					Assert.That(openAsync, Is.False);
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.True);
+					Assert.That(openAsync, Is.False);
+				});
 			}
 		}
 
@@ -551,11 +584,17 @@ namespace Tests.Data
 					}, ct),
 					null));
 
-				Assert.False(open);
-				Assert.False(openAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.False);
+					Assert.That(openAsync, Is.False);
+				});
 				await conn.SelectAsync(() => 1);
-				Assert.False(open);
-				Assert.True(openAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.False);
+					Assert.That(openAsync, Is.True);
+				});
 			}
 		}
 
@@ -576,8 +615,8 @@ namespace Tests.Data
 				finally
 				{
 					var time = DateTimeOffset.Now - start;
-					Assert.True(time >= TimeSpan.FromSeconds(30));
-					Assert.True(time < TimeSpan.FromSeconds(32));
+					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(30)));
+					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(32)));
 				}
 
 				start = DateTimeOffset.Now;
@@ -590,16 +629,16 @@ namespace Tests.Data
 				finally
 				{
 					var time = DateTimeOffset.Now - start;
-					Assert.True(time >= TimeSpan.FromSeconds(10));
-					Assert.True(time < TimeSpan.FromSeconds(12));
+					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(10)));
+					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(12)));
 				}
 
 				start = DateTimeOffset.Now;
 				db.CommandTimeout = 0;
 				db.Update(forUpdate);
 				var time2 = DateTimeOffset.Now - start;
-				Assert.True(time2 >= TimeSpan.FromSeconds(60));
-				Assert.True(time2 < TimeSpan.FromSeconds(62));
+				Assert.That(time2, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(60)));
+				Assert.That(time2, Is.LessThan(TimeSpan.FromSeconds(62)));
 			}
 		}
 
@@ -617,20 +656,20 @@ namespace Tests.Data
 				db.AddInterceptor(interceptor);
 
 				_ = db.GetTable<Person>().ToList();
-				Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
+				Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(personsCount));
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					interceptor.EntityCreatedCallCounter = 0;
 					_ = cdb.GetTable<Person>().ToList();
-					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
+					Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(personsCount));
 
 					interceptor.EntityCreatedCallCounter = 0;
 					_ = db.GetTable<Person>().ToList();
-					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
+					Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(personsCount));
 
 					_ = cdb.GetTable<Person>().ToList();
-					Assert.AreEqual(personsCount * 2, interceptor.EntityCreatedCallCounter);
+					Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(personsCount * 2));
 				}
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
@@ -638,7 +677,7 @@ namespace Tests.Data
 					interceptor.EntityCreatedCallCounter = 0;
 					_ = cdb.GetTable<Person>().ToList();
 
-					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
+					Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(personsCount));
 				}
 			}
 		}
@@ -701,37 +740,37 @@ namespace Tests.Data
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
 
-				Assert.AreEqual(-1, db.CommandTimeout);
+				Assert.That(db.CommandTimeout, Is.EqualTo(-1));
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(-1, cdb.CommandTimeout);
+					Assert.That(cdb.CommandTimeout, Is.EqualTo(-1));
 				}
 
 				db.CommandTimeout = 0;
 
-				Assert.AreEqual(0, db.CommandTimeout);
+				Assert.That(db.CommandTimeout, Is.EqualTo(0));
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(0, cdb.CommandTimeout);
+					Assert.That(cdb.CommandTimeout, Is.EqualTo(0));
 				}
 
 				db.CommandTimeout = 10;
 
-				Assert.AreEqual(10, db.CommandTimeout);
+				Assert.That(db.CommandTimeout, Is.EqualTo(10));
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(10, cdb.CommandTimeout);
+					Assert.That(cdb.CommandTimeout, Is.EqualTo(10));
 				}
 
 				db.CommandTimeout = -5;
-				Assert.AreEqual(-1, db.CommandTimeout);
+				Assert.That(db.CommandTimeout, Is.EqualTo(-1));
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(-1, cdb.CommandTimeout);
+					Assert.That(cdb.CommandTimeout, Is.EqualTo(-1));
 				}
 			}
 		}
@@ -744,28 +783,28 @@ namespace Tests.Data
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
 
-				Assert.False(db.InlineParameters);
+				Assert.That(db.InlineParameters, Is.False);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.False(cdb.InlineParameters);
+					Assert.That(cdb.InlineParameters, Is.False);
 				}
 
 				db.InlineParameters = true;
 
-				Assert.True(db.InlineParameters);
+				Assert.That(db.InlineParameters, Is.True);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.True(cdb.InlineParameters);
+					Assert.That(cdb.InlineParameters, Is.True);
 				}
 
 				db.InlineParameters = false;
-				Assert.False(db.InlineParameters);
+				Assert.That(db.InlineParameters, Is.False);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.False(cdb.InlineParameters);
+					Assert.That(cdb.InlineParameters, Is.False);
 				}
 			}
 		}
@@ -778,34 +817,34 @@ namespace Tests.Data
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
 
-				Assert.AreEqual(0, db.QueryHints.Count);
+				Assert.That(db.QueryHints, Is.Empty);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(0, cdb.QueryHints.Count);
+					Assert.That(cdb.QueryHints, Is.Empty);
 				}
 
 				db.QueryHints.Add("test");
 
-				Assert.AreEqual(1, db.QueryHints.Count);
-				Assert.AreEqual("test", db.QueryHints[0]);
+				Assert.That(db.QueryHints, Has.Count.EqualTo(1));
+				Assert.That(db.QueryHints[0], Is.EqualTo("test"));
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(1, cdb.QueryHints.Count);
-					Assert.AreEqual("test", cdb.QueryHints[0]);
+					Assert.That(cdb.QueryHints, Has.Count.EqualTo(1));
+					Assert.That(cdb.QueryHints[0], Is.EqualTo("test"));
 
 					db.QueryHints.Clear();
 
-					Assert.AreEqual(1, cdb.QueryHints.Count);
-					Assert.AreEqual("test", cdb.QueryHints[0]);
+					Assert.That(cdb.QueryHints, Has.Count.EqualTo(1));
+					Assert.That(cdb.QueryHints[0], Is.EqualTo("test"));
 				}
 
-				Assert.AreEqual(0, db.QueryHints.Count);
+				Assert.That(db.QueryHints, Is.Empty);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(0, cdb.QueryHints.Count);
+					Assert.That(cdb.QueryHints, Is.Empty);
 				}
 			}
 		}
@@ -818,37 +857,37 @@ namespace Tests.Data
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
 
-				Assert.IsNull(db.ThrowOnDisposed);
+				Assert.That(db.ThrowOnDisposed, Is.Null);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.IsNull(cdb.ThrowOnDisposed);
+					Assert.That(cdb.ThrowOnDisposed, Is.Null);
 				}
 
 				db.ThrowOnDisposed = false;
 
-				Assert.False(db.ThrowOnDisposed);
+				Assert.That(db.ThrowOnDisposed, Is.False);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.False(cdb.ThrowOnDisposed);
+					Assert.That(cdb.ThrowOnDisposed, Is.False);
 				}
 
 				db.ThrowOnDisposed = true;
 
-				Assert.True(db.ThrowOnDisposed);
+				Assert.That(db.ThrowOnDisposed, Is.True);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.True(cdb.ThrowOnDisposed);
+					Assert.That(cdb.ThrowOnDisposed, Is.True);
 				}
 
 				db.ThrowOnDisposed = null;
-				Assert.IsNull(db.ThrowOnDisposed);
+				Assert.That(db.ThrowOnDisposed, Is.Null);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.IsNull(cdb.ThrowOnDisposed);
+					Assert.That(cdb.ThrowOnDisposed, Is.Null);
 				}
 			}
 		}
@@ -863,30 +902,48 @@ namespace Tests.Data
 				// to enable MARS-enabled cloning branch
 				var _ = db.Connection;
 
-				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(0));
+					Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(0));
+				});
 				db.Close();
-				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(0));
+					Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(0));
+				});
 				_ = db.Connection;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					_ = cdb.Connection;
-					Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(0, interceptor.OnClosedCallCounter);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(0));
+						Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(0));
+					});
 					cdb.Close();
-					Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(0, interceptor.OnClosedCallCounter);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(0));
+						Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(0));
+					});
 				}
 
 				_ = db.Connection;
 				db.AddInterceptor(interceptor);
-				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(0));
+					Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(0));
+				});
 				db.Close();
-				Assert.AreEqual(1, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(1, interceptor.OnClosedCallCounter);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(1));
+					Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(1));
+				});
 				_ = db.Connection;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
@@ -894,38 +951,59 @@ namespace Tests.Data
 					interceptor.OnClosingCallCounter = 0;
 					interceptor.OnClosedCallCounter = 0;
 					_ = cdb.Connection;
-					Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(0, interceptor.OnClosedCallCounter);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(0));
+						Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(0));
+					});
 					cdb.Close();
-					Assert.AreEqual(1, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(1, interceptor.OnClosedCallCounter);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(1));
+						Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(1));
+					});
 
 					interceptor.OnClosingCallCounter = 0;
 					interceptor.OnClosedCallCounter = 0;
 					_ = cdb.Connection;
 					cdb.Close();
-					Assert.AreEqual(1, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(1, interceptor.OnClosedCallCounter);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(1));
+						Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(1));
+					});
 				}
 
 				interceptor.OnClosingCallCounter = 0;
 				interceptor.OnClosedCallCounter = 0;
 				_ = db.Connection;
-				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(0));
+					Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(0));
+				});
 				db.Close();
-				Assert.AreEqual(1, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(1, interceptor.OnClosedCallCounter);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(1));
+					Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(1));
+				});
 				_ = db.Connection;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					_ = cdb.Connection;
-					Assert.AreEqual(1, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(1, interceptor.OnClosedCallCounter);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(1));
+						Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(1));
+					});
 					cdb.Close();
-					Assert.AreEqual(2, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(2, interceptor.OnClosedCallCounter);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor.OnClosingCallCounter, Is.EqualTo(2));
+						Assert.That(interceptor.OnClosedCallCounter, Is.EqualTo(2));
+					});
 				}
 			}
 		}
@@ -938,19 +1016,31 @@ namespace Tests.Data
 
 			using (var db = GetDataConnection(context))
 			{
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(0));
+					Assert.That(opened, Is.EqualTo(0));
+				});
 				var _ = db.Connection;
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(0));
+					Assert.That(opened, Is.EqualTo(0));
+				});
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(0));
+						Assert.That(opened, Is.EqualTo(0));
+					});
 					_ = cdb.Connection;
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(0));
+						Assert.That(opened, Is.EqualTo(0));
+					});
 				}
 
 				db.Close();
@@ -960,54 +1050,81 @@ namespace Tests.Data
 					null,
 					null));
 
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(0));
+					Assert.That(opened, Is.EqualTo(0));
+				});
 				_ = db.Connection;
-				Assert.AreEqual(1, open);
-				Assert.AreEqual(1, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(1));
+					Assert.That(opened, Is.EqualTo(1));
+				});
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					open   = 0;
 					opened = 0;
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(0));
+						Assert.That(opened, Is.EqualTo(0));
+					});
 					cdb.Connection.Close();
 					open   = 0;
 					opened = 0;
 					_ = cdb.Connection;
-					Assert.AreEqual(1, open);
-					Assert.AreEqual(1, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(1));
+						Assert.That(opened, Is.EqualTo(1));
+					});
 
 					open   = 0;
 					opened = 0;
 					cdb.Close();
 					_ = cdb.Connection;
-					Assert.AreEqual(1, open);
-					Assert.AreEqual(1, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(1));
+						Assert.That(opened, Is.EqualTo(1));
+					});
 				}
 
 				open   = 0;
 				opened = 0;
 				db.Close();
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(0));
+					Assert.That(opened, Is.EqualTo(0));
+				});
 				_ = db.Connection;
-				Assert.AreEqual(1, open);
-				Assert.AreEqual(1, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(1));
+					Assert.That(opened, Is.EqualTo(1));
+				});
 				open   = 0;
 				opened = 0;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(0));
+						Assert.That(opened, Is.EqualTo(0));
+					});
 					cdb.Close();
 					_ = cdb.Connection;
 					// with MARS cloned data connection inherit connection from parent and close do nothing
 					var expected = db.IsMarsEnabled ? 0 : 1;
-					Assert.AreEqual(expected, open);
-					Assert.AreEqual(expected, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(expected));
+						Assert.That(opened, Is.EqualTo(expected));
+					});
 				}
 			}
 
@@ -1023,19 +1140,31 @@ namespace Tests.Data
 
 			using (var db = GetDataConnection(context))
 			{
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(0));
+					Assert.That(opened, Is.EqualTo(0));
+				});
 				await db.EnsureConnectionAsync();
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(0));
+					Assert.That(opened, Is.EqualTo(0));
+				});
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(0));
+						Assert.That(opened, Is.EqualTo(0));
+					});
 					await db.EnsureConnectionAsync();
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(0));
+						Assert.That(opened, Is.EqualTo(0));
+					});
 				}
 
 				db.Close();
@@ -1044,54 +1173,81 @@ namespace Tests.Data
 					null,
 					(_, _, _) => OnBeforeConnectionOpenAsync(),
 					(_,_,_) => OnConnectionOpenedAsync()));
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(0));
+					Assert.That(opened, Is.EqualTo(0));
+				});
 				await db.EnsureConnectionAsync();
-				Assert.AreEqual(1, open);
-				Assert.AreEqual(1, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(1));
+					Assert.That(opened, Is.EqualTo(1));
+				});
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					open   = 0;
 					opened = 0;
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(0));
+						Assert.That(opened, Is.EqualTo(0));
+					});
 					cdb.Connection.Close();
 					open   = 0;
 					opened = 0;
 					await cdb.EnsureConnectionAsync();
-					Assert.AreEqual(1, open);
-					Assert.AreEqual(1, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(1));
+						Assert.That(opened, Is.EqualTo(1));
+					});
 
 					open   = 0;
 					opened = 0;
 					cdb.Close();
 					await cdb.EnsureConnectionAsync();
-					Assert.AreEqual(1, open);
-					Assert.AreEqual(1, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(1));
+						Assert.That(opened, Is.EqualTo(1));
+					});
 				}
 
 				open   = 0;
 				opened = 0;
 				db.Close();
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(0));
+					Assert.That(opened, Is.EqualTo(0));
+				});
 				await db.EnsureConnectionAsync();
-				Assert.AreEqual(1, open);
-				Assert.AreEqual(1, opened);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.EqualTo(1));
+					Assert.That(opened, Is.EqualTo(1));
+				});
 				open   = 0;
 				opened = 0;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(0));
+						Assert.That(opened, Is.EqualTo(0));
+					});
 					cdb.Close();
 					await cdb.EnsureConnectionAsync();
 					// with MARS cloned data connection inherit connection from parent and close do nothing
 					var expected = db.IsMarsEnabled ? 0 : 1;
-					Assert.AreEqual(expected, open);
-					Assert.AreEqual(expected, opened);
+					Assert.Multiple(() =>
+					{
+						Assert.That(open, Is.EqualTo(expected));
+						Assert.That(opened, Is.EqualTo(expected));
+					});
 				}
 			}
 
@@ -1127,7 +1283,7 @@ namespace Tests.Data
 				var cn = db.Connection;
 				using (var testDb = new DataConnection(db.DataProvider, cn, dispose))
 				{
-					Assert.AreEqual(ConnectionState.Open, cn.State);
+					Assert.That(cn.State, Is.EqualTo(ConnectionState.Open));
 
 					DbConnection? clonedConnection = null;
 					using (var clonedDb = (DataConnection)((IDataContext)testDb).Clone(true))
@@ -1135,31 +1291,37 @@ namespace Tests.Data
 						clonedConnection = clonedDb.Connection;
 
 						// fails in v2 for MARS-enabled connections, already fixed in v3
-						Assert.AreEqual(db.IsMarsEnabled, testDb.IsMarsEnabled);
+						Assert.That(testDb.IsMarsEnabled, Is.EqualTo(db.IsMarsEnabled));
 
 						if (testDb.IsMarsEnabled)
 						{
-							// connection reused
-							Assert.AreEqual(cn, clonedConnection);
-							Assert.AreEqual(ConnectionState.Open, cn.State);
+							Assert.Multiple(() =>
+							{
+								// connection reused
+								Assert.That(clonedConnection, Is.EqualTo(cn));
+								Assert.That(cn.State, Is.EqualTo(ConnectionState.Open));
+							});
 						}
 						else
 						{
-							Assert.AreNotEqual(cn, clonedConnection);
-							Assert.AreEqual(ConnectionState.Open, cn.State);
-							Assert.AreEqual(ConnectionState.Open, clonedConnection.State);
+							Assert.Multiple(() =>
+							{
+								Assert.That(clonedConnection, Is.Not.EqualTo(cn));
+								Assert.That(cn.State, Is.EqualTo(ConnectionState.Open));
+							});
+							Assert.That(clonedConnection.State, Is.EqualTo(ConnectionState.Open));
 						}
 					}
 
 					if (testDb.IsMarsEnabled)
 					{
 						// cloned DC doesn't dispose parent connection
-						Assert.AreEqual(ConnectionState.Open, cn.State);
+						Assert.That(cn.State, Is.EqualTo(ConnectionState.Open));
 					}
 					else
 					{
 						// cloned DC dispose own connection
-						Assert.AreEqual(ConnectionState.Open, cn.State);
+						Assert.That(cn.State, Is.EqualTo(ConnectionState.Open));
 						try
 						{
 							var c = ((IDataContext)db).UnwrapDataObjectInterceptor?.UnwrapConnection(db, clonedConnection);
@@ -1167,7 +1329,7 @@ namespace Tests.Data
 							// bug in Miniprofiler.
 							//
 							if (c != null)
-							Assert.AreEqual(ConnectionState.Closed, clonedConnection.State);
+								Assert.That(clonedConnection.State, Is.EqualTo(ConnectionState.Closed));
 						}
 						catch (ObjectDisposedException)
 						{
@@ -1352,7 +1514,7 @@ namespace Tests.Data
 
 					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
-					Assert.AreEqual(3, ids.Length);
+					Assert.That(ids, Has.Length.EqualTo(3));
 				}
 			}
 			finally
@@ -1388,8 +1550,8 @@ namespace Tests.Data
 
 					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
-					Assert.AreEqual(1, ids.Length);
-					Assert.AreEqual(3, ids[0]);
+					Assert.That(ids, Has.Length.EqualTo(1));
+					Assert.That(ids[0], Is.EqualTo(3));
 				}
 			}
 			finally
@@ -1427,9 +1589,12 @@ namespace Tests.Data
 
 					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
-					Assert.AreEqual(2, ids.Length);
-					Assert.AreEqual(1, ids[0]);
-					Assert.AreEqual(3, ids[1]);
+					Assert.That(ids, Has.Length.EqualTo(2));
+					Assert.Multiple(() =>
+					{
+						Assert.That(ids[0], Is.EqualTo(1));
+						Assert.That(ids[1], Is.EqualTo(3));
+					});
 				}
 			}
 			finally
@@ -1490,13 +1655,16 @@ namespace Tests.Data
 								}
 							}
 
-							Assert.True(cnt3 > 0);
+							Assert.That(cnt3, Is.GreaterThan(0));
 						}
 					}
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1619,14 +1787,17 @@ namespace Tests.Data
 									}
 								}
 
-								Assert.True(cnt3 > 0);
+								Assert.That(cnt3, Is.GreaterThan(0));
 							}
 						}
 					}
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1757,13 +1928,16 @@ namespace Tests.Data
 								}
 							}
 
-							Assert.True(cnt3 > 0);
+							Assert.That(cnt3, Is.GreaterThan(0));
 						}
 					}
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1847,8 +2021,11 @@ namespace Tests.Data
 					cnt2++;
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1891,7 +2068,7 @@ namespace Tests.Data
 
 				db.Person.Where(_ => _.LastName == param).ToList();
 
-				Assert.AreEqual(1, commandInterceptor.Parameters.Length);
+				Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
 			}
 		}
 
@@ -1907,7 +2084,7 @@ namespace Tests.Data
 
 				await db.Person.Where(_ => _.LastName == param).ToListAsync();
 
-				Assert.AreEqual(1, commandInterceptor.Parameters.Length);
+				Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
 			}
 		}
 
@@ -1935,8 +2112,11 @@ namespace Tests.Data
 					cnt2++;
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1975,7 +2155,7 @@ namespace Tests.Data
 			using var cn1 = GetDataContext(context);
 			using var cn2 = GetDataContext(context);
 
-			Assert.AreEqual(cn1.MappingSchema, cn2.MappingSchema);
+			Assert.That(cn2.MappingSchema, Is.EqualTo(cn1.MappingSchema));
 		}
 
 		[Test]
@@ -1987,7 +2167,7 @@ namespace Tests.Data
 			using var cn1 = GetDataContext(context, ms);
 			using var cn2 = GetDataContext(context, ms);
 
-			Assert.AreEqual(cn1.MappingSchema, cn2.MappingSchema);
+			Assert.That(cn2.MappingSchema, Is.EqualTo(cn1.MappingSchema));
 		}
 	}
 }

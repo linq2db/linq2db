@@ -41,7 +41,7 @@ namespace Tests.Infrastructure
 
 				_child = db.Child.ToList();
 
-				Assert.NotNull(s1);
+				Assert.That(s1, Is.Not.Null);
 			}
 
 			{
@@ -51,7 +51,7 @@ namespace Tests.Infrastructure
 
 				_child = db.Child.ToList();
 
-				Assert.IsNull(s1);
+				Assert.That(s1, Is.Null);
 			}
 		}
 
@@ -64,7 +64,7 @@ namespace Tests.Infrastructure
 
 			_child = db.Child.ToList();
 
-			Assert.IsNull(s1);
+			Assert.That(s1, Is.Null);
 
 			using var db1 = new TestDataConnection(db.Options
 				.UseConnection   (db.DataProvider, db.Connection, false)
@@ -77,7 +77,7 @@ namespace Tests.Infrastructure
 
 			_child = db1.Child.ToList();
 
-			Assert.NotNull(s1);
+			Assert.That(s1, Is.Not.Null);
 		}
 
 		[Test]
@@ -132,10 +132,13 @@ namespace Tests.Infrastructure
 			{
 				dc.GetTable<Person>().ToList();
 
-				Assert.True(syncBeforeCalled);
-				Assert.True(syncAfterCalled);
-				Assert.False(asyncBeforeCalled);
-				Assert.False(asyncAfterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(syncBeforeCalled, Is.True);
+					Assert.That(syncAfterCalled, Is.True);
+					Assert.That(asyncBeforeCalled, Is.False);
+					Assert.That(asyncAfterCalled, Is.False);
+				});
 			}
 
 			syncBeforeCalled  = false;
@@ -146,10 +149,13 @@ namespace Tests.Infrastructure
 			{
 				await dc.GetTable<Person>().ToListAsync();
 
-				Assert.False(syncBeforeCalled);
-				Assert.False(syncAfterCalled);
-				Assert.True(asyncBeforeCalled);
-				Assert.True(asyncAfterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(syncBeforeCalled, Is.False);
+					Assert.That(syncAfterCalled, Is.False);
+					Assert.That(asyncBeforeCalled, Is.True);
+					Assert.That(asyncAfterCalled, Is.True);
+				});
 			}
 
 			syncBeforeCalled  = false;
@@ -160,10 +166,13 @@ namespace Tests.Infrastructure
 			{
 				dc.GetTable<Person>().ToList();
 
-				Assert.True(syncBeforeCalled);
-				Assert.True(syncAfterCalled);
-				Assert.False(asyncBeforeCalled);
-				Assert.False(asyncAfterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(syncBeforeCalled, Is.True);
+					Assert.That(syncAfterCalled, Is.True);
+					Assert.That(asyncBeforeCalled, Is.False);
+					Assert.That(asyncAfterCalled, Is.False);
+				});
 			}
 
 			syncBeforeCalled  = false;
@@ -174,10 +183,13 @@ namespace Tests.Infrastructure
 			{
 				await dc.GetTable<Person>().ToListAsync();
 
-				Assert.False(syncBeforeCalled);
-				Assert.False(syncAfterCalled);
-				Assert.True(asyncBeforeCalled);
-				Assert.True(asyncAfterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(syncBeforeCalled, Is.False);
+					Assert.That(syncAfterCalled, Is.False);
+					Assert.That(asyncBeforeCalled, Is.True);
+					Assert.That(asyncAfterCalled, Is.True);
+				});
 			}
 
 			// test sync only handlers
@@ -201,8 +213,11 @@ namespace Tests.Infrastructure
 			{
 				dc.GetTable<Person>().ToList();
 
-				Assert.True(beforeCalled);
-				Assert.True(afterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(beforeCalled, Is.True);
+					Assert.That(afterCalled, Is.True);
+				});
 			}
 
 			beforeCalled = false;
@@ -211,8 +226,11 @@ namespace Tests.Infrastructure
 			{
 				await dc.GetTable<Person>().ToListAsync();
 
-				Assert.True(beforeCalled);
-				Assert.True(afterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(beforeCalled, Is.True);
+					Assert.That(afterCalled, Is.True);
+				});
 			}
 
 			beforeCalled = false;
@@ -221,8 +239,11 @@ namespace Tests.Infrastructure
 			{
 				dc.GetTable<Person>().ToList();
 
-				Assert.True(beforeCalled);
-				Assert.True(afterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(beforeCalled, Is.True);
+					Assert.That(afterCalled, Is.True);
+				});
 			}
 
 			beforeCalled = false;
@@ -231,8 +252,11 @@ namespace Tests.Infrastructure
 			{
 				await dc.GetTable<Person>().ToListAsync();
 
-				Assert.True(beforeCalled);
-				Assert.True(afterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(beforeCalled, Is.True);
+					Assert.That(afterCalled, Is.True);
+				});
 			}
 
 			// test use from provider detector
@@ -254,8 +278,11 @@ namespace Tests.Infrastructure
 			{
 				dc.GetTable<Person>().ToList();
 
-				Assert.AreEqual(2, beforeCallCnt);
-				Assert.AreEqual(2, afterCallCnt);
+				Assert.Multiple(() =>
+				{
+					Assert.That(beforeCallCnt, Is.EqualTo(2));
+					Assert.That(afterCallCnt, Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -285,8 +312,11 @@ namespace Tests.Infrastructure
 					db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
-				Assert.True(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(globalTriggered, Is.True);
+					Assert.That(localTriggrered, Is.False);
+				});
 				globalTriggered = false;
 
 				// local handler set
@@ -299,8 +329,11 @@ namespace Tests.Infrastructure
 					db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
-				Assert.False(globalTriggered);
-				Assert.True(localTriggrered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(globalTriggered, Is.False);
+					Assert.That(localTriggrered, Is.True);
+				});
 				localTriggrered = false;
 
 				// descriptor cached
@@ -309,8 +342,11 @@ namespace Tests.Infrastructure
 					db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
-				Assert.False(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(globalTriggered, Is.False);
+					Assert.That(localTriggrered, Is.False);
+				});
 
 				// cache miss
 				using (var db = GetDataContext(context, new MappingSchema("name1")))
@@ -318,8 +354,11 @@ namespace Tests.Infrastructure
 					db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
-				Assert.True(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(globalTriggered, Is.True);
+					Assert.That(localTriggrered, Is.False);
+				});
 				globalTriggered = false;
 
 				// no handlers
@@ -329,8 +368,11 @@ namespace Tests.Infrastructure
 					db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
-				Assert.False(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(globalTriggered, Is.False);
+					Assert.That(localTriggrered, Is.False);
+				});
 			}
 			finally
 			{

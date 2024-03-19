@@ -54,7 +54,7 @@ namespace Tests.UserTests
 				ed2 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));
 			}
 
-			Assert.AreEqual(ed1, ed2);
+			Assert.That(ed2, Is.EqualTo(ed1));
 		}
 	}
 }

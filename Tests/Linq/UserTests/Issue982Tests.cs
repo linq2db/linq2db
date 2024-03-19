@@ -150,7 +150,7 @@ namespace Tests.UserTests
 								};
 
 					var str = query.ToString()!;
-					Assert.True(str.Contains("2147483647"));
+					Assert.That(str, Does.Contain("2147483647"));
 					var _ = query.ToArray();
 				}
 			}

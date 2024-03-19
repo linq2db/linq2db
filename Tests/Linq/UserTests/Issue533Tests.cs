@@ -77,8 +77,11 @@ namespace Tests.UserTests
 
 				var obj2 = db.GetTable<Entity533>().First(_ => _.ID == id);
 
-				Assert.IsNull  (obj2.MiddleName);
-				Assert.AreEqual(obj.FirstName.Value, obj2.FirstName.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(obj2.MiddleName, Is.Null);
+					Assert.That(obj2.FirstName.Value, Is.EqualTo(obj.FirstName.Value));
+				});
 			}
 		}
 	}

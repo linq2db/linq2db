@@ -123,7 +123,7 @@ namespace Tests.DataProvider
 
 				db.OnNextCommandInitialized((_, cmd) =>
 				{
-					Assert.AreEqual(2, cmd.Parameters.Count);
+					Assert.That(cmd.Parameters, Has.Count.EqualTo(2));
 					return cmd;
 				});
 
@@ -135,7 +135,7 @@ namespace Tests.DataProvider
 				db.InlineParameters = true;
 				db.OnNextCommandInitialized((_, cmd) =>
 				{
-					Assert.AreEqual(0, cmd.Parameters.Count);
+					Assert.That(cmd.Parameters, Is.Empty);
 					return cmd;
 				});
 
@@ -215,12 +215,12 @@ namespace Tests.DataProvider
 							: table.ToArray();
 
 			// assert data
-			Assert.AreEqual(1, records.Length);
+			Assert.That(records, Has.Length.EqualTo(1));
 
 			var record = records[0];
-			Assert.AreEqual(getExpectedValue != null ? getExpectedValue(value) : value, record.Column);
+			Assert.That(record.Column, Is.EqualTo(getExpectedValue != null ? getExpectedValue(value) : value));
 			if (!skipNullable)
-				Assert.AreEqual(getExpectedNullableValue != null ? getExpectedNullableValue(nullableValue) : nullableValue, record.ColumnNullable);
+				Assert.That(record.ColumnNullable, Is.EqualTo(getExpectedNullableValue != null ? getExpectedNullableValue(nullableValue) : nullableValue));
 		}
 	}
 }

@@ -120,9 +120,12 @@ namespace Tests.Linq
 				var sql = query.ToString()!;
 				TestContext.WriteLine(sql);
 
-				Assert.That(CountOccurrences(sql, tableName),    Is.EqualTo(2));
-				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
-				Assert.That(CountOccurrences(sql, schemaName),   Is.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
+					Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
+					Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -149,9 +152,12 @@ namespace Tests.Linq
 				var sql = query.ToString()!;
 				TestContext.WriteLine(sql);
 
-				Assert.That(CountOccurrences(sql, tableName),    Is.EqualTo(2));
-				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
-				Assert.That(CountOccurrences(sql, schemaName),   Is.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
+					Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
+					Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -251,7 +257,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, BuilderType = typeof(InExtExpressionItemBuilder), ServerSideOnly = true)]
-		public static bool InExt<T>([ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values) where T : struct, IEquatable<int>
+		private static bool InExt<T>([ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values) where T : struct, IEquatable<int>
 		{
 			throw new NotImplementedException();
 		}

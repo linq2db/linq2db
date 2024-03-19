@@ -57,9 +57,9 @@ namespace Tests.Metadata
 			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
 			var attrs = rd.GetAttributes(typeof(XmlReaderTests)).OfType<TableAttribute>().ToArray();
 
-			Assert.NotNull (attrs);
-			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs[0].Name);
+			Assert.That(attrs, Is.Not.Null);
+			Assert.That(attrs, Has.Length.EqualTo(1));
+			Assert.That(attrs[0].Name, Is.EqualTo("TestName"));
 		}
 
 		public int Field1;
@@ -71,9 +71,9 @@ namespace Tests.Metadata
 			var attrs = rd.GetAttributes(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Field1))
 				.OfType<ColumnAttribute>().ToArray();
 
-			Assert.NotNull (attrs);
-			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs[0].Name);
+			Assert.That(attrs, Is.Not.Null);
+			Assert.That(attrs, Has.Length.EqualTo(1));
+			Assert.That(attrs[0].Name, Is.EqualTo("TestName"));
 		}
 
 		public int Property1 { get; set; }
@@ -85,9 +85,9 @@ namespace Tests.Metadata
 			var attrs = rd.GetAttributes(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Property1))
 				.OfType<ColumnAttribute>().ToArray();
 
-			Assert.NotNull (attrs);
-			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs[0].Name);
+			Assert.That(attrs, Is.Not.Null);
+			Assert.That(attrs, Has.Length.EqualTo(1));
+			Assert.That(attrs[0].Name, Is.EqualTo("TestName"));
 		}
 	}
 }

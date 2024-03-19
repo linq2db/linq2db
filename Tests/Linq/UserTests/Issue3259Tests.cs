@@ -49,13 +49,13 @@ namespace Tests.UserTests
 		}
 
 		[Sql.Extension("Sum({expr})", IsAggregate = true)]
-		public static TV SumCustom<T, TV>(IEnumerable<T> items, [ExprParameter] Expression<Func<T, TV>> expr)
+		private static TV SumCustom<T, TV>(IEnumerable<T> items, [ExprParameter] Expression<Func<T, TV>> expr)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("Sum({items})", IsAggregate = true)]
-		public static T SumCustom<T>([ExprParameter] IEnumerable<T> items)
+		private static T SumCustom<T>([ExprParameter] IEnumerable<T> items)
 		{
 			throw new NotImplementedException();
 		}

@@ -54,23 +54,23 @@ namespace Tests.UserTests
 			{
 				var allPeople = db.GetTable<PersonEx>().ToArray();
 				var anyGotId = allPeople.Any(p => p.ID != null);
-				Assert.IsFalse(anyGotId);
+				Assert.That(anyGotId, Is.False);
 
 				var allPeopleWithCondition = db.GetTable<PersonEx>()
 					.Where(p => (p.ID ?? 0) >= 2)
 					.ToArray();
 				var anyWithCondGotId = allPeopleWithCondition.Any(p => p.ID != null);
-				Assert.IsFalse(anyWithCondGotId);
+				Assert.That(anyWithCondGotId, Is.False);
 
 				var allAnonymWithExplicitSelect = db.GetTable<PersonEx>()
 					.Select(p => new { p.ID, p.FirstName, p.LastName });
 				var allAnonymGotId = allAnonymWithExplicitSelect.All(p => p.ID != null);
-				Assert.IsTrue(allAnonymGotId);
+				Assert.That(allAnonymGotId, Is.True);
 
 				var allPeopleWithExplicitSelect = db.GetTable<PersonEx>()
 					.Select(p => new PersonEx { ID = p.ID, FirstName = p.FirstName, LastName = p.LastName });
 				var allExplicitGotId = allPeopleWithExplicitSelect.All(p => p.ID != null);
-				Assert.IsTrue(allExplicitGotId);
+				Assert.That(allExplicitGotId, Is.True);
 			}
 		}
 

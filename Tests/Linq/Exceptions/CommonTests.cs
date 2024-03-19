@@ -94,7 +94,7 @@ namespace Tests.Exceptions
 							Value1   = n
 						}),
 					"Invalid object name 'Parent1'.")!;
-				Assert.True(ex.GetType().Name == "SqlException");
+				Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
 
 				ex = Assert.Throws(
 					Is.AssignableTo<Exception>(),
@@ -105,7 +105,7 @@ namespace Tests.Exceptions
 							Value1   = n
 						}),
 					"Invalid object name 'Parent1'.")!;
-				Assert.True(ex.GetType().Name == "SqlException");
+				Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
 
 				db.Parent.Delete(p => p.ParentID == n);
 			}

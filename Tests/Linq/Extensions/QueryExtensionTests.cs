@@ -34,7 +34,7 @@ namespace Tests.Extensions
 
 			Console.WriteLine(query);
 
-			Assert.AreEqual(1, query.GetTableSource().Joins.Count);
+			Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
 		}
 
 		[Test]
@@ -50,7 +50,7 @@ namespace Tests.Extensions
 
 			Debug.WriteLine(query);
 
-			Assert.AreEqual(1, query.GetTableSource().Joins.Count);
+			Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
 		}
 
 		[Test]

@@ -32,9 +32,9 @@ namespace Tests.xUpdate
 					.Value(c => Sql.Property<int>(c, ChildIDColumn), () => id)
 					.Insert();
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, cnt);
+					Assert.That(cnt, Is.EqualTo(1));
 
-				Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
+				Assert.That(db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id), Is.EqualTo(1));
 			}
 		}
 
@@ -48,14 +48,17 @@ namespace Tests.xUpdate
 
 				db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
 
-				Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
+				Assert.That(db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id), Is.EqualTo(1));
 				var cnt = db.Child
 						.Where(c => Sql.Property<int>(c, ChildIDColumn) == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
 						.Set(c => Sql.Property<int>(c, ChildIDColumn), c => Sql.Property<int>(c, ChildIDColumn) + 1)
 						.Update();
-				Assert.AreEqual(1, cnt);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt, Is.EqualTo(1));
 
-				Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id + 1));
+					Assert.That(db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id + 1), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -69,14 +72,17 @@ namespace Tests.xUpdate
 
 				db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
 
-				Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
+				Assert.That(db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id), Is.EqualTo(1));
 				var cnt = db.Child
 						.Where(c => Sql.Property<int>(c, ChildIDColumn) == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
 						.Set(c => Sql.Property<int>(c, ChildIDColumn), 5000)
 						.Update();
-				Assert.AreEqual(1, cnt);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt, Is.EqualTo(1));
 
-				Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == 5000));
+					Assert.That(db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == 5000), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -96,12 +102,11 @@ namespace Tests.xUpdate
 					.Value(c => Sql.Property<Gender>(c, "Gender"), () => Gender.Male)
 					.Insert();
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, cnt);
+					Assert.That(cnt, Is.EqualTo(1));
 
-				Assert.AreEqual(1,
-					db.GetTable<MyClass>().Count(c =>
+				Assert.That(db.GetTable<MyClass>().Count(c =>
 						Sql.Property<string>(c, firstNameColumn) == "John" &&
-						Sql.Property<string>(c, lastNameColumn) == "The Dynamic"));
+						Sql.Property<string>(c, lastNameColumn) == "The Dynamic"), Is.EqualTo(1));
 			}
 		}
 
@@ -117,16 +122,16 @@ namespace Tests.xUpdate
 					.Value(c => Sql.Property<Gender>(c, "Gender"), () => Gender.Male)
 					.Insert();
 
-				Assert.AreEqual(1, db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "LastName") == "Limonadovy"));
+				Assert.That(db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "LastName") == "Limonadovy"), Is.EqualTo(1));
 
 				var cnt = db.GetTable<MyClass>()
 						.Where(c => Sql.Property<string>(c, "LastName") == "Limonadovy")
 						.Set(c => Sql.Property<string>(c, "FirstName"), () => "Johnny")
 						.Update();
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, cnt);
+					Assert.That(cnt, Is.EqualTo(1));
 
-				Assert.AreEqual(1, db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "FirstName") == "Johnny" && Sql.Property<string>(c, "LastName") == "Limonadovy"));
+				Assert.That(db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "FirstName") == "Johnny" && Sql.Property<string>(c, "LastName") == "Limonadovy"), Is.EqualTo(1));
 			}
 		}
 

@@ -290,8 +290,11 @@ namespace Tests.xUpdate
 
 				var qq = conn.GetTable<Aa>().ToList().First();
 
-				Assert.That(qq.bb, Is.EqualTo(99));
-				Assert.That(qq.cc, Is.EqualTo("hallo"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(qq.bb, Is.EqualTo(99));
+					Assert.That(qq.cc, Is.EqualTo("hallo"));
+				});
 
 				conn.DropTable<Qq>();
 			}

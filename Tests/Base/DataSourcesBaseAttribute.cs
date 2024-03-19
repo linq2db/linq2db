@@ -24,7 +24,7 @@ namespace Tests
 			}
 			catch (Exception e)
 			{
-				TestBase.Log(e);
+				TestUtils.Log(e);
 				throw;
 			}
 		}
@@ -49,7 +49,7 @@ namespace Tests
 			}
 			catch (Exception e)
 			{
-				TestBase.Log(e);
+				TestUtils.Log(e);
 				throw;
 			}
 		}
@@ -62,7 +62,7 @@ namespace Tests
 			}
 			catch (Exception e)
 			{
-				TestBase.Log(e);
+				TestUtils.Log(e);
 				throw;
 			}
 		}

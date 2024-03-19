@@ -74,7 +74,7 @@ namespace Tests
 			if (_context == null)
 				return;
 
-			var target = TestBase.GetConfigName();
+			var target = TestUtils.GetConfigName();
 
 			var fixturePath = Path.Combine(baselinesPath, target);
 

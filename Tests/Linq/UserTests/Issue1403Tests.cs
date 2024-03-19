@@ -56,8 +56,11 @@ namespace Tests.UserTests
 
 				var events = table.First();
 
-				Assert.AreEqual(1, events.EventId);
-				Assert.AreEqual("New event", events.EventDescription);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events.EventId, Is.EqualTo(1));
+					Assert.That(events.EventDescription, Is.EqualTo("New event"));
+				});
 			}
 		}
 
@@ -75,8 +78,11 @@ namespace Tests.UserTests
 
 				var events = table.First();
 
-				Assert.AreEqual(1, events.EventId);
-				Assert.AreEqual("New event", events.EventDescription);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events.EventId, Is.EqualTo(1));
+					Assert.That(events.EventDescription, Is.EqualTo("New event"));
+				});
 			}
 		}
 
@@ -94,8 +100,11 @@ namespace Tests.UserTests
 
 				var events = table.First();
 
-				Assert.AreEqual(1, events.EventId);
-				Assert.AreEqual("New event", events.EventDescription);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events.EventId, Is.EqualTo(1));
+					Assert.That(events.EventDescription, Is.EqualTo("New event"));
+				});
 			}
 		}
 	}

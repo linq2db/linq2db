@@ -66,8 +66,8 @@ namespace Tests.UserTests
 
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(3, result[0].Id);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result[0].Id, Is.EqualTo(3));
 			}
 		}
 	}

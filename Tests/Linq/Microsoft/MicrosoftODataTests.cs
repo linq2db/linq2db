@@ -139,7 +139,7 @@ namespace Tests.OData.Microsoft
 
 				var resultQuery  = options.ApplyTo(table);
 				var materialized = Materialize(resultQuery);
-				Assert.That(materialized.Count, Is.EqualTo(1));
+				Assert.That(materialized, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -230,7 +230,7 @@ namespace Tests.OData.Microsoft
 
 				var materialized = query.ToArray();
 
-				Assert.That(materialized.Length, Is.EqualTo(1));
+				Assert.That(materialized, Has.Length.EqualTo(1));
 			}
 		}
 
@@ -279,7 +279,7 @@ namespace Tests.OData.Microsoft
 
 				var materialized = query.ToArray();
 
-				Assert.That(materialized.Length, Is.EqualTo(1));
+				Assert.That(materialized, Has.Length.EqualTo(1));
 			}
 		}
 

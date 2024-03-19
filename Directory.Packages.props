@@ -83,7 +83,8 @@
 	<ItemGroup Label="Testing">
 		<PackageVersion Include="FluentAssertions"                                      Version="6.12.0"               />
 		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="17.8.0"               />
-		<PackageVersion Include="NUnit"                                                 Version="3.14.0"               />
+		<PackageVersion Include="NUnit"                                                 Version="4.1.0"                />
+		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.1.0"                />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="4.5.0"                />
 
 		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.3"                />

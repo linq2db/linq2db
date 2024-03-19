@@ -43,8 +43,8 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
-				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
+				Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(2));
+				Assert.That(commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date), Is.EqualTo(1));
 			}
 		}
 
@@ -64,8 +64,8 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
-				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
+				Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(2));
+				Assert.That(commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date), Is.EqualTo(1));
 			}
 		}
 	}
