@@ -63,6 +63,11 @@ namespace LinqToDB
 			return builder.Add<int>(left, new SqlValue(value));
 		}
 
+		public static ISqlExpression Add(this Sql.ISqExtensionBuilder builder, ISqlExpression left, long value)
+		{
+			return builder.Add<long>(left, new SqlValue(value));
+		}
+
 		public static ISqlExpression Inc(this Sql.ISqExtensionBuilder builder, ISqlExpression expr)
 		{
 			return builder.Add(expr, 1);
@@ -81,6 +86,11 @@ namespace LinqToDB
 		public static ISqlExpression Sub(this Sql.ISqExtensionBuilder builder, ISqlExpression left, int value)
 		{
 			return builder.Sub<int>(left, new SqlValue(value));
+		}
+
+		public static ISqlExpression Sub(this Sql.ISqExtensionBuilder builder, ISqlExpression left, long value)
+		{
+			return builder.Sub<long>(left, new SqlValue(value));
 		}
 
 		public static ISqlExpression Dec(this Sql.ISqExtensionBuilder builder, ISqlExpression expr)
@@ -103,6 +113,11 @@ namespace LinqToDB
 			return builder.Mul<int>(expr1, new SqlValue(value));
 		}
 
+		public static ISqlExpression Mul(this Sql.ISqExtensionBuilder builder, ISqlExpression expr1, long value)
+		{
+			return builder.Mul<long>(expr1, new SqlValue(value));
+		}
+
 		public static ISqlExpression Div(this Sql.ISqExtensionBuilder builder, ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
 			return new SqlBinaryExpression(type, expr1, "/", expr2, Precedence.Multiplicative);
@@ -116,6 +131,11 @@ namespace LinqToDB
 		public static ISqlExpression Div(this Sql.ISqExtensionBuilder builder, ISqlExpression expr1, int value)
 		{
 			return builder.Div<int>(expr1, new SqlValue(value));
+		}
+
+		public static ISqlExpression Div(this Sql.ISqExtensionBuilder builder, ISqlExpression expr1, long value)
+		{
+			return builder.Div<long>(expr1, new SqlValue(value));
 		}
 	}
 

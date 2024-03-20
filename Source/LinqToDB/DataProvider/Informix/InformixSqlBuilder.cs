@@ -116,18 +116,19 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			switch (type.Type.DataType)
 			{
-				case DataType.Guid       : StringBuilder.Append("VARCHAR(36)");               return;
-				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
-				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   return;
-				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   return;
-				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); return;
+				case DataType.Interval   : StringBuilder.Append("interval day (9) to fraction (5)"); return;
+				case DataType.Guid       : StringBuilder.Append("VARCHAR(36)");                      return;
+				case DataType.VarBinary  : StringBuilder.Append("BYTE");                             return;
+				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                          return;
+				case DataType.DateTime   : StringBuilder.Append("datetime year to second");          return;
+				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction");        return;
 				case DataType.Time       :
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"INTERVAL HOUR TO FRACTION({type.Type.Length ?? 5})");
 					return;
-				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      return;
+				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");             return;
 				case DataType.SByte      :
-				case DataType.Byte       : StringBuilder.Append("SmallInt");                  return;
-				case DataType.SmallMoney : StringBuilder.Append("Decimal(10, 4)");            return;
+				case DataType.Byte       : StringBuilder.Append("SmallInt");                         return;
+				case DataType.SmallMoney : StringBuilder.Append("Decimal(10, 4)");                   return;
 				case DataType.Decimal    :
 					StringBuilder.Append("Decimal");
 					if (type.Type.Precision != null && type.Type.Scale != null)

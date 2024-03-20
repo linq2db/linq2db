@@ -501,33 +501,35 @@ namespace LinqToDB.Linq.Builder
 						return new TransformInfo(ConvertExpression(expr));
 					}
 
-					if (ma.Member.DeclaringType == typeof(TimeSpan))
+					if (!Configuration.DisableLegacySqlBuilderDateDiffCalls)
 					{
-						switch (ma.Expression!.NodeType)
+						if (ma.Member.DeclaringType == typeof(TimeSpan))
 						{
-							case ExpressionType.Subtract:
-							case ExpressionType.SubtractChecked:
+							switch (ma.Expression!.NodeType)
+							{
+								case ExpressionType.Subtract:
+								case ExpressionType.SubtractChecked:
 
-								Sql.DateParts datePart;
+									Sql.DateParts datePart;
 
-								switch (ma.Member.Name)
-								{
-									case "TotalMilliseconds": datePart = Sql.DateParts.Millisecond; break;
-									case "TotalSeconds"     : datePart = Sql.DateParts.Second;      break;
-									case "TotalMinutes"     : datePart = Sql.DateParts.Minute;      break;
-									case "TotalHours"       : datePart = Sql.DateParts.Hour;        break;
-									case "TotalDays"        : datePart = Sql.DateParts.Day;         break;
-									default                 : return new TransformInfo(e);
-								}
+									switch (ma.Member.Name)
+									{
+										case "TotalMilliseconds": datePart = Sql.DateParts.Millisecond; break;
+										case "TotalSeconds": datePart = Sql.DateParts.Second; break;
+										case "TotalMinutes": datePart = Sql.DateParts.Minute; break;
+										case "TotalHours": datePart = Sql.DateParts.Hour; break;
+										case "TotalDays": datePart = Sql.DateParts.Day; break;
+										default: return new TransformInfo(e);
+									}
 
-								var ex = (BinaryExpression)ma.Expression;
-								if (ex.Left.Type == typeof(DateTime)
-									&& ex.Right.Type == typeof(DateTime))
-								{
-									var method = MemberHelper.MethodOf(
+									var ex = (BinaryExpression)ma.Expression;
+									if (ex.Left.Type == typeof(DateTime)
+										&& ex.Right.Type == typeof(DateTime))
+									{
+										var method = MemberHelper.MethodOf(
 												() => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
 
-									var call   =
+										var call   =
 												Expression.Convert(
 													Expression.Call(
 														null,
@@ -537,14 +539,14 @@ namespace LinqToDB.Linq.Builder
 														Expression.Convert(ex.Left,  typeof(DateTime?))),
 													typeof(double));
 
-									return new TransformInfo(ConvertExpression(call));
-								}
-								else
-								{
-									var method = MemberHelper.MethodOf(
+										return new TransformInfo(ConvertExpression(call));
+									}
+									else
+									{
+										var method = MemberHelper.MethodOf(
 												() => Sql.DateDiff(Sql.DateParts.Day, DateTimeOffset.MinValue, DateTimeOffset.MinValue));
 
-									var call   =
+										var call   =
 												Expression.Convert(
 													Expression.Call(
 														null,
@@ -554,17 +556,40 @@ namespace LinqToDB.Linq.Builder
 														Expression.Convert(ex.Left,  typeof(DateTimeOffset?))),
 													typeof(double));
 
-									return new TransformInfo(ConvertExpression(call));
-								}
+										return new TransformInfo(ConvertExpression(call));
+									}
+							}
 						}
 					}
-
+					
 					break;
 				}
-
 				default:
 				{
-					if (e is BinaryExpression binary)
+					if(e is UnaryExpression unary)
+					{
+						var l = Expressions.ConvertUnary(MappingSchema, unary);
+						if (l != null)
+						{
+							var body = l.Body.Unwrap();
+							var expr = body.Transform((l, unary), static (context, wpi) =>
+							{
+								if (wpi.NodeType == ExpressionType.Parameter)
+								{
+									if (context.l.Parameters[0] == wpi)
+										return context.unary.Operand;
+								}
+
+								return wpi;
+							});
+
+							if (expr.Type != e.Type)
+								expr = new ChangeTypeExpression(expr, e.Type);
+
+							return new TransformInfo(ConvertExpression(expr));
+						}
+					}
+					else if (e is BinaryExpression binary)
 					{
 						var l = Expressions.ConvertBinary(MappingSchema, binary);
 						if (l != null)
