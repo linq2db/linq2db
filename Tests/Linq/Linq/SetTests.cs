@@ -109,7 +109,6 @@ namespace Tests.Linq
 					from p in db.Parent where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n) select p);
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Contains7([DataSources] string context)
 		{
@@ -119,7 +118,6 @@ namespace Tests.Linq
 					db.Child.Select(c => c.ParentID).Contains(11));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Contains701([DataSources] string context)
 		{
@@ -338,7 +336,6 @@ namespace Tests.Linq
 				db.Parent1.Where(p => p.ParentID == 1).Contains(parent));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Contains14([DataSources] string context)
 		{

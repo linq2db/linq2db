@@ -341,7 +341,7 @@ namespace Tests.xUpdate
 			}
 		};
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, TestProvName.Oracle21DevartDirect })]
+		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect })]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)
 		{
@@ -472,7 +472,7 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (provider.IsAnyOf(TestProvName.AllPostgreSQL))
+				if (provider.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.ClickHouseMySql))
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 			}
 
