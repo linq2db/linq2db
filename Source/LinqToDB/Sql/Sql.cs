@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
+
 using PN = LinqToDB.ProviderName;
 
 // ReSharper disable CheckNamespace
@@ -13,11 +15,11 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Mapping;
+	using Common;
 	using Expressions;
 	using Linq;
+	using Mapping;
 	using SqlQuery;
-	using LinqToDB.Common;
 
 	[PublicAPI]
 	public static partial class Sql
@@ -262,6 +264,41 @@ namespace LinqToDB
 		public static Guid NewGuid()
 		{
 			return Guid.NewGuid();
+		}
+
+		sealed class GuidToStringBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var para = builder.GetExpression(0);
+				
+				builder.ResultExpression = PseudoFunctions.MakeConvert(SqlDataType.String, SqlDataType.Guid, para);
+			}
+		}
+
+		/// <summary>
+		/// Converts a Guid to a normalized string in the format <c>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx</c>.
+		/// </summary>
+		/// <param name="guid">The guid to convert.</param>
+		/// <returns>The guid formatted to a string.</returns>
+		[CLSCompliant(false)]
+		[Expression(PN.SQLite, "lower((substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.Access, "LCase(Mid(CStr({0}), 2, 36))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.PostgreSQL, "(Cast({0} as VarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.MariaDB, "Lower(Cast({0} as CHAR(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.MySql, "Lower(Cast({0} as CHAR(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.Informix, "Lower(To_Char({0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.DB2, "lower((substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.Oracle, "lower((substr(rawtohex({0}), 7, 2) || substr(rawtohex({0}), 5, 2) || substr(rawtohex({0}), 3, 2) || substr(rawtohex({0}), 1, 2) || '-' || substr(rawtohex({0}), 11, 2) || substr(rawtohex({0}), 9, 2) || '-' || substr(rawtohex({0}), 15, 2) || substr(rawtohex({0}), 13, 2) || '-' || substr(rawtohex({0}), 17, 4) || '-' || substr(rawtohex({0}), 21, 12)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.ClickHouse, "lower(toString({0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.SapHana, "Lower(Cast({0} as NVarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.Sybase, "Lower(Convert(NVarChar(36), {0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Expression(PN.SqlServer, "LOWER(CAST({0} AS char(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+		[Extension("", BuilderType = typeof(GuidToStringBuilder), PreferServerSide = true)]
+		[return: NotNullIfNotNull(nameof(guid))]
+		public static string? GuidToNormalizedString(Guid? guid)
+		{
+			return guid == null ? null : guid.ToString();
 		}
 
 		#endregion
