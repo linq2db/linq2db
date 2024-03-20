@@ -138,7 +138,7 @@ namespace LinqToDB.Linq.Builder
 				return type.GetElementType()!;
 			if (typeof(IGrouping<,>).IsSameOrParentOf(type))
 				return type.GetGenericArguments()[1];
-			return type.GetGenericArguments()[0];
+			return type.GetGenericArguments(typeof(IEnumerable<>))![0];
 		}
 
 		public static bool IsEnumerableType(Type type, MappingSchema mappingSchema)
