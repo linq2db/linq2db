@@ -309,7 +309,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> Mapping(IReadOnlyDictionary<string,string> mapping)
-			=> Mapping<TFrom>(mapping).Mapping<TFrom>(mapping);
+			=> Mapping<TFrom>(mapping).Mapping<TTo>(mapping);
 
 		/// <summary>
 		/// Member mappers.
