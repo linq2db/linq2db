@@ -164,7 +164,9 @@ namespace Tests.Linq
 
 			ms.SetConverter<AnimalType, string>       (obj => obj.ToString());
 			ms.SetConverter<AnimalType, DataParameter>(obj => new DataParameter { Value = obj.ToString() });
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			ms.SetConverter<string, AnimalType>       (txt => (AnimalType)Enum.Parse(typeof(AnimalType), txt, true));
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 
 			ms.SetDefaultFromEnumType(typeof(AnimalType2), typeof(string));
 

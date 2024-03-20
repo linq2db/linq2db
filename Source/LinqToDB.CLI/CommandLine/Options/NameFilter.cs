@@ -6,7 +6,7 @@ namespace LinqToDB.CommandLine
 	/// <summary>
 	/// Database object name filter.
 	/// </summary>
-	public class NameFilter
+	internal sealed class NameFilter
 	{
 		private readonly HashSet<string>                               _exactNames    = new ();
 		private readonly Dictionary<string, HashSet<string>>           _schemaNames   = new ();

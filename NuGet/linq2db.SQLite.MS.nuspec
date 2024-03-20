@@ -15,23 +15,23 @@
 		<dependencies>
 			<group targetFramework="net462">
 				<dependency id="linq2db"                version="6.0.0"  />
-				<dependency id="Microsoft.Data.Sqlite"  version="6.0.26" />
+				<dependency id="Microsoft.Data.Sqlite"  version="6.0.28" />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"                version="6.0.0"  />
-				<dependency id="Microsoft.Data.Sqlite"  version="6.0.26" />
+				<dependency id="Microsoft.Data.Sqlite"  version="6.0.28" />
 			</group>
 			<group targetFramework="net6.0">
 				<dependency id="linq2db"                version="6.0.0"  />
-				<dependency id="Microsoft.Data.Sqlite"  version="6.0.26" />
+				<dependency id="Microsoft.Data.Sqlite"  version="6.0.28" />
 			</group>
 			<group targetFramework="net7.0">
 				<dependency id="linq2db"                version="6.0.0"  />
-				<dependency id="Microsoft.Data.Sqlite"  version="7.0.15" />
+				<dependency id="Microsoft.Data.Sqlite"  version="7.0.17" />
 			</group>
 			<group targetFramework="net8.0">
 				<dependency id="linq2db"                version="6.0.0"  />
-				<dependency id="Microsoft.Data.Sqlite"  version="8.0.1"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="8.0.3"  />
 			</group>
 		</dependencies>
 		<contentFiles>

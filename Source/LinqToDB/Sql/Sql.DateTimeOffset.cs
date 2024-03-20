@@ -88,10 +88,9 @@ namespace LinqToDB
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
-				builder.ResultExpression = builder.Add(
+				builder.ResultExpression = builder.Add<DateTimeOffset?>(
 					date,
-					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number),
-					typeof(DateTimeOffset?));
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number));
 			}
 		}
 

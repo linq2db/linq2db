@@ -14,6 +14,7 @@ namespace Tests.Linq
 	{
 		private TempTable<Src> SetupSrcTable(IDataContext db)
 		{
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			new FluentMappingBuilder(db.MappingSchema)
 				.Entity<Src>()
 					.Property(e => e.CEnum)
@@ -21,6 +22,7 @@ namespace Tests.Linq
 						.HasLength(20)
 						.HasConversion(v => $"___{v}___", v => (ConvertedEnum)Enum.Parse(typeof(ConvertedEnum), v.Substring(3, v.Length - 6)))
 				.Build();
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 
 			var data = new[]
 			{

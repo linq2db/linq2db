@@ -680,3 +680,5 @@ dotnet_diagnostic.MA0151.severity = none
 dotnet_diagnostic.MA0152.severity = none
 # MA0153: Do not log symbols decorated with DataClassificationAttribute directly
 dotnet_diagnostic.MA0153.severity = none
+# MA0154: Use langword in XML comment
+dotnet_diagnostic.MA0154.severity = none
