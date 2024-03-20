@@ -921,5 +921,30 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 		}
+
+		[Test]
+		public void TablesInScopeHintWithTReferenceTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				select new
+				{
+					c.ChildID,
+					c.Parent!.ParentID
+				}
+			)
+			.TablesInScopeHint(SqlServerHints.Table.NoLock);
+
+			_ = q.ToList();
+
+			var test = LastQuery?.Replace("\r", "");
+
+			Assert.That(test, Contains.Substring("[Child] [c] WITH (NoLock)"));
+			Assert.That(test, Contains.Substring("[Parent] [p] WITH (NoLock)"));
+		}
 	}
 }
