@@ -51,7 +51,7 @@ namespace LinqToDB.SqlQuery
 
 		public override int              Precedence  => SqlQuery.Precedence.Primary;
 		public override Type?            SystemType  => _dataType.SystemType;
-		public override QueryElementType ElementType => QueryElementType.SqlCase;
+		public override QueryElementType ElementType => QueryElementType.SqlSimpleCase;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{

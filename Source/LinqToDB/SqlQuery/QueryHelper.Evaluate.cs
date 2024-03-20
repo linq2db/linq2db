@@ -422,6 +422,54 @@ namespace LinqToDB.SqlQuery
 					return false;
 				}
 
+				case QueryElementType.CompareTo:
+				{
+					var compareTo = (SqlCompareToExpression)expr;
+					if (!compareTo.Expression1.TryEvaluateExpression(context, out var value1) || !compareTo.Expression2.TryEvaluateExpression(context, out var value2))
+						return false;
+
+					if (value1 == null || value2 == null)
+					{
+						result = false;
+						return true;
+					}
+
+					if (value1 is IComparable comp1 && value2 is IComparable comp2)
+					{
+						result = comp1.CompareTo(comp2);
+						return true;
+					}
+
+					return false;
+				}
+
+				case QueryElementType.SqlCondition:
+				{
+					var compareTo = (SqlConditionExpression)expr;
+
+					if (compareTo.Condition.TryEvaluateExpression(context, out var conditionValue) && conditionValue is bool boolCondition)
+					{
+						if (boolCondition)
+						{
+							if (compareTo.TrueValue.TryEvaluateExpression(context, out var trueValue))
+							{
+								result = trueValue;
+								return true;
+							}
+						}
+						else
+						{
+							if (compareTo.FalseValue.TryEvaluateExpression(context, out var falseValue))
+							{
+								result = falseValue;
+								return true;
+							}
+						}
+					}
+
+					return false;
+				}
+
 				default:
 				{
 					return false;

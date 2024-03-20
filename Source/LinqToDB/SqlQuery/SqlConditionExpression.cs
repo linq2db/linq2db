@@ -4,30 +4,30 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlConditionExpression : SqlExpressionBase
 	{
-		public SqlConditionExpression(ISqlPredicate predicate, ISqlExpression trueValue, ISqlExpression falseValue)
+		public SqlConditionExpression(ISqlPredicate condition, ISqlExpression trueValue, ISqlExpression falseValue)
 		{
-			Predicate  = predicate;
+			Condition  = condition;
 			TrueValue  = trueValue;
 			FalseValue = falseValue;
 		}
 
-		public ISqlPredicate  Predicate  { get; private set; }
+		public ISqlPredicate  Condition  { get; private set; }
 		public ISqlExpression TrueValue  { get; private set; }
 		public ISqlExpression FalseValue { get; private set; }
 
 		public override int                    Precedence  => SqlQuery.Precedence.LogicalDisjunction;
 		public override Type?                  SystemType  => TrueValue.SystemType;
-		public override QueryElementType       ElementType => QueryElementType.SqlConditional;
+		public override QueryElementType       ElementType => QueryElementType.SqlCondition;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
 				.Append("$IIF$(")
-				.Append(Predicate)
+				.AppendElement(Condition)
 				.Append(", ")
-				.Append(TrueValue)
+				.AppendElement(TrueValue)
 				.Append(", ")
-				.Append(FalseValue)
+				.AppendElement(FalseValue)
 				.Append(')');
 
 			return writer;
@@ -35,7 +35,15 @@ namespace LinqToDB.SqlQuery
 
 		public override bool Equals(ISqlExpression  other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			throw new NotImplementedException();
+			if (ReferenceEquals(other, this))
+				return true;
+
+			if (!(other is SqlConditionExpression otherCondition))
+				return false;
+
+			return this.Condition.Equals(otherCondition.Condition) &&
+			       comparer(this.TrueValue, otherCondition.TrueValue) &&
+			       comparer(this.FalseValue, otherCondition.FalseValue);
 		}
 
 		public override bool CanBeNullable(NullabilityContext nullability)
@@ -45,7 +53,7 @@ namespace LinqToDB.SqlQuery
 
 		public void Modify(ISqlPredicate predicate, ISqlExpression trueValue, ISqlExpression falseValue)
 		{
-			Predicate  = predicate;
+			Condition  = predicate;
 			TrueValue  = trueValue;
 			FalseValue = falseValue;
 		}

@@ -32,7 +32,6 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
-		public virtual    bool CanCompareSearchConditions => false;
 		protected virtual bool SupportsBooleanInColumn    => false;
 		protected virtual bool SupportsNullInColumn       => true;
 
@@ -82,6 +81,22 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return expression;
+		}
+
+		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
+		{
+			var newElement = base.VisitSqlConditionExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			var trueValue  = WrapBooleanExpression(element.TrueValue);
+			var falseValue = WrapBooleanExpression(element.FalseValue);
+
+			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
+				return Visit(NotifyReplaced(new SqlConditionExpression(element.Condition, trueValue, falseValue), element));
+
+			return element;
 		}
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
@@ -160,6 +175,24 @@ namespace LinqToDB.SqlProvider
 			return newPredicate;
 		}
 
+		protected override IQueryElement VisitSqlCompareToExpression(SqlCompareToExpression element)
+		{
+			var newElement = base.VisitSqlCompareToExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			var caseExpression = new SqlCaseExpression(new DbDataType(typeof(int)),
+				new SqlCaseExpression.CaseItem[]
+				{
+					new(new SqlSearchCondition().AddGreater(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNullsAsValues), new SqlValue(1)),
+					new(new SqlSearchCondition().AddEqual(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNullsAsValues), new SqlValue(0))
+				},
+				new SqlValue(-1));
+
+			return Visit(Optimize(caseExpression));
+		}
+
 		public virtual IQueryElement ConvertExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
@@ -176,30 +209,18 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			if (!CanCompareSearchConditions && (predicate.Expr1.ElementType == QueryElementType.SearchCondition ||
-			                                    predicate.Expr2.ElementType == QueryElementType.SearchCondition))
+			if (SqlProviderFlags is { SupportsBooleanComparison: false })
 			{
-				var expr1 = predicate.Expr1;
-				if (expr1.ElementType == QueryElementType.SearchCondition)
-					expr1 = ConvertBooleanExprToCase(expr1);
+				var expr1 = WrapBooleanExpression(predicate.Expr1);
+				var expr2 = WrapBooleanExpression(predicate.Expr2);
 
-				var expr2 = predicate.Expr2;
-				if (expr2.ElementType == QueryElementType.SearchCondition)
-					expr2 = ConvertBooleanExprToCase(expr2);
-
-				return new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull);
+				if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
+				{
+					return new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull);
+				}
 			}
 
 			return predicate;
-		}
-
-		protected ISqlExpression ConvertBooleanExprToCase(ISqlExpression expression)
-		{
-			return new SqlFunction(typeof(bool), "CASE", expression, new SqlValue(true), new SqlValue(false))
-			{
-				CanBeNull     = false,
-				DoNotOptimize = true
-			};
 		}
 
 		static SqlField ExpectsUnderlyingField(ISqlExpression expr)
@@ -744,9 +765,12 @@ namespace LinqToDB.SqlProvider
 				{
 					if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
 					{
-						return new SqlFunction(typeof(int), func.Name,
-							new SqlFunction(func.SystemType, "CASE", func.Parameters[0], new SqlValue(1),
-								new SqlValue(0)) { CanBeNull = false });
+						if (func.Parameters[0] is not ISqlPredicate predicate)
+						{
+							predicate = new SqlPredicate.Expr(func.Parameters[0]);
+						}
+
+						return new SqlFunction(typeof(int), func.Name, new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
 					}
 
 					break;
@@ -903,17 +927,23 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr)
 		{
-			if (SqlProviderFlags == null || SqlProviderFlags.SupportsBooleanType)
+			if (SqlProviderFlags == null)
 				return expr;
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (QueryHelper.UnwrapNullablity(expr) is ISqlPredicate)
+				var unwrapped = QueryHelper.UnwrapNullablity(expr);
+				if (unwrapped is ISqlPredicate predicate)
 				{
-					expr = new SqlFunction(typeof(bool), "CASE", expr, new SqlValue(true), new SqlValue(false))
-						{
-							DoNotOptimize = true
-						};
+					if (expr.CanBeNullable(NullabilityContext))
+					{
+						var conditionExpr = new SqlConditionExpression(predicate, new SqlValue(true), new SqlValue(false));
+						expr = new SqlConditionExpression(new SqlPredicate.IsNull(expr, false), new SqlValue(QueryHelper.GetDbDataType(expr), null), conditionExpr);
+					}
+					else
+					{
+						expr = new SqlConditionExpression(predicate, new SqlValue(true), new SqlValue(false));
+					}
 
 					expr = (ISqlExpression)Visit(expr);
 				}
@@ -1262,11 +1292,7 @@ namespace LinqToDB.SqlProvider
 
 				sc.AddNotEqual(par, new SqlValue(0), DataOptions.LinqOptions.CompareNullsAsValues);
 
-				return new SqlFunction(func.SystemType, "CASE", false, true, sc, new SqlValue(true), new SqlValue(false))
-				{
-					CanBeNull = false,
-					DoNotOptimize = true
-				};
+				return new SqlConditionExpression(sc, new SqlValue(true), new SqlValue(false));
 			}
 
 			return null;

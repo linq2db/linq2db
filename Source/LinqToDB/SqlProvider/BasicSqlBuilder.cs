@@ -14,6 +14,8 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlProvider
 {
+	using System.Linq.Expressions;
+
 	using Common;
 	using Common.Internal;
 	using DataProvider;
@@ -3151,11 +3153,106 @@ namespace LinqToDB.SqlProvider
 					BuildSqlRow((SqlRowExpression) expr, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
 					break;
 
+				case QueryElementType.SqlCase:
+					BuildSqlCaseExpression((SqlCaseExpression)expr);
+					break;
+
+				case QueryElementType.SqlCondition:
+					BuildSqlConditionExpression((SqlConditionExpression)expr);
+					break;
+
 				default:
 					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}
 
 			return StringBuilder;
+		}
+
+		protected virtual void BuildSqlConditionExpression(SqlConditionExpression conditionExpression)
+		{
+			StringBuilder.Append("CASE").AppendLine();
+
+			Indent++;
+
+			AppendIndent().Append("WHEN ");
+
+			var len = StringBuilder.Length;
+
+			BuildPredicate(0, GetPrecedence(conditionExpression.Condition), conditionExpression.Condition);
+
+			if (StringBuilder.Length - len > 50)
+			{
+				StringBuilder.AppendLine();
+				AppendIndent().Append("\tTHEN ");
+			}
+			else
+				StringBuilder.Append(" THEN ");
+
+			BuildExpression(conditionExpression.TrueValue);
+			StringBuilder.AppendLine();
+
+			AppendIndent().Append("ELSE ");
+			BuildExpression(conditionExpression.FalseValue);
+			StringBuilder.AppendLine();
+
+			Indent--;
+
+			AppendIndent().Append("END");
+		}
+
+		protected void BuildSqlConditionExpressionAsFunction(string funcName, SqlConditionExpression conditionExpression)
+		{
+			StringBuilder
+				.Append(funcName)
+				.Append('(');
+
+			BuildPredicate(0, GetPrecedence(conditionExpression.Condition), conditionExpression.Condition);
+
+			StringBuilder.Append(", ");
+			BuildExpression(conditionExpression.TrueValue);
+
+			StringBuilder.Append(", ");
+			BuildExpression(conditionExpression.FalseValue);
+
+			StringBuilder.Append(')');
+		}
+
+		protected virtual void BuildSqlCaseExpression(SqlCaseExpression caseExpression)
+		{
+			StringBuilder.Append("CASE").AppendLine();
+
+			Indent++;
+
+			foreach (var caseItem in caseExpression.Cases)
+			{
+				AppendIndent().Append("WHEN ");
+
+				var len = StringBuilder.Length;
+
+				BuildPredicate(0, GetPrecedence(caseItem.Condition), caseItem.Condition);
+
+				if (StringBuilder.Length - len > 50)
+				{
+					StringBuilder.AppendLine();
+					AppendIndent().Append("\tTHEN ");
+				}
+				else
+					StringBuilder.Append(" THEN ");
+
+				BuildExpression(caseItem.ResultExpression);
+				StringBuilder.AppendLine();
+			}
+
+			if (caseExpression.ElseExpression != null)
+			{
+				AppendIndent().Append("ELSE ");
+				BuildExpression(caseExpression.ElseExpression);
+				StringBuilder.AppendLine();
+			}
+
+			Indent--;
+
+			AppendIndent().Append("END");
 		}
 
 		protected virtual void BuildAnchor(SqlAnchor anchor)

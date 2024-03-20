@@ -236,6 +236,13 @@ namespace LinqToDB.SqlQuery
 					}
 					break;
 				}
+				case QueryElementType.SqlCondition:
+				{
+					var condition = (SqlConditionExpression)expr;
+
+					return GetColumnDescriptor(condition.TrueValue) ??
+					       GetColumnDescriptor(condition.FalseValue);
+				}
 			}
 			return null;
 		}

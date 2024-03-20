@@ -324,7 +324,7 @@ namespace Tests
 				{
 					var mc = (MethodCallExpression)e;
 
-					if (mc.Method.Name == nameof(Methods.LinqToDB.AsSubQuery))
+					if (mc.Method.Name == nameof(Methods.LinqToDB.AsSubQuery) || mc.Method.Name == nameof(LinqExtensions.TagQuery))
 						return new TransformInfo(mc.Arguments[0], false, true);
 
 					if (typeof(ITable<>).IsSameOrParentOf(mc.Type) || typeof(ILoadWithQueryable<,>).IsSameOrParentOf(mc.Type))

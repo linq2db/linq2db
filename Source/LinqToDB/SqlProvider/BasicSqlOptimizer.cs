@@ -1582,6 +1582,24 @@ namespace LinqToDB.SqlProvider
 
 					return IsParameterDependedElement(nullability, searchString.CaseSensitive);
 				}
+				case QueryElementType.SqlCase:
+				{
+					var sqlCase = (SqlCaseExpression)element;
+
+					if (sqlCase.Cases.Any(c => c.Condition.IsMutable()))
+						return true;
+
+					return false;
+				}
+				case QueryElementType.SqlCondition:
+				{
+					var sqlCondition = (SqlConditionExpression)element;
+
+					if (sqlCondition.Condition.IsMutable())
+						return true;
+
+					return false;
+				}
 				case QueryElementType.SqlFunction:
 				{
 					var sqlFunc = (SqlFunction)element;
