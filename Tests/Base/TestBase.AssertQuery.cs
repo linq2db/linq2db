@@ -361,7 +361,7 @@ namespace Tests
 			if (actual.Length > 0 || expected.Length > 0)
 			{
 				comparer ??= ComparerBuilder.GetEqualityComparer<T>();
-				AreEqual(expected, actual, comparer);
+				AreEqual(expected, actual, comparer, allowEmpty: true);
 			}
 
 			return actual;

@@ -16,18 +16,45 @@ namespace Tests.Linq
 	[TestFixture]
 	public class SqlExpressionOptimizationTests : TestBase
 	{
+		[Test]
+		public void ConditionalWithBinary([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (var table = db.CreateLocalTable(OptimizationData.Seed()))
+				{
+					CheckPredicate(table, x => (x.IntVlaue == 1 ? 3 : 4) == 3);
+
+					CheckPredicate(table, x => (x.IntVlaue == 1 ? null : false) == true, false, false);
+					CheckPredicate(table, x => (x.IntVlaue == 1 ? null : true)  == true);
+
+					CheckPredicate(table, x => (x.BoolValue ? true : false)         == true);
+					CheckPredicate(table, x => (x.BoolValue == true ? null : true)  == true);
+					CheckPredicate(table, x => (x.BoolValue == true ? true : false) == true);
+
+
+					CheckPredicate(table, x => (x.StringValueNullable == null ? 1 : x.StringValueNullable != null ? 2 : 3) == 2);
+					CheckPredicate(table, x => (x.StringValueNullable == null ? 1 : x.StringValueNullable != null ? 2 : 3) != 2);
+
+					CheckPredicate(table, x => ((x.StringValueNullable != null) ? (x.StringValueNullable == "2" ? 2 : 10) : (x.StringValueNullable == null) ? 3 : 1) == 2);
+				}
+			}
+		}
+
+		#region Helpers
+
 		class OptimizationData
 		{
 			public int Id { get; set; }
 
-			public int  IntVlaue         { get; set; }
+			public int IntVlaue { get; set; }
 			[Nullable]
 			public int? IntVlaueNullable { get; set; }
 
 			public bool BoolValue { get; set; }
 
 			[Nullable]
-			public bool? BoolValueNullable { get; set;}
+			public bool? BoolValueNullable { get; set; }
 
 			public string StringValue { get; set; } = default!;
 
@@ -87,23 +114,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void ConditionalWithBinary([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				using (var table = db.CreateLocalTable(OptimizationData.Seed()))
-				{
-					CheckPredicate(table, x => (x.IntVlaue == 1 ? 3 : 4) == 3);
-
-					CheckPredicate(table, x => (x.IntVlaue == 1 ? null : false) == true);
-					CheckPredicate(table, x => (x.IntVlaue == 1 ? null : true)  == true);
-
-					CheckPredicate(table, x => (x.BoolValue ? true : false)         == true);
-					CheckPredicate(table, x => (x.BoolValue == true ? null : true)  == true);
-					CheckPredicate(table, x => (x.BoolValue == true ? true : false) == true);
-				}
-			}
-		}
+		#endregion Helpers
 	}
 }

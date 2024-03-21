@@ -76,6 +76,10 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
+			var optimized = OptimizeIsTruePredicate(predicate);
+			if (!ReferenceEquals(optimized, predicate))
+				return Visit(optimized);
+
 			return predicate;
 		}
 
@@ -115,11 +119,6 @@ namespace LinqToDB.SqlProvider
 				var newCaseExpression = new SqlCaseExpression(falseCase.Type, caseItems, falseCase.ElseExpression);
 
 				return Visit(newCaseExpression);
-			}
-
-			if (element.TrueValue is SqlConditionExpression)
-			{
-				// TODO: implement
 			}
 
 			return element;
@@ -978,23 +977,115 @@ namespace LinqToDB.SqlProvider
 				throw new NotImplementedException();
 		}
 
-		ISqlPredicate OptimizeExpExprPredicate(SqlPredicate.ExprExpr expr)
+
+		ISqlPredicate? ProcessComparisonWithCase(ISqlExpression valueExpression, ISqlExpression other, bool isNot)
 		{
-			var unwrapped1 = QueryHelper.UnwrapNullablity(expr.Expr1);
+			var unwrappedOther = QueryHelper.UnwrapNullablity(other);
+			var unwrappedValue = QueryHelper.UnwrapNullablity(valueExpression);
+
+			if (unwrappedOther is SqlConditionExpression sqlConditionExpression)
+			{
+				if (sqlConditionExpression.TrueValue.Equals(unwrappedValue))
+					return sqlConditionExpression.Condition.MakeNot(isNot);
+
+				if (sqlConditionExpression.FalseValue.Equals(unwrappedValue))
+					return sqlConditionExpression.Condition.MakeNot(!isNot);
+
+				if (unwrappedValue.TryEvaluateExpression(_evaluationContext, out var compareValue))
+				{
+					if (sqlConditionExpression.TrueValue.TryEvaluateExpression(_evaluationContext, out var trueValue))
+					{
+						var isEqual = object.Equals(compareValue, trueValue);
+						if (isEqual)
+							return sqlConditionExpression.Condition.MakeNot(isNot);
+
+						if (trueValue is null)
+						{
+							return new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, isNot ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal, valueExpression, null);
+						}
+					}
+
+					/*if (condition1.FalseValue.TryEvaluateExpression(_evaluationContext, out var falseValue))
+					{
+						var isEqual = object.Equals(compareValue, falseValue);
+						if (isEqual)
+							return condition1.Condition;
+					}*/
+				}
+			}
+			else if (unwrappedOther is SqlCaseExpression sqlCaseExpression)
+			{
+				var foundIndex = sqlCaseExpression._cases.FindIndex(c => c.ResultExpression.Equals(unwrappedValue));
+
+				if (foundIndex < 0)
+				{
+					if (sqlCaseExpression.ElseExpression != null && sqlCaseExpression.ElseExpression.Equals(unwrappedValue))
+					{
+						foundIndex = sqlCaseExpression._cases.Count;
+					}
+				}
+
+				if (foundIndex >= 0)
+				{
+					ISqlPredicate predicate;
+
+					var notMatch = new SqlSearchCondition(true, sqlCaseExpression._cases.Take(1).Select(c => c.Condition)).MakeNot();
+
+					if (foundIndex < sqlCaseExpression._cases.Count)
+						predicate = new SqlSearchCondition(false).Add(notMatch).Add(sqlCaseExpression._cases[foundIndex].Condition);
+					else
+						predicate = notMatch;
+
+					return predicate.MakeNot(isNot);
+				}
+
+				// nothing matched, decide to return predicate
+				if (unwrappedValue.TryEvaluateExpression(_evaluationContext, out _))
+				{
+					return SqlPredicate.False;
+				}
+			}
+
+			return null;
+		}
+
+		ISqlPredicate OptimizeIsTruePredicate(SqlPredicate.IsTrue isTrue)
+		{
+			if (isTrue.Expr1.TryEvaluateExpression(_evaluationContext, out var result) && result is bool boolValue)
+			{
+				return SqlPredicate.MakeBool(boolValue == isTrue.IsNot);
+			}
+
+			if (isTrue.Expr1 is SqlConditionExpression or SqlCaseExpression)
+			{
+				if (!isTrue.IsNot)
+				{
+					var predicate = ProcessComparisonWithCase(isTrue.TrueValue, isTrue.Expr1, false);
+					if (predicate != null)
+						return predicate.MakeNot(isTrue.IsNot);
+				}
+			}
+
+			return isTrue;
+		}
+
+		ISqlPredicate OptimizeExpExprPredicate(SqlPredicate.ExprExpr exprExpr)
+		{
+			var unwrapped1 = QueryHelper.UnwrapNullablity(exprExpr.Expr1);
 
 			if (unwrapped1 is SqlCompareToExpression compareTo1)
 			{
-				if (expr.Expr2.TryEvaluateExpression(_evaluationContext, out var result) && result is int intValue)
+				if (exprExpr.Expr2.TryEvaluateExpression(_evaluationContext, out var result) && result is int intValue)
 				{
 					SqlPredicate.Operator? current = null;
 
-					if (Compare(1, intValue, expr.Operator))
+					if (Compare(1, intValue, exprExpr.Operator))
 						CombineOperator(ref current, SqlPredicate.Operator.Greater);
 
-					if (Compare(0, intValue, expr.Operator))
+					if (Compare(0, intValue, exprExpr.Operator))
 						CombineOperator(ref current, SqlPredicate.Operator.Equal);
 
-					if (Compare(-1, intValue, expr.Operator))
+					if (Compare(-1, intValue, exprExpr.Operator))
 						CombineOperator(ref current, SqlPredicate.Operator.Less);
 
 					if (current == null)
@@ -1004,21 +1095,21 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			var unwrapped2 = QueryHelper.UnwrapNullablity(expr.Expr2);
+			var unwrapped2 = QueryHelper.UnwrapNullablity(exprExpr.Expr2);
 
 			if (unwrapped2 is SqlCompareToExpression compareTo2)
 			{
-				if (expr.Expr1.TryEvaluateExpression(_evaluationContext, out var result) && result is int intValue)
+				if (exprExpr.Expr1.TryEvaluateExpression(_evaluationContext, out var result) && result is int intValue)
 				{
 					SqlPredicate.Operator? current = null;
 
-					if (Compare(1, intValue, expr.Operator))
+					if (Compare(1, intValue, exprExpr.Operator))
 						CombineOperator(ref current, SqlPredicate.Operator.Less);
 
-					if (Compare(0, intValue, expr.Operator))
+					if (Compare(0, intValue, exprExpr.Operator))
 						CombineOperator(ref current, SqlPredicate.Operator.Equal);
 
-					if (Compare(-1, intValue, expr.Operator))
+					if (Compare(-1, intValue, exprExpr.Operator))
 						CombineOperator(ref current, SqlPredicate.Operator.Greater);
 
 					if (current == null)
@@ -1028,58 +1119,24 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			if (expr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
+			if (exprExpr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
-				var isNot = expr.Operator == SqlPredicate.Operator.NotEqual;
+				var isNot = exprExpr.Operator == SqlPredicate.Operator.NotEqual;
 
-				if (unwrapped1 is SqlConditionExpression condition1)
-				{
-					if (condition1.TrueValue.Equals(unwrapped2))
-						return condition1.Condition.MakeNot(isNot);
+				var processed = ProcessComparisonWithCase(exprExpr.Expr1, exprExpr.Expr2, isNot)
+				                ?? ProcessComparisonWithCase(exprExpr.Expr2, exprExpr.Expr1, isNot);
 
-					if (condition1.FalseValue.Equals(unwrapped2))
-						return condition1.Condition.MakeNot(!isNot);
-
-					if (unwrapped2.TryEvaluateExpression(_evaluationContext, out var compareValue))
-					{
-						if (condition1.TrueValue.TryEvaluateExpression(_evaluationContext, out var trueValue))
-						{
-							var isEqual = object.Equals(compareValue, trueValue);
-							if (isEqual)
-								return condition1.Condition.MakeNot(isNot);
-
-							if (trueValue is null)
-							{
-								return new SqlPredicate.ExprExpr(condition1.FalseValue, expr.Operator, expr.Expr2, null);
-							}
-						}
-
-						/*if (condition1.FalseValue.TryEvaluateExpression(_evaluationContext, out var falseValue))
-						{
-							var isEqual = object.Equals(compareValue, falseValue);
-							if (isEqual)
-								return condition1.Condition;
-						}*/
-					}
-				}
-
-				if (unwrapped2 is SqlConditionExpression condition2)
-				{
-					if (condition2.TrueValue.Equals(unwrapped1))
-						return condition2.Condition.MakeNot(isNot);
-
-					if (condition2.FalseValue.Equals(unwrapped1))
-						return condition2.Condition.MakeNot(!isNot);
-				}
+				if (processed != null)
+					return processed;
 			}
 
 			if (!_nullabilityContext.IsEmpty                   &&
-			    !expr.Expr1.CanBeNullable(_nullabilityContext) &&
-			    !expr.Expr2.CanBeNullable(_nullabilityContext) &&
-			    expr.Expr1.SystemType.IsSignedType()           &&
-			    expr.Expr2.SystemType.IsSignedType())
+			    !exprExpr.Expr1.CanBeNullable(_nullabilityContext) &&
+			    !exprExpr.Expr2.CanBeNullable(_nullabilityContext) &&
+			    exprExpr.Expr1.SystemType.IsSignedType()           &&
+			    exprExpr.Expr2.SystemType.IsSignedType())
 			{
-				var newExpr = expr switch
+				var newExpr = exprExpr switch
 				{
 					(SqlBinaryExpression binary, var op, var v, _) when v.CanBeEvaluated(_evaluationContext) =>
 
@@ -1120,10 +1177,10 @@ namespace LinqToDB.SqlProvider
 					_ => null
 				};
 
-				expr = newExpr ?? expr;
+				exprExpr = newExpr ?? exprExpr;
 			}
 
-			return expr;
+			return exprExpr;
 		}
 
 		#endregion
