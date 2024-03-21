@@ -13,8 +13,6 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override bool CanCompareSearchConditions => true;
-
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (element.Operation)

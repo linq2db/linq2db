@@ -99,8 +99,9 @@
 		SqlQueryExtension,
 
 		SqlCoalesce,
-		SqlConditional,
+		SqlCondition,
 		SqlCase,
 		SqlSimpleCase,
+		CompareTo,
 	}
 }

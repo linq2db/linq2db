@@ -440,7 +440,7 @@ namespace LinqToDB.SqlProvider
 		/// Indicates that provider supports boolean type.
 		/// </summary>
 		[DataMember(Order =  51)]
-		public bool SupportsBooleanType { get; set; }
+		public bool SupportsBooleanComparison { get; set; }
 
 		/// <summary>
 		/// Provider supports nested joins
@@ -527,7 +527,7 @@ namespace LinqToDB.SqlProvider
 				^ IsMultiTablesSupportsJoins                           .GetHashCode()
 				^ IsCTESupportsOrdering                                .GetHashCode()
 				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
-				^ SupportsBooleanType                                  .GetHashCode()
+				^ SupportsBooleanComparison                            .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -583,7 +583,7 @@ namespace LinqToDB.SqlProvider
 				&& IsMultiTablesSupportsJoins                            == other.IsMultiTablesSupportsJoins
 				&& IsCTESupportsOrdering                                 == other.IsCTESupportsOrdering
 				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
-				&& SupportsBooleanType                                   == other.SupportsBooleanType
+				&& SupportsBooleanComparison                             == other.SupportsBooleanComparison
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

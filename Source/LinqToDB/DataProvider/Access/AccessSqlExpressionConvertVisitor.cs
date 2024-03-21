@@ -13,8 +13,6 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		public override bool CanCompareSearchConditions => true;
-
 		protected static string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
 
 		public override bool LikeIsEscapeSupported => false;
@@ -119,24 +117,6 @@ namespace LinqToDB.DataProvider.Access
 			return result;
 		}
 
-		SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
-		{
-			var len = parameters.Length - start;
-
-			if (len < 2)
-				throw new SqlException("CASE statement is not supported by the {0}.", GetType().Name);
-
-			return new SqlFunction(systemType, "IIF",
-				parameters[start],
-				parameters[start + 1],
-				len switch
-				{
-					2 => parameters[start                          + 1],
-					3 => parameters[start                          + 2],
-					_ => ConvertCase(systemType, parameters, start + 2)
-				});
-		}
-
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			switch (func.Name)
@@ -160,7 +140,6 @@ namespace LinqToDB.DataProvider.Access
 
 					return new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0]);
 				}
-				case "CASE"      : return ConvertCase(func.SystemType, func.Parameters, 0); 
 				case "CharIndex" :
 					return func.Parameters.Length == 2?
 						new SqlFunction(func.SystemType, "InStr", new SqlValue(1),    func.Parameters[1], func.Parameters[0], new SqlValue(1)):

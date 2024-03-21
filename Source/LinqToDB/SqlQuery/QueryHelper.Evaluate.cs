@@ -264,30 +264,6 @@ namespace LinqToDB.SqlQuery
 
 					switch (function.Name)
 					{
-						case "CASE":
-						{
-							if (function.Parameters.Length != 3)
-							{
-								return false;
-							}
-
-							if (!function.Parameters[0]
-								.TryEvaluateExpression(context, out var cond))
-								return false;
-
-							if (!(cond is bool))
-							{
-								return false;
-							}
-
-							if ((bool)cond!)
-								return function.Parameters[1]
-									.TryEvaluateExpression(context, out result);
-							else
-								return function.Parameters[2]
-									.TryEvaluateExpression(context, out result);
-						}
-
 						case "Length":
 						{
 							if (function.Parameters[0]
@@ -384,6 +360,45 @@ namespace LinqToDB.SqlQuery
 					return false;
 				}
 
+				case QueryElementType.SqlCase:
+				{
+					var caseExpr = (SqlCaseExpression)expr;
+
+					foreach (var caseItem in caseExpr.Cases)
+					{
+						if (caseItem.Condition.TryEvaluateExpression(context, out var evaluatedCondition) && evaluatedCondition is bool boolValue)
+						{
+							if (boolValue)
+							{
+								if (caseItem.ResultExpression.TryEvaluateExpression(context, out var resultValue))
+								{
+									result = resultValue;
+									return true;
+								}
+							}
+						}
+						else
+						{
+							return false;
+						}
+					}
+
+					if (caseExpr.ElseExpression == null)
+					{
+						result = null;
+						return true;
+					}
+
+					if (caseExpr.ElseExpression.TryEvaluateExpression(context, out var elseValue))
+					{
+						result = elseValue;
+						return true;
+					}
+
+					return false;
+				}
+
+
 				case QueryElementType.ExprPredicate      :
 				{
 					var predicate = (SqlPredicate.Expr)expr;
@@ -416,6 +431,54 @@ namespace LinqToDB.SqlQuery
 						{
 							result = evaluated;
 							return true;
+						}
+					}
+
+					return false;
+				}
+
+				case QueryElementType.CompareTo:
+				{
+					var compareTo = (SqlCompareToExpression)expr;
+					if (!compareTo.Expression1.TryEvaluateExpression(context, out var value1) || !compareTo.Expression2.TryEvaluateExpression(context, out var value2))
+						return false;
+
+					if (value1 == null || value2 == null)
+					{
+						result = false;
+						return true;
+					}
+
+					if (value1 is IComparable comp1 && value2 is IComparable comp2)
+					{
+						result = comp1.CompareTo(comp2);
+						return true;
+					}
+
+					return false;
+				}
+
+				case QueryElementType.SqlCondition:
+				{
+					var compareTo = (SqlConditionExpression)expr;
+
+					if (compareTo.Condition.TryEvaluateExpression(context, out var conditionValue) && conditionValue is bool boolCondition)
+					{
+						if (boolCondition)
+						{
+							if (compareTo.TrueValue.TryEvaluateExpression(context, out var trueValue))
+							{
+								result = trueValue;
+								return true;
+							}
+						}
+						else
+						{
+							if (compareTo.FalseValue.TryEvaluateExpression(context, out var falseValue))
+							{
+								result = falseValue;
+								return true;
+							}
 						}
 					}
 

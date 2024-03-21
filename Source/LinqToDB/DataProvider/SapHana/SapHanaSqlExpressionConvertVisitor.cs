@@ -20,54 +20,6 @@ namespace LinqToDB.DataProvider.SapHana
 
 		#endregion
 
-		//this is for Tests.Linq.Common.CoalesceLike test
-		static SqlFunction ConvertCase(SqlFunction? func, Type systemType, ISqlExpression[] parameters, int start)
-		{
-			var len  = parameters.Length - start;
-			var cond = parameters[start];
-
-			if (start == 0 && SqlExpression.NeedsEqual(cond))
-			{
-				cond = new SqlSearchCondition(false).AddEqual(cond, new SqlValue(1), false);
-			}
-
-			const string name = "CASE";
-
-			if (len == 2)
-			{
-				if (func != null && start == 0 && ReferenceEquals(parameters[start], cond))
-					return func;
-
-				return new (systemType, name, cond, parameters[start + 1]);
-			}
-
-			if (len == 3)
-			{
-				if (func != null && start == 0 && ReferenceEquals(parameters[start], cond))
-					return func;
-
-				return new (systemType, name, cond, parameters[start + 1], parameters[start + 2]);
-			}
-
-			return new SqlFunction(systemType, name,
-				cond,
-				parameters[start                                + 1],
-				ConvertCase(null, systemType, parameters, start + 2));
-		}
-
-		//this is for Tests.Linq.Common.CoalesceLike test
-		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func, false);
-			switch (func.Name)
-			{
-				case "CASE": func = ConvertCase(func, func.SystemType, func.Parameters, 0);
-					break;
-			}
-
-			return base.ConvertSqlFunction(func);
-		}
-
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (element.Operation)

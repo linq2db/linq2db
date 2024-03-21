@@ -12,8 +12,6 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		public override bool CanCompareSearchConditions => true;
-
 		protected override ISqlExpression ConvertConversion(SqlFunction func)
 		{
 			var to = func.Parameters[0];

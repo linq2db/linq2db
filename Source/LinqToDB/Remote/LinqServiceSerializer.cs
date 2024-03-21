@@ -1633,11 +1633,48 @@ namespace LinqToDB.Remote
 						Append(ext.BuilderType);
 						Append(ext.Arguments.Count);
 
-							foreach (var argument in ext.Arguments)
-							{
-								Append(argument.Key);
-								Append(argument.Value);
-							}
+						foreach (var argument in ext.Arguments)
+						{
+							Append(argument.Key);
+							Append(argument.Value);
+						}
+
+						break;
+					}
+
+					case QueryElementType.SqlCondition:
+					{
+						var elem = (SqlConditionExpression)e;
+						Append(elem.Condition);
+						Append(elem.TrueValue);
+						Append(elem.FalseValue);
+						break;
+					}
+
+					case QueryElementType.SqlCase:
+					{
+						var elem = (SqlCaseExpression)e;
+
+						Append(elem.Type);
+						Append(elem.Cases.Count);
+
+						foreach (var caseItem in elem.Cases)
+						{
+							Append(caseItem.Condition);
+							Append(caseItem.ResultExpression);
+						}
+
+						Append(elem.ElseExpression);
+
+						break;
+					}
+
+					case QueryElementType.CompareTo:
+					{
+						var elem = (SqlCompareToExpression)e;
+
+						Append(elem.Expression1);
+						Append(elem.Expression2);
 
 						break;
 					}
@@ -2667,6 +2704,49 @@ namespace LinqToDB.Remote
 							};
 							break;
 						}
+
+					case QueryElementType.SqlCondition:
+					{
+						var condition = Read<ISqlPredicate>();
+						var trueValue = Read<ISqlExpression>();
+						var falseValue = Read<ISqlExpression>();
+
+						obj = new SqlConditionExpression(condition!, trueValue!, falseValue!);
+
+						break;
+					}
+
+					case QueryElementType.SqlCase:
+					{
+						var dbDataType = ReadDbDataType();
+						var casesCount = ReadInt();
+
+						var cases = new List<SqlCaseExpression.CaseItem>(casesCount);
+
+						for (int i = 0; i < casesCount; i++)
+						{
+							var condition = Read<ISqlPredicate>();
+							var resultExpression = Read<ISqlExpression>();
+
+							cases.Add(new SqlCaseExpression.CaseItem(condition!, resultExpression!));
+						}
+
+						var elseExpression = Read<ISqlExpression>();
+
+						obj = new SqlCaseExpression(dbDataType, cases, elseExpression);
+
+						break;
+					}
+
+					case QueryElementType.CompareTo:
+					{
+						var expr1 = Read<ISqlExpression>();
+						var expr2 = Read<ISqlExpression>();
+
+						obj = new SqlCompareToExpression(expr1!, expr2!);
+
+						break;
+					}
 
 					default:
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");

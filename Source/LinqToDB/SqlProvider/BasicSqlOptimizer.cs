@@ -1582,21 +1582,29 @@ namespace LinqToDB.SqlProvider
 
 					return IsParameterDependedElement(nullability, searchString.CaseSensitive);
 				}
+				case QueryElementType.SqlCase:
+				{
+					var sqlCase = (SqlCaseExpression)element;
+
+					if (sqlCase.Cases.Any(c => c.Condition.CanBeEvaluated(true)))
+						return true;
+
+					return false;
+				}
+				case QueryElementType.SqlCondition:
+				{
+					var sqlCondition = (SqlConditionExpression)element;
+
+					if (sqlCondition.Condition.CanBeEvaluated(true))
+						return true;
+
+					return false;
+				}
 				case QueryElementType.SqlFunction:
 				{
 					var sqlFunc = (SqlFunction)element;
 					switch (sqlFunc.Name)
 					{
-						case "CASE":
-						{
-							for (int i = 0; i < sqlFunc.Parameters.Length - 2; i += 2)
-							{
-								var testParam = sqlFunc.Parameters[i];
-								if (testParam.CanBeEvaluated(true))
-									return true;
-							}
-							break;
-						}
 						case "Length":
 						{
 							if (sqlFunc.Parameters[0].CanBeEvaluated(true))

@@ -13,7 +13,6 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		protected override bool SupportsNullInColumn => false;
-		public override bool CanCompareSearchConditions => true;
 
 		static string[] DB2LikeCharactersToEscape = {"%", "_"};
 
@@ -65,8 +64,6 @@ namespace LinqToDB.DataProvider.DB2
 				case "NChar"         :
 				case "NVarChar"      : return new SqlFunction(func.SystemType, "Char",      func.Parameters);
 			}
-
-			func = ConvertFunctionParameters(func, false);
 
 			return base.ConvertSqlFunction(func);
 		}

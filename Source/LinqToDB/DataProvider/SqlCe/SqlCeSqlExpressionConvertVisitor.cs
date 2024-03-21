@@ -55,8 +55,6 @@ namespace LinqToDB.DataProvider.SqlCe
 				}
 			}
 
-			func = ConvertFunctionParameters(func, false);
-
 			return base.ConvertSqlFunction(func);
 		}
 

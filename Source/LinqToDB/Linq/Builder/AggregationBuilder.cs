@@ -532,7 +532,7 @@ namespace LinqToDB.Linq.Builder
 								if (filterSqlExpression != null)
 #pragma warning restore CA1508
 								{
-									sql = new SqlFunction(returnType, "CASE", filterSqlExpression, new SqlValue(1), new SqlValue(returnType, null));
+									sql = new SqlConditionExpression(filterSqlExpression, new SqlValue(1), new SqlValue(returnType, null));
 								}								
 								else
 								{
@@ -562,7 +562,7 @@ namespace LinqToDB.Linq.Builder
 							if (filterSqlExpression != null)
 #pragma warning restore CA1508
 							{
-								sql = new SqlFunction(returnType, "CASE", filterSqlExpression, valueSqlExpression!, new SqlValue(returnType, null));
+								sql = new SqlConditionExpression(filterSqlExpression, valueSqlExpression!, new SqlValue(returnType, null));
 							}
 							else
 							{

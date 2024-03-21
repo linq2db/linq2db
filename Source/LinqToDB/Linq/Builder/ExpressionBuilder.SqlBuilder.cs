@@ -118,10 +118,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (sql.Select.TakeValue != null)
 			{
-				expr = new SqlFunction(
-					typeof(int),
-					"CASE",
-					new SqlBinaryExpression(typeof(bool), sql.Select.TakeValue, "<", expr, Precedence.Comparison),
+				expr = new SqlConditionExpression(
+					new SqlPredicate.ExprExpr(sql.Select.TakeValue, SqlPredicate.Operator.Less, expr, null),
 					sql.Select.TakeValue,
 					expr);
 			}
@@ -825,38 +823,18 @@ namespace LinqToDB.Linq.Builder
 						trueExpr is SqlPlaceholderExpression &&
 						falseExpr is SqlPlaceholderExpression)
 					{
-						var testSql  = (SqlPlaceholderExpression)ConvertToSqlExpr(context, e.Test,    flags, columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
+						var testPredicate  = ConvertPredicate(context, e.Test, flags, out var error);
+
+						if (testPredicate is null)
+						{
+							return SqlErrorExpression.EnsureError(error ?? expression, e.Type);
+						}
+
 						var trueSql  = (SqlPlaceholderExpression)ConvertToSqlExpr(context, e.IfTrue,  flags, columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
 						var falseSql = (SqlPlaceholderExpression)ConvertToSqlExpr(context, e.IfFalse, flags, columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
 
-						if (testSql.Sql is SqlSearchCondition sc)
-						{
-							if (sc.Predicates.Count == 1                       &&
-								sc.Predicates[0] is SqlPredicate.IsNull isnull && 
-								isnull.IsNot)
-							{
-								if (QueryHelper.IsNullValue(falseSql.Sql) && trueSql.Sql.Equals(isnull.Expr1))
-									return CreatePlaceholder(context, isnull.Expr1, expression);
-							}
+						return CreatePlaceholder(context, new SqlConditionExpression(testPredicate, trueSql.Sql, falseSql.Sql), expression, alias: alias);
 
-						}
-
-						if (QueryHelper.UnwrapExpression(falseSql.Sql, checkNullability: false) is SqlFunction c && c.Name == "CASE")
-						{
-							var parms = new ISqlExpression[c.Parameters.Length + 2];
-
-							parms[0] = testSql.Sql;
-							parms[1] = trueSql.Sql;
-							c.Parameters.CopyTo(parms, 2);
-
-							return CreatePlaceholder(context,
-								new SqlFunction(e.Type, "CASE",
-									parms), expression, alias : alias);
-						}
-
-						return CreatePlaceholder(context,
-							new SqlFunction(e.Type, "CASE",
-								testSql.Sql, trueSql.Sql, falseSql.Sql), expression, alias : alias);
 					}
 
 					return e;
@@ -1084,11 +1062,30 @@ namespace LinqToDB.Linq.Builder
 					if (d)
 						ps[^1] = ConvertToSql(context, switchExpression.DefaultBody!);
 
-					var nullability = NullabilityContext.GetContext(context?.SelectQuery);
+					//TODO: Convert everything to SqlSimpleCaseExpression
+					var cases = new List<SqlCaseExpression.CaseItem>(ps.Length);
 
-					var caseFunc = new SqlFunction(switchExpression.Type, "CASE", ps) { CanBeNull = ps.Any(p => p.CanBeNullable(nullability)) };
+					for (var i = 0; i < ps.Length; i += 2)
+					{
+						var caseExpr = ps[i];
+						var value    = ps[i + 1];
 
-					return CreatePlaceholder(context, caseFunc, expression, alias : alias);
+						if (caseExpr is SqlSearchCondition sc)
+						{
+							cases.Add(new SqlCaseExpression.CaseItem(sc, value));
+						}
+						else
+							throw new InvalidOperationException();
+					}
+
+					ISqlExpression? defaultExpression = null;
+
+					if (d)
+						defaultExpression = ps[^1];
+
+					var caseExpression = new SqlCaseExpression(MappingSchema.GetDataType(switchExpression.Type).Type, cases, defaultExpression);
+
+					return CreatePlaceholder(context, caseExpression, expression, alias : alias);
 				}
 
 				/*default:
@@ -2042,36 +2039,22 @@ namespace LinqToDB.Linq.Builder
 				? op == SqlPredicate.Operator.Equal
 				: (bool?)null;
 
+
+			// TODO: maybe remove
 			if (l is SqlSearchCondition lsc)
 			{
 				if (isEquality != null & IsBooleanConstant(rightExpr, out var boolRight) && boolRight != null)
 				{
 					predicate = lsc.MakeNot(boolRight != isEquality);
 				}
-				else
-				{
-					l = new SqlFunction(typeof(bool), "CASE", l, new SqlValue(true), new SqlValue(false))
-					{
-						CanBeNull = false, DoNotOptimize = true
-					};
-					lOriginal = l;
-				}
 			}
 
+			// TODO: maybe remove
 			if (r is SqlSearchCondition rsc)
 			{
 				if (isEquality != null & IsBooleanConstant(rightExpr, out var boolLeft) && boolLeft != null)
 				{
 					predicate = rsc.MakeNot(boolLeft != isEquality);
-				}
-				else
-				{
-					r = new SqlFunction(typeof(bool), "CASE", r, new SqlValue(true), new SqlValue(false))
-					{
-						CanBeNull     = false,
-						DoNotOptimize = true
-					};
-					rOriginal = r;
 				}
 			}
 

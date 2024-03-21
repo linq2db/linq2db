@@ -1906,13 +1906,7 @@ namespace LinqToDB.Linq
 				var str   = builder.GetExpression("str");
 				var value = builder.GetExpression("value");
 
-				var compareNullsAsValues = builder.DataContext.Options.LinqOptions.CompareNullsAsValues;
-
-				builder.ResultExpression = new SqlFunction(typeof(int), "CASE",
-					new SqlSearchCondition().AddGreater(str, value, compareNullsAsValues), new SqlValue(1),
-					new SqlSearchCondition().AddEqual(str, value, compareNullsAsValues),
-					new SqlValue(0),
-					new SqlValue(-1)) { CanBeNull = false };
+				builder.ResultExpression = new SqlCompareToExpression(str, value);
 			}
 		}
 

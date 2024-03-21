@@ -125,8 +125,10 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlInlinedExpression      => VisitSqlInlinedSqlExpression   ((SqlInlinedSqlExpression   )element),
 				QueryElementType.SqlInlinedToSqlExpression => VisitSqlInlinedToSqlExpression ((SqlInlinedToSqlExpression )element),
 				QueryElementType.SqlQueryExtension         => VisitSqlQueryExtension         ((SqlQueryExtension         )element),
-				QueryElementType.SqlConditional            => VisitSqlConditionalExpression  ((SqlConditionExpression    )element),
+				QueryElementType.SqlCondition              => VisitSqlConditionExpression    ((SqlConditionExpression    )element),
 				QueryElementType.SqlCoalesce               => VisitSqlCoalesceExpression     ((SqlCoalesceExpression     )element),
+				QueryElementType.SqlCase                   => VisitSqlCaseExpression         ((SqlCaseExpression         )element),
+				QueryElementType.CompareTo                 => VisitSqlCompareToExpression    ((SqlCompareToExpression    )element),
 
 				_ => throw new InvalidOperationException()
 			};
@@ -2957,13 +2959,13 @@ namespace LinqToDB.SqlQuery
 			return extension;
 		}
 
-		protected virtual IQueryElement VisitSqlConditionalExpression(SqlConditionExpression element)
+		protected virtual IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
 				case VisitMode.ReadOnly:
 				{
-					Visit(element.Predicate);
+					Visit(element.Condition);
 					Visit(element.TrueValue);
 					Visit(element.FalseValue);
 
@@ -2972,7 +2974,7 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.Modify:
 				{
 					element.Modify(
-						(ISqlPredicate)Visit(element.Predicate),
+						(ISqlPredicate)Visit(element.Condition),
 						(ISqlExpression)Visit(element.TrueValue),
 						(ISqlExpression)Visit(element.FalseValue)
 					);
@@ -2981,12 +2983,12 @@ namespace LinqToDB.SqlQuery
 				}
 				case VisitMode.Transform:
 				{
-					var predicate  = (ISqlPredicate)Visit(element.Predicate);
+					var predicate  = (ISqlPredicate)Visit(element.Condition);
 					var trueValue  = (ISqlExpression)Visit(element.TrueValue);
 					var falseValue = (ISqlExpression)Visit(element.FalseValue);
 
 					if (ShouldReplace(element)                         || 
-					    element.Predicate != predicate                 || 
+					    element.Condition != predicate                 || 
 					    !ReferenceEquals(element.TrueValue, trueValue) || 
 					    !ReferenceEquals(element.FalseValue, falseValue))
 					{
@@ -3026,6 +3028,90 @@ namespace LinqToDB.SqlQuery
 					    !ReferenceEquals(element.Expressions, expressions))
 					{
 						return NotifyReplaced(new SqlCoalesceExpression(element.Expressions != expressions ? expressions : expressions.ToArray()), element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected virtual SqlCaseExpression.CaseItem VisitCaseItem(SqlCaseExpression.CaseItem element)
+		{
+			return element.Update((ISqlPredicate)Visit(element.Condition), (ISqlExpression)Visit(element.ResultExpression));
+		}
+
+		protected virtual IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitElements(element._cases, VisitMode.ReadOnly, VisitCaseItem);
+					Visit(element.ElseExpression);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					var newElements = VisitElements(element._cases, VisitMode.Modify, VisitCaseItem);
+					var defaultExpr = (ISqlExpression?)Visit(element.ElseExpression);
+
+					element.Modify(newElements, defaultExpr);
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var newElements = VisitElements(element._cases, VisitMode.Transform, VisitCaseItem);
+					var elseExpr = (ISqlExpression?)Visit(element.ElseExpression);
+
+					if (ShouldReplace(element)                        || 
+					    !ReferenceEquals(element._cases, newElements) ||
+					    !ReferenceEquals(element.ElseExpression, elseExpr))
+					{
+						return NotifyReplaced(new SqlCaseExpression(element.Type, element._cases != newElements ? newElements : element._cases.ToList(), elseExpr), element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected virtual IQueryElement VisitSqlCompareToExpression(SqlCompareToExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Expression1);
+					Visit(element.Expression2);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Expression1), (ISqlExpression)Visit(element.Expression2));
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var expression1 = (ISqlExpression)Visit(element.Expression1);
+					var expression2 = (ISqlExpression)Visit(element.Expression2);
+
+					if (ShouldReplace(element)                             || 
+					    !ReferenceEquals(element.Expression1, expression1) ||
+					    !ReferenceEquals(element.Expression2, expression2))
+					{
+						return NotifyReplaced(new SqlCompareToExpression(expression1, expression2), element);
 					}
 
 					break;
@@ -3224,7 +3310,7 @@ namespace LinqToDB.SqlQuery
 		/// </returns>
 		[return: NotNullIfNotNull(nameof(list1))]
 		protected List<T>? VisitElements<T>(List<T>? list1, VisitMode mode, Func<T, T> transformFunc)
-			where T : class, IQueryElement
+			where T : class
 		{
 			if (list1 == null)
 				return null;

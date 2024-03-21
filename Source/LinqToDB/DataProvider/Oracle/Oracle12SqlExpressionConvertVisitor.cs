@@ -10,8 +10,6 @@
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			func = ConvertFunctionParameters(func, false);
-
 			switch (func.Name)
 			{
 				case PseudoFunctions.TRY_CONVERT:

@@ -8,9 +8,9 @@ namespace LinqToDB.SqlQuery
 
 	public class SqlCaseExpression : SqlExpressionBase
 	{
-		public class CaseExpression
+		public class CaseItem
 		{
-			public CaseExpression(ISqlPredicate condition, ISqlExpression resultExpression)
+			public CaseItem(ISqlPredicate condition, ISqlExpression resultExpression)
 			{
 				Condition        = condition;
 				ResultExpression = resultExpression;
@@ -22,30 +22,31 @@ namespace LinqToDB.SqlQuery
 				ResultExpression = resultExpression;
 			}
 
-			public CaseExpression Update(ISqlPredicate condition, ISqlExpression resultExpression)
+			public CaseItem Update(ISqlPredicate condition, ISqlExpression resultExpression)
 			{
 				if (ReferenceEquals(Condition, condition) && ReferenceEquals(ResultExpression, resultExpression))
 					return this;
 
-				return new CaseExpression(condition, resultExpression);
+				return new CaseItem(condition, resultExpression);
 			}
 
 			public ISqlPredicate  Condition        { get; set; }
 			public ISqlExpression ResultExpression { get; set; }
 		}
 
-		public SqlCaseExpression(DbDataType dataType, IReadOnlyCollection<CaseExpression> cases, ISqlExpression? elseExpression)
+		public SqlCaseExpression(DbDataType dataType, IReadOnlyCollection<CaseItem> cases, ISqlExpression? elseExpression)
 		{
 			_dataType      = dataType;
 			_cases         = cases.ToList();
 			ElseExpression = elseExpression;
 		}
 
-		internal List<CaseExpression> _cases;
-		readonly DbDataType           _dataType;
+		internal List<CaseItem> _cases;
+		readonly DbDataType     _dataType;
 
-		public ISqlExpression?               ElseExpression { get; private set; }
-		public IReadOnlyList<CaseExpression> Cases          => _cases;
+		public ISqlExpression?         ElseExpression { get; private set; }
+		public IReadOnlyList<CaseItem> Cases          => _cases;
+		public DbDataType              Type           => _dataType;
 
 		public override int              Precedence  => SqlQuery.Precedence.Primary;
 		public override Type?            SystemType  => _dataType.SystemType;
@@ -131,9 +132,14 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		public void Modify(List<CaseExpression> cases, ISqlExpression? resultExpression)
+		public void Modify(List<CaseItem> cases, ISqlExpression? resultExpression)
 		{
 			_cases         = cases;
+			ElseExpression = resultExpression;
+		}
+
+		public void Modify(ISqlExpression? resultExpression)
+		{
 			ElseExpression = resultExpression;
 		}
 	}
