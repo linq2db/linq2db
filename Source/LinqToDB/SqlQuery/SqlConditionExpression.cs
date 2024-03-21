@@ -15,7 +15,7 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression TrueValue  { get; private set; }
 		public ISqlExpression FalseValue { get; private set; }
 
-		public override int                    Precedence  => SqlQuery.Precedence.LogicalDisjunction;
+		public override int                    Precedence  => SqlQuery.Precedence.Primary;
 		public override Type?                  SystemType  => TrueValue.SystemType;
 		public override QueryElementType       ElementType => QueryElementType.SqlCondition;
 
