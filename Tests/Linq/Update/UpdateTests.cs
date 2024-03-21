@@ -792,8 +792,8 @@ namespace Tests.xUpdate
 		[Table("LinqDataTypes")]
 		sealed class Table1
 		{
-			[Column] public int  ID;
-			[Column] public bool BoolValue;
+			[Column] public int  ID        { get; set; }
+			[Column] public bool BoolValue { get; set; }
 
 			[Association(ThisKey = "ID", OtherKey = "ParentID", CanBeNull = false)]
 			public List<Table2> Tables2 = null!;
@@ -802,8 +802,8 @@ namespace Tests.xUpdate
 		[Table("Parent")]
 		sealed class Table2
 		{
-			[Column] public int  ParentID;
-			[Column] public int? Value1;
+			[Column] public int  ParentID { get; set; }
+			[Column] public int? Value1   { get; set; }
 
 			[Association(ThisKey = "ParentID", OtherKey = "ID", CanBeNull = false)]
 			public Table1 Table1 = null!;
