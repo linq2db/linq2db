@@ -950,6 +950,47 @@ namespace LinqToDB.SqlProvider
 			throw new InvalidOperationException();
 		}
 
+		static bool Compare(object? value1, object? value2, SqlPredicate.Operator op, out bool result)
+		{
+			if (op is SqlPredicate.Operator.NotEqual)
+			{
+				if (value1 is null && value2 is not null)
+				{
+					result = false;
+					return true;
+				}
+
+				if (value2 is null && value1 is not null)
+				{
+					result = false;
+					return true;
+				}
+			}
+
+			if (value1 is IComparable comparable1 && value1.GetType() == value2?.GetType())
+			{
+				switch (op)
+				{
+					case SqlPredicate.Operator.Equal:          result = comparable1.CompareTo(value2) == 0; break;
+					case SqlPredicate.Operator.NotEqual:       result = comparable1.CompareTo(value2) != 0; break;
+					case SqlPredicate.Operator.Greater:        result = comparable1.CompareTo(value2) >  0; break;
+					case SqlPredicate.Operator.GreaterOrEqual: result = comparable1.CompareTo(value2) >= 0; break;
+					case SqlPredicate.Operator.Less:           result = comparable1.CompareTo(value2) <  0; break;
+					case SqlPredicate.Operator.LessOrEqual:    result = comparable1.CompareTo(value2) <= 0; break;
+
+					default:
+					{
+						result = false;
+						return false;
+					}
+				}
+			}
+
+			result = false;
+			return false;
+		}
+
+
 		static void CombineOperator(ref SqlPredicate.Operator? current, SqlPredicate.Operator additional)
 		{
 			if (current == null)
@@ -977,6 +1018,21 @@ namespace LinqToDB.SqlProvider
 				throw new NotImplementedException();
 		}
 
+		static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool preserveEqual)
+		{
+			switch (op)
+			{
+				case SqlPredicate.Operator.Equal: return preserveEqual ? op : SqlPredicate.Operator.NotEqual;
+				case SqlPredicate.Operator.NotEqual: return preserveEqual ? op : SqlPredicate.Operator.Equal;
+				case SqlPredicate.Operator.Greater: return SqlPredicate.Operator.LessOrEqual;
+				case SqlPredicate.Operator.NotLess:
+				case SqlPredicate.Operator.GreaterOrEqual: return preserveEqual ? SqlPredicate.Operator.LessOrEqual : SqlPredicate.Operator.Less;
+				case SqlPredicate.Operator.Less: return SqlPredicate.Operator.GreaterOrEqual;
+				case SqlPredicate.Operator.NotGreater:
+				case SqlPredicate.Operator.LessOrEqual: return preserveEqual ? SqlPredicate.Operator.GreaterOrEqual : SqlPredicate.Operator.Greater;
+				default: throw new InvalidOperationException();
+			}
+		}
 
 		ISqlPredicate? ProcessComparisonWithCase(ISqlExpression valueExpression, ISqlExpression other, bool isNot)
 		{
@@ -1004,24 +1060,75 @@ namespace LinqToDB.SqlProvider
 							return new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, isNot ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal, valueExpression, null);
 						}
 					}
-
-					/*if (condition1.FalseValue.TryEvaluateExpression(_evaluationContext, out var falseValue))
-					{
-						var isEqual = object.Equals(compareValue, falseValue);
-						if (isEqual)
-							return condition1.Condition;
-					}*/
 				}
 			}
 			else if (unwrappedOther is SqlCaseExpression sqlCaseExpression)
 			{
-				var foundIndex = sqlCaseExpression._cases.FindIndex(c => c.ResultExpression.Equals(unwrappedValue));
+				var foundIndex      = -1;
 
-				if (foundIndex < 0)
+				// Try comparing by values
+				if (unwrappedValue.TryEvaluateExpression(_evaluationContext, out var value))
 				{
-					if (sqlCaseExpression.ElseExpression != null && sqlCaseExpression.ElseExpression.Equals(unwrappedValue))
+					var allEvaluatable = true;
+
+					for (var index = 0; index < sqlCaseExpression._cases.Count; index++)
 					{
-						foundIndex = sqlCaseExpression._cases.Count;
+						var caseItem = sqlCaseExpression._cases[index];
+						if (caseItem.ResultExpression.TryEvaluateExpression(_evaluationContext, out var caseItemValue))
+						{
+							if (object.Equals(caseItemValue, value))
+							{
+								foundIndex = index;
+								break;
+							}
+						}
+						else
+						{
+							allEvaluatable = false;
+						}
+					}
+
+					if (foundIndex < 0)
+					{
+						object? elseValue = null;
+						if (sqlCaseExpression.ElseExpression != null) 
+						{
+							if (!sqlCaseExpression.ElseExpression.TryEvaluateExpression(_evaluationContext, out elseValue))
+								allEvaluatable = false;
+							else
+							{
+								if (object.Equals(elseValue, value))
+									foundIndex = sqlCaseExpression._cases.Count;
+							}
+						}
+						else
+						{
+							if (object.Equals(elseValue, value))
+								foundIndex = sqlCaseExpression._cases.Count;
+						}
+					}
+
+					if (foundIndex < 0)
+					{
+						if (allEvaluatable)
+						{
+							// If nothing match we can return false
+
+							return SqlPredicate.False;
+						}
+					}
+
+				}
+				else
+				{
+					foundIndex = sqlCaseExpression._cases.FindIndex(c => c.ResultExpression.Equals(unwrappedValue));
+
+					if (foundIndex < 0)
+					{
+						if (sqlCaseExpression.ElseExpression != null && sqlCaseExpression.ElseExpression.Equals(unwrappedValue))
+						{
+							foundIndex = sqlCaseExpression._cases.Count;
+						}
 					}
 				}
 
@@ -1039,11 +1146,6 @@ namespace LinqToDB.SqlProvider
 					return predicate.MakeNot(isNot);
 				}
 
-				// nothing matched, decide to return predicate
-				if (unwrappedValue.TryEvaluateExpression(_evaluationContext, out _))
-				{
-					return SqlPredicate.False;
-				}
 			}
 
 			return null;
