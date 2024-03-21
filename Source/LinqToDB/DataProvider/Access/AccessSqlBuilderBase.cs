@@ -132,6 +132,16 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
+		protected override void BuildSqlCaseExpression(SqlCaseExpression caseExpression)
+		{
+			BuildExpression(ConvertCaseToConditions(caseExpression, 0));
+		}
+
+		protected override void BuildSqlConditionExpression(SqlConditionExpression conditionExpression)
+		{
+			BuildSqlConditionExpressionAsFunction("IIF", conditionExpression);
+		}
+
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)

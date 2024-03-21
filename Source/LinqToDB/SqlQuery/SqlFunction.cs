@@ -32,12 +32,6 @@ namespace LinqToDB.SqlQuery
 			if (systemType == null) throw new ArgumentNullException(nameof(systemType));
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
-			// TODO: remove
-			if (name == "CASE")
-			{
-				throw new ArgumentException("Use SqlCaseExpression class for CASE statement", nameof(name));
-			}
-
 			foreach (var p in parameters)
 				if (p == null) throw new ArgumentNullException(nameof(parameters));
 

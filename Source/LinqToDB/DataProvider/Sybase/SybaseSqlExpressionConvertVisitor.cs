@@ -22,8 +22,6 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			func = ConvertFunctionParameters(func, false);
-
 			switch (func.Name)
 			{
 				case PseudoFunctions.REPLACE: return func.WithName("Str_Replace");

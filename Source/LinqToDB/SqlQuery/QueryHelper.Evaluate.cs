@@ -264,30 +264,6 @@ namespace LinqToDB.SqlQuery
 
 					switch (function.Name)
 					{
-						case "CASE":
-						{
-							if (function.Parameters.Length != 3)
-							{
-								return false;
-							}
-
-							if (!function.Parameters[0]
-								.TryEvaluateExpression(context, out var cond))
-								return false;
-
-							if (!(cond is bool))
-							{
-								return false;
-							}
-
-							if ((bool)cond!)
-								return function.Parameters[1]
-									.TryEvaluateExpression(context, out result);
-							else
-								return function.Parameters[2]
-									.TryEvaluateExpression(context, out result);
-						}
-
 						case "Length":
 						{
 							if (function.Parameters[0]
@@ -383,6 +359,45 @@ namespace LinqToDB.SqlQuery
 
 					return false;
 				}
+
+				case QueryElementType.SqlCase:
+				{
+					var caseExpr = (SqlCaseExpression)expr;
+
+					foreach (var caseItem in caseExpr.Cases)
+					{
+						if (caseItem.Condition.TryEvaluateExpression(context, out var evaluatedCondition) && evaluatedCondition is bool boolValue)
+						{
+							if (boolValue)
+							{
+								if (caseItem.ResultExpression.TryEvaluateExpression(context, out var resultValue))
+								{
+									result = resultValue;
+									return true;
+								}
+							}
+						}
+						else
+						{
+							return false;
+						}
+					}
+
+					if (caseExpr.ElseExpression == null)
+					{
+						result = null;
+						return true;
+					}
+
+					if (caseExpr.ElseExpression.TryEvaluateExpression(context, out var elseValue))
+					{
+						result = elseValue;
+						return true;
+					}
+
+					return false;
+				}
+
 
 				case QueryElementType.ExprPredicate      :
 				{

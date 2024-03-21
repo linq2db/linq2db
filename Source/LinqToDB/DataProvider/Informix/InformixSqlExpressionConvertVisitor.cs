@@ -53,8 +53,6 @@ namespace LinqToDB.DataProvider.Informix
 				case PseudoFunctions.COALESCE : return ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false);
 			}
 
-			func = ConvertFunctionParameters(func, false);
-
 			return base.ConvertSqlFunction(func);
 		}
 

@@ -239,9 +239,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				switch (func)
 				{
-					case SqlFunction(_, "CASE", [_, SqlValue(true), SqlValue(false)]) f when SqlProviderFlags.IsProjectionBoolSupported is false:
-						return new SqlFunction(f.SystemType, f.Name, f.Parameters[0], new SqlValue((byte)1), new SqlValue((byte)0));
-
 					case SqlFunction(_, PseudoFunctions.COALESCE) : 
 						return new SqlFunction(func.SystemType, "Coalesce", func.Parameters);
 				}
@@ -249,10 +246,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			switch (func.Name)
 			{
-				case "Max":
-				case "Min":
-				case "Avg":
-				case "Sum":
+				case "MAX":
+				case "MIN":
+				case "AVG":
+				case "SUM":
 				{
 					// use standard-compatible aggregates
 					// https://github.com/ClickHouse/ClickHouse/pull/16123

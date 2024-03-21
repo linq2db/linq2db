@@ -65,8 +65,6 @@ namespace LinqToDB.DataProvider.DB2
 				case "NVarChar"      : return new SqlFunction(func.SystemType, "Char",      func.Parameters);
 			}
 
-			func = ConvertFunctionParameters(func, false);
-
 			return base.ConvertSqlFunction(func);
 		}
 

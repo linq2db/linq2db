@@ -70,8 +70,6 @@ namespace LinqToDB.DataProvider.Firebird
 
 			}
 
-			func = ConvertFunctionParameters(func, false);
-
 			return base.ConvertSqlFunction(func);
 		}
 

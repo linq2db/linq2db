@@ -229,11 +229,6 @@ namespace LinqToDB.SqlQuery
 					{
 						return GetColumnDescriptor(function.Parameters[0]);
 					}
-					else if (function.Name == "CASE" && function.Parameters.Length == 3)
-					{
-						return GetColumnDescriptor(function.Parameters[1]) ??
-							   GetColumnDescriptor(function.Parameters[2]);
-					}
 					break;
 				}
 				case QueryElementType.SqlCondition:
@@ -242,6 +237,19 @@ namespace LinqToDB.SqlQuery
 
 					return GetColumnDescriptor(condition.TrueValue) ??
 					       GetColumnDescriptor(condition.FalseValue);
+				}
+				case QueryElementType.SqlCase:
+				{
+					var caseExpression = (SqlCaseExpression)expr;
+
+					foreach (var caseItem in caseExpression.Cases)
+					{
+						var descriptor = GetColumnDescriptor(caseItem.ResultExpression);
+						if (descriptor != null)
+							return descriptor;
+					}
+
+					return GetColumnDescriptor(caseExpression.ElseExpression);
 				}
 			}
 			return null;
@@ -752,7 +760,7 @@ namespace LinqToDB.SqlQuery
 					newOrderItems[i] = !nonProjecting.Contains(oi.Expression)
 							? oi
 							: new SqlOrderByItem(
-								new SqlFunction(oi.Expression.SystemType!, !oi.IsDescending ? "Min" : "Max", true, oi.Expression),
+								new SqlFunction(oi.Expression.SystemType!, !oi.IsDescending ? "MIN" : "MAX", true, oi.Expression),
 								oi.IsDescending, oi.IsPositioned);
 				}
 

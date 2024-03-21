@@ -1413,44 +1413,6 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		protected SqlFunction ConvertFunctionParameters(SqlFunction func, bool withParameters = false)
-		{
-			if (func.Name == "CASE")
-			{
-				ISqlExpression[]? parameters = null;
-				for (var i = 0; i < func.Parameters.Length; i++)
-				{
-					var p = func.Parameters[i];
-					if (IsBooleanParameter(p, func.Parameters.Length, i))
-					{
-						if (parameters == null)
-						{
-							parameters = new ISqlExpression[func.Parameters.Length];
-							for (var j = 0; j < i; j++)
-								parameters[j] = func.Parameters[j];
-						}
-						parameters[i] = new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false))
-						{
-							CanBeNull     = false,
-							DoNotOptimize = true
-						};
-					}
-					else if (parameters != null)
-						parameters[i] = p;
-				}
-
-				if (parameters != null)
-					return new SqlFunction(
-						func.SystemType,
-						func.Name,
-						false,
-						func.Precedence,
-						parameters);
-			}
-
-			return func;
-		}
-
 		#endregion
 	}
 }
