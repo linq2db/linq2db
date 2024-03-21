@@ -984,6 +984,8 @@ namespace LinqToDB.SqlProvider
 						return false;
 					}
 				}
+
+				return true;
 			}
 
 			result = false;
@@ -1018,132 +1020,131 @@ namespace LinqToDB.SqlProvider
 				throw new NotImplementedException();
 		}
 
-		static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool preserveEqual)
+		static SqlPredicate.Operator SwapOperator(SqlPredicate.Operator op)
 		{
-			switch (op)
+			return op switch
 			{
-				case SqlPredicate.Operator.Equal: return preserveEqual ? op : SqlPredicate.Operator.NotEqual;
-				case SqlPredicate.Operator.NotEqual: return preserveEqual ? op : SqlPredicate.Operator.Equal;
-				case SqlPredicate.Operator.Greater: return SqlPredicate.Operator.LessOrEqual;
-				case SqlPredicate.Operator.NotLess:
-				case SqlPredicate.Operator.GreaterOrEqual: return preserveEqual ? SqlPredicate.Operator.LessOrEqual : SqlPredicate.Operator.Less;
-				case SqlPredicate.Operator.Less: return SqlPredicate.Operator.GreaterOrEqual;
-				case SqlPredicate.Operator.NotGreater:
-				case SqlPredicate.Operator.LessOrEqual: return preserveEqual ? SqlPredicate.Operator.GreaterOrEqual : SqlPredicate.Operator.Greater;
-				default: throw new InvalidOperationException();
-			}
+				SqlPredicate.Operator.Equal => op,
+				SqlPredicate.Operator.NotEqual => op,
+				SqlPredicate.Operator.Greater => SqlPredicate.Operator.Less,
+				SqlPredicate.Operator.NotLess => SqlPredicate.Operator.NotGreater,
+				SqlPredicate.Operator.GreaterOrEqual => SqlPredicate.Operator.LessOrEqual,
+				SqlPredicate.Operator.Less => SqlPredicate.Operator.Greater,
+				SqlPredicate.Operator.NotGreater => SqlPredicate.Operator.NotLess,
+				SqlPredicate.Operator.LessOrEqual => SqlPredicate.Operator.GreaterOrEqual,
+				_ => throw new InvalidOperationException()
+			};
 		}
 
-		ISqlPredicate? ProcessComparisonWithCase(ISqlExpression valueExpression, ISqlExpression other, bool isNot)
+		ISqlPredicate? ProcessComparisonWithCase(ISqlExpression valueExpression, ISqlExpression other, SqlPredicate.Operator op)
 		{
 			var unwrappedOther = QueryHelper.UnwrapNullablity(other);
 			var unwrappedValue = QueryHelper.UnwrapNullablity(valueExpression);
 
+			var isNot = op == SqlPredicate.Operator.NotEqual;
+
 			if (unwrappedOther is SqlConditionExpression sqlConditionExpression)
 			{
-				if (sqlConditionExpression.TrueValue.Equals(unwrappedValue))
-					return sqlConditionExpression.Condition.MakeNot(isNot);
+				if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
+				{
+					if (sqlConditionExpression.TrueValue.Equals(unwrappedValue))
+						return sqlConditionExpression.Condition.MakeNot(isNot);
 
-				if (sqlConditionExpression.FalseValue.Equals(unwrappedValue))
-					return sqlConditionExpression.Condition.MakeNot(!isNot);
+					if (sqlConditionExpression.FalseValue.Equals(unwrappedValue))
+						return sqlConditionExpression.Condition.MakeNot(!isNot);
+				}
 
 				if (unwrappedValue.TryEvaluateExpression(_evaluationContext, out var compareValue))
 				{
 					if (sqlConditionExpression.TrueValue.TryEvaluateExpression(_evaluationContext, out var trueValue))
 					{
-						var isEqual = object.Equals(compareValue, trueValue);
-						if (isEqual)
-							return sqlConditionExpression.Condition.MakeNot(isNot);
-
-						if (trueValue is null)
+						if (Compare(compareValue, trueValue, op, out var isMatch) && isMatch)
 						{
-							return new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, isNot ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal, valueExpression, null);
+							return sqlConditionExpression.Condition.MakeNot(isNot);
+						}
+					}
+
+					if (sqlConditionExpression.FalseValue.TryEvaluateExpression(_evaluationContext, out var falseValue))
+					{
+						if (Compare(compareValue, falseValue, op, out var isMatch) && isMatch)
+						{
+							return sqlConditionExpression.Condition.MakeNot(!isNot);
 						}
 					}
 				}
 			}
 			else if (unwrappedOther is SqlCaseExpression sqlCaseExpression)
 			{
-				var foundIndex      = -1;
-
 				// Try comparing by values
+
 				if (unwrappedValue.TryEvaluateExpression(_evaluationContext, out var value))
 				{
+					var caseMatch      = new bool [sqlCaseExpression._cases.Count];
 					var allEvaluatable = true;
+					var elseMatch      = false;
 
 					for (var index = 0; index < sqlCaseExpression._cases.Count; index++)
 					{
 						var caseItem = sqlCaseExpression._cases[index];
-						if (caseItem.ResultExpression.TryEvaluateExpression(_evaluationContext, out var caseItemValue))
+						if (caseItem.ResultExpression.TryEvaluateExpression(_evaluationContext, out var caseItemValue)
+						    && Compare(value, caseItemValue, op, out var result))
 						{
-							if (object.Equals(caseItemValue, value))
-							{
-								foundIndex = index;
-								break;
-							}
+							caseMatch[index] = result;
 						}
 						else
 						{
 							allEvaluatable = false;
+							break;
 						}
 					}
 
-					if (foundIndex < 0)
+					object? elseValue = null;
+
+					if ((sqlCaseExpression.ElseExpression == null || sqlCaseExpression.ElseExpression.TryEvaluateExpression(_evaluationContext, out elseValue))
+					    && Compare(value, elseValue, op, out var compareResult))
 					{
-						object? elseValue = null;
-						if (sqlCaseExpression.ElseExpression != null) 
+						elseMatch = compareResult;
+					}
+					else
+						allEvaluatable = false;
+
+
+					if (allEvaluatable)
+					{
+						if (caseMatch.All(c => !c) && !elseMatch)
+							return SqlPredicate.False;
+
+						var resultCondition = new SqlSearchCondition(true);
+
+						var notMatches = new List<ISqlPredicate>();
+						for (int index = 0; index < caseMatch.Length; index++)
 						{
-							if (!sqlCaseExpression.ElseExpression.TryEvaluateExpression(_evaluationContext, out elseValue))
-								allEvaluatable = false;
+							if (caseMatch[index])
+							{
+								var condition = new SqlSearchCondition(false)
+									.Add(sqlCaseExpression._cases[index].Condition);
+
+								if (notMatches.Count > 0)
+									condition.Add(new SqlSearchCondition(true, notMatches).MakeNot());
+
+								resultCondition.Add(condition);
+							}
 							else
 							{
-								if (object.Equals(elseValue, value))
-									foundIndex = sqlCaseExpression._cases.Count;
+								notMatches.Add(sqlCaseExpression._cases[index].Condition);
 							}
 						}
-						else
+
+						if (elseMatch)
 						{
-							if (object.Equals(elseValue, value))
-								foundIndex = sqlCaseExpression._cases.Count;
+							if (notMatches.Count == 0)
+								return SqlPredicate.True;
+
+							resultCondition.Add(new SqlSearchCondition(true, notMatches).MakeNot());
 						}
+
+						return resultCondition;
 					}
-
-					if (foundIndex < 0)
-					{
-						if (allEvaluatable)
-						{
-							// If nothing match we can return false
-
-							return SqlPredicate.False;
-						}
-					}
-
-				}
-				else
-				{
-					foundIndex = sqlCaseExpression._cases.FindIndex(c => c.ResultExpression.Equals(unwrappedValue));
-
-					if (foundIndex < 0)
-					{
-						if (sqlCaseExpression.ElseExpression != null && sqlCaseExpression.ElseExpression.Equals(unwrappedValue))
-						{
-							foundIndex = sqlCaseExpression._cases.Count;
-						}
-					}
-				}
-
-				if (foundIndex >= 0)
-				{
-					ISqlPredicate predicate;
-
-					var notMatch = new SqlSearchCondition(true, sqlCaseExpression._cases.Take(1).Select(c => c.Condition)).MakeNot();
-
-					if (foundIndex < sqlCaseExpression._cases.Count)
-						predicate = new SqlSearchCondition(false).Add(notMatch).Add(sqlCaseExpression._cases[foundIndex].Condition);
-					else
-						predicate = notMatch;
-
-					return predicate.MakeNot(isNot);
 				}
 
 			}
@@ -1162,7 +1163,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (!isTrue.IsNot)
 				{
-					var predicate = ProcessComparisonWithCase(isTrue.TrueValue, isTrue.Expr1, false);
+					var predicate = ProcessComparisonWithCase(isTrue.TrueValue, isTrue.Expr1, SqlPredicate.Operator.Equal);
 					if (predicate != null)
 						return predicate.MakeNot(isTrue.IsNot);
 				}
@@ -1221,16 +1222,12 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			if (exprExpr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
-			{
-				var isNot = exprExpr.Operator == SqlPredicate.Operator.NotEqual;
+			var processed = ProcessComparisonWithCase(exprExpr.Expr1, exprExpr.Expr2, exprExpr.Operator)
+			                ?? ProcessComparisonWithCase(exprExpr.Expr2, exprExpr.Expr1, SwapOperator(exprExpr.Operator));
 
-				var processed = ProcessComparisonWithCase(exprExpr.Expr1, exprExpr.Expr2, isNot)
-				                ?? ProcessComparisonWithCase(exprExpr.Expr2, exprExpr.Expr1, isNot);
+			if (processed != null)
+				return processed;
 
-				if (processed != null)
-					return processed;
-			}
 
 			if (!_nullabilityContext.IsEmpty                   &&
 			    !exprExpr.Expr1.CanBeNullable(_nullabilityContext) &&
