@@ -1363,7 +1363,6 @@ namespace Tests.Linq
 			public bool Actual { get; set; }
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue1096Test([DataSources] string context)
 		{

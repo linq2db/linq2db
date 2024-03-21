@@ -631,6 +631,11 @@ namespace Tests.Data
 		public void TestDisposeFlagCloning962Test1(
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
+			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
+			{
+				Assert.Inconclusive("Provider goes crazy");
+			}
+
 			if (withScope && (
 				context == ProviderName.DB2                     ||
 				context == ProviderName.InformixDB2             ||

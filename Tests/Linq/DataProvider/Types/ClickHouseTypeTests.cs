@@ -259,19 +259,13 @@ namespace Tests.DataProvider
 		{
 			// https://clickhouse.com/docs/en/sql-reference/data-types/boolean/
 
-			// Bool
-			// https://github.com/Octonica/ClickHouseClient/issues/56
-			// https://github.com/ClickHouse/ClickHouse/issues/37999
-			if (!context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseMySql))
-			{
-				await TestType<bool, bool?>(context, new(typeof(bool)), default, default);
-				await TestType<bool, bool?>(context, new(typeof(bool)), true, false);
-				await TestType<bool, bool?>(context, new(typeof(bool)), false, true);
+			await TestType<bool, bool?>(context, new(typeof(bool)), default, default);
+			await TestType<bool, bool?>(context, new(typeof(bool)), true, false);
+			await TestType<bool, bool?>(context, new(typeof(bool)), false, true);
 
-				await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), default, default);
-				await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), true, false);
-				await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), false, true);
-			}
+			await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), default, default);
+			await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), true, false);
+			await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), false, true);
 
 			// as underlying type
 			await TestType<bool, bool?>(context, new(typeof(bool), DataType.Byte), default, default);
@@ -353,14 +347,6 @@ namespace Tests.DataProvider
 			var min = new DateTime(1900, 1, 1);
 			var max = new DateTime(2299, 12, 31);
 
-			// https://github.com/Octonica/ClickHouseClient/issues/66
-			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
-			{
-				// https://github.com/Octonica/ClickHouseClient/issues/60
-				min = new DateTime(1925, 1, 2);
-				max = new DateTime(2283, 11, 11);
-			}
-
 			// Date32
 #if NET6_0_OR_GREATER
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), DateOnly.FromDateTime(TestData.Date), default);
@@ -435,12 +421,6 @@ namespace Tests.DataProvider
 			// max value for DateTime64(9)
 			var max9 = new DateTime(2262, 4, 11, 23, 47, 16, 854, DateTimeKind.Unspecified).AddTicks(7758);
 			var val  = TestData.DateTime;
-
-			// https://github.com/Octonica/ClickHouseClient/issues/60
-			// https://github.com/Octonica/ClickHouseClient/issues/62
-			// https://github.com/Octonica/ClickHouseClient/issues/66
-			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
-				min = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Unspecified).AddSeconds(1);
 
 			// DateTime64
 
@@ -787,23 +767,20 @@ namespace Tests.DataProvider
 			// Unmapped enums cannot be used as server returns string values, which cannot be converted to enum
 			// because we don't have mapping information
 
-			// https://github.com/Octonica/ClickHouseClient/issues/64
-			var nullBug = context.IsAnyOf(ProviderName.ClickHouseOctonica);
-
 			// Enum8
 
-			await TestType<Enum8Mapped, Enum8Mapped?>(context, new(typeof(Enum8Mapped), DataType.Enum8, "Enum8('value1' = -111, 'value2' = 123)"), Enum8Mapped.Two, nullBug ? (Enum8Mapped?)Enum8Mapped.One : default);
+			await TestType<Enum8Mapped, Enum8Mapped?>(context, new(typeof(Enum8Mapped), DataType.Enum8, "Enum8('value1' = -111, 'value2' = 123)"), Enum8Mapped.Two, default);
 			await TestType<Enum8Mapped, Enum8Mapped?>(context, new(typeof(Enum8Mapped), DataType.Enum8, "Enum8('value1' = -111, 'value2' = 123)"), Enum8Mapped.One, Enum8Mapped.Two);
 
 			// Enum16
 
-			await TestType<Enum16Mapped, Enum16Mapped?>(context, new(typeof(Enum16Mapped), DataType.Enum16, "Enum16('value1' = -1111, 'value2' = 2212)"), Enum16Mapped.Two, nullBug ? (Enum16Mapped?)Enum16Mapped.One : default);
+			await TestType<Enum16Mapped, Enum16Mapped?>(context, new(typeof(Enum16Mapped), DataType.Enum16, "Enum16('value1' = -1111, 'value2' = 2212)"), Enum16Mapped.Two, default);
 			await TestType<Enum16Mapped, Enum16Mapped?>(context, new(typeof(Enum16Mapped), DataType.Enum16, "Enum16('value1' = -1111, 'value2' = 2212)"), Enum16Mapped.One, Enum16Mapped.Two);
 
-			await TestType<EnumMappedVar, EnumMappedVar?>(context, new(typeof(EnumMappedVar), DataType.Enum16, "Enum16('value1' = -1234, 'value 2' = 4567)"), EnumMappedVar.Two, nullBug ? (EnumMappedVar?)EnumMappedVar.One : default);
+			await TestType<EnumMappedVar, EnumMappedVar?>(context, new(typeof(EnumMappedVar), DataType.Enum16, "Enum16('value1' = -1234, 'value 2' = 4567)"), EnumMappedVar.Two, default);
 			await TestType<EnumMappedVar, EnumMappedVar?>(context, new(typeof(EnumMappedVar), DataType.Enum16, "Enum16('value1' = -1234, 'value 2' = 4567)"), EnumMappedVar.One, EnumMappedVar.Two);
 
-			await TestType<EnumMappedFixed, EnumMappedFixed?>(context, new(typeof(EnumMappedFixed), DataType.Enum16, "Enum16('value1' = -1234, 'value2' = 4567)"), EnumMappedFixed.Two, nullBug ? (EnumMappedFixed?)EnumMappedFixed.One : default);
+			await TestType<EnumMappedFixed, EnumMappedFixed?>(context, new(typeof(EnumMappedFixed), DataType.Enum16, "Enum16('value1' = -1234, 'value2' = 4567)"), EnumMappedFixed.Two, default);
 			await TestType<EnumMappedFixed, EnumMappedFixed?>(context, new(typeof(EnumMappedFixed), DataType.Enum16, "Enum16('value1' = -1234, 'value2' = 4567)"), EnumMappedFixed.One, EnumMappedFixed.Two);
 
 			// check that default mappings still work

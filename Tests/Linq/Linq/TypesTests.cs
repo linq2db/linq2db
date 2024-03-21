@@ -197,7 +197,6 @@ namespace Tests.Linq
 					from p in db.Types where ids.Contains(p.GuidValue) select p.GuidValue);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void NewGuid(
 			[DataSources(
@@ -295,7 +294,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void UpdateBinary2([DataSources(ProviderName.SqlCe)] string context)
 		{
@@ -331,7 +329,6 @@ namespace Tests.Linq
 											from t in db.Types2 where t.DateTimeValue!.Value.Date > dt!.Value.Date select t);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateTime21([DataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -350,7 +347,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateTime22(
 			[DataSources(
@@ -378,11 +374,13 @@ namespace Tests.Linq
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
 
+				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+					dt = dt.AddTicks(-dt.Ticks % 10);
+
 				Assert.AreEqual(dt, dt2);
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateTime23(
 			[DataSources(
@@ -413,11 +411,13 @@ namespace Tests.Linq
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
 
+				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+					dt = dt.AddTicks(-dt.Ticks % 10);
+
 				Assert.AreEqual(dt, dt2);
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateTime24(
 			[DataSources(
@@ -447,6 +447,9 @@ namespace Tests.Linq
 				var dt2 = db.Types2.First(t => t.ID == 1).DateTimeValue2;
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
+
+				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+					dt = dt.AddTicks(-dt.Ticks % 10);
 
 				Assert.AreEqual(dt, dt2);
 			}

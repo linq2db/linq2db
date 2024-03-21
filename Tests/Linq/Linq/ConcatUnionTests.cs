@@ -368,7 +368,6 @@ namespace Tests.Linq
 					select child);
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Union3([DataSources] string context)
 		{
@@ -381,7 +380,6 @@ namespace Tests.Linq
 					(from ch in db.Child  select new { id = ch.ParentID, val = false })));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Union4([DataSources] string context)
 		{
@@ -396,7 +394,6 @@ namespace Tests.Linq
 					.Select(p => new { p.id, p.val }));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Union41([DataSources] string context)
 		{
@@ -411,7 +408,6 @@ namespace Tests.Linq
 					.Select(p => p));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Union42([DataSources] string context)
 		{
@@ -425,7 +421,6 @@ namespace Tests.Linq
 					.Select(p => p.val));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Union421([DataSources] string context)
 		{

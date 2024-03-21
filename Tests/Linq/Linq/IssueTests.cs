@@ -41,7 +41,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/42")]
+		// https://github.com/linq2db/linq2db/issues/42
+		//
+		[Test]
 		public void Issue42Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -396,7 +398,6 @@ namespace Tests.Linq
 			Client
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue535Test2([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -422,7 +423,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue535Test3([DataSources(TestProvName.AllSybase)] string context)
 		{

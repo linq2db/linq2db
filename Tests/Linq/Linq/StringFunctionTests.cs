@@ -869,6 +869,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Nothing to see here, it just broke after new ClickHouse release (broken in: 24.2.2)", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void LastIndexOf2([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
@@ -883,6 +884,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Nothing to see here, it just broke after new ClickHouse release (broken in: 24.2.2)", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void LastIndexOf3([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
