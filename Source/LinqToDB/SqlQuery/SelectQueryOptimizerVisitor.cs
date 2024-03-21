@@ -1136,6 +1136,8 @@ namespace LinqToDB.SqlQuery
 
 			var allowed = _movingComplexityVisitor.IsAllowedToMove(column, parent: parentQuery,
 				nullability,
+				_expressionOptimizerVisitor,
+				_dataOptions,
 				_evaluationContext,
 				column.Parent,
 				_applySelect == parentQuery ? parentQuery.Where  : null,
@@ -2412,14 +2414,16 @@ namespace LinqToDB.SqlQuery
 
 		class MovingComplexityVisitor : QueryElementVisitor
 		{
-			ISqlExpression     _expressionToCheck = default!;
-			IQueryElement?[]   _ignore            = default!;
-			NullabilityContext _nullability       = default!;
-			EvaluationContext  _evaluationContext = default!;
-			bool               _isInsideNot;
-			int                _foundCount;
-			bool               _notAllowedScope;
-			bool               _doNotAllow;
+			ISqlExpression                _expressionToCheck = default!;
+			IQueryElement?[]              _ignore            = default!;
+			NullabilityContext            _nullability       = default!;
+			EvaluationContext             _evaluationContext = default!;
+			SqlExpressionOptimizerVisitor _optimizerVisitor  = default!;
+			DataOptions                   _dataOptions       = default!;
+			bool                          _isInsideNot;
+			int                           _foundCount;
+			bool                          _notAllowedScope;
+			bool                          _doNotAllow;
 
 			public bool DoNotAllow
 			{
@@ -2438,17 +2442,21 @@ namespace LinqToDB.SqlQuery
 				_doNotAllow        = default;
 				_nullability       = default!;
 				_evaluationContext = default!;
+				_optimizerVisitor  = default!;
+				_dataOptions       = default!;
 				_foundCount        = 0;
 				_isInsideNot       = default;
 			}
 
-			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, NullabilityContext nullability, 
+			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, NullabilityContext nullability, SqlExpressionOptimizerVisitor optimizerVisitor, DataOptions dataOptions,
 				EvaluationContext evaluationContext, params IQueryElement?[] ignore)
 			{
 				_ignore            = ignore;
 				_expressionToCheck = testExpression;
 				_nullability       = nullability;
 				_evaluationContext = evaluationContext;
+				_optimizerVisitor  = optimizerVisitor;
+				_dataOptions       = dataOptions;
 				_doNotAllow        = default;
 				_foundCount        = 0;
 				_isInsideNot       = default;
@@ -2490,9 +2498,13 @@ namespace LinqToDB.SqlQuery
 
 			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 			{
-				var reduced = predicate.Reduce(_nullability, _evaluationContext, _isInsideNot);
+				IQueryElement reduced = predicate.Reduce(_nullability, _evaluationContext, _isInsideNot);
 				if (!ReferenceEquals(reduced, predicate))
+				{
+					reduced = _optimizerVisitor.Optimize(_evaluationContext, _nullability, null, _dataOptions, reduced, false, _isInsideNot, true);
+
 					Visit(reduced);
+				}
 				else
 					base.VisitExprExprPredicate(predicate);
 
