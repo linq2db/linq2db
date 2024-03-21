@@ -357,11 +357,11 @@ namespace LinqToDB.Linq.Builder
 
 					if (argument is NewExpression newExpr && newExpr.Type.IsAnonymous())
 					{
-						BuildNew(newExpr, Expression.MakeMemberAccess(path, member));
+						BuildNew(newExpr, pe);
 					}
 					else if (argument is MemberInitExpression initExpr && !into.IsExpression(pe, 1, RequestFor.Field).Result)
 					{
-						BuildMemberInit(initExpr, Expression.MakeMemberAccess(path, member));
+						BuildMemberInit(initExpr, pe);
 					}
 					else
 					{
@@ -691,15 +691,30 @@ namespace LinqToDB.Linq.Builder
 				sequence.Statement  = updateStatement;
 
 				if (update == null)
-				{
-					// we have first lambda as whole update field part
-					var sp     = sequence.Parent;
-					var ctx    = new ExpressionContext(buildInfo.Parent, sequence, extract);
-					var expr   = builder.ConvertToSqlExpression(ctx, extract.Body, null, true);
+				{					
+					if (extract.ReturnType == typeof(string))
+					{
+						// Set(old => "field += 3")
+						// we have first lambda as whole update field part
+						var sp     = sequence.Parent;
+						var ctx    = new ExpressionContext(buildInfo.Parent, sequence, extract);
+						var expr   = builder.ConvertToSqlExpression(ctx, extract.Body, null, true);
 
-					builder.ReplaceParent(ctx, sp);
+						builder.ReplaceParent(ctx, sp);
 
-					updateStatement.Update.Items.Add(new SqlSetExpression(expr, null));
+						updateStatement.Update.Items.Add(new SqlSetExpression(expr, null));
+					}
+					else
+					{
+						// Set(old => from X select new T { Field1 = 3, Field2 = 4 })
+						ParseQueryableSet(
+							builder,
+							buildInfo,
+							extract,
+							sequence,
+							updateStatement.Update.Table,
+							updateStatement.Update.Items);
+					}
 				}
 				else if (update.NodeType == ExpressionType.Lambda)
 					ParseSet(
@@ -724,6 +739,27 @@ namespace LinqToDB.Linq.Builder
 				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
+			}
+
+			private static void ParseQueryableSet(
+				ExpressionBuilder      builder,
+				BuildInfo              buildInfo,
+				LambdaExpression       subQuery,
+				IBuildContext          fieldsContext,
+				SqlTable?              table,
+				List<SqlSetExpression> items)
+			{				
+				var ctx = new ExpressionContext(buildInfo.Parent, fieldsContext, subQuery);
+				var queryExpr = (SelectQuery)builder.ConvertToSqlExpression(ctx, subQuery.Body, null, false);
+				var entityDescriptor = builder.MappingSchema.GetEntityDescriptor(subQuery.Parameters[0].Type);
+				var columns = queryExpr.Select.Columns
+					.Select(c => new SqlField(
+						entityDescriptor[c.Alias!]
+						?? throw new LinqException($"Member {c.Alias} not found in entity {entityDescriptor.Name}")))
+					.ToArray();
+				items.Add(new SqlSetExpression(
+					new SqlRow(columns),
+					queryExpr));
 			}
 		}
 
