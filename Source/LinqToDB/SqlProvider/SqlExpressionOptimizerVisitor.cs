@@ -1036,7 +1036,7 @@ namespace LinqToDB.SqlProvider
 			};
 		}
 
-		ISqlPredicate? ProcessComparisonWithCase(ISqlExpression valueExpression, ISqlExpression other, SqlPredicate.Operator op)
+		ISqlPredicate? ProcessComparisonWithCase(ISqlExpression other, ISqlExpression valueExpression, SqlPredicate.Operator op)
 		{
 			var unwrappedOther = QueryHelper.UnwrapNullablity(other);
 			var unwrappedValue = QueryHelper.UnwrapNullablity(valueExpression);
@@ -1054,22 +1054,23 @@ namespace LinqToDB.SqlProvider
 						return sqlConditionExpression.Condition.MakeNot(!isNot);
 				}
 
-				if (unwrappedValue.TryEvaluateExpression(_evaluationContext, out var compareValue))
+				if (unwrappedValue.TryEvaluateExpression(_evaluationContext, out _))
 				{
-					if (sqlConditionExpression.TrueValue.TryEvaluateExpression(_evaluationContext, out var trueValue))
+					if (sqlConditionExpression.TrueValue.TryEvaluateExpression(_evaluationContext, out _) || sqlConditionExpression.FalseValue.TryEvaluateExpression(_evaluationContext, out _))
 					{
-						if (Compare(compareValue, trueValue, op, out var isMatch) && isMatch)
-						{
-							return sqlConditionExpression.Condition.MakeNot(isNot);
-						}
-					}
+						var sc = new SqlSearchCondition(true)
+							.AddAnd( sub => 
+								sub
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, _dataOptions.LinqOptions.CompareNullsAsValues ? true : null))
+									.Add(sqlConditionExpression.Condition)
+							)
+							.AddAnd( sub => 
+								sub
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, _dataOptions.LinqOptions.CompareNullsAsValues ? true : null))
+									.Add(sqlConditionExpression.Condition.MakeNot())
+								);
 
-					if (sqlConditionExpression.FalseValue.TryEvaluateExpression(_evaluationContext, out var falseValue))
-					{
-						if (Compare(compareValue, falseValue, op, out var isMatch) && isMatch)
-						{
-							return sqlConditionExpression.Condition.MakeNot(!isNot);
-						}
+						return sc;
 					}
 				}
 			}
@@ -1087,7 +1088,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var caseItem = sqlCaseExpression._cases[index];
 						if (caseItem.ResultExpression.TryEvaluateExpression(_evaluationContext, out var caseItemValue)
-						    && Compare(value, caseItemValue, op, out var result))
+						    && Compare(caseItemValue, value, op, out var result))
 						{
 							caseMatch[index] = result;
 						}
@@ -1101,7 +1102,7 @@ namespace LinqToDB.SqlProvider
 					object? elseValue = null;
 
 					if ((sqlCaseExpression.ElseExpression == null || sqlCaseExpression.ElseExpression.TryEvaluateExpression(_evaluationContext, out elseValue))
-					    && Compare(value, elseValue, op, out var compareResult))
+					    && Compare(elseValue, value, op, out var compareResult))
 					{
 						elseMatch = compareResult;
 					}
@@ -1194,7 +1195,7 @@ namespace LinqToDB.SqlProvider
 					if (current == null)
 						return SqlPredicate.False;
 
-					return new SqlPredicate.ExprExpr(compareTo1.Expression1, current.Value, compareTo1.Expression2, _dataOptions.LinqOptions.CompareNullsAsValues);
+					return new SqlPredicate.ExprExpr(compareTo1.Expression1, current.Value, compareTo1.Expression2, _dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 				}
 			}
 
@@ -1218,7 +1219,7 @@ namespace LinqToDB.SqlProvider
 					if (current == null)
 						return SqlPredicate.False;
 
-					return new SqlPredicate.ExprExpr(compareTo2.Expression1, current.Value, compareTo2.Expression2, _dataOptions.LinqOptions.CompareNullsAsValues);
+					return new SqlPredicate.ExprExpr(compareTo2.Expression1, current.Value, compareTo2.Expression2, _dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 				}
 			}
 
