@@ -518,7 +518,7 @@ namespace Tests.OrmBattle
 		public void ComplexTakeSkipTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
-			var original = db.Order.ToList()
+			var original = Order.ToList()
 				.OrderBy(o => o.OrderDate)
 				.Skip(100)
 				.Take(50)
@@ -966,7 +966,7 @@ namespace Tests.OrmBattle
 		{
 			Setup(context);
 			var result = db.Product.Where(p => p is DiscontinuedProduct);
-			var expected = db.Product.ToList().Where(p => p is DiscontinuedProduct);
+			var expected = Products.Where(p => p is DiscontinuedProduct);
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 			Assert.AreEqual(expected.Count(), list.Count);
@@ -977,7 +977,7 @@ namespace Tests.OrmBattle
 		{
 			Setup(context);
 			var result = db.Product.Where(p => p is Product);
-			var expected = db.Product.ToList();
+			var expected = Products.ToList();
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 			Assert.AreEqual(expected.Count(), list.Count);
@@ -993,7 +993,7 @@ namespace Tests.OrmBattle
 					? x
 					: null);
 
-			var expected = db.Product.ToList()
+			var expected = Products
 				.Select(x => x is DiscontinuedProduct
 					? x
 					: null);
@@ -1010,7 +1010,7 @@ namespace Tests.OrmBattle
 		{
 			Setup(context);
 			var result = db.Product.OfType<DiscontinuedProduct>();
-			var expected = db.Product.ToList().OfType<DiscontinuedProduct>();
+			var expected = Products.OfType<DiscontinuedProduct>();
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 			Assert.AreEqual(expected.Count(), list.Count);
@@ -1265,7 +1265,7 @@ namespace Tests.OrmBattle
 		{
 			Setup(context);
 			var result = db.Customer.Where(c => db.Order.Count(o => o.Customer.CustomerID == c.CustomerID) > 5);
-			var expected = Customers.Where(c => db.Order.Count(o => o.Customer.CustomerID == c.CustomerID) > 5);
+			var expected = Customers.Where(c => Order.Count(o => o.Customer.CustomerID == c.CustomerID) > 5);
 
 			Assert.IsTrue(expected.Except(result).Count() == 0);
 		}
