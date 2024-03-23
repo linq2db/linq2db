@@ -66,9 +66,8 @@ namespace Tests.Linq
 
 				var current = db.Types2.First(r => r.ID == 1);
 
-
 				// If this test fails, Data for MathFunctionsTests will be corrupted.
-				saved.Should().Be(current);
+				current.Should().Be(saved);
 			}
 		}
 

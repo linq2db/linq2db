@@ -221,8 +221,33 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 
+				var dbDataType = paramValue.DbDataType;
+
+				if (dbDataType.DataType == DataType.Undefined)
+				{
+					// TODO: We should avoid such tricks, proper TypeMapping required
+					dbDataType = MappingSchema.GetDataType(dbDataType.SystemType).Type;
+				}
+
+				// Same code in DB2 provider
+				if (paramValue.ProviderValue is byte[] bytes)
+				{
+					dbDataType = dbDataType.WithLength(bytes.Length);
+				}
+				else if (paramValue.ProviderValue is string str)
+				{
+					dbDataType = dbDataType.WithLength(str.Length);
+				}
+				else if (paramValue.ProviderValue is decimal d)
+				{
+					if (dbDataType.Precision == null)
+						dbDataType = dbDataType.WithPrecision(DecimalHelper.GetPrecision(d));
+					if (dbDataType.Scale == null)
+						dbDataType = dbDataType.WithScale(DecimalHelper.GetScale(d));
+				}
+
 				// TODO: temporary guard against cast to unknown type (Variant)
-				if (paramValue.DbDataType.DataType   == DataType.Undefined)
+				if (dbDataType.DataType   == DataType.Undefined)
 				{
 					base.BuildParameter(parameter);
 					return;
@@ -230,7 +255,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;
-				BuildTypedExpression(new SqlDataType(paramValue.DbDataType), parameter);
+				BuildTypedExpression(new SqlDataType(dbDataType), parameter);
 				BuildStep = saveStep;
 
 				return;
