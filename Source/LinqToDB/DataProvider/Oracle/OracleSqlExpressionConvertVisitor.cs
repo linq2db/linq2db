@@ -137,12 +137,6 @@ namespace LinqToDB.DataProvider.Oracle
 					return func.Parameters.Length == 2?
 						new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0]):
 						new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0], func.Parameters[2]);
-				case "AVG"            :
-					return new SqlFunction(
-						func.SystemType,
-						"Round",
-						new SqlFunction(func.SystemType, "AVG", func.Parameters[0]),
-						new SqlValue(27));
 			}
 
 			return base.ConvertSqlFunction(func);
