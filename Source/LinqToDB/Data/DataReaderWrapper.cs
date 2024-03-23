@@ -18,6 +18,7 @@ namespace LinqToDB.Data
 	{
 		private          bool            _disposed;
 		private readonly DataConnection? _dataConnection;
+		private readonly IDisposable?    _concurrencyToken;
 
 		/// <summary>
 		/// Creates wrapper instance for specified data reader.
@@ -28,15 +29,16 @@ namespace LinqToDB.Data
 			DataReader = dataReader;
 		}
 
-		internal DataReaderWrapper(DataConnection dataConnection, DbDataReader dataReader, DbCommand? command)
+		internal DataReaderWrapper(DataConnection dataConnection, DbDataReader dataReader, DbCommand? command, IDisposable concurrencyToken)
 		{
-			_dataConnection = dataConnection;
-			DataReader      = dataReader;
-			Command         = command;
+			_dataConnection   = dataConnection;
+			DataReader        = dataReader;
+			Command           = command;
+			_concurrencyToken = concurrencyToken;
 		}
 
-		public  DbDataReader? DataReader { get; private set; }
-		internal DbCommand?   Command    { get; }
+		public   DbDataReader? DataReader { get; private set; }
+		internal DbCommand?    Command    { get; }
 
 		internal Action<DbCommand>? OnBeforeCommandDispose { get; set; }
 
@@ -67,6 +69,9 @@ namespace LinqToDB.Data
 				else
 					Command.Dispose();
 			}
+
+			if (_concurrencyToken != null)
+				_concurrencyToken.Dispose();
 		}
 
 #if NETSTANDARD2_1PLUS
@@ -97,6 +102,9 @@ namespace LinqToDB.Data
 				else
 					await Command.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
+
+			if (_concurrencyToken != null)
+				_concurrencyToken.Dispose();
 		}
 #elif !NETFRAMEWORK
 		public ValueTask DisposeAsync()
