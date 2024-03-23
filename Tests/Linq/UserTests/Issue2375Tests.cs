@@ -55,7 +55,8 @@ namespace Tests.UserTests
 		public void Issue2375Test(
 			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				using (var itb = db.CreateLocalTable<InventoryResourceDTO>())
 				using (var lctb = db.CreateLocalTable<WmsLoadCarrierDTO>())

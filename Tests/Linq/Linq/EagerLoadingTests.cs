@@ -7,7 +7,9 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Interceptors;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
@@ -175,6 +177,7 @@ namespace Tests.Linq
 					};
 
 				var result = query.ToList();
+
 				var expected = expectedQuery.ToList();
 
 				foreach (var item in result.Concat(expected))
@@ -347,25 +350,21 @@ FROM
 		[Test]
 		public void TestLoadWithToString2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var sql = db.Person.LoadWith(p => p.Patient).ToString()!;
+			using var db = GetDataContext(context);
 
-				Assert.False(sql.Contains("LoadWithQueryable"));
+			var query = db.Person.LoadWith(p => p.Patient).AsQueryable();
+			var sql   = query.ToString()!;
+			TestContext.WriteLine(sql);
 
-				// one query with join generated
-				CompareSql(@"SELECT
-	[t1].[FirstName],
-	[t1].[PersonID],
-	[t1].[LastName],
-	[t1].[MiddleName],
-	[t1].[Gender],
-	[a_Patient].[PersonID],
-	[a_Patient].[Diagnosis]
-FROM
-	[Person] [t1]
-		LEFT JOIN [Patient] [a_Patient] ON [t1].[PersonID] = [a_Patient].[PersonID]", sql);
-			}
+			sql.Should().NotContain("LoadWithQueryable");
+
+			var select = query.GetSelectQuery();
+
+			// one query with join generated
+
+			select.From.Tables.Should().HaveCount(1);
+			select.From.Tables[0].Joins.Should().HaveCount(1);
+			select.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Left);
 		}
 
 		[Test]
@@ -743,7 +742,7 @@ FROM
 
 		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -761,7 +760,7 @@ FROM
 						Detail = dd,
 						DetailAssociated = dd.SubDetails,
 						DetailAssociatedFiltered = dd.SubDetails.OrderBy(sd => sd.SubDetailValue).Take(10).ToArray(),
-						Masters = master.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+						Masters = master.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
 				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
@@ -773,7 +772,7 @@ FROM
 						Detail = dd,
 						DetailAssociated = subDetailRecords.Where(sd => sd.DetailId == dd.DetailId).ToArray(),
 						DetailAssociatedFiltered = subDetailRecords.OrderBy(sd => sd.SubDetailValue).Where(sd => sd.DetailId == dd.DetailId).Take(10).ToArray(),
-						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+						Masters = masterRecords.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
 				var result   = query.ToArray();
@@ -1119,6 +1118,80 @@ FROM
 				await FluentActions.Awaiting(() => query.FirstOrDefaultAsync(x => x.Id1 == 1)).Should().NotThrowAsync();
 				await FluentActions.Awaiting(() => query.FirstAsync(x => x.Id1          == 1)).Should().NotThrowAsync();
 				await FluentActions.Awaiting(() => query.SingleAsync(x => x.Id1         == 1)).Should().NotThrowAsync();
+			}
+		}
+
+		[Test]
+		public void TestSkipTake([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					select new
+					{
+						m,
+						details = m.Details.OrderBy(d => d.DetailId).Skip(1).Take(2).ToList()
+					};
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
+		public void TestAggregate([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					select new
+					{
+						Sum = m.Details.Select(x => x.DetailId)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(5)
+							.Sum(),
+
+						Count = m.Details.Select(x => x.DetailValue)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(2)
+							.Count()
+					};
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		public void TestAggregateAverage([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					where m.Details.Count() > 1
+					select new
+					{
+						Average = m.Details.Select(x => x.DetailId)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(5)
+							.Average(x => (double)x),
+					};
+
+				AssertQuery(query);
 			}
 		}
 
@@ -1633,7 +1706,7 @@ FROM
 		[Test]
 		public void Issue3799Test([DataSources] string context)
 		{
-			using var db    = GetDataContext(context);
+			using var db    = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var table = db.CreateLocalTable<Test3799Item>(Test3799Item.TestData);
 
 			var result = table.Select(Test3799ItemModel.Selector).ToList();
@@ -1641,8 +1714,9 @@ FROM
 		#endregion
 
 		#region Issue 4057
+		// Remote tests disabled due to the issue with different query generation. We do not detect provider correctly in this case.
 		[Test]
-		public async Task Issue4057_Async([DataSources] string context)
+		public async Task Issue4057_Async([DataSources(false)] string context)
 		{
 			DataOptions options;
 
@@ -1673,8 +1747,9 @@ FROM
 			}
 		}
 
+		// Remote tests disabled due to the issue with different query generation. We do not detect provider correctly in this case.
 		[Test]
-		public void Issue4057_Sync([DataSources] string context)
+		public void Issue4057_Sync([DataSources(false)] string context)
 		{
 			DataOptions options;
 			using (var db = GetDataContext(context))
@@ -1706,7 +1781,7 @@ FROM
 		}
 
 		[Test]
-		public async Task Issue4057_Async_ExplicitTransaction([DataSources] string context)
+		public async Task Issue4057_Async_ExplicitTransaction([DataSources(false)] string context)
 		{
 			DataOptions options;
 
@@ -1741,7 +1816,7 @@ FROM
 		}
 
 		[Test]
-		public void Issue4057_Sync_ExplicitTransaction([DataSources] string context)
+		public void Issue4057_Sync_ExplicitTransaction([DataSources(false)] string context)
 		{
 			DataOptions options;
 			using (var db = GetDataContext(context))

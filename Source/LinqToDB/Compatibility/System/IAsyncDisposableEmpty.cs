@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Helps leverage of pain to work with <c>await using nullable_value</c> code.
 	/// </summary>

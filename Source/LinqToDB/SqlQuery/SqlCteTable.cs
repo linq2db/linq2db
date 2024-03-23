@@ -1,15 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common.Internal;
-	using Mapping;
-
 	public class SqlCteTable : SqlTable
 	{
-		[DisallowNull]
 		public CteClause? Cte { get; set; }
 
 		public override SqlObjectName TableName
@@ -19,15 +16,11 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public SqlCteTable(
-			CteClause        cte,
-			EntityDescriptor entityDescriptor)
-			: base(entityDescriptor, cte.Name)
+			CteClause cte,
+			Type      entityType)
+			: base(entityType, null, new SqlObjectName(cte.Name ?? string.Empty))
 		{
 			Cte = cte;
-
-			// CTE has it's own names even there is mapping
-			foreach (var field in Fields)
-				field.PhysicalName = field.Name;
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
@@ -41,13 +34,47 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
+		public override IList<ISqlExpression>? GetKeys(bool allIfEmpty)
+		{
+			if (Cte?.Body == null)
+				return null;
+
+			var cteKeys = Cte.Body.GetKeys(allIfEmpty);
+
+			if (!(cteKeys?.Count > 0))
+				return cteKeys;
+
+			var hasInvalid = false;
+			IList<ISqlExpression> projected = Cte.Body.Select.Columns.Select((c, idx) =>
+			{
+				var found = cteKeys.FirstOrDefault(k => ReferenceEquals(c, k));
+				if (found != null)
+				{
+					var field = Cte.Fields[idx];
+
+					var foundField = Fields.FirstOrDefault(f => f.Name == field.Name);
+					if (foundField == null)
+						hasInvalid = true;
+					return (foundField as ISqlExpression)!;
+				}
+
+				hasInvalid = true;
+				return null!;
+			}).ToList();
+
+			if (hasInvalid)
+				return null;
+
+			return projected;
+		}
+
 		internal void SetDelayedCteObject(CteClause cte)
 		{
 			Cte        = cte;
 			ObjectType = cte.ObjectType;
 		}
 
-		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause cte)
+		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause? cte)
 			: base(table.ObjectType, null, table.TableName)
 		{
 			Alias              = table.Alias;
@@ -60,23 +87,21 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementType ElementType  => QueryElementType.SqlCteTable;
 		public override SqlTableType     SqlTableType => SqlTableType.Cte;
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			Cte?.ToString(sb, dic);
-			return sb;
+			writer
+				.DebugAppendUniqueId(this)
+				.Append("CteTable(")
+				.AppendElement(Cte)
+				.Append('[').Append(SourceID).Append(']')
+				.Append(')');
+
+			return writer;
 		}
 
 		#region IQueryElement Members
 
-		public string SqlText
-		{
-			get
-			{
-				using var sb = Pools.StringBuilder.Allocate();
-				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
-			}
-		}
-
+		public string SqlText => this.ToDebugString();
 
 		#endregion
 	}

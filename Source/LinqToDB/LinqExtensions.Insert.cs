@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -402,7 +401,6 @@ namespace LinqToDB
 
 			return ((IQueryProviderAsync)query).ExecuteAsync<int>(expr, token);
 		}
-
 
 		#region Many records
 

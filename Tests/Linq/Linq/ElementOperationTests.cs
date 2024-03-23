@@ -165,11 +165,10 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Where(c => c.ParentID > 0).Distinct().OrderBy(_ => _.ChildID).FirstOrDefault());
 		}
 
-		//TODO: Access has nonstandard join, we have to improve it
 		[Test]
-		public void NestedFirstOrDefault5([DataSources(TestProvName.AllAccess)] string context)
+		public void NestedFirstOrDefault5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 				AreEqual(
 					from p in GrandChild 
 					where p.ChildID > 0

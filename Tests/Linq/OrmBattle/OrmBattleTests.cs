@@ -34,6 +34,15 @@ namespace Tests.OrmBattle
 		private string _currentContext;
 		protected NorthwindDB db;
 
+		List<Northwind.Customer> Customers;
+		List<Northwind.Employee> Employees;
+		List<Northwind.Order>    Order;
+		List<Northwind.Product>  Products;
+//		List<Northwind.Category> Categories;
+//		List<Northwind.Supplier> Suppliers;
+//		List<Northwind.Product> DiscontinuedProducts;
+//		List<Northwind.OrderDetail> OrderDetails;
+
 		protected void Setup(string context)
 		{
 			if (_currentContext == context)
@@ -72,14 +81,6 @@ namespace Tests.OrmBattle
 			using (db)
 				db = null;
 		}
-		List<Northwind.Customer> Customers;
-		List<Northwind.Employee> Employees;
-		List<Northwind.Order> Order;
-		List<Northwind.Product> Products;
-//		List<Northwind.Category> Categories;
-//		List<Northwind.Supplier> Suppliers;
-//		List<Northwind.Product> DiscontinuedProducts;
-//		List<Northwind.OrderDetail> OrderDetails;
 
 		// DTO for testing purposes.
 		public class OrderDTO
@@ -517,7 +518,7 @@ namespace Tests.OrmBattle
 		public void ComplexTakeSkipTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
-			var original = db.Order.ToList()
+			var original = Order.ToList()
 				.OrderBy(o => o.OrderDate)
 				.Skip(100)
 				.Take(50)
@@ -649,8 +650,7 @@ namespace Tests.OrmBattle
 		}
 
 		[Test]
-		[ActiveIssue("Bad database data", Configuration = TestProvName.AllSQLiteNorthwind)]
-		public void OrderBySelectManyTest([NorthwindDataContext] string context)
+		public void OrderBySelectManyTest([NorthwindDataContext(true)] string context)
 		{
 			Setup(context);
 			var result =
@@ -741,13 +741,18 @@ namespace Tests.OrmBattle
 		[Test]
 		public void GroupByCalculatedTest([NorthwindDataContext] string context)
 		{
+			using (new GuardGrouping(false))
+
 			Setup(context);
+
 			var result =
 				from o in db.Order
 				group o by o.Freight > 50 ? o.Freight > 100 ? "expensive" : "average" : "cheap"
 				into g
 				select g;
+
 			var list = result.ToList();
+
 			Assert.AreEqual(3, list.Count);
 		}
 
@@ -800,10 +805,14 @@ namespace Tests.OrmBattle
 		[Test]
 		public void GroupByAggregate([NorthwindDataContext] string context)
 		{
+			using (new GuardGrouping(false))
+
 			Setup(context);
+
 			var result =
 				from c in db.Customer
 				group c by c.Orders.Average(o => o.Freight) >= 80;
+
 			var list = result.ToList();
 			Assert.AreEqual(2, list.Count);
 			var firstGroupList = list.First(g => !g.Key).ToList();
@@ -813,7 +822,10 @@ namespace Tests.OrmBattle
 		[Test]
 		public void ComplexGroupingTest([NorthwindDataContext] string context)
 		{
+			using (new GuardGrouping(false))
+
 			Setup(context);
+
 			var result =
 				from c in db.Customer
 				select new
@@ -954,7 +966,7 @@ namespace Tests.OrmBattle
 		{
 			Setup(context);
 			var result = db.Product.Where(p => p is DiscontinuedProduct);
-			var expected = db.Product.ToList().Where(p => p is DiscontinuedProduct);
+			var expected = Products.Where(p => p is DiscontinuedProduct);
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 			Assert.AreEqual(expected.Count(), list.Count);
@@ -965,7 +977,7 @@ namespace Tests.OrmBattle
 		{
 			Setup(context);
 			var result = db.Product.Where(p => p is Product);
-			var expected = db.Product.ToList();
+			var expected = Products.ToList();
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 			Assert.AreEqual(expected.Count(), list.Count);
@@ -981,7 +993,7 @@ namespace Tests.OrmBattle
 					? x
 					: null);
 
-			var expected = db.Product.ToList()
+			var expected = Products
 				.Select(x => x is DiscontinuedProduct
 					? x
 					: null);
@@ -998,7 +1010,7 @@ namespace Tests.OrmBattle
 		{
 			Setup(context);
 			var result = db.Product.OfType<DiscontinuedProduct>();
-			var expected = db.Product.ToList().OfType<DiscontinuedProduct>();
+			var expected = Products.OfType<DiscontinuedProduct>();
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 			Assert.AreEqual(expected.Count(), list.Count);
@@ -1253,7 +1265,7 @@ namespace Tests.OrmBattle
 		{
 			Setup(context);
 			var result = db.Customer.Where(c => db.Order.Count(o => o.Customer.CustomerID == c.CustomerID) > 5);
-			var expected = Customers.Where(c => db.Order.Count(o => o.Customer.CustomerID == c.CustomerID) > 5);
+			var expected = Customers.Where(c => Order.Count(o => o.Customer.CustomerID == c.CustomerID) > 5);
 
 			Assert.IsTrue(expected.Except(result).Count() == 0);
 		}
@@ -1425,7 +1437,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, ActiveIssue(573, Details = "'k.CompanyName' cannot be converted to SQL.")]
+		[Test]
 		public void ComplexTest2([NorthwindDataContext] string context)
 		{
 			Setup(context);

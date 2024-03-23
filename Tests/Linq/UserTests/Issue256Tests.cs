@@ -68,6 +68,7 @@ namespace Tests.UserTests
 			[Issue256TestSource] string context,
 			[ValueSource(nameof(TestActions))] Action<ITestDataContext,byte[],int> action)
 		{
+			using var _ = new DisableBaseline("test name conflicts");
 			Test(context, action, 1);
 		}
 
@@ -76,6 +77,7 @@ namespace Tests.UserTests
 			[Issue256TestSource] string context,
 			[ValueSource(nameof(TestActions))] Action<ITestDataContext,byte[],int> action)
 		{
+			using var _ = new DisableBaseline("test name conflicts");
 			Test(context, action, 3);
 		}
 

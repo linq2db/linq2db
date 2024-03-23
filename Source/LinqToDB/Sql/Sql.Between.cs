@@ -1,8 +1,10 @@
-﻿using System;
-using LinqToDB.SqlQuery;
+﻿#pragma warning disable CS8604 // TODO:WAITFIX
+using System;
 
 namespace LinqToDB
 {
+	using LinqToDB.SqlQuery;
+
 	partial class Sql
 	{
 
@@ -39,20 +41,17 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x));
-				builder.ResultExpression = new SqlSearchCondition(new SqlCondition(false,
-					new SqlPredicate.Between(args[0], false, args[1], args[2])));
+				builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.Between(args[0], false, args[1], args[2]));
 			}
 		}
-		
+
 		private sealed class NotBetweenBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x));
-				builder.ResultExpression = new SqlSearchCondition(new SqlCondition(false,
-					new SqlPredicate.Between(args[0], true, args[1], args[2])));
+				builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.Between(args[0], true, args[1], args[2]));
 			}
 		}
-		
 	}
 }

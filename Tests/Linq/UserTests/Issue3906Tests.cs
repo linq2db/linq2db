@@ -35,7 +35,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void QueryNotPossible([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void QueryNotPossible([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InfeedAdvicePositionDTO>())

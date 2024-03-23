@@ -1043,7 +1043,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.ByteN equals y.ByteN
+							join y in db.GetTable<IntegerConverts>() on new { x.ByteN } equals new { y.ByteN }
 							select x;
 
 				var res = query.Single();
@@ -1077,7 +1077,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.SByteN equals y.SByteN
+							join y in db.GetTable<IntegerConverts>() on new { x.SByteN } equals new { y.SByteN }
 							select x;
 
 				var res = query.Single();
@@ -1111,7 +1111,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.Int16N equals y.Int16N
+							join y in db.GetTable<IntegerConverts>() on new { x.Int16N } equals new { y.Int16N }
 							select x;
 
 				var res = query.Single();
@@ -1145,7 +1145,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.UInt16N equals y.UInt16N
+							join y in db.GetTable<IntegerConverts>() on new { x.UInt16N } equals new { y.UInt16N }
 							select x;
 
 				var res = query.Single();
@@ -1179,7 +1179,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.Int32N equals y.Int32N
+							join y in db.GetTable<IntegerConverts>() on new { x.Int32N } equals new { y.Int32N }
 							select x;
 
 				var res = query.Single();
@@ -1213,7 +1213,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.UInt32N equals y.UInt32N
+							join y in db.GetTable<IntegerConverts>() on new { x.UInt32N } equals new { y.UInt32N }
 							select x;
 
 				var res = query.Single();
@@ -1247,7 +1247,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.Int64N equals y.Int64N
+							join y in db.GetTable<IntegerConverts>() on new { x.Int64N } equals new { y.Int64N }
 							select x;
 
 				var res = query.Single();
@@ -1281,7 +1281,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.UInt64N equals y.UInt64N
+							join y in db.GetTable<IntegerConverts>() on new { x.UInt64N } equals new { y.UInt64N }
 							select x;
 
 				var res = query.Single();

@@ -4,11 +4,9 @@ using System.IO;
 using System.Globalization;
 using System.Reflection;
 
-using LinqToDB.Common;
-
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Configuration;
+	using LinqToDB.Common;
 	using Data;
 
 	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion,SqlServerProviderAdapter.SqlConnection>

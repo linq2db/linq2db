@@ -1,4 +1,7 @@
 ﻿using System.Linq;
+
+using FluentAssertions;
+
 using LinqToDB;
 using NUnit.Framework;
 
@@ -34,8 +37,9 @@ namespace Tests.UserTests
 		[Test]
 		public void AssociationConcat([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable<TestReceipt>())
+			using (db.CreateLocalTable<TestReceipt>(TestReceipt.ExternalReceiptsTableName))
 			using (db.CreateLocalTable<TestCustomer>())
 			{
 				var query = db.GetTable<TestReceipt>()
@@ -44,8 +48,7 @@ namespace Tests.UserTests
 						i =>
 							new { i.ReceiptNo, a = TestCustomer.GetName(i.Customer.BillingGroup) });
 
-				Assert.Throws<LinqToDBException>(() => _ = query.ToArray(),
-					"Associations with Concat/Union or other Set operations are not supported.");
+				FluentActions.Enumerating(() => query).Should().NotThrow();
 			}
 		}
 	}

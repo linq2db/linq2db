@@ -13,7 +13,6 @@ namespace Tests.Linq
 	[TestFixture]
 	public class SelectScalarTests : TestBase
 	{
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Parameter1([DataSources] string context)
 		{
@@ -22,7 +21,6 @@ namespace Tests.Linq
 				Assert.AreEqual(p, db.Select(() => p));
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public async Task Parameter1Async([DataSources] string context)
 		{
@@ -62,7 +60,6 @@ namespace Tests.Linq
 				Assert.AreEqual(1, db.Select(() => new Person { ID = 1, FirstName = "John" }).ID);
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void StrLen([DataSources] string context)
 		{
@@ -77,7 +74,6 @@ namespace Tests.Linq
 				Assert.AreEqual(int.MaxValue, db.Select(() => int.MaxValue));
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Substring([DataSources] string context)
 		{
@@ -86,7 +82,6 @@ namespace Tests.Linq
 				Assert.AreEqual(s.Substring(1), db.Select(() => s.Substring(1)));
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Add([DataSources] string context)
 		{
@@ -251,7 +246,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCastAndHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -269,9 +263,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// Informix actually can use TOP in subqueries when wrapped into another select: https://stackoverflow.com/a/22656180
-		// Looks like SAP HANA2 support TOP in subqueries. We to introduce HANA provider versions
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCast([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -288,7 +279,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -306,7 +296,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithoutCastAndHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -323,7 +312,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCastAndHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -341,7 +329,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCastByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -358,7 +345,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -376,7 +362,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithoutCastAndHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{

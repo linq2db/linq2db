@@ -7,6 +7,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 	using Reflection;
 
 	sealed partial class TableBuilder : ISequenceBuilder
@@ -16,13 +17,12 @@ namespace LinqToDB.Linq.Builder
 		enum BuildContextType
 		{
 			None,
-			TableConstant,
 			GetTableMethod,
 			MemberAccess,
-			Association,
 			TableFunctionAttribute,
+			TableFromExpression,
 			AsCteMethod,
-			CteConstant,
+			GetCteMethod,
 			FromSqlMethod,
 			FromSqlScalarMethod
 		}
@@ -35,29 +35,6 @@ namespace LinqToDB.Linq.Builder
 
 			switch (expression.NodeType)
 			{
-				case ExpressionType.Constant:
-					{
-						var c = (ConstantExpression)expression;
-
-						if (c.Value is IQueryable queryable)
-						{
-							if (typeof(CteTable<>).IsSameOrParentOf(c.Value.GetType()))
-								return BuildContextType.CteConstant;
-
-							// Avoid collision with ArrayBuilder
-							var elementType = queryable.ElementType;
-							if (builder.MappingSchema.IsScalarType(elementType) && typeof(EnumerableQuery<>).IsSameOrParentOf(c.Value.GetType()))
-								break;
-
-							if (queryable.Expression.NodeType == ExpressionType.NewArrayInit)
-								break;
-
-							return BuildContextType.TableConstant;
-						}
-
-						break;
-					}
-
 				case ExpressionType.Call:
 					{
 						var mc = (MethodCallExpression)expression;
@@ -71,8 +48,18 @@ namespace LinqToDB.Linq.Builder
 									break;
 								}
 
+							case "TableFromExpression":
+							{
+								if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
+									return BuildContextType.TableFromExpression;
+								break;
+							}
+
 							case "AsCte":
 								return BuildContextType.AsCteMethod;
+
+							case "GetCte":
+								return BuildContextType.GetCteMethod;
 
 							case "FromSql":
 								return BuildContextType.FromSqlMethod;
@@ -85,13 +72,6 @@ namespace LinqToDB.Linq.Builder
 						if (attr != null)
 							return BuildContextType.TableFunctionAttribute;
 
-						if (mc.IsAssociation(builder.MappingSchema))
-						{
-							parentContext = builder.GetContext(buildInfo.Parent, expression);
-							if (parentContext != null)
-								return BuildContextType.Association;
-						}
-
 						break;
 					}
 
@@ -100,18 +80,9 @@ namespace LinqToDB.Linq.Builder
 					if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
 						return BuildContextType.MemberAccess;
 
-					// Looking for association.
-					//
-					if (buildInfo.IsSubQuery/* && buildInfo.SelectQuery.From.Tables.Count == 0*/)
-					{
-						parentContext = builder.GetContext(buildInfo.Parent, expression);
-						if (parentContext != null)
-							return BuildContextType.Association;
-					}
-
 					break;
 
-				case ExpressionType.Parameter:
+				/*case ExpressionType.Parameter:
 					{
 						if (buildInfo.IsSubQuery && buildInfo.SelectQuery.From.Tables.Count == 0)
 						{
@@ -128,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						break;
-					}
+					}*/
 			}
 
 			return BuildContextType.None;
@@ -139,79 +110,97 @@ namespace LinqToDB.Linq.Builder
 			return FindBuildContext(builder, buildInfo, out var _) != BuildContextType.None;
 		}
 
-		static IBuildContext ApplyQueryFilters(ExpressionBuilder builder, BuildInfo buildInfo, MemberInfo? memberInfo, TableContext tableContext)
+		static Expression CallGetTable<T>(IDataContext dataContext)
+			where T : class
+		{
+			return dataContext.GetTable<T>().Expression;
+		}
+
+		static BuildSequenceResult ApplyQueryFilters(ExpressionBuilder builder, MappingSchema mappingSchema,
+			BuildInfo buildInfo, MemberInfo? memberInfo, TableContext tableContext)
 		{
 			var entityType = tableContext.ObjectType;
 			if (builder.IsFilterDisabled(entityType))
-				return tableContext;
+				return BuildSequenceResult.FromContext(tableContext);
 
-			var ed = builder.MappingSchema.GetEntityDescriptor(entityType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			var ed = mappingSchema.GetEntityDescriptor(entityType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			var filterFunc = ed.QueryFilterFunc;
 			if (filterFunc == null)
-				return tableContext;
-
-			if (memberInfo == null)
-			{
-				memberInfo = Methods.LinqToDB.GetTable.MakeGenericMethod(entityType);
-			}
-
-			var fakeQuery = ExpressionQueryImpl.CreateQuery(entityType, builder.DataContext, null);
-
-			// Here we tell for Equality Comparer to compare optimized expressions
-			//
-			builder.AddQueryableMemberAccessors((filterFunc, fakeQuery), new AccessorMember(memberInfo), builder.DataContext, static (context, mi, dc) =>
-			{
-				var filtered      = (IQueryable)context.filterFunc.DynamicInvoke(context.fakeQuery, dc)!;
-
-				// here we use light version of optimization, only for comparing trees
-				var optimizationContext = new ExpressionTreeOptimizationContext(dc);
-				var optimizedExpr       = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionBuilder.DataContextParam);
-
-				optimizedExpr = optimizationContext.ExposeExpression(optimizedExpr);
-				optimizedExpr = optimizationContext.ExpandQueryableMethods(optimizedExpr);
-
-				return optimizedExpr;
-			});
-
-			var filtered  = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext)!;
-			var optimized = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionBuilder.DataContextParam);
-
-			optimized = builder.ConvertExpressionTree(optimized);
-			optimized = builder.ConvertExpression(optimized);
+				return BuildSequenceResult.FromContext(tableContext);
 
 			var refExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(entityType), tableContext);
-			var replaced = optimized.Replace(fakeQuery.Expression, refExpression);
-			if (replaced == optimized)
-				throw new LinqException("Could not correct query result for processing.");
 
-			var context   = builder.BuildSequence(new BuildInfo(buildInfo, replaced));
-			return context;
+			var        dcParam = filterFunc.Parameters[1];
+			Expression dcExpr  = SqlQueryRootExpression.Create(mappingSchema, dcParam.Type);
 
+			var filterLambda = Expression.Lambda(filterFunc.Body.Replace(dcParam, dcExpr), filterFunc.Parameters[0]);
+			filterLambda = (LambdaExpression)builder.ConvertExpressionTree(filterLambda);
+
+			Expression sequenceExpr = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), refExpression, filterLambda);
+
+			var context   = builder.BuildSequence(new BuildInfo(buildInfo, sequenceExpr));
+			return BuildSequenceResult.FromContext(context);
 		}
 
-		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		static MappingSchema GetRootMappingSchema(ExpressionBuilder builder, Expression expression)
+		{
+			if (expression is SqlQueryRootExpression root)
+				return root.MappingSchema;
+
+			if (expression is NewExpression ne && ne.Arguments.Count > 0)
+			{
+				return GetRootMappingSchema(builder, ne.Arguments[0]);
+			}
+
+			var dc = builder.EvaluateExpression<IDataContext>(expression);
+
+			if (dc != null)
+				return dc.MappingSchema;
+
+			throw new LinqException($"Could not retrieve DataContext information from expression '{expression}'");
+		}
+
+		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var type = FindBuildContext(builder, buildInfo, out var parentContext);
 
 			switch (type)
 			{
-				case BuildContextType.None                   : return null;
-				case BuildContextType.TableConstant:
-					{
-						return ApplyQueryFilters(builder, buildInfo, null,
-							AddTableInScope(new(builder, buildInfo, buildInfo.Expression.EvaluateExpression<IQueryable>(builder.DataContext)!.ElementType)));
-					}
+				case BuildContextType.None                   : return BuildSequenceResult.NotSupported();
 				case BuildContextType.GetTableMethod         :
+				{
+					var mc = (MethodCallExpression)buildInfo.Expression;
+					var mappingSchema = GetRootMappingSchema(builder, mc.Arguments[0]);
+
+					var tableContext = new TableContext(builder, mappingSchema, buildInfo, buildInfo.Expression.Type.GetGenericArguments()[0]);
+					return ApplyQueryFilters(builder, mappingSchema, buildInfo, null, AddTableInScope(tableContext));
+				}
 				case BuildContextType.MemberAccess           :
-					{
-						return ApplyQueryFilters(builder, buildInfo, null,
-							AddTableInScope(new(builder, buildInfo,
-								buildInfo.Expression.Type.GetGenericArguments()[0])));
-					}
-				case BuildContextType.Association            : return parentContext!.GetContext(buildInfo.Expression, 0, buildInfo);
-				case BuildContextType.TableFunctionAttribute : return AddTableInScope(new (builder, buildInfo));
+				{
+					var me            = (MemberExpression)buildInfo.Expression;
+					var mappingSchema = GetRootMappingSchema(builder, me.Expression!);
+
+					var tableContext = new TableContext(builder, mappingSchema, buildInfo, buildInfo.Expression.Type.GetGenericArguments()[0]);
+					return ApplyQueryFilters(builder, mappingSchema, buildInfo, null, AddTableInScope(tableContext));
+				}
+				case BuildContextType.TableFunctionAttribute :
+				{
+					var mappingSchema = builder.MappingSchema;
+
+					return BuildSequenceResult.FromContext(new TableContext(builder, mappingSchema, buildInfo));
+				}
+				case BuildContextType.TableFromExpression :
+				{
+					var mappingSchema = builder.MappingSchema;
+
+					var mc = (MethodCallExpression)buildInfo.Expression;
+
+					var bodyMethod = mc.Arguments[1].UnwrapLambda().Body;
+
+					return BuildSequenceResult.FromContext(new TableContext(builder, mappingSchema, new BuildInfo(buildInfo, bodyMethod)));
+				}
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
-				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);
+				case BuildContextType.GetCteMethod           : return BuildRecursiveCteContextTable (builder, buildInfo);
 				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo, false);
 				case BuildContextType.FromSqlScalarMethod    : return BuildRawSqlTable(builder, buildInfo, true);
 			}
@@ -225,14 +214,10 @@ namespace LinqToDB.Linq.Builder
 			throw new InvalidOperationException();
 		}
 
-		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			return true;
 		}
+
 	}
 }

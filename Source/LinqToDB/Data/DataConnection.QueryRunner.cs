@@ -20,23 +20,26 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
+		IQueryRunner IDataContext.GetQueryRunner(Query query,      IDataContext parametersContext, int queryNumber,
+			Expression                                 expression, object?[]?   parameters,        object?[]? preambles)
 		{
 			CheckAndThrowOnDisposed();
-			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
+			return new QueryRunner(query, queryNumber, this, parametersContext, expression, parameters, preambles);
 		}
 
 		internal sealed class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object?[]? parameters, object?[]? preambles)
-				: base(query, queryNumber, dataConnection, expression, parameters, preambles)
+			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, IDataContext parametersContext, Expression expression, object?[]? parameters, object?[]? preambles)
+				: base(query, queryNumber, dataConnection, parametersContext, expression, parameters, preambles)
 			{
 				_dataConnection = dataConnection;
+				_parametersContext = parametersContext;
 				_executionScope = _dataConnection.DataProvider.ExecuteScope(_dataConnection);
 			}
 
 			readonly IExecutionScope? _executionScope;
 			readonly DataConnection   _dataConnection;
+			readonly IDataContext     _parametersContext;
 			readonly DateTime         _startedOn = DateTime.UtcNow;
 			readonly Stopwatch        _stopwatch = Stopwatch.StartNew();
 
@@ -182,67 +185,117 @@ namespace LinqToDB.Data
 
 			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, bool forGetSqlText, int startIndent = 0)
 			{
-				if (query.Context != null)
+				bool aquiredLock = false;
+				try
 				{
-					return new PreparedQuery((CommandWithParameters[])query.Context, query.Statement, dataConnection.GetNextCommandHints(!forGetSqlText));
+					Monitor.Enter(query, ref aquiredLock);
+
+					var statement = query.Statement;
+					var options   = query.DataOptions ?? dataConnection.Options;
+
+					if (query.Context is CommandWithParameters[] context)
+					{
+						return new PreparedQuery(context, statement, dataConnection.GetNextCommandHints(!forGetSqlText));
+					}
+
+					var continuousRun = query.IsContinuousRun;
+
+					if (continuousRun)
+					{
+						// query will not modify statement, release lock
+						Monitor.Exit(query);
+						aquiredLock = false;
+					}
+
+					var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (options);
+					var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
+
+					// custom query handling
+					var          preprocessContext = new EvaluationContext(parameterValues);
+					SqlStatement newSql;
+					newSql = dataConnection.ProcessQuery(statement, preprocessContext);
+
+					if (!ReferenceEquals(statement, newSql))
+					{
+						statement                      = newSql;
+						statement.IsParameterDependent = true;
+					}
+
+					if (!continuousRun)
+					{
+						if (!statement.IsParameterDependent)
+						{
+							if (sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, statement))
+								statement.IsParameterDependent = true;
+						}
+					}
+
+					var cc = sqlBuilder.CommandCount(statement);
+					using var sb = Pools.StringBuilder.Allocate();
+
+					var commands = new CommandWithParameters[cc];
+
+					var aliases = query.Aliases;
+					if (aliases == null || !ReferenceEquals(query.Statement, statement))
+					{
+						// correct aliases if needed
+						SqlStatement.PrepareQueryAndAliases(statement, query.Aliases, out aliases);
+					}
+
+					var optimizeAndConvertAll = !continuousRun && !statement.IsParameterDependent;
+					// We can optimize and convert all queries at once, because they are not parameter dependent.
+
+					var optimizeVisitor = sqlOptimizer.CreateOptimizerVisitor(optimizeAndConvertAll);
+					var convertVisitor  = sqlOptimizer.CreateConvertVisitor(optimizeAndConvertAll);
+
+					// do not pass parameter values to the evaluation context when optimising whole query.
+					var evaluationContext = new EvaluationContext(optimizeAndConvertAll ? null: parameterValues);
+
+					var optimizationContext = new OptimizationContext(evaluationContext, options,
+						dataConnection.DataProvider.SqlProviderFlags,
+						dataConnection.MappingSchema,
+						aliases,
+						optimizeVisitor,
+						convertVisitor,
+						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
+						isAlreadyOptimizedAndConverted: optimizeAndConvertAll,
+						dataConnection.DataProvider.GetQueryParameterNormalizer);
+
+					if (optimizeAndConvertAll)
+					{
+						var nullability = NullabilityContext.GetContext(statement.SelectQuery);
+						statement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
+					}
+					
+					for (var i = 0; i < cc; i++)
+					{
+						sb.Value.Length = 0;
+
+						using (ActivityService.Start(ActivityID.BuildSql))
+							sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, startIndent);
+
+						commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
+						optimizationContext.ClearParameters();
+					}
+
+					if (optimizeAndConvertAll)
+					{
+						query.Context = commands;
+
+						// clear aliases, they are not needed after SQL generation.
+						//
+						query.Aliases = null;
+					}
+
+					query.IsContinuousRun = true;
+
+					return new PreparedQuery(commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText));
 				}
-
-				var sql     = query.Statement;
-				var options = query.DataOptions ?? dataConnection.Options;
-
-				// custom query handling
-				var preprocessContext = new EvaluationContext(parameterValues);
-				var newSql            = dataConnection.ProcessQuery(sql, preprocessContext);
-
-				if (!ReferenceEquals(sql, newSql))
+				finally
 				{
-					sql = newSql;
-					sql.IsParameterDependent = true;
+					if (aquiredLock)
+						Monitor.Exit(query);
 				}
-
-				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
-				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (options);
-
-				var cc = sqlBuilder.CommandCount(sql);
-				using var sb = Pools.StringBuilder.Allocate();
-
-				var commands = new CommandWithParameters[cc];
-
-				if (!sql.IsParameterDependent)
-					sql.IsParameterDependent = sqlOptimizer.IsParameterDependent(sql);
-
-				// optimize, optionally with parameters
-				var evaluationContext = new EvaluationContext(sql.IsParameterDependent ? parameterValues : null);
-
-				var aliases = query.Aliases;
-				if (aliases == null || !ReferenceEquals(query.Statement, sql))
-				{
-					// correct aliases if needed
-					SqlStatement.PrepareQueryAndAliases(sql, query.Aliases, out aliases);
-				}
-
-				for (var i = 0; i < cc; i++)
-				{
-					var optimizationContext = new OptimizationContext(evaluationContext, aliases, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent, dataConnection.DataProvider.GetQueryParameterNormalizer);
-					sb.Value.Length = 0;
-
-					using (ActivityService.Start(ActivityID.BuildSql))
-						sqlBuilder.BuildSql(i, sql, sb.Value, optimizationContext, startIndent);
-
-					commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
-					optimizationContext.ClearParameters();
-				}
-
-				if (!sql.IsParameterDependent)
-				{
-					query.Context = commands;
-
-					// clear aliases, they are not needed after SQL generation.
-					//
-					query.Aliases = null;
-				}
-
-				return new PreparedQuery(commands, sql, dataConnection.GetNextCommandHints(!forGetSqlText));
 			}
 
 			static DbParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues, bool forGetSqlText)

@@ -100,7 +100,7 @@ namespace Tests.UserTests
 
 				var str = sqlCondos.ToString();
 
-				str.Should().ContainAll("CountCondoTags", "CountCondoCategories");
+				str.Should().Contain("COUNT(*)", AtLeast.Twice());
 			}
 		}
 	}

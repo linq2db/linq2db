@@ -23,7 +23,7 @@ namespace Tests.UserTests
 
 			public override string ToString()
 			{
-				return Field1;
+				return Field1 ?? "";
 			}
 		}
 
@@ -64,7 +64,8 @@ namespace Tests.UserTests
 
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
+			ms.SetConvertExpression<CustomFieldType, DataParameter>(
+				_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -98,7 +99,10 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => _ == null ? new DataParameter(null, null, DataType.NVarChar) : new DataParameter(null, _.ToString()), false);
+			ms.SetConvertExpression<CustomFieldType, DataParameter>(
+				_ => _ == null
+					? new DataParameter(null, null, DataType.NVarChar)
+					: new DataParameter(null, _.ToString()), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -132,7 +136,8 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
+			ms.SetConvertExpression<CustomFieldType, DataParameter>(
+				_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
 
 			using (var db = GetDataContext(context,  ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -165,7 +170,8 @@ namespace Tests.UserTests
 
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
+			ms.SetConvertExpression<CustomFieldType, DataParameter>(
+				_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -200,7 +206,10 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => _ == null ? new DataParameter(null, null, DataType.NVarChar) : new DataParameter(null, _.ToString()), false);
+			ms.SetConvertExpression<CustomFieldType?, DataParameter>(
+				_ => _ == null
+					? new DataParameter(null, null, DataType.NVarChar)
+					: new DataParameter(null, _.ToString()), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -235,7 +244,8 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
+			ms.SetConvertExpression<CustomFieldType, DataParameter>(
+				_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())

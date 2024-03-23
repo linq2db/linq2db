@@ -27,7 +27,7 @@ namespace LinqToDB.Metadata
 		readonly ConcurrentDictionary<Type, MemberInfo[]> _dynamicColumns = new();
 		readonly object                                   _syncRoot = new();
 
-		readonly IMetadataReader[]             _readers;
+		readonly IMetadataReader[]              _readers;
 		public   IReadOnlyList<IMetadataReader> Readers => _readers;
 
 		public MetadataReader(params IMetadataReader[] readers)

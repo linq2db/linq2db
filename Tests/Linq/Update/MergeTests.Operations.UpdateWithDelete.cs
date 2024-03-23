@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-
+using LinqToDB.Linq;
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -682,8 +682,8 @@ namespace Tests.xUpdate
 							(t, s) => t.Field2 == s.Field2)
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));
+				Assert.IsInstanceOf<LinqException>(exception);
+				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -711,8 +711,8 @@ namespace Tests.xUpdate
 							(t, s) => t.Field2 == s.Field1)
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+				Assert.IsInstanceOf<LinqException>(exception);
+				Assert.That(exception.Message,  Does.EndWith("'s.Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -734,8 +734,8 @@ namespace Tests.xUpdate
 						.UpdateWhenMatchedThenDelete((t, s) => t.Field2 == s.Field1)
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+				Assert.IsInstanceOf<LinqException>(exception);
+				Assert.That(exception.Message,  Does.EndWith("'source.Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -764,8 +764,8 @@ namespace Tests.xUpdate
 							(t, s) => t.Field2 == s.Field1)
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));
+				Assert.IsInstanceOf<LinqException>(exception);
+				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
 	}

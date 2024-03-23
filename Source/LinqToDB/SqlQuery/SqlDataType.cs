@@ -5,7 +5,6 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -368,7 +367,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -379,15 +378,6 @@ namespace LinqToDB.SqlQuery
 
 		public int  Precedence => SqlQuery.Precedence.Primary;
 		public Type SystemType => Type.SystemType;
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			return func(context, this);
-		}
 
 		#endregion
 
@@ -405,6 +395,8 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+
 		public bool CanBeNull => false;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
@@ -416,21 +408,24 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SqlDataType;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.AppendFormat(CultureInfo.InvariantCulture, $"{Type.DataType}");
+			writer.Append(Type.DataType);
 
 			if (!string.IsNullOrEmpty(Type.DbType))
-				sb.Append(CultureInfo.InvariantCulture, $":\"{Type.DbType}\"");
+				writer.Append(":\"").Append(Type.DbType).Append('"');
 
 			if (Type.Length != 0)
-				sb.Append(CultureInfo.InvariantCulture, $"({Type.Length})");
+				writer.Append('(').Append(Type.Length).Append(')');
 			else if (Type.Precision != 0)
-				sb.Append(CultureInfo.InvariantCulture, $"({Type.Precision},{Type.Scale})");
+				writer.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

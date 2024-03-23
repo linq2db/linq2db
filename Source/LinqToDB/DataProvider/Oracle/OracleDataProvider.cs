@@ -29,13 +29,16 @@ namespace LinqToDB.DataProvider.Oracle
 			Provider = provider;
 			Version  = version;
 
-			SqlProviderFlags.IsIdentityParameterRequired       = true;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.ReadCommitted;
-			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
+			SqlProviderFlags.IsIdentityParameterRequired                           = true;
+			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported                            = true;
+			SqlProviderFlags.IsDistinctOrderBySupported                            = false;
+			SqlProviderFlags.IsUpdateFromSupported                                 = false;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel                       = IsolationLevel.ReadCommitted;
+			SqlProviderFlags.IsNamingQueryBlockSupported                           = true;
+			SqlProviderFlags.IsRowNumberWithoutOrderBySupported                    = false;
+			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported          = false;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
 			                                         RowFeature.Update   | RowFeature.Overlaps;

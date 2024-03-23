@@ -82,7 +82,6 @@ namespace LinqToDB.DataProvider.Informix
 			};
 		}
 
-
 		protected override string GetProviderSpecificTypeNamespace()
 		{
 			return _provider.Adapter.ProviderTypesNamespace;
@@ -388,7 +387,6 @@ namespace LinqToDB.DataProvider.Informix
 								value2 is DBNull ? null : (string)value2
 							};
 						}
-
 
 						if (name.StartsWith("r"))
 						{

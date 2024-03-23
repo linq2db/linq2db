@@ -33,7 +33,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
-		protected override bool SupportsNullInColumn          => false;
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
@@ -211,49 +210,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, true);
-
-			AppendIndent();
-			StringBuilder.Append("ON CONFLICT (");
-
-			var firstKey = true;
-			foreach (var expr in insertOrUpdate.Update.Keys)
-			{
-				if (!firstKey)
-					StringBuilder.Append(InlineComma);
-				firstKey = false;
-
-				BuildExpression(expr.Column, false, true);
-			}
-
-			if (insertOrUpdate.Update.Items.Count > 0)
-			{
-				StringBuilder.AppendLine(") DO UPDATE SET");
-
-				Indent++;
-
-				var first = true;
-
-				foreach (var expr in insertOrUpdate.Update.Items)
-				{
-					if (!first)
-						StringBuilder.AppendLine(Comma);
-					first = false;
-
-					AppendIndent();
-					BuildExpression(expr.Column, false, true);
-					StringBuilder.Append(" = ");
-					BuildExpression(expr.Expression!, true, true);
-				}
-
-				Indent--;
-
-				StringBuilder.AppendLine();
-			}
-			else
-			{
-				StringBuilder.AppendLine(") DO NOTHING");
-			}
+			BuildInsertOrUpdateQueryAsOnConflictUpdateOrNothing(insertOrUpdate);
 		}
 
 		public override ISqlExpression? GetIdentityExpression(SqlTable table)
@@ -363,7 +320,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
-			var table = truncateTable.Table;
+			var nullability = NullabilityContext.NonQuery;
+			var table       = truncateTable.Table;
 
 			BuildTag(truncateTable);
 			AppendIndent();

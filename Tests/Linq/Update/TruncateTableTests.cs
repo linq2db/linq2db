@@ -1,4 +1,7 @@
 ﻿using System.Linq;
+
+using FluentAssertions;
+
 using JetBrains.Annotations;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -75,6 +78,8 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 
 			using var table = db.CreateTempTable<TestIdTrun>("test_temp", tableOptions:TableOptions.CheckExistence);
+
+			table.Truncate(false);
 
 			table.Insert(() => new TestIdTrun { Field1 = 1m });
 			table.Insert(() => new TestIdTrun { Field1 = 1m });

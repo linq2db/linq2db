@@ -2,6 +2,10 @@
 
 namespace LinqToDB.Linq
 {
+	using Common;
+	using LinqToDB.Linq.Builder;
+	using LinqToDB.Mapping;
+
 	internal static class Exceptions
 	{
 		internal static object DefaultInheritanceMappingException(object value, Type type)

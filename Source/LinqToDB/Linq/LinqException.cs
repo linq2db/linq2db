@@ -33,6 +33,17 @@ namespace LinqToDB.Linq
 		/// with the specified error message.
 		/// </summary>
 		/// <param name="message">The message to display to the client when the exception is thrown.</param>
+		/// <seealso cref="Exception.Message"/>
+		public LinqException(string message)
+			: base(message)
+		{
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="LinqException"/> class
+		/// with the specified error message.
+		/// </summary>
+		/// <param name="message">The message to display to the client when the exception is thrown.</param>
 		/// <param name="args">An <see cref="System.Object"/> array containing zero or more objects to format.</param>
 		/// <seealso cref="Exception.Message"/>
 		[JetBrains.Annotations.StringFormatMethod("message")]

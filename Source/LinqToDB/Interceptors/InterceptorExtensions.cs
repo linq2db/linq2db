@@ -6,6 +6,8 @@ namespace LinqToDB
 	using Data;
 	using Interceptors;
 
+	using LinqToDB.Interceptors.Internal;
+
 	/// <summary>
 	/// Contains extensions that add one-time interceptors to connection.
 	/// </summary>
@@ -46,6 +48,7 @@ namespace LinqToDB
 				case IDataContextInterceptor      dc : AddInterceptorImpl(interceptable, dc); break;
 				case IEntityServiceInterceptor    es : AddInterceptorImpl(interceptable, es); break;
 				case IUnwrapDataObjectInterceptor wr : AddInterceptorImpl(interceptable, wr); break;
+				case IEntityBindingInterceptor    ex : AddInterceptorImpl(interceptable, ex); break;
 			}
 		}
 
@@ -76,6 +79,9 @@ namespace LinqToDB
 				case IInterceptable<IUnwrapDataObjectInterceptor> wri when interceptor is IUnwrapDataObjectInterceptor wr:
 					wri.Interceptor = new AggregatedUnwrapDataObjectInterceptor { Interceptors = { wri.Interceptor!, wr } };
 					break;
+				case IInterceptable<IEntityBindingInterceptor> exi when interceptor is IEntityBindingInterceptor ex:
+					exi.Interceptor = new AggregatedEntityBindingInterceptor    { Interceptors = { exi.Interceptor!, ex } };
+					break;
 				default:
 					throw new NotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
 			}
@@ -98,12 +104,6 @@ namespace LinqToDB
 						break;
 				}
 			}
-		}
-
-		internal static T? CloneAggregated<T>(this T? interceptor)
-			where T : IInterceptor
-		{
-			return interceptor is AggregatedInterceptor<T> ai ? (T?)(object?)ai.Clone() : interceptor;
 		}
 	}
 }

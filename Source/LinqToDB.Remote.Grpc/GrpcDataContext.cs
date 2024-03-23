@@ -55,15 +55,6 @@ namespace LinqToDB.Remote.Grpc
 			return new GrpcLinqServiceClient(channel);
 		}
 
-		protected override IDataContext Clone()
-		{
-			return new GrpcDataContext(Address, ChannelOptions)
-			{
-				MappingSchema       = MappingSchema,
-				ConfigurationString = ConfigurationString
-			};
-		}
-
 		protected override string ContextIDPrefix => "GrpcRemoteLinqService";
 
 		#endregion

@@ -6,7 +6,6 @@ using System.Reflection;
 namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
-	using Configuration;
 	using Data;
 
 	public static partial class MySqlTools

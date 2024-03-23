@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return "OFFSET {0}";
 		}
 
-		public override bool IsNestedJoinSupported => false;
+		public override bool IsNestedJoinParenthesisRequired => true;
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
@@ -184,6 +184,11 @@ namespace LinqToDB.DataProvider.SQLite
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
+		{
+			BuildInsertOrUpdateQueryAsOnConflictUpdateOrNothing(insertOrUpdate);
+		}
+
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
@@ -193,8 +198,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
-			valuesTable = ConvertElement(valuesTable);
-			var rows = valuesTable.BuildRows(OptimizationContext.Context);
+			valuesTable = ConvertElement(valuesTable, checkBoolean: false);
+			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
 
 			if (rows.Count == 0)
 			{

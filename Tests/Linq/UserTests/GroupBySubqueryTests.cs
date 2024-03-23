@@ -84,6 +84,8 @@ namespace Tests.UserTests
 				).Distinct();
 
 				var sql1 = q1.GetSelectQuery();
+				TestContext.WriteLine(q1.ToString());
+
 				Assert.That(sql1.Select.IsDistinct, "Distinct not present");
 
 				var q2 =
@@ -92,6 +94,9 @@ namespace Tests.UserTests
 					into g
 					where g.Count() > 1
 					select new { g.Key.Field6, EngineeringCircuitNumber = g.Key.Field4, Count = g.Count() };
+
+				var sql2 = q2.GetSelectQuery();
+				TestContext.WriteLine(q2.ToString());
 
 				var distinct = q2.EnumQueries().FirstOrDefault(q => q.Select.IsDistinct)!;
 

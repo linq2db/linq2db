@@ -16,6 +16,8 @@ namespace LinqToDB.SqlQuery
 
 		public IReadOnlyParameterValues? ParameterValues { get; }
 
+		public bool IsParametersInitialized => ParameterValues != null;
+
 		internal bool TryGetValue(IQueryElement expr, [NotNullWhen(true)] out (object? value, bool success)? info)
 		{
 			if (_evaluationCache == null)

@@ -1,17 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Data.Common;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Globalization;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.DB2
 {
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using Common;
+
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
@@ -29,8 +31,6 @@ namespace LinqToDB.DataProvider.DB2
 		SqlField? _identityField;
 
 		protected abstract DB2Version Version { get; }
-
-		protected override bool SupportsNullInColumn => false;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -68,6 +68,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			var table = truncateTable.Table!;
 
 			BuildTag(truncateTable);
@@ -80,6 +82,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
+
 			Statement           = statement;
 			StringBuilder       = sb;
 			OptimizationContext = optimizationContext;
@@ -280,7 +284,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table;
+			var nullability = NullabilityContext.NonQuery;
+			var table       = dropTable.Table;
 
 			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
@@ -391,6 +396,61 @@ END");
 			}
 
 			base.BuildCreateTablePrimaryKey(createTable, pkName, fieldNames);
+		}
+
+		// TODO: Copy of Firebird's BuildParameter, looks like we can move such functionality to SqlProviderFlags
+		protected override void BuildParameter(SqlParameter parameter)
+		{
+			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
+			{
+				base.BuildParameter(parameter);
+				return;
+			}
+
+			if (parameter.NeedsCast)
+			{
+				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+
+				// TODO: temporary guard against cast to unknown type (Variant)
+				var dbDataType = paramValue.DbDataType;
+				if (dbDataType.DataType == DataType.Undefined)
+				{
+					base.BuildParameter(parameter);
+					return;
+				}
+
+				var saveStep = BuildStep;
+				BuildStep = Step.TypedExpression;
+
+				if (paramValue.ProviderValue is byte[] bytes)
+				{
+					dbDataType = dbDataType.WithLength(bytes.Length);
+				}
+				else if (paramValue.ProviderValue is string str)
+				{
+					dbDataType = dbDataType.WithLength(str.Length);
+				}
+				else if (paramValue.ProviderValue is decimal d)
+				{
+					if (dbDataType.Precision == null)
+						dbDataType = dbDataType.WithPrecision(DecimalHelper.GetPrecision(d));
+					if (dbDataType.Scale == null)
+						dbDataType = dbDataType.WithScale(DecimalHelper.GetScale(d));
+				}
+
+				if (dbDataType.Length > 32672)
+				{
+					base.BuildParameter(parameter);
+					return;
+				}
+
+				BuildTypedExpression(new SqlDataType(dbDataType), parameter);
+				BuildStep = saveStep;
+
+				return;
+			}
+
+			base.BuildParameter(parameter);
 		}
 	}
 }

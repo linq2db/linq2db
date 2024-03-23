@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -219,8 +218,8 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source and target set.</returns>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
-			                    this IMergeableUsing<TTarget> merge,
-			[SqlQueryDependent] IEnumerable<TSource>          source)
+			      this IMergeableUsing<TTarget> merge,
+			      IEnumerable<TSource>          source)
 		{
 			if (merge  == null) throw new ArgumentNullException(nameof(merge));
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -240,7 +239,6 @@ namespace LinqToDB
 						null,
 						UsingMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 						mergeQuery.Expression, Expression.Constant(source)));
-
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}

@@ -68,12 +68,12 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetIdentityExpression(table);
 		}
 
-		protected override bool BuildWhere(SelectQuery selectQuery)
+		protected override bool ShouldBuildWhere(SelectQuery selectQuery, out SqlSearchCondition condition)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
 
 			return
-				base.BuildWhere(selectQuery) ||
+				base.ShouldBuildWhere(selectQuery, out condition) ||
 				!NeedSkip(takeExpr, skipEpr) &&
 				 NeedTake(takeExpr) &&
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
@@ -209,16 +209,14 @@ namespace LinqToDB.DataProvider.Oracle
 			return sb.Append(value);
 		}
 
-		protected override StringBuilder BuildExpression(
-			ISqlExpression expr,
-			bool buildTableName,
-			bool checkParentheses,
-			string? alias,
-			ref bool addAlias,
-			bool throwExceptionIfTableNotFound = true)
+		protected override StringBuilder BuildExpression(ISqlExpression expr,
+			bool                                                        buildTableName,
+			bool                                                        checkParentheses,
+			string?                                                     alias,
+			ref bool                                                    addAlias,
+			bool                                                        throwExceptionIfTableNotFound = true)
 		{
-			return base.BuildExpression(
-				expr,
+			return base.BuildExpression(expr,
 				buildTableName && Statement.QueryType != QueryType.MultiInsert,
 				checkParentheses,
 				alias,
@@ -297,6 +295,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
 
 			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
@@ -640,8 +640,9 @@ END;",
 
 		protected override void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
 		{
+			var nullability = NullabilityContext.NonQuery;
 			BuildMultiInsertClause(statement);
-			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, skipAlias: false);
+			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, skipAlias : false);
 		}
 
 		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
@@ -650,10 +651,12 @@ END;",
 
 			Indent++;
 
+			var nullability = NullabilityContext.NonQuery;
+
 			if (statement.InsertType == MultiInsertType.Unconditional)
 			{
 				foreach (var insert in statement.Inserts)
-					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName : true, addAlias : false);
 			}
 			else
 			{
@@ -662,7 +665,7 @@ END;",
 					if (insert.When != null)
 					{
 						int length = StringBuilder.Append("WHEN ").Length;
-						BuildSearchCondition(insert.When, wrapCondition: true);
+						BuildSearchCondition(insert.When, wrapCondition : true);
 						// If `when` condition is optimized to always `true`,
 						// then BuildSearchCondition doesn't write anything.
 						if (StringBuilder.Length == length)
@@ -674,7 +677,7 @@ END;",
 						StringBuilder.AppendLine("ELSE");
 					}
 
-					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName : true, addAlias : false);
 				}
 			}
 

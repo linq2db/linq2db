@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
-	using MySql;
 	using Expressions;
 	using Mapping;
+	using MySql;
 	using SqlQuery;
 
 	public class ClickHouseProviderAdapter : IDynamicProviderAdapter

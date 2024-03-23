@@ -83,7 +83,6 @@ namespace Tests.Linq
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllInformix,
-				ProviderName.DB2,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -103,7 +102,6 @@ namespace Tests.Linq
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllInformix,
-				ProviderName.DB2,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -122,7 +120,6 @@ namespace Tests.Linq
 				ProviderName.SqlCe,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllInformix,
-				ProviderName.DB2,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -151,8 +148,7 @@ namespace Tests.Linq
 		public void CharAsSqlParameter5(
 			[DataSources(
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllInformix,
-				ProviderName.DB2)]
+				TestProvName.AllInformix)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -175,7 +171,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -190,7 +186,7 @@ namespace Tests.Linq
 
 		// DB2: see DB2SqlOptimizer.SetQueryParameter - binary parameters inlined for DB2
 		[Test]
-		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlBinaryParameter([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -317,8 +313,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// sequence evaluation fails in GetChildrenFiltered2
-		[ActiveIssue("Unable to cast object of type 'System.Linq.Expressions.FieldExpression' to type 'System.Linq.Expressions.LambdaExpression'.")]
 		[Test]
 		public void TestQueryableCallWithParametersWorkaround2([DataSources] string context)
 		{
@@ -468,7 +462,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Issue1189Test([DataSources] string context)
 		{
@@ -1258,7 +1251,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
-				Assert.AreEqual(3, _cnt1);
+				Assert.AreEqual(1, _cnt1);
 				Assert.AreEqual(1, _cnt2);
 				Assert.AreEqual(1, _cnt3);
 
@@ -1271,8 +1264,8 @@ namespace Tests.Linq
 				Assert.AreEqual(2, persons.Count);
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
-				Assert.AreEqual(5, _cnt1);
-				Assert.AreEqual(3, _cnt2);
+				Assert.AreEqual(1, _cnt1);
+				Assert.AreEqual(1, _cnt2);
 				Assert.AreEqual(1, _cnt3);
 
 				_cnt1   = 0;
@@ -1283,9 +1276,9 @@ namespace Tests.Linq
 
 				Assert.AreEqual(1, persons.Count);
 				Assert.AreEqual(1, persons[0].ID);
-				Assert.AreEqual(4, _cnt1);
-				Assert.AreEqual(2, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.AreEqual(1, _cnt1);
+				Assert.AreEqual(1, _cnt2);
+				Assert.AreEqual(1, _cnt3);
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1296,9 +1289,9 @@ namespace Tests.Linq
 				Assert.AreEqual(2, persons.Count);
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
-				Assert.AreEqual(2, _cnt1);
-				Assert.AreEqual(2, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.AreEqual(1, _cnt1);
+				Assert.AreEqual(1, _cnt2);
+				Assert.AreEqual(1, _cnt3);
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1310,9 +1303,9 @@ namespace Tests.Linq
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
-				Assert.AreEqual(4, _cnt1);
-				Assert.AreEqual(3, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.AreEqual(1, _cnt1);
+				Assert.AreEqual(1, _cnt2);
+				Assert.AreEqual(1, _cnt3);
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1572,6 +1565,34 @@ namespace Tests.Linq
 						  && (c.MiddleName != null ? c.MiddleName.Trim().ToLower() : string.Empty) == (data.MiddleName != null ? data.MiddleName.Trim().ToLower() : string.Empty)
 						  select c).ToList();
 		}
+
+
+		int GetId(int id, int increment)
+		{
+			return id + increment;
+		}
+
+		/// <summary>
+		/// Tests that we do not have cache hit for similar parameters
+		/// </summary>
+		/// <param name="context"></param>
+		[Test]
+		public void Caching([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+
+				var query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
+				AssertQuery(query1);
+
+				id = 2;
+
+				var query2  = db.Parent.Where(x => x.ParentID == GetId(id, 1) || x.ParentID == GetId(id, 0));
+				AssertQuery(query2);
+			}
+		}
+
 
 		[Table]
 		public sealed class Issue4371Table

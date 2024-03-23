@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -89,12 +88,6 @@ namespace LinqToDB
 		bool?               IsDBNullAllowed    (DbDataReader reader, int idx);
 
 		/// <summary>
-		/// Clones current context.
-		/// </summary>
-		/// <returns>Cloned context.</returns>
-		IDataContext        Clone              (bool forNestedQuery);
-
-		/// <summary>
 		/// Closes context connection and disposes underlying resources.
 		/// </summary>
 		void                Close              ();
@@ -108,12 +101,13 @@ namespace LinqToDB
 		/// Returns query runner service for current context.
 		/// </summary>
 		/// <param name="query">Query batch object.</param>
+		/// <param name="parametersContext">Context instance which will be used for parameters evaluation.</param>
 		/// <param name="queryNumber">Index of query in query batch.</param>
 		/// <param name="expression">Query results mapping expression.</param>
 		/// <param name="parameters">Query parameters.</param>
 		/// <param name="preambles">Query preambles</param>
 		/// <returns>Query runner service.</returns>
-		IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles);
+		IQueryRunner GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles);
 
 		/// <summary>
 		/// Adds interceptor instance to context.

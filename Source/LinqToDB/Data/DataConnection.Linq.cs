@@ -34,32 +34,6 @@ namespace LinqToDB.Data
 			return DataProvider.IsDBNullAllowed(Options, reader, idx);
 		}
 
-		IDataContext IDataContext.Clone(bool forNestedQuery)
-		{
-			CheckAndThrowOnDisposed();
-
-			if (forNestedQuery && _connection != null && IsMarsEnabled)
-				return new DataConnection(DataProvider, _connection.Connection)
-				{
-					MappingSchema             = MappingSchema,
-					TransactionAsync          = TransactionAsync,
-					IsMarsEnabled             = IsMarsEnabled,
-					ConnectionString          = ConnectionString,
-					RetryPolicy               = RetryPolicy,
-					CommandTimeout            = CommandTimeout,
-					InlineParameters          = InlineParameters,
-					ThrowOnDisposed           = ThrowOnDisposed,
-					_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
-					OnTraceConnection         = OnTraceConnection,
-					_commandInterceptor       = _commandInterceptor      .CloneAggregated(),
-					_connectionInterceptor    = _connectionInterceptor   .CloneAggregated(),
-					_dataContextInterceptor   = _dataContextInterceptor  .CloneAggregated(),
-					_entityServiceInterceptor = _entityServiceInterceptor.CloneAggregated(),
-				};
-
-			return (DataConnection)Clone();
-		}
-
 		string IDataContext.ContextName => DataProvider.Name;
 
 		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);

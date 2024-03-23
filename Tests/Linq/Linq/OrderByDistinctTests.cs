@@ -237,23 +237,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByDistinctFailTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)
+		public void OrderByDistinctNotFailTest([DataSources()] string context)
 		{
 			var testData = GetTestData();
 
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(testData))
 			{
-				Assert.Throws<LinqToDBException>(() =>
-				{
-					table
-						.OrderBy(x => x.OrderData1)
-						.Select(x => x.DuplicateData)
-						.Distinct()
-						.Skip(0)
-						.Take(3)
-						.ToArray();
-				});
+				var result = table
+					.OrderBy(x => x.OrderData1)
+					.Select(x => x.DuplicateData)
+					.Distinct()
+					.Skip(0)
+					.Take(3)
+					.ToArray();
 			}
 		}
 

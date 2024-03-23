@@ -5,6 +5,8 @@ dotnet_diagnostic.ide0001.severity = none # IDE0001: Simplify name
 dotnet_diagnostic.ide0004.severity = none # IDE0004: Remove unnecessary cast
 dotnet_diagnostic.CA1852.severity = none # CA1852: Type can be sealed
 
+dotnet_diagnostic.CA1852.severity = none # CA1852: Seal internal types
+
 # ReSharper properties
 resharper_space_before_new_parentheses = true
 

@@ -11,9 +11,9 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("AsUpdatable");
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0])));
 		}
 	}
 }

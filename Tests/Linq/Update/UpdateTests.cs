@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -275,10 +275,6 @@ namespace Tests.xUpdate
 				TestProvName.AllClickHouse,
 				ProviderName.SqlCe,
 				ProviderName.DB2,
-				TestProvName.AllFirebird,
-				TestProvName.AllOracle,
-				TestProvName.AllMySql,
-				TestProvName.AllSQLite,
 				ProviderName.Access,
 				TestProvName.AllSapHana)]
 			string context)
@@ -307,14 +303,8 @@ namespace Tests.xUpdate
 			[DataSources(
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
-				ProviderName.SqlCe,
-				ProviderName.DB2,
-				TestProvName.AllFirebird,
-				TestProvName.AllOracle,
-				TestProvName.AllMySql,
-				TestProvName.AllSQLite,
-				ProviderName.Access,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -358,9 +348,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
-				TestProvName.AllOracle,
-				TestProvName.AllSQLite,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -383,9 +370,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
-				TestProvName.AllOracle,
-				TestProvName.AllSQLite,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -408,9 +392,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
-				TestProvName.AllOracle,
-				TestProvName.AllSQLite,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -688,7 +669,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation1([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation1([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -709,7 +690,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -730,7 +711,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation2([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation2([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -751,7 +732,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation3([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation3([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -772,7 +753,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateAssociation4([DataSources(TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		public void UpdateAssociation4([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -811,8 +792,8 @@ namespace Tests.xUpdate
 		[Table("LinqDataTypes")]
 		sealed class Table1
 		{
-			[Column] public int  ID;
-			[Column] public bool BoolValue;
+			[Column] public int  ID        { get; set; }
+			[Column] public bool BoolValue { get; set; }
 
 			[Association(ThisKey = "ID", OtherKey = "ParentID", CanBeNull = false)]
 			public List<Table2> Tables2 = null!;
@@ -821,8 +802,8 @@ namespace Tests.xUpdate
 		[Table("Parent")]
 		sealed class Table2
 		{
-			[Column] public int  ParentID;
-			[Column] public int? Value1;
+			[Column] public int  ParentID { get; set; }
+			[Column] public int? Value1   { get; set; }
 
 			[Association(ThisKey = "ParentID", OtherKey = "ID", CanBeNull = false)]
 			public Table1 Table1 = null!;
@@ -836,9 +817,6 @@ namespace Tests.xUpdate
 				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllSQLite,
-				TestProvName.AllFirebird,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana)]
 			string context)
@@ -854,22 +832,8 @@ namespace Tests.xUpdate
 					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
 					.Update();
 
-				if (!context.IsAnyOf(TestProvName.AllSybase))
-				{
-					var idx = db.LastQuery!.IndexOf("INNER JOIN");
-
-					Assert.That(idx, Is.Not.EqualTo(-1));
-
-					idx = db.LastQuery.IndexOf("INNER JOIN", idx + 1);
-
-					Assert.That(idx, Is.EqualTo(-1));
-				}
-				else
-				{
-					var idx = db.LastQuery!.IndexOf("INNER JOIN");
-
-					Assert.That(idx, Is.EqualTo(-1));
-				}
+				db.LastQuery!.Should().Contain("INNER JOIN");
+				db.LastQuery!.Should().Contain("DISTINCT");
 			}
 		}
 
@@ -946,15 +910,13 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP clause.")]
 		public void UpdateTop(
 			[DataSources(
 				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana)]
 			string context)
@@ -981,17 +943,13 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateTakeOrdered(
 			[DataSources(
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana,
-				TestProvName.AllFirebird,
-				TestProvName.AllSQLite,
-				TestProvName.AllMySql,
-				TestProvName.AllSybase,
-				TestProvName.AllOracle)]
+				TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1026,11 +984,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana,
-				TestProvName.AllFirebird,
-				TestProvName.AllSQLite,
-				TestProvName.AllMySql,
-				TestProvName.AllSybase,
-				TestProvName.AllOracle)]
+				TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1060,6 +1014,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP clause.")]
 		public void TestUpdateTakeNotOrdered(
 			[DataSources(
 				TestProvName.AllAccess,
@@ -1067,7 +1022,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
-				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana)]
 			string context)
@@ -1123,13 +1077,9 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateIssue319Regression(
 			[DataSources(
-				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
-				TestProvName.AllSQLite,
-				TestProvName.AllMySql,
-				TestProvName.AllSybase,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -1143,17 +1093,17 @@ namespace Tests.xUpdate
 				});
 
 				var query = db.GetTable<Parent1>()
-						.Where(_ => _.ParentID == id)
-						.Select(_ => new Parent1()
+						.Where(p => p.ParentID == id)
+						.Select(p => new Parent1()
 						{
-							ParentID = _.ParentID
+							ParentID = p.ParentID
 						});
 
 				var queryResult = new Lazy<Parent1>(() => query.First());
 
 				var cnt = db.GetTable<Parent1>()
-						.Where(_ => _.ParentID == id && query.Count() > 0)
-						.Update(_ => new Parent1()
+						.Where(p => p.ParentID == id && query.Count() > 0)
+						.Update(p => new Parent1()
 						{
 							Value1 = queryResult.Value.ParentID
 						});
@@ -1396,12 +1346,59 @@ namespace Tests.xUpdate
 						});
 			}
 		}
+
+		[Test]
+		public void TestUpdateFromJoinDifferentTable([DataSources(
+			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllClickHouse,
+			ProviderName.SqlCe,
+			TestProvName.AllInformix)] string context)
+		{
+			using (var db          = GetDataContext(context))
+			using (var gt_s_one    = db.CreateLocalTable(UpdateFromJoin.Data))
+			using (var gt_s_one_target = db.CreateLocalTable(tableName: "gt_s_one_target", UpdateFromJoin.Data))
+			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
+			{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
+				gt_s_one
+					.GroupJoin(
+						access_mode,
+						l => l.col3!.Replace("auth.", "").ToUpper(),
+						am => am.code!.ToUpper(),
+						(l, am) => new
+						{
+							l,
+							am
+						})
+					.SelectMany(
+						x => x.am.DefaultIfEmpty(),
+						(x1, y1) => new
+						{
+							gt    = x1.l,
+							theAM = y1!.id
+						})
+					.Update(
+						gt_s_one.TableName("gt_s_one_target"),
+						s => new UpdateFromJoin()
+						{
+							col1 = s.gt.col1,
+							col2 = s.gt.col2,
+							col3 = s.gt.col3!.Replace("auth.", ""),
+							col4 = s.gt.col4,
+							col5 = s.gt.col3 == "empty" ? "1" : "0",
+							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
+						});
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
+			}
+		}
+
 		enum UpdateSetEnum
 		{
 			Value1 = 6,
 			Value2 = 7,
 			Value3 = 8
 		}
+
 		[Table]
 		sealed class UpdateSetTest
 		{

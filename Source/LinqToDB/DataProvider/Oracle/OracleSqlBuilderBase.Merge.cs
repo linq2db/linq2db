@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle
 {
 	using SqlQuery;
 
@@ -22,7 +20,7 @@ namespace LinqToDB.DataProvider.Oracle
 		// dual table owner
 		protected override string FakeTableSchema => "sys";
 
-		protected override void BuildMergeInto(SqlMergeStatement merge)
+		protected override void BuildMergeInto(NullabilityContext nullability, SqlMergeStatement merge)
 		{
 			StringBuilder.Append("MERGE");
 
@@ -42,7 +40,7 @@ namespace LinqToDB.DataProvider.Oracle
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildMergeOperationInsert(SqlMergeOperationClause operation)
+		protected override void BuildMergeOperationInsert(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			StringBuilder
 				.AppendLine()
@@ -57,11 +55,11 @@ namespace LinqToDB.DataProvider.Oracle
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" WHERE ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition : true);
 			}
 		}
 
-		protected override void BuildMergeOperationUpdate(SqlMergeOperationClause operation)
+		protected override void BuildMergeOperationUpdate(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			StringBuilder
 				.AppendLine()
@@ -78,20 +76,20 @@ namespace LinqToDB.DataProvider.Oracle
 					.AppendLine("WHERE")
 					.Append('\t');
 
-				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition : true);
 			}
 		}
 
-		protected override void BuildMergeOperationUpdateWithDelete(SqlMergeOperationClause operation)
+		protected override void BuildMergeOperationUpdateWithDelete(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
-			BuildMergeOperationUpdate(operation);
+			BuildMergeOperationUpdate(nullability, operation);
 
 			StringBuilder
 				.AppendLine()
 				.AppendLine("DELETE WHERE")
 				.Append('\t');
 
-			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete!, wrapCondition: true);
+			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete!, wrapCondition : true);
 		}
 	}
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -11,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class AllJoinsLinqBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames4 = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
+		static readonly string[] MethodNames4 = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -24,14 +23,15 @@ namespace LinqToDB.Linq.Builder
 				methodCall.IsQueryable("CrossJoin" ) && methodCall.Arguments.Count == 3;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 			List<SqlQueryExtension>? extensions = null;
 
-			if (innerContext is QueryExtensionBuilder.JoinHintContext jhc)
+			var jhc = SequenceHelper.GetJoinHintContext(innerContext);
+			if (jhc != null)
 			{
 				innerContext = jhc.Context;
 				extensions   = jhc.Extensions;
@@ -50,31 +50,32 @@ namespace LinqToDB.Linq.Builder
 				default:
 					conditionIndex = 3;
 
-					joinType = (SqlJoinType) methodCall.Arguments[2].EvaluateExpression(builder.DataContext)! switch
+					joinType = (SqlJoinType) builder.EvaluateExpression(methodCall.Arguments[2])! switch
 					{
 						SqlJoinType.Inner => JoinType.Inner,
 						SqlJoinType.Left  => JoinType.Left,
 						SqlJoinType.Right => JoinType.Right,
 						SqlJoinType.Full  => JoinType.Full,
-						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[2].EvaluateExpression(builder.DataContext)!}")
+						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)builder.EvaluateExpression(methodCall.Arguments[2])!}")
 					};
 					break;
 			}
 
 			if (joinType == JoinType.Right || joinType == JoinType.Full)
-				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null);
+				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, outerContext, null, false);
 			outerContext = new SubQueryContext(outerContext);
 
 			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null);
+				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, innerContext, null, false);
 			innerContext = new SubQueryContext(innerContext);
 
-			var selector = (LambdaExpression)methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap();
+			var selector = methodCall.Arguments[^1].UnwrapLambda();
+			var selectorBody = SequenceHelper.PrepareBody(selector, outerContext, new ScopeContext(innerContext, outerContext));
 
 			outerContext.SetAlias(selector.Parameters[0].Name);
 			innerContext.SetAlias(selector.Parameters[1].Name);
 
-			var joinContext = new JoinContext(buildInfo.Parent, selector, outerContext, innerContext)
+			var joinContext = new SelectContext(buildInfo.Parent, builder, null, selectorBody, outerContext.SelectQuery, buildInfo.IsSubQuery)
 #if DEBUG
 			{
 				Debug_MethodCall = methodCall
@@ -84,8 +85,12 @@ namespace LinqToDB.Linq.Builder
 
 			if (conditionIndex != -1)
 			{
-				var condition     = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
-				var conditionExpr = condition.GetBody(selector.Parameters[0], selector.Parameters[1]);
+				var condition     = methodCall.Arguments[conditionIndex].UnwrapLambda();
+
+				// Comparison should be provided without DefaultIfEmptyBuilder, so we left original contexts for comparison
+				// ScopeContext ensures that comparison will placed on needed level.
+				//
+				var conditionExpr = SequenceHelper.PrepareBody(condition, outerContext, innerContext);
 
 				conditionExpr = builder.ConvertExpression(conditionExpr);
 
@@ -96,47 +101,24 @@ namespace LinqToDB.Linq.Builder
 				if (extensions != null)
 					join.JoinedTable.SqlQueryExtensions = extensions;
 
+				var flags = ProjectFlags.SQL;
+
 				builder.BuildSearchCondition(
 					joinContext,
-					conditionExpr,
-					@join.JoinedTable.Condition.Conditions);
+					conditionExpr, flags,
+					join.JoinedTable.Condition);
+
+				/*if (joinType == JoinType.Full)
+				{
+					join.JoinedTable.Condition = QueryHelper.CorrectComparisonForJoin(join.JoinedTable.Condition);
+				}*/
 			}
 			else
 			{
 				outerContext.SelectQuery.From.Table(innerContext.SelectQuery);
 			}
 
-			return joinContext;
-		}
-
-		internal sealed class JoinContext : SelectContext
-		{
-			public JoinContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, outerContext, innerContext)
-			{
-			}
-
-			public IBuildContext OuterContext => Sequence[0];
-			public IBuildContext InnerContext => Sequence[1];
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				var result = base.ConvertToSql(expression, level, flags);
-
-				// we need exact column from InnerContext
-				result = result.Select(s =>
-					{
-						if (s.Sql is SqlColumn column && InnerContext.SelectQuery.From.Tables.Any(ts => ts.Source == column.Parent))
-						{
-							var idx = InnerContext.SelectQuery.Select.Add(s.Sql);
-							return new SqlInfo(s.MemberChain, InnerContext.SelectQuery.Select.Columns[idx], InnerContext.SelectQuery, idx);
-						}
-
-						return s;
-					})
-					.ToArray();
-
-				return result;
-			}
+			return BuildSequenceResult.FromContext(joinContext);
 		}
 	}
 }

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlOrderByClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
+	public class SqlOrderByClause : ClauseBase, IQueryElement
 	{
 		internal SqlOrderByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
@@ -15,76 +14,64 @@ namespace LinqToDB.SqlQuery
 			Items.AddRange(items);
 		}
 
-		public SqlOrderByClause Expr(ISqlExpression expr, bool isDescending)
+		public SqlOrderByClause Expr(ISqlExpression expr, bool isDescending, bool isPositioned)
 		{
-			Add(expr, isDescending);
+			Add(expr, isDescending, isPositioned);
 			return this;
 		}
 
-		public SqlOrderByClause Expr     (ISqlExpression expr)               { return Expr(expr,  false);        }
-		public SqlOrderByClause ExprAsc  (ISqlExpression expr)               { return Expr(expr,  false);        }
-		public SqlOrderByClause ExprDesc (ISqlExpression expr)               { return Expr(expr,  true);         }
-		public SqlOrderByClause Field    (SqlField field, bool isDescending) { return Expr(field, isDescending); }
-		public SqlOrderByClause Field    (SqlField field)                    { return Expr(field, false);        }
-		public SqlOrderByClause FieldAsc (SqlField field)                    { return Expr(field, false);        }
-		public SqlOrderByClause FieldDesc(SqlField field)                    { return Expr(field, true);         }
+		public SqlOrderByClause Expr     (ISqlExpression expr, bool isPositioned = false) => Expr(expr, false, isPositioned);
+		public SqlOrderByClause ExprAsc  (ISqlExpression expr, bool isPositioned = false) => Expr(expr, false, isPositioned);
+		public SqlOrderByClause ExprDesc(ISqlExpression  expr, bool isPositioned = false) => Expr(expr, true, isPositioned);
 
-		void Add(ISqlExpression expr, bool isDescending)
+		public SqlOrderByClause Field(SqlField     field, bool isDescending, bool isPositioned) => Expr(field, isDescending, isPositioned);
+		public SqlOrderByClause Field(SqlField     field, bool isPositioned = false) => Expr(field, false, isPositioned);
+		public SqlOrderByClause FieldAsc (SqlField field, bool isPositioned = false) => Expr(field, false, isPositioned);
+		public SqlOrderByClause FieldDesc(SqlField field, bool isPositioned = false) => Expr(field, true, isPositioned);
+
+		void Add(ISqlExpression expr, bool isDescending, bool isPositioned)
 		{
 			foreach (var item in Items)
 				if (item.Expression.Equals(expr, (x, y) => !(x is SqlColumn col) || !col.Parent!.HasSetOperators || x == y))
 					return;
 
-			Items.Add(new SqlOrderByItem(expr, isDescending));
+			Items.Add(new SqlOrderByItem(expr, isDescending, isPositioned));
 		}
 
-		public List<SqlOrderByItem>  Items { get; } = new List<SqlOrderByItem>();
+		public List<SqlOrderByItem> Items { get; } = [];
 
 		public bool IsEmpty => Items.Count == 0;
 
-#if OVERRIDETOSTRING
+		#region QueryElement overrides
 
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
+		public override QueryElementType ElementType => QueryElementType.OrderByClause;
 
-#endif
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			foreach (var t in Items)
-				t.Walk(options, context, func);
-			return null;
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-		public QueryElementType ElementType => QueryElementType.OrderByClause;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (Items.Count == 0)
-				return sb;
+				return writer;
 
-			sb.Append(" \nORDER BY \n");
+			writer
+				.AppendLine()
+				.AppendLine("ORDER BY");
 
-			foreach (IQueryElement item in Items)
-			{
-				sb.Append('\t');
-				item.ToString(sb, dic);
-				sb.Append(", ");
-			}
+			using(writer.IndentScope())
+				for (var index = 0; index < Items.Count; index++)
+				{
+					var item = Items[index];
+					writer.AppendElement(item);
+					if (index < Items.Count - 1)
+						writer.AppendLine(',');
+				}
 
-			sb.Length -= 2;
-
-			return sb;
+			return writer;
 		}
 
 		#endregion
+
+		public void Cleanup()
+		{
+			Items.Clear();
+		}
 	}
 }

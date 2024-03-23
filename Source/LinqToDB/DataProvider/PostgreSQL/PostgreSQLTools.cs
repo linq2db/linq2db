@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Reflection;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL

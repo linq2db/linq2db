@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -58,8 +57,6 @@ namespace LinqToDB.Data.RetryPolicy
 
 		void IAsyncDbConnection.Open() => _policy.Execute(_connection.Open);
 		Task IAsyncDbConnection.OpenAsync(CancellationToken cancellationToken) => _policy.ExecuteAsync(_connection.OpenAsync, cancellationToken);
-
-		DbConnection? IAsyncDbConnection.TryClone() => _connection.TryClone();
 #endregion
 	}
 }

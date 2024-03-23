@@ -17,7 +17,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Stores mapping entity descriptor.
 	/// </summary>
-	[DebuggerDisplay("{TypeAccessor.Type.Name} (\"{TableName.Name}\")")]
+	[DebuggerDisplay("{TypeAccessor.Type.Name} (\"{Name}\")")]
 	public class EntityDescriptor : IEntityChangeDescriptor
 	{
 		/// <summary>
@@ -152,7 +152,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal bool HasComplexColumns { get; private set; }
 
-		public Delegate? QueryFilterFunc { get; private set; }
+		public LambdaExpression? QueryFilterFunc { get; private set; }
 
 		bool HasInheritanceMapping()
 		{
@@ -209,13 +209,13 @@ namespace LinqToDB.Mapping
 				if (aa != null)
 				{
 					_associations.Add(new AssociationDescriptor(
-						TypeAccessor.Type, 
-						member.MemberInfo, 
-						aa.GetThisKeys(), 
+						TypeAccessor.Type,
+						member.MemberInfo,
+						aa.GetThisKeys(),
 						aa.GetOtherKeys(),
-						aa.ExpressionPredicate, 
-						aa.Predicate, 
-						aa.QueryExpressionMethod, 
+						aa.ExpressionPredicate,
+						aa.Predicate,
+						aa.QueryExpressionMethod,
 						aa.QueryExpression,
 						aa.Storage,
 						aa.AssociationSetterExpressionMethod,

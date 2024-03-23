@@ -77,7 +77,6 @@ namespace LinqToDB.DataProvider.SQLite
 			return ProviderName.SQLiteClassic;
 		}
 
-
 		public static IDataProvider GetDataProvider(string? providerName = null)
 		{
 			switch (providerName)

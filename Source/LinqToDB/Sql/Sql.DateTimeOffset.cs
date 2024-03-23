@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS8604 // TODO:WAITFIX
+using System;
 using System.Globalization;
 
 namespace LinqToDB
@@ -56,6 +57,11 @@ namespace LinqToDB
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number", true);
 
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				builder.ResultExpression = new SqlFunction(typeof(DateTimeOffset?), builder.Expression,
 					new SqlExpression(partStr, Precedence.Primary), number, date);
@@ -69,6 +75,12 @@ namespace LinqToDB
 				var part   = builder.GetValue<DateParts>("part");
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
+
+				if (date is null || number is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				string expStr;
 				switch (part)

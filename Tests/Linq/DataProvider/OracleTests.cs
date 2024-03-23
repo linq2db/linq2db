@@ -334,8 +334,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<DateTime> ("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.EqualTo(default(DateTime)));
 				Assert.That(conn.Execute<DateTime?>("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.EqualTo(default(DateTime?)));
 
-				Assert.That(conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).                         ToString(), Is.EqualTo(dto.ToString(DateTimeFormatInfo.InvariantInfo)));
-				Assert.That(conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto, DataType.DateTimeOffset)).ToString(), Is.EqualTo(dto.ToString(DateTimeFormatInfo.InvariantInfo)));
+				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).Should().Be(dto);
+				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto, DataType.DateTimeOffset)).Should().Be(dto);
 			}
 		}
 
@@ -906,7 +906,7 @@ namespace Tests.DataProvider
 
 				_ = query.FirstOrDefault();
 
-				Assert.That(parameters.Length, Is.EqualTo(2));
+				parameters.Should().HaveCount(1);
 
 				if (context.IsAnyOf(TestProvName.AllOracleDevart))
 					// another case of sloppy implementation by devart...
@@ -936,7 +936,8 @@ namespace Tests.DataProvider
 
 				_ = query.FirstOrDefault();
 
-				Assert.That(parameters.Length, Is.EqualTo(2));
+
+				parameters.Should().HaveCount(1);
 
 				if (context.IsAnyOf(TestProvName.AllOracleDevart))
 					// another case of sloppy implementation by devart...
@@ -4299,7 +4300,7 @@ END convert_bool;");
 		}
 
 		[Test]
-		public void Issue4172Test1([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
+		public void Issue4172Test1([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
@@ -4316,7 +4317,7 @@ END convert_bool;");
 		}
 
 		[Test]
-		public void Issue4172Test2([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
+		public void Issue4172Test2([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
@@ -4328,6 +4329,40 @@ END convert_bool;");
 				 from u in users
 				 where u.ROLE != Role.Unknown
 				 select u).ToList();
+
+			Assert.True(data.Count == 1, "Incorrect count");
+		}
+
+		[Test]
+		public void Issue4172Test1Swap([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
+
+			users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
+
+			// Should return Unknown Role users
+			var data = (
+				from u in users
+				where Role.Unknown == u.ROLE
+				select u).ToList();
+
+			Assert.True(data.Count == 0, "Incorrect count");
+		}
+
+		[Test]
+		public void Issue4172Test2Swap([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
+
+			users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
+
+			// Should return Known Role users
+			var data = (
+				from u in users
+				where Role.Unknown != u.ROLE
+				select u).ToList();
 
 			Assert.True(data.Count == 1, "Incorrect count");
 		}

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -26,8 +26,6 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			return new InformixSqlBuilder(this);
 		}
-
-		protected override bool SupportsNullInColumn => false;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -279,7 +277,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			BuildExpression(value);
 			StringBuilder.Append("::");
-			BuildDataType(dataType, false, value.CanBeNull);
+			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
@@ -319,7 +317,8 @@ namespace LinqToDB.DataProvider.Informix
 			BuildDropTableStatementIfExists(dropTable);
 		}
 
-		protected override void BuildSqlRow(SqlRow expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
+		protected override void BuildSqlRow(SqlRowExpression expr, bool buildTableName, bool checkParentheses,
+			bool                                   throwExceptionIfTableNotFound)
 		{
 			// Informix needs ROW(1,2) syntax instead of BasicSqlBuilder default (1,2)
 			StringBuilder.Append("ROW (");
@@ -330,18 +329,6 @@ namespace LinqToDB.DataProvider.Informix
 			}
 			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
 			StringBuilder.Append(')');
-		}
-
-		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)
-		{
-			var newExpr = base.WrapBooleanExpression(expr);
-			if (!ReferenceEquals(newExpr, expr))
-			{
-				return new SqlFunction(typeof(bool), "Convert", false, new SqlDataType(DataType.Boolean),
-					newExpr);
-			}
-
-			return newExpr;
 		}
 
 		protected override bool IsReserved(string word)

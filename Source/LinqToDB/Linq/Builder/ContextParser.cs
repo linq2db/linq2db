@@ -11,19 +11,14 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return buildInfo.Expression is MethodCallExpression call 
+			return buildInfo.Expression is MethodCallExpression call
 				&& call.Method.Name == "GetContext";
 		}
 
-		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var call = (MethodCallExpression)buildInfo.Expression;
-			return new Context(builder.BuildSequence(new BuildInfo(buildInfo, call.Arguments[0])));
-		}
-
-		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
+			return BuildSequenceResult.FromContext(new Context(builder.BuildSequence(new BuildInfo(buildInfo, call.Arguments[0]))));
 		}
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
@@ -39,15 +34,21 @@ namespace LinqToDB.Linq.Builder
 
 			public ISqlOptimizer? SqlOptimizer;
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				query.DoNotCache = true;
 
 				QueryRunner.SetNonQueryQuery(query);
 
-				SqlOptimizer  = query.SqlOptimizer;
+				SqlOptimizer = query.SqlOptimizer;
 
 				query.GetElement = (db, expr, ps, preambles) => this;
+				base.SetRunQuery(query, expr);
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new Context(context.CloneContext(Context));
 			}
 		}
 	}

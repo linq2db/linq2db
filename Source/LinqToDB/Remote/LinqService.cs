@@ -110,13 +110,17 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				using var db = CreateDataContext(configuration);
+#pragma warning disable CA2007
+				await using var db = CreateDataContext(configuration);
+#pragma warning restore CA2007
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var _  = db.DataProvider.ExecuteScope(db);
+#pragma warning disable CA2007
+				await using var _ = db.DataProvider.ExecuteScope(db);
+#pragma warning restore CA2007
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -170,13 +174,17 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				using var db = CreateDataContext(configuration);
+#pragma warning disable CA2007
+				await using var db = CreateDataContext(configuration);
+#pragma warning restore CA2007
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var _  = db.DataProvider.ExecuteScope(db);
+#pragma warning disable CA2007
+				await using var _ = db.DataProvider.ExecuteScope(db);
+#pragma warning restore CA2007
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -267,17 +275,18 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				using var db = CreateDataContext(configuration);
+#pragma warning disable CA2007
+				await using var db = CreateDataContext(configuration);
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var _  = db.DataProvider.ExecuteScope(db);
+				await using var _ = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
-				using var rd = await DataConnection.QueryRunner.ExecuteReaderAsync(
+				await using var rd = await DataConnection.QueryRunner.ExecuteReaderAsync(
 					db,
 					new QueryContext(query.Statement, query.DataOptions),
 					SqlParameterValues.Empty,
@@ -287,6 +296,7 @@ namespace LinqToDB.Remote
 				var ret = ProcessDataReaderWrapper(query, db, rd);
 
 				return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
+#pragma warning restore CA2007
 			}
 			catch (Exception exception)
 			{
@@ -388,7 +398,6 @@ namespace LinqToDB.Remote
 				if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
 					fieldType = fieldType.GetGenericArguments()[0];
 
-
 				if (fieldType.IsEnum || fieldType.IsNullable() && fieldType.ToNullableUnderlying().IsEnum)
 				{
 					var stringConverter = db.MappingSchema.GetConverter(new DbDataType(typeof(string)), new DbDataType(fieldType), false, ConversionType.Common);
@@ -477,7 +486,9 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				using var db = CreateDataContext(configuration);
+#pragma warning disable CA2007
+				await using var db = CreateDataContext(configuration);
+#pragma warning restore CA2007
 
 				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, r)).ToArray();
@@ -485,7 +496,9 @@ namespace LinqToDB.Remote
 				foreach (var query in queries)
 					ValidateQuery(query);
 
-				using var _  = db.DataProvider.ExecuteScope(db);
+#pragma warning disable CA2007
+				await using var _ = db.DataProvider.ExecuteScope(db);
+#pragma warning restore CA2007
 
 				await db.BeginTransactionAsync(cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -516,11 +529,12 @@ namespace LinqToDB.Remote
 
 		sealed class QueryContext(SqlStatement statement, DataOptions dataOptions) : IQueryContext
 		{
-			public SqlStatement    Statement   { get; } = statement;
-			public object?         Context     { get; set; }
-			public SqlParameter[]? Parameters  { get; set; }
-			public AliasesContext? Aliases     { get; set; }
-			public DataOptions     DataOptions { get; } = dataOptions;
+			public SqlStatement    Statement       { get; } = statement;
+			public object?         Context         { get; set; }
+			public bool            IsContinuousRun { get; set; }
+			public SqlParameter[]? Parameters      { get; set; }
+			public AliasesContext? Aliases         { get; set; }
+			public DataOptions     DataOptions     { get; } = dataOptions;
 		}
 
 		#endregion

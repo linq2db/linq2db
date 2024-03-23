@@ -208,30 +208,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void TestCloneConnection([DataSources(false)] string context)
-		{
-			using (var db = new NewDataContext(context))
-			{
-				Assert.AreEqual(0, db.CloneCalled);
-				using (new NewDataContext(context))
-				{
-					using (((IDataContext)db).Clone(true))
-					{
-						Assert.False(db.IsMarsEnabled);
-						Assert.AreEqual(0, db.CloneCalled);
-
-						// create and preserve underlying dataconnection
-						db.KeepConnectionAlive = true;
-						db.GetTable<Person>().ToList();
-
-						using (((IDataContext)db).Clone(true))
-							Assert.AreEqual(db.IsMarsEnabled ? 1 : 0, db.CloneCalled);
-					}
-				}
-			}
-		}
-
 		sealed class NewDataContext : DataContext
 		{
 			public NewDataContext(string context)
@@ -240,18 +216,11 @@ namespace Tests.Linq
 			}
 
 			public int CreateCalled;
-			public int CloneCalled;
 
 			protected override DataConnection CreateDataConnection(DataOptions options)
 			{
 				CreateCalled++;
 				return base.CreateDataConnection(options);
-			}
-
-			protected override DataConnection CloneDataConnection(DataConnection currentConnection, DataOptions options)
-			{
-				CloneCalled++;
-				return base.CloneDataConnection(currentConnection, options);
 			}
 		}
 

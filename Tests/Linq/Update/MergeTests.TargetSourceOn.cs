@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-
+using LinqToDB.Linq;
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -403,8 +403,9 @@ namespace Tests.xUpdate
 						})
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+				Assert.IsInstanceOf<LinqException>(exception);
+
+				Assert.That(exception.Message,  Does.EndWith("'s.Field2' could not be converted to SQL."));
 			}
 		}
 	}

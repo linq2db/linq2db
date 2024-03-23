@@ -3,9 +3,12 @@ using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+#if !NET6_0_OR_GREATER
+using System.Text;
+#endif
 
 namespace LinqToDB.Remote
 {
@@ -18,16 +21,16 @@ namespace LinqToDB.Remote
 
 	public abstract partial class RemoteDataContextBase
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
 		{
 			ThrowOnDisposed();
-			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
+			return new QueryRunner(query, queryNumber, this, parametersContext, expression, parameters, preambles);
 		}
 
 		sealed class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
-				: base(query, queryNumber, dataContext, expression, parameters, preambles)
+			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, IDataContext parametersContext, Expression expression, object?[]? parameters, object?[]? preambles)
+				: base(query, queryNumber, dataContext, parametersContext, expression, parameters, preambles)
 			{
 				_dataContext = dataContext;
 			}
@@ -57,7 +60,17 @@ namespace LinqToDB.Remote
 				using var sqlStringBuilder = Pools.StringBuilder.Allocate();
 				var cc                     = sqlBuilder.CommandCount(query.Statement);
 
-				var optimizationContext = new OptimizationContext(_evaluationContext, query.Aliases!, false, static () => NoopQueryParametersNormalizer.Instance);
+				var optimizationContext = new OptimizationContext(
+					_evaluationContext,
+					DataContext.Options,
+					DataContext.SqlProviderFlags,
+					DataContext.MappingSchema,
+					query.Aliases!,
+					sqlOptimizer.CreateOptimizerVisitor(false),
+					sqlOptimizer.CreateConvertVisitor(false),
+					isParameterOrderDepended : false,
+					isAlreadyOptimizedAndConverted : true,
+					static () => NoopQueryParametersNormalizer.Instance);
 
 				for (var i = 0; i < cc; i++)
 				{
@@ -111,11 +124,12 @@ namespace LinqToDB.Remote
 
 							var value = parameterValue.ProviderValue;
 
-							if(value != null)
-								if (value is string str)
-									value = FormattableString.Invariant($"'{str.Replace("'", "''")}'");
-							else if (value is char chr)
-								value = FormattableString.Invariant($"'{(chr == '\'' ? "''" : chr)}'");
+							value = value switch
+							{
+								string str => FormattableString.Invariant($"'{str.Replace("'", "''")}'"),
+								char chr   => FormattableString.Invariant($"'{(chr == '\'' ? "''" : chr)}'"),
+								_ => value
+							};
 
 							sb.Value.AppendLine(CultureInfo.InvariantCulture, $"-- SET {p.Name} = {value}");
 						}
@@ -130,7 +144,6 @@ namespace LinqToDB.Remote
 #endif
 					sqlStringBuilder.Value.Length = 0;
 				}
-
 
 				return sb.Value.ToString();
 			}

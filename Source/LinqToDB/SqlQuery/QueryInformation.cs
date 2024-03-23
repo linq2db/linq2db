@@ -9,7 +9,8 @@ namespace LinqToDB.SqlQuery
 	/// </summary>
 	public class QueryInformation
 	{
-		private readonly SelectQuery                        _rootQuery;
+		public SelectQuery RootQuery { get; }
+
 		private Dictionary<SelectQuery, HierarchyInfo>?     _parents;
 		private Dictionary<SelectQuery, List<SelectQuery>>? _tree;
 
@@ -19,7 +20,7 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public QueryInformation(SelectQuery rootQuery)
 		{
-			_rootQuery = rootQuery ?? throw new ArgumentNullException(nameof(rootQuery));
+			RootQuery = rootQuery ?? throw new ArgumentNullException(nameof(rootQuery));
 		}
 
 		/// <summary>
@@ -30,7 +31,9 @@ namespace LinqToDB.SqlQuery
 		public SelectQuery? GetParentQuery(SelectQuery selectQuery)
 		{
 			var info = GetHierarchyInfo(selectQuery);
-			return info?.HierarchyType == HierarchyType.From ? info.MasterQuery : null;
+			return info?.HierarchyType == HierarchyType.From || info?.HierarchyType == HierarchyType.Join
+				? info.MasterQuery
+				: null;
 		}
 
 		/// <summary>
@@ -51,7 +54,7 @@ namespace LinqToDB.SqlQuery
 			{
 				_parents = new Dictionary<SelectQuery, HierarchyInfo>();
 				_tree    = new Dictionary<SelectQuery, List<SelectQuery>>();
-				BuildParentHierarchy(_rootQuery);
+				BuildParentHierarchy(RootQuery);
 			}
 		}
 
@@ -66,7 +69,7 @@ namespace LinqToDB.SqlQuery
 
 		public IEnumerable<SelectQuery> GetQueriesParentFirst()
 		{
-			return GetQueriesParentFirst(_rootQuery);
+			return GetQueriesParentFirst(RootQuery);
 		}
 
 		public IEnumerable<SelectQuery> GetQueriesParentFirst(SelectQuery root)
@@ -88,7 +91,7 @@ namespace LinqToDB.SqlQuery
 
 		public IEnumerable<SelectQuery> GetQueriesChildFirst()
 		{
-			return GetQueriesChildFirst(_rootQuery);
+			return GetQueriesChildFirst(RootQuery);
 		}
 
 		public IEnumerable<SelectQuery> GetQueriesChildFirst(SelectQuery root)
@@ -113,7 +116,7 @@ namespace LinqToDB.SqlQuery
 			yield return root;
 		}
 
-		void RegisterHierachry(SelectQuery parent, SelectQuery child, HierarchyInfo info)
+		void RegisterHierarchry(SelectQuery parent, SelectQuery child, HierarchyInfo info)
 		{
 			_parents![child] = info;
 
@@ -131,11 +134,11 @@ namespace LinqToDB.SqlQuery
 			{
 				if (table.Source is SelectQuery s)
 				{
-					RegisterHierachry(selectQuery, s, new HierarchyInfo(selectQuery, HierarchyType.From, selectQuery));
+					RegisterHierarchry(selectQuery, s, new HierarchyInfo(selectQuery, HierarchyType.From, selectQuery));
 
 					foreach (var setOperator in s.SetOperators)
 					{
-						RegisterHierachry(selectQuery, setOperator.SelectQuery, new HierarchyInfo(selectQuery, HierarchyType.SetOperator, setOperator));
+						RegisterHierarchry(selectQuery, setOperator.SelectQuery, new HierarchyInfo(selectQuery, HierarchyType.SetOperator, setOperator));
 						BuildParentHierarchy(setOperator.SelectQuery);
 					}
 
@@ -146,7 +149,7 @@ namespace LinqToDB.SqlQuery
 				{
 					if (joinedTable.Table.Source is SelectQuery joinQuery)
 					{
-						RegisterHierachry(selectQuery, joinQuery,
+						RegisterHierarchry(selectQuery, joinQuery,
 							new HierarchyInfo(selectQuery, HierarchyType.Join, joinedTable));
 						BuildParentHierarchy(joinQuery);
 					}
@@ -174,7 +177,7 @@ namespace LinqToDB.SqlQuery
 				{
 					if (e is SelectQuery q)
 					{
-						context.Info.RegisterHierachry(context.SelectQuery, q, new HierarchyInfo(context.SelectQuery, HierarchyType.InnerQuery, context.Parent));
+						context.Info.RegisterHierarchry(context.SelectQuery, q, new HierarchyInfo(context.SelectQuery, HierarchyType.InnerQuery, context.Parent));
 						context.Info.BuildParentHierarchy(q);
 						return false;
 					}
@@ -223,4 +226,3 @@ namespace LinqToDB.SqlQuery
 		}
 	}
 }
-

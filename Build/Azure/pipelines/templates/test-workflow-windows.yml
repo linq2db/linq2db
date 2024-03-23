@@ -229,6 +229,13 @@ steps:
           $output = git pull --rebase
           if ($LASTEXITCODE -ne 0) {
               Write-Host "Failed to rebase. Error code ${LASTEXITCODE}, output: ${output}"
+              Write-Host "Display conflict diff"
+              $output = git diff ORIG_HEAD FETCH_HEAD
+              if ($LASTEXITCODE -ne 0) {
+                  Write-Host "Failed to render diff. Error code ${LASTEXITCODE}, output: ${output}"
+                  exit 1
+              }
+              Write-Host "${output}"
               exit 1
           }
           Write-Host "Push baselines to server"

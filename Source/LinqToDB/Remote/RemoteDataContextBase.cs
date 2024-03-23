@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 using LinqToDB.Tools;
@@ -20,6 +19,9 @@ namespace LinqToDB.Remote
 	using Expressions;
 	using Extensions;
 	using Interceptors;
+
+	using LinqToDB.Data;
+
 	using Mapping;
 	using SqlProvider;
 
@@ -29,6 +31,8 @@ namespace LinqToDB.Remote
 		protected RemoteDataContextBase(DataOptions options)
 		{
 			Options = options;
+
+			options.Apply(this);
 		}
 
 		[Obsolete("Use ConfigurationString instead.")]
@@ -127,7 +131,6 @@ namespace LinqToDB.Remote
 		}
 
 		protected abstract ILinqService GetClient();
-		protected abstract IDataContext Clone    ();
 		protected abstract string       ContextIDPrefix { get; }
 
 		string?            _contextName;
@@ -170,9 +173,8 @@ namespace LinqToDB.Remote
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }
 
-
 		private List<string>? _queryHints;
-		public  List<string>   QueryHints => _queryHints ??= new();
+		public  List<string>  QueryHints => _queryHints ??= new();
 
 		private List<string>? _nextQueryHints;
 		public  List<string>   NextQueryHints => _nextQueryHints ??= new();
@@ -414,18 +416,6 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		IDataContext IDataContext.Clone(bool forNestedQuery)
-		{
-			ThrowOnDisposed();
-
-			var ctx = (RemoteDataContextBase)Clone();
-
-			ctx._dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor;
-			ctx._entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor es ? (AggregatedEntityServiceInterceptor)es.Clone() : _entityServiceInterceptor;
-
-			return ctx;
-		}
-
 		protected bool Disposed { get; private set; }
 
 		protected void ThrowOnDisposed()
@@ -472,6 +462,28 @@ namespace LinqToDB.Remote
 			Disposed = true;
 
 			return new ValueTask(((IDataContext)this).CloseAsync());
+		}
+
+		internal static class ConfigurationApplier
+		{
+			public static void Apply(RemoteDataContextBase dataContext, ConnectionOptions options)
+			{
+				if (options.MappingSchema != null)
+				{
+					dataContext.MappingSchema = options.MappingSchema;
+				}
+				else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
+				{
+					dataContext.MappingSchema = new(dataContext.MappingSchema);
+				}
+			}
+
+			public static void Apply(RemoteDataContextBase dataContext, DataContextOptions options)
+			{
+				if (options.Interceptors != null)
+					foreach (var interceptor in options.Interceptors)
+						dataContext.AddInterceptor(interceptor);
+			}
 		}
 	}
 }

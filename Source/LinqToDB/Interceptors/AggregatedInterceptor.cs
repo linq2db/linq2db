@@ -99,14 +99,5 @@ namespace LinqToDB.Interceptors
 				RemoveDelayed();
 			}
 		}
-
-		protected abstract AggregatedInterceptor<TInterceptor> Create();
-
-		public AggregatedInterceptor<TInterceptor> Clone()
-		{
-			var clone = Create();
-			clone.Interceptors.AddRange(Interceptors);
-			return clone;
-		}
 	}
 }

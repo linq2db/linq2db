@@ -43,6 +43,7 @@ namespace LinqToDB.DataProvider
 				IsSkipSupportedIfTake                = false,
 				TakeHintsSupported                   = null,
 				IsSubQueryTakeSupported              = true,
+				IsSubQuerySkipSupported              = true,
 				IsSubQueryColumnSupported            = true,
 				IsSubQueryOrderBySupported           = false,
 				IsCountSubQuerySupported             = true,
@@ -63,11 +64,13 @@ namespace LinqToDB.DataProvider
 				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
-				IsCountDistinctSupported             = false,
+				IsCountDistinctSupported             = true,
+				IsAggregationDistinctSupported       = true,
 				AcceptsOuterExpressionInAggregate    = true,
 				IsUpdateFromSupported                = true,
 				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,
 				RowConstructorSupport                = RowFeature.None,
+				IsWindowFunctionsSupported           = true,
 			};
 
 			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));

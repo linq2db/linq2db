@@ -1620,6 +1620,8 @@ namespace Tests.Linq
 
 				var sql = results.ToString()!;
 
+				TestContext.WriteLine(sql);
+
 				AreEqual(
 					from c in db.Parent.AsEnumerable()
 					where c.ParentID == id
@@ -1801,6 +1803,8 @@ namespace Tests.Linq
 		[Test]
 		public void BooleanSubquery([DataSources] string context)
 		{
+			//TODO: Store in SelectQuery IsSingleRecord information, to allow optimizer moving CrossApply to SubQuery Column
+
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<WhereWithBool>(new List<WhereWithBool>(){new WhereWithBool()
 			{

@@ -47,7 +47,7 @@ namespace LinqToDB.Extensions
 			//	- preserve the order of GetMembers() inside the same type declared type
 
 			var results = new List<MemberInfo>(members.Length);
-			var seen = new HashSet<string>();
+			var seen    = new HashSet<string>();
 			for (var t = type; t != typeof(object) && t != typeof(ValueType); t = t.BaseType!)
 			{
 				// iterating in reverse order because we will reverse it
@@ -538,6 +538,31 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
+		public static IEnumerable<Type> GetGenericTypes(this Type genericType, Type type)
+		{
+			if (genericType == null) throw new ArgumentNullException(nameof(genericType));
+
+			while (type != typeof(object))
+			{
+				if (type.IsGenericType && type.GetGenericTypeDefinition() == genericType)
+					yield return type;
+
+				if (genericType.IsInterface)
+				{
+					foreach (var interfaceType in type.GetInterfaces())
+					{
+						foreach (var gType in GetGenericTypes(genericType, interfaceType))
+							yield return gType;
+					}
+				}
+
+				if (type.BaseType == null)
+					break;
+
+				type = type.BaseType;
+			}
+		}
+
 		///<summary>
 		/// Gets the Type of a list item.
 		///</summary>
@@ -634,17 +659,10 @@ namespace LinqToDB.Extensions
 			return typeof(object);
 		}
 
-		public static bool IsEnumerableTType(this Type type, Type elementType)
+		public static bool IsEnumerableType(this Type type, Type elementType)
 		{
-			foreach (var interfaceType in type.GetInterfaces())
-			{
-				if (interfaceType.IsGenericType
-						&& interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
-						&& interfaceType.GetGenericArguments()[0] == elementType)
-					return true;
-			}
-
-			return false;
+			return typeof(IEnumerable<>).GetGenericTypes(type)
+				.Any(t => t.GetGenericArguments()[0].IsSameOrParentOf(elementType));
 		}
 
 		public static bool IsGenericEnumerableType(this Type type)

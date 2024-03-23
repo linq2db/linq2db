@@ -14,7 +14,7 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{expr}",                           TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> OrderBy<T, TR, TKey>(
-							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate, 
+							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>               expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -33,14 +33,14 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{aggregate}",                      TokenName = "order_item")]
 		public static Sql.IAggregateFunction<T, TR> OrderBy<T, TR>(
-			[ExprParameter] this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate)
+			this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(OrderBy, aggregate), Expression.Constant(aggregate)
+					MethodHelper.GetMethodInfo(OrderBy, aggregate), aggregate.Query.Expression
 				));
 
 			return new Sql.AggregateFunctionNotOrderedImpl<T, TR>(query);
@@ -50,7 +50,7 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{expr} DESC",                      TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> OrderByDescending<T, TR, TKey>(
-							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate, 
+							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>               expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -69,7 +69,7 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{aggregate} DESC",                 TokenName = "order_item")]
 		public static Sql.IAggregateFunction<T, TR> OrderByDescending<T, TR>(
-			[ExprParameter] this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate)
+			this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 
@@ -85,7 +85,7 @@ namespace LinqToDB
 
 		[Sql.Extension("{expr}", TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> ThenBy<T, TR, TKey>(
-							this Sql.IAggregateFunctionOrdered<T, TR> aggregate, 
+							this Sql.IAggregateFunctionOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>            expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -102,7 +102,7 @@ namespace LinqToDB
 
 		[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> ThenByDescending<T, TR, TKey>(
-							this Sql.IAggregateFunctionOrdered<T, TR> aggregate, 
+							this Sql.IAggregateFunctionOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>        expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -125,11 +125,22 @@ namespace LinqToDB
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
 
+			Expression aggregateExpr;
+
+			if (aggregate is Sql.IQueryableContainer)
+			{
+				aggregateExpr = aggregate.Query.Expression;
+			}
+			else
+			{
+				aggregateExpr = Expression.Constant(aggregate);
+			}
+
 			return aggregate.Query.Provider.Execute<TR>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(ToValue, aggregate), 
-					Expression.Constant(aggregate)));
+					MethodHelper.GetMethodInfo(ToValue, aggregate),
+					aggregateExpr));
 		}
 	}
 
@@ -157,7 +168,5 @@ namespace LinqToDB
 
 			public IQueryable Query { get; }
 		}
-
-
 	}
 }

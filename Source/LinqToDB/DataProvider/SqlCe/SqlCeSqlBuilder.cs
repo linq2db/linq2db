@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Common;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
@@ -44,6 +45,17 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override bool IsValuesSyntaxSupported       => false;
 		protected override bool SupportsColumnAliasesInSource => true;
 		protected override bool RequiresConstantColumnAliases => true;
+
+		protected override bool CanSkipRootAliases(SqlStatement statement)
+		{
+			if (statement.SelectQuery != null)
+			{
+				// SQL CE doesn't support multiple columns with the same name in SELECT clause
+				return false;
+			}
+
+			return base.CanSkipRootAliases(statement);
+		}
 
 		public override int CommandCount(SqlStatement statement)
 		{

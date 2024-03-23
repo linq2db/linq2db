@@ -75,12 +75,13 @@ namespace Tests.Linq
 			{
 				var collection = db.Parent.Select(_ => new { _.ParentID }).ToList();
 
-				db.Parent
+				var query = db.Parent
 					.Select(_ => new
 					{
 						Children = collection.Where(c1 => c1.ParentID == _.ParentID).ToArray()
-					})
-					.ToArray();
+					});
+
+				AssertQuery(query);
 			}
 		}
 

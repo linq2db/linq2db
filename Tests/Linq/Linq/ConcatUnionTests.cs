@@ -96,15 +96,16 @@ namespace Tests.Linq
 		[Test]
 		public void Concat4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from c in    Child where c.ParentID == 1 select c).Concat(
-					(from c in    Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 }).
-					Where(c => c.ChildID != 1032))
-					,
-					(from c in db.Child where c.ParentID == 1 select c).Concat(
-					(from c in db.Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 })).
-					Where(c => c.ChildID != 1032));
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				(from c in    Child where c.ParentID == 1 select c).Concat(
+				(from c in    Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 })
+				.Where(c => c.ChildID != 1032))
+				,
+				(from c in db.Child where c.ParentID == 1 select c).Concat(
+				(from c in db.Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 }))
+				.Where(c => c.ChildID != 1032));
 		}
 
 		[Test]
@@ -123,7 +124,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void Concat5([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void Concat5([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -138,7 +139,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void Concat501([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void Concat501([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -152,7 +153,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat502([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void Concat502([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -522,28 +523,43 @@ namespace Tests.Linq
 					(from p2 in db.Parent select new Parent { Value1   = p2.Value1   })));
 		}
 
-		//[Test]
+		[Test]
 		public void Union54([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })),
-					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })));
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
+				(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() })),
+				(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
+				(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() })), sort: e => e.OrderBy(x => x.ch == null).ThenBy(x => x.ParentID));
 		}
 
-		//[Test]
+		[Test]
+		public void ConcatWithDifferentProjections([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+					(from p1 in db.Parent select new { ParentID = p1.ParentID, p = p1 })
+				.Concat(
+					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null })
+					);
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void Union541([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() }))
+					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() }))
 					.Select(p => new { p.ParentID, p.p, p.ch })
 					,
 					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() }))
+					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() }))
 					.Select(p => new { p.ParentID, p.p, p.ch }));
 		}
 
@@ -558,7 +574,7 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select p2)));
 		}
 
-		//////[Test]
+		[Test]
 		public void ObjectUnion2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -580,7 +596,7 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = p2 })));
 		}
 
-		//////[Test]
+		[Test]
 		public void ObjectUnion4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -591,7 +607,49 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, p2.ParentID } })));
 		}
 
-		//////[Test]
+		[Test]
+		public void TupleUnion([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = 
+					(from p1 in db.Parent where p1.ParentID > 3 select Tuple.Create(p1.ParentID, p1.Value1))
+				.Union(
+					from p2 in db.Parent where p2.ParentID <= 3 select Tuple.Create(p2.ParentID, p2.Value1));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void TupleUnionProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				(from p1 in db.Parent where p1.ParentID > 3 select Tuple.Create((int?)p1.ParentID, p1.Value1))
+				.Union(
+					from p2 in db.Parent where p2.ParentID <= 3 select Tuple.Create(p2.Value1, (int?)p2.ParentID))
+				.Select(x => new { x.Item2, x.Item1 });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void TupleConcatIncompatibleProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				(from p1 in db.Parent where p1.ParentID > 3 select Tuple.Create((int?)p1.ParentID, p1.Value1))
+				.Concat(
+					from p2 in db.Parent where p2.ParentID <= 3 select default(Tuple<int?, int?>))
+				.Select(x => new { x.Item2, x.Item1 });
+
+			AssertQuery(query);
+		}
+
+
+		[Test]
 		public void ObjectUnion5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -673,10 +731,11 @@ namespace Tests.Linq
 
 				var fullJoinSql = fullJoin.ToString(); // BLToolkit.Data.Linq.LinqException : Types in Concat are constructed incompatibly.
 				Assert.IsNotNull(fullJoinSql);
+
+				TestContext.Write(fullJoinSql);
 			}
 		}
 
-		[ActiveIssue("Associations with Concat/Union or other Set operations are not supported.")]
 		[Test]
 		public void AssociationUnion1([DataSources] string context)
 		{
@@ -690,7 +749,6 @@ namespace Tests.Linq
 					select p.ParentID);
 		}
 
-		[ActiveIssue("Associations with Concat/Union or other Set operations are not supported.")]
 		[Test]
 		public void AssociationUnion2([DataSources] string context)
 		{
@@ -702,7 +760,6 @@ namespace Tests.Linq
 					select c.Parent!.ParentID);
 		}
 
-		[ActiveIssue("Associations with Concat/Union or other Set operations are not supported.")]
 		[Test]
 		public void AssociationConcat2([DataSources] string context)
 		{
@@ -746,6 +803,26 @@ namespace Tests.Linq
 						)
 					)
 				);
+		}
+
+		[Test]
+		public void ConcatDefaultIfEmpty([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 =
+				from p in db.Parent.LoadWith(p => p.Children)
+				where p.ParentID == 1
+				select p.Children.FirstOrDefault();
+
+			var query2 =
+				from p in db.Parent
+				where p.ParentID != 1
+				select (Child?)null;
+
+			var query = query1.Concat(query2);
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -925,7 +1002,6 @@ namespace Tests.Linq
 
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void TestConcatWithParameterProjection([DataSources] string context)
 		{
@@ -1132,10 +1208,11 @@ namespace Tests.Linq
 			Assert.Less(i4, i5);
 		}
 
-		public record class  Issue3357RecordClass (int Id, string FirstName, string LastName);
-		public class Issue3357RecordLike
+		public record class RecordClass (int Id, string FirstName, string LastName);
+
+		public class RecordLikeClass
 		{
-			public Issue3357RecordLike(int Id, string FirstName, string LastName)
+			public RecordLikeClass(int Id, string FirstName, string LastName)
 			{
 				this.Id        = Id;
 				this.FirstName = FirstName;
@@ -1147,30 +1224,44 @@ namespace Tests.Linq
 			public string LastName  { get; }
 		}
 
+		public record class NameRecord (string FirstName, string LastName);
+
+		public record class RecordClassWithNestedRecord (int Id, NameRecord Name);
+
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordClass([DataSources] string context)
+		public void ConcatRecordClass([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
-			AreEqual(
-				Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))
-				.Concat(Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))),
+			var query = 
+				db.Person.Select(p => new RecordClass(p.ID, p.FirstName, p.LastName))
+				.Concat(db.Person.Select(p => new RecordClass(p.ID, p.FirstName, p.LastName)));
 
-				db.Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))
-				.Concat(db.Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))));
+			AssertQuery(query);
 		}
 
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordLikeClass([DataSources] string context)
+		public void ConcatRecordClassNested([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person.Select(p => new RecordClassWithNestedRecord(p.ID, new NameRecord(p.FirstName, p.LastName)))
+				.Concat(db.Person.Select(p => new RecordClassWithNestedRecord(p.ID, new NameRecord(p.LastName, p.FirstName))));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "record type support")]
+		public void ConcatRecordLikeClass([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			AreEqualWithComparer(
-				Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))
-				.Concat(Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))),
+				Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))
+				.Concat(Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))),
 
-				db.Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))
-				.Concat(db.Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))));
+				db.Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))
+				.Concat(db.Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))));
 		}
 
 		[Table]
@@ -1286,7 +1377,6 @@ namespace Tests.Linq
 			public string? LastName  { get; set; }
 		}
 
-		[ActiveIssue(3346)]
 		[Test(Description = "composite columns in union (also tests create table)")]
 		public void Issue3346_ProjectionBuild([DataSources] string context)
 		{
@@ -1304,7 +1394,6 @@ namespace Tests.Linq
 			query1.Union(query2).ToArray();
 		}
 
-		[ActiveIssue(3346)]
 		[Test(Description = "composite columns in union (also tests create table)")]
 		public void Issue3346_Count([DataSources] string context)
 		{
@@ -1322,7 +1411,6 @@ namespace Tests.Linq
 			query1.Union(query2).Count();
 		}
 
-		[ActiveIssue(3150)]
 		[Test(Description = "preserve constant columns")]
 		public void Issue3150([DataSources] string context)
 		{
@@ -1331,11 +1419,11 @@ namespace Tests.Linq
 			var query1 = db.Person.Where(p => p.ID == 1).Select(p => new { p.ID, Name = new { p.FirstName, Marker = "id=1" } });
 			var query2 = db.Person.Where(p => p.ID == 2).Select(p => new { p.ID, Name = new { p.FirstName, Marker = "id=2" } });
 
-			var result = query1.Concat(query2).ToArray();
+			var result = query1.Concat(query2).AsEnumerable().OrderBy(x => x.ID).ToArray();
 
-			Assert.AreEqual(2, result.Length);
-			Assert.AreEqual(1, result.Select(r => r.Name.Marker == "id=1").Count());
-			Assert.AreEqual(1, result.Select(r => r.Name.Marker == "id=2").Count());
+			result.Should().HaveCount(2);
+			result[0].Name.Marker.Should().Be("id=1");
+			result[1].Name.Marker.Should().Be("id=2");
 		}
 
 		public class Issue2948MyModel
@@ -1350,24 +1438,27 @@ namespace Tests.Linq
 			public T    Model { get; set; } = default!;
 		}
 
-		[ActiveIssue(2948)]
 		[Test(Description = "InvalidCastException : Unable to cast object of type 'System.Linq.Expressions.MemberMemberBinding' to type 'System.Linq.Expressions.MemberAssignment'.")]
 		public void Issue2948([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var main = (from p in db.Person
-						select new Issue2948RankData<Issue2948MyModel>()
-						{
-							Model = { Id = p.ID, Name = p.FirstName },
-							Rank  = Sql.Ext.RowNumber().Over().PartitionBy(p.ID).OrderBy(p.ID).ToValue()
-						}).Where(x => x.Rank == 1).Select(x => x.Model).AsSubQuery();
+				select new Issue2948RankData<Issue2948MyModel>()
+				{
+					Model = { Id = p.ID, Name = p.FirstName },
+					Rank  = Sql.Ext.RowNumber().Over().PartitionBy(p.ID).OrderBy(p.ID).ToValue()
+				}).Where(x => x.Rank == 1).Select(x => x.Model);
 
 			var first  = main.Where(x => x.Id != 2);
 			var second = main.Where(x => x.Id == 2).OrderByDescending(x => x.Name).Take(1);
 			var third  = main.Where(x => x.Id != 3).OrderBy(x => x.Name).Take(1);
 
 			var res = first.Concat(second).Concat(third).ToList();
+
+			res.Should().HaveCount(5);
+			res[0].Id.Should().Be(1);
+			res[0].Name.Should().Be("John");
 		}
 
 		[Test(Description = "invalid SQL for Any() subquery")]
@@ -1476,7 +1567,6 @@ namespace Tests.Linq
 			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
 		}
 
-		[ActiveIssue(2511)]
 		[Test(Description = "Associations with Concat/Union or other Set operations are not supported")]
 		public void Issue2511_Query2([DataSources] string context)
 		{
@@ -1495,12 +1585,15 @@ namespace Tests.Linq
 				.Concat(db.Person.LoadWith(p => p.Patient))
 				.ToArray();
 
-			Assert.AreEqual(6, res.Length);
+			res.Should().HaveCount(6);
+
 			var pat = res.Where(r => r.ID == 2).First();
-			Assert.IsNull(pat.Patient);
+			pat.Patient.Should().NotBeNull();
+
 			pat = res.Where(r => r.ID == 2).Skip(1).Single();
-			Assert.IsNotNull(pat.Patient);
-			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
+			pat.Patient.Should().NotBeNull();
+
+			pat.Patient!.Diagnosis.Should().Be("Hallucination with Paranoid Bugs' Delirium of Persecution");
 		}
 
 		[Test(Description = "Working version of Issue2511_Query2")]
@@ -1518,13 +1611,166 @@ namespace Tests.Linq
 					Gender     = p.Gender,
 				}).Take(2)
 				.Concat(db.Person.LoadWith(p => p.Patient))
+				.OrderBy(x => x.ID)
 				.ToArray();
 
-			Assert.AreEqual(6, res.Length);
-			var pat = res.Where(r => r.ID == 2).First();
-			Assert.IsNull(pat.Patient);
-			pat = res.Where(r => r.ID == 2).Skip(1).Single();
-			Assert.IsNull(pat.Patient);
+			res.Should().HaveCount(6);
+
+			var patients = res.Where(r => r.ID == 2).ToList();
+			patients.Any(p => p.Patient != null).Should().BeTrue();
+			patients.Any(p => p.Patient == null).Should().BeTrue();
+		}
+
+		[Test]
+		public void ConcatEntities([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = 
+					(from p in db.Parent where p.ParentID == 1 select p).Concat(
+					(from p in db.Parent where p.ParentID == 2 select p));
+
+				AssertQuery(query);
+			}
+		}
+
+		class ConcatEntity
+		{
+			public int? IntValue { get; set; }
+
+			public class ConcatSubEntity
+			{
+				public int Id { get; set; }
+				public int? Value { get; set; }
+			}
+
+			public ConcatSubEntity? Entity { get; set; }
+		}
+
+		[Test]
+		public void ConcatEqualSelects([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					(from p in db.Parent
+					where p.ParentID == 1
+					select new ConcatEntity
+					{
+						IntValue = p.ParentID + 1,
+						Entity = new ConcatEntity.ConcatSubEntity
+						{
+							Id = p.ParentID
+						}, 
+					})
+					.Concat(
+					from p in db.Parent
+					where p.ParentID == 2
+					select new ConcatEntity
+					{
+						Entity = new ConcatEntity.ConcatSubEntity
+						{
+							Id = p.ParentID
+						}, 
+					});
+
+				AssertQuery(query);
+			}
+		}
+
+
+		[InheritanceMapping(Code = 1, Type = typeof(SetEntityA))]
+		[InheritanceMapping(Code = 2, Type = typeof(SetEntityB))]
+		[InheritanceMapping(Code = 3, Type = typeof(SetEntityC))]
+		abstract class SetEntityBase
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public abstract int Discriminator { get; }
+		}
+
+		class SetEntityA : SetEntityBase
+		{
+			[Column]
+			public          int? IntValue      { get; set; }
+
+			public override int  Discriminator => 1;
+		}
+
+		class SetEntityB : SetEntityBase
+		{
+			[Column]
+			public          string? StrValue      { get; set; }
+
+			public override int  Discriminator => 2;
+		}
+
+		class SetEntityC : SetEntityBase
+		{
+			[Column]
+			public double? DoubleValue { get; set; }
+
+			public override int Discriminator => 3;
+		}
+
+		[Test]
+		public void ConcatInheritance([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var items = new SetEntityBase[]
+			{
+				new SetEntityA{Id = 1, IntValue = 11},
+				new SetEntityB{Id = 2, StrValue = "Str22" },
+				new SetEntityC{Id = 3, DoubleValue = 33.33 }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(items))
+			{
+				var query =
+					(from t1 in table.Where(x => x.Id == 1) select t1)
+					.Concat(
+						from t2 in table.Where(x => x.Id == 2) select t2)
+					.Concat(
+						from t3 in table.Where(x => x.Id == 3) select t3);
+
+				var result = query.ToList();
+				result[0].Should().BeOfType<SetEntityA>();
+				result[1].Should().BeOfType<SetEntityB>();
+				result[2].Should().BeOfType<SetEntityC>();
+			}
+		}
+
+		[Test]
+		public void ConcatBrokenInheritance([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var items = new SetEntityBase[]
+			{
+				new SetEntityA{Id = 1, IntValue    = 11},
+				new SetEntityB{Id = 2, StrValue    = "Str22" },
+				new SetEntityC{Id = 3, DoubleValue = 33.33 }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(items))
+			{
+				var query =
+					(from t1 in table.Where(x => x.Id == 1) select t1)
+					.Concat(
+						from t2 in table.Where(x => x.Id == 2) select t2)
+					.Concat(
+						from t3 in table.Where(x => x.Id == 3) select new SetEntityC
+						{
+							Id = t3.Id,
+							DoubleValue = 4.44
+						});
+
+				var result = query.ToList();
+				result[0].Should().BeOfType<SetEntityA>();
+				result[1].Should().BeOfType<SetEntityB>();
+				result[2].Should().BeOfType<SetEntityC>();
+			}
 		}
 
 		// ClickHouse developers themself doesn't know how their aliases work, so there will be no workaround

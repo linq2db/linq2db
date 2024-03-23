@@ -1,50 +1,40 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlOrderByItem : IQueryElement
+	public class SqlOrderByItem : QueryElement
 	{
-		public SqlOrderByItem(ISqlExpression expression, bool isDescending)
+		public SqlOrderByItem(ISqlExpression expression, bool isDescending, bool isPositioned)
 		{
 			Expression   = expression;
 			IsDescending = isDescending;
+			IsPositioned = isPositioned;
 		}
 
 		public ISqlExpression Expression   { get; internal set; }
 		public bool           IsDescending { get; }
-
-		internal void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Expression = Expression.Walk(options, context, func)!;
-		}
+		public bool           IsPositioned { get; }
 
 		#region Overrides
 
-#if OVERRIDETOSTRING
+		public override QueryElementType ElementType => QueryElementType.OrderByItem;
+
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		{
+			writer.AppendElement(Expression);
+
+			if (IsPositioned)
+				writer.Append(":by_index");
+
+			if (IsDescending)
+				writer.Append(" DESC");
+
+			return writer;
+		}
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
-
-#endif
-
-		#endregion
-
-		#region IQueryElement Members
-
-		public QueryElementType ElementType => QueryElementType.OrderByItem;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			Expression.ToString(sb, dic);
-
-			if (IsDescending)
-				sb.Append(" DESC");
-
-			return sb;
+			return this.ToDebugString();
 		}
 
 		#endregion

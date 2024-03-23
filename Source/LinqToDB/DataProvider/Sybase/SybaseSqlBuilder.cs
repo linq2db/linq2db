@@ -50,7 +50,8 @@ namespace LinqToDB.DataProvider.Sybase
 			_isSelect = false;
 		}
 
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias,
+			ref bool                                               addAlias)
 		{
 			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 
@@ -111,7 +112,8 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateTableName(SelectQuery selectQuery,
+			SqlUpdateClause                                      updateClause)
 		{
 			if (updateClause.Table != null && (selectQuery.From.Tables.Count == 0 || updateClause.Table != selectQuery.From.Tables[0].Source))
 				BuildPhysicalTable(updateClause.Table, null);
@@ -228,7 +230,7 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		private void BuildIdentityInsert(SqlTableSource table, bool enable)
+		private void BuildIdentityInsert(NullabilityContext nullability, SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);
@@ -270,7 +272,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table!;
+			var nullability = NullabilityContext.NonQuery;
+			var table       = dropTable.Table!;
 
 			BuildTag(dropTable);
 
@@ -294,6 +297,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				var table = createTable.Table;

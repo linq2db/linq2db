@@ -7,11 +7,6 @@ namespace LinqToDB.Interceptors
 {
 	sealed class AggregatedDataContextInterceptor : AggregatedInterceptor<IDataContextInterceptor>, IDataContextInterceptor
 	{
-		protected override AggregatedInterceptor<IDataContextInterceptor> Create()
-		{
-			return new AggregatedDataContextInterceptor();
-		}
-
 		public void OnClosing(DataContextEventData eventData)
 		{
 			Apply(() =>

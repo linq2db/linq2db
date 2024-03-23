@@ -1,24 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlWhereClause : ClauseBase<SqlWhereClause,SqlWhereClause.Next>, IQueryElement, ISqlExpressionWalkable
+	public class SqlWhereClause : ClauseBase<SqlWhereClause>
 	{
-		public class Next : ClauseBase
-		{
-			internal Next(SqlWhereClause parent) : base(parent.SelectQuery)
-			{
-				_parent = parent;
-			}
-
-			readonly SqlWhereClause _parent;
-
-			public SqlWhereClause Or  => _parent.SetOr(true);
-			public SqlWhereClause And => _parent.SetOr(false);
-		}
-
 		internal SqlWhereClause(SelectQuery selectQuery) : base(selectQuery)
 		{
 			SearchCondition = new SqlSearchCondition();
@@ -31,47 +16,34 @@ namespace LinqToDB.SqlQuery
 
 		public SqlSearchCondition SearchCondition { get; internal set; }
 
-		public bool IsEmpty => SearchCondition.Conditions.Count == 0;
-
-		protected override SqlSearchCondition Search => SearchCondition;
-
-		protected override Next GetNext()
-		{
-			return new Next(this);
-		}
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
-
-#endif
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			SearchCondition = (SqlSearchCondition)((ISqlExpressionWalkable)SearchCondition).Walk(options, context, func)!;
-			return null;
-		}
-
-		#endregion
+		public bool IsEmpty => SearchCondition.Predicates.Count == 0;
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.WhereClause;
+		public override QueryElementType ElementType => QueryElementType.WhereClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			if (Search.Conditions.Count == 0)
-				return sb;
+			if (!IsEmpty)
+			{
+				writer
+					//.DebugAppendUniqueId(this)
+					.AppendLine()
+					.AppendLine("WHERE");
 
-			sb.Append("\nWHERE\n\t");
-			return ((IQueryElement)Search).ToString(sb, dic);
+				using (writer.IndentScope())
+					writer.AppendElement(SearchCondition);
+
+			}
+
+			return writer;
 		}
 
 		#endregion
+
+		public void Cleanup()
+		{
+			SearchCondition.Predicates.Clear();
+		}
 	}
 }

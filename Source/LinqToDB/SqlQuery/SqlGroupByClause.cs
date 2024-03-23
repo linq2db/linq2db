@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -12,9 +11,8 @@ namespace LinqToDB.SqlQuery
 		Cube
 	}
 
-	public class SqlGroupByClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
+	public class SqlGroupByClause : ClauseBase, IQueryElement
 	{
-
 		internal SqlGroupByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
 		}
@@ -46,6 +44,9 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public GroupingType GroupingType  { get; set; } = GroupingType.Default;
+
+		// Note: List is used in Visitor to modify elements, by replacing List by ReadOnly collection,
+		// Visitor should be corrected and appropriate Modify function updated.
 		public List<ISqlExpression> Items { get; } = new List<ISqlExpression>();
 
 		public bool IsEmpty => Items.Count == 0;
@@ -68,70 +69,59 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-#if OVERRIDETOSTRING
+		#region QueryElement overrides
 
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
+		public override QueryElementType ElementType => QueryElementType.GroupByClause;
 
-#endif
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			for (var i = 0; i < Items.Count; i++)
-				Items[i] = Items[i].Walk(options, context, func)!;
-
-			return null;
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-		public QueryElementType ElementType => QueryElementType.GroupByClause;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (Items.Count == 0)
-				return sb;
+				return writer;
 
-			sb.Append(" \nGROUP BY");
+			writer
+				.AppendLine()
+				.AppendLine(" GROUP BY");
+
 			switch (GroupingType)
 			{
 				case GroupingType.Default:
-					sb.Append('\n');
 					break;
 				case GroupingType.GroupBySets:
-					sb.Append(" GROUPING SETS (\n");
+					writer.AppendLine(" GROUPING SETS (");
 					break;
 				case GroupingType.Rollup:
-					sb.Append(" ROLLUP (\n");
+					writer.AppendLine(" ROLLUP (");
 					break;
 				case GroupingType.Cube:
-					sb.Append(" CUBE (\n");
+					writer.AppendLine(" CUBE (");
 					break;
 				default:
 					throw new InvalidOperationException($"Unexpected grouping type: {GroupingType}");
 			}
 
-			foreach (var item in Items)
+			using(writer.IndentScope())
 			{
-				sb.Append('\t');
-				item.ToString(sb, dic);
-				sb.Append(',');
+				for (var index = 0; index < Items.Count; index++)
+				{
+					var item = Items[index];
+					writer.AppendElement(item);
+					if (index < Items.Count - 1)
+						writer.AppendLine(',');
+				}
 			}
 
-			sb.Length--;
-
 			if (GroupingType != GroupingType.Default)
-				sb.Append(')');
+				writer.Append(')');
 
-			return sb;
+			return writer;
 		}
 
 		#endregion
+
+		public void Cleanup()
+		{
+			GroupingType = GroupingType.Default;
+			Items.Clear();
+		}
 	}
 }

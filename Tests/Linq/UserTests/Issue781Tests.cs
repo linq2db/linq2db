@@ -50,7 +50,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestHavingCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql)] string context)
+		public void TestHavingCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -70,7 +70,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestHavingLongCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql57Plus)] string context)
+		public void TestHavingLongCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql57Plus, ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -130,7 +130,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestHavingCountWithSelect([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql57Plus)] string context)
+		public void TestHavingCountWithSelect([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql57Plus, ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -154,7 +154,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestHavingLongCountWithSelect([DataSources(false,
 				TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase,
-				TestProvName.AllMySql57Plus)]
+				TestProvName.AllMySql57Plus, ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))

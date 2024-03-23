@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
-using System.Linq;
 using System.Numerics;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -140,7 +140,7 @@ SELECT * FROM (
 	FROM RDB$PROCEDURES
 	WHERE RDB$SYSTEM_FLAG = 0 AND (RDB$PRIVATE_FLAG IS NULL OR RDB$PRIVATE_FLAG = 0) AND RDB$PROCEDURE_TYPE IS NOT NULL
 	UNION ALL
-	SELECT 
+	SELECT
 		RDB$PACKAGE_NAME,
 		RDB$FUNCTION_NAME,
 		RDB$DESCRIPTION,
@@ -163,7 +163,7 @@ SELECT * FROM (
 	FROM RDB$PROCEDURES
 	WHERE RDB$SYSTEM_FLAG = 0 AND RDB$PROCEDURE_TYPE IS NOT NULL
 	UNION ALL
-	SELECT 
+	SELECT
 		NULL,
 		RDB$FUNCTION_NAME,
 		RDB$DESCRIPTION,
@@ -296,7 +296,6 @@ FROM RDB$FUNCTION_ARGUMENTS p
 				var precision     = rd.IsDBNull(9) ? (int?)null : rd.GetInt32(9);
 				var scale         = rd.GetInt32(10);
 				var isNullable    = rd.IsDBNull(11) ? true : rd.GetInt32(11) != 1;
-
 
 				return new ProcedureParameterInfo()
 				{

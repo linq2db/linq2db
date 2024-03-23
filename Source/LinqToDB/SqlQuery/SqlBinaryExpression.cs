@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	[Serializable, DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SqlBinaryExpression : ISqlExpression
+	public class SqlBinaryExpression : SqlExpressionBase
 	{
 		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence)
 		{
@@ -48,44 +44,10 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public Type           SystemType { get; }
-		public int            Precedence { get; }
+		public override QueryElementType ElementType => QueryElementType.SqlBinaryExpression;
 
-		#region Overrides
-
-		public string SqlText => ToString()!;
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
-
-#endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Expr1 = Expr1.Walk(options, context, func)!;
-			Expr2 = Expr2.Walk(options, context, func)!;
-
-			return func(context, this);
-		}
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return Equals(other, SqlExpression.DefaultComparer);
-		}
-
-		#endregion
+		public override Type SystemType { get; }
+		public override int  Precedence { get; }
 
 		int?                   _hashCode;
 
@@ -108,9 +70,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull => Expr1.CanBeNull || Expr2.CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability) => Expr1.CanBeNullable(nullability) || Expr2.CanBeNullable(nullability);
 
-		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;
@@ -128,17 +90,17 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.SqlBinaryExpression;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			Expr1
-				.ToString(sb, dic)
+			writer
+				//.DebugAppendUniqueId(this)
+				.AppendElement(Expr1)
 				.Append(' ')
 				.Append(Operation)
-				.Append(' ');
+				.Append(' ')
+				.AppendElement(Expr2);
 
-			return Expr2.ToString(sb, dic);
+			return writer;
 		}
 
 		#endregion

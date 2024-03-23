@@ -78,7 +78,7 @@ namespace Tests.UserTests
 
 				TestContext.WriteLine(query.ToString());
 
-				query.GetSelectQuery().Select.Columns.Should().HaveCount(4);
+				query.GetSelectQuery().Select.Columns.Should().HaveCount(2);
 			}
 		}
 

@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 				return methodCall.IsSameGenericMethod(_supportedMethods);
 			}
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				// Merge(ITable<TTarget> target, string hint)
 
@@ -34,22 +34,18 @@ namespace LinqToDB.Linq.Builder
 				if (disableFilters)
 					builder.PopDisabledFilter();
 
-				if (target is not TableBuilder.TableContext tableContext
-					|| !tableContext.SelectQuery.IsSimple)
-				{
-					throw new NotImplementedException("Currently, only Tables and CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
-				}
+				var targetTable = GetTargetTable(target);
 
-				var targetTable = tableContext.SqlTable;
+				if (targetTable == null)
+					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
 
 				var merge = new SqlMergeStatement(targetTable);
 				if (methodCall.Arguments.Count == 2)
-					merge.Hint = methodCall.Arguments[1].EvaluateExpression<string>(builder.DataContext);
+					merge.Hint = builder.EvaluateExpression<string>(methodCall.Arguments[1]);
 
 				target.SetAlias(merge.Target.Alias!);
-				target.Statement = merge;
 
-				return new MergeContext(merge, target);
+				return BuildSequenceResult.FromContext(new MergeContext(merge, target));
 			}
 		}
 	}

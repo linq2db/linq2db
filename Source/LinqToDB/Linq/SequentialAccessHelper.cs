@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Collections.Generic;
 
 namespace LinqToDB.Linq
 {
@@ -316,7 +316,6 @@ namespace LinqToDB.Linq
 							context.FailMessage = FormattableString.Invariant($"Expected column index: {context.ColumnIndex}, but found {idx}");
 							return e;
 						}
-
 
 						// test IsDBNull method by-name to support overrides
 						if (call.Method.Name == nameof(IDataReader.IsDBNull))

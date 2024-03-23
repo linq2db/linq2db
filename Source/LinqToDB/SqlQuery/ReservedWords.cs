@@ -91,7 +91,6 @@ namespace LinqToDB.SqlQuery
 		static readonly HashSet<string> _reservedWordsFirebird = new (StringComparer.OrdinalIgnoreCase);
 		static readonly HashSet<string> _reservedWordsInformix = new (StringComparer.OrdinalIgnoreCase);
 
-
 		static readonly ConcurrentDictionary<string,HashSet<string>> _reservedWords = new (StringComparer.OrdinalIgnoreCase);
 
 		public static bool IsReserved(string word, string? providerName = null)

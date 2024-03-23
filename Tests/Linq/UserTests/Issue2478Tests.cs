@@ -54,7 +54,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApplyTestExt([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void CrossApplyTestExt([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

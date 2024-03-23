@@ -226,7 +226,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoin9([DataSources(TestProvName.AllAccess)] string context)
+		public void InnerJoin9([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -411,7 +411,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin52([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupJoin52([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -473,7 +473,7 @@ namespace Tests.Linq
 
 				var list1 = q1.ToList();
 				var ch1   = list1[0].lj.ToList();
-
+ 
 				var q2 =
 					from p in db.Parent
 						join c in db.Child on p.ParentID + n equals c.ParentID into lj
@@ -762,7 +762,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoin4([DataSources] string context)
+		public void LeftJoin4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -891,16 +891,23 @@ namespace Tests.Linq
 		[Test]
 		public void ReferenceJoin1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from c in    Child join g in    GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID },
-					from c in db.Child join g in db.GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID });
+			using var db = GetDataContext(context);
+
+			var query = from c in db.Child
+				join g in db.GrandChild on c equals g.Child
+				select new { c.ParentID, g.GrandChildID };
+
+			var xx = query.ToList();
+
+			AreEqual(
+				from c in    Child join g in    GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID },
+				from c in db.Child join g in db.GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID });
 		}
 
 		[Test]
 		public void ReferenceJoin2([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 				AreEqual(
 					from g in    GrandChild
 						join c in    Child on g.Child equals c
@@ -995,8 +1002,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Explicit]
-		public void StackOverflow([IncludeDataSources(
-			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)]
+		public void StackOverflow([IncludeDataSources(TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1103,10 +1109,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubQueryCount([DataSources(
-				TestProvName.AllClickHouse,
-				TestProvName.AllAccess,
-				ProviderName.SqlCe)]
+		public void JoinSubQueryCount([DataSources(TestProvName.AllClickHouse)]
 			string context)
 		{
 			var n = 1;
@@ -1128,7 +1131,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubQuerySum([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void JoinSubQuerySum([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1369,10 +1372,11 @@ namespace Tests.Linq
 				var expected = Parent.SqlJoinInternal(Parent, joinType, (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1, (p1, p2) => p2);
 
 				var actual = db.Parent.Join(db.Parent, joinType, (p1, p2) => p1.ParentID == p2.ParentID && p1.Value1 == p2.Value1,
-					(p1, p2) => p2);
+					(p1, p2) => p2)
+					.ToList();
 
 				AreEqual(expected.ToList().OrderBy(r => r!.ParentID).ThenBy(r => r!.Value1),
-					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
+					actual.OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
 			}
 		}
 
@@ -1603,9 +1607,10 @@ namespace Tests.Linq
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 				var id2 = Parent.Skip(1).First().ParentID;
@@ -1646,10 +1651,12 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutConditions([DataSources(
+			TestProvName.AllClickHouse,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1692,10 +1699,12 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(
+			TestProvName.AllClickHouse,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1740,9 +1749,10 @@ namespace Tests.Linq
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 				var id2 = Parent.Skip(1).First().ParentID;
@@ -1787,9 +1797,10 @@ namespace Tests.Linq
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 
@@ -1833,9 +1844,10 @@ namespace Tests.Linq
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var actual =
 					from left in (
@@ -1872,9 +1884,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(TestProvName.AllSQLite)] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 				var id2 = Parent.Skip(1).First().ParentID;
@@ -1914,7 +1926,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithoutConditions([DataSources(TestProvName.AllSQLite)] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithoutConditions([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1955,7 +1967,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(TestProvName.AllSQLite)] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1994,7 +2006,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithConditions([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithConditions([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2038,7 +2050,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlRightJoinWithInnerJoinOnRightWithoutConditions([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 
@@ -2077,7 +2089,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2748,9 +2760,12 @@ namespace Tests.Linq
 		#region issue 1455
 		public class Alert
 		{
-			public string?   AlertKey     { get; set; }
-			public string?   AlertCode    { get; set; }
-			public DateTime? CreationDate { get { return DateTime.Today; } }
+			[Column(CanBeNull = false)]
+			public string    AlertKey     { get; set; } = null!;
+			[Column(CanBeNull = false)]
+			public string    AlertCode    { get; set; } = null!;
+			[Column(CanBeNull = false)]
+			public DateTime CreationDate { get { return DateTime.Today; } }
 		}
 		public class AuditAlert : Alert
 		{

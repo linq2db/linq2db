@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS8604 // TODO:WAITFIX
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
@@ -35,10 +36,9 @@ namespace LinqToDB
 				if (!ValidateCollation(collation))
 					throw new InvalidOperationException($"Invalid collation: {collation}");
 
-				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}", Precedence.Primary, expr)
-				{
-					CanBeNull = expr.CanBeNull
-				};
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}",
+					Precedence.Primary, SqlFlags.IsPure, ParametersNullabilityType.IfAnyParameterNullable, null, expr);
+;
 			}
 
 			/// <summary>
@@ -59,10 +59,9 @@ namespace LinqToDB
 				var expr      = builder.GetExpression("expr");
 				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
 
-				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr)
-				{
-					CanBeNull = expr.CanBeNull
-				};
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"",
+					Precedence.Primary, SqlFlags.IsPure, ParametersNullabilityType.IfAnyParameterNullable, null,
+					expr);
 			}
 		}
 
@@ -74,10 +73,9 @@ namespace LinqToDB
 				var collation = builder.GetValue<string>("collation");
 
 				// collation cannot be parameter
-				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})", Precedence.Primary, expr, new SqlValue(typeof(string), collation))
-				{
-					CanBeNull = expr.CanBeNull
-				};
+				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})",
+					Precedence.Primary, SqlFlags.IsPure, ParametersNullabilityType.SameAsFirstParameter, null,
+					expr, new SqlValue(typeof(string), collation));
 			}
 		}
 	}

@@ -1,1 +1,5 @@
 ﻿#nullable enable
+*REMOVED*override LinqToDB.DataExtensions.SqlFormattableComparerAttribute.PrepareForCache(System.Linq.Expressions.Expression! expression) -> System.Linq.Expressions.Expression!
+*REMOVED*override LinqToDB.DataExtensions.SqlFormattableComparerAttribute.ExpressionsEqual<TContext>(TContext context, System.Linq.Expressions.Expression! expr1, System.Linq.Expressions.Expression! expr2, System.Func<TContext, System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!, bool>! comparer) -> bool
+*REMOVED*LinqToDB.DataExtensions.SqlFormattableComparerAttribute
+*REMOVED*LinqToDB.DataExtensions.SqlFormattableComparerAttribute.SqlFormattableComparerAttribute() -> void

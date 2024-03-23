@@ -47,8 +47,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsCountDistinctSupported          = true;
 			SqlProviderFlags.DoesNotSupportCorrelatedSubquery  = true;
+			SqlProviderFlags.IsAllSetOperationsSupported       = true;
+			SqlProviderFlags.IsNestedJoinsSupported            = false;
 
 			if (this is ClickHouseOctonicaDataProvider or ClickHouseMySqlDataProvider)
 				SqlProviderFlags.IsProjectionBoolSupported = false;

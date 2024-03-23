@@ -46,7 +46,7 @@ namespace Tests.Linq
 				var query = table.Distinct();
 
 				var grouped = from q in query
-					group q by Sql.GroupBy.Rollup(() => new { q.Id1, q.Id2 })
+					group q by Sql.GroupBy.Rollup(new { q.Id1, q.Id2 })
 					into g
 					select new
 					{
@@ -74,7 +74,7 @@ namespace Tests.Linq
 				var query = table.Distinct();
 
 				var grouped = from q in query
-					group q by Sql.GroupBy.Rollup(() => new { q.Id1, q.Id2 })
+					group q by Sql.GroupBy.Rollup(new { q.Id1, q.Id2 })
 					into g
 					select new
 					{
@@ -99,7 +99,7 @@ namespace Tests.Linq
 				var query = table.Distinct();
 
 				var grouped = from q in query
-					group q by Sql.GroupBy.Rollup(() => new { q.Id1, q.Id2 })
+					group q by Sql.GroupBy.Rollup(new { q.Id1, q.Id2 })
 					into g
 					select new
 					{
@@ -128,7 +128,7 @@ namespace Tests.Linq
 				var query = table.Distinct();
 
 				var grouped = from q in query
-					group q by Sql.GroupBy.Cube(() => new { q.Id1, q.Id2 })
+					group q by Sql.GroupBy.Cube(new { q.Id1, q.Id2 })
 					into g
 					select new
 					{
@@ -157,7 +157,7 @@ namespace Tests.Linq
 				var query = table.Distinct();
 
 				var grouped = from q in query
-					group q by Sql.GroupBy.GroupingSets(() => new { Set1 = new { q.Id1, q.Id2 }, Set2 = new { q.Id2 }, Set3 = new {}})
+					group q by Sql.GroupBy.GroupingSets(new { Set1 = new { q.Id1, q.Id2 }, Set2 = new { q.Id2 }, Set3 = new {}})
 					into g
 					select new
 					{
@@ -186,7 +186,7 @@ namespace Tests.Linq
 				var query = table.Distinct();
 
 				var grouped = from q in query
-					group q by Sql.GroupBy.GroupingSets(() => new
+					group q by Sql.GroupBy.GroupingSets(new
 						{ Set1 = new { q.Id1, q.Id2 }, Set2 = new { q.Id2 }, Set3 = new { } })
 					into g
 					where g.Count() > 0 || Sql.Grouping(g.Key.Set1.Id1) == 1
@@ -217,7 +217,7 @@ namespace Tests.Linq
 				var query = table.Distinct();
 
 				var grouped = (from q in query
-						group q by Sql.GroupBy.GroupingSets(() => new
+						group q by Sql.GroupBy.GroupingSets(new
 							{ Set1 = new { q.Id1, q.Id2 }, Set2 = new { q.Id2 }, Set3 = new { } })
 						into g
 						select g)

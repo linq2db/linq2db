@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSetExpression : IQueryElement, ISqlExpressionWalkable
+	public class SqlSetExpression : IQueryElement
 	{
 		// These are both nullable refs, but by construction either _column or _row is set.
 
@@ -18,7 +16,7 @@ namespace LinqToDB.SqlQuery
 
 		private void ValidateColumnExpression(ISqlExpression column, ISqlExpression? expression)
 		{
-			if (column is SqlRow row)
+			if (column is SqlRowExpression row)
 			{
 				// The length-checks _should_ never failed thanks to C# type-checking.
 				// We do them in case someone attempts to build invalid expressions with unsafe casts or similar.
@@ -28,10 +26,10 @@ namespace LinqToDB.SqlQuery
 					var columns = subquery.Select.Columns;
 					if (columns.Count != row.Values.Length)
 						throw new LinqToDBException("Arity of row expression and subquery do not match.");
-					for (int i = 0; i < row.Values.Length; i++)				
+					for (int i = 0; i < row.Values.Length; i++)
 						RefineDbParameter(row.Values[i], columns[i].Expression);
 				}
-				else if (expression is SqlRow sqlRow)
+				else if (expression is SqlRowExpression sqlRow)
 				{
 					var values = sqlRow.Values;
 					if (values.Length != row.Values.Length)
@@ -41,7 +39,7 @@ namespace LinqToDB.SqlQuery
 				}
 				else if (expression != null)
 				{
-					throw new ArgumentException("An array of expressions can only be SET to a subquery or row expression", nameof(expression));
+					//throw new ArgumentException("An array of expressions can only be SET to a subquery or row expression", nameof(expression));
 				}
 			}
 			else
@@ -49,7 +47,6 @@ namespace LinqToDB.SqlQuery
 				RefineDbParameter(column, expression);
 			}
 		}
-
 
 		public ISqlExpression  Column     { get; set; }
 		public ISqlExpression? Expression { get; set; }
@@ -81,36 +78,28 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
 
 		#endregion
 
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Column     = Column.Walk(options, context, func)!;
-			Expression = Expression?.Walk(options, context, func);
-			return null;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SetExpression;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			Column.ToString(sb, dic);
+			writer
+				.AppendElement(Column)
+				.Append(" = ")
+				.AppendElement(Expression);
 
-			sb.Append(" = ");
-			Expression?.ToString(sb, dic);
-
-			return sb;
+			return writer;
 		}
 
 		#endregion

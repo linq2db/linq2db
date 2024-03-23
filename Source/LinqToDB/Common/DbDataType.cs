@@ -77,7 +77,6 @@ namespace LinqToDB.Common
 				from.Scale     ?? Scale);
 		}
 
-
 		public readonly DbDataType WithoutSystemType(DbDataType       from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
 		public readonly DbDataType WithoutSystemType(ColumnDescriptor from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
 

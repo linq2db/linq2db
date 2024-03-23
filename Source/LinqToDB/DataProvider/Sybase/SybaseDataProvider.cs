@@ -35,6 +35,7 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.IsCrossJoinSupported             = false;
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
+			SqlProviderFlags.IsWindowFunctionsSupported       = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));

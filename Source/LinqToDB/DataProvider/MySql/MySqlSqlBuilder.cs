@@ -74,7 +74,9 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			if (selectQuery.Select.SkipValue == null)
+			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+
+			if (skipExpr == null)
 				base.BuildOffsetLimit(selectQuery);
 			else
 			{
@@ -82,10 +84,10 @@ namespace LinqToDB.DataProvider.MySql
 					.AppendFormat(
 						CultureInfo.InvariantCulture,
 						"LIMIT {0}, {1}",
-						WithStringBuilderBuildExpression(selectQuery.Select.SkipValue),
-						selectQuery.Select.TakeValue == null ?
+						WithStringBuilderBuildExpression(skipExpr),
+						takeExpr == null ?
 							(object)long.MaxValue :
-							WithStringBuilderBuildExpression(selectQuery.Select.TakeValue))
+							WithStringBuilderBuildExpression(takeExpr))
 					.AppendLine();
 			}
 		}
@@ -272,7 +274,8 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
+			SqlUpdateClause                                    updateClause)
 		{
 			var pos = StringBuilder.Length;
 
@@ -285,6 +288,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
+
 			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
@@ -346,7 +351,7 @@ namespace LinqToDB.DataProvider.MySql
 				case ConvertType.NameToQueryTable     :
 				case ConvertType.NameToProcedure      :
 					// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
-					if (value.Contains('`'))
+					if (value.Contains("`"))
 						value = value.Replace("`", "``");
 
 					return sb.Append('`').Append(value).Append('`');
@@ -362,8 +367,7 @@ namespace LinqToDB.DataProvider.MySql
 			ref bool addAlias,
 			bool throwExceptionIfTableNotFound = true)
 		{
-			return base.BuildExpression(
-				expr,
+			return base.BuildExpression(expr,
 				buildTableName && Statement.QueryType != QueryType.InsertOrUpdate,
 				checkParentheses,
 				alias,
@@ -382,6 +386,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
+			var nullability = new NullabilityContext(insertOrUpdate.SelectQuery);
+
 			var position = StringBuilder.Length;
 
 			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, false);
@@ -487,7 +493,8 @@ namespace LinqToDB.DataProvider.MySql
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
-		protected override void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
+		protected override void BuildGroupByBody(GroupingType groupingType,
+			List<ISqlExpression>                              items)
 		{
 			if (groupingType == GroupingType.GroupBySets || groupingType == GroupingType.Default)
 			{
@@ -504,7 +511,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				AppendIndent();
 
-				var expr = WrapBooleanExpression(items[i]);
+				var expr = items[i];
 				BuildExpression(expr);
 
 				if (i + 1 < items.Count)

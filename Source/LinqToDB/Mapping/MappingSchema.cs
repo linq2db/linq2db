@@ -8,8 +8,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net;
-using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Xml;
@@ -499,7 +497,6 @@ namespace LinqToDB.Mapping
 			return li == null ? null : (LambdaExpression)ReduceDefaultValue(checkNull ? li.CheckNullLambda : li.Lambda);
 		}
 
-
 		/// <summary>
 		/// Returns conversion delegate for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
 		/// </summary>
@@ -768,6 +765,13 @@ namespace LinqToDB.Mapping
 					new DefaultValueExpression(this, type));
 			}
 
+			if (body.Type != type)
+			{
+				var convertExpr = GetConvertExpression(body.Type, type);
+				if (convertExpr != null)
+					body = InternalExtensions.ApplyLambdaToExpression(convertExpr, body);
+			}
+
 			var expr = Expression.Lambda(body, param);
 			return expr;
 		}
@@ -787,7 +791,6 @@ namespace LinqToDB.Mapping
 			valueExpr = InternalExtensions.ApplyLambdaToExpression(convertLambda, valueExpr);
 			return valueExpr;
 		}
-
 
 		static bool Simplify(ref DbDataType type)
 		{
@@ -1198,7 +1201,7 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attributes owner member.</param>
-		/// <param name="forFirstConfiguration">If <c>true</c> - returns only atributes for first configuration with attributes from <see cref="ConfigurationList"/>.</param>
+		/// <param name="forFirstConfiguration">If <c>true</c> - returns only attributes for first configuration with attributes from <see cref="ConfigurationList"/>.</param>
 		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool forFirstConfiguration = false)
 			where T : MappingAttribute
@@ -1679,7 +1682,6 @@ namespace LinqToDB.Mapping
 
 			return SqlDataType.Undefined;
 		}
-
 
 		#endregion
 

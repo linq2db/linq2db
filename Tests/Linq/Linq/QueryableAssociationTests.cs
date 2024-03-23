@@ -500,12 +500,12 @@ WHERE
 					x.SomeValue.Value
 				});
 
+				TestContext.WriteLine(q.ToString());
+
 				var select = q.GetSelectQuery();
 
 				// Ensure that cross apply inlined in query
 				Assert.AreEqual(2, select.Select.From.Tables[0].Joins.Count);
-
-				TestContext.WriteLine(q.ToString());
 			}
 		}
 
@@ -647,6 +647,7 @@ WHERE
 			}
 		}
 
+		[Ignore("(sdanyliv): Synthetic test, we are trying to expand whole projection and some properties are non expandable. Decided to disable.")]
 		[Test]
 		public void TestPropertiesFromDataConnection([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2, 3)] int currentUser)
 		{
@@ -670,6 +671,7 @@ WHERE
 			}
 		}
 
+		[Ignore("(sdanyliv): Synthetic test, we are trying to expand whole projection and some properties are non expandable. Decided to disable.")]
 		[Test]
 		public void TestPropertiesFromDataContext([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

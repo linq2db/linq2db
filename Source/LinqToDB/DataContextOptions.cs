@@ -8,6 +8,8 @@ namespace LinqToDB
 	using Data;
 	using Interceptors;
 
+	using LinqToDB.Remote;
+
 	/// <param name="CommandTimeout">
 	/// The command timeout, or <c>null</c> if none has been set.
 	/// </param>
@@ -21,7 +23,7 @@ namespace LinqToDB
 		// If you add another parameter here, don't forget to update
 		// DataContextOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
-		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
+		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>, IApplicable<RemoteDataContextBase>
 	{
 		public DataContextOptions() : this((int?)default)
 		{
@@ -61,6 +63,11 @@ namespace LinqToDB
 		void IApplicable<DataContext>.Apply(DataContext obj)
 		{
 			DataContext.ConfigurationApplier.Apply(obj, this);
+		}
+
+		void IApplicable<RemoteDataContextBase>.Apply(RemoteDataContextBase obj)
+		{
+			RemoteDataContextBase.ConfigurationApplier.Apply(obj, this);
 		}
 
 		#region IEquatable implementation

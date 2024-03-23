@@ -38,6 +38,11 @@
 			StringBuilder.AppendLine(";");
 		}
 
+		protected override void BuildSqlConditionExpression(SqlConditionExpression conditionExpression)
+		{
+			BuildSqlConditionExpressionAsFunction("IIF", conditionExpression);
+		}
+
 		public override string  Name => ProviderName.SqlServer2012;
 	}
 }
