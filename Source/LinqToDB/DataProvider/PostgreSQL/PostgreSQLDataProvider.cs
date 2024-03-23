@@ -223,7 +223,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal object? NormalizeTimeStamp(PostgreSQLOptions options, object? value, DbDataType dataType)
+		internal object? NormalizeTimeStamp(PostgreSQLOptions options, object? value, DbDataType dataType, NpgsqlProviderAdapter.NpgsqlDbType? npgsqlType)
 		{
 			if (options.NormalizeTimestampData)
 			{
@@ -234,16 +234,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				else if (value is DateTime dt)
 				{
 					// timestamptz should have UTC Kind
-					if ((dataType.DataType == DataType.DateTimeOffset || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ))
+					if (dt.Kind != DateTimeKind.Utc && (dataType.DataType == DataType.DateTimeOffset || npgsqlType == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ))
 					{
-						if (dt.Kind != DateTimeKind.Utc)
-							value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+						value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
 					}
 					// timestamp should have non-UTC Kind (Unspecified used by default by npgsql)
-					else if (dataType.DataType == DataType.DateTime2 || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp)
+					else if (dt.Kind == DateTimeKind.Utc && (dataType.DataType == DataType.DateTime2 || npgsqlType == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp))
 					{
-						if (dt.Kind == DateTimeKind.Utc)
-							value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
+						value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
 					}
 				}
 			}
@@ -259,7 +257,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 			else
 			{
-				value = NormalizeTimeStamp(dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default), value, dataType);
+				value = NormalizeTimeStamp(dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default), value, dataType, GetNativeType(dataType.DbType));
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
