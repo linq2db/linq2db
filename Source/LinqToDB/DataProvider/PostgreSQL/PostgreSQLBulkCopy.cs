@@ -164,10 +164,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					for (var i = 0; i < columns.Length; i++)
 					{
 						// DBNull.Value : https://github.com/npgsql/npgsql/issues/5330
-						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i]);
-						var dataType = columnTypes[i];
+						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i], npgsqlTypes[i]);
 
-						if (_provider.GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ && value is DateTimeOffset dto)
+						if (value is DateTimeOffset dto && npgsqlTypes[i] == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ)
 						{
 							// https://github.com/npgsql/npgsql/issues/5332
 							// reset date
@@ -291,10 +290,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					for (var i = 0; i < columns.Length; i++)
 					{
 						// DBNull.Value : https://github.com/npgsql/npgsql/issues/5330
-						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i]);
-						var dataType = columnTypes[i];
-
-						if (_provider.GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ && value is DateTimeOffset dto)
+						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i], npgsqlTypes[i]);
+						
+						if (value is DateTimeOffset dto && npgsqlTypes[i] == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ)
 						{
 							// https://github.com/npgsql/npgsql/issues/5332
 							// reset date
@@ -415,10 +413,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					for (var i = 0; i < columns.Length; i++)
 					{
 						// DBNull.Value : https://github.com/npgsql/npgsql/issues/5330
-						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i]);
-						var dataType = columnTypes[i];
+						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i], npgsqlTypes[i]);
 
-						if (_provider.GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ && value is DateTimeOffset dto)
+						if (value is DateTimeOffset dto && npgsqlTypes[i] == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ)
 						{
 							// https://github.com/npgsql/npgsql/issues/5332
 							// reset date
