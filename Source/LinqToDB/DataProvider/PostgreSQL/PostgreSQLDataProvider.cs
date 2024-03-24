@@ -234,14 +234,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				else if (value is DateTime dt)
 				{
 					// timestamptz should have UTC Kind
-					if (dt.Kind != DateTimeKind.Utc && (dataType.DataType == DataType.DateTimeOffset || npgsqlType == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ))
+					if (dataType.DataType == DataType.DateTimeOffset || npgsqlType == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ)
 					{
-						value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+						if (dt.Kind != DateTimeKind.Utc)
+							value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
 					}
 					// timestamp should have non-UTC Kind (Unspecified used by default by npgsql)
-					else if (dt.Kind == DateTimeKind.Utc && (dataType.DataType == DataType.DateTime2 || npgsqlType == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp))
+					else if (dataType.DataType == DataType.DateTime2 || npgsqlType == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp)
 					{
-						value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
+						if (dt.Kind == DateTimeKind.Utc)
+							value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
 					}
 				}
 			}
