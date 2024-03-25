@@ -91,6 +91,46 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811
 		Test.cmd = Test.cmd
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E-D3B3-433F-A3CA-EE29CD24C324}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\icon.png = NuGet\icon.png
+		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
+		NuGet\linq2db.AspNet.nuspec = NuGet\linq2db.AspNet.nuspec
+		NuGet\linq2db.cli.nuspec = NuGet\linq2db.cli.nuspec
+		NuGet\linq2db.DB2.Core.nuspec = NuGet\linq2db.DB2.Core.nuspec
+		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
+		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
+		NuGet\linq2db.Informix.Core.nuspec = NuGet\linq2db.Informix.Core.nuspec
+		NuGet\linq2db.Informix.nuspec = NuGet\linq2db.Informix.nuspec
+		NuGet\linq2db.MySql.nuspec = NuGet\linq2db.MySql.nuspec
+		NuGet\linq2db.MySqlConnector.nuspec = NuGet\linq2db.MySqlConnector.nuspec
+		NuGet\linq2db.nuspec = NuGet\linq2db.nuspec
+		NuGet\linq2db.Oracle.Managed.nuspec = NuGet\linq2db.Oracle.Managed.nuspec
+		NuGet\linq2db.Oracle.Unmanaged.nuspec = NuGet\linq2db.Oracle.Unmanaged.nuspec
+		NuGet\linq2db.PostgreSQL.nuspec = NuGet\linq2db.PostgreSQL.nuspec
+		NuGet\linq2db.Remote.Grpc.nuspec = NuGet\linq2db.Remote.Grpc.nuspec
+		NuGet\linq2db.Remote.Wcf.nuspec = NuGet\linq2db.Remote.Wcf.nuspec
+		NuGet\linq2db.SapHana.nuspec = NuGet\linq2db.SapHana.nuspec
+		NuGet\linq2db.SqlCe.nuspec = NuGet\linq2db.SqlCe.nuspec
+		NuGet\linq2db.SQLite.MS.nuspec = NuGet\linq2db.SQLite.MS.nuspec
+		NuGet\linq2db.SQLite.nuspec = NuGet\linq2db.SQLite.nuspec
+		NuGet\linq2db.SqlServer.MS.nuspec = NuGet\linq2db.SqlServer.MS.nuspec
+		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
+		NuGet\linq2db.Sybase.DataAction.nuspec = NuGet\linq2db.Sybase.DataAction.nuspec
+		NuGet\linq2db.Sybase.nuspec = NuGet\linq2db.Sybase.nuspec
+		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
+		NuGet\linq2db.Tools.nuspec = NuGet\linq2db.Tools.nuspec
+		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
+		NuGet\Pack.cmd = NuGet\Pack.cmd
+		NuGet\README.AspNet.md = NuGet\README.AspNet.md
+		NuGet\README.linq2db.md = NuGet\README.linq2db.md
+		NuGet\README.Remote.Grpc.md = NuGet\README.Remote.Grpc.md
+		NuGet\README.Remote.Wcf.md = NuGet\README.Remote.Wcf.md
+		NuGet\README.T4.md = NuGet\README.T4.md
+		NuGet\README.Tools.md = NuGet\README.Tools.md
+		NuGet\TestToolLocal.cmd = NuGet\TestToolLocal.cmd
+	EndProjectSection
+EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.FSharp", "Tests\FSharp\Tests.FSharp.fsproj", "{E3E09A92-ED23-457B-8E59-CCD34667B6EE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.Base", "Tests\Base\Tests.Base.csproj", "{8581F094-7096-4041-8072-029EF3E4EE17}"
