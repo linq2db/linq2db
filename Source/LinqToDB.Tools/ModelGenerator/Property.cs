@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.Tools.ModelGenerator
 {
-	public interface IProperty : IMemberBase
+	public interface IProperty : IMemberBase, IClassMember
 	{
 		bool           IsAuto          { get; set; }
 //		public string?        InitValue       { get; set; }

@@ -84,6 +84,30 @@ public partial class MemberGroup : MemberGroup<MemberGroup>
 
 public partial class Property : Property<Property>
 {
+	public Property()
+	{
+	}
+
+	public Property(ModelType type, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
+		: base(type, name, getBodyBuilder, setBodyBuilder)
+	{
+	}
+
+	public Property(bool enforceNotNullable, Func<string> typeBuilder, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
+		: base(enforceNotNullable, typeBuilder, name, getBodyBuilder, setBodyBuilder)
+	{
+	}
+
+	public Property(Func<string> typeBuilder, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
+		: base(typeBuilder, name, getBodyBuilder, setBodyBuilder)
+	{
+	}
+
+	public Property(string type, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
+		: base(type, name, getBodyBuilder, setBodyBuilder)
+	{
+	}
+
 	public void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
 		Render(tt.CodeTemplateGenerator, isCompact);
@@ -92,6 +116,11 @@ public partial class Property : Property<Property>
 
 public partial class Field : Field<Field>
 {
+	public Field() {}
+	public Field(ModelType type,           string name) : base(type,        name) {}
+	public Field(Func<string> typeBuilder, string name) : base(typeBuilder, name) {}
+	public Field(string type,              string name) : base(type,        name) {}
+
 	public void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
 		Render(tt.CodeTemplateGenerator, isCompact);
@@ -100,6 +129,11 @@ public partial class Field : Field<Field>
 
 public partial class Event : Event<Event>
 {
+	public Event() {}
+	public Event(Type eventType,   string name, bool nullable) : base(eventType, name, nullable) {}
+	public Event(string eventType, string name, bool nullable) : base(eventType, name, nullable) {}
+	public Event(Func<string> typeBuilder, string name) : base(typeBuilder, name) {}
+
 	public void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
 		Render(tt.CodeTemplateGenerator, isCompact);
@@ -108,6 +142,24 @@ public partial class Event : Event<Event>
 
 public partial class Method : Method<Method>
 {
+	public Method()
+	{
+	}
+
+	public Method(Func<string> typeBuilder, string name, IEnumerable<Func<string>> parameterBuilders = null, params Func<IEnumerable<string>>[] bodyBuilders)
+		: base(typeBuilder, name, parameterBuilders, bodyBuilders)
+	{
+	}
+
+	public static Method Create(string type, string name, IEnumerable<string> parameters = null, IEnumerable<string> body = null)
+	{
+		return new Method(
+			() => type,
+			name,
+			parameters?.Select<string,Func<string>>(p => () => p),
+			body?.Select<string,Func<IEnumerable<string>>>(p => () => new[] { p }).ToArray());
+	}
+
 	public void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
 		Render(tt.CodeTemplateGenerator, isCompact);
@@ -116,6 +168,14 @@ public partial class Method : Method<Method>
 
 public partial class Attribute : Attribute<Attribute>
 {
+	public Attribute()
+	{
+	}
+
+	public Attribute(string name, params string[] ps) : base(name, ps)
+	{
+	}
+
 	public virtual void Render(GeneratedTextTransformation tt)
 	{
 		tt.CodeTemplateGenerator.WriteAttribute(this);

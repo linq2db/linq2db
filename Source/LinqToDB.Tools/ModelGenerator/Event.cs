@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Tools.ModelGenerator
 {
-	public interface IEvent : IMemberBase
+	public interface IEvent : IMemberBase, IClassMember
 	{
 		bool IsStatic  { get; set; }
 		bool IsVirtual { get; set; }
