@@ -1,9 +1,10 @@
-<#@ assembly name="System.Core"                         #>
-<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll" #>
-<#@ import   namespace="System.Reflection"              #>
-<#@ import   namespace="System.IO"                      #>
-<#@ import   namespace="System.Linq"                    #>
-<#@ import   namespace="System.Runtime.InteropServices" #>
+<#@ assembly name="System.Core"                               #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll"       #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Tools.dll" #>
+<#@ import   namespace="System.Reflection"                    #>
+<#@ import   namespace="System.IO"                            #>
+<#@ import   namespace="System.Linq"                          #>
+<#@ import   namespace="System.Runtime.InteropServices"       #>
 
 <#
 AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
@@ -25,7 +26,7 @@ static string GetAssemblyLocation(Assembly assembly)
 	if (RuntimeInformation.FrameworkDescription.Contains(".NET Framework"))
 	{
 		// CodeBase used instead of Location, as Location could point to shadow copy, but we need to get original path
-		// to be able to locate sibling asemblies
+		// to be able to locate sibling assemblies
 		return assembly.CodeBase.Replace("file:///", "");
 	}
 

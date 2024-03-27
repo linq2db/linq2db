@@ -1,10 +1,9 @@
-﻿using System.Windows.Media;
+﻿using System;
+using System.Windows.Media;
 
 namespace Tests.T4.Wpf
 {
-	/// <summary>
-	/// 
-	/// </summary>
+	/// <summary/>
 	partial class ViewModel
 	{
 		static readonly Brush _normalBrushes   = new SolidColorBrush(Colors.Black);
