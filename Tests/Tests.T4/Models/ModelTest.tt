@@ -1,11 +1,10 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"      #>
-<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                    #>
-<#@ output extension=".generated.cs"                                                              #>
-<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                    #>
-<#@ include file="$(LinqToDBT4TemplatesPath)T4Model.ttinclude"                        once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)EditableObject.ttinclude"                 once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)NotifyPropertyChanged.ttinclude"          once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)Validation.ttinclude"                     once="true" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="$(LinqToDBT4TemplatesPath)T4Model.ttinclude"                   once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)EditableObject.ttinclude"            once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)NotifyPropertyChanged.ttinclude"     once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)Validation.ttinclude"                once="true" #>
 <#
 	EnableNullableReferenceTypes = true;
 
