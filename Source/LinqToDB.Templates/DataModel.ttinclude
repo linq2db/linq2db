@@ -1,18 +1,10 @@
-<#@ assembly name="System.Data"                   #>
-<#@ include file="LinqToDB.ttinclude" once="true" #>
-<#@ import namespace="LinqToDB.SchemaProvider"    #>
+<#@ assembly name="System.Data"                  #>
+<#@ import namespace="LinqToDB.SchemaProvider"   #>
+<#@ include file="T4Model.ttinclude" once="true" #>
 <#
-	{
-		var beforeGenerateModel = BeforeGenerateModel;
-		BeforeGenerateModel = () =>
-		{
-			GenerateTypesFromMetadata();
-			beforeGenerateModel();
-		};
-	}
-#><#+
 
-string   NamespaceName
+#><#+
+string NamespaceName
 {
 	get { return Model.Namespace.Name;  }
 	set { Model.Namespace.Name = value; }

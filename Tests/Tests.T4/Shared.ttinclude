@@ -1,7 +1,7 @@
-﻿<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll"                       #>
-<#@ assembly name="$(LinqToDBT4SharedTools)Microsoft.Bcl.AsyncInterfaces.dll" #>
-<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Tests.Base.dll"            #>
-<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" once="true"   #>
+﻿<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll"                                 #>
+<#@ assembly name="$(LinqToDBT4SharedTools)Microsoft.Bcl.AsyncInterfaces.dll"           #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Tests.Base.dll"                      #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude" once="true" #>
 <#@ import namespace="System.IO" #>
 <#
 	EnableNullableReferenceTypes = true;

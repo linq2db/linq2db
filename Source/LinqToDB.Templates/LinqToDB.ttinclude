@@ -1,4 +1,5 @@
 <#@ assembly name="System.Data"                    #>
+<#@ import namespace="System.Collections.Generic"  #>
 <#@ import namespace="System.Data"                 #>
 <#@ import namespace="System.Globalization"        #>
 <#@ import namespace="LinqToDB"                    #>
@@ -9,6 +10,15 @@
 <#
 	if (BaseDataContextClass == null)
 		BaseDataContextClass = "LinqToDB.Data.DataConnection";
+
+	{
+		var beforeGenerateModel = BeforeGenerateModel;
+		BeforeGenerateModel = () =>
+		{
+			GenerateTypesFromMetadata();
+			beforeGenerateModel();
+		};
+	}
 #>
 <#+
 Action BeforeGenerateLinqToDBModel = () => {};

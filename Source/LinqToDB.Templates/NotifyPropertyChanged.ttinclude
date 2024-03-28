@@ -306,7 +306,7 @@ public string[] OnPropertyChangingArgBody = new[]
 	"}",
 };
 
-partial class Property
+partial class Property : INotifyingPropertyProperty
 {
 	public bool         IsNotifying;
 	public List<string> Dependents = new List<string>();
