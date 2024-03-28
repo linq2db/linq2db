@@ -10,7 +10,7 @@ namespace LinqToDB.Tools.ModelGenerator
 	}
 
 	public class Field<T> : MemberBase, IField
-	where T : Field<T>
+		where T : Field<T>
 	{
 		public bool    IsStatic   { get; set; }
 		public bool    IsReadonly { get; set; }

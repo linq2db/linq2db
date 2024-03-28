@@ -4,8 +4,11 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Tools.ModelGenerator
 {
+	[PublicAPI]
 	public partial class CodeTemplateGenerator
 	{
 		public CodeTemplateGenerator(
@@ -540,6 +543,29 @@ namespace LinqToDB.Tools.ModelGenerator
 			sb.Append('"');
 
 			return sb.ToString();
+		}
+
+		public string ToCamelCase(string name)
+		{
+			var n = 0;
+
+			foreach (var c in name)
+			{
+				if (char.IsUpper(c))
+					n++;
+				else
+					break;
+			}
+
+			if (n == 0)
+				return name;
+
+			if (n == name.Length)
+				return name.ToLower(CultureInfo.InvariantCulture)!;
+
+			n = Math.Max(1, n - 1);
+
+			return name.Substring(0, n).ToLower(CultureInfo.InvariantCulture)! + name.Substring(n);
 		}
 	}
 }

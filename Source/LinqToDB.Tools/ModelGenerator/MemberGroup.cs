@@ -7,6 +7,9 @@ namespace LinqToDB.Tools.ModelGenerator
 {
 	public interface IMemberGroup : IMemberBase
 	{
+		bool               IsCompact       { get; set; }
+		bool               IsPropertyGroup { get; set; }
+		List<IClassMember> Members         { get; set; }
 	}
 
 	public abstract class MemberGroup<TMemberGroup> : MemberBase, IMemberGroup

@@ -4,10 +4,11 @@ using System.Linq;
 
 namespace LinqToDB.Tools.ModelGenerator
 {
-	public interface IMemberBase
+	public interface IMemberBase : IClassMember
 	{
 		AccessModifier AccessModifier { get; set; }
 		string?        Name           { get; set; }
+		Func<string?>? TypeBuilder    { get; set; }
 		string?        EndLineComment { get; set; }
 		string?        Conditional    { get; set; }
 
@@ -21,7 +22,7 @@ namespace LinqToDB.Tools.ModelGenerator
 		string? BuildType();
 	}
 
-	public abstract class MemberBase : IMemberBase, IClassMember
+	public abstract class MemberBase : IMemberBase
 	{
 		public string?          ID                   { get; set; }
 		public AccessModifier   AccessModifier       { get; set; } = AccessModifier.Public;

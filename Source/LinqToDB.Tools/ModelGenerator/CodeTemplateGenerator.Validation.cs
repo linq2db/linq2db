@@ -10,10 +10,6 @@ namespace LinqToDB.Tools.ModelGenerator
 		bool ValidateProperty { get; set; }
 	}
 
-	public interface INotifyingPropertyProperty : IProperty
-	{
-	}
-
 	public partial class CodeTemplateGenerator
 	{
 		public void ValidationImplementation<TClass,TMemberGroup,TMethod,TField,TAttribute>()

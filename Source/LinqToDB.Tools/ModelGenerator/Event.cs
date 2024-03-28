@@ -9,7 +9,7 @@ namespace LinqToDB.Tools.ModelGenerator
 	}
 
 	public class Event<T> : MemberBase, IEvent
-	where T : Event<T>
+		where T : Event<T>
 	{
 		public bool IsStatic  { get; set; }
 		public bool IsVirtual { get; set; }
