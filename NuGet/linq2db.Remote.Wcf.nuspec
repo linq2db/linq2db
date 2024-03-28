@@ -17,7 +17,7 @@
 	</metadata>
 
 	<files>
-		<file src="..\Nuget\README.Remote.Wcf.md"                                          target="README.md"  />
+		<file src="..\NuGet\README.Remote.Wcf.md"                                          target="README.md"  />
 
 		<file src="..\Source\LinqToDB.Remote.Wcf\bin\Release\net45\linq2db.Remote.Wcf.pdb" target="lib\net45\" />
 		<file src="..\Source\LinqToDB.Remote.Wcf\bin\Release\net45\linq2db.Remote.Wcf.xml" target="lib\net45\" />

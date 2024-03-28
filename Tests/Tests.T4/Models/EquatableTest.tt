@@ -1,9 +1,10 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
 <#@ output extension=".generated.cs"                                                         #>
 <#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\System.Data.SQLite.dll"         #>
-<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude" once="true"  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\Equatable.ttinclude"       once="true"  #>
+<#@ include file="..\Shared.ttinclude"                                 once="true"           #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.SQLite.ttinclude" once="true"           #>
+<#@ include file="$(LinqToDBT4TemplatesPath)Equatable.ttinclude"       once="true"           #>
 <#
 
 	EnableNullableReferenceTypes  = true;

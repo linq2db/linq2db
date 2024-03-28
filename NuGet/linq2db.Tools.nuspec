@@ -26,7 +26,7 @@
 	</metadata>
 
 	<files>
-		<file src="..\Nuget\README.Tools.md"                                              target="README.md"           />
+		<file src="..\NuGet\README.Tools.md"                                              target="README.md"           />
 
 		<file src="..\Source\LinqToDB.Tools\bin\Release\net45\linq2db.Tools.pdb"          target="lib\net45\"          />
 		<file src="..\Source\LinqToDB.Tools\bin\Release\net45\linq2db.Tools.xml"          target="lib\net45\"          />

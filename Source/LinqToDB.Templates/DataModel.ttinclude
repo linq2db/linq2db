@@ -111,9 +111,9 @@ public HashSet<string> KeyWords = new HashSet<string>
 	"using",    "virtual",  "volatile", "void",    "while",     "namespace", "string"
 };
 
-public static Func<string, bool>  IsValueType    = IsValueTypeDefault;
-public static Func<string,string> ToPlural       = s => s + "s";
-public static Func<string,string> ToSingular     = s => s;
+public static Func<string,bool>   IsValueType = IsValueTypeDefault;
+public static Func<string,string> ToPlural    = s => s + "s";
+public static Func<string,string> ToSingular  = s => s;
 
 static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema = (dataConnection, schemaOptions) =>
 {
@@ -604,6 +604,7 @@ Table GetTable(string name)
 
 	WriteLine(" */");
 
+	Error("Table '" + name +  "' not found.");
 	throw new ArgumentException("Table '" + name +  "' not found.");
 }
 
@@ -624,6 +625,7 @@ Procedure GetProcedure(string name)
 
 	WriteLine(" */");
 
+	Error("Procedure '" + name +  "' not found.");
 	throw new ArgumentException("Procedure '" + name +  "' not found.");
 }
 
@@ -797,7 +799,7 @@ public partial class Column : Property
 
 	public ModelType ModelType { get; }
 
-	protected internal override bool EnforceNotNullable => EnableNullableReferenceTypes && EnforceModelNullability && ModelType != null && ModelType.IsReference && !ModelType.IsNullable;
+	public override bool EnforceNotNullable => EnableNullableReferenceTypes && EnforceModelNullability && ModelType != null && ModelType.IsReference && !ModelType.IsNullable;
 }
 
 public enum AssociationType
@@ -844,7 +846,7 @@ public partial class ForeignKey : Property
 		}
 	}
 
-	protected internal override bool EnforceNotNullable => EnableNullableReferenceTypes && EnforceModelNullability && (!CanBeNull || AssociationType == AssociationType.OneToMany);
+	public override bool EnforceNotNullable => EnableNullableReferenceTypes && EnforceModelNullability && (!CanBeNull || AssociationType == AssociationType.OneToMany);
 }
 
 public partial class Procedure : Method

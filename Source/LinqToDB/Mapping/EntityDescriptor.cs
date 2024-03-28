@@ -209,13 +209,13 @@ namespace LinqToDB.Mapping
 				if (aa != null)
 				{
 					_associations.Add(new AssociationDescriptor(
-						TypeAccessor.Type, 
-						member.MemberInfo, 
-						aa.GetThisKeys(), 
+						TypeAccessor.Type,
+						member.MemberInfo,
+						aa.GetThisKeys(),
 						aa.GetOtherKeys(),
-						aa.ExpressionPredicate, 
-						aa.Predicate, 
-						aa.QueryExpressionMethod, 
+						aa.ExpressionPredicate,
+						aa.Predicate,
+						aa.QueryExpressionMethod,
 						aa.QueryExpression,
 						aa.Storage,
 						aa.AssociationSetterExpressionMethod,
