@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Tools.ModelGenerator
 {
-	public interface ITypeBase
+	public interface ITypeBase : ITree
 	{
 		AccessModifier   AccessModifier { get; }
 		string?          Name           { get; }

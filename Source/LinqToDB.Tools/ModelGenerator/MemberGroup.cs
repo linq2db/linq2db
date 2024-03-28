@@ -5,11 +5,11 @@ using System.Linq;
 
 namespace LinqToDB.Tools.ModelGenerator
 {
-	public interface IMemberGroup
+	public interface IMemberGroup : IMemberBase
 	{
 	}
 
-	public class MemberGroup<TMemberGroup> : MemberBase, IMemberGroup
+	public abstract class MemberGroup<TMemberGroup> : MemberBase, IMemberGroup
 	where TMemberGroup : MemberGroup<TMemberGroup>
 	{
 		public string?            Region          { get; set; }

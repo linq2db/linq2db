@@ -5,6 +5,8 @@ namespace LinqToDB.Tools.ModelGenerator
 {
 	public interface IModelSource : ITree
 	{
+		public List<string> Usings { get; }
+
 		void Render(CodeTemplateGenerator tt);
 	}
 
@@ -14,7 +16,8 @@ namespace LinqToDB.Tools.ModelGenerator
 	{
 		public int CurrentNamespace;
 
-		public List<string>     Usings     = [ "System"         ];
+		public List<string> Usings { get; set; } = [ "System" ];
+
 		public List<TNamespace> Namespaces = [ new TNamespace() ];
 
 		public TNamespace     Namespace => Namespaces[CurrentNamespace];

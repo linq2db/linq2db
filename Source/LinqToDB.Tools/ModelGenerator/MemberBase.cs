@@ -9,6 +9,7 @@ namespace LinqToDB.Tools.ModelGenerator
 		AccessModifier AccessModifier { get; set; }
 		string?        Name           { get; set; }
 		string?        EndLineComment { get; set; }
+		string?        Conditional    { get; set; }
 
 		int AccessModifierLen { get; set; }
 		int ModifierLen       { get; set; }
@@ -67,8 +68,15 @@ namespace LinqToDB.Tools.ModelGenerator
 		{
 			if (Conditional != null)
 			{
+				if (!isCompact)
+				{
+					tt.Trim();
+					tt.WriteLine("");
+				}
+
 				tt.RemoveSpace();
 				tt.WriteLine("#endif");
+
 				if (!isCompact)
 					tt.WriteLine("");
 			}

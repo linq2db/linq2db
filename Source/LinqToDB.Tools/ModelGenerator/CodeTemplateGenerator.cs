@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LinqToDB.Tools.ModelGenerator
 {
-	public class CodeTemplateGenerator
+	public partial class CodeTemplateGenerator
 	{
 		public CodeTemplateGenerator(
 			IModelSource    model,
@@ -33,7 +33,12 @@ namespace LinqToDB.Tools.ModelGenerator
 			WriteEndClass       = WriteEndClassImpl;
 			WriteAttribute      = WriteAttributeImpl;
 			BeginRegion         = s  => WriteLine($"#region {s}");
-			EndRegion           = () => WriteLine("#endregion");
+			EndRegion           = () =>
+			{
+				Trim();
+				WriteLine("");
+				WriteLine("#endregion");
+			};
 			WriteProperty       = WritePropertyImpl;
 			WriteField          = WriteFieldImpl;
 			WriteEvent          = WriteEventImpl;
@@ -506,6 +511,35 @@ namespace LinqToDB.Tools.ModelGenerator
 		{
 			while (len-- > 0)
 				Write(" ");
+		}
+
+		public string ToStringLiteral(string? value)
+		{
+			if (value == null)
+				return "null";
+
+			var sb = new StringBuilder("\"");
+
+			foreach (var chr in value)
+			{
+				switch (chr)
+				{
+					case '\t'     : sb.Append("\\t");                  break;
+					case '\n'     : sb.Append("\\n");                  break;
+					case '\r'     : sb.Append("\\r");                  break;
+					case '\\'     : sb.Append("\\\\");                 break;
+					case '"'      : sb.Append("\\\"");                 break;
+					case '\0'     : sb.Append("\\0");                  break;
+					case '\u0085' :
+					case '\u2028' :
+					case '\u2029' : sb.Append($"\\u{(ushort)chr:X4}"); break;
+					default       : sb.Append(chr);                    break;
+				}
+			}
+
+			sb.Append('"');
+
+			return sb.ToString();
 		}
 	}
 }

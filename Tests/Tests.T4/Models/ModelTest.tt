@@ -1,19 +1,20 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"      #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                    #>
 <#@ output extension=".generated.cs"                                                              #>
 <#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                    #>
-<#@ include file="$(LinqToDBT4TemplatesPath)T4Model.ttinclude"               once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)EditableObject.ttinclude"        once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)NotifyPropertyChanged.ttinclude" once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)Validation.ttinclude"            once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)T4Model.ttinclude"                        once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)EditableObject.ttinclude"                 once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)NotifyPropertyChanged.ttinclude"          once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)Validation.ttinclude"                     once="true" #>
 <#
 	EnableNullableReferenceTypes = true;
 
-	Model.Namespaces[0].Name = "Tests.T4.Model";
+	Model.Namespaces[0].Name = "Tests.T4.Models";
 
 	Model.Usings.Add("System.ComponentModel");
 	Model.Usings.Add("System.Collections.Generic");
 	Model.Usings.Add("System.Xml.Serialization");
-	Model.Usings.Add("Tests.T4.Model");
+	Model.Usings.Add("Tests.T4.Models");
 	Model.Usings.Add("System.ComponentModel");
 
 	ImplementNotifyPropertyChanging = true;

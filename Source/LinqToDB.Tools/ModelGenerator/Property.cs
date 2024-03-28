@@ -6,16 +6,18 @@ namespace LinqToDB.Tools.ModelGenerator
 {
 	public interface IProperty : IMemberBase, IClassMember
 	{
-		bool           IsAuto          { get; set; }
-//		public string?        InitValue       { get; set; }
-		bool           IsVirtual       { get; set; }
-		bool           IsOverride      { get; set; }
-		bool           IsAbstract      { get; set; }
-		bool           IsStatic        { get; set; }
-		bool           HasGetter       { get; set; }
-		bool           HasSetter       { get; set; }
-//		public List<Func<IEnumerable<string>>> GetBodyBuilders { get; set; } = [];
-//		public List<Func<IEnumerable<string>>> SetBodyBuilders { get; set; } = [];
+		bool    IsAuto     { get; set; }
+		string? InitValue  { get; set; }
+		bool    IsVirtual  { get; set; }
+		bool    IsOverride { get; set; }
+		bool    IsAbstract { get; set; }
+		bool    IsStatic   { get; set; }
+		bool    HasGetter  { get; set; }
+		bool    HasSetter  { get; set; }
+
+		List<Func<IEnumerable<string>>> GetBodyBuilders { get; set; }
+		List<Func<IEnumerable<string>>> SetBodyBuilders { get; set; }
+
 		int GetterLen { get; set; }
 		int SetterLen { get; set; }
 
@@ -28,14 +30,15 @@ namespace LinqToDB.Tools.ModelGenerator
 	public class Property<T> : MemberBase, IProperty
 	where T : Property<T>
 	{
-		public bool                            IsAuto          { get; set; } = true;
-		public string?                         InitValue       { get; set; }
-		public bool                            IsVirtual       { get; set; }
-		public bool                            IsOverride      { get; set; }
-		public bool                            IsAbstract      { get; set; }
-		public bool                            IsStatic        { get; set; }
-		public bool                            HasGetter       { get; set; } = true;
-		public bool                            HasSetter       { get; set; } = true;
+		public bool    IsAuto     { get; set; } = true;
+		public string? InitValue  { get; set; }
+		public bool    IsVirtual  { get; set; }
+		public bool    IsOverride { get; set; }
+		public bool    IsAbstract { get; set; }
+		public bool    IsStatic   { get; set; }
+		public bool    HasGetter  { get; set; } = true;
+		public bool    HasSetter  { get; set; } = true;
+
 		public List<Func<IEnumerable<string>>> GetBodyBuilders { get; set; } = [];
 		public List<Func<IEnumerable<string>>> SetBodyBuilders { get; set; } = [];
 

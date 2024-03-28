@@ -1,6 +1,5 @@
 <#@ assembly name="System.Data.Entity.Design"                          #>
 <#@ import namespace="System.Data.Entity.Design.PluralizationServices" #>
-<#@ include file="T4Model.ttinclude"   once="true"                     #>
 <#@ include file="DataModel.ttinclude" once="true"                     #>
 <#
 	{

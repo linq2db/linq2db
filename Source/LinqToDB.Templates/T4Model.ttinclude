@@ -21,12 +21,12 @@ CodeTemplateGenerator  CodeTemplateGenerator
 
 ModelSource Model { get { return (ModelSource)CodeTemplateGenerator.Model; } set { CodeTemplateGenerator.Model = value; } }
 
+Action                 BeforeGenerateModel { get { return CodeTemplateGenerator.BeforeGenerateModel; } set { CodeTemplateGenerator.BeforeGenerateModel = value; } }
 Action<string>         WriteComment        { get { return CodeTemplateGenerator.WriteComment;        } set { CodeTemplateGenerator.WriteComment        = value; } }
 Action<string>         WriteUsing          { get { return CodeTemplateGenerator.WriteUsing;          } set { CodeTemplateGenerator.WriteUsing          = value; } }
 Action<string>         WriteBeginNamespace { get { return CodeTemplateGenerator.WriteBeginNamespace; } set { CodeTemplateGenerator.WriteBeginNamespace = value; } }
 Action                 WriteEndNamespace   { get { return CodeTemplateGenerator.WriteEndNamespace;   } set { CodeTemplateGenerator.WriteEndNamespace   = value; } }
 Action<IAttribute>     WriteAttribute      { get { return CodeTemplateGenerator.WriteAttribute;      } set { CodeTemplateGenerator.WriteAttribute      = value; } }
-Action                 BeforeGenerateModel { get { return CodeTemplateGenerator.BeforeGenerateModel; } set { CodeTemplateGenerator.BeforeGenerateModel = value; } }
 Action<string>         BeginRegion         { get { return CodeTemplateGenerator.BeginRegion;         } set { CodeTemplateGenerator.BeginRegion         = value; } }
 Action                 EndRegion           { get { return CodeTemplateGenerator.EndRegion;           } set { CodeTemplateGenerator.EndRegion           = value; } }
 Action<IProperty,bool> WriteProperty       { get { return CodeTemplateGenerator.WriteProperty;       } set { CodeTemplateGenerator.WriteProperty       = value; } }
@@ -34,7 +34,11 @@ Action<IField>         WriteField          { get { return CodeTemplateGenerator.
 Action<IEvent>         WriteEvent          { get { return CodeTemplateGenerator.WriteEvent;          } set { CodeTemplateGenerator.WriteEvent          = value; } }
 
 bool GenerateProcedureErrors       { get { return CodeTemplateGenerator.GenerateProcedureErrors;            } set { CodeTemplateGenerator.GenerateProcedureErrors      = value; } }
-bool EnableNullableReferenceTypes  { get { return CodeTemplateGenerator.EnableNullableReferenceTypes; } set { CodeTemplateGenerator.EnableNullableReferenceTypes = value; } }
+
+/// <summary>
+/// Enables generation of nullable reference type annotations.
+/// </summary>
+static bool EnableNullableReferenceTypes  { get { return CodeTemplateGenerator.EnableNullableReferenceTypes; } set { CodeTemplateGenerator.EnableNullableReferenceTypes = value; } }
 
 public void GenerateModel()
 {
@@ -257,36 +261,6 @@ public static void SetPropertyValue(Property propertyObject, string propertyName
 {
 	if (SetPropertyValueAction != null)
 		SetPropertyValueAction(propertyObject, propertyName, value);
-}
-
-static string ToStringLiteral(string value)
-{
-	if (value == null)
-		return "null";
-
-	var sb = new StringBuilder("\"");
-
-	foreach (var chr in value)
-	{
-		switch (chr)
-		{
-			case '\t':     sb.Append("\\t");                    break;
-			case '\n':     sb.Append("\\n");                    break;
-			case '\r':     sb.Append("\\r");                    break;
-			case '\\':     sb.Append("\\\\");                   break;
-			case '"' :     sb.Append("\\\"");                   break;
-			case '\0':     sb.Append("\\0");                    break;
-			case '\u0085':
-			case '\u2028':
-			case '\u2029':
-					 sb.AppendFormat("\\u{0:X4}", (ushort)chr); break;
-			default: sb.Append(chr);                            break;
-		}
-	}
-
-	sb.Append('"');
-
-	return sb.ToString();
 }
 
 #>

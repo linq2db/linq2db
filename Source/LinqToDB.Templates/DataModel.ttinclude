@@ -604,6 +604,7 @@ Table GetTable(string name)
 
 	WriteLine(" */");
 
+	Error("Table '" + name +  "' not found.");
 	throw new ArgumentException("Table '" + name +  "' not found.");
 }
 
@@ -624,6 +625,7 @@ Procedure GetProcedure(string name)
 
 	WriteLine(" */");
 
+	Error("Procedure '" + name +  "' not found.");
 	throw new ArgumentException("Procedure '" + name +  "' not found.");
 }
 
@@ -797,7 +799,7 @@ public partial class Column : Property
 
 	public ModelType ModelType { get; }
 
-	protected internal override bool EnforceNotNullable => EnableNullableReferenceTypes && EnforceModelNullability && ModelType != null && ModelType.IsReference && !ModelType.IsNullable;
+	public override bool EnforceNotNullable => EnableNullableReferenceTypes && EnforceModelNullability && ModelType != null && ModelType.IsReference && !ModelType.IsNullable;
 }
 
 public enum AssociationType
@@ -844,7 +846,7 @@ public partial class ForeignKey : Property
 		}
 	}
 
-	protected internal override bool EnforceNotNullable => EnableNullableReferenceTypes && EnforceModelNullability && (!CanBeNull || AssociationType == AssociationType.OneToMany);
+	public override bool EnforceNotNullable => EnableNullableReferenceTypes && EnforceModelNullability && (!CanBeNull || AssociationType == AssociationType.OneToMany);
 }
 
 public partial class Procedure : Method

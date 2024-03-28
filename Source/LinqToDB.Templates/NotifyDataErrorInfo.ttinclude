@@ -57,7 +57,7 @@ void NotifyDataErrorInfoImpl()
 							},
 							() => new[]
 							{
-								"List<string> errors;",
+								$"List<string>{(EnableNullableReferenceTypes ? "?" : "")} errors;",
 								"",
 								"if (!_validationErrors.TryGetValue(propertyName, out errors))",
 								"{",
@@ -82,7 +82,7 @@ void NotifyDataErrorInfoImpl()
 							},
 							() => new[]
 							{
-								"List<string> errors;",
+								$"List<string>{(EnableNullableReferenceTypes ? "?" : "")} errors;",
 								"",
 								"if (_validationErrors.TryGetValue(propertyName, out errors) && errors.Count > 0)",
 								"{",
@@ -119,7 +119,7 @@ void NotifyDataErrorInfoImpl()
 							},
 							() => new[]
 							{
-								"List<string> errors;",
+								$"List<string>{(EnableNullableReferenceTypes ? "?" : "")} errors;",
 								"return propertyName != null && _validationErrors.TryGetValue(propertyName, out errors) ? errors : null;",
 							})
 						{

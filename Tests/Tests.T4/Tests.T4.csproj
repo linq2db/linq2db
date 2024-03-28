@@ -30,14 +30,6 @@
 		<Content Include="Models\bbb.txt" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-		<Compile Update="WPF\ViewModel.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>ViewModel.tt</DependentUpon>
-		</Compile>
-	</ItemGroup>
-
 	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
 		<Compile Remove="WPF\*.cs" />
 		<None Include="WPF\ViewModel.cs" />
@@ -49,21 +41,48 @@
 		<Compile Remove="SqlServerAzure.generated.cs" />
 	</ItemGroup>
 
+	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+		<None Update="WPF\ViewModel.tt">
+			<LastGenOutput>ViewModel.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="WPF\ViewModel.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ViewModel.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
 	<ItemGroup>
 		<None Update="Cli\Fluent.tt">
 			<LastGenOutput>Fluent.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
+		<Compile Update="Cli\Fluent.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Fluent.tt</DependentUpon>
+		</Compile>
 
 		<None Update="Cli\NoMetadata.tt">
 			<LastGenOutput>NoMetadata.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
+		<Compile Update="Cli\NoMetadata.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>NoMetadata.tt</DependentUpon>
+		</Compile>
 
 		<None Update="Cli\All.tt">
 			<LastGenOutput>All.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
+		<Compile Update="Cli\All.generated.cs">
+			<DependentUpon>All.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
 
 		<None Update="Cli\Default.tt">
 			<LastGenOutput>Default.generated.cs</LastGenOutput>
@@ -251,10 +270,6 @@
 			<LastGenOutput>MultipleFiles.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
-		<None Update="WPF\ViewModel.tt">
-			<LastGenOutput>ViewModel.generated.cs</LastGenOutput>
-			<Generator>TextTemplatingFileGenerator</Generator>
-		</None>
 		<None Update="Databases\SqlServer.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>SqlServer.generated.cs</LastGenOutput>
@@ -262,25 +277,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Update="Cli\All.generated.cs">
-			<DependentUpon>All.tt</DependentUpon>
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-		</Compile>
 		<Compile Update="Cli\Default.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Default.tt</DependentUpon>
-		</Compile>
-		<Compile Update="Cli\Fluent.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>Fluent.tt</DependentUpon>
-		</Compile>
-		<Compile Update="Cli\NoMetadata.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>NoMetadata.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Cli\T4.generated.cs">
 			<DesignTime>True</DesignTime>

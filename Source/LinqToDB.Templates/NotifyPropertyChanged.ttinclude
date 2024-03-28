@@ -1,3 +1,4 @@
+<#@ include file="T4Model.ttinclude" once="true" #>
 <#
 	{
 		var beforeGenerateModel = BeforeGenerateModel;
@@ -90,7 +91,7 @@ void NotifyPropertyChangedImpl()
 			{
 				new Field(() => "const string", "NameOf" + name)
 				{
-					InitValue      = ToStringLiteral(name),
+					InitValue      = CodeTemplateGenerator.ToStringLiteral(name),
 					AccessModifier = AccessModifier.Public,
 				},
 				new Field(() => "PropertyChangedEventArgs", "_" + ToCamelCase(name) + "ChangedEventArgs")

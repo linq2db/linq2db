@@ -1,9 +1,9 @@
-﻿<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\linq2db.Tests.Base.dll" #>
-<#@ import namespace="System"                                                        #>
-<#@ import namespace="System.IO"                                                     #>
-<#@ import namespace="System.Diagnostics"                                            #>
-<#@ import namespace="System.Threading"                                              #>
-<#@ import namespace="Microsoft.Win32.SafeHandles"                                   #>
+﻿<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Tests.Base.dll" #>
+<#@ import namespace="System"                                      #>
+<#@ import namespace="System.IO"                                   #>
+<#@ import namespace="System.Diagnostics"                          #>
+<#@ import namespace="System.Threading"                            #>
+<#@ import namespace="Microsoft.Win32.SafeHandles"                 #>
 <#+
 #nullable enable
 	string GetConnectionString(string config)
@@ -13,7 +13,7 @@
 			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\DataProviders.json")),
 			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\UserDataProviders.json")));
 
-		return settings.Connections[config]!.ConnectionString!;
+		return settings.Connections![config].ConnectionString!;
 	}
 
 	void RunCliTool(
@@ -46,14 +46,19 @@
 		{
 			// FOR DEBUG
 			// WriteLine($"// {arguments}");
-			process.StartInfo.FileName       = "dotnet";
-			process.StartInfo.Arguments      = arguments;
-			process.StartInfo.CreateNoWindow = true;
-			process.StartInfo.WindowStyle    = ProcessWindowStyle.Hidden;
-			using var waitHandle             = new ManualResetEvent(false);
+			process.StartInfo.FileName              = "dotnet";
+			process.StartInfo.Arguments             = arguments;
+			process.StartInfo.CreateNoWindow        = true;
+			process.StartInfo.WindowStyle           = ProcessWindowStyle.Hidden;
+			process.StartInfo.RedirectStandardError = true;
+			process.StartInfo.UseShellExecute       = false;
+
+			using var waitHandle = new ManualResetEvent(false);
 
 			if (process.Start())
 			{
+//				var stderr = process.StandardError.ReadToEnd();
+
 				using var handle = new SafeWaitHandle(process.Handle, false);
 				waitHandle.SetSafeWaitHandle(handle);
 
@@ -64,8 +69,10 @@
 
 				if (timeouted)
 					throw new Exception($"Timeout during scaffolding of {connectionStringName} database");
-			}
 
+//				if (process.ExitCode != 0)
+//					Error($"Error during scaffolding of {connectionStringName} database: {stderr}");
+			}
 		}
 	}
 #>

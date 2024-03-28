@@ -265,7 +265,7 @@ void GenerateTypesFromMetadata()
 				() => new[] { t.DataContextPropertyName });
 
 			if (GenerateObsoleteAttributeForAliases)
-				aProp.Attributes.Add(new Attribute("Obsolete", ToStringLiteral("Use " + t.DataContextPropertyName + " instead.")));
+				aProp.Attributes.Add(new Attribute("Obsolete", CodeTemplateGenerator.ToStringLiteral("Use " + t.DataContextPropertyName + " instead.")));
 
 			aliases.Members.Add(aProp);
 		}
@@ -273,14 +273,14 @@ void GenerateTypesFromMetadata()
 		var tableAttrs = new List<string>();
 
 		if (GenerateDatabaseNameFromTable && t.TableSchema.CatalogName != null)
-			tableAttrs.Add("Database=" + ToStringLiteral(t.TableSchema.CatalogName));
+			tableAttrs.Add("Database=" + CodeTemplateGenerator.ToStringLiteral(t.TableSchema.CatalogName));
 		else if (DatabaseName != null)
-			tableAttrs.Add("Database=" + ToStringLiteral(DatabaseName));
+			tableAttrs.Add("Database=" + CodeTemplateGenerator.ToStringLiteral(DatabaseName));
 
-		if (ServerName != null) tableAttrs.Add("Server=" + ToStringLiteral(ServerName));
-		if (t.Schema   != null) tableAttrs.Add("Schema=" + ToStringLiteral(t.TableSchema.SchemaName ?? t.Schema));
+		if (ServerName != null) tableAttrs.Add("Server=" + CodeTemplateGenerator.ToStringLiteral(ServerName));
+		if (t.Schema   != null) tableAttrs.Add("Schema=" + CodeTemplateGenerator.ToStringLiteral(t.TableSchema.SchemaName ?? t.Schema));
 
-		tableAttrs.Add((tableAttrs.Count == 0 ? "" : "Name=") + ToStringLiteral(t.TableName));
+		tableAttrs.Add((tableAttrs.Count == 0 ? "" : "Name=") + CodeTemplateGenerator.ToStringLiteral(t.TableName));
 
 		if (t.IsView)
 			tableAttrs.Add("IsView=true");
@@ -303,7 +303,7 @@ void GenerateTypesFromMetadata()
 		var allNullable    = t.Columns.Values.All  (c => c.IsNullable || c.IsIdentity);
 		var nameMaxLen     = t.Columns.Values.Max  (c => (int?)(c.MemberName == c.ColumnName
 			? 0
-			: ToStringLiteral(c.ColumnName).Length)) ?? 0;
+			: CodeTemplateGenerator.ToStringLiteral(c.ColumnName).Length)) ?? 0;
 		var dbTypeMaxLen   = t.Columns.Values.Max  (c => (int?)(c.ColumnType.Length)) ?? 0;
 		var dataTypeMaxLen = t.Columns.Values.Where(c => c.DataType != null).Max  (c => (int?)(c.DataType.Length)) ?? 0;
 		var dataTypePrefix = "LinqToDB.";
@@ -317,7 +317,7 @@ void GenerateTypesFromMetadata()
 
 			if (c.MemberName != c.ColumnName)
 			{
-				var columnNameInAttr = ToStringLiteral(c.ColumnName);
+				var columnNameInAttr = CodeTemplateGenerator.ToStringLiteral(c.ColumnName);
 
 				var space = new string(' ', nameMaxLen - columnNameInAttr.Length);
 
@@ -334,7 +334,7 @@ void GenerateTypesFromMetadata()
 			{
 				var space = new string(' ', dbTypeMaxLen - c.ColumnType.Length);
 
-				ca.Parameters.Add("DbType=" + ToStringLiteral(c.ColumnType) + space);
+				ca.Parameters.Add("DbType=" + CodeTemplateGenerator.ToStringLiteral(c.ColumnType) + space);
 				canBeReplaced = false;
 			}
 
@@ -446,9 +446,9 @@ void GenerateTypesFromMetadata()
 				caProp.Comment.AddRange(columnComments);
 
 				if (GenerateObsoleteAttributeForAliases)
-					caProp.Attributes.Add(new Attribute("Obsolete", ToStringLiteral("Use " + c.MemberName + " instead.")));
+					caProp.Attributes.Add(new Attribute("Obsolete", CodeTemplateGenerator.ToStringLiteral("Use " + c.MemberName + " instead.")));
 
-				caProp.Attributes.Add(new Attribute("ColumnAlias" , ToStringLiteral(c.MemberName)));
+				caProp.Attributes.Add(new Attribute("ColumnAlias" , CodeTemplateGenerator.ToStringLiteral(c.MemberName)));
 
 				columnAliases.Members.Add(caProp);
 			}
@@ -490,8 +490,8 @@ void GenerateTypesFromMetadata()
 
 					var aa = new Attribute("Association");
 
-					aa.Parameters.Add("ThisKey="   + ToStringLiteral(string.Join(", ", (from c in key.ThisColumns  select c.MemberName).ToArray())));
-					aa.Parameters.Add("OtherKey="  + ToStringLiteral(string.Join(", ", (from c in key.OtherColumns select c.MemberName).ToArray())));
+					aa.Parameters.Add("ThisKey="   + CodeTemplateGenerator.ToStringLiteral(string.Join(", ", (from c in key.ThisColumns  select c.MemberName).ToArray())));
+					aa.Parameters.Add("OtherKey="  + CodeTemplateGenerator.ToStringLiteral(string.Join(", ", (from c in key.OtherColumns select c.MemberName).ToArray())));
 					aa.Parameters.Add("CanBeNull=" + (key.CanBeNull ? "true" : "false"));
 
 					key.Attributes.Add(aa);
@@ -657,7 +657,7 @@ void GenerateTypesFromMetadata()
 				aClass.Comment.AddRange(comments);
 
 			if (GenerateObsoleteAttributeForAliases)
-				aClass.Attributes.Add(new Attribute("Obsolete", ToStringLiteral("Use " + t.TypeName + " instead.")));
+				aClass.Attributes.Add(new Attribute("Obsolete", CodeTemplateGenerator.ToStringLiteral("Use " + t.TypeName + " instead.")));
 
 			Model.Types.Add(aClass);
 		}
@@ -750,12 +750,12 @@ void GenerateTypesFromMetadata()
 			{
 				var tableAttrs = new List<string>();
 
-				if (ServerName    != null) tableAttrs.Add("Server="   + ToStringLiteral(ServerName));
-				if (DatabaseName  != null) tableAttrs.Add("Database=" + ToStringLiteral(DatabaseName));
-				if (p.Schema      != null) tableAttrs.Add("Schema="   + ToStringLiteral(p.Schema));
-				if (p.PackageName != null) tableAttrs.Add("Package="  + ToStringLiteral(p.PackageName));
+				if (ServerName    != null) tableAttrs.Add("Server="   + CodeTemplateGenerator.ToStringLiteral(ServerName));
+				if (DatabaseName  != null) tableAttrs.Add("Database=" + CodeTemplateGenerator.ToStringLiteral(DatabaseName));
+				if (p.Schema      != null) tableAttrs.Add("Schema="   + CodeTemplateGenerator.ToStringLiteral(p.Schema));
+				if (p.PackageName != null) tableAttrs.Add("Package="  + CodeTemplateGenerator.ToStringLiteral(p.PackageName));
 
-				tableAttrs.Add("Name=" + ToStringLiteral(p.ProcedureName));
+				tableAttrs.Add("Name=" + CodeTemplateGenerator.ToStringLiteral(p.ProcedureName));
 
 				p.Attributes.Add(new Attribute("Sql.TableFunction", tableAttrs.ToArray()));
 
@@ -771,7 +771,7 @@ void GenerateTypesFromMetadata()
 				};
 				var paramCount   = p.ProcParameters.Count(pr => !pr.IsResult);
 				var functionName = SqlBuilder.BuildObjectName(new StringBuilder(), new SqlObjectName(p.ProcedureName, Schema: p.Schema, Package: p.PackageName), ConvertType.NameToProcedure, true, TableOptions.NotSet).ToString();
-				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral(functionName), "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + CodeTemplateGenerator.ToStringLiteral(functionName), "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
 
 				if (p.IsDefaultSchema || !GenerateSchemaAsType)
 					p.ParameterBuilders.Add(() => "this IEnumerable<TSource> src");
@@ -788,7 +788,7 @@ void GenerateTypesFromMetadata()
 				p.IsStatic       = true;
 				p.TypeBuilder    = () => p.ProcParameters.Single(pr => pr.IsResult).Type.ToTypeName();
 				var functionName = SqlBuilder.BuildObjectName(new StringBuilder(), new SqlObjectName(p.ProcedureName, Schema: p.Schema, Package: p.PackageName), ConvertType.NameToProcedure, true, TableOptions.NotSet).ToString();
-				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + ToStringLiteral(functionName), "ServerSideOnly=true"));
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=" + CodeTemplateGenerator.ToStringLiteral(functionName), "ServerSideOnly=true"));
 			}
 			else
 			{
@@ -837,7 +837,7 @@ void GenerateTypesFromMetadata()
 						LinqToDB.TableOptions.NotSet
 					).ToString();
 
-				spName = ToStringLiteral(spName);
+				spName = CodeTemplateGenerator.ToStringLiteral(spName);
 
 				var inputParameters      = p.ProcParameters.Where(pp => pp.IsIn).                            ToList();
 				var outputParameters     = p.ProcParameters.Where(pp => pp.IsOut || pp.IsResult).            ToList();
@@ -876,7 +876,7 @@ void GenerateTypesFromMetadata()
 
 							var extraInitializers = new List<Tuple<string, string>>();
 							if (GenerateProcedureDbType(pr))
-								extraInitializers.Add(Tuple.Create("DbType", ToStringLiteral(pr.SchemaType)));
+								extraInitializers.Add(Tuple.Create("DbType", CodeTemplateGenerator.ToStringLiteral(pr.SchemaType)));
 
 							if (pr.IsOut || pr.IsResult)
 								extraInitializers.Add(Tuple.Create("Direction", pr.IsIn ? "ParameterDirection.InputOutput" : (pr.IsResult ? "ParameterDirection.ReturnValue" : "ParameterDirection.Output")));
@@ -889,7 +889,7 @@ void GenerateTypesFromMetadata()
 							if (hasInputValue)
 								code.Add(string.Format(
 									"\tnew DataParameter({0}, {1}{2}, {3}{4}){5}",
-									ToStringLiteral(pr.SchemaName),
+									CodeTemplateGenerator.ToStringLiteral(pr.SchemaName),
 									LenDiff(maxLenSchema, pr.SchemaName),
 									pr.ParameterName,
 									LenDiff(maxLenParam, pr.ParameterName),
@@ -898,7 +898,7 @@ void GenerateTypesFromMetadata()
 							else
 								code.Add(string.Format(
 									"\tnew DataParameter({0}, null, {1}{2}){3}",
-									ToStringLiteral(pr.SchemaName),
+									CodeTemplateGenerator.ToStringLiteral(pr.SchemaName),
 									LenDiff(maxLenParam, pr.ParameterName),
 									"LinqToDB.DataType." + pr.DataType,
 									endLine));
@@ -1011,7 +1011,7 @@ void GenerateTypesFromMetadata()
 				foreach (var c in p.ResultTable.Columns.Values)
 				{
 					if (c.MemberName != c.ColumnName)
-						c.Attributes.Add(new Attribute("Column") { Parameters = { ToStringLiteral(c.ColumnName) } });
+						c.Attributes.Add(new Attribute("Column") { Parameters = { CodeTemplateGenerator.ToStringLiteral(c.ColumnName) } });
 					columns.Members.Add(c);
 				}
 
@@ -1119,7 +1119,7 @@ IEnumerable<IClassMember> GetAllClassMembers(IEnumerable<IClassMember> members, 
 // unused: left for backward API compatibility
 public string NormalizeStringName(string name)
 {
-	return ToStringLiteral(name);
+	return CodeTemplateGenerator.ToStringLiteral(name);
 }
 
 List<string> CreateXmlCommentFromText(string text, string tag = "summary", string attributes = null)
