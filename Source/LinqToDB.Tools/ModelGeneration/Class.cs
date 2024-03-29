@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IClass : ITypeBase
 	{
@@ -32,7 +32,7 @@ namespace LinqToDB.Tools.ModelGenerator
 			Members.AddRange(members);
 		}
 
-		public override void Render(CodeTemplateGenerator tt)
+		public override void Render(ModelGenerator tt)
 		{
 			BeginConditional(tt);
 

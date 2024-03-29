@@ -5,7 +5,7 @@
 		BeforeGenerateModel = () =>
 		{
 			beforeGenerateModel();
-			CodeTemplateGenerator.ValidationImplementation<Class,MemberGroup,Method,Field,Attribute>();
+			ModelGenerator.ValidationImplementation<Class,MemberGroup,Method,Field,Attribute>();
 		};
 	}
 #>

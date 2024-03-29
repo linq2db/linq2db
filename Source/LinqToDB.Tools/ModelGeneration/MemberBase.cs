@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IMemberBase : IClassMember
 	{
@@ -52,9 +52,9 @@ namespace LinqToDB.Tools.ModelGenerator
 		public virtual  int  CalcModifierLen() { return 0; }
 		public abstract int  CalcBodyLen    ();
 		public virtual  int  CalcParamLen   () { return 0; }
-		public abstract void Render         (CodeTemplateGenerator tt, bool isCompact);
+		public abstract void Render         (ModelGenerator tt, bool isCompact);
 
-		public virtual void BeginConditional(CodeTemplateGenerator tt, bool isCompact)
+		public virtual void BeginConditional(ModelGenerator tt, bool isCompact)
 		{
 			if (Conditional != null)
 			{
@@ -65,7 +65,7 @@ namespace LinqToDB.Tools.ModelGenerator
 			}
 		}
 
-		public virtual void EndConditional(CodeTemplateGenerator tt, bool isCompact)
+		public virtual void EndConditional(ModelGenerator tt, bool isCompact)
 		{
 			if (Conditional != null)
 			{

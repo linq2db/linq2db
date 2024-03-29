@@ -4,52 +4,51 @@
 <#@ import namespace="System"                                 #>
 <#@ import namespace="System.Linq"                            #>
 <#@ import namespace="System.Collections.Generic"             #>
-<#@ import namespace="System.Text"                            #>
-<#@ import namespace="LinqToDB.Tools.ModelGenerator"          #>
+<#@ import namespace="LinqToDB.Tools.ModelGeneration"         #>
 <#+
 
-CodeTemplateGenerator _codeTemplateGenerator;
-CodeTemplateGenerator  CodeTemplateGenerator
+private ModelGenerator _modelGenerator;
+public  ModelGenerator  ModelGenerator
 {
 	get
 	{
-		return _codeTemplateGenerator != null ?
-			_codeTemplateGenerator :
-			_codeTemplateGenerator = new CodeTemplateGenerator(new ModelSource(), GenerationEnvironment, Write, WriteLine, PushIndent, PopIndent, Error);
+		return _modelGenerator != null ?
+			_modelGenerator :
+			_modelGenerator = new ModelGenerator(new ModelSource(), GenerationEnvironment, Write, WriteLine, PushIndent, PopIndent, Error);
 	}
 }
 
-ModelSource Model { get { return (ModelSource)CodeTemplateGenerator.Model; } set { CodeTemplateGenerator.Model = value; } }
+ModelSource Model { get { return (ModelSource)ModelGenerator.Model; } set { ModelGenerator.Model = value; } }
 
-Action                 BeforeGenerateModel { get { return CodeTemplateGenerator.BeforeGenerateModel; } set { CodeTemplateGenerator.BeforeGenerateModel = value; } }
-Action<string>         WriteComment        { get { return CodeTemplateGenerator.WriteComment;        } set { CodeTemplateGenerator.WriteComment        = value; } }
-Action<string>         WriteUsing          { get { return CodeTemplateGenerator.WriteUsing;          } set { CodeTemplateGenerator.WriteUsing          = value; } }
-Action<string>         WriteBeginNamespace { get { return CodeTemplateGenerator.WriteBeginNamespace; } set { CodeTemplateGenerator.WriteBeginNamespace = value; } }
-Action                 WriteEndNamespace   { get { return CodeTemplateGenerator.WriteEndNamespace;   } set { CodeTemplateGenerator.WriteEndNamespace   = value; } }
-Action<IAttribute>     WriteAttribute      { get { return CodeTemplateGenerator.WriteAttribute;      } set { CodeTemplateGenerator.WriteAttribute      = value; } }
-Action<string>         BeginRegion         { get { return CodeTemplateGenerator.BeginRegion;         } set { CodeTemplateGenerator.BeginRegion         = value; } }
-Action                 EndRegion           { get { return CodeTemplateGenerator.EndRegion;           } set { CodeTemplateGenerator.EndRegion           = value; } }
-Action<IProperty,bool> WriteProperty       { get { return CodeTemplateGenerator.WriteProperty;       } set { CodeTemplateGenerator.WriteProperty       = value; } }
-Action<IField>         WriteField          { get { return CodeTemplateGenerator.WriteField;          } set { CodeTemplateGenerator.WriteField          = value; } }
-Action<IEvent>         WriteEvent          { get { return CodeTemplateGenerator.WriteEvent;          } set { CodeTemplateGenerator.WriteEvent          = value; } }
+Action                 BeforeGenerateModel { get { return ModelGenerator.BeforeGenerateModel; } set { ModelGenerator.BeforeGenerateModel = value; } }
+Action<string>         WriteComment        { get { return ModelGenerator.WriteComment;        } set { ModelGenerator.WriteComment        = value; } }
+Action<string>         WriteUsing          { get { return ModelGenerator.WriteUsing;          } set { ModelGenerator.WriteUsing          = value; } }
+Action<string>         WriteBeginNamespace { get { return ModelGenerator.WriteBeginNamespace; } set { ModelGenerator.WriteBeginNamespace = value; } }
+Action                 WriteEndNamespace   { get { return ModelGenerator.WriteEndNamespace;   } set { ModelGenerator.WriteEndNamespace   = value; } }
+Action<IAttribute>     WriteAttribute      { get { return ModelGenerator.WriteAttribute;      } set { ModelGenerator.WriteAttribute      = value; } }
+Action<string>         BeginRegion         { get { return ModelGenerator.BeginRegion;         } set { ModelGenerator.BeginRegion         = value; } }
+Action                 EndRegion           { get { return ModelGenerator.EndRegion;           } set { ModelGenerator.EndRegion           = value; } }
+Action<IProperty,bool> WriteProperty       { get { return ModelGenerator.WriteProperty;       } set { ModelGenerator.WriteProperty       = value; } }
+Action<IField>         WriteField          { get { return ModelGenerator.WriteField;          } set { ModelGenerator.WriteField          = value; } }
+Action<IEvent>         WriteEvent          { get { return ModelGenerator.WriteEvent;          } set { ModelGenerator.WriteEvent          = value; } }
 
-bool GenerateProcedureErrors       { get { return CodeTemplateGenerator.GenerateProcedureErrors;            } set { CodeTemplateGenerator.GenerateProcedureErrors      = value; } }
+bool GenerateProcedureErrors { get { return ModelGenerator.GenerateProcedureErrors;            } set { ModelGenerator.GenerateProcedureErrors      = value; } }
 
 /// <summary>
 /// Enables generation of nullable reference type annotations.
 /// </summary>
-static bool EnableNullableReferenceTypes  { get { return CodeTemplateGenerator.EnableNullableReferenceTypes; } set { CodeTemplateGenerator.EnableNullableReferenceTypes = value; } }
+static bool EnableNullableReferenceTypes  { get { return ModelGenerator.EnableNullableReferenceTypes; } set { ModelGenerator.EnableNullableReferenceTypes = value; } }
 
 public void GenerateModel()
 {
-	CodeTemplateGenerator.GenerateModel();
+	ModelGenerator.GenerateModel();
 }
 
 public partial class ModelSource : ModelSource<ModelSource,Namespace>
 {
 	public virtual void Render(GeneratedTextTransformation tt)
 	{
-		Render(tt.CodeTemplateGenerator);
+		Render(tt.ModelGenerator);
 	}
 }
 
@@ -57,24 +56,18 @@ public partial class Namespace : Namespace<Namespace>
 {
 	public virtual void Render(GeneratedTextTransformation tt)
 	{
-		Render(tt.CodeTemplateGenerator);
+		Render(tt.ModelGenerator);
 	}
 }
 
 public partial class Class : Class<Class>
 {
-	public Class()
-	{
-	}
-
-	public Class(string name, params IClassMember[] members)
-		: base(name, members)
-	{
-	}
+	public Class() {}
+	public Class(string name, params IClassMember[] members) : base(name, members) {}
 
 	public void Render(GeneratedTextTransformation tt)
 	{
-		Render(tt.CodeTemplateGenerator);
+		Render(tt.ModelGenerator);
 	}
 }
 
@@ -82,7 +75,7 @@ public partial class MemberGroup : MemberGroup<MemberGroup>
 {
 	public void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
-		Render(tt.CodeTemplateGenerator, isCompact);
+		Render(tt.ModelGenerator, isCompact);
 	}
 }
 
@@ -114,7 +107,7 @@ public partial class Property : Property<Property>
 
 	public void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
-		Render(tt.CodeTemplateGenerator, isCompact);
+		Render(tt.ModelGenerator, isCompact);
 	}
 }
 
@@ -127,7 +120,7 @@ public partial class Field : Field<Field>
 
 	public void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
-		Render(tt.CodeTemplateGenerator, isCompact);
+		Render(tt.ModelGenerator, isCompact);
 	}
 }
 
@@ -140,7 +133,7 @@ public partial class Event : Event<Event>
 
 	public void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
-		Render(tt.CodeTemplateGenerator, isCompact);
+		Render(tt.ModelGenerator, isCompact);
 	}
 }
 
@@ -166,23 +159,18 @@ public partial class Method : Method<Method>
 
 	public void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
-		Render(tt.CodeTemplateGenerator, isCompact);
+		Render(tt.ModelGenerator, isCompact);
 	}
 }
 
 public partial class Attribute : Attribute<Attribute>
 {
-	public Attribute()
-	{
-	}
-
-	public Attribute(string name, params string[] ps) : base(name, ps)
-	{
-	}
+	public Attribute() {}
+	public Attribute(string name, params string[] ps) : base(name, ps) {}
 
 	public virtual void Render(GeneratedTextTransformation tt)
 	{
-		tt.CodeTemplateGenerator.WriteAttribute(this);
+		tt.ModelGenerator.WriteAttribute(this);
 	}
 }
 

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
-	public partial class CodeTemplateGenerator
+	public partial class ModelGenerator
 	{
 		public void NotifyDataErrorInfoImplementation<TMemberGroup,TMethod,TProperty,TField,TEvent,TAttribute>()
 			where TMemberGroup : MemberGroup<TMemberGroup>, new()

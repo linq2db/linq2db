@@ -6,7 +6,7 @@
 		BeforeGenerateModel = () =>
 		{
 			beforeGenerateModel();
-			CodeTemplateGenerator.NotifyDataErrorInfoImplementation<MemberGroup,Method,Property,Field,Event,Attribute>();
+			ModelGenerator.NotifyDataErrorInfoImplementation<MemberGroup,Method,Property,Field,Event,Attribute>();
 		};
 	}
 #>

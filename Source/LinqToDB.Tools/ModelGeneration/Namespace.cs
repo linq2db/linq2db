@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public class Namespace<T> : ITree
 	where T : Namespace<T>
@@ -10,7 +10,7 @@ namespace LinqToDB.Tools.ModelGenerator
 		public List<TypeBase> Types  = [];
 		public List<string>   Usings = [];
 
-		public virtual void Render(CodeTemplateGenerator tt)
+		public virtual void Render(ModelGenerator tt)
 		{
 			if (!string.IsNullOrEmpty(Name))
 			{

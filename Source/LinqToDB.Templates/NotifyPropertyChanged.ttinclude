@@ -5,7 +5,7 @@
 		BeforeGenerateModel = () =>
 		{
 			beforeGenerateModel();
-			CodeTemplateGenerator.NotifyPropertyChangedImplementation<MemberGroup,Method,Field,Event,Attribute>();
+			ModelGenerator.NotifyPropertyChangedImplementation<MemberGroup,Method,Field,Event,Attribute>();
 		};
 
 		SetPropertyValueAction += (obj,prop,val) =>
@@ -15,8 +15,8 @@
 		};
 	}
 #><#+
-public bool ImplementNotifyPropertyChanging         { get { return CodeTemplateGenerator.ImplementNotifyPropertyChanging;         } set { CodeTemplateGenerator.ImplementNotifyPropertyChanging         = value; } }
-public bool SkipNotifyPropertyChangedImplementation { get { return CodeTemplateGenerator.SkipNotifyPropertyChangedImplementation; } set { CodeTemplateGenerator.SkipNotifyPropertyChangedImplementation = value; } }
+public bool ImplementNotifyPropertyChanging         { get { return ModelGenerator.ImplementNotifyPropertyChanging;         } set { ModelGenerator.ImplementNotifyPropertyChanging         = value; } }
+public bool SkipNotifyPropertyChangedImplementation { get { return ModelGenerator.SkipNotifyPropertyChangedImplementation; } set { ModelGenerator.SkipNotifyPropertyChangedImplementation = value; } }
 
 partial class Property : INotifyingPropertyProperty
 {

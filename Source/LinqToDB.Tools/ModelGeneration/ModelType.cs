@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public class ModelType
 	{
@@ -127,7 +127,7 @@ namespace LinqToDB.Tools.ModelGenerator
 			if (IsArray)
 				sb.Append("[]");
 
-			if (CodeTemplateGenerator.EnableNullableReferenceTypes && IsReference && IsNullable)
+			if (ModelGenerator.EnableNullableReferenceTypes && IsReference && IsNullable)
 				sb.Append('?');
 
 			return sb.ToString();

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IAttribute
 	{
@@ -10,7 +10,7 @@ namespace LinqToDB.Tools.ModelGenerator
 		string?      Conditional { get; }
 		bool         IsSeparated { get; }
 
-		void Render(CodeTemplateGenerator tt);
+		void Render(ModelGenerator tt);
 	}
 
 	public class Attribute<T> : IAttribute
@@ -31,7 +31,7 @@ namespace LinqToDB.Tools.ModelGenerator
 			Parameters.AddRange(ps);
 		}
 
-		public virtual void Render(CodeTemplateGenerator tt)
+		public virtual void Render(ModelGenerator tt)
 		{
 			tt.WriteAttribute(this);
 		}

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IEvent : IMemberBase, IClassMember
 	{
@@ -46,7 +46,7 @@ namespace LinqToDB.Tools.ModelGenerator
 
 		public override int CalcBodyLen() { return 1; }
 
-		public override void Render(CodeTemplateGenerator tt, bool isCompact)
+		public override void Render(ModelGenerator tt, bool isCompact)
 		{
 			tt.WriteEvent(this);
 		}

@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IModelSource : ITree
 	{
 		public List<string> Usings { get; }
 
-		void Render(CodeTemplateGenerator tt);
+		void Render(ModelGenerator tt);
 	}
 
 	public abstract class ModelSource<TModel,TNamespace> : IModelSource
@@ -23,7 +23,7 @@ namespace LinqToDB.Tools.ModelGenerator
 		public TNamespace     Namespace => Namespaces[CurrentNamespace];
 		public List<TypeBase> Types     => Namespaces[CurrentNamespace].Types;
 
-		public virtual void Render(CodeTemplateGenerator tt)
+		public virtual void Render(ModelGenerator tt)
 		{
 			tt.RenderUsings(Usings);
 			tt.WriteLine("");

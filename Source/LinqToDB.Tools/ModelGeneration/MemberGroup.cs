@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IMemberGroup : IMemberBase
 	{
@@ -23,7 +23,7 @@ namespace LinqToDB.Tools.ModelGenerator
 
 		public override int  CalcBodyLen() { return 0; }
 
-		public override void Render(CodeTemplateGenerator tt, bool isCompact)
+		public override void Render(ModelGenerator tt, bool isCompact)
 		{
 			if (!string.IsNullOrEmpty(Region))
 			{

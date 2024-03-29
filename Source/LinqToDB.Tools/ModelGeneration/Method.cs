@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IMethod : IMemberBase
 	{
@@ -85,7 +85,7 @@ namespace LinqToDB.Tools.ModelGenerator
 			return ParameterBuilders.Sum(p => p().Length + 2);
 		}
 
-		public override void Render(CodeTemplateGenerator tt, bool isCompact)
+		public override void Render(ModelGenerator tt, bool isCompact)
 		{
 			tt.WriteMethod(this, isCompact);
 		}

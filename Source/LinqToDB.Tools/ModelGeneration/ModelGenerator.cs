@@ -6,12 +6,12 @@ using System.Text;
 
 using JetBrains.Annotations;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	[PublicAPI]
-	public partial class CodeTemplateGenerator
+	public partial class ModelGenerator
 	{
-		public CodeTemplateGenerator(
+		public ModelGenerator(
 			IModelSource    model,
 			StringBuilder   generationEnvironment,
 			Action<string?> write,

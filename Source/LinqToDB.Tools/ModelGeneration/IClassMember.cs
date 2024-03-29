@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IClassMember : ITree
 	{

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface INotifyingPropertyProperty : IProperty
 	{
@@ -10,7 +10,7 @@ namespace LinqToDB.Tools.ModelGenerator
 		List<string> Dependents  { get; set; }
 	}
 
-	public partial class CodeTemplateGenerator
+	public partial class ModelGenerator
 	{
 		public bool ImplementNotifyPropertyChanging         { get; set; }
 		public bool SkipNotifyPropertyChangedImplementation { get; set; }

@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Linq;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IPropertyValidation : IProperty
 	{
@@ -10,7 +10,7 @@ namespace LinqToDB.Tools.ModelGenerator
 		bool ValidateProperty { get; set; }
 	}
 
-	public partial class CodeTemplateGenerator
+	public partial class ModelGenerator
 	{
 		public void ValidationImplementation<TClass,TMemberGroup,TMethod,TField,TAttribute>()
 		where TClass       : Class      <TClass>,       new()

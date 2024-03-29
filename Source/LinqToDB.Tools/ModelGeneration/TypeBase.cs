@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.Tools.ModelGenerator
+namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface ITypeBase : ITree
 	{
@@ -24,9 +24,9 @@ namespace LinqToDB.Tools.ModelGenerator
 		public string?          Conditional    { get; set; }
 		public string           ClassKeyword   { get; set; } = "class";
 
-		public abstract void Render(CodeTemplateGenerator tt);
+		public abstract void Render(ModelGenerator tt);
 
-		protected virtual void BeginConditional(CodeTemplateGenerator tt)
+		protected virtual void BeginConditional(ModelGenerator tt)
 		{
 			if (Conditional != null)
 			{
@@ -36,7 +36,7 @@ namespace LinqToDB.Tools.ModelGenerator
 			}
 		}
 
-		protected virtual void EndConditional(CodeTemplateGenerator tt)
+		protected virtual void EndConditional(ModelGenerator tt)
 		{
 			if (Conditional != null)
 			{
