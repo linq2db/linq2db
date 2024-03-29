@@ -425,7 +425,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			}
 			else
 			{
-				WriteParams ();
+				WriteParams();
 				WriteEndLineComment();
 
 				PushIndent("\t");

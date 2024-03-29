@@ -13,31 +13,25 @@ namespace LinqToDB.Tools.ModelGeneration
 	public partial class ModelGenerator
 	{
 		public void ValidationImplementation<TClass,TMemberGroup,TMethod,TField,TAttribute>()
-		where TClass       : Class      <TClass>,       new()
-		where TMemberGroup : MemberGroup<TMemberGroup>, new()
-		where TMethod      : Method     <TMethod>,      new()
-		where TField       : Field      <TField>,       new()
-		where TAttribute   : Attribute  <TAttribute>,   new()
+			where TClass       : Class      <TClass>,       new()
+			where TMemberGroup : MemberGroup<TMemberGroup>, new()
+			where TMethod      : Method     <TMethod>,      new()
+			where TField       : Field      <TField>,       new()
+			where TAttribute   : Attribute  <TAttribute>,   new()
 		{
 			foreach (var cl in GetTreeNodes(Model).OfType<IClass>())
 			{
-				var validationGroup = new TMemberGroup
-				{
-					Region = "Validation",
-				};
-
-				var props = GetTreeNodes(cl).OfType<IPropertyValidation>().Where(p => p.CustomValidation).ToList();
+				var validationGroup = new TMemberGroup { Region = "Validation" };
+				var props           = GetTreeNodes(cl).OfType<IPropertyValidation>().Where(p => p.CustomValidation).ToList();
 
 				if (props.Count > 0)
 				{
-					if (!Model.Usings.Contains("System.Collections.Generic"))
-					{
+					if (Model.Usings.Contains("System.Collections.Generic") == false)
 						Model.Usings.Add("System.Collections.Generic");
-					}
 
 					var isValid = new TMethod
 					{
-						TypeBuilder       = () => "bool",
+						TypeBuilder       = static () => "bool",
 						Name              = "IsValid",
 						ParameterBuilders = { () => cl.Name + " obj" },
 						IsStatic          = true
@@ -52,7 +46,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 					var partialGroup = new TMemberGroup { IsCompact = true };
 
-					validationGroup.Members.Add(new TField { TypeBuilder = () => "int", Name = "_isValidCounter", Attributes = { new TAttribute { Name = "field : NonSerialized"} } });
+					validationGroup.Members.Add(new TField { TypeBuilder = static () => "int", Name = "_isValidCounter", Attributes = { new TAttribute { Name = "field : NonSerialized" } } });
 					validationGroup.Members.Add(validator);
 					validationGroup.Members.Add(partialGroup);
 
@@ -60,7 +54,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					[
 						"try",
 						"{",
-						"\tobj._isValidCounter++;",
+							"\tobj._isValidCounter++;",
 						""
 					]);
 
@@ -85,14 +79,14 @@ namespace LinqToDB.Tools.ModelGeneration
 								Name = "CustomValidation",
 								Parameters =
 								{
-									"typeof(" + cl.Name + ".CustomValidator)",
+									$"typeof({cl.Name}.CustomValidator)",
 									ToStringLiteral(mname)
 								},
 								IsSeparated = true
 							});
 
 						if (conditional != null)
-							isValid.BodyBuilders.Add(() => new [] { "\t#if " + conditional });
+							isValid.BodyBuilders.Add(() => new [] { $"\t#if {conditional}" });
 
 						isValid.BodyBuilders.Add(() => new [] { $"\tvar flag{ii} = ValidationResult.Success == {mname}(obj, obj.{name});" });
 
@@ -108,12 +102,12 @@ namespace LinqToDB.Tools.ModelGeneration
 
 						var validate = new TMethod
 						{
-							TypeBuilder       = () => new ModelType("ValidationResult", true, true).ToTypeName(),
+							TypeBuilder       = static () => new ModelType("ValidationResult", true, true).ToTypeName(),
 							Name              = mname,
 							ParameterBuilders =
 							{
-								() => cl.Name + " obj",
-								() => p.BuildType()?.Trim() + " value"
+								() => $"{cl.Name} obj",
+								() => $"{p.BuildType()?.Trim()} value"
 							},
 							IsStatic          = true,
 							Conditional       = conditional
@@ -124,18 +118,18 @@ namespace LinqToDB.Tools.ModelGeneration
 							"var list = new List<ValidationResult>();",
 							"",
 							"Validator.TryValidateProperty(",
-							"\tvalue,",
-							$"\tnew ValidationContext(obj, null, null) {{ MemberName = NameOf{name} }}, list);",
+								"\tvalue,",
+								$"\tnew ValidationContext(obj, null, null) {{ MemberName = NameOf{name} }}, list);",
 							"",
 							$"obj.{mname}(value, list);",
 							"",
 							"if (list.Count > 0)",
 							"{",
-							"\tforeach (var result in list)",
-							"\t\tforeach (var name in result.MemberNames)",
-							"\t\t\tobj.AddError(name, result.ErrorMessage ?? \"\");",
+								"\tforeach (var result in list)",
+									"\t\tforeach (var name in result.MemberNames)",
+										"\t\t\tobj.AddError(name, result.ErrorMessage ?? \"\");",
 							"",
-							"\treturn list[0];",
+								"\treturn list[0];",
 							"}",
 							"",
 							$"obj.RemoveError(NameOf{name});",
@@ -147,15 +141,15 @@ namespace LinqToDB.Tools.ModelGeneration
 
 						partialGroup.Members.Add(new TMethod
 						{
-							TypeBuilder = () => "void",
-							Name = mname,
+							TypeBuilder       = static () => "void",
+							Name              = mname,
 							ParameterBuilders =
 							{
-								() => p.BuildType()?.Trim() + " value",
+								() => $"{p.BuildType()?.Trim()} value",
 								() => "List<ValidationResult> validationResults",
 							},
-							AccessModifier = AccessModifier.Partial,
-							Conditional    = conditional
+							AccessModifier    = AccessModifier.Partial,
+							Conditional       = conditional
 						});
 					}
 
@@ -166,7 +160,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						"}",
 						"finally",
 						"{",
-						"\tobj._isValidCounter--;",
+							"\tobj._isValidCounter--;",
 						"}"
 					});
 				}
@@ -200,25 +194,25 @@ namespace LinqToDB.Tools.ModelGeneration
 						}
 
 						p.SetBodyBuilders.Clear();
-						p.SetBodyBuilders.Add(() => setBody.ToArray());
+						p.SetBodyBuilders.Add(() => setBody);
 					}
 
 					validationGroup.Members.Add(new TField
 					{
-						TypeBuilder    = () => "int",
+						TypeBuilder    = static () => "int",
 						Name           = "_validationLockCounter",
 						AccessModifier = AccessModifier.Private,
 						InitValue      = "0",
 						Attributes     = { new TAttribute { Name = "field : NonSerialized" } }
 					});
 
-					validationGroup.Members.Add(new TMethod { TypeBuilder = () => "void", Name = "LockValidation",   BodyBuilders = { () => [ "_validationLockCounter++;" ] } });
-					validationGroup.Members.Add(new TMethod { TypeBuilder = () => "void", Name = "UnlockValidation", BodyBuilders = { () => [ "_validationLockCounter--;" ] } });
+					validationGroup.Members.Add(new TMethod { TypeBuilder = static () => "void", Name = "LockValidation",   BodyBuilders = { static () => [ "_validationLockCounter++;" ] } });
+					validationGroup.Members.Add(new TMethod { TypeBuilder = static () => "void", Name = "UnlockValidation", BodyBuilders = { static () => [ "_validationLockCounter--;" ] } });
 				}
 
 				if (validationGroup.Members.Count > 0)
 				{
-					if (!Model.Usings.Contains("System.ComponentModel.DataAnnotations"))
+					if (Model.Usings.Contains("System.ComponentModel.DataAnnotations") == false)
 						Model.Usings.Add("System.ComponentModel.DataAnnotations");
 
 					cl.Members.Add(validationGroup);

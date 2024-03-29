@@ -230,7 +230,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 					foreach (var m in allMembers)
 					{
-						if (!(m is IMemberGroup))
+						if (m is not IMemberGroup)
 							m.BeginConditional(tt, IsCompact);
 
 						foreach (var c in m.Comment)
@@ -292,7 +292,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						if (!IsCompact)
 							tt.WriteLine("");
 
-						if (!(m is IMemberGroup))
+						if (m is not IMemberGroup)
 							m.EndConditional(tt, IsCompact);
 					}
 				}
@@ -320,7 +320,7 @@ namespace LinqToDB.Tools.ModelGeneration
 								if (g.Key.Length > 0)
 								{
 									tt.RemoveSpace();
-									tt.WriteLine("#if " + g.Key);
+									tt.WriteLine($"#if {g.Key}");
 								}
 
 								var attrs = g.ToList();

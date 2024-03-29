@@ -95,14 +95,14 @@ namespace LinqToDB.Tools.ModelGeneration
 					{
 						new TField
 						{
-							TypeBuilder    = () => "const string",
+							TypeBuilder    = static () => "const string",
 							Name           = $"NameOf{name}",
 							InitValue      = ToStringLiteral(name),
 							AccessModifier = AccessModifier.Public
 						},
 						new TField
 						{
-							TypeBuilder    = () => "PropertyChangedEventArgs",
+							TypeBuilder    = static () => "PropertyChangedEventArgs",
 							Name           = $"_{ToCamelCase(name)}ChangedEventArgs",
 							InitValue      = $"new PropertyChangedEventArgs(NameOf{name})",
 							AccessModifier = AccessModifier.Private,
@@ -111,7 +111,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						},
 						new TMethod
 						{
-							TypeBuilder    = () => "void",
+							TypeBuilder    = static () => "void",
 							Name           = $"On{name}Changed",
 							BodyBuilders   = { () => new[] { $"OnPropertyChanged(_{ToCamelCase(name)}ChangedEventArgs);" } },
 							AccessModifier = AccessModifier.Private
@@ -133,7 +133,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						{
 							new TField
 							{
-								TypeBuilder    = () => "PropertyChangingEventArgs",
+								TypeBuilder    = static () => "PropertyChangingEventArgs",
 								Name           = $"_{ToCamelCase(name)}ChangingEventArgs",
 								InitValue      = $"new PropertyChangingEventArgs(NameOf{name})",
 								AccessModifier = AccessModifier.Private,
@@ -142,7 +142,7 @@ namespace LinqToDB.Tools.ModelGeneration
 							},
 							new TMethod
 							{
-								TypeBuilder    = () => "void",
+								TypeBuilder    = static () => "void",
 								Name           = $"On{name}Changing",
 								BodyBuilders   = { () => new[] { $"OnPropertyChanging(_{ToCamelCase(name)}ChangingEventArgs);" } },
 								AccessModifier = AccessModifier.Private
@@ -154,12 +154,14 @@ namespace LinqToDB.Tools.ModelGeneration
 				if (prop.HasSetter)
 				{
 					var setBody = prop.BuildSetBody().Select(s => $"\t{s}").ToArray();
+
 					prop.SetBodyBuilders.Clear();
 					prop.SetBodyBuilders.Add(() => setBody);
 
 					string getValue;
 
 					var getBody = prop.BuildGetBody().ToArray();
+
 					if (getBody.Length == 1 && getBody[0].StartsWith("return"))
 					{
 						getValue = getBody[0]["return".Length..].Trim(' ', '\t', ';');
@@ -170,7 +172,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					}
 
 					var insSpaces = setBody.Length > 1;
-					var n = 0;
+					var n         = 0;
 
 					prop.SetBodyBuilders.Insert(n++, () => new [] { $"if ({getValue} != value)", "{" });
 
@@ -178,15 +180,15 @@ namespace LinqToDB.Tools.ModelGeneration
 					{
 						foreach (var dp in prop.Dependents)
 							prop.SetBodyBuilders.Insert(n++, () => new [] { $"\tOn{dp}Changing();" });
-						prop.SetBodyBuilders.Insert(n++, () => [""]);
+						prop.SetBodyBuilders.Insert(n++, static () => [""]);
 					}
 
 					prop.SetBodyBuilders.Insert(n++, () => new [] { $"\tBefore{name}Changed(value);" });
 
 					if (insSpaces)
 					{
-						prop.SetBodyBuilders.Insert(3, () => [""]);
-						prop.SetBodyBuilders.Add(() => [""]);
+						prop.SetBodyBuilders.Insert(3, static () => [""]);
+						prop.SetBodyBuilders.Add(static () => [""]);
 					}
 
 					prop.SetBodyBuilders.Add(() => [$"\tAfter{name}Changed();"]);
@@ -195,15 +197,15 @@ namespace LinqToDB.Tools.ModelGeneration
 					foreach (var dp in prop.Dependents)
 						prop.SetBodyBuilders.Add(() => [$"\tOn{dp}Changed();"]);
 
-					prop.SetBodyBuilders.Add(() => ["}"]);
+					prop.SetBodyBuilders.Add(static () => ["}"]);
 
 					methods.Members.Insert(0, new TMemberGroup
 					{
 						IsCompact = true,
 						Members   =
 						{
-							new TMethod { TypeBuilder = () => "void", Name = $"Before{name}Changed", ParameterBuilders = { () => $"{type} newValue" }, AccessModifier = AccessModifier.Partial },
-							new TMethod { TypeBuilder = () => "void", Name = $"After{name}Changed",  AccessModifier = AccessModifier.Partial },
+							new TMethod { TypeBuilder = static () => "void", Name = $"Before{name}Changed", ParameterBuilders = { () => $"{type} newValue" }, AccessModifier = AccessModifier.Partial },
+							new TMethod { TypeBuilder = static () => "void", Name = $"After{name}Changed",  AccessModifier = AccessModifier.Partial },
 						}
 					});
 				}
@@ -221,7 +223,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 					if (!SkipNotifyPropertyChangedImplementation && !cl.Interfaces.Contains("INotifyPropertyChanged"))
 					{
-						if (!Model.Usings.Contains("System.ComponentModel"))
+						if (Model.Usings.Contains("System.ComponentModel") == false)
 							Model.Usings.Add("System.ComponentModel");
 
 						cl.Interfaces.Add("INotifyPropertyChanged");
@@ -233,14 +235,14 @@ namespace LinqToDB.Tools.ModelGeneration
 							{
 								new TEvent
 								{
-									TypeBuilder       = () => new ModelType("PropertyChangedEventHandler", true, true).ToTypeName(),
+									TypeBuilder       = static () => new ModelType("PropertyChangedEventHandler", true, true).ToTypeName(),
 									Name              = "PropertyChanged",
 									IsVirtual         = true,
 									Attributes        = { new TAttribute { Name = "field : NonSerialized"} }
 								},
 								new TMethod
 								{
-									TypeBuilder       = () => "void",
+									TypeBuilder       = static () => "void",
 									Name              = "OnPropertyChanged",
 									ParameterBuilders = { () => "string propertyName" },
 									BodyBuilders      = { () => OnPropertyChangedBody },
@@ -248,7 +250,7 @@ namespace LinqToDB.Tools.ModelGeneration
 								},
 								new TMethod
 								{
-									TypeBuilder       = () => "void",
+									TypeBuilder       = static () => "void",
 									Name              = "OnPropertyChanged",
 									ParameterBuilders = { () => "PropertyChangedEventArgs arg" },
 									BodyBuilders      = { () => OnPropertyChangedArgBody },
@@ -260,7 +262,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 					if (ImplementNotifyPropertyChanging && !cl.Interfaces.Contains("INotifyPropertyChanging"))
 					{
-						if (!Model.Usings.Contains("System.ComponentModel"))
+						if (Model.Usings.Contains("System.ComponentModel") == false)
 							Model.Usings.Add("System.ComponentModel");
 
 						cl.Interfaces.Add("INotifyPropertyChanging");
@@ -272,14 +274,14 @@ namespace LinqToDB.Tools.ModelGeneration
 							{
 								new TEvent
 								{
-									TypeBuilder = () => new ModelType("PropertyChangingEventHandler", true, true).ToTypeName(),
+									TypeBuilder = static () => new ModelType("PropertyChangingEventHandler", true, true).ToTypeName(),
 									Name        = "PropertyChanging",
 									IsVirtual   = true,
 									Attributes  = { new TAttribute { Name = "field : NonSerialized" } }
 								},
 								new TMethod
 								{
-									TypeBuilder       = () => "void",
+									TypeBuilder       = static () => "void",
 									Name              = "OnPropertyChanging",
 									ParameterBuilders = { () => "string propertyName" },
 									BodyBuilders      = { () => OnPropertyChangingBody },
@@ -287,7 +289,7 @@ namespace LinqToDB.Tools.ModelGeneration
 								},
 								new TMethod
 								{
-									TypeBuilder       = () => "void",
+									TypeBuilder       = static () => "void",
 									Name              = "OnPropertyChanging",
 									ParameterBuilders = { () => "PropertyChangingEventArgs arg" },
 									BodyBuilders      = { () => OnPropertyChangingArgBody },
@@ -306,7 +308,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			"",
 			"if (propertyChanged != null)",
 			"{",
-			"\tpropertyChanged(this, new PropertyChangedEventArgs(propertyName));",
+				"\tpropertyChanged(this, new PropertyChangedEventArgs(propertyName));",
 			"}",
 		];
 
@@ -316,7 +318,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			"",
 			"if (propertyChanged != null)",
 			"{",
-			"\tpropertyChanged(this, arg);",
+				"\tpropertyChanged(this, arg);",
 			"}",
 		];
 
@@ -326,7 +328,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			"",
 			"if (propertyChanging != null)",
 			"{",
-			"\tpropertyChanging(this, new PropertyChangingEventArgs(propertyName));",
+				"\tpropertyChanging(this, new PropertyChangingEventArgs(propertyName));",
 			"}",
 		];
 
@@ -336,7 +338,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			"",
 			"if (propertyChanging != null)",
 			"{",
-			"\tpropertyChanging(this, arg);",
+				"\tpropertyChanging(this, arg);",
 			"}",
 		];
 	}

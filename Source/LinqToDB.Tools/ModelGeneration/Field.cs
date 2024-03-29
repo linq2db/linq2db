@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Tools.ModelGeneration
 {
-	public interface IField : IMemberBase, IClassMember
+	public interface IField : IMemberBase
 	{
 		bool    IsStatic   { get; set; }
 		bool    IsReadonly { get; set; }

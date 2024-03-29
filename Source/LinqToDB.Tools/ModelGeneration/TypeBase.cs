@@ -31,7 +31,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			if (Conditional != null)
 			{
 				tt.RemoveSpace();
-				tt.WriteLine("#if " + Conditional);
+				tt.WriteLine($"#if {Conditional}");
 				tt.WriteLine("");
 			}
 		}

@@ -39,14 +39,14 @@ namespace LinqToDB.Tools.ModelGeneration
 							{
 								new TEvent
 								{
-									TypeBuilder = () => new ModelType("EventHandler<DataErrorsChangedEventArgs>", true, true).ToTypeName(),
+									TypeBuilder = static () => new ModelType("EventHandler<DataErrorsChangedEventArgs>", true, true).ToTypeName(),
 									Name        = "ErrorsChanged",
 									IsVirtual   = true,
 									Attributes  = { new TAttribute { Name = "field : NonSerialized" } }
 								},
 								new TField
 								{
-									TypeBuilder    = () => "Dictionary<string,List<string>>",
+									TypeBuilder    = static () => "Dictionary<string,List<string>>",
 									Name           = "_validationErrors",
 									InitValue      = "new Dictionary<string,List<string>>()",
 									AccessModifier = AccessModifier.Private,
@@ -55,9 +55,9 @@ namespace LinqToDB.Tools.ModelGeneration
 								},
 								new TMethod
 								{
-									TypeBuilder       = () => "void",
+									TypeBuilder       = static () => "void",
 									Name              = "AddError",
-									ParameterBuilders = { () => "string propertyName", () => "string error" },
+									ParameterBuilders = { static () => "string propertyName", static () => "string error" },
 									BodyBuilders      =
 									{
 										() =>
@@ -82,9 +82,9 @@ namespace LinqToDB.Tools.ModelGeneration
 								},
 								new TMethod
 								{
-									TypeBuilder       = () => "void",
+									TypeBuilder       = static () => "void",
 									Name              = "RemoveError",
-									ParameterBuilders = { () => "string propertyName" },
+									ParameterBuilders = { static () => "string propertyName" },
 									BodyBuilders      =
 									{
 										() =>
@@ -102,9 +102,9 @@ namespace LinqToDB.Tools.ModelGeneration
 								},
 								new TMethod
 								{
-									TypeBuilder       = () => "void",
+									TypeBuilder       = static () => "void",
 									Name              = "OnErrorsChanged",
-									ParameterBuilders = { () => "string propertyName" },
+									ParameterBuilders = { static () => "string propertyName" },
 									BodyBuilders      =
 									{
 										() =>
@@ -123,7 +123,7 @@ namespace LinqToDB.Tools.ModelGeneration
 								},
 								new TMethod
 								{
-									TypeBuilder       = () => ModelType.Create<System.Collections.IEnumerable>(true).ToTypeName(),
+									TypeBuilder       = static () => ModelType.Create<System.Collections.IEnumerable>(true).ToTypeName(),
 									Name              = "GetErrors",
 									ParameterBuilders = { () => $"{ModelType.Create<string>(true).ToTypeName()} propertyName" },
 									BodyBuilders      =
@@ -138,7 +138,7 @@ namespace LinqToDB.Tools.ModelGeneration
 								},
 								new TProperty
 								{
-									TypeBuilder = () => "bool",
+									TypeBuilder = static () => "bool",
 									Name        = "HasErrors"
 								}
 								.InitGetter("_validationErrors.Values.Any(e => e.Count > 0)")
