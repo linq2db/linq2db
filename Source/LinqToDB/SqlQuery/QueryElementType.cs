@@ -98,6 +98,7 @@
 		/// </summary>
 		SqlQueryExtension,
 
+		SqlCast,
 		SqlCoalesce,
 		SqlCondition,
 		SqlCase,

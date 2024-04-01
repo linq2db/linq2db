@@ -24,12 +24,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.Finalize(mappingSchema, statement, dataOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			return statement.QueryType switch
 			{
 				QueryType.Delete => CorrectPostgreSqlDelete((SqlDeleteStatement)statement, dataOptions),
-				QueryType.Update => GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, dataOptions),
+				QueryType.Update => GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, dataOptions, mappingSchema),
 				_                => statement,
 			};
 		}

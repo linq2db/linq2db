@@ -12,11 +12,16 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			var to = func.Parameters[0];
+			cast = FloorBeforeConvert(cast);
 
-			return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func, func.Parameters[2]), to);
+			var castType = cast.SystemType.ToUnderlying();
+
+			if ((castType == typeof(double) || castType == typeof(float)) && cast.Expression.SystemType == typeof(decimal))
+				return cast.Expression;
+
+			return base.ConvertConversion(cast);
 		}
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
@@ -62,32 +67,6 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
-		}
-
-		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
-		{
-			switch (func)
-			{
-				case SqlFunction(var type, PseudoFunctions.CONVERT):
-				{
-					var ftype = type.ToUnderlying();
-
-					if (ftype == typeof(bool))
-					{
-						var ex = AlternativeConvertToBoolean(func, 2);
-						if (ex != null)
-							return ex;
-					}
-
-					if ((ftype == typeof(double) || ftype == typeof(float)) && func.Parameters[1].SystemType!.ToUnderlying() == typeof(decimal))
-						return func.Parameters[2];
-
-					return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func, func.Parameters[2]), func.Parameters[0]);
-				}
-
-			}
-
-			return base.ConvertSqlFunction(func);
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)

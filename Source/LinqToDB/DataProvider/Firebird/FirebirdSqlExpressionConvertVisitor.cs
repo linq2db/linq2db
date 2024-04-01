@@ -2,14 +2,12 @@
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlProvider;
-	using LinqToDB.SqlQuery;
+	using Extensions;
+	using SqlProvider;
+	using SqlQuery;
 
 	public class FirebirdSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
-		const string CASTEXPR = "Cast({0} as {1})";
-
 		public FirebirdSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{
 		}
@@ -42,36 +40,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return element;
 		}
 
-		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
-		{
-			switch (func.Name)
-			{
-				case PseudoFunctions.CONVERT:
-				{
-					if (func.SystemType.ToUnderlying() == typeof(bool))
-					{
-						var ex = AlternativeConvertToBoolean(func, 2);
-						if (ex != null)
-							return ex;
-					}
-					else  if (func.SystemType.ToUnderlying() == typeof(string) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(Guid))
-						return new SqlFunction(func.SystemType, "UUID_TO_CHAR", false, true, func.Parameters[2])
-						{
-							CanBeNull = func.CanBeNull
-						};
-					else if (func.SystemType.ToUnderlying() == typeof(Guid) && func.Parameters[2].SystemType?.ToUnderlying() == typeof(string))
-						return new SqlFunction(func.SystemType, "CHAR_TO_UUID", false, true, func.Parameters[2])
-						{
-							CanBeNull = func.CanBeNull
-						};
 
-					return base.ConvertSqlFunction(func);
-				}
-
-			}
-
-			return base.ConvertSqlFunction(func);
-		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
@@ -155,17 +124,30 @@ namespace LinqToDB.DataProvider.Firebird
 			return new SqlSearchCondition(false, new SqlPredicate.Expr(expr));
 		}
 
-		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			if (func.SystemType.ToUnderlying() == typeof(bool))
+			if (cast.SystemType.ToUnderlying() == typeof(bool))
 			{
-				var ex = AlternativeConvertToBoolean(func, 2);
-				if (ex != null)
-					return ex;
+				if (cast.Type.DbType == nameof(Sql.Types.Bit) && cast.Expression is not ISqlPredicate)
+				{
+					var sc = new SqlSearchCondition()
+						.AddNotEqual(cast.Expression, new SqlValue(0), DataOptions.LinqOptions.CompareNullsAsValues);
+					return sc;
+
+				}
+			}
+			else if (cast.SystemType.ToUnderlying() == typeof(string) && cast.Expression.SystemType?.ToUnderlying() == typeof(Guid))
+			{
+				return new SqlFunction(cast.SystemType, "UUID_TO_CHAR", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, cast.Expression);
+			}
+			else if (cast.SystemType.ToUnderlying() == typeof(Guid) && cast.Expression.SystemType?.ToUnderlying() == typeof(string))
+			{
+				return new SqlFunction(cast.SystemType, "CHAR_TO_UUID", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, cast.Expression);
 			}
 
-			return new SqlExpression(func.SystemType, CASTEXPR, Precedence.Primary, FloorBeforeConvert(func, func.Parameters[2]),
-				func.Parameters[0]);
+			cast = FloorBeforeConvert(cast);
+
+			return base.ConvertConversion(cast);
 		}
 	}
 }

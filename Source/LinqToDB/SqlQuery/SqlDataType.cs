@@ -190,10 +190,37 @@ namespace LinqToDB.SqlQuery
 			new TypeInfo(DataType.BitArray,          null,                  null,                  null,                    null)
 		);
 
-		public static int? GetMaxLength     (DataType dbType) { return _typeInfo[(int)dbType].MaxLength;      }
-		public static int? GetMaxPrecision  (DataType dbType) { return _typeInfo[(int)dbType].MaxPrecision;   }
-		public static int? GetMaxScale      (DataType dbType) { return _typeInfo[(int)dbType].MaxScale;       }
-		public static int? GetMaxDisplaySize(DataType dbType) { return _typeInfo[(int)dbType].MaxDisplaySize; }
+		public static int? GetMaxLength(DataType dbType)
+		{
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxLength;
+		}
+
+		public static int? GetMaxPrecision(DataType dbType)
+		{
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxPrecision;
+		}
+
+		public static int? GetMaxScale(DataType dbType)
+		{
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxScale;
+		}
+
+		public static int? GetMaxDisplaySize(DataType dbType)
+		{
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxDisplaySize;
+		}
 
 		public static SqlDataType GetDataType(DataType type)
 		{
@@ -420,9 +447,9 @@ namespace LinqToDB.SqlQuery
 			if (!string.IsNullOrEmpty(Type.DbType))
 				writer.Append(":\"").Append(Type.DbType).Append('"');
 
-			if (Type.Length != 0)
+			if (Type.Length != null && Type.Length != 0)
 				writer.Append('(').Append(Type.Length).Append(')');
-			else if (Type.Precision != 0)
+			else if (Type.Precision != null && Type.Precision != 0)
 				writer.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
 
 			return writer;

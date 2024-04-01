@@ -15,6 +15,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Data;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
 
 	sealed class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
 	sealed class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
@@ -60,6 +62,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 
 			ConfigureTypes();
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new PostgreSQLMemberTranslator();
 		}
 
 		private void ConfigureTypes()

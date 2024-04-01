@@ -19,6 +19,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 	using Reflection;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
 
 	sealed class ClickHouseOctonicaDataProvider : ClickHouseDataProvider { public ClickHouseOctonicaDataProvider() : base(ProviderName.ClickHouseOctonica, ClickHouseProvider.Octonica        ) { } }
 	sealed class ClickHouseClientDataProvider   : ClickHouseDataProvider { public ClickHouseClientDataProvider  () : base(ProviderName.ClickHouseClient  , ClickHouseProvider.ClickHouseClient) { } }
@@ -113,6 +115,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 					}]                    = Expression.Lambda(body, dataReaderParameter, indexParameter);
 				}
 			}
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new ClickHouseMemberTranslator();
 		}
 
 		public ClickHouseProvider Provider { get; }

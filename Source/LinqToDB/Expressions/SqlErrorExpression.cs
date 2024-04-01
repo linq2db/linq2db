@@ -81,6 +81,11 @@ namespace LinqToDB.Expressions
 
 			if (expression != null)
 			{
+				if (expression is SqlErrorExpression sqlError)
+				{
+					expression = PrepareExpression(sqlError.Expression);
+				}
+
 				var expressionMessage = PrepareExpressionString(expression);
 				if (expressionMessage.Contains("\n"))
 				{

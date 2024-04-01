@@ -4,6 +4,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
+	using Mapping;
 
 	class SqlServer2012SqlOptimizer : SqlServerSqlOptimizer
 	{
@@ -20,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServer2012SqlExpressionConvertVisitor(allowModify, SQLVersion);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			// SQL Server 2012 supports OFFSET/FETCH providing there is an ORDER BY
 			// UPDATE queries do not directly support ORDER BY, TOP, OFFSET, or FETCH, but they are supported in subqueries

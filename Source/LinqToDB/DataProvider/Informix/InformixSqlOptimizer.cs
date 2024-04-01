@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.Informix
 			return base.Finalize(mappingSchema, statement, dataOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			switch (statement.QueryType)
 			{
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.Informix
 					break;
 
 				case QueryType.Update:
-					statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions);
+					statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema);
 					break;
 			}
 

@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
+	using Common;
 
 	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
@@ -58,15 +59,15 @@ namespace LinqToDB.DataProvider.Sybase
 			if (_skipAliases) addAlias = false;
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Guid      : StringBuilder.Append("VARCHAR(36)"); return;
 				case DataType.DateTime2 : StringBuilder.Append("DateTime");    return;
 				case DataType.NVarChar  :
 					// yep, 5461...
-					if (type.Type.Length == null || type.Type.Length > 5461 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 5461 || type.Length < 1)
 					{
 						StringBuilder.Append("NVarChar(5461)");
 						return;

@@ -6,6 +6,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	abstract class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
@@ -40,13 +41,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			return statement;
 		}
 
-		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions)
+		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			var newStatement = base.FinalizeUpdate(statement, dataOptions);
+			var newStatement = base.FinalizeUpdate(statement, dataOptions, mappingSchema);
 
 			if (newStatement is SqlUpdateStatement updateStatement)
 			{
-				updateStatement = CorrectSqlServerUpdate(updateStatement, dataOptions);
+				updateStatement = CorrectSqlServerUpdate(updateStatement, dataOptions, mappingSchema);
 				newStatement    = updateStatement;
 			}
 
@@ -58,7 +59,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return QueryHelper.IsSingleTableInQuery(updateStatement.SelectQuery, updateStatement.Update.Table!);
 		}
 
-		SqlUpdateStatement CorrectSqlServerUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions)
+		SqlUpdateStatement CorrectSqlServerUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (updateStatement.Update.Table == null)
 				throw new InvalidOperationException();
@@ -128,7 +129,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						updateStatement = DetachUpdateTableFromUpdateQuery(updateStatement, dataOptions, moveToJoin: false, addNewSource: true, out var sqlTableSource);
 						updateStatement.Update.TableSource = sqlTableSource;
 
-						OptimizeQueries(updateStatement, updateStatement, dataOptions, new EvaluationContext());
+						OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
 					}
 				}
 			}

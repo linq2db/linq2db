@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
+using LinqToDB.Linq.Translation;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Remote
@@ -18,9 +19,8 @@ namespace LinqToDB.Remote
 	using DataProvider;
 	using Expressions;
 	using Extensions;
-	using Interceptors;
-
-	using LinqToDB.Data;
+	
+	using Data;
 
 	using Mapping;
 	using SqlProvider;
@@ -44,10 +44,25 @@ namespace LinqToDB.Remote
 
 		public string? ConfigurationString { get; set; }
 
+
+		private IMemberTranslator? _methodCallTranslator;
+
+		public T GetService<T>()
+		{
+			if (typeof(T) == typeof(IMemberTranslator))
+			{
+				_methodCallTranslator ??= GetConfigurationInfo().MemberTranslator;
+				return (T)_methodCallTranslator;
+			}
+
+			throw new InvalidOperationException($"RemoteDataContextBase.GetService<{typeof(T).Name}> is not supported.");
+		}
+
 		sealed class ConfigurationInfo
 		{
-			public LinqServiceInfo LinqServiceInfo = null!;
-			public MappingSchema   MappingSchema   = null!;
+			public LinqServiceInfo       LinqServiceInfo      = null!;
+			public MappingSchema         MappingSchema        = null!;
+			public IMemberTranslator MemberTranslator = null!;
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
@@ -73,6 +88,32 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		sealed class RemoteMemberTranslator : IMemberTranslator
+		{
+			static readonly MemoryCache<Type, IMemberTranslator> _cache = new (new ());
+
+			public IMemberTranslator ProviderTranslator { get; }
+
+			public static IMemberTranslator GetOrCreate(Type methodCallTranslatorType)
+			{
+				return _cache.GetOrCreate(
+					methodCallTranslatorType,
+					static entry =>
+					{
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return new RemoteMemberTranslator((IMemberTranslator)Activator.CreateInstance(entry.Key)!);
+					});
+			}
+
+			RemoteMemberTranslator(IMemberTranslator providerTranslator)
+			{
+				ProviderTranslator = providerTranslator;
+			}
+
+			public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags) 
+				=> ProviderTranslator.Translate(translationContext, memberExpression, translationFlags);
+		}
+
 		ConfigurationInfo? _configurationInfo;
 
 		ConfigurationInfo GetConfigurationInfo()
@@ -83,14 +124,19 @@ namespace LinqToDB.Remote
 
 				try
 				{
-					var info = client.GetInfo(ConfigurationString);
-					var type = Type.GetType(info.MappingSchemaType)!;
-					var ms   = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
+					var info           = client.GetInfo(ConfigurationString);
+
+					var type           = Type.GetType(info.MappingSchemaType)!;
+					var ms             = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
+
+					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
+					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
 					_configurationInfo = new ConfigurationInfo
 					{
 						LinqServiceInfo = info,
 						MappingSchema   = ms,
+						MemberTranslator = translator,
 					};
 				}
 				finally
@@ -112,13 +158,18 @@ namespace LinqToDB.Remote
 				{
 					var info = await client.GetInfoAsync(ConfigurationString, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 					var type = Type.GetType(info.MappingSchemaType)!;
 					var ms   = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
+
+					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
+					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
 					_configurationInfo = new ConfigurationInfo
 					{
 						LinqServiceInfo = info,
 						MappingSchema = ms,
+						MemberTranslator = translator,
 					};
 				}
 				finally

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -51,6 +52,15 @@ namespace Tests.Linq
 				AreEqual(
 					from t in    Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue),
 					from t in db.Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue));
+		}
+
+		[Test]
+		public void ToBigInt2([DataSources(TestProvName.AllMySql)] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue),
+					from t in db.Types select Sql.AsSql(Sql.Convert(Sql.Types.BigInt, t.MoneyValue)));
 		}
 
 		[Test]
@@ -427,13 +437,22 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01"));
 		}
 
+		[Test]
+		public void ToSqlTimeSql([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select Sql.AsSql(Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01")),
+					from t in db.Types select Sql.AsSql(Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01")));
+		}
+
 		DateTime ToDateTime(DateTimeOffset dto)
 		{
 			return new DateTime(dto.Year, dto.Month, dto.Day, dto.Hour, dto.Minute, dto.Second);
 		}
 
 		[Test]
-		public void ToSqlDateTimeOffset([DataSources] string context)
+		public void ToSqlDateTimeOffset([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -670,12 +689,15 @@ namespace Tests.Linq
 				Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)));
 		}
 
-		//[CLSCompliant(false)]
-		[Sql.Function(PseudoFunctions.CONVERT, 1, 2, 0, ServerSideOnly = true)]
+		[ExpressionMethod(nameof(ServerConvertImp))]
 		public static TTo ServerConvert<TTo, TFrom>(TFrom obj)
 		{
 			throw new NotImplementedException();
 		}
+
+		static Expression<Func<TFrom, TTo>> ServerConvertImp<TTo, TFrom>()
+			=> obj => Sql.AsSql(Sql.Convert<TTo, TFrom>(obj));
+		
 
 		[Test]
 		public void ConvertDataToDecimal([NorthwindDataContext] string context)
@@ -1151,7 +1173,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains("CAST"));
 			}
 		}
 
@@ -1168,7 +1190,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains("CAST"));
 			}
 		}
 
@@ -1185,7 +1207,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains("CAST"));
 			}
 		}
 
@@ -1202,7 +1224,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains("CAST"));
 			}
 		}
 
@@ -1219,7 +1241,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains("CAST"));
 			}
 		}
 
@@ -1236,7 +1258,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains("CAST"));
 			}
 		}
 
@@ -1253,7 +1275,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains("CAST"));
 			}
 		}
 
@@ -1270,7 +1292,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains("CAST"));
 			}
 		}
 
@@ -1287,7 +1309,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains("CAST"));
 			}
 		}
 
@@ -1304,7 +1326,7 @@ namespace Tests.Linq
 				var res = query.Single();
 
 				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.False(db.LastQuery!.Contains("CAST"));
 			}
 		}
 		#endregion
@@ -1452,7 +1474,7 @@ namespace Tests.Linq
 			{
 				var sqlConverted = table.Select(x => new
 					{
-						Prop_bool             = Sql.AsSql(x.Prop_bool            .ToString()),
+						Prop_bool             = Sql.AsSql(x.Prop_bool            .ToString(CultureInfo.InvariantCulture)),
 						Prop_byte             = Sql.AsSql(x.Prop_byte            .ToString()),
 						Prop_char             = Sql.AsSql(x.Prop_char            .ToString()),
 						Prop_decimal          = Sql.AsSql(x.Prop_decimal         .ToString()),

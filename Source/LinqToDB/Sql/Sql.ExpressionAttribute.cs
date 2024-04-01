@@ -308,7 +308,7 @@ namespace LinqToDB
 											var converted      = converter(context, mc.Arguments[i], null, paramAttribute?.DoNotParametrize);
 											if (converted is SqlPlaceholderExpression placeholder)
 											{
-												var dbType = placeholder.Sql.GetExpressionType();
+												var dbType = QueryHelper.GetDbDataType(placeholder.Sql, mappingSchema);
 												if (dbType.DataType != DataType.Undefined)
 													type = new SqlDataType(dbType);
 											}
@@ -338,7 +338,7 @@ namespace LinqToDB
 											var converted = converter(context, mc.Arguments[i], null, paramAttribute?.DoNotParametrize);
 											if (converted is SqlPlaceholderExpression placeholder)
 											{
-												var dbType = placeholder.Sql.GetExpressionType();
+												var dbType = QueryHelper.GetDbDataType(placeholder.Sql, mappingSchema);
 												if (dbType.DataType != DataType.Undefined)
 													type = new SqlDataType(dbType);
 											}

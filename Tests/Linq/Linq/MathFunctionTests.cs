@@ -245,6 +245,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1) where t != 0 select Math.Round(t, 5));
 		}
 
+		[ActiveIssue("Wrong Firebird implementation", Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void Round4Sql([DataSources] string context)
 		{

@@ -2,6 +2,8 @@
 {
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
+
 
 	sealed class ClickHouseSqlOptimizer : BasicSqlOptimizer
 	{
@@ -15,9 +17,9 @@
 		ClickHouseOptions? _providerOptions;
 		public ClickHouseOptions ProviderOptions => _providerOptions ??= _dataOptions.FindOrDefault(ClickHouseOptions.Default);
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			statement = base.FinalizeStatement(statement, context, dataOptions);
+			statement = base.FinalizeStatement(statement, context, dataOptions, mappingSchema);
 
 			statement = DisableParameters(statement);
 
@@ -26,9 +28,9 @@
 			return statement;
 		}
 
-		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions)
+		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			var result = base.FinalizeUpdate(statement, dataOptions);
+			var result = base.FinalizeUpdate(statement, dataOptions, mappingSchema);
 
 			if (result is SqlUpdateStatement updateStatement)
 			{

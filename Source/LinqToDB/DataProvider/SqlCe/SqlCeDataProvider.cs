@@ -15,6 +15,8 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
 
 	public class SqlCeDataProvider : DynamicDataProviderBase<SqlCeProviderAdapter>
 	{
@@ -48,6 +50,11 @@ namespace LinqToDB.DataProvider.SqlCe
 		#region Overrides
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new SqlCeMemberTranslator();
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{

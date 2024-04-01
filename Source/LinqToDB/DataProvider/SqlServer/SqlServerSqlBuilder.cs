@@ -314,16 +314,16 @@ namespace LinqToDB.DataProvider.SqlServer
 				Indent--;
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
 				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.NVarChar  :
-					if (type.Type.Length is null or > 4000 or < 1)
+					if (type.Length is null or > 4000 or < 1)
 					{
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}(Max)");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}(Max)");
 						return;
 					}
 
@@ -331,9 +331,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				case DataType.VarChar   :
 				case DataType.VarBinary :
-					if (type.Type.Length is null or > 8000 or < 1)
+					if (type.Length is null or > 8000 or < 1)
 					{
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}(Max)");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}(Max)");
 						return;
 					}
 
@@ -342,12 +342,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.DateTime2:
 				case DataType.DateTimeOffset:
 				case DataType.Time:
-					StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}");
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}");
 					// Default precision for all three types is 7.
 					// For all other non-null values (including 0) precision must be specified.
-					if (type.Type.Precision != null && type.Type.Precision != 7)
+					if (type.Precision != null && type.Precision != 7)
 					{
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
 					}
 					return;
 			}

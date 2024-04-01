@@ -275,8 +275,27 @@ namespace LinqToDB
 
 		#region Convert Functions
 
+		class ConvertBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var from = builder.GetExpression("from");
+				var to = builder.GetExpression("to");
+
+				if (from is null || to is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
+				var toDataType = QueryHelper.GetDbDataType(to, builder.Mapping);
+
+				builder.ResultExpression = new SqlCastExpression(from, toDataType, null, true);
+			}
+		}
+
 		[CLSCompliant(false)]
-		[Function(PseudoFunctions.CONVERT, 0, 2, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsThirdParameter)]
+		[Extension("", BuilderType = typeof(ConvertBuilder))]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -289,17 +308,43 @@ namespace LinqToDB
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
+		class ConvertBuilderSimple : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var obj = builder.GetExpression("obj");
+
+				var toType     = ((MethodInfo)builder.Member).GetGenericArguments()[0];
+				var toDataType = builder.Mapping.GetDbDataType(toType);
+
+				builder.ResultExpression = new SqlCastExpression(obj, toDataType, null, true);
+			}
+		}
+
 		[CLSCompliant(false)]
-		[Function(PseudoFunctions.CONVERT, 1, 2, 0, IsPure = true)]
+		[Extension("", BuilderType = typeof(ConvertBuilderSimple))]
 		public static TTo Convert<TTo,TFrom>(TFrom obj)
 		{
 			return Common.ConvertTo<TTo>.From(obj);
 		}
 
+		class ConvertBuilderInner : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var obj = builder.GetExpression("obj", unwrap: true);
+
+				var toType     = ((MethodInfo)builder.Member).ReturnType;
+				var toDataType = builder.Mapping.GetDbDataType(toType);
+
+				builder.ResultExpression = new SqlCastExpression(obj, toDataType, null, true);
+			}
+		}
+
 		public static class ConvertTo<TTo>
 		{
 			[CLSCompliant(false)]
-			[Function(PseudoFunctions.CONVERT, 1, 2, 0, IsPure = true)]
+			[Extension("", BuilderType = typeof(ConvertBuilderInner))]
 			public static TTo From<TFrom>(TFrom obj)
 			{
 				return Common.ConvertTo<TTo>.From(obj);
@@ -1053,7 +1098,7 @@ namespace LinqToDB
 							100 :
 							SqlDataType.GetMaxDisplaySize(dataContext.MappingSchema.GetDataType(arg.SystemType).Type.DataType);
 
-						arr[i] = PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len, null, null, null), new SqlDataType(arg.GetExpressionType()), arg);
+						arr[i] = PseudoFunctions.MakeCast(arg, new DbDataType(typeof(string), DataType.VarChar, null, len));
 					}
 				}
 

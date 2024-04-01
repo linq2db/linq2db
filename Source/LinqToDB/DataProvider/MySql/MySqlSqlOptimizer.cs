@@ -4,6 +4,7 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	sealed class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
@@ -16,11 +17,11 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlExpressionConvertVisitor(allowModify);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement, dataOptions),
+				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema),
 				QueryType.Delete => PrepareDelete     ((SqlDeleteStatement)statement),
 				_                => statement,
 			};
@@ -36,12 +37,12 @@ namespace LinqToDB.DataProvider.MySql
 			return statement;
 		}
 
-		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement, DataOptions dataOptions)
+		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (statement.SelectQuery.Select.SkipValue != null)
 				throw new LinqToDBException("MySql does not support Skip in update query");
 
-			statement = CorrectUpdateTable(statement, leaveUpdateTableInQuery: true, dataOptions);
+			statement = CorrectUpdateTable(statement, leaveUpdateTableInQuery: true, dataOptions, mappingSchema);
 
 			// Mysql do not allow Update table usage in FROM clause. Moving it to subquery
 			// https://stackoverflow.com/a/14302701/10646316

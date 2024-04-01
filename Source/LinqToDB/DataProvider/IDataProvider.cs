@@ -10,10 +10,10 @@ namespace LinqToDB.DataProvider
 {
 	using Common;
 	using Data;
-	using LinqToDB.SqlQuery;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Linq.Translation;
 
 	public interface IDataProvider
 	{
@@ -95,5 +95,10 @@ namespace LinqToDB.DataProvider
 		/// E.g. this could be done for providers with positional parameters that ignore names.
 		/// </summary>
 		IQueryParametersNormalizer GetQueryParameterNormalizer();
+
+		/// <summary>
+		/// Returns instance of <see cref="IMemberTranslator"/>, which implements translation logic for method calls in LINQ expressions.
+		/// </summary>
+		IMemberTranslator GetMethodCallTranslator();
 	}
 }

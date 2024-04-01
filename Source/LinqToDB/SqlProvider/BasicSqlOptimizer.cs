@@ -44,7 +44,7 @@ namespace LinqToDB.SqlProvider
 
 			var evaluationContext = new EvaluationContext(null);
 
-			statement = (SqlStatement)OptimizeQueries(statement, statement, dataOptions, evaluationContext);
+			statement = (SqlStatement)OptimizeQueries(statement, statement, dataOptions, mappingSchema, evaluationContext);
 
 			if (dataOptions.LinqOptions.OptimizeJoins)
 			{
@@ -61,7 +61,7 @@ namespace LinqToDB.SqlProvider
 			statement = OptimizeUpdateSubqueries(statement, dataOptions);
 
 			// provider specific query correction
-			statement = FinalizeStatement(statement, evaluationContext, dataOptions);
+			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
 
 //statement.EnsureFindTables();
 
@@ -373,7 +373,7 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		protected virtual SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions)
+		protected virtual SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (statement is SqlUpdateStatement updateStatement)
 			{
@@ -569,8 +569,9 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		/// <param name="statement"></param>
 		/// <param name="dataOptions"></param>
+		/// <param name="mappingSchema"></param>
 		/// <returns></returns>
-		public virtual SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public virtual SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			return statement;
 		}
@@ -1037,7 +1038,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions)
+		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (updateStatement.Update.Table == null)
 				throw new InvalidOperationException();
@@ -1216,7 +1217,7 @@ namespace LinqToDB.SqlProvider
 
 				updateStatement = newUpdateStatement;
 
-				OptimizeQueries(updateStatement, updateStatement, dataOptions, new EvaluationContext());
+				OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
 			}
 
 			var (tableSource, _) = FindTableSource(new Stack<IQueryElement>(), updateStatement.SelectQuery, updateStatement.Update.Table!);
@@ -1307,7 +1308,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement, DataOptions dataOptions)
+		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
 			{
@@ -1341,7 +1342,7 @@ namespace LinqToDB.SqlProvider
 			}
 
 			if (isModified)
-				OptimizeQueries(statement, statement, dataOptions, new EvaluationContext());
+				OptimizeQueries(statement, statement, dataOptions, mappingSchema, new EvaluationContext());
 
 			statement.Update.Table       = tableToUpdate;
 			statement.Update.TableSource = tableSource;
@@ -1355,7 +1356,7 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		/// <param name="statement">Statement to examine.</param>
 		/// <returns>Corrected statement.</returns>
-		protected SqlUpdateStatement CorrectUpdateTable(SqlUpdateStatement statement, bool leaveUpdateTableInQuery, DataOptions dataOptions)
+		protected SqlUpdateStatement CorrectUpdateTable(SqlUpdateStatement statement, bool leaveUpdateTableInQuery, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			statement = BasicCorrectUpdate(statement, dataOptions, false);
 
@@ -1381,7 +1382,7 @@ namespace LinqToDB.SqlProvider
 							statement.SelectQuery.From.Tables.Insert(0, removedTableSource!);
 						}
 
-						OptimizeQueries(statement, statement, dataOptions, new EvaluationContext());
+						OptimizeQueries(statement, statement, dataOptions, mappingSchema, new EvaluationContext());
 					}
 					else if (leaveUpdateTableInQuery)
 					{
@@ -1628,10 +1629,10 @@ namespace LinqToDB.SqlProvider
 				static (ctx, e) => ctx.optimizer.IsParameterDependedElement(ctx.nullability, e));
 		}
 
-		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
+		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			var newStatement = TransformStatement(statement, dataOptions);
-			newStatement = FinalizeUpdate(newStatement, dataOptions);
+			var newStatement = TransformStatement(statement, dataOptions, mappingSchema);
+			newStatement = FinalizeUpdate(newStatement, dataOptions, mappingSchema);
 
 			if (SqlProviderFlags.IsParameterOrderDependent)
 			{
@@ -1810,7 +1811,7 @@ namespace LinqToDB.SqlProvider
 				withStack: false);
 		}
 
-		protected IQueryElement OptimizeQueries(IQueryElement startFrom, IQueryElement root, DataOptions dataOptions, EvaluationContext evaluationContext)
+		protected IQueryElement OptimizeQueries(IQueryElement startFrom, IQueryElement root, DataOptions dataOptions, MappingSchema mappingSchema, EvaluationContext evaluationContext)
 		{
 			using var visitor = QueryHelper.SelectOptimizer.Allocate();
 
@@ -1822,7 +1823,7 @@ namespace LinqToDB.SqlProvider
 				QueryHelper.DebugCheckNesting(statementBefore, false);
 #endif
 
-			var result = visitor.Value.Optimize(startFrom, root, SqlProviderFlags, true, dataOptions, evaluationContext);
+			var result = visitor.Value.Optimize(startFrom, root, SqlProviderFlags, true, dataOptions, mappingSchema, evaluationContext);
 
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable

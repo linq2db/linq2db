@@ -5,6 +5,8 @@ namespace LinqToDB.Linq.Builder
 	[Flags]
 	enum ProjectFlags
 	{
+		None            = 0x00,
+
 		SQL             = 0x01,
 		Expression      = 0x02,
 		Root            = 0x04,

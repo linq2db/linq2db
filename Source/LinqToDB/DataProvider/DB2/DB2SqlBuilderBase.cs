@@ -136,20 +136,20 @@ namespace LinqToDB.DataProvider.DB2
 			return selectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null;
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.DateTime  :
 				case DataType.DateTime2 :
 					StringBuilder.Append("timestamp");
-					if (type.Type.Precision != null && type.Type.Precision != 6)
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision})");
+					if (type.Precision != null && type.Precision != 6)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
 					return;
 				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
 				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
 				case DataType.NVarChar  :
-					if (type.Type.Length == null || type.Type.Length > 8168 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 8168 || type.Length < 1)
 					{
 						StringBuilder.Append("NVarChar(8168)");
 						return;
@@ -444,7 +444,7 @@ END");
 					return;
 				}
 
-				BuildTypedExpression(new SqlDataType(dbDataType), parameter);
+				BuildTypedExpression(dbDataType, parameter);
 				BuildStep = saveStep;
 
 				return;

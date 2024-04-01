@@ -313,22 +313,76 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public static DbDataType GetDbDataType(ISqlExpression? expr)
+		public static DbDataType GetDbDataType(ISqlExpression expr, MappingSchema mappingSchema)
 		{
-			if (expr == null)
-				return new DbDataType(typeof(object), DataType.Undefined);
-
-			var descriptor = GetColumnDescriptor(expr);
-			if (descriptor == null)
+			var result = GetDbDataType(expr);
+			if (result.DataType == DataType.Undefined)
 			{
-				var field = GetUnderlyingField(expr);
-				if (field != null)
-					return field.Type;
-
-				return new DbDataType(expr.SystemType ?? typeof(object), DataType.Undefined);
+				result = mappingSchema.GetDbDataType(expr.SystemType ?? typeof(object));
 			}
 
-			return descriptor.GetDbDataType(true);
+			return result;
+		}
+
+		static DbDataType GetDbDataType(ISqlExpression? expr)
+		{
+			if (expr == null)
+				return DbDataType.Undefined;
+
+			if (expr is SqlValue sqlValue)
+				return sqlValue.ValueType;
+			if (expr is SqlField field)
+				return field.Type;
+			if (expr is SqlColumn column)
+				return GetDbDataType(column.Expression);
+			if (expr is SqlDataType sqlDataType)
+				return sqlDataType.Type;
+			if (expr is SqlNullabilityExpression nullabilityExpression)
+				return GetDbDataType(nullabilityExpression.SqlExpression);
+			if (expr is SqlCastExpression castExpression)
+				return castExpression.Type;
+			if (expr is SqlBinaryExpression binary)
+				return binary.Type;
+
+			if (expr is SelectQuery selectQuery)
+			{
+				if (selectQuery.Select.Columns.Count == 1)
+					return GetDbDataType(selectQuery.Select.Columns[0].Expression);
+				return DbDataType.Undefined;
+			}
+
+			if (expr is SqlExpression sqlExpression)
+			{
+				if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr == "{0}")
+					return GetDbDataType(sqlExpression.Parameters[0]);
+				return DbDataType.Undefined;
+			}
+
+			if (expr is SqlCaseExpression caseExpression)
+			{
+				foreach (var caseItem in caseExpression.Cases)
+				{
+					var caseType  = GetDbDataType(caseItem.ResultExpression);
+					if (caseType.DataType != DataType.Undefined)
+						return caseType;
+				}
+
+				return GetDbDataType(caseExpression.ElseExpression);
+			}
+
+			if (expr is SqlConditionExpression sqlCondition)
+			{
+				var trueType  = GetDbDataType(sqlCondition.TrueValue);
+				if (trueType.DataType != DataType.Undefined)
+					return trueType;
+
+				return GetDbDataType(sqlCondition.FalseValue);
+			}
+
+			if (expr.SystemType == null)
+				return DbDataType.Undefined;
+
+			return new DbDataType(expr.SystemType);
 		}
 
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null, bool singleColumnLevel = false)
@@ -928,13 +982,8 @@ namespace LinqToDB.SqlQuery
 
 				if (current is SqlColumn column)
 					current = column.Expression;
-				else if (current is SqlFunction func)
-				{
-					if (func.Name == PseudoFunctions.CONVERT)
-						current = func.Parameters[2];
-					else
-						break;
-				}
+				else if (current is SqlCastExpression cast)
+					current = cast.Expression;
 				else if (current is SqlExpression expr)
 				{
 					if (IsTransitiveExpression(expr, true))
@@ -1357,21 +1406,6 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		public static DbDataType GetExpressionType(this ISqlExpression expr)
-		{
-			switch (expr.ElementType)
-			{
-				case QueryElementType.SqlParameter: return ((SqlParameter)expr).Type;
-				case QueryElementType.SqlValue    : return ((SqlValue)expr).ValueType;
-			}
-
-			var descriptor = GetColumnDescriptor(expr);
-			if (descriptor != null)
-				return descriptor.GetDbDataType(true);
-
-			return new DbDataType(expr.SystemType!);
-		}
-
 		public static SelectQuery GetInnerQuery(this SelectQuery selectQuery)
 		{
 			if (selectQuery.IsSimple)
@@ -1389,12 +1423,12 @@ namespace LinqToDB.SqlQuery
 			return selectQuery;
 		}
 
-		public static void OptimizeSelectQuery(this SelectQuery selectQuery, IQueryElement root, SqlProviderFlags providerFlags, DataOptions dataOptions)
+		public static void OptimizeSelectQuery(this SelectQuery selectQuery, IQueryElement root, SqlProviderFlags providerFlags, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			var visitor = SelectOptimizer.Allocate();
 
 			var evaluationContext = new EvaluationContext(null);
-			visitor.Value.Optimize(root, selectQuery, providerFlags, true, dataOptions, evaluationContext);
+			visitor.Value.Optimize(root, selectQuery, providerFlags, true, dataOptions, mappingSchema, evaluationContext);
 		}
 
 		[return: NotNullIfNotNull(nameof(sqlExpression))]
@@ -1469,9 +1503,9 @@ namespace LinqToDB.SqlQuery
 			return isNullableParameters ?? true;
 		}
 
-		public static ISqlExpression CreateSqlValue(object? value, SqlBinaryExpression be)
+		public static ISqlExpression CreateSqlValue(object? value, SqlBinaryExpression be, MappingSchema mappingSchema)
 		{
-			return CreateSqlValue(value, be.GetExpressionType(), be.Expr1, be.Expr2);
+			return CreateSqlValue(value, GetDbDataType(be, mappingSchema), be.Expr1, be.Expr2);
 		}
 
 		public static ISqlExpression CreateSqlValue(object? value, DbDataType dbDataType, params ISqlExpression[] basedOn)

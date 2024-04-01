@@ -13,6 +13,8 @@ namespace LinqToDB.DataProvider.SapHana
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{
@@ -34,6 +36,11 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsApplyJoinSupported              = false;
 
 			_sqlOptimizer = new SapHanaNativeSqlOptimizer(SqlProviderFlags);
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new SapHanaMemberTranslator();
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

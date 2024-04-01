@@ -1607,7 +1607,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		internal void BuildTypeName(StringBuilder sb, SqlDataType type)
+		internal void BuildTypeName(StringBuilder sb, DbDataType type)
 		{
 			StringBuilder = sb;
 			BuildDataType(type, forCreateTable: true, canBeNull: true);
@@ -1615,7 +1615,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCreateTableFieldType(SqlField field)
 		{
-			BuildDataType(new SqlDataType(field), forCreateTable: true, field.CanBeNull);
+			BuildDataType(QueryHelper.GetDbDataType(field, MappingSchema), forCreateTable: true, field.CanBeNull);
 		}
 
 		protected virtual void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
@@ -1866,7 +1866,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(InlineComma);
 				var field = valuesTable.Fields[i];
 				if (IsSqlValuesTableValueTypeRequired(valuesTable, [], -1, i))
-					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
+					BuildTypedExpression(QueryHelper.GetDbDataType(field, MappingSchema), new SqlValue(field.Type, null));
 				else
 					BuildExpression(new SqlValue(field.Type, null));
 				StringBuilder.Append(' ');
@@ -2686,7 +2686,7 @@ namespace LinqToDB.SqlProvider
 						if (value is ISqlExpression expression)
 							BuildExpression(expression);
 						else
-							BuildValue(new SqlDataType(field), value);
+							BuildValue(field.Type, value);
 
 						StringBuilder.Append(InlineComma);
 					}
@@ -2718,7 +2718,7 @@ namespace LinqToDB.SqlProvider
 							else
 							{
 								StringBuilder.Append(" = ");
-								BuildValue(new SqlDataType(field), value);
+								BuildValue(field.Type, value);
 							}
 
 							StringBuilder.Append(" AND ");
@@ -2755,12 +2755,7 @@ namespace LinqToDB.SqlProvider
 				var count         = 0;
 				var multipleParts = false;
 
-				var sqlDataType = p.Expr1.ElementType switch
-				{
-					QueryElementType.SqlField => new SqlDataType((SqlField)p.Expr1),
-					QueryElementType.SqlParameter => new SqlDataType(((SqlParameter)p.Expr1).Type),
-					_ => null,
-				};
+				var dbDataType = QueryHelper.GetDbDataType(p.Expr1, MappingSchema);
 
 				foreach (object? value in values)
 				{
@@ -2800,7 +2795,7 @@ namespace LinqToDB.SqlProvider
 					if (value is ISqlExpression expression)
 						BuildExpression(expression);
 					else
-						BuildValue(sqlDataType, value);
+						BuildValue(dbDataType, value);
 
 					StringBuilder.Append(InlineComma);
 				}
@@ -3060,9 +3055,8 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlValue:
 					var sqlval = (SqlValue)expr;
-					var dt     = new SqlDataType(sqlval.ValueType);
 
-					BuildValue(dt, sqlval.Value);
+					BuildValue(sqlval.ValueType, sqlval.Value);
 					break;
 
 				case QueryElementType.SqlExpression:
@@ -3114,7 +3108,7 @@ namespace LinqToDB.SqlProvider
 					}
 
 				case QueryElementType.SqlDataType:
-					BuildDataType((SqlDataType)expr, forCreateTable: false, canBeNull: true);
+					BuildDataType(((SqlDataType)expr).Type, forCreateTable: false, canBeNull: true);
 					break;
 
 				case QueryElementType.SearchCondition:
@@ -3153,6 +3147,10 @@ namespace LinqToDB.SqlProvider
 					BuildSqlRow((SqlRowExpression) expr, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
 					break;
 
+				case QueryElementType.SqlCast:
+					BuildSqlCastExpression((SqlCastExpression)expr);
+					break;
+
 				case QueryElementType.SqlCase:
 					BuildSqlCaseExpression((SqlCaseExpression)expr);
 					break;
@@ -3166,6 +3164,11 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return StringBuilder;
+		}
+
+		protected virtual void BuildSqlCastExpression(SqlCastExpression castExpression)
+		{
+			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
 		}
 
 		protected virtual void BuildSqlConditionExpression(SqlConditionExpression conditionExpression)
@@ -3348,7 +3351,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool TryConvertParameterToSql(SqlParameterValue paramValue)
 		{
-			return MappingSchema.TryConvertToSql(StringBuilder, new (paramValue.DbDataType), DataOptions, paramValue.ProviderValue);
+			return MappingSchema.TryConvertToSql(StringBuilder, paramValue.DbDataType, DataOptions, paramValue.ProviderValue);
 		}
 
 		protected virtual void BuildParameter(SqlParameter parameter)
@@ -3424,7 +3427,7 @@ namespace LinqToDB.SqlProvider
 			BuildExpression(precedence, expr, null, ref dummy);
 		}
 
-		protected virtual void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		protected virtual void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
 			StringBuilder.Append("CAST(");
 			BuildExpression(value);
@@ -3457,7 +3460,7 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildValue
 
-		protected void BuildValue(SqlDataType? dataType, object? value)
+		protected void BuildValue(DbDataType? dataType, object? value)
 		{
 			if (value is Sql.SqlID id)
 				TryBuildSqlID(id);
@@ -3469,7 +3472,7 @@ namespace LinqToDB.SqlProvider
 					{
 						throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 					}
-					BuildParameter(new SqlParameter(dataType.Type, "value", value));
+					BuildParameter(new SqlParameter(dataType.Value, "value", value));
 				}
 			}
 		}
@@ -3538,7 +3541,7 @@ namespace LinqToDB.SqlProvider
 		/// <param name="sb"></param>
 		/// <param name="dataType"></param>
 		/// <returns>The stringbuilder with the type information appended.</returns>
-		public StringBuilder BuildDataType(StringBuilder sb, SqlDataType dataType)
+		public StringBuilder BuildDataType(StringBuilder sb, DbDataType dataType)
 		{
 			WithStringBuilder(sb, static ctx =>
 			{
@@ -3548,23 +3551,23 @@ namespace LinqToDB.SqlProvider
 		}
 
 		/// <param name="canBeNull">Type could store <c>NULL</c> values (could be used for column table type generation or for databases with explicit typee nullability like ClickHouse).</param>
-		protected void BuildDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected void BuildDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			if (!string.IsNullOrEmpty(type.Type.DbType))
-				StringBuilder.Append(type.Type.DbType);
+			if (!string.IsNullOrEmpty(type.DbType))
+				StringBuilder.Append(type.DbType);
 			else
 			{
-				var systemType = type.Type.SystemType.FullName;
-				if (type.Type.DataType == DataType.Undefined)
-					type = MappingSchema.GetDataType(type.Type.SystemType);
+				var systemType = type.SystemType.FullName;
+				if (type.DataType == DataType.Undefined)
+					type = MappingSchema.GetDbDataType(type.SystemType);
 
-				if (!string.IsNullOrEmpty(type.Type.DbType))
+				if (!string.IsNullOrEmpty(type.DbType))
 				{
-					StringBuilder.Append(type.Type.DbType);
+					StringBuilder.Append(type.DbType);
 					return;
 				}
 
-				if (type.Type.DataType == DataType.Undefined)
+				if (type.DataType == DataType.Undefined)
 					// give some hint to user that it is expected situation and he need to fix something on his side
 					throw new LinqToDBException($"Database column type cannot be determined automatically and must be specified explicitly for system type {systemType}");
 
@@ -3572,10 +3575,12 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		/// <param name="type"></param>
+		/// <param name="forCreateTable"></param>
 		/// <param name="canBeNull">Type could store <c>NULL</c> values (could be used for column table type generation or for databases with explicit typee nullability like ClickHouse).</param>
-		protected virtual void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected virtual void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Double : StringBuilder.Append("Float");    return;
 				case DataType.Single : StringBuilder.Append("Real");     return;
@@ -3590,13 +3595,13 @@ namespace LinqToDB.SqlProvider
 				case DataType.Boolean: StringBuilder.Append("Bit");      return;
 			}
 
-			StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}");
+			StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}");
 
-			if (type.Type.Length > 0)
-				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
+			if (type.Length > 0)
+				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 
-			if (type.Type.Precision > 0)
-				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision}{InlineComma}{type.Type.Scale})");
+			if (type.Precision > 0)
+				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision}{InlineComma}{type.Scale})");
 		}
 
 		#endregion

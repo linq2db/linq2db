@@ -183,9 +183,9 @@ namespace LinqToDB.Mapping
 		/// - value SQL type descriptor;
 		/// - value.
 		/// </param>
-		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
+		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder, SqlDataType, object> converter)
 		{
-			ValueToSqlConverter.SetConverter(type, (sb,dt,_,v) => converter(sb, dt, v));
+			ValueToSqlConverter.SetConverter(type, (sb, dt, _, v) => converter(sb, new SqlDataType(dt), v));
 			return this;
 		}
 
@@ -200,7 +200,7 @@ namespace LinqToDB.Mapping
 		/// </param>
 		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,DataOptions,object> converter)
 		{
-			ValueToSqlConverter.SetConverter(type, converter);
+			ValueToSqlConverter.SetConverter(type, (sb, t, options, value) => converter(sb, new SqlDataType(t), options, value));
 			return this;
 		}
 
@@ -1573,6 +1573,16 @@ namespace LinqToDB.Mapping
 			}
 
 			return SqlDataType.Undefined;
+		}
+
+		/// <summary>
+		/// Returns database type mapping information for specified type.
+		/// </summary>
+		/// <param name="type">Mapped type.</param>
+		/// <returns>Database type information.</returns>
+		public DbDataType GetDbDataType(Type type)
+		{
+			return GetDataType(type).Type;
 		}
 
 		/// <summary>

@@ -172,6 +172,7 @@ namespace LinqToDB.Linq.Builder
 
 		bool GetSimplifiedAggregationInfo(
 			AggregationType                                        aggregationType, 
+			Type                                                   returnType,
 			IBuildContext                                          context, 
 			BuildInfo                                              buildInfo, 
 			Expression                                             expression,
@@ -321,6 +322,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (aggregationType != AggregationType.Count || isDistinct)
 			{
+				if (valueExpression is ContextRefExpression && contextRef.BuildContext == groupByContext && typeof(IGrouping<,>).IsSameOrParentOf(valueExpression.Type))
+				{
+					valueExpression = new ContextRefExpression(returnType, groupByContext);
+				}
+
 				var convertedExpr = builder.ConvertToSqlExpr(groupByContext.SubQuery, valueExpression, buildInfo.GetFlags());
 
 				if (!SequenceHelper.IsSqlReady(convertedExpr))
@@ -464,7 +470,7 @@ namespace LinqToDB.Linq.Builder
 					inputFilterLambda = methodCall.Arguments[1].UnwrapLambda();
 				}
 
-				if (GetSimplifiedAggregationInfo(aggregationType, buildInfo.Parent!, buildInfo, sequenceArgument, inputValueLambda, inputFilterLambda, out filterExpression, out var groupByContext, out valueExpression, out valueSqlExpression, out var isDistinct))
+				if (GetSimplifiedAggregationInfo(aggregationType, returnType, buildInfo.Parent!, buildInfo, sequenceArgument, inputValueLambda, inputFilterLambda, out filterExpression, out var groupByContext, out valueExpression, out valueSqlExpression, out var isDistinct))
 				{
 					isSimple = true;
 
@@ -481,6 +487,11 @@ namespace LinqToDB.Linq.Builder
 
 					sequence = sequenceResult.BuildContext;
 					sequence = new SubQueryContext(sequence);
+
+					if (!SequenceHelper.IsSupportedSubqueryForModifier(buildInfo.Parent!, sequence, out var errorMessage))
+					{
+						return BuildSequenceResult.Error(sequenceArgument, errorMessage);
+					}
 
 					if (inputFilterLambda != null)
 					{

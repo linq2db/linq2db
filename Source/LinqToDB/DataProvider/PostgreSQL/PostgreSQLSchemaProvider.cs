@@ -212,7 +212,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static string ToDatabaseLiteral(DataConnection dataConnection, string? str)
 		{
 			using var sb = Pools.StringBuilder.Allocate();
-			dataConnection.MappingSchema.ValueToSqlConverter.Convert(sb.Value, dataConnection.MappingSchema, SqlDataType.DbText, dataConnection.Options, str);
+			dataConnection.MappingSchema.ValueToSqlConverter.Convert(sb.Value, dataConnection.MappingSchema, SqlDataType.DbText.Type, dataConnection.Options, str);
 			return sb.Value.ToString();
 		}
 

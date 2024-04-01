@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using Common;
 
 	sealed class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
@@ -92,12 +93,12 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			// mysql has limited support for types in type-CAST expressions
 			if (!forCreateTable)
 			{
-				switch ((type.Type.DataType, type.Type.Precision, type.Type.Scale, type.Type.Length) switch
+				switch ((type.DataType, type.Precision, type.Scale, type.Length) switch
 				{
 					(DataType.Boolean  or
 					 DataType.SByte    or
@@ -123,8 +124,8 @@ namespace LinqToDB.DataProvider.MySql
 					// and needs version sniffing
 					(DataType.Double or
 					 DataType.Single,         _,                   _,                  _                   ) => "$decimal$",
-					(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})"),
-					(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Type.Precision})"),
+					(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
+					(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision})"),
 					(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
 					(DataType.Char      or
 					 DataType.NChar     or
@@ -143,7 +144,7 @@ namespace LinqToDB.DataProvider.MySql
 					 DataType.VarChar   or
 					 DataType.NVarChar  or
 					 DataType.NText     or
-					 DataType.Text,           _,                   _,                  _                   ) => $"CHAR({type.Type.Length})",
+					 DataType.Text,           _,                   _,                  _                   ) => $"CHAR({type.Length})",
 					(DataType.VarBinary or
 					 DataType.Binary    or
 					 DataType.Blob,           _,                   _,                  null or < 0         ) => "BINARY(255)",
@@ -152,12 +153,12 @@ namespace LinqToDB.DataProvider.MySql
 					 DataType.Blob,           _,                   _,                  1                   ) => "BINARY",
 					(DataType.VarBinary or
 					 DataType.Binary    or
-					 DataType.Blob,           _,                   _,                  _                   ) => $"BINARY({type.Type.Length})",
+					 DataType.Blob,           _,                   _,                  _                   ) => $"BINARY({type.Length})",
 					_ => null
 				})
 				{
 					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable, canBeNull); break;
-					case "$decimal$" : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable, canBeNull); break;
+					case "$decimal$" : base.BuildDataTypeFromDataType(SqlDataType.Decimal.Type, forCreateTable, canBeNull); break;
 					case var t       : StringBuilder.Append(t);                                                        break;
 				};
 
@@ -165,7 +166,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			// types for CREATE TABLE statement
-			switch ((type.Type.DataType, type.Type.Precision, type.Type.Scale, type.Type.Length) switch
+			switch ((type.DataType, type.Precision, type.Scale, type.Length) switch
 			{
 				(DataType.SByte,          _,                   _,                  _                   ) => "TINYINT",
 				(DataType.Int16,          _,                   _,                  _                   ) => "SMALLINT",
@@ -177,26 +178,26 @@ namespace LinqToDB.DataProvider.MySql
 				(DataType.UInt64,         _,                   _,                  _                   ) => "BIGINT UNSIGNED",
 				(DataType.Money,          _,                   _,                  _                   ) => "DECIMAL(19, 4)",
 				(DataType.SmallMoney,     _,                   _,                  _                   ) => "DECIMAL(10, 4)",
-				(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})"),
-				(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Type.Precision})"),
+				(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
+				(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision})"),
 				(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
 				(DataType.DateTime  or
 				 DataType.DateTime2 or
-				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"DATETIME({type.Type.Precision})"),
+				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"DATETIME({type.Precision})"),
 				(DataType.DateTime  or
 				 DataType.DateTime2 or
 				 DataType.SmallDateTime,  _,                   _,                  _                   ) => "DATETIME",
-				(DataType.DateTimeOffset, > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIMESTAMP({type.Type.Precision})"),
+				(DataType.DateTimeOffset, > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIMESTAMP({type.Precision})"),
 				(DataType.DateTimeOffset, _,                   _,                  _                   ) => "TIMESTAMP",
-				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIME({type.Type.Precision})"),
+				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIME({type.Precision})"),
 				(DataType.Time,           _,                   _,                  _                   ) => "TIME",
 				(DataType.Boolean,        _,                   _,                  _                   ) => "BOOLEAN",
-				(DataType.Double,         >= 0 and <= 53,      _,                  _                   ) => FormattableString.Invariant($"FLOAT({type.Type.Precision})"), // this is correct, FLOAT(p)
+				(DataType.Double,         >= 0 and <= 53,      _,                  _                   ) => FormattableString.Invariant($"FLOAT({type.Precision})"), // this is correct, FLOAT(p)
 				(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
-				(DataType.Single,         >= 0 and <= 53,      _,                  _                   ) => FormattableString.Invariant($"FLOAT({type.Type.Precision})"),
+				(DataType.Single,         >= 0 and <= 53,      _,                  _                   ) => FormattableString.Invariant($"FLOAT({type.Precision})"),
 				(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
 				(DataType.BitArray,       _,                   _,                  null                ) =>
-					type.Type.SystemType.ToNullableUnderlying()
+					type.SystemType.ToNullableUnderlying()
 					switch
 					{
 						var t when t == typeof(byte)  || t == typeof(sbyte)  =>  8,
@@ -210,7 +211,7 @@ namespace LinqToDB.DataProvider.MySql
 						0     => "BIT",
 						var l => FormattableString.Invariant($"BIT({l})")
 					},
-				(DataType.BitArray,       _,                  _,                   not 1 and >= 0      ) => $"BIT({type.Type.Length})",
+				(DataType.BitArray,       _,                  _,                   not 1 and >= 0      ) => $"BIT({type.Length})",
 				(DataType.BitArray,       _,                  _,                   _                   ) => "BIT",
 				(DataType.Date,           _,                  _,                   _                   ) => "DATE",
 				(DataType.Json,           _,                  _,                   _                   ) => "JSON",
@@ -220,16 +221,16 @@ namespace LinqToDB.DataProvider.MySql
 				(DataType.Char    or
 				 DataType.NChar,          _,                  _,                   1                   ) => "CHAR",
 				(DataType.Char    or
-				 DataType.NChar,          _,                  _,                   _                   ) => $"CHAR({type.Type.Length})",
+				 DataType.NChar,          _,                  _,                   _                   ) => $"CHAR({type.Length})",
 				(DataType.VarChar or
 				 DataType.NVarChar,       _,                  _,                   null or > 65535 or < 0) => "VARCHAR(255)",
 				(DataType.VarChar or
-				 DataType.NVarChar,       _,                  _,                   _                   ) => $"VARCHAR({type.Type.Length})",
+				 DataType.NVarChar,       _,                  _,                   _                   ) => $"VARCHAR({type.Length})",
 				(DataType.Binary,         _,                  _,                   null or < 0         ) => "BINARY(255)",
 				(DataType.Binary,         _,                  _,                   1                   ) => "BINARY",
-				(DataType.Binary,         _,                  _,                   _                   ) => $"BINARY({type.Type.Length})",
+				(DataType.Binary,         _,                  _,                   _                   ) => $"BINARY({type.Length})",
 				(DataType.VarBinary,      _,                  _,                   null or < 0         ) => "VARBINARY(255)",
-				(DataType.VarBinary,      _,                  _,                   _                   ) => $"VARBINARY({type.Type.Length})",
+				(DataType.VarBinary,      _,                  _,                   _                   ) => $"VARBINARY({type.Length})",
 				(DataType.Blob,           _,                  _,                   null or < 0         ) => "BLOB",
 				(DataType.Blob,           _,                  _,                   <= 255              ) => "TINYBLOB",
 				(DataType.Blob,           _,                  _,                   <= 65535            ) => "BLOB",

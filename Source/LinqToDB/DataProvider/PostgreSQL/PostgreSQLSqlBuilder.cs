@@ -57,21 +57,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return "OFFSET {0} ";
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Decimal       :
 					StringBuilder.Append("decimal");
-					if (type.Type.Precision > 0)
+					if (type.Precision > 0)
 					{
 						StringBuilder
 							.Append('(')
-							.Append(type.Type.Precision.Value.ToString(NumberFormatInfo.InvariantInfo));
-						if (type.Type.Scale > 0)
+							.Append(type.Precision.Value.ToString(NumberFormatInfo.InvariantInfo));
+						if (type.Scale > 0)
 							StringBuilder
 								.Append(", ")
-								.Append(type.Type.Scale.Value.ToString(NumberFormatInfo.InvariantInfo));
+								.Append(type.Scale.Value.ToString(NumberFormatInfo.InvariantInfo));
 						StringBuilder
 							.Append(')');
 					}
@@ -88,8 +88,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Text          : StringBuilder.Append("text");           break;
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
-					if (type.Type.Length > 0)
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
+					if (type.Length > 0)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 					break;
 				case DataType.Json           : StringBuilder.Append("json");           break;
 				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
@@ -97,21 +97,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Binary         :
 				case DataType.VarBinary      : StringBuilder.Append("bytea");          break;
 				case DataType.BitArray       :
-					if (type.Type.Length == 1)
+					if (type.Length == 1)
 						StringBuilder.Append("bit");
-					if (type.Type.Length > 1)
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"bit({type.Type.Length})");
+					if (type.Length > 1)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"bit({type.Length})");
 					else
 						StringBuilder.Append("bit varying");
 					break;
 				case DataType.NChar          :
 					StringBuilder.Append("character");
-					if (type.Type.Length > 1) // this is correct condition
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
+					if (type.Length > 1) // this is correct condition
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 					break;
 					case DataType.Interval   : StringBuilder.Append("interval");       break;
 				case DataType.Udt            :
-					var udtType = type.Type.SystemType.ToNullableUnderlying();
+					var udtType = type.SystemType.ToNullableUnderlying();
 
 					var provider = DataProvider as PostgreSQLDataProvider;
 
@@ -441,6 +441,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.QueryHint);
 			}
+		}
+
+		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		{
+			BuildExpression(Precedence.Primary, value);
+			StringBuilder.Append("::");
+			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
 		}
 
 		protected override void BuildSql()

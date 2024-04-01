@@ -19,6 +19,7 @@ namespace LinqToDB.Data
 	using Mapping;
 	using RetryPolicy;
 	using Tools;
+	using Linq.Translation;
 
 
 	/// <summary>
@@ -441,6 +442,15 @@ namespace LinqToDB.Data
 		/// Database configuration name (connection string name).
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
+
+		public T GetService<T>()
+		{
+			if (typeof(T) == typeof(IMemberTranslator))
+				return (T)DataProvider.GetMethodCallTranslator();
+
+			throw new InvalidOperationException($"DataConnection.GetService<{typeof(T).Name}> is not supported.");
+		}
+
 		/// <summary>
 		/// Database provider implementation for specific database engine.
 		/// </summary>

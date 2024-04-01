@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -1642,6 +1641,16 @@ namespace LinqToDB.Remote
 						break;
 					}
 
+					case QueryElementType.SqlCast:
+					{
+						var elem = (SqlCastExpression)e;
+						Append(elem.ToType);
+						Append(elem.Expression);
+						Append(elem.FromType);
+						Append(elem.IsMandatory);
+						break;
+					}
+
 					case QueryElementType.SqlCondition:
 					{
 						var elem = (SqlConditionExpression)e;
@@ -2704,6 +2713,18 @@ namespace LinqToDB.Remote
 							};
 							break;
 						}
+
+					case QueryElementType.SqlCast:
+					{
+						var dataType   = ReadDbDataType();
+						var expression = Read<ISqlExpression>();
+						var fromType   = Read<SqlDataType>();
+						var mandatory  = ReadBool();
+
+						obj = new SqlCastExpression(expression!, dataType!, fromType, mandatory);
+
+						break;
+					}
 
 					case QueryElementType.SqlCondition:
 					{

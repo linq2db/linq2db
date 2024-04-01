@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using Common;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
@@ -97,9 +98,9 @@ namespace LinqToDB.DataProvider.SQLite
 			return sb.Append(value);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Int32 : StringBuilder.Append("INTEGER");                                 break;
 				default             : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;

@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	sealed class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
@@ -17,15 +18,15 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSqlExpressionConvertVisitor(allowModify);
 		}
 
-		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions)
+		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (statement.QueryType == QueryType.Update)
-				return CorrectSybaseUpdate((SqlUpdateStatement)statement, dataOptions);
+				return CorrectSybaseUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema);
 
-			return base.FinalizeUpdate(statement, dataOptions);
+			return base.FinalizeUpdate(statement, dataOptions, mappingSchema);
 		}
 
-		SqlUpdateStatement CorrectSybaseUpdate(SqlUpdateStatement statement, DataOptions dataOptions)
+		SqlUpdateStatement CorrectSybaseUpdate(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (statement.SelectQuery.Select.TakeValue != null)
 				throw new LinqToDBException("The Sybase ASE does not support the UPDATE statement with the TOP clause.");
@@ -46,13 +47,13 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (isInCompatible)
 			{
-				statement = GetAlternativeUpdate(statement, dataOptions);
+				statement = GetAlternativeUpdate(statement, dataOptions, mappingSchema);
 			}
 			else
 			{
 				var hasTableInQuery = QueryHelper.HasTableInQuery(statement.SelectQuery, statement.Update.Table!);
 				if (hasTableInQuery && !RemoveUpdateTableIfPossible(statement.SelectQuery, statement.Update.Table!, out _))
-					statement = GetAlternativeUpdate(statement, dataOptions);
+					statement = GetAlternativeUpdate(statement, dataOptions, mappingSchema);
 			}
 
 			return statement;

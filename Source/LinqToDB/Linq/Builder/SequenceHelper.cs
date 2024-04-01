@@ -850,7 +850,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static bool IsSqlReady(Expression expression)
 		{
-			if (expression.Find(1, (_, e) => e is SqlErrorExpression || e is SqlEagerLoadExpression) != null)
+			if (expression.Find(1, (_, e) => e is SqlErrorExpression || e is SqlEagerLoadExpression || e is ContextRefExpression) != null)
 				return false;
 			return true;
 		}
@@ -929,6 +929,7 @@ namespace LinqToDB.Linq.Builder
 					providerFlags : parent.Builder.DataContext.SqlProviderFlags,
 					removeWeakJoins : false,
 					dataOptions : parent.Builder.DataOptions,
+					mappingSchema: context.MappingSchema,
 					evaluationContext : new EvaluationContext()
 				);
 

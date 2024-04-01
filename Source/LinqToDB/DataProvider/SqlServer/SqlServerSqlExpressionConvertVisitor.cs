@@ -108,26 +108,19 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.ConvertSqlBinaryExpression(element);
 		}
 
-		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			var toType   = func.Parameters[0];
-			var fromType = func.Parameters[1];
-			var argument = func.Parameters[2];
+			/*
+			var toType   = cast.ToType;
+			var argument = cast.Expression;
 
-			if (func.SystemType.ToUnderlying() == typeof(ulong) &&
+			if (cast.SystemType.ToUnderlying() == typeof(ulong) &&
 			    argument.SystemType!.IsFloatType())
 			{
-				return new SqlFunction(
-					func.SystemType,
-					func.Name,
-					false,
-					func.Precedence,
-					toType,
-					fromType,
-					new SqlFunction(func.SystemType, "Floor", argument));
+				return cast.WithExpression(new SqlFunction(cast.SystemType, "Floor", argument));
 			}
 
-			if (Type.GetTypeCode(func.SystemType.ToUnderlying()) == TypeCode.DateTime)
+			if (Type.GetTypeCode(cast.SystemType.ToUnderlying()) == TypeCode.DateTime)
 			{
 				var type1 = argument.SystemType!.ToUnderlying();
 
@@ -136,27 +129,28 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (type1 == typeof(DateTimeOffset) || type1 == typeof(DateTime))
 						if (_sqlServerVersion >= SqlServerVersion.v2008)
 							return new SqlExpression(
-								func.SystemType, "CAST({0} AS TIME)", Precedence.Primary, argument);
+								cast.SystemType, "CAST({0} AS TIME)", Precedence.Primary, argument);
 						else
 							return new SqlExpression(
-								func.SystemType, "Cast(Convert(Char, {0}, 114) as DateTime)", Precedence.Primary, argument);
+								cast.SystemType, "CAST(Convert(Char, {0}, 114) as DateTime)", Precedence.Primary, argument);
 
 					if (argument.SystemType == typeof(string))
 						return argument;
 
 					return new SqlExpression(
-						func.SystemType, "Convert(Char, {0}, 114)", Precedence.Primary, argument);
+						cast.SystemType, "Convert(Char, {0}, 114)", Precedence.Primary, argument);
 				}
 
 				if (type1 == typeof(DateTime) || type1 == typeof(DateTimeOffset))
 				{
 					if (IsDateDataType(toType, "Datetime"))
 						return new SqlExpression(
-							func.SystemType, "Cast(Floor(Cast({0} as Float)) as DateTime)", Precedence.Primary, argument);
+							cast.SystemType, "CAST(Floor(CAST({0} as Float)) as DateTime)", Precedence.Primary, argument);
 				}
 			}
 
-			return base.ConvertConversion(func);
+			*/
+			return base.ConvertConversion(cast);
 		}
 	}
 }

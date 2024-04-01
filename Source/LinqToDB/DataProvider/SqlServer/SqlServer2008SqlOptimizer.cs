@@ -4,6 +4,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	sealed class SqlServer2008SqlOptimizer : SqlServerSqlOptimizer
 	{
@@ -16,7 +17,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServer2008SqlExpressionConvertVisitor(allowModify, SQLVersion);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			//SQL Server 2008 supports ROW_NUMBER but not OFFSET/FETCH
 

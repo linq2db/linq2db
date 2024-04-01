@@ -1,5 +1,7 @@
 ﻿using System;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
 	/// <summary>
@@ -28,13 +30,11 @@ namespace LinqToDB.SqlQuery
 		}
 
 		/// <summary>
-		/// Function to convert value from one type to another: <c>CONVERT(to_type, from_type, value) { CanBeNull = value.CanBeNull }</c>
+		/// Creates cast expression: <c>CAST(value AS to_type)</c>
 		/// </summary>
-		public const string CONVERT = "$Convert$";
-		public static SqlFunction MakeConvert(SqlDataType toType, SqlDataType fromType, ISqlExpression value)
+		public static SqlCastExpression MakeCast(ISqlExpression value, DbDataType toType, SqlDataType? fromType = null)
 		{
-			return new SqlFunction(toType.SystemType, CONVERT, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, toType, fromType, value);
+			return new SqlCastExpression(value, toType, fromType);
 		}
 
 		/// <summary>
@@ -45,13 +45,9 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Function to convert value from one type to another: <c>CONVERT(to_type, from_type, value) { CanBeNull = value.CanBeNull, DoNotOptimize = true }</c>
 		/// </summary>
-		public static SqlFunction MakeMandatoryConvert(SqlDataType toType, SqlDataType fromType, ISqlExpression value)
+		public static SqlCastExpression MakeMandatoryCast(ISqlExpression value, DbDataType toType, SqlDataType? fromType = null)
 		{
-			return new SqlFunction(toType.SystemType, CONVERT, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, toType, fromType, value)
-			{
-				DoNotOptimize = true
-			};
+			return new SqlCastExpression(value, toType, fromType, true);
 		}
 
 		/// <summary>

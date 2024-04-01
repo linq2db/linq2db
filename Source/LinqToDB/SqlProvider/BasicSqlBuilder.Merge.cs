@@ -269,9 +269,9 @@ namespace LinqToDB.SqlProvider
 
 		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
 		{
-			var columnTypes = new SqlDataType[sourceFields.Count];
+			var columnTypes = new DbDataType[sourceFields.Count];
 			for (var i = 0; i < sourceFields.Count; i++)
-				columnTypes[i] = new SqlDataType(sourceFields[i]);
+				columnTypes[i] = sourceFields[i].Type;
 
 			StringBuilder
 				.AppendLine();
@@ -334,7 +334,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(InlineComma);
 
 				if (IsSqlValuesTableValueTypeRequired(merge.Source.SourceEnumerable!, [], -1, i))
-					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
+					BuildTypedExpression(field.Type, new SqlValue(field.Type, null));
 				else
 					BuildExpression(new SqlValue(field.Type, null));
 
@@ -373,9 +373,9 @@ namespace LinqToDB.SqlProvider
 			if (rows.Count == 0)
 				return;
 
-			var columnTypes = new SqlDataType[source.Fields.Count];
+			var columnTypes = new DbDataType[source.Fields.Count];
 			for (var i = 0; i < source.Fields.Count; i++)
-				columnTypes[i] = new SqlDataType(source.Fields[i]);
+				columnTypes[i] = source.Fields[i].Type;
 
 			StringBuilder.AppendLine("VALUES");
 

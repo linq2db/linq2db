@@ -105,9 +105,9 @@ namespace LinqToDB.Expressions
 		{
 		}
 
-		public virtual Expression VisitClosurePlaceholderExpression(ClosurePlaceholderExpression node)
+		public virtual Expression VisitPlaceholderExpression(PlaceholderExpression node)
 		{
-			return node.Update(Visit(node.ClosureExpression));
+			return node.Update(Visit(node.InnerExpression));
 		}
 
 		public virtual Expression VisitTagExpression(TagExpression node)

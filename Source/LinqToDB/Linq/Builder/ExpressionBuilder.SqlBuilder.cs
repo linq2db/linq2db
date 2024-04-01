@@ -23,6 +23,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using LinqToDB.Linq.Translation;
 
 	partial class ExpressionBuilder
 	{
@@ -472,7 +473,25 @@ namespace LinqToDB.Linq.Builder
 				sql = ConvertToSqlConvertible(newExpr);
 			}
 
-			if (sql == null && !flags.IsExpression())
+
+			var processDefault = true;
+			if (sql == null)
+			{
+				var translated = TranslateMember(context, flags, columnDescriptor, alias, newExpr);
+				if (translated != null)
+				{
+					if (SequenceHelper.IsSqlReady(translated))
+					{
+						newExpr        = translated;
+						processDefault = false;
+					}
+
+					if (translated is SqlErrorExpression)
+						return translated;
+				}
+			}
+
+			if (processDefault && sql == null && !flags.IsExpression())
 			{
 				if (!PreferServerSide(newExpr, false))
 				{
@@ -487,7 +506,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (newExpr is not SqlGenericConstructorExpression)
 						{
-							sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias : alias, forceNew: forceParameter)?.SqlParameter;
+							sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias: alias, forceNew: forceParameter)?.SqlParameter;
 						}
 					}
 				}
@@ -585,6 +604,19 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return false;
+		}
+
+		static TranslationFlags GetTranslationFlags(ProjectFlags flags)
+		{
+			var result = TranslationFlags.None;
+
+			if (flags.IsSql())
+				result |= TranslationFlags.Sql;
+
+			if (flags.IsExpression())
+				result |= TranslationFlags.Expression;
+
+			return result;
 		}
 
 		Expression ConvertToSqlInternal(IBuildContext? context, Expression expression, ProjectFlags flags, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, bool forExtension = false, string? alias = null)
@@ -804,7 +836,7 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						return CreatePlaceholder(placeholder.SelectQuery,
-							PseudoFunctions.MakeConvert(MappingSchema.GetDataType(e.Type), s, placeholder.Sql), expression,
+							PseudoFunctions.MakeCast(placeholder.Sql, MappingSchema.GetDbDataType(e.Type), s), expression,
 							alias : alias);
 					}
 
@@ -878,6 +910,7 @@ namespace LinqToDB.Linq.Builder
 								return SqlErrorExpression.EnsureError(mc, mc.Type);
 							break;
 						}
+
 						return ConvertExtensionToSql(context!, flags, attr, mc, checkAggregateRoot: true);
 					}
 
@@ -1110,6 +1143,80 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
+		static ObjectPool<TranslationContext> _translationContexts = new ObjectPool<TranslationContext>(() => new TranslationContext(), c => c.Cleanup(), 100);
+
+		public Expression? TranslateMember(IBuildContext? context, ProjectFlags flags, ColumnDescriptor? columnDescriptor, string? alias, Expression memberExpression)
+		{
+			if (context == null)
+				return null;
+
+			if (memberExpression is MethodCallExpression || memberExpression is MemberExpression)
+			{
+				if (IsAlreadyTranslated(context, flags, columnDescriptor, memberExpression, out var cacheKey, out var translateMember))
+				{
+					return translateMember;
+				}
+
+				using var translationContext = _translationContexts.Allocate();
+
+				translationContext.Value.Init(this, context, columnDescriptor, alias);
+
+				var translated = _memberTranslator.Translate(translationContext.Value, memberExpression, GetTranslationFlags(flags));
+
+				if (translated != null)
+				{
+					if (!flags.IsTest())
+						translated = UpdateNesting(context, translated);
+
+					if (translated is SqlPlaceholderExpression placeholder)
+					{
+						_cachedSql.Remove(cacheKey);
+						_cachedSql.Add(cacheKey, placeholder);
+					}
+				}
+
+				return translated;
+			}
+
+			return null;
+		}
+
+		bool IsAlreadyTranslated(IBuildContext? context, ProjectFlags flags, ColumnDescriptor? columnDescriptor, Expression memberExpression, out SqlCacheKey cacheKey, out Expression? translatedExpression)
+		{
+			var cacheFlags = flags & ~ProjectFlags.Keys;
+			cacheFlags &= ~ProjectFlags.ForExtension;
+
+			cacheKey = new SqlCacheKey(memberExpression, null, columnDescriptor, context?.SelectQuery, cacheFlags);
+
+			if (_cachedSql.TryGetValue(cacheKey, out var sqlExpr))
+			{
+				if (sqlExpr is SqlPlaceholderExpression cachedPlaceholder)
+				{
+					translatedExpression = cachedPlaceholder.WithTrackingPath(memberExpression);
+					return true;
+				}
+
+				{
+					translatedExpression = sqlExpr;
+					return true;
+				}
+			}
+
+			if (cacheFlags.IsExpression())
+			{
+				cacheFlags = cacheFlags.SqlFlag();
+				cacheKey   = new SqlCacheKey(memberExpression, null, columnDescriptor, context?.SelectQuery, cacheFlags);
+				if (_cachedSql.TryGetValue(cacheKey, out var asSql))
+				{
+					translatedExpression = asSql;
+					return true;
+				}
+			}
+
+			translatedExpression = null;
+			return false;
+		}
+
 		public ISqlExpression? TryConvertFormatToSql(IBuildContext? context, MethodCallExpression mc, bool isPureExpression, ProjectFlags flags)
 		{
 			// TODO: move PrepareRawSqlArguments to more correct location
@@ -1155,7 +1262,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			// Second attempt probably conversion failed and switched to client side evaluation
-			if (mc.Find(1, (_, e) => e is ClosurePlaceholderExpression) != null)
+			if (mc.Find(1, (_, e) => e is PlaceholderExpression { PlaceholderType: PlaceholderType.Closure }) != null)
 				return mc;
 
 			var sqlExpression = attr.GetExpression(
@@ -2014,10 +2121,10 @@ namespace LinqToDB.Linq.Builder
 			r = QueryHelper.UnwrapExpression(r, checkNullability: true);
 
 			if (l is SqlValue lValue)
-				lValue.ValueType = GetDataType(r, lValue.ValueType);
+				lValue.ValueType = GetDataType(r, lValue.ValueType, MappingSchema);
 
 			if (r is SqlValue rValue)
-				rValue.ValueType = GetDataType(l, rValue.ValueType);
+				rValue.ValueType = GetDataType(l, rValue.ValueType, MappingSchema);
 
 			switch (nodeType)
 			{
@@ -2546,25 +2653,29 @@ namespace LinqToDB.Linq.Builder
 
 		private sealed class GetDataTypeContext
 		{
-			public GetDataTypeContext(DbDataType baseType)
+			public GetDataTypeContext(DbDataType baseType, MappingSchema mappingSchema)
 			{
-				DataType   = baseType.DataType;
-				DbType     = baseType.DbType;
-				Length     = baseType.Length;
-				Precision  = baseType.Precision;
-				Scale      = baseType.Scale;
+				DataType      = baseType.DataType;
+				DbType        = baseType.DbType;
+				Length        = baseType.Length;
+				Precision     = baseType.Precision;
+				Scale         = baseType.Scale;
+
+				MappingSchema = mappingSchema;
 			}
 
-			public DataType DataType;
-			public string?  DbType;
-			public int?     Length;
-			public int?     Precision;
-			public int?     Scale;
+			public DataType      DataType;
+			public string?       DbType;
+			public int?          Length;
+			public int?          Precision;
+			public int?          Scale;
+
+			public MappingSchema MappingSchema { get; }
 		}
 
-		static DbDataType GetDataType(ISqlExpression expr, DbDataType baseType)
+		static DbDataType GetDataType(ISqlExpression expr, DbDataType baseType, MappingSchema mappingSchema)
 		{
-			var ctx = new GetDataTypeContext(baseType);
+			var ctx = new GetDataTypeContext(baseType, mappingSchema);
 
 			expr.Find(ctx, static (context, e) =>
 			{
@@ -2604,7 +2715,7 @@ namespace LinqToDB.Linq.Builder
 					default:
 						if (e is ISqlExpression expr)
 						{
-							var type = expr.GetExpressionType();
+							var type = QueryHelper.GetDbDataType(expr, context.MappingSchema);
 							context.DataType  = type.DataType;
 							context.DbType    = type.DbType;
 							context.Length    = type.Length;

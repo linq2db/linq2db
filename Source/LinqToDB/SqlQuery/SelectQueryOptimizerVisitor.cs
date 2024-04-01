@@ -7,6 +7,7 @@ using System.Text;
 namespace LinqToDB.SqlQuery
 {
 	using Common;
+	using Mapping;
 	using Linq.Builder;
 
 	using SqlProvider;
@@ -22,6 +23,7 @@ namespace LinqToDB.SqlQuery
 		IQueryElement     _root              = default!;
 		IQueryElement     _rootElement       = default!;
 		IQueryElement[]   _dependencies      = default!;
+		MappingSchema     _mappingSchema     = default!;
 		SelectQuery?      _correcting;
 		int               _version;
 		bool              _removeWeakJoins;
@@ -51,6 +53,7 @@ namespace LinqToDB.SqlQuery
 			SqlProviderFlags       providerFlags, 
 			bool                   removeWeakJoins, 
 			DataOptions            dataOptions,
+			MappingSchema          mappingSchema,
 			EvaluationContext      evaluationContext,
 			params IQueryElement[] dependencies)
 		{
@@ -64,6 +67,7 @@ namespace LinqToDB.SqlQuery
 			_providerFlags     = providerFlags;
 			_removeWeakJoins   = removeWeakJoins;
 			_dataOptions       = dataOptions;
+			_mappingSchema     = mappingSchema;
 			_evaluationContext = evaluationContext;
 			_root              = root;
 			_rootElement       = rootElement;
@@ -149,17 +153,18 @@ namespace LinqToDB.SqlQuery
 		{
 			base.Cleanup();
 
-			_providerFlags      = default!;
-			_dataOptions        = default!;
-			_evaluationContext  = default!;
-			_root               = default!;
-			_rootElement        = default!;
-			_dependencies       = default!;
-			_parentSelect       = default!;
-			_applySelect        = default!;
-			_version            = default;
-			_isInRecursiveCte   = false;
-			_updateQuery        = default;
+			_providerFlags     = default!;
+			_dataOptions       = default!;
+			_mappingSchema     = default!;
+			_evaluationContext = default!;
+			_root              = default!;
+			_rootElement       = default!;
+			_dependencies      = default!;
+			_parentSelect      = default!;
+			_applySelect       = default!;
+			_version           = default;
+			_isInRecursiveCte  = false;
+			_updateQuery       = default;
 
 			_columnNestingCorrector.Cleanup();
 			_columnUsageCollector.Cleanup();
@@ -212,7 +217,7 @@ namespace LinqToDB.SqlQuery
 					var before = selectQuery.ToDebugString();
 #endif
 					// only once
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery, visitQueries : true, isInsideNot : false, reduceBinary: false);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries : true, isInsideNot : false, reduceBinary: false);
 				}
 				else
 				{
@@ -294,7 +299,7 @@ namespace LinqToDB.SqlQuery
 #endif
 					CorrectEmptyInnerJoinsRecursive(selectQuery);
 
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, selectQuery, visitQueries : true, isInsideNot : false, reduceBinary: false);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries : true, isInsideNot : false, reduceBinary: false);
 				}
 
 				if (saveSetOperatorCount != (selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0))
@@ -1138,6 +1143,7 @@ namespace LinqToDB.SqlQuery
 				nullability,
 				_expressionOptimizerVisitor,
 				_dataOptions,
+				_mappingSchema,
 				_evaluationContext,
 				column.Parent,
 				_applySelect == parentQuery ? parentQuery.Where  : null,
@@ -2420,6 +2426,7 @@ namespace LinqToDB.SqlQuery
 			EvaluationContext             _evaluationContext = default!;
 			SqlExpressionOptimizerVisitor _optimizerVisitor  = default!;
 			DataOptions                   _dataOptions       = default!;
+			MappingSchema                 _mappingSchema     = default!;
 			bool                          _isInsideNot;
 			int                           _foundCount;
 			bool                          _notAllowedScope;
@@ -2444,11 +2451,13 @@ namespace LinqToDB.SqlQuery
 				_evaluationContext = default!;
 				_optimizerVisitor  = default!;
 				_dataOptions       = default!;
-				_foundCount        = 0;
+				_mappingSchema     = default!;
+
+				_foundCount = 0;
 				_isInsideNot       = default;
 			}
 
-			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, NullabilityContext nullability, SqlExpressionOptimizerVisitor optimizerVisitor, DataOptions dataOptions,
+			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, NullabilityContext nullability, SqlExpressionOptimizerVisitor optimizerVisitor, DataOptions dataOptions, MappingSchema mappingSchema,
 				EvaluationContext evaluationContext, params IQueryElement?[] ignore)
 			{
 				_ignore            = ignore;
@@ -2457,6 +2466,7 @@ namespace LinqToDB.SqlQuery
 				_evaluationContext = evaluationContext;
 				_optimizerVisitor  = optimizerVisitor;
 				_dataOptions       = dataOptions;
+				_mappingSchema     = mappingSchema;
 				_doNotAllow        = default;
 				_foundCount        = 0;
 				_isInsideNot       = default;
@@ -2501,7 +2511,7 @@ namespace LinqToDB.SqlQuery
 				IQueryElement reduced = predicate.Reduce(_nullability, _evaluationContext, _isInsideNot);
 				if (!ReferenceEquals(reduced, predicate))
 				{
-					reduced = _optimizerVisitor.Optimize(_evaluationContext, _nullability, null, _dataOptions, reduced, false, _isInsideNot, true);
+					reduced = _optimizerVisitor.Optimize(_evaluationContext, _nullability, null, _dataOptions, _mappingSchema, reduced, false, _isInsideNot, true);
 
 					Visit(reduced);
 				}

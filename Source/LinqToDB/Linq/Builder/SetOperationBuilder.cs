@@ -630,7 +630,7 @@ namespace LinqToDB.Linq.Builder
 					if (placeholder2 == null)
 					{
 						placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2,
-							new SqlValue(QueryHelper.GetDbDataType(placeholder.Sql), null), placeholderPath);
+							new SqlValue(QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema), null), placeholderPath);
 					}
 					else
 					{
@@ -659,7 +659,7 @@ namespace LinqToDB.Linq.Builder
 
 						placeholder2 = placeholder2.WithAlias(alias);
 
-						var column1 = ExpressionBuilder.CreatePlaceholder(_sequence1, new SqlValue(QueryHelper.GetDbDataType(placeholder2.Sql), null), placeholderPath);
+						var column1 = ExpressionBuilder.CreatePlaceholder(_sequence1, new SqlValue(QueryHelper.GetDbDataType(placeholder2.Sql, MappingSchema), null), placeholderPath);
 						column1 = Builder.MakeColumn(SelectQuery, column1, true);
 
 						var column2 = Builder.MakeColumn(SelectQuery, placeholder2, true);

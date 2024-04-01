@@ -13,6 +13,9 @@ namespace LinqToDB.DataProvider.SQLite
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
+	using System.Globalization;
 
 	sealed class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
 	sealed class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
@@ -192,6 +195,11 @@ namespace LinqToDB.DataProvider.SQLite
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new SQLiteMemberTranslator();
+		}
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return new SQLiteSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
@@ -256,6 +264,12 @@ namespace LinqToDB.DataProvider.SQLite
 						break;
 				}
 			}
+
+			if (value is DateTime dt)
+			{
+				value = dt.ToString("yyyy-MM-ddTHH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
+			}
+
 
 #if NET6_0_OR_GREATER
 			if (!Adapter.SupportsDateOnly && value is DateOnly d)

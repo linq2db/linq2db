@@ -68,75 +68,57 @@ namespace LinqToDB.DataProvider.DB2
 			return base.ConvertSqlFunction(func);
 		}
 
-		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			var toType   = func.Parameters[0];
-			var argument = func.Parameters[2];
+			var toType   = cast.ToType;
+			var argument = cast.Expression;
 
 			var isNull = argument is SqlValue sqlValue && sqlValue.Value == null;
 
 			if (isNull)
 			{
-				return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, argument, toType);
+				return cast.MakeMandatory();
 			}
 
-			if (func.SystemType.ToUnderlying() == typeof(bool))
+			if (cast.SystemType.ToUnderlying() == typeof(bool) && ReferenceEquals(cast, IsForPredicate))
 			{
-				var ex = AlternativeConvertToBoolean(func, 2);
-				if (ex != null)
-					return ex;
+				return ConvertToBooleanSearchCondition(cast);
 			}
 
-			if (toType is SqlDataType sqlDataType)
+			if (toType.SystemType == typeof(string) && argument.SystemType != typeof(string))
+					return new SqlFunction(cast.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", argument));
+
+			if (toType.Length > 0)
+				return new SqlFunction(cast.SystemType, toType.DataType.ToString(), argument, new SqlValue(toType.Length));
+
+			if (toType.Precision > 0)
+				return new SqlFunction(cast.SystemType, toType.DataType.ToString(), argument, new SqlValue(toType.Precision), new SqlValue(toType.Scale ?? 0));
+
+			if (QueryHelper.UnwrapNullablity(argument) is SqlParameter param)
 			{
-				if (sqlDataType.Type.SystemType == typeof(string) && argument.SystemType != typeof(string))
-					return new SqlFunction(func.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", argument));
+				if (toType.Equals(param.Type))
+					return param;
 
-				if (sqlDataType.Type.Length > 0)
-					return new SqlFunction(func.SystemType, sqlDataType.Type.DataType.ToString(), argument, new SqlValue(sqlDataType.Type.Length));
+				var paramSystemType = param.Type.SystemType.ToNullableUnderlying();
 
-				if (sqlDataType.Type.Precision > 0)
-					return new SqlFunction(func.SystemType, sqlDataType.Type.DataType.ToString(), argument, new SqlValue(sqlDataType.Type.Precision), new SqlValue(sqlDataType.Type.Scale ?? 0));
-
-				if (QueryHelper.UnwrapNullablity(argument) is SqlParameter param)
+				switch (toType.DataType)
 				{
-					if (sqlDataType.Type.Equals(param.Type))
-						return param;
+					case DataType.Int32:
+						if (paramSystemType == typeof(short))
+							return param;
+						break;
+					case DataType.Int64:
+						if (paramSystemType == typeof(short))
+							return param;
+						if (paramSystemType == typeof(int))
+							return param;
+						break;
 
-					var paramSystemType = param.Type.SystemType.ToNullableUnderlying();
-
-					switch (sqlDataType.Type.DataType)
-					{
-						case DataType.Int32:
-							if (paramSystemType == typeof(short))
-								return param;
-							break;
-						case DataType.Int64:
-							if (paramSystemType == typeof(short))
-								return param;
-							if (paramSystemType == typeof(int))
-								return param;
-							break;
-
-						//TODO: probably others
-					}
+					//TODO: probably others
 				}
-
-				return new SqlFunction(func.SystemType, sqlDataType.Type.DataType.ToString(), argument);
 			}
 
-			if (toType is SqlFunction f)
-			{
-				return
-					f.Name == "Char" ?
-						new SqlFunction(func.SystemType, f.Name, argument) :
-						f.Parameters.Length == 1 ?
-							new SqlFunction(func.SystemType, f.Name, argument, f.Parameters[0]) :
-							new SqlFunction(func.SystemType, f.Name, argument, f.Parameters[0], f.Parameters[1]);
-			}
-
-			var e = (SqlExpression)toType;
-			return new SqlFunction(func.SystemType, e.Expr, argument);
+			return new SqlFunction(cast.SystemType, toType.DataType.ToString(), argument);
 		}
 	}
 }

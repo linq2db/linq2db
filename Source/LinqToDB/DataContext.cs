@@ -7,16 +7,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB
 {
 	using Data;
 	using DataProvider;
 	using Linq;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 	using Mapping;
 	using SqlProvider;
+	using Tools;
+	using Linq.Translation;
 
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
@@ -93,6 +93,15 @@ namespace LinqToDB
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
+
+		public T GetService<T>()
+		{
+			if (typeof(T) == typeof(IMemberTranslator))
+				return (T)DataProvider.GetMethodCallTranslator();
+
+			throw new InvalidOperationException($"DataContext.GetService<{typeof(T).Name}> is not supported.");
+		}
+
 		/// <summary>
 		/// Gets initial value for database connection string.
 		/// </summary>

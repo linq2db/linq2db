@@ -87,9 +87,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return base.GetIdentityExpression(table);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				// FB4+ types:
 				case DataType.Int128        : StringBuilder.Append("INT128");                             break;
@@ -97,12 +97,12 @@ namespace LinqToDB.DataProvider.Firebird
 				case DataType.DateTimeOffset: StringBuilder.Append("TIMESTAMP WITH TIME ZONE");           break;
 				case DataType.DecFloat      :
 					StringBuilder.Append("DECFLOAT");
-					if (type.Type.Precision != null && type.Type.Precision <= 16)
+					if (type.Precision != null && type.Precision <= 16)
 						StringBuilder.Append("(16)");
 					break;
 
 				case DataType.Decimal       :
-					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable, canBeNull);
+					base.BuildDataTypeFromDataType(type.Precision > 18 ? type.WithPrecision(10) : type, forCreateTable, canBeNull);
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");                           break;
@@ -118,10 +118,10 @@ namespace LinqToDB.DataProvider.Firebird
 					// 10921 is implementation limit for UNICODE_FSS encoding
 					// use 255 as default length, because FB have 64k row-size limits
 					// also it is not good to depend on implementation limits
-					if (type.Type.Length == null || type.Type.Length < 1)
+					if (type.Length == null || type.Length < 1)
 						StringBuilder.Append("(255)");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 
 					// type for UUID, e.g. see https://firebirdsql.org/refdocs/langrefupd25-intfunc-gen_uuid.html
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.Firebird
 				case DataType.Guid          : StringBuilder.Append("CHAR(16) CHARACTER SET OCTETS");      break;
 				case DataType.NChar         :
 				case DataType.Char          :
-					if (type.Type.SystemType == typeof(Guid) || type.Type.SystemType == typeof(Guid?))
+					if (type.SystemType == typeof(Guid) || type.SystemType == typeof(Guid?))
 						StringBuilder.Append("CHAR(38)");
 					else
 						base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
@@ -255,7 +255,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;
-				BuildTypedExpression(new SqlDataType(dbDataType), parameter);
+				BuildTypedExpression(dbDataType, parameter);
 				BuildStep = saveStep;
 
 				return;

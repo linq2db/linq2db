@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlProvider
 {
 	using Mapping;
@@ -23,7 +25,7 @@ namespace LinqToDB.SqlProvider
 		/// <param name="withoutSuffix">If object name have suffix, which could be detached from main name, this parameter disables suffix generation (enables generation of only main name part).</param>
 		/// <returns><paramref name="sb"/> parameter value.</returns>
 		StringBuilder BuildObjectName               (StringBuilder sb, SqlObjectName name, ConvertType objectType = ConvertType.NameToQueryTable, bool escape = true, TableOptions tableOptions = TableOptions.NotSet, bool withoutSuffix = false);
-		StringBuilder   BuildDataType                 (StringBuilder    sb,    SqlDataType dataType);
+		StringBuilder   BuildDataType                 (StringBuilder    sb,    DbDataType dataType);
 		string          ConvertInline                 (string           value, ConvertType convertType);
 		StringBuilder   Convert                       (StringBuilder    sb,    string      value, ConvertType convertType);
 		ISqlExpression? GetIdentityExpression         (SqlTable         table);

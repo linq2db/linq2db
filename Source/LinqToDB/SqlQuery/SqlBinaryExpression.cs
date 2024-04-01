@@ -1,20 +1,22 @@
 ﻿using System;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
 	public class SqlBinaryExpression : SqlExpressionBase
 	{
-		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence)
+		public SqlBinaryExpression(DbDataType dbDataType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = SqlQuery.Precedence.Unknown)
 		{
 			_expr1     = expr1     ?? throw new ArgumentNullException(nameof(expr1));
 			Operation  = operation ?? throw new ArgumentNullException(nameof(operation));
 			_expr2     = expr2     ?? throw new ArgumentNullException(nameof(expr2));
-			SystemType = systemType;
+			Type       = dbDataType;
 			Precedence = precedence;
 		}
 
-		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2)
-			: this(systemType, expr1, operation, expr2, SqlQuery.Precedence.Unknown)
+		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = SqlQuery.Precedence.Unknown)
+			: this(new DbDataType(systemType), expr1, operation, expr2, precedence)
 		{
 		}
 
@@ -46,7 +48,9 @@ namespace LinqToDB.SqlQuery
 
 		public override QueryElementType ElementType => QueryElementType.SqlBinaryExpression;
 
-		public override Type SystemType { get; }
+		public DbDataType Type { get; }
+
+		public override Type SystemType => Type.SystemType;
 		public override int  Precedence { get; }
 
 		int?                   _hashCode;

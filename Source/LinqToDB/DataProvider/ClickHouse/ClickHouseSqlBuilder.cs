@@ -105,9 +105,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		#region Types
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			BuildTypeName(StringBuilder, type.Type, canBeNull);
+			BuildTypeName(StringBuilder, type, canBeNull);
 		}
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)

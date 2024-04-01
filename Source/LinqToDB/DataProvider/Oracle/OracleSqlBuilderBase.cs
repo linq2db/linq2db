@@ -90,23 +90,23 @@ namespace LinqToDB.DataProvider.Oracle
 			base.BuildSetOperation(operation, sb);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Date           :
 				case DataType.DateTime       : StringBuilder.Append("date");                      break;
 				case DataType.DateTime2      :
-					if (type.Type.Precision == 6 || type.Type.Precision == null)
+					if (type.Precision == 6 || type.Precision == null)
 						StringBuilder.Append("timestamp");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Type.Precision})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Precision})");
 					break;
 				case DataType.DateTimeOffset :
-					if (type.Type.Precision == 6 || type.Type.Precision == null)
+					if (type.Precision == 6 || type.Precision == null)
 						StringBuilder.Append("timestamp with time zone");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Type.Precision}) with time zone");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Precision}) with time zone");
 					break;
 				case DataType.UInt32         :
 				case DataType.Int64          : StringBuilder.Append("Number(19)");                break;
@@ -115,16 +115,16 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Money          : StringBuilder.Append("Number(19, 4)");             break;
 				case DataType.SmallMoney     : StringBuilder.Append("Number(10, 4)");             break;
 				case DataType.VarChar        :
-					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 						StringBuilder.Append("VarChar(4000)");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar({type.Length})");
 					break;
 				case DataType.NVarChar       :
-					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 						StringBuilder.Append("VarChar2(4000)");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar2({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar2({type.Length})");
 					break;
 				case DataType.Boolean        : StringBuilder.Append("Char(1)");                   break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;
@@ -132,10 +132,10 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Guid           : StringBuilder.Append("Raw(16)");                   break;
 				case DataType.Binary         :
 				case DataType.VarBinary      :
-					if (type.Type.Length == null || type.Type.Length == 0)
+					if (type.Length == null || type.Length == 0)
 						StringBuilder.Append("BLOB");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"Raw({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"Raw({type.Length})");
 					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);         break;
 			}

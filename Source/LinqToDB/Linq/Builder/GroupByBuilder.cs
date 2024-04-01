@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -153,7 +154,10 @@ namespace LinqToDB.Linq.Builder
 			var keyRef              = new ContextRefExpression(keySelector.Parameters[0].Type, key);
 			var currentPlaceholders = new List<SqlPlaceholderExpression>();
 
-			AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, key.Body, groupingKind, buildInfo.GetFlags());
+			if (!AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, key.Body, groupingKind, buildInfo.GetFlags(), out var errorExpression))
+			{
+				return BuildSequenceResult.Error(errorExpression);
+			}
 
 			groupingSubquery.SelectQuery.GroupBy.GroupingType = groupingKind;
 
@@ -199,10 +203,13 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="path">Actual expression which should be translated to grouping keys.</param>
 		/// <param name="groupingKind"></param>
 		/// <param name="flags"></param>
-		static void AppendGrouping(IBuildContext sequence, List<SqlPlaceholderExpression> currentPlaceholders,
+		/// <param name="errorExpression"></param>
+		static bool AppendGrouping(IBuildContext sequence, List<SqlPlaceholderExpression> currentPlaceholders,
 			ExpressionBuilder builder, IBuildContext onSequence, Expression path, GroupingType groupingKind,
-			ProjectFlags flags)
+			ProjectFlags flags, [NotNullWhen(false)] out Expression? errorExpression)
 		{
+			errorExpression = null;
+
 			if (groupingKind == GroupingType.GroupBySets)
 			{
 				var hasSets = false;
@@ -212,6 +219,12 @@ namespace LinqToDB.Linq.Builder
 					var setExpr = builder.BuildSqlExpression(onSequence, groupingSet,
 						ProjectFlags.SQL | ProjectFlags.Keys,
 						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+
+					if (!SequenceHelper.IsSqlReady(setExpr))
+					{
+						errorExpression = SqlErrorExpression.EnsureError(setExpr, path.Type);
+						return false;
+					}
 
 					setExpr = builder.UpdateNesting(sequence, setExpr);
 
@@ -225,15 +238,28 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var groupSqlExpr = builder.BuildSqlExpression(onSequence, path, flags.SqlFlag() | ProjectFlags.Keys, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+				var groupSqlExpr = builder.ConvertToSqlExpr(onSequence, path, flags.SqlFlag() | ProjectFlags.Keys);
+				if (groupSqlExpr is not SqlPlaceholderExpression)
+				{
+					groupSqlExpr = builder.BuildSqlExpression(onSequence, path, flags.SqlFlag() | ProjectFlags.Keys, buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+				}
+
+				if (!SequenceHelper.IsSqlReady(groupSqlExpr))
+				{
+					var sqLError = groupSqlExpr.Find(1, (_, e) => e is SqlErrorExpression);
+					errorExpression = sqLError ?? SqlErrorExpression.EnsureError(path, path.Type);
+					return false;
+				}
 
 				AppendGroupBy(builder, currentPlaceholders, sequence.SelectQuery, groupSqlExpr);
 			}
+
+			return true;
 		}
 
-		static void AppendGroupBy(ExpressionBuilder builder, List<SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression result)
+		static void AppendGroupBy(ExpressionBuilder builder, List<SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression groupByExpression)
 		{
-			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(result);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(groupByExpression);
 
 			foreach (var p in placeholders)
 			{
@@ -396,7 +422,7 @@ namespace LinqToDB.Linq.Builder
 				Element             = element;
 				_groupingType       = groupingType;
 
-				_isGroupingGuardDisabled = isGroupingGuardDisabled;
+				IsGroupingGuardDisabled = isGroupingGuardDisabled;
 
 				key.GroupByContext = this;
 				key.Parent         = this;
@@ -407,7 +433,7 @@ namespace LinqToDB.Linq.Builder
 			readonly ContextRefExpression           _keyRef;
 			public   List<SqlPlaceholderExpression> CurrentPlaceholders { get; }
 			readonly Type                           _groupingType;
-			readonly bool                           _isGroupingGuardDisabled;
+			public   bool                           IsGroupingGuardDisabled { get; }
 
 			public ElementContext Element { get; }
 
@@ -445,7 +471,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (isSameContext && flags.IsExpression()/* && GetInterfaceGroupingType().IsSameOrParentOf(path.Type)*/)
 				{
-					if (!_isGroupingGuardDisabled)
+					if (!IsGroupingGuardDisabled)
 					{
 						var ex = new LinqToDBException(
 							"You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.\n" +
@@ -555,7 +581,7 @@ namespace LinqToDB.Linq.Builder
 				var clone = new GroupByContext(context.CloneContext(SubQuery), context.CloneElement(SelectQuery), context.CloneExpression(_sequenceExpr), _groupingType,
 					context.CloneContext(_key), context.CloneExpression(_keyRef),
 					CurrentPlaceholders.Select(p => context.CloneExpression(p)).ToList(), context.CloneContext(Element),
-					_isGroupingGuardDisabled, false);
+					IsGroupingGuardDisabled, false);
 
 				return clone;
 			}

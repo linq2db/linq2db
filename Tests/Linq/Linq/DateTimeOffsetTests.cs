@@ -97,7 +97,7 @@ namespace Tests.Linq
 		#region Group By Tests
 		// Group by tests are only done for Sql Server due to complexity of db variances in handling TZ
 		[Test]
-		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
+		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))

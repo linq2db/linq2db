@@ -16,6 +16,8 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using LinqToDB.Common.Internal;
 	using Tools;
+	using Linq.Translation;
+
 
 	internal sealed partial class ExpressionBuilder : IExpressionEvaluator
 	{
@@ -103,6 +105,7 @@ namespace LinqToDB.Linq.Builder
 		#region Init
 
 		readonly Query                             _query;
+		readonly IMemberTranslator             _memberTranslator;
 		readonly IReadOnlyList<ISequenceBuilder>   _builders = _sequenceBuilders;
 		bool                                       _reorder;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
@@ -133,6 +136,8 @@ namespace LinqToDB.Linq.Builder
 			DataContext        = dataContext;
 			DataOptions        = dataContext.Options;
 			OriginalExpression = expression;
+
+			_memberTranslator = dataContext.GetService<IMemberTranslator>();
 
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
@@ -349,6 +354,10 @@ namespace LinqToDB.Linq.Builder
 			if (buildResult.BuildContext == null)
 			{
 				var errorExpr = buildResult.ErrorExpression ?? buildInfo.Expression;
+
+				if (errorExpr is SqlErrorExpression error)
+					throw error.CreateException();
+
 				throw SqlErrorExpression.CreateException(errorExpr, buildResult.AdditionalDetails);
 			}
 			return buildResult.BuildContext;

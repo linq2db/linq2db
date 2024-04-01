@@ -107,34 +107,25 @@ namespace LinqToDB.DataProvider.ClickHouse
 					// % operation not implemented for decimal arguments and we need to cast them to supported type
 					// also see https://github.com/ClickHouse/ClickHouse/issues/39287
 
-					var leftType  = left .GetExpressionType();
-					var rightType = right.GetExpressionType();
+					var leftType  = QueryHelper.GetDbDataType(left, MappingSchema);
+					var rightType = QueryHelper.GetDbDataType(right, MappingSchema);
 					var rewrite   = false;
 
 					if (leftType.DataType is DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256)
 					{
-						left = ConvertSqlFunction(PseudoFunctions.MakeConvert(
-							new SqlDataType(new DbDataType(typeof(double), DataType.Double)),
-							new SqlDataType(leftType),
-							left));
+						left    = PseudoFunctions.MakeCast(left, new DbDataType(typeof(double), DataType.Double), new SqlDataType(leftType));
 						rewrite = true;
 					}
 
 					if (rightType.DataType is DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256)
 					{
-						right = ConvertSqlFunction(PseudoFunctions.MakeConvert(
-							new SqlDataType(new DbDataType(typeof(double), DataType.Double)),
-							new SqlDataType(rightType),
-							right));
+						right   = PseudoFunctions.MakeCast(right, new DbDataType(typeof(double), DataType.Double), new SqlDataType(rightType));
 						rewrite = true;
 					}
 
 					return !rewrite
 						? element
-						: ConvertSqlFunction(PseudoFunctions.MakeConvert(
-							new SqlDataType(element.GetExpressionType()),
-							new SqlDataType(new DbDataType(typeof(double), DataType.Double)),
-							new SqlBinaryExpression(typeof(double), left, "%", right)));
+						: PseudoFunctions.MakeCast(new SqlBinaryExpression(typeof(double), left, "%", right), QueryHelper.GetDbDataType(element, MappingSchema), new SqlDataType(new DbDataType(typeof(double), DataType.Double)));
 				}
 
 				case SqlBinaryExpression(var type, var left, "|", var right)    : return new SqlFunction(type, "bitOr",  false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, left, right);
@@ -223,6 +214,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{ DataType.Decimal128, "toDecimal128" },
 			{ DataType.Decimal256, "toDecimal256" },
 
+			{ DataType.Char ,      "toString"     },
+			{ DataType.NChar ,     "toString"     },
 			{ DataType.VarChar   , "toString"     },
 			{ DataType.NVarChar  , "toString"     },
 			{ DataType.VarBinary , "toString"     },
@@ -267,7 +260,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case PseudoFunctions.TO_LOWER              : return func.WithName("lowerUTF8");
 				case PseudoFunctions.TO_UPPER              : return func.WithName("upperUTF8");
 
-				case PseudoFunctions.CONVERT               : // toType
 				case PseudoFunctions.TRY_CONVERT           : // toTypeOrNull
 				case PseudoFunctions.TRY_CONVERT_OR_DEFAULT: // coalesce(toTypeOrNull, defaultValue)
 				{
@@ -293,81 +285,90 @@ namespace LinqToDB.DataProvider.ClickHouse
 						toType      = sqlDataType.Type;
 					}
 
-					var value        = func.Parameters[2];
-					var defaultValue = func.Name == PseudoFunctions.TRY_CONVERT_OR_DEFAULT ? func.Parameters[3] : null;
-					var suffix       = func.Name != PseudoFunctions.CONVERT ? "OrNull" : null;
-
-					if (ClickHouseConvertFunctions.TryGetValue(toType.DataType, out var name))
-					{
-						switch (toType.DataType)
-						{
-							// special cases: String(N)
-							case DataType.VarChar :
-							case DataType.NVarChar:
-							{
-								// skip Try[OrDefault] as toString always succeed
-
-								// if converting from FixedString - just trim trailing \0s
-								var valueType = value.GetExpressionType();
-								if (valueType.DataType is DataType.Char or DataType.NChar or DataType.Binary)
-								{
-									return new SqlFunction(func.SystemType, "trim", false, true,
-										new SqlExpression(func.SystemType, "TRAILING '\x00' FROM {0}", Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, value));
-								}
-
-								return new SqlFunction(func.SystemType, name, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, value);
-							}
-
-							case DataType.Decimal32:
-							case DataType.Decimal64:
-							case DataType.Decimal128:
-							case DataType.Decimal256:
-							{
-								// toDecimalX(S)
-								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true,
-										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
-										value,
-										new SqlValue((byte)(toType.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
-
-								if (defaultValue != null)
-									newFunc = ConvertSqlFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
-
-								return newFunc;
-							}
-
-							case DataType.DateTime64:
-							{
-								// toDateTime64(S)
-
-								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true,
-										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
-										value,
-										new SqlValue((byte)(toType.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)));
-
-								if (defaultValue != null)
-									newFunc = ConvertSqlFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
-
-								return newFunc;
-							}
-
-							// default call template
-							default:
-							{
-								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, value);
-
-								if (defaultValue != null)
-									newFunc = ConvertSqlFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
-
-								return newFunc;
-							}
-						}
-					}
-
-					throw new LinqToDBException($"Missing conversion function definition to type '{toTypeExpr.SystemType}'");
+					return MakeConversion(func.Parameters[2], toType, true, func.Name == PseudoFunctions.TRY_CONVERT_OR_DEFAULT ? func.Parameters[3] : null);
 				}
 			}
 
 			return base.ConvertSqlFunction(func);
+		}
+
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
+		{
+			return MakeConversion(cast.Expression, cast.Type, false, null);
+		}
+
+		protected ISqlExpression MakeConversion(ISqlExpression expression, DbDataType toType, bool isTry, ISqlExpression? defaultValue)
+		{
+			var value        = expression;
+			var suffix       = isTry ? "OrNull" : null;
+
+			if (ClickHouseConvertFunctions.TryGetValue(toType.DataType, out var name))
+			{
+				switch (toType.DataType)
+				{
+					// special cases: String(N)
+					case DataType.VarChar:
+					case DataType.NVarChar:
+					{
+						// skip Try[OrDefault] as toString always succeed
+
+						// if converting from FixedString - just trim trailing \0s
+						var valueType = QueryHelper.GetDbDataType(value, MappingSchema);
+						if (valueType.DataType is DataType.Char or DataType.NChar or DataType.Binary)
+						{
+							return new SqlFunction(toType.SystemType, "trim", false, true,
+								new SqlExpression(toType.SystemType, "TRAILING '\x00' FROM {0}", Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, value));
+						}
+
+						return new SqlFunction(toType.SystemType, name, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, value);
+					}
+
+					case DataType.Decimal32:
+					case DataType.Decimal64:
+					case DataType.Decimal128:
+					case DataType.Decimal256:
+					{
+						// toDecimalX(S)
+						ISqlExpression newFunc = new SqlFunction(toType.SystemType, name + suffix, false, true,
+										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
+										value,
+										new SqlValue((byte)(toType.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
+
+						if (defaultValue != null)
+							newFunc = ConvertSqlFunction(PseudoFunctions.MakeCoalesce(toType.SystemType, newFunc, defaultValue));
+
+						return newFunc;
+					}
+
+					case DataType.DateTime64:
+					{
+						// toDateTime64(S)
+
+						ISqlExpression newFunc = new SqlFunction(toType.SystemType, name + suffix, false, true,
+										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
+										value,
+										new SqlValue((byte)(toType.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)));
+
+						if (defaultValue != null)
+							newFunc = ConvertSqlFunction(PseudoFunctions.MakeCoalesce(toType.SystemType, newFunc, defaultValue));
+
+						return newFunc;
+					}
+
+					// default call template
+					default:
+					{
+						ISqlExpression newFunc = new SqlFunction(toType.SystemType, name + suffix, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, value);
+
+						if (defaultValue != null)
+							newFunc = ConvertSqlFunction(PseudoFunctions.MakeCoalesce(toType.SystemType, newFunc, defaultValue));
+
+						return newFunc;
+					}
+				}
+			}
+
+			throw new LinqToDBException($"Missing conversion function definition to type '{toType}'");
 		}
 	}
 }

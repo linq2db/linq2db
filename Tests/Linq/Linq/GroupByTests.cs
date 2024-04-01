@@ -921,6 +921,7 @@ namespace Tests.Linq
 		{
 			var data = AggregationData.Data;
 
+			using var _     = new GuardGrouping(false);
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -948,6 +949,7 @@ namespace Tests.Linq
 		{
 			var data = AggregationData.Data;
 
+			using var _     = new GuardGrouping(false);
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -1223,7 +1225,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void GroupByAssociation1022([DataSources(
 			ProviderName.SqlCe)]
 			string context)
@@ -1242,7 +1243,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void GroupByAssociation1023([DataSources(
 			ProviderName.SqlCe)]
 			string context)
@@ -1267,7 +1267,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void GroupByAssociation1024([DataSources(
 			ProviderName.SqlCe)]
 			string context)
@@ -1470,6 +1469,7 @@ namespace Tests.Linq
 		[Test]
 		public void Scalar101([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from ch in Child
@@ -1518,7 +1518,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void Scalar4([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1535,7 +1534,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
 		public void Scalar41([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))

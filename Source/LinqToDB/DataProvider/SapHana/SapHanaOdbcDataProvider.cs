@@ -11,6 +11,9 @@ namespace LinqToDB.DataProvider.SapHana
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
+
 
 	public class SapHanaOdbcDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
@@ -55,6 +58,11 @@ namespace LinqToDB.DataProvider.SapHana
 			TableOptions.IsGlobalTemporaryStructure |
 			TableOptions.IsLocalTemporaryStructure  |
 			TableOptions.IsLocalTemporaryData;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new SapHanaMemberTranslator();
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{

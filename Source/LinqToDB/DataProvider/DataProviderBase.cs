@@ -22,6 +22,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Linq.Translation;
 
 	public abstract class DataProviderBase : IDataProvider
 	{
@@ -499,5 +500,16 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		public virtual IQueryParametersNormalizer GetQueryParameterNormalizer() => new UniqueParametersNormalizer();
+
+		protected abstract IMemberTranslator CreateMemberTranslator();
+
+		IMemberTranslator? _methodCallTranslator;
+
+		public IMemberTranslator GetMethodCallTranslator()
+		{
+			if (_methodCallTranslator == null)
+				_methodCallTranslator = CreateMemberTranslator();
+			return _methodCallTranslator;
+		}
 	}
 }

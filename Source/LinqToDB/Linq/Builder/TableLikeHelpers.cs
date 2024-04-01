@@ -126,7 +126,7 @@ namespace LinqToDB.Linq.Builder
 					var field = RegisterFieldMapping(fields, updatedPlaceholder.Index!.Value, () =>
 					{
 						var alias = GenerateColumnAlias(updatedPlaceholder.Path) ?? GenerateColumnAlias(updatedPlaceholder.Sql);
-						var dataType = QueryHelper.GetDbDataType(updatedPlaceholder.Sql);
+						var dataType = QueryHelper.GetDbDataType(updatedPlaceholder.Sql, subQueryContext.MappingSchema);
 
 						SqlField newField;
 						if (recursiveMap != null && recursiveMap.TryGetValue(placeholder.TrackingPath, out var recursiveField))

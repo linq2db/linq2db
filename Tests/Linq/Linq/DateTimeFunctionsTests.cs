@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -188,7 +189,7 @@ namespace Tests.Linq
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.ID == 1 select new { DateTime.Now };
+				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(DateTime.Now) };
 				Assert.AreEqual(DateTime.Now.Year, q.ToList().First().Now.Year);
 			}
 		}
@@ -546,7 +547,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Millisecond([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = "The LINQ expression 't.DateTimeValue.Millisecond' could not be converted to SQL.")]
+		public void Millisecond([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

@@ -2,7 +2,6 @@
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -47,17 +46,10 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.ConvertSqlBinaryExpression(element);
 		}
 
-		protected override ISqlExpression ConvertConversion(SqlFunction func)
-		{
-			var ftype = func.SystemType.ToUnderlying();
 
-			if (ftype == typeof(bool))
-			{
-				var ex = AlternativeConvertToBoolean(func, 2);
-				if (ex != null)
-					return ex;
-			}
-			return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func, func.Parameters[2]), func.Parameters[0]);
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
+		{
+			return base.ConvertConversion(cast);
 		}
 	}
 }

@@ -126,6 +126,7 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlInlinedToSqlExpression => VisitSqlInlinedToSqlExpression ((SqlInlinedToSqlExpression )element),
 				QueryElementType.SqlQueryExtension         => VisitSqlQueryExtension         ((SqlQueryExtension         )element),
 				QueryElementType.SqlCondition              => VisitSqlConditionExpression    ((SqlConditionExpression    )element),
+				QueryElementType.SqlCast                   => VisitSqlCastExpression         ((SqlCastExpression         )element),
 				QueryElementType.SqlCoalesce               => VisitSqlCoalesceExpression     ((SqlCoalesceExpression     )element),
 				QueryElementType.SqlCase                   => VisitSqlCaseExpression         ((SqlCaseExpression         )element),
 				QueryElementType.CompareTo                 => VisitSqlCompareToExpression    ((SqlCompareToExpression    )element),
@@ -2993,6 +2994,40 @@ namespace LinqToDB.SqlQuery
 					    !ReferenceEquals(element.FalseValue, falseValue))
 					{
 						return NotifyReplaced(new SqlConditionExpression(predicate, trueValue, falseValue), element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected virtual IQueryElement VisitSqlCastExpression(SqlCastExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Expression);
+					Visit(Visit(element.FromType));
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify(element.ToType,  (ISqlExpression)Visit(element.Expression), (SqlDataType?)Visit(element.FromType));
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var expression = (ISqlExpression)Visit(element.Expression);
+					var fromType   = (SqlDataType?)Visit(element.FromType);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, expression) || !ReferenceEquals(element.FromType, fromType))
+					{
+						return NotifyReplaced(new SqlCastExpression(expression, element.ToType, fromType), element);
 					}
 
 					break;

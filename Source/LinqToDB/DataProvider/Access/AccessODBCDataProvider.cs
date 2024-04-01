@@ -4,12 +4,16 @@ using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+
 using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
 
 namespace LinqToDB.DataProvider.Access
 {
 	using Common;
 	using Data;
+	using Translation;
+	using LinqToDB.Linq.Translation;
+
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -53,6 +57,11 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new AccessMemberTranslator();
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{

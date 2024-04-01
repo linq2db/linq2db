@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSqlExpressionConvertVisitor(allowModify);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			statement = CorrectMultiTableQueries(statement);
 			statement = CorrectInnerJoins(statement);
@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.Access
 			return statement.QueryType switch
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
-				QueryType.Update => CorrectAccessUpdate ((SqlUpdateStatement)statement, dataOptions),
+				QueryType.Update => CorrectAccessUpdate ((SqlUpdateStatement)statement, dataOptions, mappingSchema),
 				_                => statement,
 			};
 		}
@@ -69,12 +69,12 @@ namespace LinqToDB.DataProvider.Access
 			return statement;
 		}
 
-		private SqlUpdateStatement CorrectAccessUpdate(SqlUpdateStatement statement, DataOptions dataOptions)
+		private SqlUpdateStatement CorrectAccessUpdate(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
 				throw new LinqToDBException("Access does not support update query limitation");
 
-			statement = CorrectUpdateTable(statement, leaveUpdateTableInQuery: true, dataOptions);
+			statement = CorrectUpdateTable(statement, leaveUpdateTableInQuery: true, dataOptions, mappingSchema);
 
 			if (!statement.SelectQuery.OrderBy.IsEmpty)
 				statement.SelectQuery.OrderBy.Items.Clear();

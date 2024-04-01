@@ -568,6 +568,11 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMember(MemberExpression node)
 			{
+				var translatedMemberExpression = Builder.TranslateMember(_context, _flags, _columnDescriptor, _alias, node);
+
+				if (translatedMemberExpression != null)
+					return Visit(translatedMemberExpression);
+
 				var attr = node.Member.GetExpressionAttribute(MappingSchema);
 
 				if (attr != null)
@@ -713,6 +718,11 @@ namespace LinqToDB.Linq.Builder
 				if (!ReferenceEquals(method, node))
 					return Visit(method);
 
+				var translatedMethodCall = Builder.TranslateMember(_context, localFlags, _columnDescriptor, _alias, node);
+
+				if (translatedMethodCall != null)
+					return Visit(translatedMethodCall);
+
 				var attr = node.Method.GetExpressionAttribute(MappingSchema);
 
 				if (attr != null)
@@ -785,7 +795,7 @@ namespace LinqToDB.Linq.Builder
 
 			bool HandleParametrized(Expression expr, [NotNullWhen(true)] out Expression? transformed)
 			{
-				if (expr is ClosurePlaceholderExpression)
+				if (expr is PlaceholderExpression { PlaceholderType: PlaceholderType.Closure })
 				{
 					transformed = expr;
 					return true;
@@ -839,14 +849,14 @@ namespace LinqToDB.Linq.Builder
 						valueExpr = Expression.Convert(valueExpr.UnwrapConvert(), expr.Type);
 					}
 
-					transformed = new ClosurePlaceholderExpression(valueExpr);
+					transformed = new PlaceholderExpression(valueExpr, PlaceholderType.Closure);
 					return true;
 				}
 
 				return false;
 			}
 
-			public override Expression VisitClosurePlaceholderExpression(ClosurePlaceholderExpression node)
+			public override Expression VisitPlaceholderExpression(PlaceholderExpression node)
 			{
 				return node;
 			}

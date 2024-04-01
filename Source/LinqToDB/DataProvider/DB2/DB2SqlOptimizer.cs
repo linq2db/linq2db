@@ -4,6 +4,8 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
+
 
 	sealed class DB2SqlOptimizer : BasicSqlOptimizer
 	{
@@ -11,7 +13,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			// DB2 LUW 9/10 supports only FETCH, v11 adds OFFSET, but for that we need to introduce versions into DB2 provider first
 			statement = SeparateDistinctFromPagination(statement, q => q.Select.SkipValue != null);
@@ -22,7 +24,7 @@ namespace LinqToDB.DataProvider.DB2
 			return statement.QueryType switch
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
-				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions),
+				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema),
 				_                => statement,
 			};
 		}
@@ -51,10 +53,10 @@ namespace LinqToDB.DataProvider.DB2
 
 		#endregion
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			statement = WrapParameters(statement, context);
-			return base.FinalizeStatement(statement, context, dataOptions);
+			return base.FinalizeStatement(statement, context, dataOptions, mappingSchema);
 		}
 
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)

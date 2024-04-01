@@ -20,6 +20,26 @@ namespace LinqToDB.DataProvider.Sybase
 
 		#endregion
 
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
+		{
+			/*var ftype = cast.SystemType.ToUnderlying();
+			if (ftype == typeof(string))
+			{
+				var stype = cast.Expression.SystemType!.ToUnderlying();
+
+				if (stype == typeof(DateTime)
+#if NET6_0_OR_GREATER
+							|| stype == typeof(DateOnly)
+#endif
+				   )
+				{
+					return new SqlFunction(cast.SystemType, "Convert", false, true, Precedence.Primary, ParametersNullabilityType.IfAllParametersNullable, null, new SqlDataType(cast.ToType), cast.Expression, new SqlValue(23));
+				}
+			}*/
+
+			return base.ConvertConversion(cast);
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			switch (func.Name)
@@ -54,29 +74,6 @@ namespace LinqToDB.DataProvider.Sybase
 								func.Parameters[1],
 								func.Parameters[1],
 								new SqlValue(value.ValueType, null));
-					}
-
-					break;
-				}
-
-				case PseudoFunctions.CONVERT:
-				{
-					var ftype = func.SystemType.ToUnderlying();
-					if (ftype == typeof(string))
-					{
-						var stype = func.Parameters[2].SystemType!.ToUnderlying();
-
-						if (stype == typeof(DateTime)
-#if NET6_0_OR_GREATER
-							|| stype == typeof(DateOnly)
-#endif
-						   )
-						{
-							return new SqlFunction(func.SystemType, "convert", false, true, func.Parameters[0], func.Parameters[2], new SqlValue(23))
-							{
-								CanBeNull = func.CanBeNull
-							};
-						}
 					}
 
 					break;

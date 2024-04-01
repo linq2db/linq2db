@@ -127,5 +127,7 @@ namespace LinqToDB
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
 		string?                       ConfigurationString         { get; }
+
+		T GetService<T>();
 	}
 }

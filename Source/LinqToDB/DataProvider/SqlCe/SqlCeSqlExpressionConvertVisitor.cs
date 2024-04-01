@@ -5,6 +5,8 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using Common;
+
 
 	public class SqlCeSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
@@ -26,13 +28,13 @@ namespace LinqToDB.DataProvider.SqlCe
 			{
 				case "%":
 				{
-					var exprType = QueryHelper.GetDbDataType(element.Expr1);
+					var exprType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
 
 					if (!exprType.SystemType.IsIntegerType())
 					{
 						return new SqlBinaryExpression(
 							typeof(int),
-							PseudoFunctions.MakeConvert(new SqlDataType(DataType.Int32, typeof(int)), new SqlDataType(exprType), element.Expr1),
+							PseudoFunctions.MakeCast(element.Expr1, new DbDataType(typeof(int), DataType.Int32)),
 							element.Operation,
 							element.Expr2,
 							element.Precedence);
@@ -136,22 +138,20 @@ namespace LinqToDB.DataProvider.SqlCe
 			return like;
 		}
 
-		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			var toType   = func.Parameters[0];
-			var fromType = func.Parameters[1];
-			var argument = func.Parameters[2];
+			var toType = cast.ToType;
+			var argument = cast.Expression;
 
-			switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
+			switch (Type.GetTypeCode(cast.SystemType.ToUnderlying()))
 			{
 				case TypeCode.UInt64:
 				{
-					var argumentType = QueryHelper.GetDbDataType(argument);
-					var toDbType = QueryHelper.GetDbDataType(toType);
+					var argumentType = QueryHelper.GetDbDataType(argument, MappingSchema);
 
 					if (argumentType.SystemType.IsFloatType())
 					{
-						return PseudoFunctions.MakeConvert(new SqlDataType(toDbType), new SqlDataType(argumentType), new SqlFunction(func.SystemType, "Floor", argument));
+						return PseudoFunctions.MakeCast(new SqlFunction(cast.SystemType, "Floor", argument), toType);
 					}
 
 					break;
@@ -163,14 +163,14 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						if (type1 == typeof(DateTime) || type1 == typeof(DateTimeOffset))
 							return new SqlExpression(
-								func.SystemType, "Cast(Convert(NChar, {0}, 114) as DateTime)",
+								cast.SystemType, "Cast(Convert(NChar, {0}, 114) as DateTime)",
 								Precedence.Primary, argument);
 
 						if (argument.SystemType == typeof(string))
 							return argument;
 
 						return new SqlExpression(
-							func.SystemType, "Convert(NChar, {0}, 114)", Precedence.Primary,
+							cast.SystemType, "Convert(NChar, {0}, 114)", Precedence.Primary,
 							argument);
 					}
 
@@ -178,14 +178,14 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						if (IsDateDataType(toType, "Datetime"))
 							return new SqlExpression(
-								func.SystemType, "Cast(Floor(Cast({0} as Float)) as DateTime)",
+								cast.SystemType, "Cast(Floor(Cast({0} as Float)) as DateTime)",
 								Precedence.Primary, argument);
 					}
 
 					break;
 			}
 
-			return base.ConvertConversion(func);
+			return base.ConvertConversion(cast);
 		}
 	}
 }

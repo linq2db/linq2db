@@ -4,6 +4,7 @@ namespace LinqToDB.DataProvider.SapHana
 {
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	class SapHanaSqlOptimizer : BasicSqlOptimizer
 	{
@@ -17,12 +18,12 @@ namespace LinqToDB.DataProvider.SapHana
 			return new SapHanaSqlExpressionConvertVisitor(allowModify);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
-				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions); break;
+				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions, mappingSchema); break;
 			}
 
 			return statement;

@@ -149,26 +149,26 @@ namespace LinqToDB.DataProvider.Access
 			return base.ConvertSqlFunction(func);
 		}
 
-		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			var expression = func.Parameters[2];
+			var expression = cast.Expression;
 			var funcName   = string.Empty;
 
-			switch (func.SystemType.ToUnderlying().GetTypeCodeEx())
+			switch (cast.SystemType.ToUnderlying().GetTypeCodeEx())
 			{
 				case TypeCode.String   : funcName = "CStr";  break;
 				case TypeCode.Boolean  : funcName = "CBool"; break;
 				case TypeCode.DateTime :
-					if (IsDateDataType(func.Parameters[0], "Date"))
+					if (IsDateDataType(cast.ToType, "Date"))
 						funcName = "DateValue";
-					else if (IsTimeDataType(func.Parameters[0]))
+					else if (IsTimeDataType(cast.ToType))
 						funcName = "TimeValue";
 					else
 						funcName = "CDate";
 					break;
 
 				default:
-					if (func.SystemType == typeof(DateTime))
+					if (cast.SystemType == typeof(DateTime))
 						goto case TypeCode.DateTime;
 
 					return expression;
@@ -176,7 +176,7 @@ namespace LinqToDB.DataProvider.Access
 
 			if (!string.IsNullOrEmpty(funcName))
 			{
-				return new SqlFunction(func.SystemType, funcName, expression); 
+				return new SqlFunction(cast.SystemType, funcName, expression); 
 			}
 
 			return expression;

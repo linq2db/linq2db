@@ -15,8 +15,9 @@ namespace LinqToDB.SqlProvider
 
 	public class SqlExpressionConvertVisitor : SqlQueryVisitor
 	{
-		protected bool IsInsideNot;
-		protected bool VisitQueries;
+		protected bool            IsInsideNot;
+		protected ISqlExpression? IsForPredicate;
+		protected bool            VisitQueries;
 
 		protected OptimizationContext OptimizationContext = default!;
 		protected NullabilityContext  NullabilityContext  = default!;
@@ -25,8 +26,6 @@ namespace LinqToDB.SqlProvider
 		protected DataOptions       DataOptions       => OptimizationContext.DataOptions;
 		protected MappingSchema     MappingSchema     => OptimizationContext.MappingSchema;
 		protected SqlProviderFlags? SqlProviderFlags  => OptimizationContext.SqlProviderFlags;
-
-		readonly SqlDataType _typeWrapper = new(default(DbDataType));
 
 		public SqlExpressionConvertVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
@@ -113,6 +112,17 @@ namespace LinqToDB.SqlProvider
 			return newQuery;
 		}
 
+		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		{
+			var saveIsForPredicate = IsForPredicate;
+			IsForPredicate = predicate.Expr1;
+
+			var result = base.VisitExprPredicate(predicate);
+
+			IsForPredicate = saveIsForPredicate;
+			return result;
+		}
+
 		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
 		{
 			var saveIsInsideNot = IsInsideNot;
@@ -135,13 +145,7 @@ namespace LinqToDB.SqlProvider
 			if (element.Value is Sql.SqlID)
 				return element;
 
-			// TODO:
-			// this line produce insane amount of allocations
-			// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
-			//var dataType = new SqlDataType(value.ValueType);
-			_typeWrapper.Type = element.ValueType;
-
-			if (!MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, DataOptions, element.Value))
+			if (!MappingSchema.ValueToSqlConverter.CanConvert(element.ValueType, DataOptions, element.Value))
 			{
 				// we cannot generate SQL literal, so just convert to parameter
 				var param = OptimizationContext.SuggestDynamicParameter(element.ValueType, element.Value);
@@ -153,7 +157,7 @@ namespace LinqToDB.SqlProvider
 
 		protected IQueryElement Optimize(IQueryElement element)
 		{
-			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, element, VisitQueries, IsInsideNot, reduceBinary : false);
+			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, IsInsideNot, reduceBinary : false);
 		}
 
 		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
@@ -502,7 +506,7 @@ namespace LinqToDB.SqlProvider
 				};
 
 				var patternExpr = LikePatternParameterSupport
-					? QueryHelper.CreateSqlValue(patternValue, predicate.Expr2.GetExpressionType(), predicate.Expr2)
+					? QueryHelper.CreateSqlValue(patternValue, QueryHelper.GetDbDataType(predicate.Expr2, MappingSchema), predicate.Expr2)
 					: new SqlValue(patternValue);
 
 				var valueExpr = predicate.Expr1;
@@ -749,6 +753,22 @@ namespace LinqToDB.SqlProvider
 			return WrapBooleanExpression(newItem);
 		}
 
+		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
+		{
+			var newElement = base.VisitSqlCastExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			var converted = ConvertConversion(element);
+			if (!ReferenceEquals(converted, element))
+			{
+				return Visit(Optimize(converted));
+			}
+
+			return element;
+		}
+
 		#endregion Visitor overrides
 
 		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
@@ -775,9 +795,6 @@ namespace LinqToDB.SqlProvider
 
 					break;
 				}
-
-				case PseudoFunctions.CONVERT:
-					return ConvertConversion(func);
 
 				case PseudoFunctions.CONVERT_FORMAT:
 				{
@@ -899,7 +916,7 @@ namespace LinqToDB.SqlProvider
 							element.SystemType,
 							element.Expr1,
 							element.Operation,
-							(ISqlExpression)Visit(PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), new SqlDataType(element.Expr2.GetExpressionType()), element.Expr2)),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
 							element.Precedence);
 					}
 
@@ -912,7 +929,7 @@ namespace LinqToDB.SqlProvider
 
 						return new SqlBinaryExpression(
 							element.SystemType,
-							(ISqlExpression)Visit(PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len.Value), new SqlDataType(element.Expr1.GetExpressionType()), element.Expr1)),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
 							element.Operation,
 							element.Expr2,
 							element.Precedence);
@@ -938,7 +955,7 @@ namespace LinqToDB.SqlProvider
 					if (expr.CanBeNullable(NullabilityContext))
 					{
 						var conditionExpr = new SqlConditionExpression(predicate, new SqlValue(true), new SqlValue(false));
-						expr = new SqlConditionExpression(new SqlPredicate.IsNull(expr, false), new SqlValue(QueryHelper.GetDbDataType(expr), null), conditionExpr);
+						expr = new SqlConditionExpression(new SqlPredicate.IsNull(expr, false), new SqlValue(QueryHelper.GetDbDataType(expr, MappingSchema), null), conditionExpr);
 					}
 					else
 					{
@@ -956,11 +973,7 @@ namespace LinqToDB.SqlProvider
 		{
 			if (!SupportsNullInColumn && expr is SqlValue sqlValue && sqlValue.Value == null)
 			{
-				var sqlDataType = new SqlDataType(sqlValue.ValueType);
-				return new SqlFunction(sqlValue.ValueType.SystemType, PseudoFunctions.CONVERT, false, sqlDataType, sqlDataType, sqlValue)
-				{
-					DoNotOptimize = true
-				};
+				return new SqlCastExpression(sqlValue, QueryHelper.GetDbDataType(sqlValue, MappingSchema), null, true);
 			}
 
 			return expr;
@@ -969,31 +982,52 @@ namespace LinqToDB.SqlProvider
 
 		#region DataTypes
 
-		protected virtual int? GetMaxLength     (SqlDataType type) { return SqlDataType.GetMaxLength     (type.Type.DataType); }
-		protected virtual int? GetMaxPrecision  (SqlDataType type) { return SqlDataType.GetMaxPrecision  (type.Type.DataType); }
-		protected virtual int? GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.Type.DataType); }
-		protected virtual int? GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.Type.DataType); }
+		protected virtual int? GetMaxLength(DbDataType      type) { return SqlDataType.GetMaxLength(type.DataType); }
+		protected virtual int? GetMaxPrecision(DbDataType   type) { return SqlDataType.GetMaxPrecision(type.DataType); }
+		protected virtual int? GetMaxScale(DbDataType       type) { return SqlDataType.GetMaxScale(type.DataType); }
+		protected virtual int? GetMaxDisplaySize(DbDataType type) { return SqlDataType.GetMaxDisplaySize(type.DataType); }
 
 		/// <summary>
-		/// Implements <see cref="PseudoFunctions.CONVERT"/> function converter.
+		/// Implements <see cref="SqlCastExpression"/> conversion.
 		/// </summary>
-		protected virtual ISqlExpression ConvertConversion(SqlFunction func)
+		protected virtual ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			var to   = func.Parameters[0];
-			var from = func.Parameters[1];
+			var toDataType = cast.ToType;
 
-			if (to is SqlDataType toDataType && toDataType.Type.Length > 0 && from is SqlDataType fromDataType)
+			if (cast.SystemType == typeof(string) && cast.Expression is SqlValue value)
 			{
-				var maxLength = toDataType.SystemType == typeof(string) ? GetMaxDisplaySize(fromDataType) : GetMaxLength(fromDataType);
-				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(toDataType.Type.Length ?? 0, maxLength.Value) : fromDataType.Type.Length;
-
-				if (fromDataType.Type.Length != newLength)
-					to = new SqlDataType(toDataType.Type.WithLength(newLength));
+				if (value.Value is char charValue)
+					return new SqlValue(cast.Type, charValue.ToString());
 			}
-			else if (!func.DoNotOptimize && from.SystemType == typeof(short) && to.SystemType == typeof(int))
-				return func.Parameters[2];
 
-			return new SqlFunction(func.SystemType, "Convert", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, to, func.Parameters[2]);
+			var fromDbType = cast.FromType?.Type ?? QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
+
+			if (toDataType.Length > 0)
+			{
+				var maxLength = toDataType.SystemType == typeof(string) ? GetMaxDisplaySize(fromDbType) : GetMaxLength(fromDbType);
+				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(toDataType.Length ?? 0, maxLength.Value) : fromDbType.Length;
+
+				var newDataType = toDataType.WithLength(newLength);
+				if (!newDataType.Equals(toDataType))
+				{
+					return new SqlCastExpression(cast.Expression, newDataType, cast.FromType);
+				}
+			}
+			else if (!cast.IsMandatory && fromDbType.SystemType == typeof(short) && toDataType.SystemType == typeof(int))
+			{
+				return cast.Expression;
+			}
+
+			if (SqlProviderFlags?.SupportsBooleanComparison == false)
+			{
+				if (cast.SystemType.ToUnderlying() == typeof(bool))
+				{
+					var sc = new SqlSearchCondition().AddNotEqual(cast.Expression, new SqlValue(0), DataOptions.LinqOptions.CompareNullsAsValues);
+					return sc;
+				}
+			}
+
+			return cast;
 		}
 
 		#endregion
@@ -1282,20 +1316,36 @@ namespace LinqToDB.SqlProvider
 			return Div<int>(expr1, new SqlValue(value));
 		}
 
-		protected ISqlExpression? AlternativeConvertToBoolean(SqlFunction func, int paramNumber)
+		protected ISqlExpression ConvertToBooleanCondition(ISqlExpression expression)
 		{
-			var par = func.Parameters[paramNumber];
+			var predicate = new SqlPredicate.ExprExpr(expression, SqlPredicate.Operator.Equal, new SqlValue(0), DataOptions.LinqOptions.CompareNullsAsValues)
+				.MakeNot();
 
-			if (par.SystemType!.IsFloatType() || par.SystemType!.IsIntegerType())
-			{
-				var sc = new SqlSearchCondition();
+			return new SqlConditionExpression(predicate, new SqlValue(true), new SqlValue(false));
+		}
 
-				sc.AddNotEqual(par, new SqlValue(0), DataOptions.LinqOptions.CompareNullsAsValues);
+		protected ISqlExpression ConvertToBooleanSearchCondition(ISqlExpression expression)
+		{
+			var sc = new SqlSearchCondition();
+			var predicate = new SqlPredicate.ExprExpr(expression, SqlPredicate.Operator.Equal, new SqlValue(0), DataOptions.LinqOptions.CompareNullsAsValues)
+				.MakeNot();
 
-				return new SqlConditionExpression(sc, new SqlValue(true), new SqlValue(false));
-			}
+			sc.Add(predicate);
 
-			return null;
+			return sc;
+		}
+
+		protected ISqlExpression ConvertBooleanToCase(ISqlExpression expr, DbDataType toType)
+		{
+			var caseExpr = new SqlCaseExpression(toType,
+				new SqlCaseExpression.CaseItem[]
+				{
+					new(new SqlPredicate.IsNull(expr, false), new SqlValue(toType, null)),
+					new(new SqlPredicate.ExprExpr(expr, SqlPredicate.Operator.NotEqual, new SqlValue(0), null), new SqlValue(toType, true))
+				}, new SqlValue(toType, false));
+			
+
+			return caseExpr;
 		}
 
 		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlFunction func, string funcName, bool supportsParameters = true)
@@ -1315,102 +1365,58 @@ namespace LinqToDB.SqlProvider
 			return last;
 		}
 
-		protected static bool IsDateDataType(ISqlExpression expr, string dateName)
+		protected static bool IsDateDataType(DbDataType dataType, string typeName)
 		{
-			return expr.ElementType switch
-			{
-				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Date,
-				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == dateName,
-				_                              => false,
-			};
+			return dataType.DataType == DataType.Date || dataType.DbType == typeName;
 		}
 
-		protected static bool IsSmallDateTimeType(ISqlExpression expr, string typeName)
+		protected static bool IsSmallDateTimeType(DbDataType dataType, string typeName)
 		{
-			return expr.ElementType switch
-			{
-				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.SmallDateTime,
-				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
-				_ => false,
-			};
+			return dataType.DataType == DataType.SmallDateTime || dataType.DbType == typeName;
 		}
 
-		protected static bool IsDateTime2Type(ISqlExpression expr, string typeName)
+		protected static bool IsDateTime2Type(DbDataType dataType, string typeName)
 		{
-			return expr.ElementType switch
-			{
-				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.DateTime2,
-				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
-				_ => false,
-			};
+			return dataType.DataType == DataType.DateTime2 || dataType.DbType == typeName;
 		}
 
-		protected static bool IsDateTimeType(ISqlExpression expr, string typeName)
+		protected static bool IsDateTimeType(DbDataType dataType, string typeName)
 		{
-			return expr.ElementType switch
-			{
-				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.DateTime,
-				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == typeName,
-				_ => false,
-			};
+			return dataType.DataType == DataType.DateTime2 || dataType.DbType == typeName;
 		}
 
-		protected static bool IsDateDataOffsetType(ISqlExpression expr)
+		protected static bool IsDateDataOffsetType(DbDataType dataType)
 		{
-			return expr.ElementType switch
-			{
-				QueryElementType.SqlDataType => ((SqlDataType)expr).Type.DataType == DataType.DateTimeOffset,
-				_                            => false,
-			};
+			return dataType.DataType == DataType.DateTimeOffset;
 		}
 
-		protected static bool IsTimeDataType(ISqlExpression expr)
+		protected static bool IsTimeDataType(DbDataType dataType)
 		{
-			return expr.ElementType switch
-			{
-				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Time,
-				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == "Time",
-				_                              => false,
-			};
+			return dataType.DataType == DataType.Time || dataType.DbType == "Time";
 		}
 
-		protected ISqlExpression FloorBeforeConvert(SqlFunction func)
+		protected SqlCastExpression FloorBeforeConvert(SqlCastExpression cast)
 		{
-			return FloorBeforeConvert(func, func.Parameters[1]);
-		}
-
-		protected ISqlExpression FloorBeforeConvert(SqlFunction func, ISqlExpression par)
-		{
-			if (par.SystemType!.IsFloatType() && func.SystemType.IsIntegerType())
+			if (cast.Expression.SystemType!.IsFloatType() && cast.SystemType.IsIntegerType())
 			{
-				return new SqlFunction(func.SystemType, "Floor", par);
+				if (cast.Expression is SqlFunction { Name: "Floor" })
+					return cast;
+
+				return cast.WithExpression(new SqlFunction(cast.Expression.SystemType!, "Floor", cast.Expression));
 			}
 
-			return par;
+			return cast;
 		}
 
-		protected static ISqlExpression TryConvertToValue(ISqlExpression expr, EvaluationContext context)
+		protected ISqlExpression TryConvertToValue(ISqlExpression expr, EvaluationContext context)
 		{
 			if (expr.ElementType != QueryElementType.SqlValue)
 			{
 				if (expr.TryEvaluateExpression(context, out var value))
-					expr = new SqlValue(expr.GetExpressionType(), value);
+					expr = new SqlValue(QueryHelper.GetDbDataType(expr, MappingSchema), value);
 			}
 
 			return expr;
-		}
-
-		protected static bool IsBooleanParameter(ISqlExpression expr, int count, int i)
-		{
-			if ((i % 2 == 1 || i == count - 1) && expr.SystemType == typeof(bool) || expr.SystemType == typeof(bool?))
-			{
-				switch (expr.ElementType)
-				{
-					case QueryElementType.SearchCondition: return true;
-				}
-			}
-
-			return false;
 		}
 
 		#endregion

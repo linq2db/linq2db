@@ -173,7 +173,9 @@ namespace LinqToDB.Linq.Builder.Visitors
 			{
 				var newNode = ConvertMethod(node);
 				if (newNode != null)
+				{
 					return Visit(newNode);
+				}
 			}
 
 			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependedAttributes(node.Method);
@@ -227,7 +229,12 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 			lambda ??= Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
-			return lambda == null ? null : ConvertMethod(pi, lambda);
+			Expression? result = null;
+
+			if (lambda != null)
+				result = ConvertMethod(pi, lambda);
+
+			return result;
 		}
 
 		Expression? ConvertBinary(BinaryExpression node)

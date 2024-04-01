@@ -11,6 +11,8 @@ namespace LinqToDB.DataProvider.MySql
 	using Data;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
 
 	sealed class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
 	sealed class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
@@ -57,6 +59,11 @@ namespace LinqToDB.DataProvider.MySql
 			if (Adapter.GetTimeOnlyMethodName != null) SetProviderField(typeof(TimeOnly), Adapter.GetTimeOnlyMethodName, Adapter.DataReaderType);
 			if (Adapter.GetDateOnlyMethodName != null) SetProviderField(typeof(DateOnly), Adapter.GetDateOnlyMethodName, Adapter.DataReaderType);
 #endif
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new MySqlMemberTranslator();
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

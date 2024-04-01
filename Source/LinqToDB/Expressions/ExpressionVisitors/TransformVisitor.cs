@@ -232,7 +232,7 @@ namespace LinqToDB.Expressions
 				return expr;
 			}
 
-			if (expr is ClosurePlaceholderExpression)
+			if (expr is PlaceholderExpression {PlaceholderType: PlaceholderType.Closure})
 			{
 				return expr;
 			}

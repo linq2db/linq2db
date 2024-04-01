@@ -7,6 +7,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using SqlQuery;
+	using Common;
 
 	public partial class FirebirdSqlBuilder
 	{
@@ -48,9 +49,9 @@ namespace LinqToDB.DataProvider.Firebird
 				&& ConvertElement(rows[row][column], checkBoolean: false) is SqlValue sqlValue && sqlValue.Value != null;
 		}
 
-		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
-			if (dataType.Type.DbType == null && dataType.Type.DataType == DataType.NVarChar)
+			if (dataType.DbType == null && dataType.DataType == DataType.NVarChar)
 			{
 				var length = 0;
 				var typeRequired = false;

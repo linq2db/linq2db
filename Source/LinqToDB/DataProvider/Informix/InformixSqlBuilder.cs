@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using Common;
 
 	sealed partial class InformixSqlBuilder : BasicSqlBuilder
 	{
@@ -110,9 +111,9 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Guid       : StringBuilder.Append("VARCHAR(36)");               return;
 				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
@@ -120,7 +121,7 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   return;
 				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); return;
 				case DataType.Time       :
-					StringBuilder.Append(CultureInfo.InvariantCulture, $"INTERVAL HOUR TO FRACTION({type.Type.Length ?? 5})");
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"INTERVAL HOUR TO FRACTION({type.Length ?? 5})");
 					return;
 				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      return;
 				case DataType.SByte      :
@@ -128,11 +129,11 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.SmallMoney : StringBuilder.Append("Decimal(10, 4)");            return;
 				case DataType.Decimal    :
 					StringBuilder.Append("Decimal");
-					if (type.Type.Precision != null && type.Type.Scale != null)
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision}, {type.Type.Scale})");
+					if (type.Precision != null && type.Scale != null)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision}, {type.Scale})");
 					return;
 				case DataType.NVarChar:
-					if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 255 || type.Length < 1)
 					{
 						StringBuilder.Append("NVarChar(255)");
 
@@ -273,7 +274,7 @@ namespace LinqToDB.DataProvider.Informix
 			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
-		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
 			BuildExpression(value);
 			StringBuilder.Append("::");

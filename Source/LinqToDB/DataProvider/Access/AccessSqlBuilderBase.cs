@@ -100,7 +100,7 @@ namespace LinqToDB.DataProvider.Access
 				if (defaultValue != null)
 				{
 					StringBuilder.Append("IIF(False, ");
-					BuildValue(new SqlDataType(sqlValue.ValueType), defaultValue);
+					BuildValue(sqlValue.ValueType, defaultValue);
 					StringBuilder.Append(", NULL)");
 					return;
 				}
@@ -142,9 +142,9 @@ namespace LinqToDB.DataProvider.Access
 			BuildSqlConditionExpressionAsFunction("IIF", conditionExpression);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.DateTime2 : StringBuilder.Append("timestamp");                               break;
 				default                 : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;

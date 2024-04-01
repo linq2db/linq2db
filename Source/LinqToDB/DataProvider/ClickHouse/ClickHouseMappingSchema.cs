@@ -740,7 +740,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static void BuildInt32Literal(StringBuilder sb, int value)
 		{
-			sb.AppendFormat(CultureInfo.InvariantCulture, "toInt32({0})", value);
+			sb.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
 		}
 
 		private static void BuildUInt32Literal(StringBuilder sb, uint value)

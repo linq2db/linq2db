@@ -45,7 +45,7 @@ namespace LinqToDB.Extensions
 			return new SqlValue(systemType, originalValue);
 		}
 
-		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, SqlDataType? dataType, DataOptions options, object? value)
+		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, DbDataType? dataType, DataOptions options, object? value)
 		{
 			var sqlConverter = mappingSchema.ValueToSqlConverter;
 
@@ -78,7 +78,7 @@ namespace LinqToDB.Extensions
 		}
 
 		public static void ConvertToSqlValue(this MappingSchema mappingSchema, StringBuilder stringBuilder,
-			SqlDataType?                                        dataType,      DataOptions   options, object? value)
+			DbDataType? dataType, DataOptions options, object? value)
 		{
 			if (!mappingSchema.TryConvertToSql(stringBuilder, dataType, options, value))
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");

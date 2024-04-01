@@ -142,19 +142,16 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.ConvertSqlFunction(func);
 		}
 
-		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			var ftype = func.SystemType.ToUnderlying();
+			var ftype = cast.SystemType.ToUnderlying();
 
-			var toType   = func.Parameters[0];
-			var fromType = func.Parameters[1];
-			var argument = func.Parameters[2];
+			var toType   = cast.ToType;
+			var argument = cast.Expression;
 
-			if (ftype == typeof(bool))
+			if (ftype == typeof(bool) && ReferenceEquals(cast, IsForPredicate))
 			{
-				var ex = AlternativeConvertToBoolean(func, 2);
-				if (ex != null)
-					return ex;
+				return ConvertToBooleanSearchCondition(cast.Expression);
 			}
 
 			if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
@@ -168,7 +165,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (argument.SystemType == typeof(string))
 						return argument;
 
-					return new SqlFunction(func.SystemType, "To_Char", argument, new SqlValue("HH24:MI:SS"));
+					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("HH24:MI:SS"));
 				}
 
 				if (IsDateDataType(toType, "Date"))
@@ -176,20 +173,20 @@ namespace LinqToDB.DataProvider.Oracle
 					if (argument.SystemType!.ToUnderlying() == typeof(DateTime)
 						|| argument.SystemType!.ToUnderlying() == typeof(DateTimeOffset))
 					{
-						return new SqlFunction(func.SystemType, "Trunc", argument, new SqlValue("DD"));
+						return new SqlFunction(cast.SystemType, "Trunc", argument, new SqlValue("DD"));
 					}
 
-					return new SqlFunction(func.SystemType, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
+					return new SqlFunction(cast.SystemType, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
 				}
 				else if (IsDateDataOffsetType(toType))
 				{
 					if (ftype == typeof(DateTimeOffset))
 						return argument;
 
-					return new SqlFunction(func.SystemType, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+					return new SqlFunction(cast.SystemType, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 				}
 
-				return new SqlFunction(func.SystemType, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+				return new SqlFunction(cast.SystemType, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 			}
 			else if (ftype == typeof(string))
 			{
@@ -197,21 +194,21 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (stype == typeof(DateTimeOffset))
 				{
-					return new SqlFunction(func.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS TZH:TZM"));
+					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS TZH:TZM"));
 				}
 				else if (stype == typeof(DateTime))
 				{
-					return new SqlFunction(func.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 				}
 #if NET6_0_OR_GREATER
 				else if (stype == typeof(DateOnly))
 				{
-					return new SqlFunction(func.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD"));
+					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD"));
 				}
 #endif
 			}
 
-			return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func, argument), toType);
+			return FloorBeforeConvert(cast);
 		}
 	}
 }

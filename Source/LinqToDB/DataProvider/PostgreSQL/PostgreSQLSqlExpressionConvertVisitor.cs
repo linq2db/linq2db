@@ -1,8 +1,8 @@
 ﻿namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlProvider;
-	using LinqToDB.SqlQuery;
+	using Extensions;
+	using SqlProvider;
+	using SqlQuery;
 
 	public class PostgreSQLSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
@@ -34,17 +34,16 @@
 				{
 					// PostgreSQL '%' operator supports only decimal and numeric types
 
-					var fromType = QueryHelper.GetDbDataType(element.Expr1);
+					var fromType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
 					if (fromType.SystemType.ToNullableUnderlying() != typeof(decimal))
 					{
-						var toType          = MappingSchema.GetDataType(typeof(decimal));
-						var fromSqlDataType = new SqlDataType(fromType);
-						var newExpr1        = PseudoFunctions.MakeConvert(toType, fromSqlDataType, element.Expr1);
+						var toType          = MappingSchema.GetDbDataType(typeof(decimal));
+						var newExpr1        = PseudoFunctions.MakeCast(element.Expr1, toType);
 						var systemType      = typeof(decimal);
 						if (fromType.SystemType.IsNullable())
 							systemType = systemType.AsNullable();
 
-						var newExpr =  PseudoFunctions.MakeConvert(fromSqlDataType, toType, new SqlBinaryExpression(systemType, newExpr1, element.Operation, element.Expr2));
+						var newExpr =  PseudoFunctions.MakeMandatoryCast(new SqlBinaryExpression(systemType, newExpr1, element.Operation, element.Expr2), toType);
 						return Visit(Optimize(newExpr));
 					}
 					break;
@@ -82,20 +81,17 @@
 			return base.ConvertSqlFunction(func);
 		}
 
-		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			if (func.SystemType.ToUnderlying() == typeof(bool))
+			if (cast.SystemType.ToUnderlying() == typeof(bool))
 			{
-				var ex = AlternativeConvertToBoolean(func, 2);
-				if (ex != null)
-					return ex;
+				if (cast.Expression is not SqlSearchCondition and not SqlCaseExpression)
+				{
+					return ConvertBooleanToCase(cast.Expression, cast.ToType);
+				}
 			}
-
-			// Another cast syntax
-			//
-			// rreturn new SqlExpression(func.SystemType, "{0}::{1}", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
-			return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary,
-				FloorBeforeConvert(func, func.Parameters[2]), func.Parameters[0]);
+			cast = FloorBeforeConvert(cast);
+			return base.ConvertConversion(cast);
 		}
 	}
 }

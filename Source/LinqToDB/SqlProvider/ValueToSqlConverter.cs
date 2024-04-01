@@ -9,9 +9,8 @@ namespace LinqToDB.SqlProvider
 	using Common;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
-
-	using ConverterType = Action<StringBuilder,SqlQuery.SqlDataType,DataOptions,object>;
+	
+	using ConverterType = Action<StringBuilder, LinqToDB.Common.DbDataType, DataOptions,object>;
 
 	public class ValueToSqlConverter
 	{
@@ -170,7 +169,7 @@ namespace LinqToDB.SqlProvider
 			return TryConvert(stringBuilder, mappingSchema, null, options, value);
 		}
 
-		public bool TryConvert(StringBuilder stringBuilder, MappingSchema mappingSchema, SqlDataType? dataType, DataOptions options, object? value)
+		public bool TryConvert(StringBuilder stringBuilder, MappingSchema mappingSchema, DbDataType? dataType, DataOptions options, object? value)
 		{
 			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
@@ -178,15 +177,15 @@ namespace LinqToDB.SqlProvider
 				return true;
 			}
 
-			return TryConvertImpl(stringBuilder, dataType ?? mappingSchema.GetDataType(value.GetType()), options, value, true);
+			return TryConvertImpl(stringBuilder, dataType ?? mappingSchema.GetDbDataType(value.GetType()), options, value, true);
 		}
 
-		public bool CanConvert(SqlDataType dataType, DataOptions options, object? value)
+		public bool CanConvert(DbDataType dataType, DataOptions options, object? value)
 		{
 			return TryConvertImpl(null, dataType, options, value, true);
 		}
 
-		bool TryConvertImpl(StringBuilder? stringBuilder, SqlDataType dataType, DataOptions options, object? value, bool tryBase)
+		bool TryConvertImpl(StringBuilder? stringBuilder, DbDataType dataType, DataOptions options, object? value, bool tryBase)
 		{
 			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
@@ -244,7 +243,7 @@ namespace LinqToDB.SqlProvider
 			return Convert(stringBuilder, mappingSchema, null, options, value);
 		}
 
-		public StringBuilder Convert(StringBuilder stringBuilder, MappingSchema mappingSchema, SqlDataType? dataType, DataOptions options, object? value)
+		public StringBuilder Convert(StringBuilder stringBuilder, MappingSchema mappingSchema, DbDataType? dataType, DataOptions options, object? value)
 		{
 			if (!TryConvert(stringBuilder, mappingSchema, dataType, options, value))
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");

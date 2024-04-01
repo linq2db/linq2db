@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	using SqlQuery;
 	using SqlProvider;
+	using Mapping;
 
 	sealed class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
@@ -17,7 +18,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new SqlCeSqlExpressionConvertVisitor(allowModify);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			// This function mutates statement which is allowed only in this place
 			CorrectSkipAndColumns(statement);
@@ -43,13 +44,13 @@ namespace LinqToDB.DataProvider.SqlCe
 			return statement;
 		}
 
-		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions)
+		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			var newStatement = base.FinalizeUpdate(statement, dataOptions);
+			var newStatement = base.FinalizeUpdate(statement, dataOptions, mappingSchema);
 
 			if (newStatement is SqlUpdateStatement updateStatement)
 			{
-				updateStatement = GetAlternativeUpdate(updateStatement, dataOptions);
+				updateStatement = GetAlternativeUpdate(updateStatement, dataOptions, mappingSchema);
 
 				if (updateStatement.Update.Table != null)
 				{

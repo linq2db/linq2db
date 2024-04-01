@@ -57,19 +57,19 @@ namespace LinqToDB.DataProvider.Firebird
 			return false;
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			return statement.QueryType switch
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
-				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions),
+				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema),
 				_                => statement,
 			};
 		}
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			statement = base.FinalizeStatement(statement, context, dataOptions);
+			statement = base.FinalizeStatement(statement, context, dataOptions, mappingSchema);
 			statement = WrapParameters(statement, context);
 			return statement;
 		}

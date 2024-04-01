@@ -346,10 +346,10 @@ namespace LinqToDB.Data
 				if (dbDataType.DataType == DataType.Undefined)
 				{
 					dbDataType = dbDataType.WithDataType(
-						dataConnection.MappingSchema.GetDataType(
+						dataConnection.MappingSchema.GetDbDataType(
 							dbDataType.SystemType == typeof(object) && paramValue != null
 								? paramValue.GetType()
-								: dbDataType.SystemType).Type.DataType);
+								: dbDataType.SystemType).DataType);
 				}
 
 				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name!, dbDataType, paramValue);

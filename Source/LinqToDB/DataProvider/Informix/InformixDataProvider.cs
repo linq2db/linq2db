@@ -10,6 +10,9 @@ namespace LinqToDB.DataProvider.Informix
 	using Common;
 	using Data;
 	using Linq.Internal;
+	using Translation;
+	using LinqToDB.Linq.Translation;
+
 	using Mapping;
 	using SqlProvider;
 
@@ -55,6 +58,11 @@ namespace LinqToDB.DataProvider.Informix
 											  SetProviderField(Adapter.DecimalType , typeof(decimal) , Adapter.GetDecimalReaderMethod!, dataReaderType: Adapter.DataReaderType);
 			if (Adapter.DateTimeType != null) SetProviderField(Adapter.DateTimeType, typeof(DateTime), Adapter.GetDateTimeReaderMethod, dataReaderType: Adapter.DataReaderType);
 			if (Adapter.TimeSpanType != null) SetProviderField(Adapter.TimeSpanType, typeof(TimeSpan), Adapter.GetTimeSpanReaderMethod, dataReaderType: Adapter.DataReaderType);
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new InformixMemberTranslator();
 		}
 
 		[ColumnReader(1)]

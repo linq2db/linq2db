@@ -24,7 +24,22 @@ namespace LinqToDB.SqlQuery
 		{
 			if (expr.CanBeEvaluated(false))
 				return false;
-			return expr.CanBeEvaluated(true);
+
+			var isMutable = false;
+			expr.VisitParentFirst(a =>
+			{
+				if (a is SqlBinaryExpression binary)
+				{
+					var expr1 = UnwrapNullablity(binary.Expr1);
+					var expr2 = UnwrapNullablity(binary.Expr2);
+					if ((expr1 is SqlParameter || expr1.CanBeEvaluated(false)) && (expr2 is SqlParameter || expr2.CanBeEvaluated(false)))
+						isMutable = true;
+				}
+
+				return !isMutable;
+			});
+
+			return isMutable;
 		}
 
 		public static bool CanBeEvaluated(this IQueryElement expr, bool withParameters)
@@ -227,6 +242,65 @@ namespace LinqToDB.SqlQuery
 					return false;
 				}
 
+				case QueryElementType.SqlCast:
+				{
+					var cast = (SqlCastExpression)expr;
+					if (!cast.Expression.TryEvaluateExpression(context, out var value))
+						return false;
+
+					result = value;
+
+					if (result != null)
+					{
+						if (cast.SystemType == typeof(string))
+						{
+							if (result.GetType().IsNumeric())
+							{
+								if (result is int intValue)
+									result = intValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is long longValue)
+									result = longValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is short shortValue)
+									result = shortValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is byte byteValue)
+									result = byteValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is uint uintValue)
+									result = uintValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is ulong ulongValue)
+									result = ulongValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is ushort ushortValue)
+									result = ushortValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is sbyte sbyteValue)
+									result = sbyteValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is char charValue)
+									result = charValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is decimal decimalValue)
+									result = decimalValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is float floatValue)
+									result = floatValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is double doubleValue)
+									result = doubleValue.ToString(CultureInfo.InvariantCulture);
+							}
+						}
+						else
+						{
+							if (result.GetType() != cast.SystemType)
+							{
+								try
+								{
+									result = Convert.ChangeType(result, cast.SystemType, CultureInfo.InvariantCulture);
+								}
+								catch (InvalidCastException)
+								{
+									return false;
+								}
+							}
+						}
+					}
+
+					return true;
+				}
+
 				case QueryElementType.SqlBinaryExpression:
 				{
 					var binary = (SqlBinaryExpression)expr;
@@ -237,7 +311,7 @@ namespace LinqToDB.SqlQuery
 					dynamic? left  = leftEvaluated;
 					dynamic? right = rightEvaluated;
 					if (left == null || right == null)
-						return true;
+						return false;
 					switch (binary.Operation)
 					{
 						case "+" : result = left + right; break;

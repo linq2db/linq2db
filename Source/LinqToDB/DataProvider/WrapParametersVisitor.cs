@@ -99,32 +99,15 @@ namespace LinqToDB.DataProvider
 			return base.VisitSqlQuery(selectQuery);
 		}
 
-		protected override IQueryElement VisitSqlFunction(SqlFunction element)
+		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
-			if (element.Name == PseudoFunctions.CONVERT)
+			if (element.Expression is SqlParameter param)
 			{
-				var newElement = base.VisitSqlFunction(element);
-
-				if (newElement is SqlFunction func)
-				{
-					var foundParam = false;
-					foreach (var param in func.Parameters)
-					{
-						if (param is SqlParameter sqlParam)
-						{
-							foundParam = true;
-							sqlParam.NeedsCast = false;
-						}
-					}
-
-					if (foundParam)
-						func.DoNotOptimize = true;
-				}
-
-				return newElement;
+				param.NeedsCast = false;
 			}
 
-			return base.VisitSqlFunction(element);
+			using var scope = NeedCast(false);
+			return base.VisitSqlCastExpression(element);
 		}
 
 		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
