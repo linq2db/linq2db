@@ -187,12 +187,6 @@ static string LenDiff(int max, string str)
 	return s;
 }
 
-public void WriteSpaces(int len)
-{
-	while (len-- > 0)
-		Write(" ");
-}
-
 public static IEnumerable<ITree> GetTreeNodes(ITree parent)
 {
 	foreach (var node in parent.GetNodes())
@@ -220,12 +214,14 @@ public static ITree FindNode(ITree parent, Func<ITree,bool> func)
 	return null;
 }
 
-static event Action<Property,string,object> SetPropertyValueAction;
-
-public static void SetPropertyValue(Property propertyObject, string propertyName, object value)
+event Action<IProperty,string,object> SetPropertyValueAction
 {
-	if (SetPropertyValueAction != null)
-		SetPropertyValueAction(propertyObject, propertyName, value);
+	add    { ModelGenerator.SetPropertyValueAction += value; }
+	remove { ModelGenerator.SetPropertyValueAction -= value; }
 }
 
+public void SetPropertyValue(Property propertyObject, string propertyName, object value)
+{
+	ModelGenerator.SetPropertyValue(propertyObject, propertyName, value);
+}
 #>

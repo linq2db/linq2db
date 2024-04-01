@@ -6,9 +6,9 @@ namespace LinqToDB.Tools.ModelGeneration
 	public class Namespace<T> : ITree
 	where T : Namespace<T>
 	{
-		public string?        Name;
-		public List<TypeBase> Types  = [];
-		public List<string>   Usings = [];
+		public string ?        Name;
+		public List<ITypeBase> Types  = [];
+		public List<string>    Usings = [];
 
 		public virtual void Render(ModelGenerator tt)
 		{

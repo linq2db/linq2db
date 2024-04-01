@@ -3,18 +3,20 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
-	public interface ITypeBase : ITree
+	public interface ITypeBase : IClassMember
 	{
-		AccessModifier   AccessModifier { get; }
-		string?          Name           { get; }
-		bool             IsPartial      { get; }
-		List<string>     Comment        { get; }
-		List<IAttribute> Attributes     { get; }
-		string?          Conditional    { get; }
-		string           ClassKeyword   { get; }
+		AccessModifier   AccessModifier { get; set; }
+		string?          Name           { get; set; }
+		bool             IsPartial      { get; set; }
+		List<string>     Comment        { get; set; }
+		List<IAttribute> Attributes     { get; set; }
+		string?          Conditional    { get; set; }
+		string           ClassKeyword   { get; set; }
+
+		void Render(ModelGenerator tt);
 	}
 
-	public abstract class TypeBase : IClassMember
+	public abstract class TypeBase : ITypeBase
 	{
 		public AccessModifier   AccessModifier { get; set; } = AccessModifier.Public;
 		public string?          Name           { get; set; }

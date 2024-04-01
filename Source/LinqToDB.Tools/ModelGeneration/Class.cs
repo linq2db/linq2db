@@ -14,7 +14,7 @@ namespace LinqToDB.Tools.ModelGeneration
 	}
 
 	public class Class<T> : TypeBase, IClass
-	where T : Class<T>
+		where T : Class<T>
 	{
 		public string?            BaseClass        { get; set; }
 		public bool               IsStatic         { get; set; }

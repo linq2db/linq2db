@@ -565,7 +565,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			n = Math.Max(1, n - 1);
 
-			return name.Substring(0, n).ToLower(CultureInfo.InvariantCulture)! + name.Substring(n);
+			return name[..n].ToLower(CultureInfo.InvariantCulture) + name[n..];
 		}
 	}
 }

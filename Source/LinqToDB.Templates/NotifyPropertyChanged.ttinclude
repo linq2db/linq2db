@@ -11,7 +11,7 @@
 		SetPropertyValueAction += (obj,prop,val) =>
 		{
 			if (prop == "IsNotifying")
-				obj.IsNotifying = (bool)val;
+				((Property)obj).IsNotifying = (bool)val;
 		};
 	}
 #><#+
