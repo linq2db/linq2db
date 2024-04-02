@@ -6,11 +6,15 @@ namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IMemberBase : IClassMember
 	{
-		AccessModifier AccessModifier { get; set; }
-		string?        Name           { get; set; }
-		Func<string?>? TypeBuilder    { get; set; }
-		string?        EndLineComment { get; set; }
-		string?        Conditional    { get; set; }
+		string?          ID                   { get; set; }
+		AccessModifier   AccessModifier       { get; set; }
+		string?          Name                 { get; set; }
+		Func<string?>?   TypeBuilder          { get; set; }
+		List<string>     Comment              { get; set; }
+		string?          EndLineComment       { get; set; }
+		List<IAttribute> Attributes           { get; set; }
+		bool             InsertBlankLineAfter { get; set; }
+		string?          Conditional          { get; set; }
 
 		int AccessModifierLen { get; set; }
 		int ModifierLen       { get; set; }

@@ -220,7 +220,7 @@ event Action<IProperty,string,object> SetPropertyValueAction
 	remove { ModelGenerator.SetPropertyValueAction -= value; }
 }
 
-public void SetPropertyValue(Property propertyObject, string propertyName, object value)
+public void SetPropertyValue(IProperty propertyObject, string propertyName, object value)
 {
 	ModelGenerator.SetPropertyValue(propertyObject, propertyName, value);
 }

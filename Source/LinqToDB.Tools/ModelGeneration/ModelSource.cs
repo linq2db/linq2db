@@ -5,8 +5,10 @@ namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IModelSource : ITree
 	{
-		public List<string>    Usings { get; }
-		public List<ITypeBase> Types  { get; }
+		List<string>     Usings     { get; }
+		List<ITypeBase>  Types      { get; }
+		List<INamespace> Namespaces { get; }
+		INamespace       Namespace  { get; }
 
 		void Render(ModelGenerator tt);
 	}
@@ -19,9 +21,9 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		public List<string> Usings { get; set; } = [ "System" ];
 
-		public List<TNamespace> Namespaces = [ new TNamespace() ];
+		public List<INamespace> Namespaces { get; } = [ new TNamespace() ];
 
-		public TNamespace      Namespace => Namespaces[CurrentNamespace];
+		public INamespace      Namespace => Namespaces[CurrentNamespace];
 		public List<ITypeBase> Types     => Namespaces[CurrentNamespace].Types;
 
 		public virtual void Render(ModelGenerator tt)

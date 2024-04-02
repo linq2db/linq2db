@@ -23,7 +23,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public bool       IsDiscriminator    { get; set; }
 		public string?    AliasName          { get; set; }
 		public string?    MemberName         { get; set; }
-		public ModelType? ModelType          { get; }
+		public ModelType? ModelType          { get; set; }
 	}
 
 	public class Column<T> : Property<T>, IColumn

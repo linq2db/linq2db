@@ -28,7 +28,7 @@ namespace LinqToDB.Tools.ModelGeneration
 	}
 
 	public class Property<T> : MemberBase, IProperty
-	where T : Property<T>
+		where T : Property<T>
 	{
 		public bool    IsAuto     { get; set; } = true;
 		public string? InitValue  { get; set; }
@@ -45,7 +45,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public int GetterLen { get; set; } = 5;
 		public int SetterLen { get; set; } = 5;
 
-		public virtual bool EnforceNotNullable { get; }
+		public virtual bool EnforceNotNullable { get; set; }
 
 		public Property()
 		{
@@ -68,7 +68,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public Property(Func<string> typeBuilder, string name, Func<IEnumerable<string>>? getBodyBuilder = null, Func<IEnumerable<string>>? setBodyBuilder = null)
 		{
 			TypeBuilder = typeBuilder;
-			Name = name;
+			Name        = name;
 
 			InitBody(getBodyBuilder, setBodyBuilder);
 		}
@@ -76,7 +76,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public Property(string type, string name, Func<IEnumerable<string>>? getBodyBuilder = null, Func<IEnumerable<string>>? setBodyBuilder = null)
 		{
 			TypeBuilder = () => type;
-			Name = name;
+			Name        = name;
 
 			InitBody(getBodyBuilder, setBodyBuilder);
 		}

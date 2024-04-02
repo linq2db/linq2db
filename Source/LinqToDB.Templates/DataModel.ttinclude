@@ -78,30 +78,12 @@ void LoadMetadata(DataConnection dataConnection)
 	ModelGenerator.LoadMetadata<Table,Class,ForeignKey,Column,Procedure>(dataConnection);
 }
 
-ITable GetTable(string name)
-{
-	return ModelGenerator.GetTable(name);
-}
+ITable     GetTable    (string name) { return ModelGenerator.GetTable    (name); }
+IProcedure GetProcedure(string name) { return ModelGenerator.GetProcedure(name); }
 
-IProcedure GetProcedure(string name)
-{
-	return ModelGenerator.GetProcedure(name);
-}
-
-IColumn GetColumn(string tableName, string columnName)
-{
-	return ModelGenerator.GetColumn(tableName, columnName);
-}
-
-IForeignKey GetFK(string tableName, string fkName)
-{
-	return GetForeignKey(tableName, fkName);
-}
-
-IForeignKey GetForeignKey(string tableName, string fkName)
-{
-	return ModelGenerator.GetForeignKey(tableName, fkName);
-}
+IColumn     GetColumn    (string tableName, string columnName) { return ModelGenerator.GetColumn(tableName, columnName); }
+IForeignKey GetFK        (string tableName, string fkName)     { return GetForeignKey(tableName, fkName);                }
+IForeignKey GetForeignKey(string tableName, string fkName)     { return ModelGenerator.GetForeignKey(tableName, fkName); }
 
 public TableContext SetTable(string tableName,
 	string TypeName                = null,

@@ -46,6 +46,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			WriteField          = WriteFieldImpl;
 			WriteEvent          = WriteEventImpl;
 			WriteMethod         = WriteMethodImpl;
+			GetConstructors     = GetConstructorsImpl;
 		}
 
 		public IModelSource    Model                 { get; set; }
@@ -516,7 +517,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				Write(" ");
 		}
 
-		public string ToStringLiteral(string? value)
+		public static string ToStringLiteral(string? value)
 		{
 			if (value == null)
 				return "null";

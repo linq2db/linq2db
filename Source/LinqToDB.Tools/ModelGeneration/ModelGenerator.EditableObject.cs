@@ -87,8 +87,8 @@ namespace LinqToDB.Tools.ModelGeneration
 				if (prop.HasGetter) prop.GetBodyBuilders.Add(() => new [] { "return " + currentField.Name.Trim() + ";" });
 				if (prop.HasSetter) prop.SetBodyBuilders.Add(() => new [] { currentField.Name.Trim() + " = value;" });
 
-				var ac = new TMethod   { TypeBuilder = static () => "void", Name = $"Accept{name}Changes", BodyBuilders = { () => [$"_original{name} = _current{name};"]} };
-				var rc = new TMethod   { TypeBuilder = static () => "void", Name = $"Reject{name}Changes", BodyBuilders = { () => [$"{name} = _original{name};"]        } };
+				var ac = new TMethod   { TypeBuilder = static () => "void", Name = $"Accept{name}Changes", BodyBuilders = { () => [$"_original{name} = _current{name};"] } };
+				var rc = new TMethod   { TypeBuilder = static () => "void", Name = $"Reject{name}Changes", BodyBuilders = { () => [$"{name} = _original{name};"]         } };
 				var id = new TProperty { TypeBuilder = static () => "bool", Name = $"Is{name}Dirty" }
 					.InitGetter(string.Format(prop.IsDirtyText, $"_current{name}", $"_original{name}"));
 
