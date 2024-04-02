@@ -40,7 +40,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Rolllbacks current transaction for data connection.
+		/// Rollbacks current transaction for data connection.
 		/// </summary>
 		public void Rollback()
 		{
@@ -49,8 +49,8 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Commits current transaction for data connection asynchonously.
-		/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
+		/// Commits current transaction for data connection asynchronously.
+		/// If underlying provider doesn't support asynchronous commit, it will be performed synchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
