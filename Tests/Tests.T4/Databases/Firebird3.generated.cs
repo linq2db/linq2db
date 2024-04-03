@@ -22,7 +22,7 @@ using LinqToDB.Mapping;
 
 namespace Firebird3DataContext
 {
-	public partial class TESTDB30DB : LinqToDB.Data.DataConnection
+	public partial class Testdb30DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<CamelCaseName>     CamelCaseNames      { get { return this.GetTable<CamelCaseName>(); } }
@@ -44,27 +44,27 @@ namespace Firebird3DataContext
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 
-		public TESTDB30DB()
+		public Testdb30DB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TESTDB30DB(string configuration)
+		public Testdb30DB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TESTDB30DB(DataOptions options)
+		public Testdb30DB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TESTDB30DB(DataOptions<TESTDB30DB> options)
+		public Testdb30DB(DataOptions<Testdb30DB> options)
 			: base(options.Options)
 		{
 			InitDataContext();
@@ -301,10 +301,10 @@ namespace Firebird3DataContext
 
 		#endregion
 
-		#region TestTableFunction
+		#region TestPACKAGE1TestTableFunction
 
-		[Sql.TableFunction(Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult> TestTableFunction(int? I)
+		[Sql.TableFunction(Package="TEST_PACKAGE1", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult> TestPACKAGE1TestTableFunction(int? I)
 		{
 			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				I);
@@ -317,10 +317,10 @@ namespace Firebird3DataContext
 
 		#endregion
 
-		#region TestPACKAGE1TestTableFunction
+		#region TestPACKAGE2TestTableFunction
 
-		[Sql.TableFunction(Package="TEST_PACKAGE1", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult0> TestPACKAGE1TestTableFunction(int? I)
+		[Sql.TableFunction(Package="TEST_PACKAGE2", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult0> TestPACKAGE2TestTableFunction(int? I)
 		{
 			return this.GetTable<TestTableFUNCTIONResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				I);
@@ -333,10 +333,10 @@ namespace Firebird3DataContext
 
 		#endregion
 
-		#region TestPACKAGE2TestTableFunction
+		#region TestTableFunction
 
-		[Sql.TableFunction(Package="TEST_PACKAGE2", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult1> TestPACKAGE2TestTableFunction(int? I)
+		[Sql.TableFunction(Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult1> TestTableFunction(int? I)
 		{
 			return this.GetTable<TestTableFUNCTIONResult1>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				I);
@@ -506,7 +506,7 @@ namespace Firebird3DataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_18 (SYSDBA.Person)
+		/// INTEG_1489 (SYSDBA.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -532,7 +532,7 @@ namespace Firebird3DataContext
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_18_BackReference (SYSDBA.Patient)
+		/// INTEG_1489_BackReference (SYSDBA.Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? INTEG { get; set; }
@@ -617,11 +617,11 @@ namespace Firebird3DataContext
 		[Column(DbType="integer",          DataType=LinqToDB.DataType.Int32),                               Nullable         ] public int?      FieldEnumNumber { get; set; } // integer
 	}
 
-	public static partial class TESTDB30DBStoredProcedures
+	public static partial class Testdb30DBStoredProcedures
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this TESTDB30DB dataConnection)
+		public static int AddIssue792Record(this Testdb30DB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"AddIssue792Record\"");
 		}
@@ -630,7 +630,7 @@ namespace Firebird3DataContext
 
 		#region PersonDelete
 
-		public static int PersonDelete(this TESTDB30DB dataConnection, int? PERSONID)
+		public static int PersonDelete(this Testdb30DB dataConnection, int? PERSONID)
 		{
 			var parameters = new []
 			{
@@ -647,7 +647,7 @@ namespace Firebird3DataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TESTDB30DB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public static int PersonUpdate(this Testdb30DB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
 			var parameters = new []
 			{
@@ -678,35 +678,9 @@ namespace Firebird3DataContext
 
 		#endregion
 
-		#region TestProcedure
-
-		public static int TestProcedure(this TESTDB30DB dataConnection, int? I, out int? O)
-		{
-			var parameters = new []
-			{
-				new DataParameter("I", I, LinqToDB.DataType.Int32)
-				{
-					Size = 4
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Int32)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 4
-				}
-			};
-
-			var ret = dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
-
-			O = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-
-			return ret;
-		}
-
-		#endregion
-
 		#region TestPACKAGE1TestProcedure
 
-		public static int TestPACKAGE1TestProcedure(this TESTDB30DB dataConnection, int? I, out int? O)
+		public static int TestPACKAGE1TestProcedure(this Testdb30DB dataConnection, int? I, out int? O)
 		{
 			var parameters = new []
 			{
@@ -732,7 +706,7 @@ namespace Firebird3DataContext
 
 		#region TestPACKAGE2TestProcedure
 
-		public static int TestPACKAGE2TestProcedure(this TESTDB30DB dataConnection, int? I, out int? O)
+		public static int TestPACKAGE2TestProcedure(this Testdb30DB dataConnection, int? I, out int? O)
 		{
 			var parameters = new []
 			{
@@ -748,6 +722,32 @@ namespace Firebird3DataContext
 			};
 
 			var ret = dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+
+			O = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region TestProcedure
+
+		public static int TestProcedure(this Testdb30DB dataConnection, int? I, out int? O)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", I, LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				},
+				new DataParameter("O", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				}
+			};
+
+			var ret = dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
 
 			O = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 

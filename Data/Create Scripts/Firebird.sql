@@ -582,11 +582,11 @@ COMMIT;
 -- Person_Delete
 
 CREATE PROCEDURE "Person_Delete"(
-	PersonID INTEGER
+	"PersonID" INTEGER
 	)
 AS
 BEGIN
-	DELETE FROM "Person" WHERE "PersonID" = :PersonID;
+	DELETE FROM "Person" WHERE "PersonID" = :"PersonID";
 END;
 COMMIT;
 
@@ -959,7 +959,7 @@ RETURNS (O INT)
 AS
 BEGIN
 	FOR SELECT :I + 3 FROM "Person"
-	INTO :O 
+	INTO :O
 	DO SUSPEND;
 END
 COMMIT;

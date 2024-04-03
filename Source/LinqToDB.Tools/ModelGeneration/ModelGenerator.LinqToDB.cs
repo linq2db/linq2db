@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Text;
 
 using LinqToDB.SqlProvider;
@@ -765,7 +764,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 					var proc = new TMemberGroup { Region = p.Name };
 
-					if (!p.IsFunction)          addProcs(proc);
+					if      (!p.IsFunction)     addProcs(proc);
 					else if (p.IsTableFunction) addTabfs(proc);
 					else                        addFuncs(proc);
 

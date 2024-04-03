@@ -241,8 +241,18 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			if (normalize)
 			{
-				if (IsParameter) name = char.ToLower(name[0]) + name[1..];
-				else             name = char.ToUpper(name[0]) + name[1..];
+				var isAllUpper = name.All(c => char.IsDigit(c) || char.IsLetter(c) && char.IsUpper(c));
+
+				if (IsParameter)
+				{
+					name = isAllUpper ? name.ToLowerInvariant() : char.ToLower(name[0]) + name[1..];
+				}
+				else
+				{
+					if (isAllUpper)
+						name = name.ToLowerInvariant();
+					name = char.ToUpper(name[0]) + name[1..];
+				}
 			}
 
 			return name;

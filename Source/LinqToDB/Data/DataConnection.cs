@@ -850,7 +850,7 @@ namespace LinqToDB.Data
 		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
 			if (_commandInterceptor == null)
-				using(ActivityService.Start(ActivityID.CommandExecuteNonQuery))
+				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery))
 					return command.ExecuteNonQuery();
 
 			Option<int> result;
