@@ -1,5 +1,4 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
 	<PropertyGroup>
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3270;MSB3277;MSB3246</MSBuildWarningsAsMessages>
 		<NoWarn>$(NoWarn);CS8002</NoWarn>
@@ -8,7 +7,7 @@
 	<ItemGroup>
 		<PackageReference Include="Npgsql" />
 		<PackageReference Include="System.Data.SQLite.Core" />
-		<PackageReference Include="MySql.Data" Aliases="MySqlData" />
+		<PackageReference Include="MySql.Data"     Aliases="MySqlData" />
 		<PackageReference Include="MySqlConnector" Aliases="MySqlConnector" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="AdoNetCore.AseClient" />
@@ -73,5 +72,4 @@
 			</ItemGroup>
 		</When>
 	</Choose>
-
 </Project>
