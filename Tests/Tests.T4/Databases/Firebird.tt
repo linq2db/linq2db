@@ -6,9 +6,10 @@
 <#
 	NamespaceName = "FirebirdDataContext";
 
-	IncludeDefaultSchema = false;
-	GenerateDataTypes    = true;
-	GenerateDbTypes      = true;
+	IncludeDefaultSchema     = false;
+	GenerateDataTypes        = true;
+	GenerateDbTypes          = true;
+	ConvertUpperNamesToLower = false;
 
 	LoadFirebirdMetadata(GetConnectionString("Firebird"));
 	GenerateModel();

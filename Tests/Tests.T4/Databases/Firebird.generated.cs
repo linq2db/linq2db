@@ -79,11 +79,11 @@ namespace FirebirdDataContext
 		#region OutRefEnumTest
 
 		[Sql.TableFunction(Name="OutRefEnumTest")]
-		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? str, string? InInputoutputstr)
+		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? str, string? inInputoutputstr)
 		{
 			return this.GetTable<OutRefEnumTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				str,
-				InInputoutputstr);
+				inInputoutputstr);
 		}
 
 		public partial class OutRefEnumTestResult
@@ -97,13 +97,13 @@ namespace FirebirdDataContext
 		#region OutRefTest
 
 		[Sql.TableFunction(Name="OutRefTest")]
-		public ITable<OutRefTestResult> OutRefTest(int? id, int? InInputoutputid, string? str, string? InInputoutputstr)
+		public ITable<OutRefTestResult> OutRefTest(int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
 		{
 			return this.GetTable<OutRefTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				id,
-				InInputoutputid,
+				inInputoutputid,
 				str,
-				InInputoutputstr);
+				inInputoutputstr);
 		}
 
 		public partial class OutRefTestResult
@@ -236,11 +236,11 @@ namespace FirebirdDataContext
 		#region PersonSelectByName
 
 		[Sql.TableFunction(Name="Person_SelectByName")]
-		public ITable<PersonSelectByNameResult> PersonSelectByName(string? InFirstname, string? InLastname)
+		public ITable<PersonSelectByNameResult> PersonSelectByName(string? inFirstname, string? inLastname)
 		{
 			return this.GetTable<PersonSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				InFirstname,
-				InLastname);
+				inFirstname,
+				inLastname);
 		}
 
 		public partial class PersonSelectByNameResult
@@ -458,7 +458,7 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_1897 (SYSDBA.Person)
+		/// INTEG_2033 (SYSDBA.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -484,7 +484,7 @@ namespace FirebirdDataContext
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_1897_BackReference (SYSDBA.Patient)
+		/// INTEG_2033_BackReference (SYSDBA.Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? INTEG { get; set; }
@@ -582,11 +582,11 @@ namespace FirebirdDataContext
 
 		#region PersonDelete
 
-		public static int PersonDelete(this Testdb25DB dataConnection, int? PersonID)
+		public static int PersonDelete(this Testdb25DB dataConnection, int? personID)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PersonID", PersonID, LinqToDB.DataType.Int32)
+				new DataParameter("PersonID", personID, LinqToDB.DataType.Int32)
 				{
 					Size = 4
 				}
@@ -636,7 +636,7 @@ namespace FirebirdDataContext
 		#region LTRIM
 
 		[Sql.Function(Name="LTRIM", ServerSideOnly=true)]
-		public static string? LTRIM(string? Par2)
+		public static string? LTRIM(string? par2)
 		{
 			throw new InvalidOperationException();
 		}
@@ -646,7 +646,7 @@ namespace FirebirdDataContext
 		#region RTRIM
 
 		[Sql.Function(Name="RTRIM", ServerSideOnly=true)]
-		public static string? RTRIM(string? Par4)
+		public static string? RTRIM(string? par4)
 		{
 			throw new InvalidOperationException();
 		}

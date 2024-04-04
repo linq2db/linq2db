@@ -25,7 +25,7 @@ namespace OracleDataContext
 	public partial class XeDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>             AllTypes            { get { return this.GetTable<AllType>(); } }
-		public ITable<BINARYDATA>          Binarydatas         { get { return this.GetTable<BINARYDATA>(); } }
+		public ITable<Binarydata>          Binarydatas         { get { return this.GetTable<Binarydata>(); } }
 		public ITable<Child>               Children            { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>       CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<DataTypeTest>        DataTypeTests       { get { return this.GetTable<DataTypeTest>(); } }
@@ -35,7 +35,7 @@ namespace OracleDataContext
 		public ITable<InheritanceChild>    InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent>   InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
 		public ITable<LinqDataType>        LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<LINQDATATYPESBC>     Linqdatatypesbcs    { get { return this.GetTable<LINQDATATYPESBC>(); } }
+		public ITable<Linqdatatypesbc>     Linqdatatypesbcs    { get { return this.GetTable<Linqdatatypesbc>(); } }
 		public ITable<LongRawTable>        LongRawTables       { get { return this.GetTable<LongRawTable>(); } }
 		public ITable<Parent>              Parents             { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>             Patients            { get { return this.GetTable<Patient>(); } }
@@ -49,7 +49,7 @@ namespace OracleDataContext
 		/// </summary>
 		public ITable<SchemaTestTable>     SchemaTestTables    { get { return this.GetTable<SchemaTestTable>(); } }
 		public ITable<SchemaTestView>      SchemaTestViews     { get { return this.GetTable<SchemaTestView>(); } }
-		public ITable<SEQUENCETEST>        Sequencetests       { get { return this.GetTable<SEQUENCETEST>(); } }
+		public ITable<Sequencetest>        Sequencetests       { get { return this.GetTable<Sequencetest>(); } }
 		public ITable<StgTradeInformation> StgTradeInformation { get { return this.GetTable<StgTradeInformation>(); } }
 		public ITable<StringTest>          StringTests         { get { return this.GetTable<StringTest>(); } }
 		public ITable<TEntity>             TEntities           { get { return this.GetTable<TEntity>(); } }
@@ -176,11 +176,11 @@ namespace OracleDataContext
 	}
 
 	[Table(Schema="TEST", Name="BINARYDATA")]
-	public partial class BINARYDATA
+	public partial class Binarydata
 	{
-		[Column(DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal,   Length=22),          PrimaryKey, NotNull] public decimal  BINARYDATAID { get; set; } // NUMBER
-		[Column(DbType="TIMESTAMP(6)", DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),             NotNull] public DateTime STAMP        { get; set; } // TIMESTAMP(6)
-		[Column(DbType="BLOB",         DataType=LinqToDB.DataType.Blob,      Length=4000),                    NotNull] public byte[]   DATA         { get; set; } = null!; // BLOB
+		[Column("BINARYDATAID", DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal,   Length=22),          PrimaryKey, NotNull] public decimal  Binarydataid { get; set; } // NUMBER
+		[Column("STAMP",        DbType="TIMESTAMP(6)", DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),             NotNull] public DateTime Stamp        { get; set; } // TIMESTAMP(6)
+		[Column("DATA",         DbType="BLOB",         DataType=LinqToDB.DataType.Blob,      Length=4000),                    NotNull] public byte[]   Data         { get; set; } = null!; // BLOB
 	}
 
 	[Table(Schema="TEST", Name="Child")]
@@ -294,18 +294,18 @@ namespace OracleDataContext
 	}
 
 	[Table(Schema="TEST", Name="LINQDATATYPESBC")]
-	public partial class LINQDATATYPESBC
+	public partial class Linqdatatypesbc
 	{
-		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  ID             { get; set; } // NUMBER
-		[Column(DbType="NUMBER (10,4)", DataType=LinqToDB.DataType.Decimal,   Length=22, Precision=10, Scale=4), Nullable] public decimal?  MONEYVALUE     { get; set; } // NUMBER (10,4)
-		[Column(DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),               Nullable] public DateTime? DATETIMEVALUE  { get; set; } // TIMESTAMP(6)
-		[Column(DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),               Nullable] public DateTime? DATETIMEVALUE2 { get; set; } // TIMESTAMP(6)
-		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  BOOLVALUE      { get; set; } // NUMBER
-		[Column(DbType="RAW(16)",       DataType=LinqToDB.DataType.Binary,    Length=16),                        Nullable] public byte[]?   GUIDVALUE      { get; set; } // RAW(16)
-		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  SMALLINTVALUE  { get; set; } // NUMBER
-		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  INTVALUE       { get; set; } // NUMBER
-		[Column(DbType="NUMBER (20,0)", DataType=LinqToDB.DataType.Decimal,   Length=22, Precision=20, Scale=0), Nullable] public decimal?  BIGINTVALUE    { get; set; } // NUMBER (20,0)
-		[Column(DbType="VARCHAR2(50)",  DataType=LinqToDB.DataType.VarChar,   Length=50),                        Nullable] public string?   STRINGVALUE    { get; set; } // VARCHAR2(50)
+		[Column(                  DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  ID             { get; set; } // NUMBER
+		[Column("MONEYVALUE",     DbType="NUMBER (10,4)", DataType=LinqToDB.DataType.Decimal,   Length=22, Precision=10, Scale=4), Nullable] public decimal?  Moneyvalue     { get; set; } // NUMBER (10,4)
+		[Column("DATETIMEVALUE",  DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),               Nullable] public DateTime? Datetimevalue  { get; set; } // TIMESTAMP(6)
+		[Column("DATETIMEVALUE2", DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),               Nullable] public DateTime? Datetimevalue2 { get; set; } // TIMESTAMP(6)
+		[Column("BOOLVALUE",      DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  Boolvalue      { get; set; } // NUMBER
+		[Column("GUIDVALUE",      DbType="RAW(16)",       DataType=LinqToDB.DataType.Binary,    Length=16),                        Nullable] public byte[]?   Guidvalue      { get; set; } // RAW(16)
+		[Column("SMALLINTVALUE",  DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  Smallintvalue  { get; set; } // NUMBER
+		[Column("INTVALUE",       DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  Intvalue       { get; set; } // NUMBER
+		[Column("BIGINTVALUE",    DbType="NUMBER (20,0)", DataType=LinqToDB.DataType.Decimal,   Length=22, Precision=20, Scale=0), Nullable] public decimal?  Bigintvalue    { get; set; } // NUMBER (20,0)
+		[Column("STRINGVALUE",    DbType="VARCHAR2(50)",  DataType=LinqToDB.DataType.VarChar,   Length=50),                        Nullable] public string?   Stringvalue    { get; set; } // VARCHAR2(50)
 	}
 
 	[Table(Schema="TEST", Name="LongRawTable")]
@@ -399,10 +399,10 @@ namespace OracleDataContext
 	}
 
 	[Table(Schema="TEST", Name="SEQUENCETEST")]
-	public partial class SEQUENCETEST
+	public partial class Sequencetest
 	{
-		[Column(DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID    { get; set; } // NUMBER
-		[Column(DbType="VARCHAR2(50)", DataType=LinqToDB.DataType.VarChar, Length=50),                      NotNull] public string  VALUE { get; set; } = null!; // VARCHAR2(50)
+		[Column(         DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID    { get; set; } // NUMBER
+		[Column("VALUE", DbType="VARCHAR2(50)", DataType=LinqToDB.DataType.VarChar, Length=50),                      NotNull] public string  Value { get; set; } = null!; // VARCHAR2(50)
 	}
 
 	[Table(Schema="TEST", Name="STG_TRADE_INFORMATION")]
@@ -412,7 +412,7 @@ namespace OracleDataContext
 		[Column("STG_TRADE_VERSION",     DbType="NUMBER",         DataType=LinqToDB.DataType.Decimal,  Length=22),   NotNull    ] public decimal   StgTradeVersion     { get; set; } // NUMBER
 		[Column("INFORMATION_TYPE_ID",   DbType="NUMBER",         DataType=LinqToDB.DataType.Decimal,  Length=22),   NotNull    ] public decimal   InformationTypeId   { get; set; } // NUMBER
 		[Column("INFORMATION_TYPE_NAME", DbType="VARCHAR2(50)",   DataType=LinqToDB.DataType.VarChar,  Length=50),      Nullable] public string?   InformationTypeName { get; set; } // VARCHAR2(50)
-		[Column(                         DbType="VARCHAR2(4000)", DataType=LinqToDB.DataType.VarChar,  Length=4000),    Nullable] public string?   VALUE               { get; set; } // VARCHAR2(4000)
+		[Column("VALUE",                 DbType="VARCHAR2(4000)", DataType=LinqToDB.DataType.VarChar,  Length=4000),    Nullable] public string?   Value               { get; set; } // VARCHAR2(4000)
 		[Column("VALUE_AS_INTEGER",      DbType="NUMBER",         DataType=LinqToDB.DataType.Decimal,  Length=22),      Nullable] public decimal?  ValueAsInteger      { get; set; } // NUMBER
 		[Column("VALUE_AS_DATE",         DbType="DATE",           DataType=LinqToDB.DataType.DateTime, Length=7),       Nullable] public DateTime? ValueAsDate         { get; set; } // DATE
 	}
@@ -529,18 +529,18 @@ namespace OracleDataContext
 
 	public static partial class XeDBStoredProcedures
 	{
-		#region ADDISSUE792RECORD
+		#region Addissue792record
 
-		public static int ADDISSUE792RECORD(this XeDB dataConnection)
+		public static int Addissue792record(this XeDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("TEST.ADDISSUE792RECORD");
 		}
 
 		#endregion
 
-		#region OUTREFENUMTEST
+		#region Outrefenumtest
 
-		public static int OUTREFENUMTEST(this XeDB dataConnection, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
+		public static int Outrefenumtest(this XeDB dataConnection, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
 		{
 			var parameters = new []
 			{
@@ -565,9 +565,9 @@ namespace OracleDataContext
 
 		#endregion
 
-		#region OUTREFTEST
+		#region Outreftest
 
-		public static int OUTREFTEST(this XeDB dataConnection, decimal? pid, out decimal? poutputid, ref decimal? pinputoutputid, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
+		public static int Outreftest(this XeDB dataConnection, decimal? pid, out decimal? poutputid, ref decimal? pinputoutputid, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
 		{
 			var parameters = new []
 			{
@@ -646,9 +646,9 @@ namespace OracleDataContext
 
 		#endregion
 
-		#region RESULTSETTEST
+		#region Resultsettest
 
-		public static IEnumerable<RESULTSETTESTResult> RESULTSETTEST(this XeDB dataConnection, out object? mr, out object? sr)
+		public static IEnumerable<RESULTSETTESTResult> Resultsettest(this XeDB dataConnection, out object? mr, out object? sr)
 		{
 			var parameters = new []
 			{
@@ -672,7 +672,7 @@ namespace OracleDataContext
 
 		public partial class RESULTSETTESTResult
 		{
-			public decimal? MASTERID { get; set; }
+			[Column("MASTERID")] public decimal? Masterid { get; set; }
 		}
 
 		#endregion
@@ -897,10 +897,10 @@ namespace OracleDataContext
 				t.ID == ID);
 		}
 
-		public static BINARYDATA? Find(this ITable<BINARYDATA> table, decimal BINARYDATAID)
+		public static Binarydata? Find(this ITable<Binarydata> table, decimal Binarydataid)
 		{
 			return table.FirstOrDefault(t =>
-				t.BINARYDATAID == BINARYDATAID);
+				t.Binarydataid == Binarydataid);
 		}
 
 		public static DataTypeTest? Find(this ITable<DataTypeTest> table, decimal DataTypeID)
@@ -957,7 +957,7 @@ namespace OracleDataContext
 				t.Id == Id);
 		}
 
-		public static SEQUENCETEST? Find(this ITable<SEQUENCETEST> table, decimal ID)
+		public static Sequencetest? Find(this ITable<Sequencetest> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

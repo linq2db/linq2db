@@ -740,8 +740,9 @@ namespace LinqToDB.Tools.ModelGeneration
 				var currentContext = DataContextObject;
 				foreach (var p in Procedures.Values
 					.Where(proc =>
-						proc.IsLoaded || proc.IsFunction && !proc.IsTableFunction ||
-						proc.IsTableFunction && proc.ResultException != null)
+						proc.IsLoaded ||
+						proc is { IsFunction     : true, IsTableFunction: false    } ||
+						proc is { IsTableFunction: true, ResultException: not null })
 					.OrderBy(proc => proc.Name))
 				{
 					Action<IMemberGroup> addProcs = tp => procs.Members.Add(tp);

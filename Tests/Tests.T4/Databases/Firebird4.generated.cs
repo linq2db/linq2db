@@ -82,17 +82,17 @@ namespace Firebird4DataContext
 		#region OutRefEnumTest
 
 		[Sql.TableFunction(Name="OutRefEnumTest")]
-		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? str, string? InInputoutputstr)
+		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? str, string? inInputoutputstr)
 		{
 			return this.GetTable<OutRefEnumTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				str,
-				InInputoutputstr);
+				inInputoutputstr);
 		}
 
 		public partial class OutRefEnumTestResult
 		{
-			public string? INPUTOUTPUTSTR { get; set; }
-			public string? OUTPUTSTR      { get; set; }
+			[Column("INPUTOUTPUTSTR")] public string? Inputoutputstr { get; set; }
+			[Column("OUTPUTSTR")     ] public string? Outputstr      { get; set; }
 		}
 
 		#endregion
@@ -100,21 +100,21 @@ namespace Firebird4DataContext
 		#region OutRefTest
 
 		[Sql.TableFunction(Name="OutRefTest")]
-		public ITable<OutRefTestResult> OutRefTest(int? id, int? InInputoutputid, string? str, string? InInputoutputstr)
+		public ITable<OutRefTestResult> OutRefTest(int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
 		{
 			return this.GetTable<OutRefTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				id,
-				InInputoutputid,
+				inInputoutputid,
 				str,
-				InInputoutputstr);
+				inInputoutputstr);
 		}
 
 		public partial class OutRefTestResult
 		{
-			public int?    INPUTOUTPUTID  { get; set; }
-			public string? INPUTOUTPUTSTR { get; set; }
-			public int?    OUTPUTID       { get; set; }
-			public string? OUTPUTSTR      { get; set; }
+			[Column("INPUTOUTPUTID") ] public int?    Inputoutputid  { get; set; }
+			[Column("INPUTOUTPUTSTR")] public string? Inputoutputstr { get; set; }
+			[Column("OUTPUTID")      ] public int?    Outputid       { get; set; }
+			[Column("OUTPUTSTR")     ] public string? Outputstr      { get; set; }
 		}
 
 		#endregion
@@ -129,12 +129,12 @@ namespace Firebird4DataContext
 
 		public partial class PatientSelectAllResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? FIRSTNAME  { get; set; }
-			public string? LASTNAME   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
-			public string? DIAGNOSIS  { get; set; }
+			[Column("PERSONID")  ] public int?    Personid   { get; set; }
+			[Column("FIRSTNAME") ] public string? Firstname  { get; set; }
+			[Column("LASTNAME")  ] public string? Lastname   { get; set; }
+			[Column("MIDDLENAME")] public string? Middlename { get; set; }
+			[Column("GENDER")    ] public string? Gender     { get; set; }
+			[Column("DIAGNOSIS") ] public string? Diagnosis  { get; set; }
 		}
 
 		#endregion
@@ -151,10 +151,10 @@ namespace Firebird4DataContext
 
 		public partial class PatientSelectByNameResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
-			public string? DIAGNOSIS  { get; set; }
+			[Column("PERSONID")  ] public int?    Personid   { get; set; }
+			[Column("MIDDLENAME")] public string? Middlename { get; set; }
+			[Column("GENDER")    ] public string? Gender     { get; set; }
+			[Column("DIAGNOSIS") ] public string? Diagnosis  { get; set; }
 		}
 
 		#endregion
@@ -173,7 +173,7 @@ namespace Firebird4DataContext
 
 		public partial class PersonInsertResult
 		{
-			public int? PERSONID { get; set; }
+			[Column("PERSONID")] public int? Personid { get; set; }
 		}
 
 		#endregion
@@ -192,7 +192,7 @@ namespace Firebird4DataContext
 
 		public partial class PersonInsertOutputParameterResult
 		{
-			public int? PERSONID { get; set; }
+			[Column("PERSONID")] public int? Personid { get; set; }
 		}
 
 		#endregion
@@ -207,11 +207,11 @@ namespace Firebird4DataContext
 
 		public partial class PersonSelectAllResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? FIRSTNAME  { get; set; }
-			public string? LASTNAME   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
+			[Column("PERSONID")  ] public int?    Personid   { get; set; }
+			[Column("FIRSTNAME") ] public string? Firstname  { get; set; }
+			[Column("LASTNAME")  ] public string? Lastname   { get; set; }
+			[Column("MIDDLENAME")] public string? Middlename { get; set; }
+			[Column("GENDER")    ] public string? Gender     { get; set; }
 		}
 
 		#endregion
@@ -227,11 +227,11 @@ namespace Firebird4DataContext
 
 		public partial class PersonSelectByKeyResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? FIRSTNAME  { get; set; }
-			public string? LASTNAME   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
+			[Column("PERSONID")  ] public int?    Personid   { get; set; }
+			[Column("FIRSTNAME") ] public string? Firstname  { get; set; }
+			[Column("LASTNAME")  ] public string? Lastname   { get; set; }
+			[Column("MIDDLENAME")] public string? Middlename { get; set; }
+			[Column("GENDER")    ] public string? Gender     { get; set; }
 		}
 
 		#endregion
@@ -239,20 +239,20 @@ namespace Firebird4DataContext
 		#region PersonSelectByName
 
 		[Sql.TableFunction(Name="Person_SelectByName")]
-		public ITable<PersonSelectByNameResult> PersonSelectByName(string? InFirstname, string? InLastname)
+		public ITable<PersonSelectByNameResult> PersonSelectByName(string? inFirstname, string? inLastname)
 		{
 			return this.GetTable<PersonSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				InFirstname,
-				InLastname);
+				inFirstname,
+				inLastname);
 		}
 
 		public partial class PersonSelectByNameResult
 		{
-			public int?    PERSONID   { get; set; }
-			public string? FIRSTNAME  { get; set; }
-			public string? LASTNAME   { get; set; }
-			public string? MIDDLENAME { get; set; }
-			public string? GENDER     { get; set; }
+			[Column("PERSONID")  ] public int?    Personid   { get; set; }
+			[Column("FIRSTNAME") ] public string? Firstname  { get; set; }
+			[Column("LASTNAME")  ] public string? Lastname   { get; set; }
+			[Column("MIDDLENAME")] public string? Middlename { get; set; }
+			[Column("GENDER")    ] public string? Gender     { get; set; }
 		}
 
 		#endregion
@@ -267,8 +267,8 @@ namespace Firebird4DataContext
 
 		public partial class ScalarDataReaderResult
 		{
-			public int?    INTFIELD    { get; set; }
-			public string? STRINGFIELD { get; set; }
+			[Column("INTFIELD")   ] public int?    Intfield    { get; set; }
+			[Column("STRINGFIELD")] public string? Stringfield { get; set; }
 		}
 
 		#endregion
@@ -283,8 +283,8 @@ namespace Firebird4DataContext
 
 		public partial class ScalarOutputParameterResult
 		{
-			public int?    OUTPUTINT    { get; set; }
-			public string? OUTPUTSTRING { get; set; }
+			[Column("OUTPUTINT")   ] public int?    Outputint    { get; set; }
+			[Column("OUTPUTSTRING")] public string? Outputstring { get; set; }
 		}
 
 		#endregion
@@ -355,14 +355,14 @@ namespace Firebird4DataContext
 		#region TestV4Types
 
 		[Sql.TableFunction(Name="TEST_V4_TYPES")]
-		public ITable<TestV4TYPESResult> TestV4Types(FbZonedDateTime? tstz, FbZonedTime? ttz, FbDecFloat? decfloat16, FbDecFloat? decfloat34, BigInteger? Int128)
+		public ITable<TestV4TYPESResult> TestV4Types(FbZonedDateTime? tstz, FbZonedTime? ttz, FbDecFloat? decfloat16, FbDecFloat? decfloat34, BigInteger? int128)
 		{
 			return this.GetTable<TestV4TYPESResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
 				tstz,
 				ttz,
 				decfloat16,
 				decfloat34,
-				Int128);
+				int128);
 		}
 
 		public partial class TestV4TYPESResult
@@ -409,11 +409,11 @@ namespace Firebird4DataContext
 	public partial class CamelCaseName
 	{
 		[Column(          DbType="integer",     DataType=LinqToDB.DataType.Int32),               PrimaryKey,  NotNull] public int     Id    { get; set; } // integer
-		[Column(          DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? NAME1 { get; set; } // varchar(20)
+		[Column("NAME1",  DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? Name1 { get; set; } // varchar(20)
 		[Column(          DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? Name2 { get; set; } // varchar(20)
-		[Column(          DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? NAME3 { get; set; } // varchar(20)
-		[Column("_NAME4", DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? NAME4 { get; set; } // varchar(20)
-		[Column("NAME 5", DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? NAME5 { get; set; } // varchar(20)
+		[Column("NAME3",  DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? Name3 { get; set; } // varchar(20)
+		[Column("_NAME4", DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? Name4 { get; set; } // varchar(20)
+		[Column("NAME 5", DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? Name5 { get; set; } // varchar(20)
 	}
 
 	[Table("Child")]
@@ -567,7 +567,7 @@ namespace Firebird4DataContext
 		/// INTEG_1489_BackReference (SYSDBA.Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
-		public Patient? INTEG { get; set; }
+		public Patient? Integ { get; set; }
 
 		#endregion
 	}
@@ -791,20 +791,20 @@ namespace Firebird4DataContext
 
 	public static partial class SqlFunctions
 	{
-		#region LTRIM
+		#region Ltrim
 
 		[Sql.Function(Name="LTRIM", ServerSideOnly=true)]
-		public static string? LTRIM(string? Par2)
+		public static string? Ltrim(string? par2)
 		{
 			throw new InvalidOperationException();
 		}
 
 		#endregion
 
-		#region RTRIM
+		#region Rtrim
 
 		[Sql.Function(Name="RTRIM", ServerSideOnly=true)]
-		public static string? RTRIM(string? Par4)
+		public static string? Rtrim(string? par4)
 		{
 			throw new InvalidOperationException();
 		}

@@ -95,8 +95,8 @@
 		<None    Update="Databases\Oracle.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Oracle.generated.cs" />
 		<Compile Update="Databases\Oracle.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Oracle.tt" />
 
-		<None    Update="Databases\PostgreSQL.11.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="PostgreSQL.11.generated.cs" />
-		<Compile Update="Databases\PostgreSQL.11.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="PostgreSQL.11.tt" />
+		<None    Update="Databases\PostgreSQL.16.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="PostgreSQL.16.generated.cs" />
+		<Compile Update="Databases\PostgreSQL.16.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="PostgreSQL.16.tt" />
 
 		<None    Update="Databases\PostgreSQL.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="PostgreSQL.generated.cs" />
 		<Compile Update="Databases\PostgreSQL.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="PostgreSQL.tt" />

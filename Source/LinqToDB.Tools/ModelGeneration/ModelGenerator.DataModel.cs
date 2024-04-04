@@ -12,8 +12,6 @@ using LinqToDB.SchemaProvider;
 #pragma warning disable CA1304
 #pragma warning disable MA0075
 
-using AssociationType = LinqToDB.Tools.ModelGeneration.AssociationType;
-
 namespace LinqToDB.Tools.ModelGeneration
 {
 	public partial class ModelGenerator
@@ -52,6 +50,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public bool    NormalizeProcedureColumnName        { get; set; } = true;
 		public bool    NormalizeNames                      { get; set; } = true;
 		public bool    NormalizeNamesWithoutUnderscores    { get; set; }
+		public bool    ConvertUpperNamesToLower            { get; set; } = true;
 
 		private Func<string,bool,string>? _toValidName;
 		public  Func<string,bool,string>   ToValidName
@@ -216,7 +215,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public Dictionary<string,ITable>     Tables     { get; set; } = new ();
 		public Dictionary<string,IProcedure> Procedures { get; set; } = new ();
 
-		string ToValidNameDefault(string name, bool mayRemoveUnderscore)
+		public string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 		{
 			var normalize = IsParameter && NormalizeParameterName || IsProcedureColumn && NormalizeProcedureColumnName || (!IsParameter && !IsProcedureColumn && NormalizeNames);
 
@@ -249,7 +248,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				}
 				else
 				{
-					if (isAllUpper)
+					if (isAllUpper && name.Length > 2 && ConvertUpperNamesToLower)
 						name = name.ToLowerInvariant();
 					name = char.ToUpper(name[0]) + name[1..];
 				}
@@ -269,7 +268,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			return s.Length == 0 ? s : char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1));
 		}
 
-		string ConvertToCompilableDefault(string name, bool mayRemoveUnderscore)
+		public string ConvertToCompilableDefault(string name, bool mayRemoveUnderscore)
 		{
 			var query =
 				from c in name
@@ -582,7 +581,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			return dic;
 		}
 
-		string? CheckType(Type? type, string? typeName)
+		public string? CheckType(Type? type, string? typeName)
 		{
 			type ??= typeof(object);
 
@@ -655,7 +654,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			LoadServerMetadata<TTable,TForeignKey,TColumn,TProcedure>(dataConnection);
 
-			if (Tables.Values.SelectMany(_ => _.ForeignKeys.Values).Any(_ => _.AssociationType == AssociationType.OneToMany))
+			if (Tables.Values.SelectMany(t => t.ForeignKeys.Values).Any(t => t.AssociationType == AssociationType.OneToMany))
 				Model.Usings.Add("System.Collections.Generic");
 
 			foreach (var t in Tables.Values)

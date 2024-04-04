@@ -113,6 +113,22 @@ namespace PostreSQL11DataContext
 
 		#endregion
 
+		#region TestTableFunction
+
+		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
+		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
+		{
+			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				param1);
+		}
+
+		public partial class TestTableFunctionResult
+		{
+			public int? param2 { get; set; }
+		}
+
+		#endregion
+
 		#region TestTableFunction1
 
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction1\"")]
@@ -127,22 +143,6 @@ namespace PostreSQL11DataContext
 		{
 			public int? param3 { get; set; }
 			public int? param4 { get; set; }
-		}
-
-		#endregion
-
-		#region TestTableFunction
-
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
-		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
-		{
-			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				param1);
-		}
-
-		public partial class TestTableFunctionResult
-		{
-			public int? param2 { get; set; }
 		}
 
 		#endregion
@@ -673,7 +673,7 @@ namespace PostreSQL11DataContext
 		#region Reverse
 
 		[Sql.Function(Name="\"public\".reverse", ServerSideOnly=true)]
-		public static string? Reverse(string? par7)
+		public static string? Reverse(string? par8)
 		{
 			throw new InvalidOperationException();
 		}
@@ -683,7 +683,7 @@ namespace PostreSQL11DataContext
 		#region TestAvg
 
 		[Sql.Function(Name="\"public\".test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par10)
 		{
 			throw new InvalidOperationException();
 		}

@@ -44,6 +44,7 @@ public bool     NormalizeParameterName              { get { return ModelGenerato
 public bool     NormalizeProcedureColumnName        { get { return ModelGenerator.NormalizeProcedureColumnName;        } set { ModelGenerator.NormalizeProcedureColumnName        = value; } }
 public bool     NormalizeNames                      { get { return ModelGenerator.NormalizeNames;                      } set { ModelGenerator.NormalizeNames                      = value; } }
 public bool     NormalizeNamesWithoutUnderscores    { get { return ModelGenerator.NormalizeNamesWithoutUnderscores;    } set { ModelGenerator.NormalizeNamesWithoutUnderscores    = value; } }
+public bool     ConvertUpperNamesToLower            { get { return ModelGenerator.ConvertUpperNamesToLower;            } set { ModelGenerator.ConvertUpperNamesToLower            = value; } }
 
 public Func<string,bool,string> ToValidName         { get { return ModelGenerator.ToValidName;         } set { ModelGenerator.ToValidName         = value; } }
 public Func<string,bool,string> ConvertToCompilable { get { return ModelGenerator.ConvertToCompilable; } set { ModelGenerator.ConvertToCompilable = value; } }

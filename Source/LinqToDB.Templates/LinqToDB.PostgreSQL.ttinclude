@@ -19,10 +19,10 @@
 	}
 #>
 <#+
-bool GenerateCaseSensitiveNames = false; // Defines whether to generate case sensitive or insensitive names
+bool GenerateCaseSensitiveNames = false; // Defines whether to generate case-sensitive or insensitive names
 
 // functions with multiple out parameters implemented by pgsql as functions with input parameters that return record with
-// value for each output parameter so we need to move out parameters to result value class field and map
+// value for each output parameter, so we need to move out parameters to result value class field and map
 // record, returned by npgsql provider as object[], to this class
 // exception: functions with only one out parameter treat it as return parameter
 void FixRecordResultFunctions()

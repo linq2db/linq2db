@@ -38,6 +38,9 @@
 		<Reference Include="Sap.Data.Hana.v4.5">
 			<HintPath>..\..\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
 		</Reference>
+		<None Include="$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll" Link="IBM.Data.DB2.x64.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
 		<Reference Include="Sap.Data.Hana.Core.v2.1">

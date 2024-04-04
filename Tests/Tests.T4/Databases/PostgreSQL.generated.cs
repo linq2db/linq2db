@@ -38,10 +38,6 @@ namespace PostreSQLDataContext
 		public ITable<GrandChild>                     GrandChildren             { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>               InheritanceChildren       { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent>              InheritanceParents        { get { return this.GetTable<InheritanceParent>(); } }
-		/// <summary>
-		/// This is the Issue2023 matview
-		/// </summary>
-		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
@@ -82,6 +78,22 @@ namespace PostreSQLDataContext
 
 		#endregion
 
+		#region TestTableFunction
+
+		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
+		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
+		{
+			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				param1);
+		}
+
+		public partial class TestTableFunctionResult
+		{
+			[Column("param2")] public int? Param2 { get; set; }
+		}
+
+		#endregion
+
 		#region TestTableFunction1
 
 		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction1\"")]
@@ -96,22 +108,6 @@ namespace PostreSQLDataContext
 		{
 			[Column("param3")] public int? Param3 { get; set; }
 			[Column("param4")] public int? Param4 { get; set; }
-		}
-
-		#endregion
-
-		#region TestTableFunction
-
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
-		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
-		{
-			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				param1);
-		}
-
-		public partial class TestTableFunctionResult
-		{
-			[Column("param2")] public int? Param2 { get; set; }
 		}
 
 		#endregion
@@ -160,9 +156,7 @@ namespace PostreSQLDataContext
 			[Column("inetDataType")       ] public NpgsqlInet?       InetDataType        { get; set; }
 			[Column("cidrDataType")       ] public NpgsqlInet?       CidrDataType        { get; set; }
 			[Column("macaddrDataType")    ] public PhysicalAddress?  MacaddrDataType     { get; set; }
-			[Column("macaddr8DataType")   ] public PhysicalAddress?  Macaddr8DataType    { get; set; }
 			[Column("jsonDataType")       ] public string?           JsonDataType        { get; set; }
-			[Column("jsonbDataType")      ] public string?           JsonbDataType       { get; set; }
 			[Column("xmlDataType")        ] public string?           XmlDataType         { get; set; }
 			[Column("varBitDataType")     ] public BitArray?         VarBitDataType      { get; set; }
 			[Column("strarray")           ] public string[]?         Strarray            { get; set; }
@@ -230,9 +224,7 @@ namespace PostreSQLDataContext
 		[Column("inetDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlInet?       InetDataType        { get; set; } // inet
 		[Column("cidrDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlInet?       CidrDataType        { get; set; } // cidr
 		[Column("macaddrDataType",     DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?  MacaddrDataType     { get; set; } // macaddr
-		[Column("macaddr8DataType",    DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?  Macaddr8DataType    { get; set; } // macaddr8
 		[Column("jsonDataType",        DataType=LinqToDB.DataType.Json),                                  Nullable            ] public string?           JsonDataType        { get; set; } // json
-		[Column("jsonbDataType",       DataType=LinqToDB.DataType.BinaryJson),                            Nullable            ] public string?           JsonbDataType       { get; set; } // jsonb
 		[Column("xmlDataType",         DataType=LinqToDB.DataType.Xml),                                   Nullable            ] public string?           XmlDataType         { get; set; } // xml
 		[Column("varBitDataType",      DataType=LinqToDB.DataType.BitArray),                              Nullable            ] public BitArray?         VarBitDataType      { get; set; } // bit varying
 		[Column("strarray",            DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public string[]?         Strarray            { get; set; } // text[]
@@ -306,22 +298,6 @@ namespace PostreSQLDataContext
 		[Column(DataType=LinqToDB.DataType.Int32,    Precision=32, Scale=0), PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.Int32,    Precision=32, Scale=0),    Nullable         ] public int?    TypeDiscriminator   { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50),                Nullable         ] public string? Name                { get; set; } // character varying(50)
-	}
-
-	/// <summary>
-	/// This is the Issue2023 matview
-	/// </summary>
-	[Table(Schema="public", Name="Issue2023", IsView=true)]
-	public partial class Issue2023
-	{
-		/// <summary>
-		/// This is the Issue2023.PersonID column
-		/// </summary>
-		[Column(DataType=LinqToDB.DataType.Int32,    Precision=32, Scale=0, SkipOnInsert=true, SkipOnUpdate=true), Nullable] public int?    PersonID   { get; set; } // integer
-		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? FirstName  { get; set; } // character varying(50)
-		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? LastName   { get; set; } // character varying(50)
-		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50, SkipOnInsert=true, SkipOnUpdate=true),             Nullable] public string? MiddleName { get; set; } // character varying(50)
-		[Column(DataType=LinqToDB.DataType.NChar,    Length=1, SkipOnInsert=true, SkipOnUpdate=true),              Nullable] public char?   Gender     { get; set; } // character(1)
 	}
 
 	[Table(Schema="public", Name="LinqDataTypes")]
@@ -404,16 +380,16 @@ namespace PostreSQLDataContext
 		#region Associations
 
 		/// <summary>
-		/// same_name_BackReference (public.same_name2)
-		/// </summary>
-		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
-		public IEnumerable<SameName2> SameNameBackReferences { get; set; } = null!;
-
-		/// <summary>
 		/// same_name_BackReference (public.same_name1)
 		/// </summary>
 		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
-		public IEnumerable<SameName1> Samenames { get; set; } = null!;
+		public IEnumerable<SameName1> SameNameBackReferences { get; set; } = null!;
+
+		/// <summary>
+		/// same_name_BackReference (public.same_name2)
+		/// </summary>
+		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
+		public IEnumerable<SameName2> Samenames { get; set; } = null!;
 
 		#endregion
 	}
@@ -642,7 +618,7 @@ namespace PostreSQLDataContext
 		#region Reverse
 
 		[Sql.Function(Name="\"public\".reverse", ServerSideOnly=true)]
-		public static string? Reverse(string? par7)
+		public static string? Reverse(string? par6)
 		{
 			throw new InvalidOperationException();
 		}
@@ -652,7 +628,7 @@ namespace PostreSQLDataContext
 		#region TestAvg
 
 		[Sql.Function(Name="\"public\".test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par8)
 		{
 			throw new InvalidOperationException();
 		}
