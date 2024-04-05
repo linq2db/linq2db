@@ -39,6 +39,7 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 			SqlProviderFlags.IsWindowFunctionsSupported       = false;
+			SqlProviderFlags.IsDerivedTableOrderBySupported   = false;
 
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
 

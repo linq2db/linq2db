@@ -239,11 +239,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				var groupSqlExpr = builder.ConvertToSqlExpr(onSequence, path, flags.SqlFlag() | ProjectFlags.Keys);
-				if (groupSqlExpr is not SqlPlaceholderExpression)
-				{
-					groupSqlExpr = builder.BuildSqlExpression(onSequence, path, flags.SqlFlag() | ProjectFlags.Keys, buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
-				}
-
+				
 				if (!SequenceHelper.IsSqlReady(groupSqlExpr))
 				{
 					var sqLError = groupSqlExpr.Find(1, (_, e) => e is SqlErrorExpression);
@@ -263,7 +259,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var p in placeholders)
 			{
-				if (currentPlaceholders.Find(cp => ExpressionEqualityComparer.Instance.Equals(cp.Path, p.Path)) == null)
+				if (currentPlaceholders.Find(cp => ExpressionEqualityComparer.Instance.Equals(cp.Path, p.Path) || ExpressionEqualityComparer.Instance.Equals(cp.TrackingPath, p.TrackingPath)) == null)
 				{
 					currentPlaceholders.Add(p);
 

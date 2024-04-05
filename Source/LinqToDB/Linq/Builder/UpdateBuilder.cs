@@ -464,11 +464,12 @@ namespace LinqToDB.Linq.Builder
 
 		static void ParseSet(
 			ExpressionBuilder           builder,
-			IBuildContext buildContext,
+			IBuildContext               buildContext,
 			Expression                  targetPath,
 			Expression                  fieldExpression,
 			Expression                  valueExpression,
-			List<SetExpressionEnvelope> envelopes)
+			List<SetExpressionEnvelope> envelopes,
+			bool                        forceParameters)
 		{
 			var correctedField = builder.ParseGenericConstructor(fieldExpression, ProjectFlags.SQL, null);
 
@@ -487,7 +488,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var (f, v) in pairs)
 				{
 					var currentPath = Expression.MakeMemberAccess(targetPath, f.MemberInfo);
-					ParseSet(builder, buildContext, currentPath, f.Expression, v.Expression, envelopes);
+					ParseSet(builder, buildContext, currentPath, f.Expression, v.Expression, envelopes, false);
 				}
 			}
 			else
@@ -514,11 +515,11 @@ namespace LinqToDB.Linq.Builder
 						foreach (var assignment in valueGeneric.Assignments)
 						{
 							var currentPath = Expression.MakeMemberAccess(targetPath, assignment.MemberInfo);
-							ParseSet(builder, buildContext, currentPath, currentPath, assignment.Expression, envelopes);
+							ParseSet(builder, buildContext, currentPath, currentPath, assignment.Expression, envelopes, false);
 						}
 					}
 					else
-						envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, true));
+						envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, forceParameters));
 				}
 			}
 		}
@@ -529,7 +530,7 @@ namespace LinqToDB.Linq.Builder
 			Expression                  valueExpression,
 			List<SetExpressionEnvelope> envelopes)
 		{
-			ParseSet(targetRef.BuildContext.Builder, targetRef.BuildContext, targetRef, fieldExpression, valueExpression, envelopes);
+			ParseSet(targetRef.BuildContext.Builder, targetRef.BuildContext, targetRef, fieldExpression, valueExpression, envelopes, true);
 		}
 
 		internal static void ParseSetter(
@@ -551,7 +552,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
 
-					ParseSet(builder, targetRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes);
+					ParseSet(builder, targetRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
 				}
 			}
 			else
@@ -848,7 +849,7 @@ namespace LinqToDB.Linq.Builder
 						updateExpr = SequenceHelper.PrepareBody(lambda, sequence);
 					}
 
-					ParseSet(builder, sequence, extractExpr, extractExpr, updateExpr, updateContext.SetExpressions);
+					ParseSet(builder, sequence, extractExpr, extractExpr, updateExpr, updateContext.SetExpressions, false);
 				}
 
 				return BuildSequenceResult.FromContext(updateContext);

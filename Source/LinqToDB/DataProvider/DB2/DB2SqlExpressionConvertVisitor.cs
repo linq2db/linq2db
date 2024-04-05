@@ -82,7 +82,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			if (cast.SystemType.ToUnderlying() == typeof(bool) && ReferenceEquals(cast, IsForPredicate))
 			{
-				return ConvertToBooleanSearchCondition(cast);
+				return ConvertToBooleanSearchCondition(cast.Expression);
 			}
 
 			if (toType.SystemType == typeof(string) && argument.SystemType != typeof(string))

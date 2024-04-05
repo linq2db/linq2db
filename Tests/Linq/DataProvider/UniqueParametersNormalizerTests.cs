@@ -378,7 +378,8 @@ namespace Tests.DataProvider
 			public void InitContext(IDataContext dataContext) => _baseProvider.InitContext(dataContext);
 			public bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx) => _baseProvider.IsDBNullAllowed(options, reader, idx);
 			public void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value) => _baseProvider.SetParameter(dataConnection, parameter, name, dataType, value);
-			public IMemberTranslator GetMethodCallTranslator() => _baseProvider.GetMethodCallTranslator();
+
+			public IServiceProvider ServiceProvider => _baseProvider.ServiceProvider;
 		}
 
 		public class Table1

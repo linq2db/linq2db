@@ -65,6 +65,12 @@ namespace LinqToDB.Linq.Translation
 				if (translationFunc != null)
 					return translationFunc(translationContext, memberExpression, translationFlags);
 			}
+			else if (memberExpression is NewExpression newExpression && newExpression.Constructor != null)
+			{
+				var translationFunc = Registration.GetTranslation(newExpression.Constructor);
+				if (translationFunc != null)
+					return translationFunc(translationContext, memberExpression, translationFlags);
+			}
 
 			translated = CombinedMemberTranslator.Translate(translationContext, memberExpression, translationFlags);
 			if (translated != null)

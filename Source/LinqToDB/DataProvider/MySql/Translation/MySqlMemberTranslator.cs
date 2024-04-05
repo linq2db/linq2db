@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.MySql.Translation
 {
-	using System.Globalization;
-
-	using LinqToDB.Linq.Translation;
+	using Common;
 	using SqlQuery;
+	using LinqToDB.Linq.Translation;
 
 	public class MySqlMemberTranslator : ProviderMemberTranslatorDefault
 	{
@@ -148,14 +148,14 @@ namespace LinqToDB.DataProvider.MySql.Translation
 
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				Type resulType,
-				ISqlExpression year,
-				ISqlExpression month,
-				ISqlExpression day,
-				ISqlExpression? hour,
-				ISqlExpression? minute,
-				ISqlExpression? second,
-				ISqlExpression? millisecond)
+				DbDataType          resulType,
+				ISqlExpression      year,
+				ISqlExpression      month,
+				ISqlExpression      day,
+				ISqlExpression?     hour,
+				ISqlExpression?     minute,
+				ISqlExpression?     second,
+				ISqlExpression?     millisecond)
 			{
 				var factory        = translationContext.ExpressionFactory;
 				var stringDataType = factory.GetDbDataType(typeof(string));
@@ -197,7 +197,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 					PartExpression(millisecond, 3)
 				);
 
-				resultExpression = factory.Function(factory.GetDbDataType(resulType), "STR_TO_DATE", resultExpression, factory.Value(stringDataType, "%Y-%m-%d %H:%i:%s.%f"));
+				resultExpression = factory.Function(resulType, "STR_TO_DATE", resultExpression, factory.Value(stringDataType, "%Y-%m-%d %H:%i:%s.%f"));
 
 				return resultExpression;
 			}
@@ -221,5 +221,12 @@ namespace LinqToDB.DataProvider.MySql.Translation
 			return new DateFunctionsTranslator();
 		}
 
+		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			var factory  = translationContext.ExpressionFactory;
+			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Uuid");
+
+			return timePart;
+		}
 	}
 }

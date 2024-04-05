@@ -343,6 +343,8 @@ namespace LinqToDB.SqlQuery
 				return castExpression.Type;
 			if (expr is SqlBinaryExpression binary)
 				return binary.Type;
+			if (expr is SqlFunction func)
+				return func.Type;
 
 			if (expr is SelectQuery selectQuery)
 			{

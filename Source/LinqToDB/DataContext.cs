@@ -94,13 +94,10 @@ namespace LinqToDB
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
 
-		public T GetService<T>()
-		{
-			if (typeof(T) == typeof(IMemberTranslator))
-				return (T)DataProvider.GetMethodCallTranslator();
-
-			throw new InvalidOperationException($"DataContext.GetService<{typeof(T).Name}> is not supported.");
-		}
+		/// <summary>
+		/// Gets service provider, used for data connection instance.
+		/// </summary>
+		public IServiceProvider ServiceProvider => DataProvider.ServiceProvider;
 
 		/// <summary>
 		/// Gets initial value for database connection string.

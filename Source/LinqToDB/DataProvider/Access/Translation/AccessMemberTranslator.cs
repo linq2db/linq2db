@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				Type                resulType,
+				DbDataType          resulType,
 				ISqlExpression      year,
 				ISqlExpression      month,
 				ISqlExpression      day,
@@ -88,7 +88,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 
 				if (hour == null && minute == null && second == null && millisecond == null)
 				{
-					resultExpression = factory.Function(factory.GetDbDataType(resulType), "DateSerial", year, month, day);
+					resultExpression = factory.Function(resulType, "DateSerial", year, month, day);
 				}
 				else
 				{
@@ -139,7 +139,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 						PartExpression(second, 2)
 					);
 
-					resultExpression = factory.Cast(resultExpression, factory.GetDbDataType(resulType));
+					resultExpression = factory.Cast(resultExpression, resulType);
 				}
 
 				return resultExpression;

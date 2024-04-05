@@ -2,10 +2,10 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.DataProvider.Sybase.Translation
 {
+	using Common;
+	using SqlQuery;
 	using LinqToDB.Linq.Translation;
 
 	public class SybaseMemberTranslator : ProviderMemberTranslatorDefault
@@ -74,14 +74,14 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				Type resulType,
-				ISqlExpression year,
-				ISqlExpression month,
-				ISqlExpression day,
-				ISqlExpression? hour,
-				ISqlExpression? minute,
-				ISqlExpression? second,
-				ISqlExpression? millisecond)
+				DbDataType          resulType,
+				ISqlExpression      year,
+				ISqlExpression      month,
+				ISqlExpression      day,
+				ISqlExpression?     hour,
+				ISqlExpression?     minute,
+				ISqlExpression?     second,
+				ISqlExpression?     millisecond)
 			{
 				var factory        = translationContext.ExpressionFactory;
 				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.VarChar);
@@ -105,25 +105,32 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 						factory.Value(intDataType, padSize));
 				}
 
-				var yearString  = CastToLength(year, 4);
+				var yearString  = PartExpression(year, 4);
 				var monthString = PartExpression(month, 2);
 				var dayString   = PartExpression(day, 2);
 
-				hour ??= factory.Value(intDataType, 0);
-				minute ??= factory.Value(intDataType, 0);
-				second ??= factory.Value(intDataType, 0);
-				millisecond ??= factory.Value(intDataType, 0);
-
 				var resultExpression = factory.Concat(
 					yearString, factory.Value(stringDataType, "-"),
-					monthString, factory.Value(stringDataType, "-"), dayString, factory.Value(stringDataType, " "),
-					PartExpression(hour, 2), factory.Value(stringDataType, ":"),
-					PartExpression(minute, 2), factory.Value(stringDataType, ":"),
-					PartExpression(second, 2), factory.Value(stringDataType, "."),
-					PartExpression(millisecond, 3)
-				);
+					monthString, factory.Value(stringDataType, "-"), dayString);
 
-				resultExpression = factory.Cast(resultExpression, factory.GetDbDataType(resulType));
+				if (hour != null || minute != null || second != null || millisecond != null)
+				{
+					hour        ??= factory.Value(intDataType, 0);
+					minute      ??= factory.Value(intDataType, 0);
+					second      ??= factory.Value(intDataType, 0);
+					millisecond ??= factory.Value(intDataType, 0);
+
+					resultExpression = factory.Concat(
+						resultExpression,
+						factory.Value(stringDataType, " "),
+						PartExpression(hour, 2), factory.Value(stringDataType, ":"),
+						PartExpression(minute, 2), factory.Value(stringDataType, ":"),
+						PartExpression(second, 2), factory.Value(stringDataType, "."),
+						PartExpression(millisecond, 3)
+					);
+				}
+
+				resultExpression = factory.Cast(resultExpression, resulType);
 
 				return resultExpression;
 			}
@@ -153,5 +160,12 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			return new DateFunctionsTranslator();
 		}
 
+		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			var factory  = translationContext.ExpressionFactory;
+			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
+
+			return timePart;
+		}
 	}
 }

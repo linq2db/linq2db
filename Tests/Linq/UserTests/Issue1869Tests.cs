@@ -157,7 +157,7 @@ namespace Tests.UserTests
 
 				var result = query3.ToArray();
 
-				query3.GetSelectQuery().Select.Columns.Should().HaveCount(4);
+				query3.GetSelectQuery().Select.Columns.Should().HaveCount(3);
 			}
 		}
 

@@ -1,5 +1,7 @@
 ﻿using System;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.DataProvider
 {
 	using SqlQuery;
@@ -101,10 +103,10 @@ namespace LinqToDB.DataProvider
 
 		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
-			if (element.Expression is SqlParameter param)
+			/*if (element.Expression is SqlParameter param)
 			{
 				param.NeedsCast = false;
-			}
+			}*/
 
 			using var scope = NeedCast(false);
 			return base.VisitSqlCastExpression(element);

@@ -25,6 +25,14 @@ namespace LinqToDB.SqlQuery
 			if (expr.CanBeEvaluated(false))
 				return false;
 
+
+			if (expr is ISqlExpression sqlExpression)
+			{
+				sqlExpression = UnwrapNullablity(sqlExpression);
+				if (sqlExpression is SqlParameter)
+					return true;
+			}
+
 			var isMutable = false;
 			expr.VisitParentFirst(a =>
 			{

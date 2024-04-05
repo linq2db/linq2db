@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				Type                resulType,
+				DbDataType          resulType,
 				ISqlExpression      year,
 				ISqlExpression      month,
 				ISqlExpression      day,
@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 				ISqlExpression?     millisecond)
 			{
 				var factory     = translationContext.ExpressionFactory;
-				var dateType    = factory.GetDbDataType(resulType);
+				var dateType    = resulType;
 				var intDataType = factory.GetDbDataType(typeof(int));
 
 				ISqlExpression resultExpression;
@@ -198,5 +198,12 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			return new DateFunctionsTranslator();
 		}
 
+		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			var factory  = translationContext.ExpressionFactory;
+			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "generateUUIDv4");
+
+			return timePart;
+		}
 	}
 }

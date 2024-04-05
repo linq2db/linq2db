@@ -488,11 +488,6 @@ namespace LinqToDB.Linq.Builder
 					sequence = sequenceResult.BuildContext;
 					sequence = new SubQueryContext(sequence);
 
-					if (!SequenceHelper.IsSupportedSubqueryForModifier(buildInfo.Parent!, sequence, out var errorMessage))
-					{
-						return BuildSequenceResult.Error(sequenceArgument, errorMessage);
-					}
-
 					if (inputFilterLambda != null)
 					{
 						sequence = builder.BuildWhere(buildInfo.Parent, sequence, inputFilterLambda, false, false, buildInfo.IsTest);
@@ -727,7 +722,7 @@ namespace LinqToDB.Linq.Builder
 
 					parentQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
-					Placeholder = (SqlPlaceholderExpression)Builder.UpdateNesting(parentQuery, Placeholder);
+					Placeholder = Builder.UpdateNesting(parentQuery, Placeholder);
 				}
 			}
 

@@ -18,6 +18,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 		{
 			const string StrFTimeFuncName = "strftime";
 			const string DateFormat = "%Y-%m-%d %H:%M:%f";
+			const string TimeFormat = "%H:%M:%f";
 
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
@@ -114,23 +115,18 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				Type resulType,
-				ISqlExpression year,
-				ISqlExpression month,
-				ISqlExpression day,
-				ISqlExpression? hour,
-				ISqlExpression? minute,
-				ISqlExpression? second,
-				ISqlExpression? millisecond)
+				DbDataType          resulType,
+				ISqlExpression      year,
+				ISqlExpression      month,
+				ISqlExpression      day,
+				ISqlExpression?     hour,
+				ISqlExpression?     minute,
+				ISqlExpression?     second,
+				ISqlExpression?     millisecond)
 			{
 				var factory        = translationContext.ExpressionFactory;
 				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.VarChar);
 				var intDataType    = factory.GetDbDataType(typeof(int));
-
-				ISqlExpression CastToLength(ISqlExpression expression, int stringLength)
-				{
-					return factory.Cast(expression, stringDataType.WithLength(stringLength));
-				}
 
 				ISqlExpression PartExpression(ISqlExpression expression, int padSize)
 				{
@@ -147,7 +143,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 						expression);
 				}
 
-				var yearString  = CastToLength(year, 4);
+				var yearString  = PartExpression(year, 4);
 				var monthString = PartExpression(month, 2);
 				var dayString   = PartExpression(day, 2);
 
@@ -165,7 +161,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 					PartExpression(millisecond, 3)
 				);
 
-				resultExpression = factory.Function(factory.GetDbDataType(resulType), StrFTimeFuncName,  factory.Value(stringDataType, DateFormat), resultExpression);
+				resultExpression = factory.Function(resulType, StrFTimeFuncName,  factory.Value(stringDataType, DateFormat), resultExpression);
 
 				return resultExpression;
 			}
@@ -179,6 +175,26 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 
 				return dateFunc;
 			}
+
+			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var resultExpression = factory.Function(factory.GetDbDataType(typeof(TimeSpan)), StrFTimeFuncName, factory.Value(TimeFormat), dateExpression);
+
+				return resultExpression;
+			}
+
+			protected override ISqlExpression? TranslateDateOnlyDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
+			}
+
+			protected override ISqlExpression? TranslateDateOnlyDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)			
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
+
 		}
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()

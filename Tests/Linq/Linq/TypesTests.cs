@@ -350,6 +350,7 @@ namespace Tests.Linq
 		[Test]
 		public void DateTime22(
 			[DataSources(
+				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
 				TestProvName.AllSqlServer2005,
@@ -384,6 +385,7 @@ namespace Tests.Linq
 		[Test]
 		public void DateTime23(
 			[DataSources(
+				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
 				TestProvName.AllSqlServer2005,
@@ -421,6 +423,7 @@ namespace Tests.Linq
 		[Test]
 		public void DateTime24(
 			[DataSources(
+				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
 				TestProvName.AllSqlServer2005,

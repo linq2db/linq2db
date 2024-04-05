@@ -15,7 +15,8 @@ namespace LinqToDB.Remote
 	using Mapping;
 	using SqlQuery;
 	using Tools;
-
+	using Infrastructure;
+	using Linq.Translation;
 
 	public class LinqService : ILinqService
 	{
@@ -79,7 +80,7 @@ namespace LinqToDB.Remote
 			return new LinqServiceInfo
 			{
 				MappingSchemaType        = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				MethodCallTranslatorType = ctx.DataProvider.GetMethodCallTranslator().GetType().AssemblyQualifiedName!,
+				MethodCallTranslatorType = ctx.DataProvider.ServiceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
 				SqlBuilderType           = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlOptimizerType         = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags         = ctx.DataProvider.SqlProviderFlags,
@@ -94,7 +95,7 @@ namespace LinqToDB.Remote
 			return Task.FromResult(new LinqServiceInfo()
 			{
 				MappingSchemaType        = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				MethodCallTranslatorType = ctx.DataProvider.GetMethodCallTranslator().GetType().AssemblyQualifiedName!,
+				MethodCallTranslatorType = ctx.DataProvider.ServiceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
 				SqlBuilderType           = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlOptimizerType         = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags         = ctx.DataProvider.SqlProviderFlags,

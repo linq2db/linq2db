@@ -13,7 +13,6 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using Linq.Translation;
 
 	public interface IDataProvider
 	{
@@ -97,8 +96,8 @@ namespace LinqToDB.DataProvider
 		IQueryParametersNormalizer GetQueryParameterNormalizer();
 
 		/// <summary>
-		/// Returns instance of <see cref="IMemberTranslator"/>, which implements translation logic for method calls in LINQ expressions.
+		/// Returns ServiceProvider instance for provider.
 		/// </summary>
-		IMemberTranslator GetMethodCallTranslator();
+		public IServiceProvider ServiceProvider { get; }
 	}
 }

@@ -138,6 +138,11 @@ namespace LinqToDB.Expressions
 					return Parameter(e.Type, contextRef.Alias ?? "x");
 				}
 
+				if (e is SqlEagerLoadExpression eagerLoad)
+				{
+					return PrepareExpression(eagerLoad.SequenceExpression);
+				}
+
 				if (e is SqlQueryRootExpression)
 				{
 					if (!usedNames.TryGetValue(e, out var name))

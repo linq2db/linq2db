@@ -337,7 +337,7 @@ namespace LinqToDB
 				var toType     = ((MethodInfo)builder.Member).ReturnType;
 				var toDataType = builder.Mapping.GetDbDataType(toType);
 
-				builder.ResultExpression = new SqlCastExpression(obj, toDataType, null, true);
+				builder.ResultExpression = new SqlCastExpression(obj, toDataType, null, false);
 			}
 		}
 

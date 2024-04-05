@@ -1,10 +1,49 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
 	public class SqlFunction : SqlExpressionBase
 	{
+		public SqlFunction(DbDataType dbDataType, string name, params ISqlExpression[] parameters)
+			: this(dbDataType, name, false, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
+		{
+		}
+
+		public SqlFunction(DbDataType dbDataType, string name, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
+			: this(dbDataType, name, isAggregate, isPure, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
+		{
+		}
+
+		public SqlFunction(DbDataType dbDataType, string name, bool isAggregate, params ISqlExpression[] parameters)
+			: this(dbDataType, name, isAggregate, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
+		{
+		}
+
+		public SqlFunction(DbDataType dbDataType, string name, bool isAggregate, int precedence, params ISqlExpression[] parameters)
+			: this(dbDataType, name, isAggregate, true, precedence, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
+		{
+		}
+
+		public SqlFunction(DbDataType dbDataType, string name, bool isAggregate, bool isPure, int precedence, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters) 
+		{
+			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+
+			foreach (var p in parameters)
+				if (p == null) throw new ArgumentNullException(nameof(parameters));
+
+			Type            = dbDataType;
+			Name            = name;
+			Precedence      = precedence;
+			NullabilityType = nullabilityType;
+			_canBeNull      = canBeNull;
+			FunctionFlags = (isAggregate ? SqlFlags.IsAggregate : SqlFlags.None) |
+			                (isPure ? SqlFlags.IsPure : SqlFlags.None);
+			Parameters      = parameters;
+		}
+
 		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
 			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
 		{
@@ -25,27 +64,13 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters) 
+		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
+		: this(new DbDataType(systemType), name, isAggregate, isPure, precedence, nullabilityType, canBeNull, parameters)
 		{
-			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
-
-			if (systemType == null) throw new ArgumentNullException(nameof(systemType));
-			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
-
-			foreach (var p in parameters)
-				if (p == null) throw new ArgumentNullException(nameof(parameters));
-
-			SystemType      = systemType;
-			Name            = name;
-			Precedence      = precedence;
-			NullabilityType = nullabilityType;
-			_canBeNull      = canBeNull;
-			FunctionFlags = (isAggregate ? SqlFlags.IsAggregate : SqlFlags.None) |
-			                (isPure ? SqlFlags.IsPure : SqlFlags.None);
-			Parameters      = parameters;
 		}
 
-		public override Type                      SystemType        { get; }
+		public          DbDataType                Type              { get; }
+		public override Type                      SystemType        => Type.SystemType;
 		public          string                    Name              { get; }
 		public override int                       Precedence        { get; }
 		public          SqlFlags                  FunctionFlags     { get; }

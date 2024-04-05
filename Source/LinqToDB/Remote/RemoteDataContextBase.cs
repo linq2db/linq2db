@@ -42,20 +42,34 @@ namespace LinqToDB.Remote
 			set => ConfigurationString = value;
 		}
 
-		public string? ConfigurationString { get; set; }
+		public string?          ConfigurationString { get; set; }
 
-
-		private IMemberTranslator? _methodCallTranslator;
-
-		public T GetService<T>()
+		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
-			if (typeof(T) == typeof(IMemberTranslator))
-			{
-				_methodCallTranslator ??= GetConfigurationInfo().MemberTranslator;
-				return (T)_methodCallTranslator;
-			}
+			serviceProvider.AddService(GetConfigurationInfo().MemberTranslator);
+		}
 
-			throw new InvalidOperationException($"RemoteDataContextBase.GetService<{typeof(T).Name}> is not supported.");
+		SimpleServiceProvider? _serviceProvider;
+		readonly object        _guard = new();
+
+		public IServiceProvider ServiceProvider
+		{
+			get
+			{
+				if (_serviceProvider == null)
+				{
+					lock (_guard)
+					{
+						if (_serviceProvider == null)
+						{
+							_serviceProvider = new SimpleServiceProvider();
+							InitServiceProvider(_serviceProvider);
+						}
+					}
+				}
+
+				return _serviceProvider;
+			}
 		}
 
 		sealed class ConfigurationInfo

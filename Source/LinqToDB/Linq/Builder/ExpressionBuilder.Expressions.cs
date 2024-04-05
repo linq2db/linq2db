@@ -165,7 +165,8 @@ namespace LinqToDB.Linq.Builder
 				    node.NodeType == ExpressionType.Parameter    ||
 				    node.NodeType == ExpressionType.Not          ||
 				    node is SqlGenericConstructorExpression      ||
-				    node is BinaryExpression)
+				    node is SqlEagerLoadExpression               ||
+					node is BinaryExpression)
 				{
 					return base.Visit(node);
 				}
@@ -404,8 +405,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						var operand = Visit(node.Operand);
 						var newNode = node.Update(operand);
+
 						if (!ExpressionEqualityComparer.Instance.Equals(newNode, node))
 							return Visit(newNode);
+
+						return node;
 					}
 
 					var translated = TranslateExpression(node);

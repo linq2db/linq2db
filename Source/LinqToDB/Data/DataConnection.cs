@@ -19,8 +19,6 @@ namespace LinqToDB.Data
 	using Mapping;
 	using RetryPolicy;
 	using Tools;
-	using Linq.Translation;
-
 
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines.
@@ -443,13 +441,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
 
-		public T GetService<T>()
-		{
-			if (typeof(T) == typeof(IMemberTranslator))
-				return (T)DataProvider.GetMethodCallTranslator();
-
-			throw new InvalidOperationException($"DataConnection.GetService<{typeof(T).Name}> is not supported.");
-		}
+		public IServiceProvider ServiceProvider => DataProvider.ServiceProvider;
 
 		/// <summary>
 		/// Database provider implementation for specific database engine.

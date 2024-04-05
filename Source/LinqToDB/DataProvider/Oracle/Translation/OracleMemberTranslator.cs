@@ -2,11 +2,12 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
-using LinqToDB.Linq.Translation;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.DataProvider.Oracle.Translation
 {
+	using Common;
+	using SqlQuery;
+	using LinqToDB.Linq.Translation;
+
 	public class OracleMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		class SqlTypesTranslation : SqlTypesTranslationDefault
@@ -122,7 +123,7 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				Type                resulType,
+				DbDataType          resulType,
 				ISqlExpression      year,
 				ISqlExpression      month,
 				ISqlExpression      day,
@@ -171,7 +172,7 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 					PartExpression(millisecond, 3)
 				); 
 				
-				resultExpression = factory.Function(factory.GetDbDataType(resulType), "TO_TIMESTAMP", resultExpression, factory.Value(stringDataType, "YYYY-MM-DD HH24:MI:SS.FF3"));
+				resultExpression = factory.Function(resulType, "TO_TIMESTAMP", resultExpression, factory.Value(stringDataType, "YYYY-MM-DD HH24:MI:SS.FF3"));
 
 				return resultExpression;
 			}
@@ -208,15 +209,13 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 			return new DateFunctionsTranslator();
 		}
 
-		protected override ISqlExpression? TranslateConvertToBoolean(ITranslationContext translationContext, ISqlExpression sqlExpression, TranslationFlags translationFlags)
+		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var sc = new SqlSearchCondition();
-			var predicate = new SqlPredicate.ExprExpr(sqlExpression, SqlPredicate.Operator.Equal, new SqlValue(0), translationContext.DataOptions.LinqOptions.CompareNullsAsValues)
-				.MakeNot();
+			var factory  = translationContext.ExpressionFactory;
+			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Sys_Guid");
 
-			sc.Add(predicate);
-
-			return sc;
+			return timePart;
 		}
+
 	}
 }

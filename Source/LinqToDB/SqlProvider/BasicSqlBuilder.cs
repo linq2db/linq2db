@@ -3429,11 +3429,16 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
+			var saveStep = BuildStep;
+			BuildStep = Step.TypedExpression;
+
 			StringBuilder.Append("CAST(");
 			BuildExpression(value);
 			StringBuilder.Append(" AS ");
 			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
 			StringBuilder.Append(')');
+
+			BuildStep = saveStep;
 		}
 
 		protected virtual void BuildSqlRow(SqlRowExpression expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)

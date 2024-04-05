@@ -705,6 +705,18 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
+
+			if (element.Expression is SelectQuery selectQuery && selectQuery.Select.Columns.Count == 1)
+			{
+				if (GetVisitMode(selectQuery) == VisitMode.Modify)
+				{
+					var columnExpression = selectQuery.Select.Columns[0].Expression;
+					selectQuery.Select.Columns[0].Expression = (ISqlExpression)Visit(new SqlCastExpression(columnExpression, element.ToType, element.FromType, isMandatory: element.IsMandatory));
+
+					return selectQuery;
+				}
+			}
+
 			return base.VisitSqlCastExpression(element);
 		}
 

@@ -438,8 +438,8 @@ namespace LinqToDB.Linq.Builder
 				return sqlExpr;
 			}
 
-			ISqlExpression? sql = null;
-			Expression?     result = null;
+			ISqlExpression? sql              = null;
+			Expression?     result           = null;
 
 			var newExpr = expression;
 
@@ -473,25 +473,7 @@ namespace LinqToDB.Linq.Builder
 				sql = ConvertToSqlConvertible(newExpr);
 			}
 
-
-			var processDefault = true;
-			if (sql == null)
-			{
-				var translated = TranslateMember(context, flags, columnDescriptor, alias, newExpr);
-				if (translated != null)
-				{
-					if (SequenceHelper.IsSqlReady(translated))
-					{
-						newExpr        = translated;
-						processDefault = false;
-					}
-
-					if (translated is SqlErrorExpression)
-						return translated;
-				}
-			}
-
-			if (processDefault && sql == null && !flags.IsExpression())
+			if (sql == null && !flags.IsExpression())
 			{
 				if (!PreferServerSide(newExpr, false))
 				{
@@ -501,12 +483,15 @@ namespace LinqToDB.Linq.Builder
 					}
 					else if (CanBeCompiled(newExpr, flags.IsExpression()))
 					{
-						if (flags.IsKeys())
-							newExpr = ParseGenericConstructor(newExpr, flags, columnDescriptor);
-
-						if (newExpr is not SqlGenericConstructorExpression)
+						if (!TryTranslateMember(newExpr, out result))
 						{
-							sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias: alias, forceNew: forceParameter)?.SqlParameter;
+							if (flags.IsKeys())
+								newExpr = ParseGenericConstructor(newExpr, flags, columnDescriptor);
+
+							if (newExpr is not SqlGenericConstructorExpression)
+							{
+								sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias: alias, forceNew: forceParameter)?.SqlParameter;
+							}
 						}
 					}
 				}
@@ -520,7 +505,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (context != null && forExtension && newExpr is SqlGenericConstructorExpression)
+			if (result == null && context != null && forExtension && newExpr is SqlGenericConstructorExpression)
 			{
 				var fullyTranslated = BuildSqlExpression(context, expression, flags, buildFlags : BuildFlags.ForceAssignments);
 				fullyTranslated = UpdateNesting(context, fullyTranslated);
@@ -548,7 +533,9 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					newExpr = ConvertSingleExpression(newExpr, flags.IsExpression());
-					result  = ConvertToSqlInternal(context, newExpr, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
+					
+					if (!TryTranslateMember(newExpr, out result))
+						result  = ConvertToSqlInternal(context, newExpr, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
 				}
 			}
 
@@ -588,6 +575,33 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return result;
+
+			bool TryTranslateMember(Expression toTranslate, [NotNullWhen(true)] out Expression? translationResult)
+			{
+				var translated = TranslateMember(context, flags, columnDescriptor, alias, toTranslate);
+				if (translated != null)
+				{
+					if (translated is SqlPlaceholderExpression)
+						translationResult = translated;
+					else if (!SequenceHelper.IsSqlReady(translated))
+					{
+						var sqLError = translated.Find(1, (_, e) => e is SqlErrorExpression);
+						if (sqLError != null)
+							translationResult = ((SqlErrorExpression)sqLError).WithType(expression.Type);
+						else
+						{
+							translationResult = null;
+							return false;
+						}
+					}
+
+					translationResult = ConvertToSqlExpr(context, translated, flags, unwrap, columnDescriptor, isPureExpression, forceParameter, alias);
+					return true;
+				}
+
+				translationResult = null;
+				return false;
+			}
 		}
 
 		bool IsForceParameter(Expression expression, ColumnDescriptor? columnDescriptor)
@@ -799,7 +813,7 @@ namespace LinqToDB.Linq.Builder
 						e = e.Update(UpdateNesting(context, e.Operand));
 					}
 
-					var operandExpr = ConvertToSqlExpr(context, e.Operand, flags, columnDescriptor: columnDescriptor);
+					var operandExpr = ConvertToSqlExpr(context, e.Operand, flags, unwrap : unwrap, columnDescriptor : columnDescriptor);
 
 					if (!SequenceHelper.IsSqlReady(operandExpr))
 						return e;
@@ -1150,7 +1164,7 @@ namespace LinqToDB.Linq.Builder
 			if (context == null)
 				return null;
 
-			if (memberExpression is MethodCallExpression || memberExpression is MemberExpression)
+			if (memberExpression is MethodCallExpression || memberExpression is MemberExpression || memberExpression is NewExpression)
 			{
 				if (IsAlreadyTranslated(context, flags, columnDescriptor, memberExpression, out var cacheKey, out var translateMember))
 				{
@@ -4678,20 +4692,23 @@ namespace LinqToDB.Linq.Builder
 				expression = placeholderExpression.WithTrackingPath(path);
 			}
 
-			_expressionCache[key] = expression;
-
-			if (!flags.HasFlag(ProjectFlags.Test))
+			if (shouldCache)
 			{
-				if ((flags.HasFlag(ProjectFlags.SQL) ||
-					 flags.HasFlag(ProjectFlags.Keys)) && expression is SqlPlaceholderExpression)
-				{
-					var anotherKey = new SqlCacheKey(path, null, null, null, ProjectFlags.Expression);
-					_expressionCache[anotherKey] = expression;
+				_expressionCache[key] = expression;
 
-					if (flags.HasFlag(ProjectFlags.Keys))
+				if (!flags.HasFlag(ProjectFlags.Test))
+				{
+					if ((flags.HasFlag(ProjectFlags.SQL) ||
+					     flags.HasFlag(ProjectFlags.Keys)) && expression is SqlPlaceholderExpression)
 					{
-						anotherKey = new SqlCacheKey(path, null, null, null, ProjectFlags.Expression | ProjectFlags.Keys);
+						var anotherKey = new SqlCacheKey(path, null, null, null, ProjectFlags.Expression);
 						_expressionCache[anotherKey] = expression;
+
+						if (flags.HasFlag(ProjectFlags.Keys))
+						{
+							anotherKey                   = new SqlCacheKey(path, null, null, null, ProjectFlags.Expression | ProjectFlags.Keys);
+							_expressionCache[anotherKey] = expression;
+						}
 					}
 				}
 			}

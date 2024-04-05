@@ -890,9 +890,16 @@ namespace LinqToDB.Linq.Builder
 
 			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
 			{
-				if (!QueryHelper.IsDependsOnOuterSources(context.SelectQuery))
-					return true;
+				// We are trying to simulate what will be with query after optimizer's work
 
+				// shortcut for derived table limitations
+				if (context.Builder.DataContext.SqlProviderFlags.IsDerivedTableOrderBySupported)
+				{
+					if (!QueryHelper.IsDependsOnOuterSources(context.SelectQuery))
+					{
+						return true;
+					}
+				}
 				// We are trying to simulate what will be with query after optimizer's work
 				//
 				var cloningContext = new CloningContext();

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Linq.Translation
 {
 	using System.Globalization;
@@ -21,9 +23,21 @@ namespace LinqToDB.Linq.Translation
 		protected ProviderMemberTranslatorDefault()
 		{
 			InitDefaultTranslators();
+
+			Registration.RegisterMethod(() => Sql.NewGuid(), TranslateNewGuidMethod);
+			Registration.RegisterMethod(() => Guid.NewGuid(), TranslateNewGuidMethod);
 		}
 
-	void InitDefaultTranslators()
+		Expression? TranslateNewGuidMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var translated = TranslateNewGuidMethod(translationContext, translationFlags);
+			if (translated == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
+		}
+
+		void InitDefaultTranslators()
 		{
 			CombinedMemberTranslator.Add(CreateSqlTypesTranslator());
 			CombinedMemberTranslator.Add(CreateDateFunctionsTranslator());
@@ -45,14 +59,17 @@ namespace LinqToDB.Linq.Translation
 			return objPlaceholder;
 		}
 
-		protected virtual Expression ConvertToString(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		protected virtual Expression? ConvertToString(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (translationFlags.HasFlag(TranslationFlags.Expression))
+				return null;
+
 			var obj = methodCall.Object!;
 
-			var translated = translationContext.Translate(obj, translationFlags);
+			var objPlaceholder = TranslateNoRequiredObjectExpression(translationContext, obj, translationFlags);
 
-			if (translated is not SqlPlaceholderExpression objPlaceholder)
-				return translated;
+			if (objPlaceholder == null)
+				return null;
 
 			DbDataType toType;
 
@@ -100,6 +117,10 @@ namespace LinqToDB.Linq.Translation
 					return true;
 
 				translated = ConvertToString(translationContext, methodCall, translationFlags);
+
+				if (translated == null)
+					return false;
+				
 				return true;
 			}
 
@@ -151,9 +172,51 @@ namespace LinqToDB.Linq.Translation
 			return true;
 		}
 
+		protected bool ProcessGetValueOrDefault(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, out Expression? translated)
+		{
+			translated = null;
+
+			var nullableType = methodCall.Method.DeclaringType;
+			if (nullableType == null || !typeof(Nullable<>).IsSameOrParentOf(nullableType))
+				return false;
+
+			if (methodCall.Method.Name != nameof(Nullable<int>.GetValueOrDefault))
+				return false;
+
+			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Object, translationFlags);
+
+			if (argumentPlaceholder == null)
+				return true;
+
+			var underlyingType = nullableType.GetGenericArguments()[0];
+
+			var defaultValueExpr = methodCall.Arguments.Count == 1 ? methodCall.Arguments[0] : new DefaultValueExpression(translationContext.MappingSchema, underlyingType);
+
+			var checkExpression =
+				Expression.Condition(
+					Expression.Equal(argumentPlaceholder, Expression.Constant(null, nullableType)), 
+					defaultValueExpr,
+					argumentPlaceholder.WithType(underlyingType));
+
+			translated = translationContext.Translate(checkExpression);
+
+			if (translated is not SqlPlaceholderExpression placeholder)
+				return false;
+
+			translated = placeholder.WithPath(methodCall);
+
+			return true;
+		}
+
 		protected virtual ISqlExpression? TranslateConvertToBoolean(ITranslationContext translationContext, ISqlExpression sqlExpression, TranslationFlags translationFlags)
 		{
-			return null;
+			var sc = new SqlSearchCondition();
+			var predicate = new SqlPredicate.ExprExpr(sqlExpression, SqlPredicate.Operator.Equal, new SqlValue(0), translationContext.DataOptions.LinqOptions.CompareNullsAsValues)
+				.MakeNot();
+
+			sc.Add(predicate);
+
+			return sc;
 		}
 
 		public virtual Expression? TranslateMethodCall(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -167,6 +230,9 @@ namespace LinqToDB.Linq.Translation
 				return translated;
 
 			if (ProcessConvertToBoolean(translationContext, methodCall, translationFlags, out translated))
+				return translated;
+
+			if (ProcessGetValueOrDefault(translationContext, methodCall, translationFlags, out translated))
 				return translated;
 
 			return null;
@@ -195,5 +261,14 @@ namespace LinqToDB.Linq.Translation
 
 			return base.TranslateOverrideHandler(translationContext, memberExpression, translationFlags);
 		}
+
+		#region Methods to override
+
+		protected virtual ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			return null;
+		}
+		
+		#endregion
 	}
 }

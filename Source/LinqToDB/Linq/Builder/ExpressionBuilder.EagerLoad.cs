@@ -240,10 +240,11 @@ namespace LinqToDB.Linq.Builder
 
 			var dependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
-			var sequenceExpression = UnwrapDefaultIfEmpty(eagerLoad.SequenceExpression);
+			var sequenceExpression = eagerLoad.SequenceExpression;
+			//var sequenceExpression = UnwrapDefaultIfEmpty(eagerLoad.SequenceExpression);
 
 			sequenceExpression = ExpandContexts(buildContext, sequenceExpression);
-			sequenceExpression = UnwrapDefaultIfEmpty(sequenceExpression);
+			//sequenceExpression = UnwrapDefaultIfEmpty(sequenceExpression);
 
 			CollectDependencies(buildContext, sequenceExpression, dependencies);
 

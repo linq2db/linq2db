@@ -12,6 +12,11 @@ namespace LinqToDB.Linq.Translation
 			return factory.Fragment(dataType, Precedence.Primary, fragmentText, parameters);
 		}
 
+		public static ISqlExpression NonPureFragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] parameters)
+		{
+			return new SqlExpression(dataType.SystemType, fragmentText, Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, parameters);
+		}
+
 		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] parameters)
 		{
 			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, null, parameters);
@@ -19,7 +24,12 @@ namespace LinqToDB.Linq.Translation
 
 		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, params ISqlExpression[] parameters)
 		{
-			return new SqlFunction(dataType.SystemType, functionName, parameters);
+			return new SqlFunction(dataType, functionName, parameters);
+		}
+
+		public static ISqlExpression NonPureFunction(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, params ISqlExpression[] parameters)
+		{
+			return new SqlFunction(dataType, functionName, false, false, parameters);
 		}
 
 		public static ISqlExpression Value<T>(this ISqlExpressionFactory factory, DbDataType dataType, T value)

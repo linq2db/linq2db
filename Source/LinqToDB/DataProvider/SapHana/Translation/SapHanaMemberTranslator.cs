@@ -2,10 +2,10 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.DataProvider.SapHana.Translation
 {
+	using Common;
+	using SqlQuery;
 	using LinqToDB.Linq.Translation;
 
 	public class SapHanaMemberTranslator : ProviderMemberTranslatorDefault
@@ -158,14 +158,14 @@ namespace LinqToDB.DataProvider.SapHana.Translation
 
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				Type resulType,
-				ISqlExpression year,
-				ISqlExpression month,
-				ISqlExpression day,
-				ISqlExpression? hour,
-				ISqlExpression? minute,
-				ISqlExpression? second,
-				ISqlExpression? millisecond)
+				DbDataType          resulType,
+				ISqlExpression      year,
+				ISqlExpression      month,
+				ISqlExpression      day,
+				ISqlExpression?     hour,
+				ISqlExpression?     minute,
+				ISqlExpression?     second,
+				ISqlExpression?     millisecond)
 			{
 				var factory        = translationContext.ExpressionFactory;
 				var stringDataType = factory.GetDbDataType(typeof(string));
@@ -202,7 +202,7 @@ namespace LinqToDB.DataProvider.SapHana.Translation
 					PartExpression(millisecond, 3)
 				);
 
-				resultExpression = factory.Function(factory.GetDbDataType(resulType), "To_Timestamp", resultExpression);
+				resultExpression = factory.Function(resulType, "To_Timestamp", resultExpression);
 
 				return resultExpression;
 			}
@@ -226,5 +226,12 @@ namespace LinqToDB.DataProvider.SapHana.Translation
 			return new DateFunctionsTranslator();
 		}
 
+		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			var factory  = translationContext.ExpressionFactory;
+			var timePart = factory.NonPureFragment(factory.GetDbDataType(typeof(Guid)), "SYSUUID");
+
+			return timePart;
+		}
 	}
 }

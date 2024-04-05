@@ -3,8 +3,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.PostgreSQL.Translation
 {
-	using LinqToDB.Linq.Translation;
+	using Common;
 	using SqlQuery;
+	using LinqToDB.Linq.Translation;
 
 	public class PostgreSQLMemberTranslator : ProviderMemberTranslatorDefault
 	{
@@ -172,7 +173,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				Type                resulType,
+				DbDataType          resulType,
 				ISqlExpression      year,
 				ISqlExpression      month,
 				ISqlExpression      day,
@@ -182,7 +183,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 				ISqlExpression?     millisecond)
 			{
 				var factory        = translationContext.ExpressionFactory;
-				var dateType       = factory.GetDbDataType(resulType);
+				var dateType       = resulType;
 				var intDataType    = factory.GetDbDataType(typeof(int));
 				var doubleDataType = factory.GetDbDataType(typeof(double));
 
@@ -209,6 +210,15 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 				return resultExpression;
 			}
 
+			protected override ISqlExpression? TranslateDateOnlyDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
+			}
+
+			protected override ISqlExpression? TranslateDateOnlyDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
 		}
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()

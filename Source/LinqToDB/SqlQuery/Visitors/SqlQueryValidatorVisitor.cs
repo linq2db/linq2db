@@ -97,6 +97,20 @@ namespace LinqToDB.SqlQuery.Visitors
 						return false;
 					}
 				}
+
+				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty)
+				{
+					errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
+					return false;
+				}
+			}
+			else
+			{
+				if (!_providerFlags.IsDerivedTableOrderBySupported && !selectQuery.OrderBy.IsEmpty)
+				{
+					errorMessage = ErrorHelper.Error_OrderBy_in_Derived;
+					return false;
+				}
 			}
 
 			errorMessage = null;

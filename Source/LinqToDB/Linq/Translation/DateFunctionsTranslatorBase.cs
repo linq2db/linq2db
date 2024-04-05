@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.SqlQuery;
@@ -13,6 +14,7 @@ namespace LinqToDB.Linq.Translation
 		{
 			RegisterDateTime();
 			RegisterDateTimeOffset();
+			RegisterDateOnly();
 
 			Registration.RegisterMethod((int? year, int? month, int? day) => Sql.MakeDateTime(year, month, day), TranslateMakeDateTime);
 			Registration.RegisterMethod((int year, int month, int day, int hour, int minute, int second) => Sql.MakeDateTime(year, month, day, hour, minute, second), TranslateMakeDateTime);
@@ -29,6 +31,9 @@ namespace LinqToDB.Linq.Translation
 				=> new DateTime(year, month, day, hour, minute, second), TranslateDateTimeConstructor);
 			Registration.RegisterConstructor((int year, int month, int day, int hour, int minute, int second, int millisecond) 
 				=> new DateTime(year, month, day, hour, minute, second, millisecond), TranslateDateTimeConstructor);
+
+			Registration.RegisterMethod((int year, int month, int day, int hour, int minute, int second)
+				=> Sql.MakeDateTime(year, month, day, hour, minute, second), TranslateMakeDateTimeMethod);
 
 			Registration.RegisterMember(() => DateTime.Now,              TranslateDateTimeNow);
 
@@ -78,7 +83,7 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMember((DateTimeOffset dt) => dt.DayOfWeek, (tc,   me, tf) => TranslateDateTimeOffsetMember(tc, me, tf, Sql.DateParts.WeekDay));
 			Registration.RegisterMember((DateTimeOffset dt) => dt.Date, TranslateDateTimeOffsetTruncationToDate);
 
-			Registration.RegisterMember((DateTimeOffset dt) => dt.TimeOfDay, TranslateDateTimeTruncationToTime);
+			Registration.RegisterMember((DateTimeOffset dt) => dt.TimeOfDay, TranslateDateTimeOffsetTruncationToTime);
 
 			Registration.RegisterMethod((DateTimeOffset dt) => Sql.DateAdd(Sql.DateParts.Year, 0, dt), TranslateDateTimeOffsetDateAdd);
 
@@ -91,6 +96,28 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod((DateTimeOffset dt) => dt.AddMilliseconds(0), (tc, mc, tf) => TranslateDateTimeOffsetAddMember(tc, mc, tf, Sql.DateParts.Millisecond));
 
 			Registration.RegisterMethod((DateTimeOffset dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateTimeOffsetSqlDatepart);
+		}
+
+		void RegisterDateOnly()
+		{
+#if NET6_0_OR_GREATER
+			Registration.RegisterMethod((int year, int month, int day) => Sql.MakeDateOnly(year, month, day), TranslateMakeDateOnlyMethod);
+
+			Registration.RegisterConstructor((int year, int month, int day) => new DateOnly(year, month, day), TranslateDateOnlyConstructor);
+			Registration.RegisterMember((DateOnly dt) => dt.Year, (tc,      me, tf) => TranslateDateOnlyMember(tc, me, tf, Sql.DateParts.Year));
+			Registration.RegisterMember((DateOnly dt) => dt.Month, (tc,     me, tf) => TranslateDateOnlyMember(tc, me, tf, Sql.DateParts.Month));
+			Registration.RegisterMember((DateOnly dt) => dt.Day, (tc,       me, tf) => TranslateDateOnlyMember(tc, me, tf, Sql.DateParts.Day));
+			Registration.RegisterMember((DateOnly dt) => dt.DayOfYear, (tc, me, tf) => TranslateDateOnlyMember(tc, me, tf, Sql.DateParts.DayOfYear));
+			Registration.RegisterMember((DateOnly dt) => dt.DayOfWeek, (tc, me, tf) => TranslateDateOnlyMember(tc, me, tf, Sql.DateParts.WeekDay));
+
+			Registration.RegisterMethod((DateOnly dt) => Sql.DateAdd(Sql.DateParts.Year, 0, dt), TranslateDateOnlyDateAdd);
+
+			Registration.RegisterMethod((DateOnly dt) => dt.AddYears(0), (tc,  mc, tf) => TranslateDateOnlyAddMember(tc, mc, tf, Sql.DateParts.Year));
+			Registration.RegisterMethod((DateOnly dt) => dt.AddMonths(0), (tc, mc, tf) => TranslateDateOnlyAddMember(tc, mc, tf, Sql.DateParts.Month));
+			Registration.RegisterMethod((DateOnly dt) => dt.AddDays(0), (tc,   mc, tf) => TranslateDateOnlyAddMember(tc, mc, tf, Sql.DateParts.Day));
+
+			Registration.RegisterMethod((DateOnly dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateOnlySqlDatepart);
+#endif
 		}
 
 
@@ -130,12 +157,35 @@ namespace LinqToDB.Linq.Translation
 					return null;
 			}
 
-			var makeExpression = TranslateMakeDateTime(translationContext, expression.Type, year, month, day, hour, minute, second, millisecond);
+			var makeExpression = TranslateMakeDateTime(translationContext, translationContext.ExpressionFactory.GetDbDataType(expression.Type), year, month, day, hour, minute, second, millisecond);
 
 			if (makeExpression == null)
 				return null;
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, makeExpression, newExpression);
+		}
+
+		Expression? TranslateMakeDateTimeMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (methodCall.Arguments.Count < 6)
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0].UnwrapConvert(), out var year)  ||
+				!translationContext.TranslateToSqlExpression(methodCall.Arguments[1].UnwrapConvert(), out var month) ||
+				!translationContext.TranslateToSqlExpression(methodCall.Arguments[2].UnwrapConvert(), out var day)   ||
+				!translationContext.TranslateToSqlExpression(methodCall.Arguments[3].UnwrapConvert(), out var hour)   ||
+				!translationContext.TranslateToSqlExpression(methodCall.Arguments[4].UnwrapConvert(), out var minute) ||
+				!translationContext.TranslateToSqlExpression(methodCall.Arguments[5].UnwrapConvert(), out var second))
+			{
+				return null;
+			}
+
+			var makeExpression = TranslateMakeDateTime(translationContext, translationContext.ExpressionFactory.GetDbDataType(methodCall.Type), year, month, day, hour, minute, second, null);
+
+			if (makeExpression == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, makeExpression, methodCall);
 		}
 
 		Expression? TranslateDateTimeOffsetConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
@@ -174,7 +224,7 @@ namespace LinqToDB.Linq.Translation
 					return null;
 			}
 
-			var makeExpression = TranslateMakeDateTime(translationContext, expression.Type, year, month, day, hour, minute, second, millisecond);
+			var makeExpression = TranslateMakeDateTime(translationContext, translationContext.ExpressionFactory.GetDbDataType(expression.Type), year, month, day, hour, minute, second, millisecond);
 
 			if (makeExpression == null)
 				return null;
@@ -209,7 +259,7 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
-			var makeExpression = TranslateMakeDateTime(translationContext, methodCall.Type.ToNullableUnderlying(), year, month, day, hour, minute, second, null);
+			var makeExpression = TranslateMakeDateTime(translationContext, translationContext.ExpressionFactory.GetDbDataType(methodCall.Type.ToNullableUnderlying()), year, month, day, hour, minute, second, null);
 
 			if (makeExpression == null)
 				return null;
@@ -398,6 +448,27 @@ namespace LinqToDB.Linq.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
 
+		Expression? TranslateDateOnlyAddMember(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, Sql.DateParts datepart)
+		{
+			var datePlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Object, translationFlags, false);
+			if (datePlaceholder == null)
+				return null;
+
+			var incrementPlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[0].UnwrapConvert(), translationFlags, false);
+			if (incrementPlaceholder == null)
+				return null;
+
+			// Can be evaluated on client side
+			if (datePlaceholder.Sql is SqlParameter && incrementPlaceholder.Sql is SqlParameter)
+				return null;
+
+			var converted = TranslateDateOnlyDateAdd(translationContext, translationFlags, datePlaceholder.Sql, incrementPlaceholder.Sql, datepart);
+			if (converted == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
+		}
+
 		Expression? TranslateDateTimeDateAdd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (!translationContext.TryEvaluate<Sql.DateParts>(methodCall.Arguments[0], out var datepart))
@@ -446,6 +517,109 @@ namespace LinqToDB.Linq.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
 
+#if NET6_0_OR_GREATER
+		Expression? TranslateDateOnlyConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
+		{
+			if (expression is not NewExpression newExpression)
+				return null;
+
+			if (newExpression.Arguments.Count < 3)
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[0], out var year)  ||
+			    !translationContext.TranslateToSqlExpression(newExpression.Arguments[1], out var month) ||
+			    !translationContext.TranslateToSqlExpression(newExpression.Arguments[2], out var day))
+			{
+				return null;
+			}
+
+			var makeExpression = TranslateMakeDateOnly(translationContext, translationContext.ExpressionFactory.GetDbDataType(expression.Type), year, month, day);
+
+			if (makeExpression == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, makeExpression, newExpression);
+		}
+
+		Expression? TranslateMakeDateOnlyMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (methodCall.Arguments.Count < 3)
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0].UnwrapConvert(), out var year)   ||
+			    !translationContext.TranslateToSqlExpression(methodCall.Arguments[1].UnwrapConvert(), out var month)  ||
+			    !translationContext.TranslateToSqlExpression(methodCall.Arguments[2].UnwrapConvert(), out var day)    )
+			{
+				return null;
+			}
+
+			var makeExpression = TranslateMakeDateOnly(translationContext, translationContext.ExpressionFactory.GetDbDataType(methodCall.Type), year, month, day);
+
+			if (makeExpression == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, makeExpression, methodCall);
+		}
+
+		Expression? TranslateDateOnlyMember(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags, Sql.DateParts datepart)
+		{
+			var placeholder = TranslateNoRequiredExpression(translationContext, memberExpression.Expression, translationFlags);
+			if (placeholder == null)
+				return null;
+
+			var converted = TranslateDateOnlyDatePart(translationContext, translationFlags, placeholder.Sql, datepart);
+			if (converted == null)
+				return null;
+
+			//TODO: Why?	
+			if (datepart == Sql.DateParts.WeekDay)
+				converted = translationContext.ExpressionFactory.Decrement(converted);
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, memberExpression);
+		}
+
+		Expression? TranslateDateOnlySqlDatepart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!translationContext.TryEvaluate<Sql.DateParts>(methodCall.Arguments[0], out var datePart))
+				return null;
+
+			var dateExpr = translationContext.Translate(methodCall.Arguments[1]);
+
+			if (dateExpr is not SqlPlaceholderExpression datePlaceholder)
+				return null;
+
+			var converted = TranslateDateOnlyDatePart(translationContext, translationFlags, datePlaceholder.Sql, datePart);
+			if (converted == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
+		}
+
+		Expression? TranslateDateOnlyDateAdd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!translationContext.TryEvaluate<Sql.DateParts>(methodCall.Arguments[0], out var datepart))
+				return null;
+
+			var datePlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[2].UnwrapConvert(), translationFlags, false);
+			if (datePlaceholder == null)
+				return null;
+
+			var incrementPlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[1].UnwrapConvert(), translationFlags, false);
+			if (incrementPlaceholder == null)
+				return null;
+
+			// Can be evaluated on client side
+			if (datePlaceholder.Sql is SqlParameter && incrementPlaceholder.Sql is SqlParameter)
+				return null;
+
+			var converted = TranslateDateOnlyDateAdd(translationContext, translationFlags, datePlaceholder.Sql, incrementPlaceholder.Sql, datepart);
+			if (converted == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
+		}
+#endif
+
 		#region Methods to override
 
 		protected virtual ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
@@ -458,6 +632,11 @@ namespace LinqToDB.Linq.Translation
 			return null;
 		}
 
+		protected virtual ISqlExpression? TranslateDateOnlyDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+		{
+			return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+		}
+
 		protected virtual ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
 		{
 			return null;
@@ -466,6 +645,11 @@ namespace LinqToDB.Linq.Translation
 		protected virtual ISqlExpression? TranslateDateTimeOffsetDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
 		{
 			return null;
+		}
+
+		protected virtual ISqlExpression? TranslateDateOnlyDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
+		{
+			return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
 		}
 
 		protected virtual ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
@@ -481,7 +665,7 @@ namespace LinqToDB.Linq.Translation
 		protected virtual ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 		{
 			var factory = translationContext.ExpressionFactory;
-			var cast    = factory.Cast(dateExpression, factory.GetDbDataType(dateExpression).WithDataType(DataType.Time), true);
+			var cast    = factory.Cast(dateExpression, factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Time), true);
 
 			return cast;
 		}
@@ -489,7 +673,7 @@ namespace LinqToDB.Linq.Translation
 		protected virtual ISqlExpression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 		{
 			var factory = translationContext.ExpressionFactory;
-			var cast    = factory.Cast(dateExpression, factory.GetDbDataType(dateExpression).WithDataType(DataType.Time), true);
+			var cast    = factory.Cast(dateExpression, factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Time), true);
 
 			return cast;
 		}
@@ -524,7 +708,7 @@ namespace LinqToDB.Linq.Translation
 
 		protected virtual ISqlExpression? TranslateMakeDateTime(
 			ITranslationContext translationContext,
-			Type                resulType,
+			DbDataType          resulType,
 			ISqlExpression      year,
 			ISqlExpression      month,
 			ISqlExpression      day,
@@ -535,7 +719,17 @@ namespace LinqToDB.Linq.Translation
 		{
 			return null;
 		}
-		
+
+		protected virtual ISqlExpression? TranslateMakeDateOnly(
+			ITranslationContext translationContext,
+			DbDataType          resulType,
+			ISqlExpression      year,
+			ISqlExpression      month,
+			ISqlExpression      day)
+		{
+			return TranslateMakeDateTime(translationContext, resulType, year, month, day, null, null, null, null);
+		}
+
 
 		#endregion
 

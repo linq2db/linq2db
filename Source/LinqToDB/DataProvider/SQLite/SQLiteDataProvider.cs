@@ -267,7 +267,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 			if (value is DateTime dt)
 			{
-				value = dt.ToString("yyyy-MM-ddTHH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
+				value = dt.ToString("yyyy-MM-dd HH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
 			}
 
 

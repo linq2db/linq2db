@@ -330,7 +330,7 @@ namespace LinqToDB.Linq.Builder
 			sqlExpression = null;
 
 			//Just test that we can convert
-			var actual = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test, columnDescriptor : columnDescriptor);
+			var actual = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test, unwrap: false, columnDescriptor : columnDescriptor);
 			if (actual is not SqlPlaceholderExpression placeholderTest)
 			{
 				error = SqlErrorExpression.EnsureError(context, expression);

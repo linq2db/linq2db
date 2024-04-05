@@ -72,6 +72,7 @@ namespace LinqToDB.DataProvider
 				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,
 				RowConstructorSupport                = RowFeature.None,
 				IsWindowFunctionsSupported           = true,
+				IsDerivedTableOrderBySupported       = true,
 			};
 
 			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));
@@ -503,13 +504,34 @@ namespace LinqToDB.DataProvider
 
 		protected abstract IMemberTranslator CreateMemberTranslator();
 
-		IMemberTranslator? _methodCallTranslator;
-
-		public IMemberTranslator GetMethodCallTranslator()
+		protected virtual void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
-			if (_methodCallTranslator == null)
-				_methodCallTranslator = CreateMemberTranslator();
-			return _methodCallTranslator;
+			serviceProvider.AddService(CreateMemberTranslator());
 		}
+
+		SimpleServiceProvider? _serviceProvider;
+		readonly object        _guard = new();
+
+		public IServiceProvider ServiceProvider
+		{
+			get
+			{
+				if (_serviceProvider == null)
+				{
+					lock (_guard)
+					{
+						if (_serviceProvider == null)
+						{
+							_serviceProvider = new SimpleServiceProvider();
+							InitServiceProvider(_serviceProvider);
+						}
+					}
+				}
+
+				return _serviceProvider;
+			}
+		}
+
+
 	}
 }

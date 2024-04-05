@@ -82,7 +82,7 @@ namespace LinqToDB.SqlProvider
 		public bool        IsSubQueryTakeSupported        { get; set; }
 
 		/// <summary>
-		/// Indicates support for skip clause in subquery.
+		/// Indicates support for skip clause in column expression subquery.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order =  10)]
@@ -472,6 +472,14 @@ namespace LinqToDB.SqlProvider
 		public bool IsAggregationDistinctSupported { get; set; }
 
 
+		/// <summary>
+		/// Provider supports SUM/AVG/MIN/MAX(DISTINCT column) function. Otherwise, it will be emulated.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// </summary>
+		[DataMember(Order = 70)]
+		public bool IsDerivedTableOrderBySupported { get; set; }
+
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
@@ -528,6 +536,7 @@ namespace LinqToDB.SqlProvider
 				^ IsCTESupportsOrdering                                .GetHashCode()
 				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
 				^ SupportsBooleanComparison                            .GetHashCode()
+				^ IsDerivedTableOrderBySupported                       .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -584,6 +593,7 @@ namespace LinqToDB.SqlProvider
 				&& IsCTESupportsOrdering                                 == other.IsCTESupportsOrdering
 				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
 				&& SupportsBooleanComparison                             == other.SupportsBooleanComparison
+				&& IsDerivedTableOrderBySupported                        == other.IsDerivedTableOrderBySupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

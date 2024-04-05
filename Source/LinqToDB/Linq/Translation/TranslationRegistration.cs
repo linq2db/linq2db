@@ -113,6 +113,8 @@ namespace LinqToDB.Linq.Translation
 				memberInfo = memberExpression.Member;
 			else if (expression is MethodCallExpression methodCallExpression)
 				memberInfo = methodCallExpression.Method;
+			else if (expression is NewExpression newExpression && newExpression.Constructor != null)
+				memberInfo = newExpression.Constructor;
 			else
 				return null;
 

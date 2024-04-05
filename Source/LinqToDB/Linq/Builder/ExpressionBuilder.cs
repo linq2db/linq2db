@@ -13,11 +13,11 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using Visitors;
+	using Tools;
+	using Translation;
+	using Infrastructure;
 	using LinqToDB.Expressions;
 	using LinqToDB.Common.Internal;
-	using Tools;
-	using Linq.Translation;
-
 
 	internal sealed partial class ExpressionBuilder : IExpressionEvaluator
 	{
@@ -137,7 +137,7 @@ namespace LinqToDB.Linq.Builder
 			DataOptions        = dataContext.Options;
 			OriginalExpression = expression;
 
-			_memberTranslator = dataContext.GetService<IMemberTranslator>();
+			_memberTranslator = dataContext.ServiceProvider.GetRequiredService<IMemberTranslator>();
 
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;

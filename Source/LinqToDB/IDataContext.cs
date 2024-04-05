@@ -128,6 +128,6 @@ namespace LinqToDB
 		/// </summary>
 		string?                       ConfigurationString         { get; }
 
-		T GetService<T>();
+		IServiceProvider ServiceProvider { get; }
 	}
 }

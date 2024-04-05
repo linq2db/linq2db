@@ -11,6 +11,7 @@ namespace LinqToDB.Common
 	/// <summary>
 	/// Stores database type attributes.
 	/// </summary>
+	[DebuggerDisplay("DbDataType: {ToString()}")]
 	public struct DbDataType : IEquatable<DbDataType>
 	{
 		public static readonly DbDataType Undefined = new (typeof(object), DataType.Undefined);

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -129,31 +131,22 @@ namespace LinqToDB.DataProvider.SQLite
 			var leftType  = QueryHelper.GetDbDataType(predicate.Expr1, MappingSchema);
 			var rightType = QueryHelper.GetDbDataType(predicate.Expr2, MappingSchema);
 
-			if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
-			    !(predicate.Expr1.TryEvaluateExpression(EvaluationContext, out var value1) && value1 == null ||
-			      predicate.Expr2.TryEvaluateExpression(EvaluationContext, out var value2) && value2 == null))
+			if (IsDateTime(leftType) || IsDateTime(rightType))
 			{
 				var dateType = IsDateTime(leftType) ? leftType : rightType;
 
 				var expr1 = QueryHelper.UnwrapNullablity(predicate.Expr1);
-				if (!IsDateTime(leftType) || expr1 is SqlParameter or SqlValue)
+				if (!(expr1 is SqlCastExpression || expr1 is SqlFunction { DoNotOptimize: true }))
 				{
-					if (!(expr1 is SqlCastExpression || expr1 is SqlFunction { DoNotOptimize: true }))
-					{
-						var left = PseudoFunctions.MakeMandatoryCast(predicate.Expr1, dateType, null);
-						predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, null);
-					}
-
+					var left = PseudoFunctions.MakeMandatoryCast(predicate.Expr1, dateType, null);
+					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, null);
 				}
 
 				var expr2 = QueryHelper.UnwrapNullablity(predicate.Expr2);
-				if (!IsDateTime(rightType) || expr2 is SqlParameter or SqlValue)
+				if (!(expr2 is SqlCastExpression || expr2 is SqlFunction { DoNotOptimize: true }))
 				{
-					if (!(expr2 is SqlCastExpression || expr2 is SqlFunction { DoNotOptimize: true }))
-					{
-						var right = PseudoFunctions.MakeMandatoryCast(predicate.Expr2, dateType, null);
-						predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, null);
-					}
+					var right = PseudoFunctions.MakeMandatoryCast(predicate.Expr2, dateType, null);
+					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, null);
 				}
 			}
 
@@ -170,13 +163,36 @@ namespace LinqToDB.DataProvider.SQLite
 #endif
 			   )
 			{
-				if (IsDateDataType(cast.ToType, "Date"))
-					return new SqlFunction(cast.SystemType, "Date", cast.Expression) { DoNotOptimize = true };
+				if (!(cast.Expression.TryEvaluateExpression(EvaluationContext, out var value) && value is null))
+				{
+					return (ISqlExpression)Visit(WrapDateTime(cast.Expression, cast.ToType));
+					/*
+					if (IsDateDataType(cast.ToType, "Date"))
+						return new SqlFunction(cast.SystemType, "Date", cast.Expression) { DoNotOptimize = true };
 
-				return new SqlFunction(cast.SystemType, "StrFTime", new SqlValue("%Y-%m-%dT%H:%M:%f"), cast.Expression) { DoNotOptimize = true };
+					return new SqlFunction(cast.SystemType, "StrFTime", new SqlValue("%Y-%m-%dT%H:%M:%f"), cast.Expression) { DoNotOptimize = true };
+				*/
+				}
 			}
 
 			return base.ConvertConversion(cast);
+		}
+
+
+		protected ISqlExpression WrapDateTime(ISqlExpression expression, DbDataType dbDataType)
+		{
+			if (IsDateTime(dbDataType))
+			{
+				if (!(expression is SqlCastExpression || expression is SqlFunction { DoNotOptimize: true }))
+				{
+					if (IsDateDataType(dbDataType, "Date"))
+						return new SqlFunction(dbDataType.SystemType, "Date", expression) { DoNotOptimize = true };
+
+					return new SqlFunction(dbDataType.SystemType, "strftime", new SqlValue("%Y-%m-%d %H:%M:%f"), expression) { DoNotOptimize = true };
+				}
+			}
+
+			return expression;
 		}
 	}
 }

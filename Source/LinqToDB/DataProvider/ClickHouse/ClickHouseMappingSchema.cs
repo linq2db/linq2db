@@ -74,7 +74,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// conversions to DateTimeOffset
 			SetConvertExpression((DateTime v) => new DateTimeOffset(v.Ticks, default));
 #if NET6_0_OR_GREATER
-			SetConvertExpression((DateOnly v) => new DateTimeOffset(v.ToDateTime(TimeOnly.MinValue), default));
+			SetConvertExpression((DateOnly       v) => new DateTimeOffset(v.ToDateTime(TimeOnly.MinValue), default));
+			SetConvertExpression((DateTimeOffset v) => new DateOnly(v.Year, v.Month, v.Day));
 #endif
 
 			// IPAddress <=> uint (IPv4)

@@ -505,47 +505,6 @@ namespace LinqToDB.Linq
 			void SetInfo();
 		}
 
-		sealed class GetValueOrDefaultExpressionInfo<T1> : IExpressionInfo, ISetInfo
-			where T1 : struct
-		{
-#pragma warning disable CS0649 // Field is never assigned to...
-			static T1? _member;
-			static T1  _default;
-#pragma warning restore CS0649 // Field is never assigned to...
-
-			public LambdaExpression GetExpression(MappingSchema mappingSchema)
-			{
-				var p            = Expression.Parameter(typeof(T1?), "p");
-				var defaultValue = mappingSchema.GetDefaultValue(typeof(T1));
-
-				if (!_default.Equals(defaultValue))
-					return Expression.Lambda<Func<T1?, T1>>(Expression.Coalesce(p, Expression.Constant(defaultValue)), p);
-				else
-					// use non-constant value (field) to allow parameter optimization
-					// but only when default value not overriden by user in mapping schema
-					return (Expression<Func<T1?, T1>>)((T1? p) => p ?? _default);
-			}
-
-			public void SetInfo()
-			{
-				Members[""][M(() => _member.GetValueOrDefault() )] = this; // N(() => L<T1?,T1>((T1? obj) => obj ?? default(T1)));
-			}
-		}
-
-		sealed class GetValueOrDefaultInfoProvider<T> : IGenericInfoProvider
-		{
-			public void SetInfo(MappingSchema mappingSchema)
-			{
-				if (!typeof(T).IsNullableType())
-				{
-					var gtype    = typeof(GetValueOrDefaultExpressionInfo<>).MakeGenericType(typeof(T));
-					var provider = (ISetInfo)Activator.CreateInstance(gtype)!;
-
-					provider.SetInfo();
-				}
-			}
-		}
-
 		#region Mapping
 
 		private static          Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>? _members;
@@ -753,29 +712,6 @@ namespace LinqToDB.Linq
 			#endregion
 
 			#region Convert
-
-			#region ToBoolean
-
-			{ M(() => Convert.ToBoolean((bool)true  )), N(() => L<bool,    bool>((bool     p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((byte)0     )), N(() => L<byte,    bool>((byte     p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((char)   '0')), N(() => L<char,    bool>((char     p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean(DateTime.Now)), N(() => L<DateTime,bool>((DateTime p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((decimal) 0 )), N(() => L<decimal, bool>((decimal  p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((double)  0 )), N(() => L<double,  bool>((double   p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((short)   0 )), N(() => L<short,   bool>((short    p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((int)     0 )), N(() => L<int,     bool>((int      p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((long)    0 )), N(() => L<long,    bool>((long     p0) => Sql.ConvertTo<bool>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToBoolean((object)  0 )), N(() => L<object,  bool>((object   p0) => Sql.ConvertTo<bool>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToBoolean((sbyte)   0 )), N(() => L<sbyte,   bool>((sbyte    p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((float)   0 )), N(() => L<float,   bool>((float    p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((string) "0")), N(() => L<string,  bool>((string   p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((ushort)  0 )), N(() => L<ushort,  bool>((ushort   p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((uint)    0 )), N(() => L<uint,    bool>((uint     p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((ulong)   0 )), N(() => L<ulong,   bool>((ulong    p0) => Sql.ConvertTo<bool>.From(p0))) },
-
-			#endregion
 
 			#region ToByte
 
@@ -1234,8 +1170,6 @@ namespace LinqToDB.Linq
 
 		static Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> LoadMembers()
 		{
-			SetGenericInfoProvider(typeof(GetValueOrDefaultInfoProvider<>));
-
 			var members = new Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>>
 			{
 				{ "", _commonMembers },
@@ -1449,22 +1383,6 @@ namespace LinqToDB.Linq
 						Sql.ZeroPad(m, 2) + "-" +
 						Sql.ZeroPad(d, 2)))) },
 #endif
-
-					/*
-					{ M(() => Sql.MakeDateTime(0, 0, 0)), N(() => L<int?,int?,int?,DateTime?>((y,m,d) => Sql.Convert(Sql.Types.Date,
-						Sql.ZeroPad(y, 4) + "-" +
-						Sql.ZeroPad(m, 2) + "-" +
-						Sql.ZeroPad(d, 2)))) },
-
-					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0)), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,i,s) => Sql.Convert(Sql.Types.DateTime2,
-						Sql.ZeroPad(y, 4) + "-" +
-						Sql.ZeroPad(m, 2) + "-" +
-						Sql.ZeroPad(d, 2) + " " +
-						Sql.ZeroPad(h, 2) + ":" +
-						Sql.ZeroPad(i, 2) + ":" +
-						Sql.ZeroPad(s, 2)))) },
-						*/
-
 					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>((Guid p) => Sql.Lower(
 						Sql.Substring(Hex(p),  7,  2) + Sql.Substring(Hex(p),  5, 2) + Sql.Substring(Hex(p), 3, 2) + Sql.Substring(Hex(p), 1, 2) + "-" +
 						Sql.Substring(Hex(p), 11,  2) + Sql.Substring(Hex(p),  9, 2) + "-" +
@@ -1520,7 +1438,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
-					//{ M(() => Sql.MakeDateTime(0,0,0)), N(() => L<int?,int?,int?,DateTime?>         ((y,m,d)       => MakeDateTime2(y, m, d)))                                   },
 
 					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(Sql.Substring(p.ToString(), 2, 36)))) },
 //					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(Sql.Substring((string)(object)(p), 2, 36)))) },

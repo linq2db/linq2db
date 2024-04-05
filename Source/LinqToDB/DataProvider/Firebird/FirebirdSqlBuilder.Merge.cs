@@ -51,22 +51,40 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
-			if (dataType.DbType == null && dataType.DataType == DataType.NVarChar)
+			if (dataType.DbType == null && (dataType.DataType == DataType.NVarChar || dataType.DataType == DataType.NChar))
 			{
-				var length = 0;
-				var typeRequired = false;
-				if (value is SqlValue sqlValue && sqlValue.Value is string stringValue)
+				object? providerValue = null;
+				var     typeRequired  = false;
+
+				switch (value)
 				{
-					typeRequired = true;
-					length = Encoding.UTF8.GetByteCount(stringValue);
-					if (length == 0)
-						length = 1;
+					case SqlValue sqlValue:
+						providerValue = sqlValue.Value;
+						break;
+					case SqlParameter param:
+					{
+						typeRequired = true;
+						var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+						providerValue = paramValue.ProviderValue;
+						break;
+					}
 				}
 
-				if (value is SqlParameter param)
+				var length = providerValue switch
 				{
-					typeRequired = true;
-					length       = param.Type.Length ?? 8191; // max possible
+					string strValue => Encoding.UTF8.GetByteCount(strValue),
+					char charValue => Encoding.UTF8.GetByteCount(new[] { charValue }),
+					_ => -1
+				};
+
+				if (length == 0)
+					length = 1;
+
+				typeRequired = typeRequired || length > 0;
+
+				if (typeRequired && length < 0)
+				{
+					length = 8191; // max length for CHAR/VARCHAR
 				}
 
 				if (typeRequired)
@@ -75,7 +93,12 @@ namespace LinqToDB.DataProvider.Firebird
 				BuildExpression(value);
 
 				if (typeRequired)
-					StringBuilder.Append(CultureInfo.InvariantCulture, $" AS VARCHAR({length}))");
+				{
+					if (dataType.DataType  == DataType.NChar)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $" AS CHAR({length}))");
+					else
+						StringBuilder.Append(CultureInfo.InvariantCulture, $" AS VARCHAR({length}))");
+				}
 			}
 			else
 				base.BuildTypedExpression(dataType, value);
