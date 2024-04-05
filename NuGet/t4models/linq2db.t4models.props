@@ -13,6 +13,7 @@
 		<LinqToDBT4SQLiteClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SQLiteClientPath>
 		<LinqToDBT4SQLServerClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SQLServerClientPath>
 		<LinqToDBT4SybaseDataActionClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SybaseDataActionClientPath>
+		<LinqToDBT4SybaseClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SybaseClientPath>
 
 		<!--templates pathes-->
 		<LinqToDBT4TemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
@@ -29,5 +30,6 @@
 		<LinqToDBT4SQLiteTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SQLiteTemplatesPath>
 		<LinqToDBT4SqlServerTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SqlServerTemplatesPath>
 		<LinqToDBT4SybaseAseTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SybaseAseTemplatesPath>
+		<LinqToDBT4SybaseTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SybaseTemplatesPath>
 	</PropertyGroup>
 </Project>

@@ -52,6 +52,7 @@
 		<LinqToDBT4SQLiteClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SQLiteClientPath>
 		<LinqToDBT4SQLServerClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SQLServerClientPath>
 		<LinqToDBT4SybaseDataActionClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SybaseDataActionClientPath>
+		<LinqToDBT4SybaseClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SybaseClientPath>
 
 		<LinqToDBT4TemplatesPath>$(SolutionDir)Source\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
 		<LinqToDBT4AccessTemplatesPath>$(SolutionDir)Nuget\Access\</LinqToDBT4AccessTemplatesPath>
@@ -67,6 +68,7 @@
 		<LinqToDBT4SQLiteTemplatesPath>$(SolutionDir)Nuget\SQLite\</LinqToDBT4SQLiteTemplatesPath>
 		<LinqToDBT4SqlServerTemplatesPath>$(SolutionDir)Nuget\SqlServer\</LinqToDBT4SqlServerTemplatesPath>
 		<LinqToDBT4SybaseAseTemplatesPath>$(SolutionDir)Nuget\Sybase\</LinqToDBT4SybaseAseTemplatesPath>
+		<LinqToDBT4SybaseTemplatesPath>$(SolutionDir)Nuget\Sybase\</LinqToDBT4SybaseTemplatesPath>
 
 		<!--temporary suppress netcoreapp3.1 warnings-->
 		<CheckEolTargetFramework>false</CheckEolTargetFramework>

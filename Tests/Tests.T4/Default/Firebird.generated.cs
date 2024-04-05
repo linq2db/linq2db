@@ -67,6 +67,13 @@ namespace Default.Firebird
 			InitMappingSchema();
 		}
 
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 
@@ -75,11 +82,11 @@ namespace Default.Firebird
 		#region OutRefEnumTest
 
 		[Sql.TableFunction(Name="OutRefEnumTest")]
-		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? STR, string? IN_INPUTOUTPUTSTR)
+		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? str, string? inInputoutputstr)
 		{
 			return this.GetTable<OutRefEnumTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				STR,
-				IN_INPUTOUTPUTSTR);
+				str,
+				inInputoutputstr);
 		}
 
 		public partial class OutRefEnumTestResult
@@ -93,13 +100,13 @@ namespace Default.Firebird
 		#region OutRefTest
 
 		[Sql.TableFunction(Name="OutRefTest")]
-		public ITable<OutRefTestResult> OutRefTest(int? ID, int? IN_INPUTOUTPUTID, string? STR, string? IN_INPUTOUTPUTSTR)
+		public ITable<OutRefTestResult> OutRefTest(int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
 		{
 			return this.GetTable<OutRefTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				ID,
-				IN_INPUTOUTPUTID,
-				STR,
-				IN_INPUTOUTPUTSTR);
+				id,
+				inInputoutputid,
+				str,
+				inInputoutputstr);
 		}
 
 		public partial class OutRefTestResult
@@ -135,11 +142,11 @@ namespace Default.Firebird
 		#region PatientSelectByName
 
 		[Sql.TableFunction(Name="Patient_SelectByName")]
-		public ITable<PatientSelectByNameResult> PatientSelectByName(string? FIRSTNAME, string? LASTNAME)
+		public ITable<PatientSelectByNameResult> PatientSelectByName(string? firstname, string? lastname)
 		{
 			return this.GetTable<PatientSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				FIRSTNAME,
-				LASTNAME);
+				firstname,
+				lastname);
 		}
 
 		public partial class PatientSelectByNameResult
@@ -155,13 +162,13 @@ namespace Default.Firebird
 		#region PersonInsert
 
 		[Sql.TableFunction(Name="Person_Insert")]
-		public ITable<PersonInsertResult> PersonInsert(string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public ITable<PersonInsertResult> PersonInsert(string? firstname, string? lastname, string? middlename, char? gender)
 		{
 			return this.GetTable<PersonInsertResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				FIRSTNAME,
-				LASTNAME,
-				MIDDLENAME,
-				GENDER);
+				firstname,
+				lastname,
+				middlename,
+				gender);
 		}
 
 		public partial class PersonInsertResult
@@ -174,13 +181,13 @@ namespace Default.Firebird
 		#region PersonInsertOutputParameter
 
 		[Sql.TableFunction(Name="Person_Insert_OutputParameter")]
-		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? firstname, string? lastname, string? middlename, char? gender)
 		{
 			return this.GetTable<PersonInsertOutputParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				FIRSTNAME,
-				LASTNAME,
-				MIDDLENAME,
-				GENDER);
+				firstname,
+				lastname,
+				middlename,
+				gender);
 		}
 
 		public partial class PersonInsertOutputParameterResult
@@ -212,10 +219,10 @@ namespace Default.Firebird
 		#region PersonSelectByKey
 
 		[Sql.TableFunction(Name="Person_SelectByKey")]
-		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? ID)
+		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? id)
 		{
 			return this.GetTable<PersonSelectByKeyResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				ID);
+				id);
 		}
 
 		public partial class PersonSelectByKeyResult
@@ -232,11 +239,11 @@ namespace Default.Firebird
 		#region PersonSelectByName
 
 		[Sql.TableFunction(Name="Person_SelectByName")]
-		public ITable<PersonSelectByNameResult> PersonSelectByName(string? IN_FIRSTNAME, string? IN_LASTNAME)
+		public ITable<PersonSelectByNameResult> PersonSelectByName(string? inFirstname, string? inLastname)
 		{
 			return this.GetTable<PersonSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				IN_FIRSTNAME,
-				IN_LASTNAME);
+				inFirstname,
+				inLastname);
 		}
 
 		public partial class PersonSelectByNameResult
@@ -297,13 +304,13 @@ namespace Default.Firebird
 
 		#endregion
 
-		#region TestTableFunction
+		#region TestPACKAGE1TestTableFunction
 
-		[Sql.TableFunction(Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult> TestTableFunction(int? I)
+		[Sql.TableFunction(Package="TEST_PACKAGE1", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult> TestPACKAGE1TestTableFunction(int? i)
 		{
 			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+				i);
 		}
 
 		public partial class TestTableFUNCTIONResult
@@ -313,37 +320,13 @@ namespace Default.Firebird
 
 		#endregion
 
-		#region TestV4Types
+		#region TestPACKAGE2TestTableFunction
 
-		[Sql.TableFunction(Name="TEST_V4_TYPES")]
-		public ITable<TestV4TYPESResult> TestV4Types(FbZonedDateTime? TSTZ, FbZonedTime? TTZ, FbDecFloat? DECFLOAT16, FbDecFloat? DECFLOAT34, BigInteger? INT_128)
-		{
-			return this.GetTable<TestV4TYPESResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				TSTZ,
-				TTZ,
-				DECFLOAT16,
-				DECFLOAT34,
-				INT_128);
-		}
-
-		public partial class TestV4TYPESResult
-		{
-			public FbZonedDateTime? COL_TSTZ       { get; set; }
-			public FbZonedTime?     COL_TTZ        { get; set; }
-			public FbDecFloat?      COL_DECFLOAT16 { get; set; }
-			public FbDecFloat?      COL_DECFLOAT34 { get; set; }
-			public BigInteger?      COL_INT_128    { get; set; }
-		}
-
-		#endregion
-
-		#region TestPACKAGE1TestTableFunction
-
-		[Sql.TableFunction(Package="TEST_PACKAGE1", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult0> TestPACKAGE1TestTableFunction(int? I)
+		[Sql.TableFunction(Package="TEST_PACKAGE2", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult0> TestPACKAGE2TestTableFunction(int? i)
 		{
 			return this.GetTable<TestTableFUNCTIONResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+				i);
 		}
 
 		public partial class TestTableFUNCTIONResult0
@@ -353,18 +336,42 @@ namespace Default.Firebird
 
 		#endregion
 
-		#region TestPACKAGE2TestTableFunction
+		#region TestTableFunction
 
-		[Sql.TableFunction(Package="TEST_PACKAGE2", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult1> TestPACKAGE2TestTableFunction(int? I)
+		[Sql.TableFunction(Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult1> TestTableFunction(int? i)
 		{
 			return this.GetTable<TestTableFUNCTIONResult1>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+				i);
 		}
 
 		public partial class TestTableFUNCTIONResult1
 		{
 			public int? O { get; set; }
+		}
+
+		#endregion
+
+		#region TestV4Types
+
+		[Sql.TableFunction(Name="TEST_V4_TYPES")]
+		public ITable<TestV4TYPESResult> TestV4Types(FbZonedDateTime? tstz, FbZonedTime? ttz, FbDecFloat? decfloat16, FbDecFloat? decfloat34, BigInteger? int128)
+		{
+			return this.GetTable<TestV4TYPESResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				tstz,
+				ttz,
+				decfloat16,
+				decfloat34,
+				int128);
+		}
+
+		public partial class TestV4TYPESResult
+		{
+			public FbZonedDateTime? COL_TSTZ       { get; set; }
+			public FbZonedTime?     COL_TTZ        { get; set; }
+			public FbDecFloat?      COL_DECFLOAT16 { get; set; }
+			public FbDecFloat?      COL_DECFLOAT34 { get; set; }
+			public BigInteger?      COL_INT_128    { get; set; }
 		}
 
 		#endregion
@@ -531,7 +538,7 @@ namespace Default.Firebird
 		#region Associations
 
 		/// <summary>
-		/// INTEG_18 (SYSDBA.Person)
+		/// INTEG_1489 (SYSDBA.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -557,7 +564,7 @@ namespace Default.Firebird
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_18_BackReference (SYSDBA.Patient)
+		/// INTEG_1489_BackReference (SYSDBA.Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? INTEG { get; set; }
@@ -655,11 +662,11 @@ namespace Default.Firebird
 
 		#region PersonDelete
 
-		public static int PersonDelete(this TestDataDB dataConnection, int? PERSONID)
+		public static int PersonDelete(this TestDataDB dataConnection, int? personid)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID", PERSONID, LinqToDB.DataType.Int32)
+				new DataParameter("PERSONID", personid, LinqToDB.DataType.Int32)
 				{
 					Size = 4
 				}
@@ -672,27 +679,27 @@ namespace Default.Firebird
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestDataDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? personid, string? firstname, string? lastname, string? middlename, char? gender)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID",   PERSONID,   LinqToDB.DataType.Int32)
+				new DataParameter("PERSONID",   personid,   LinqToDB.DataType.Int32)
 				{
 					Size = 4
 				},
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar)
+				new DataParameter("FIRSTNAME",  firstname,  LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar)
+				new DataParameter("LASTNAME",   lastname,   LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				new DataParameter("MIDDLENAME", middlename, LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.NChar)
+				new DataParameter("GENDER",     gender,     LinqToDB.DataType.NChar)
 				{
 					Size = 1
 				}
@@ -703,39 +710,13 @@ namespace Default.Firebird
 
 		#endregion
 
-		#region TestProcedure
-
-		public static int TestProcedure(this TestDataDB dataConnection, int? I, out int? O)
-		{
-			var parameters = new []
-			{
-				new DataParameter("I", I, LinqToDB.DataType.Int32)
-				{
-					Size = 4
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Int32)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 4
-				}
-			};
-
-			var ret = dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
-
-			O = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-
-			return ret;
-		}
-
-		#endregion
-
 		#region TestPACKAGE1TestProcedure
 
-		public static int TestPACKAGE1TestProcedure(this TestDataDB dataConnection, int? I, out int? O)
+		public static int TestPACKAGE1TestProcedure(this TestDataDB dataConnection, int? i, out int? o)
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", I, LinqToDB.DataType.Int32)
+				new DataParameter("I", i, LinqToDB.DataType.Int32)
 				{
 					Size = 4
 				},
@@ -748,7 +729,7 @@ namespace Default.Firebird
 
 			var ret = dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
 
-			O = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -757,11 +738,11 @@ namespace Default.Firebird
 
 		#region TestPACKAGE2TestProcedure
 
-		public static int TestPACKAGE2TestProcedure(this TestDataDB dataConnection, int? I, out int? O)
+		public static int TestPACKAGE2TestProcedure(this TestDataDB dataConnection, int? i, out int? o)
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", I, LinqToDB.DataType.Int32)
+				new DataParameter("I", i, LinqToDB.DataType.Int32)
 				{
 					Size = 4
 				},
@@ -774,7 +755,33 @@ namespace Default.Firebird
 
 			var ret = dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
 
-			O = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region TestProcedure
+
+		public static int TestProcedure(this TestDataDB dataConnection, int? i, out int? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, LinqToDB.DataType.Int32)
+				{
+					Size = 4
+				},
+				new DataParameter("O", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				}
+			};
+
+			var ret = dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
+
+			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -807,7 +814,7 @@ namespace Default.Firebird
 		#region TestFunction
 
 		[Sql.Function(Name="TEST_FUNCTION", ServerSideOnly=true)]
-		public static int? TestFunction(int? I)
+		public static int? TestFunction(int? i)
 		{
 			throw new InvalidOperationException();
 		}
@@ -817,7 +824,7 @@ namespace Default.Firebird
 		#region TestPACKAGE1TestFunction
 
 		[Sql.Function(Name="TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly=true)]
-		public static int? TestPACKAGE1TestFunction(int? I)
+		public static int? TestPACKAGE1TestFunction(int? i)
 		{
 			throw new InvalidOperationException();
 		}
@@ -827,7 +834,7 @@ namespace Default.Firebird
 		#region TestPACKAGE2TestFunction
 
 		[Sql.Function(Name="TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly=true)]
-		public static int? TestPACKAGE2TestFunction(int? I)
+		public static int? TestPACKAGE2TestFunction(int? i)
 		{
 			throw new InvalidOperationException();
 		}

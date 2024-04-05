@@ -50,7 +50,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public bool    NormalizeProcedureColumnName        { get; set; } = true;
 		public bool    NormalizeNames                      { get; set; } = true;
 		public bool    NormalizeNamesWithoutUnderscores    { get; set; }
-		public bool    ConvertUpperNamesToLower            { get; set; } = true;
+		public bool    ConvertUpperNamesToLower            { get; set; }
 
 		private Func<string,bool,string>? _toValidName;
 		public  Func<string,bool,string>   ToValidName
