@@ -1708,6 +1708,117 @@ namespace Tests.Data
 			Assert.True(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4457")]
+		public async Task Test_Connection_Release_EagerLoad_AutoConnection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		{
+			var closeInterceptor = new TestDataContextInterceptor();
+			var openInterceptor = new TestConnectionInterceptor();
+
+			IDataContext main;
+			using (var db = main = new DataContext(context))
+			{
+				((DataContext)db).KeepConnectionAlive = false;
+				db.CloseAfterUse = closeAfterUse;
+				db.AddInterceptor(closeInterceptor);
+				db.AddInterceptor(openInterceptor);
+
+				Assert.That(GetOpenedCount(), Is.Zero);
+				Assert.That(GetClosedCount(), Is.Zero);
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).ToList();
+				Assert.That(GetOpenedCount(), Is.Not.Zero);
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).ToList();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).ToListAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).ToListAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefault();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefault();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefaultAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefaultAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.CloseAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+			}
+
+			Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+			int GetOpenedCount() => openInterceptor.ConnectionOpenedCount + openInterceptor.ConnectionOpenedAsyncCount;
+			int GetClosedCount() => closeInterceptor.OnClosedContexts.Concat(closeInterceptor.OnClosedAsyncContexts).Where(c => c.Key is DataConnection).Sum(c => c.Value);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4457")]
+		public async Task Test_Connection_Release_EagerLoad_PersistentConnection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		{
+			var closeInterceptor = new TestDataContextInterceptor();
+			var openInterceptor = new TestConnectionInterceptor();
+
+			IDataContext main;
+			using (var db = main = new DataContext(context))
+			{
+				((DataContext)db).KeepConnectionAlive = true;
+				db.CloseAfterUse = closeAfterUse;
+				db.AddInterceptor(closeInterceptor);
+				db.AddInterceptor(openInterceptor);
+
+				Assert.That(GetOpenedCount(), Is.Zero);
+				Assert.That(GetClosedCount(), Is.Zero);
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).ToList();
+				Assert.That(GetOpenedCount(), Is.EqualTo(1));
+				Assert.That(GetClosedCount(), Is.Zero);
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).ToList();
+				Assert.That(GetOpenedCount(), Is.EqualTo(1));
+				Assert.That(GetClosedCount(), Is.Zero);
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).ToListAsync();
+				Assert.That(GetOpenedCount(), Is.EqualTo(1));
+				Assert.That(GetClosedCount(), Is.Zero);
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).ToListAsync();
+				Assert.That(GetOpenedCount(), Is.EqualTo(1));
+				Assert.That(GetClosedCount(), Is.Zero);
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefault();
+				Assert.That(GetOpenedCount(), Is.EqualTo(1));
+				Assert.That(GetClosedCount(), Is.Zero);
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefault();
+				Assert.That(GetOpenedCount(), Is.EqualTo(1));
+				Assert.That(GetClosedCount(), Is.Zero);
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefaultAsync();
+				Assert.That(GetOpenedCount(), Is.EqualTo(1));
+				Assert.That(GetClosedCount(), Is.Zero);
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefaultAsync();
+				Assert.That(GetOpenedCount(), Is.EqualTo(1));
+				Assert.That(GetClosedCount(), Is.Zero);
+
+				await db.CloseAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+			}
+
+			Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+			int GetOpenedCount() => openInterceptor.ConnectionOpenedCount + openInterceptor.ConnectionOpenedAsyncCount;
+			int GetClosedCount() => closeInterceptor.OnClosedContexts.Concat(closeInterceptor.OnClosedAsyncContexts).Where(c => c.Key is DataConnection).Sum(c => c.Value);
+		}
+
 		#endregion
 
 		#endregion
@@ -1795,27 +1906,36 @@ namespace Tests.Data
 			public bool ConnectionOpeningTriggered      { get; set; }
 			public bool ConnectionOpeningAsyncTriggered { get; set; }
 
+			public int ConnectionOpenedCount       { get; set; }
+			public int ConnectionOpenedAsyncCount  { get; set; }
+			public int ConnectionOpeningCount      { get; set; }
+			public int ConnectionOpeningAsyncCount { get; set; }
+
 			public override void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
 			{
 				ConnectionOpenedTriggered = true;
+				ConnectionOpenedCount++;
 				base.ConnectionOpened(eventData, connection);
 			}
 
 			public override Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 			{
 				ConnectionOpenedAsyncTriggered = true;
+				ConnectionOpenedAsyncCount++;
 				return base.ConnectionOpenedAsync(eventData, connection, cancellationToken);
 			}
 
 			public override void ConnectionOpening(ConnectionEventData eventData, DbConnection connection)
 			{
 				ConnectionOpeningTriggered = true;
+				ConnectionOpeningCount++;
 				base.ConnectionOpening(eventData, connection);
 			}
 
 			public override Task ConnectionOpeningAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 			{
 				ConnectionOpeningAsyncTriggered = true;
+				ConnectionOpeningAsyncCount++;
 				return base.ConnectionOpeningAsync(eventData, connection, cancellationToken);
 			}
 		}
