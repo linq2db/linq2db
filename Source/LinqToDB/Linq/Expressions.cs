@@ -1190,23 +1190,6 @@ namespace LinqToDB.Linq
 
 				#endregion
 
-				#region SqlServer2005
-
-				/*
-				{ ProviderName.SqlServer2005, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
-					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.Types.DateTime2,
-						Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2) + " " +
-						Sql.ZeroPad(h, 2) + ":" + Sql.ZeroPad(mm, 2) + ":" + Sql.ZeroPad(s, 2), 120))) },
-					{
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-						M(() => DateTime.Parse("")),
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-						N(() => L<string,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) ))
-					},
-				}},*/
-
-				#endregion
-
 				#region SqlCe
 
 				{ ProviderName.SqlCe, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
@@ -1377,12 +1360,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 
-#if NET6_0_OR_GREATER
-					{ M(() => Sql.MakeDateOnly(0, 0, 0)), N(() => L<int?,int?,int?,DateOnly?>((y,m,d) => Sql.Convert(Sql.Types.DateOnly,
-						Sql.ZeroPad(y, 4) + "-" +
-						Sql.ZeroPad(m, 2) + "-" +
-						Sql.ZeroPad(d, 2)))) },
-#endif
 					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>((Guid p) => Sql.Lower(
 						Sql.Substring(Hex(p),  7,  2) + Sql.Substring(Hex(p),  5, 2) + Sql.Substring(Hex(p), 3, 2) + Sql.Substring(Hex(p), 1, 2) + "-" +
 						Sql.Substring(Hex(p), 11,  2) + Sql.Substring(Hex(p),  9, 2) + "-" +
@@ -1842,25 +1819,6 @@ namespace LinqToDB.Linq
 
 		// SqlServer
 		//
-		sealed class DateAddBuilder : Sql.IExtensionCallBuilder
-		{
-			public void Build(Sql.ISqExtensionBuilder builder)
-			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var partStr = Sql.DatePartBuilder.DatePartToStr(part);
-				var number  = builder.GetExpression("number");
-				var days    = builder.GetExpression("days");
-
-				builder.ResultExpression = new SqlQuery.SqlFunction(typeof(DateTime?), builder.Expression,
-					new SqlQuery.SqlExpression(partStr, SqlQuery.Precedence.Primary), number, days);
-			}
-		}
-
-		[Sql.Extension("DateAdd", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilder))]
-		public static DateTime? DateAdd(Sql.DateParts part, int? number, int? days)
-		{
-			return days == null ? null : Sql.DateAdd(part, number, new DateTime(1900, 1, days.Value + 1));
-		}
 
 		// MSSQL
 		//
@@ -1872,13 +1830,6 @@ namespace LinqToDB.Linq
 
 		// Access
 		//
-		[Sql.Function(ProviderName.Access, "DateSerial", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		public static DateTime? MakeDateTime2(int? year, int? month, int? day)
-		{
-			return year == null || month == null || day == null?
-				(DateTime?)null :
-				new DateTime(year.Value, month.Value, day.Value);
-		}
 
 		// Access
 		//
