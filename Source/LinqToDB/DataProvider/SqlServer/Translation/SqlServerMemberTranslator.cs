@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
 		}
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		public class SqlServerDateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			public static string? DatePartToStr(Sql.DateParts part)
 			{
@@ -179,7 +179,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 
 		protected override IMemberTranslator CreateDateFunctionsTranslator()
 		{
-			return new DateFunctionsTranslator();
+			return new SqlServerDateFunctionsTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

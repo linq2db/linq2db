@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Linq.Translation;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.DataProvider.SqlServer.Translation
 {
+	using LinqToDB.Linq.Translation;
+
 	public class SqlServer2005MemberTranslator : SqlServerMemberTranslator
 	{
 		class SqlTypes2005Translation : SqlTypesTranslation
@@ -14,7 +13,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
 		}
 
-		class DateFunctionsTranslator2005 : DateFunctionsTranslator
+		class DateFunctionsTranslator2005 : SqlServerDateFunctionsTranslator
 		{
 		}
 
