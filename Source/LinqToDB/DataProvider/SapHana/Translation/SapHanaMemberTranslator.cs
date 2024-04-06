@@ -228,10 +228,14 @@ namespace LinqToDB.DataProvider.SapHana.Translation
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFragment(factory.GetDbDataType(typeof(Guid)), "SYSUUID");
+			// Not found working solution for this
+			/*var factory    = translationContext.ExpressionFactory;
+			var guidType = factory.GetDbDataType(typeof(Guid));
+			var sysUUID    = factory.NonPureFragment(guidType, "SYSUUID");
 
-			return timePart;
+			return sysUUID;*/
+
+			return null;
 		}
 	}
 }
