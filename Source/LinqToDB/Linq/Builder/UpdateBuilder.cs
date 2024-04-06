@@ -842,14 +842,16 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var updateExpr = update;
+					var updateExpr      = update;
+					var forceParameters = true;
 
 					if (updateExpr.Unwrap() is LambdaExpression lambda)
 					{
-						updateExpr = SequenceHelper.PrepareBody(lambda, sequence);
+						forceParameters = false;
+						updateExpr      = SequenceHelper.PrepareBody(lambda, sequence);
 					}
 
-					ParseSet(builder, sequence, extractExpr, extractExpr, updateExpr, updateContext.SetExpressions, false);
+					ParseSet(builder, sequence, extractExpr, extractExpr, updateExpr, updateContext.SetExpressions, forceParameters);
 				}
 
 				return BuildSequenceResult.FromContext(updateContext);
