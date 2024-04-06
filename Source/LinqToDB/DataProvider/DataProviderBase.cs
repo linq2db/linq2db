@@ -522,8 +522,9 @@ namespace LinqToDB.DataProvider
 					{
 						if (_serviceProvider == null)
 						{
-							_serviceProvider = new SimpleServiceProvider();
-							InitServiceProvider(_serviceProvider);
+							var serviceProvider = new SimpleServiceProvider();
+							InitServiceProvider(serviceProvider);
+							_serviceProvider = serviceProvider;
 						}
 					}
 				}
