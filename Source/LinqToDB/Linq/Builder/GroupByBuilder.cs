@@ -259,7 +259,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var p in placeholders)
 			{
-				if (currentPlaceholders.Find(cp => ExpressionEqualityComparer.Instance.Equals(cp.Path, p.Path) || ExpressionEqualityComparer.Instance.Equals(cp.TrackingPath, p.TrackingPath)) == null)
+				if (currentPlaceholders.Find(cp => ExpressionEqualityComparer.Instance.Equals(cp.Path, p.Path)) == null)
 				{
 					currentPlaceholders.Add(p);
 
