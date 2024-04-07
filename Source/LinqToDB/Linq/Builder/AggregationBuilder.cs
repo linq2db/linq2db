@@ -465,6 +465,12 @@ namespace LinqToDB.Linq.Builder
 					inputValueLambda = methodCall.Arguments[1].UnwrapLambda();
 				}
 
+				if (argumentsCount == 2 && aggregationType == AggregationType.Custom)
+				{
+					if (methodCall.Arguments[1].Unwrap() is LambdaExpression lambda)
+						inputValueLambda = lambda;
+				}
+
 				if (argumentsCount > 1 && aggregationType == AggregationType.Count)
 				{
 					inputFilterLambda = methodCall.Arguments[1].UnwrapLambda();
