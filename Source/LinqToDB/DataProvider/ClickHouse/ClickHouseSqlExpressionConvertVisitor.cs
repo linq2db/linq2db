@@ -127,6 +127,34 @@ namespace LinqToDB.DataProvider.ClickHouse
 						? element
 						: PseudoFunctions.MakeCast(new SqlBinaryExpression(typeof(double), left, "%", right), QueryHelper.GetDbDataType(element, MappingSchema), new SqlDataType(new DbDataType(typeof(double), DataType.Double)));
 				}
+				case SqlBinaryExpression(var type, var left, "/", var right):
+				{
+					// "/" operation needs appropriate casting
+
+					var leftType  = QueryHelper.GetDbDataType(left, MappingSchema);
+					var rightType = QueryHelper.GetDbDataType(right, MappingSchema);
+					var rewrite   = false;
+
+					if (leftType.DataType is DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256)
+					{
+						left    = PseudoFunctions.MakeCast(left, new DbDataType(typeof(double), DataType.Double), new SqlDataType(leftType));
+						rewrite = true;
+					}
+
+					if (rightType.DataType is DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256)
+					{
+						right   = PseudoFunctions.MakeCast(right, new DbDataType(typeof(double), DataType.Double), new SqlDataType(rightType));
+						rewrite = true;
+					}
+
+					if (rewrite)
+					{
+						var newBinary = new SqlBinaryExpression(left.SystemType!, left, "/", right);
+						return new SqlCastExpression(newBinary, leftType, null, false);
+					}
+
+					return element;
+				}
 
 				case SqlBinaryExpression(var type, var left, "|", var right)    : return new SqlFunction(type, "bitOr",  false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, left, right);
 				case SqlBinaryExpression(var type, var left, "&", var right)    : return new SqlFunction(type, "bitAnd", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, left, right);
