@@ -1419,6 +1419,7 @@ namespace LinqToDB.Linq.Builder
 
 			var value = EvaluateExpression(expr);
 
+			// TODO: MappingSchema.GetSqlValue should use DbDataType
 			sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
 
 			_constants.Add(key, sqlValue);
