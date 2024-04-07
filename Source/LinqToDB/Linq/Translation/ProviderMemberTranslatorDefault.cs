@@ -188,22 +188,29 @@ namespace LinqToDB.Linq.Translation
 			if (argumentPlaceholder == null)
 				return true;
 
-			var underlyingType = nullableType.GetGenericArguments()[0];
+			var factory = translationContext.ExpressionFactory;
 
-			var defaultValueExpr = methodCall.Arguments.Count == 1 ? methodCall.Arguments[0] : new DefaultValueExpression(translationContext.MappingSchema, underlyingType);
+			var sqlExpression = argumentPlaceholder.Sql;
+			var argumentType           = factory.GetDbDataType(sqlExpression);
 
-			var checkExpression =
-				Expression.Condition(
-					Expression.Equal(argumentPlaceholder, Expression.Constant(null, nullableType)), 
-					defaultValueExpr,
-					argumentPlaceholder.WithType(underlyingType));
+			ISqlExpression? defaultValueExpression;
 
-			translated = translationContext.Translate(checkExpression);
+			if (methodCall.Arguments.Count == 1)
+			{
+				var defaulTranslation = translationContext.Translate(methodCall.Arguments[0]);
+				if (defaulTranslation is not SqlPlaceholderExpression defaultValuePlaceholder)
+					return true;
 
-			if (translated is not SqlPlaceholderExpression placeholder)
-				return false;
+				defaultValueExpression = defaultValuePlaceholder.Sql;
+			}
+			else
+			{
+				defaultValueExpression = new SqlValue(argumentType, translationContext.MappingSchema.GetDefaultValue(argumentType.SystemType.ToNullableUnderlying()));
+			}
 
-			translated = placeholder.WithPath(methodCall);
+			var caseExpression = new SqlConditionExpression(new SqlPredicate.IsNull(sqlExpression, true), sqlExpression, defaultValueExpression);
+
+			translated = translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, caseExpression, methodCall);
 
 			return true;
 		}
