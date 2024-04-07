@@ -111,7 +111,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic9([DataSources] string context)
+		public void Basic9([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
