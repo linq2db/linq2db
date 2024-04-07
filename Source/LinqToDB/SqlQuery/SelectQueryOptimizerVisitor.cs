@@ -1666,7 +1666,27 @@ namespace LinqToDB.SqlQuery
 				return false;
 
 			if (!_providerFlags.IsNestedJoinsSupported && subQuery.From.Tables[0].Joins.Count > 0)
-				return false;
+			{
+				// For AssociationTests.GroupBy2 and TestIssue2832 for ClickHouse
+
+				var usedColumns = new HashSet<SqlColumn>();
+				joinTable.Condition.VisitAll((usedColumns, subQuery), (ctx, e) =>
+				{
+					if (e is SqlColumn sc && sc.Parent == ctx.subQuery)
+						ctx.usedColumns.Add(sc);
+				});
+
+				if (usedColumns.Count > 0)
+				{
+					var sources = QueryHelper.EnumerateJoins(subQuery).Select(jt => jt.Table.Source).ToList();
+
+					foreach (var c in usedColumns)
+					{
+						if (QueryHelper.IsDependsOnSources(c.Expression, sources))
+							return false;
+					}
+				}
+			}
 
 			var moveConditionToQuery = joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply;
 
