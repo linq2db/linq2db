@@ -398,5 +398,24 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			throw new LinqToDBException($"Missing conversion function definition to type '{toType}'");
 		}
+
+		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			if (expr is SqlValue sqlValue && sqlValue.Value is null && sqlValue.ValueType.DataType is DataType.Interval 
+				    or DataType.IntervalSecond 
+				    or DataType.IntervalMinute
+				    or DataType.IntervalHour
+				    or DataType.IntervalDay
+					or DataType.IntervalWeek
+					or DataType.IntervalMonth
+					or DataType.IntervalQuarter
+					or DataType.IntervalYear
+					)
+			{
+				return expr;
+			}
+
+			return base.WrapColumnExpression(expr);
+		}
 	}
 }

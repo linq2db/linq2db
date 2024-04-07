@@ -595,6 +595,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				case DataType.Single   : BuildFloatLiteral(sb, checked((float)value)); return;
 				case DataType.Undefined:
+				case DataType.Int32:
 				case DataType.Double   : BuildDoubleLiteral(sb, value); return;
 			}
 
