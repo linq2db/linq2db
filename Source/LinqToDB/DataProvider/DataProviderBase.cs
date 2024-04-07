@@ -223,6 +223,11 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
 		}
 
+		protected void SetProviderField<TP, T>(Type providerFieldType, Expression<Func<TP, int, T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = providerFieldType }] = expr;
+		}
+
 		protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
