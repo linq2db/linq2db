@@ -1305,7 +1305,7 @@ namespace Tests.DataProvider
 					Assert.Multiple(() =>
 					{
 						Assert.That(procedure.IsLoaded, Is.False);
-						Assert.That(procedure.ResultException, Is.InstanceOf(typeof(InvalidOperationException)));
+						Assert.That(procedure.ResultException, Is.InstanceOf<InvalidOperationException>());
 					});
 					Assert.That(procedure.ResultException.Message, Is.EqualTo("There is no current result set."));
 				}

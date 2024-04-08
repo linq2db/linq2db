@@ -770,7 +770,6 @@ namespace Tests.Linq
 				Assert.Throws<LinqException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
@@ -899,8 +898,6 @@ namespace Tests.Linq
 		}
 
 		// Sybase, Informix: doesn't support TOP/FIRST in subqueries
-		// +https://github.com/Octonica/ClickHouseClient/issues/56
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void GroupTakeAnyTest([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values] bool withParameters)
 		{

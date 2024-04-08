@@ -118,7 +118,6 @@ namespace Tests.Linq
 					from t in from p in db.Types select Sql.Degrees((double)p.MoneyValue)!.Value where t != 0.1 select Math.Floor(t));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Degrees3([DataSources(ProviderName.SQLiteMS)] string context)
 		{

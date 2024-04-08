@@ -208,7 +208,7 @@ jobs:
         - name: Access_ACE_1
           title: Access ACE (OLEDB/ODBC) x86
           config_win: access.ace
-          script_win_global: access.ace.cmd
+          psscript_win_global: access.ace.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -226,7 +226,7 @@ jobs:
         - name: Access_ACE_2
           title: Access ACE (OLEDB/ODBC) x86
           config_win: access.ace
-          script_win_global: access.ace.cmd
+          psscript_win_global: access.ace.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -244,7 +244,7 @@ jobs:
         - name: Access_ACE_3
           title: Access ACE (OLEDB/ODBC) x86
           config_win: access.ace
-          script_win_global: access.ace.cmd
+          psscript_win_global: access.ace.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -262,7 +262,7 @@ jobs:
         - name: Access_ACE_x64
           title: Access ACE (ODBC-only) x64 # x64 OLEDB crashes randomly https://github.com/dotnet/runtime/issues/46187
           config_win: access.ace.x64
-          script_win_global: access.ace.x64.cmd
+          psscript_win_global: access.ace.x64.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -997,8 +997,27 @@ jobs:
             enabled: false
 
 # ClickHouse
-        - name: ClickHouse
-          title: ClickHouse
+        - name: ClickHouse Client
+          title: ClickHouse Client
+          config_linux: clickhouse_client
+          config_macos: clickhouse_client
+          script_linux_global: clickhouse.sh
+          script_macos_global: clickhouse.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net60: true
+          enable_fw_net80: true
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
+            enabled: false
+
+        - name: ClickHouse MySQL/Octonica
+          title: ClickHouse MySQL/Octonica
           config_linux: clickhouse
           config_macos: clickhouse
           script_linux_global: clickhouse.sh

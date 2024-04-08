@@ -1896,10 +1896,7 @@ namespace Tests.Data
 			using (var db = GetDataConnection(context))
 				provider = new TestClickHouseDataProvider(db.DataProvider.Name, ((ClickHouseDataProvider)db.DataProvider).Provider);
 
-			// temporary workaround for https://github.com/Octonica/ClickHouseClient/issues/54
-			using (var db = context.IsAnyOf(ProviderName.ClickHouseOctonica)
-				? CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(provider.Adapter.ConnectionType, cs, null)!)
-				: CreateDataConnection(provider, context, type, provider.Adapter.ConnectionType))
+			using (var db = CreateDataConnection(provider, context, type, provider.Adapter.ConnectionType))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>

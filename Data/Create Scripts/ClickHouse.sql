@@ -36,14 +36,7 @@ CREATE TABLE LinqDataTypes
 	MoneyValue     Nullable(Decimal64(4)),
 	DateTimeValue  Nullable(DateTime64(3)),
 	DateTimeValue2 Nullable(DateTime64(7)),
--- SKIP ClickHouse.Octonica BEGIN
 	BoolValue      Nullable(Bool),
--- SKIP ClickHouse.Octonica END
--- SKIP ClickHouse.Client BEGIN
--- SKIP ClickHouse.MySql BEGIN
-	BoolValue      Nullable(UInt8),
--- SKIP ClickHouse.MySql END
--- SKIP ClickHouse.Client END
 	GuidValue      Nullable(UUID),
 	BinaryValue    Nullable(String),
 	SmallIntValue  Nullable(Int16),
@@ -154,14 +147,7 @@ CREATE TABLE TestMerge1
 	Field5          Nullable(Int32),
 
 	FieldInt64      Nullable(Int64),
--- SKIP ClickHouse.Octonica BEGIN
 	FieldBoolean    Nullable(Bool),
--- SKIP ClickHouse.Octonica END
--- SKIP ClickHouse.Client BEGIN
--- SKIP ClickHouse.MySql BEGIN
-	FieldBoolean    Nullable(UInt8),
--- SKIP ClickHouse.MySql END
--- SKIP ClickHouse.Client END
 	FieldString     Nullable(String),
 	FieldNString    Nullable(String),
 	FieldChar       Nullable(FixedString(1)),
@@ -190,14 +176,7 @@ CREATE TABLE TestMerge2
 	Field5          Nullable(Int32),
 
 	FieldInt64      Nullable(Int64),
--- SKIP ClickHouse.Octonica BEGIN
 	FieldBoolean    Nullable(Bool),
--- SKIP ClickHouse.Octonica END
--- SKIP ClickHouse.Client BEGIN
--- SKIP ClickHouse.MySql BEGIN
-	FieldBoolean    Nullable(UInt8),
--- SKIP ClickHouse.MySql END
--- SKIP ClickHouse.Client END
 	FieldString     Nullable(String),
 	FieldNString    Nullable(String),
 	FieldChar       Nullable(FixedString(1)),

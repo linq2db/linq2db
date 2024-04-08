@@ -5,7 +5,9 @@ namespace LinqToDB
 	/// <summary>
 	/// Base class for T4 template code.
 	/// </summary>
+#pragma warning disable CA1515 // Consider making public types internal
 	public abstract class LinqToDBHost
+#pragma warning restore CA1515 // Consider making public types internal
 	{
 		/// <summary>
 		/// Main entry point. We call it to execute template logic.

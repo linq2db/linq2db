@@ -24,7 +24,7 @@ namespace LinqToDB.CommandLine
 		/// <summary>
 		/// Provides access to general scaffold options definitions.
 		/// </summary>
-		public static class General
+		internal static class General
 		{
 			/// <summary>
 			/// Import settings JSON option.
@@ -227,7 +227,7 @@ Customization using compiled assembly has several requirements:
 		/// <summary>
 		/// Provides access to code-generation scaffold options definitions.
 		/// </summary>
-		public static class CodeGen
+		internal static class CodeGen
 		{
 			/// <summary>
 			/// Nullable annotations generation option.
@@ -380,7 +380,7 @@ Customization using compiled assembly has several requirements:
 		/// <summary>
 		/// Provides access to data model scaffold options definitions.
 		/// </summary>
-		public static class DataModel
+		internal static class DataModel
 		{
 			/// <summary>
 			/// Naming option help text.
@@ -1147,7 +1147,7 @@ If you don't specify some property, CLI will use default value for current optio
 		/// <summary>
 		/// Provides access to database schema scaffold options definitions.
 		/// </summary>
-		public static class SchemaOptions
+		internal static class SchemaOptions
 		{
 			/// <summary>
 			/// Schema objects to load option.

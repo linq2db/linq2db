@@ -342,3 +342,4 @@ static LinqToDB.Mapping.Nullability.TryAnalyzeMember(System.Reflection.MemberInf
 *REMOVED*LinqToDB.Linq.LinqException.LinqException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 *REMOVED*LinqToDB.Data.RetryPolicy.RetryLimitExceededException.RetryLimitExceededException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 *REMOVED*LinqToDB.Common.LinqToDBConvertException.LinqToDBConvertException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+*REMOVED*override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.CreateConnectionInternal(string! connectionString) -> System.Data.Common.DbConnection!

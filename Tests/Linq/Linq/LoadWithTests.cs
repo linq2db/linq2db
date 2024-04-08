@@ -503,7 +503,7 @@ namespace Tests.Linq
 			return Tuple.Create(mainItems, mainItems2, subItems1, subSubItems1, subItems2);
 		}
 
-
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/62358", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void LoadWithAndFilter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -801,7 +801,6 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void LoadWithAssociationPredicateExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

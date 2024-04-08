@@ -2064,7 +2064,6 @@ namespace Tests.Linq
 			[Column, Nullable    ] public string? ImageFullUrl { get; set; } // nvarchar(255)
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -2164,7 +2163,6 @@ namespace Tests.Linq
 			[MapValue("D")] Delisted,
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue913Test([DataSources] string context)
 		{
@@ -2770,7 +2768,6 @@ namespace Tests.Linq
 		}
 
 		#region issue 4256
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestIssue4256AnonymousClass([DataSources] string context)
 		{
@@ -2797,7 +2794,6 @@ namespace Tests.Linq
 			public override int GetHashCode() => IsActive.GetHashCode() ^ Other.GetHashCode();
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestIssue4256Class([DataSources] string context)
 		{
@@ -2824,7 +2820,6 @@ namespace Tests.Linq
 			public override int GetHashCode() => (IsActive?.GetHashCode() ?? 0) ^ Other.GetHashCode();
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestIssue4256ClassNullableFlag([DataSources] string context)
 		{

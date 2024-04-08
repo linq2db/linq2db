@@ -88,7 +88,9 @@ namespace Tests.Linq
 
 		sealed class WithNullConverter : ValueConverter<EnumValue, string?>
 		{
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			public WithNullConverter() : base(v => v == EnumValue.Null ? null : v.ToString(), p=> p == null ? EnumValue.Null : (EnumValue)Enum.Parse(typeof(EnumValue), p), true)
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 			{
 
 			}
@@ -138,6 +140,7 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			var builder = new FluentMappingBuilder(ms);
 
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			builder.Entity<MainClass>()
 				.Property(e => e.Value1)
 				.HasConversion(v => JsonConvert.SerializeObject(v), p => JsonConvert.DeserializeObject<JToken>(p))
@@ -163,6 +166,7 @@ namespace Tests.Linq
 					_ => _.HasValue ? new DateTime(_.Value.Ticks, DateTimeKind.Local) : new DateTime?()
 				)
 				.Build();
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 
 			return ms;
 		}

@@ -522,10 +522,9 @@ namespace LinqToDB
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
-				builder.ResultExpression = builder.Add(
+				builder.ResultExpression = builder.Add<DateTime?>(
 					date,
-					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number),
-					typeof(DateTime?));
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number));
 			}
 		}
 
@@ -556,10 +555,9 @@ namespace LinqToDB
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
-				builder.ResultExpression = builder.Add(
+				builder.ResultExpression = builder.Add<DateTime?>(
 					date,
-					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Primary, number),
-					typeof(DateTime?));
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Primary, number));
 			}
 		}
 
@@ -619,10 +617,9 @@ namespace LinqToDB
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
-				builder.ResultExpression = builder.Add(
+				builder.ResultExpression = builder.Add<DateTime?>(
 					date,
-					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number),
-					typeof(DateTime?));
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number));
 			}
 		}
 

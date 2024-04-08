@@ -447,7 +447,6 @@ namespace Tests.Linq
 					 select c).Count()));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test4([DataSources] string context)
 		{

@@ -55,7 +55,7 @@ namespace Tests.Exceptions
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.FirstName };
 
-				Assert.Throws(typeof(LinqException), () => q.ToList());
+				Assert.Throws<LinqException>(() => q.ToList());
 			}
 		}
 
