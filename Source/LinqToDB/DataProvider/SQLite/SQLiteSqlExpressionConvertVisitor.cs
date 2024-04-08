@@ -166,12 +166,6 @@ namespace LinqToDB.DataProvider.SQLite
 				if (!(cast.Expression.TryEvaluateExpression(EvaluationContext, out var value) && value is null))
 				{
 					return (ISqlExpression)Visit(WrapDateTime(cast.Expression, cast.ToType));
-					/*
-					if (IsDateDataType(cast.ToType, "Date"))
-						return new SqlFunction(cast.SystemType, "Date", cast.Expression) { DoNotOptimize = true };
-
-					return new SqlFunction(cast.SystemType, "StrFTime", new SqlValue("%Y-%m-%dT%H:%M:%f"), cast.Expression) { DoNotOptimize = true };
-				*/
 				}
 			}
 
