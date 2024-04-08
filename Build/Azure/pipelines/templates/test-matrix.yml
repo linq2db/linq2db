@@ -244,7 +244,7 @@ jobs:
         - name: Access_ACE_3
           title: Access ACE (OLEDB/ODBC) x86
           config_win: access.ace
-          script_win_global: access.ace.cmd
+          psscript_win_global: access.ace.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
