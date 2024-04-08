@@ -327,6 +327,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		protected ISqlExpression MakeConversion(ISqlExpression expression, DbDataType toType, bool isTry, ISqlExpression? defaultValue)
 		{
+			if (ShouldSkipCast(expression, toType))
+				return expression;
+
 			var value        = expression;
 			var suffix       = isTry ? "OrNull" : null;
 
@@ -401,21 +404,31 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
-			if (expr is SqlValue sqlValue && sqlValue.Value is null && sqlValue.ValueType.DataType is DataType.Interval 
-				    or DataType.IntervalSecond 
-				    or DataType.IntervalMinute
-				    or DataType.IntervalHour
-				    or DataType.IntervalDay
-					or DataType.IntervalWeek
-					or DataType.IntervalMonth
-					or DataType.IntervalQuarter
-					or DataType.IntervalYear
-					)
+			if (ShouldSkipCast(expr, QueryHelper.GetDbDataType(expr, MappingSchema)))
 			{
 				return expr;
 			}
 
 			return base.WrapColumnExpression(expr);
+		}
+
+		static bool ShouldSkipCast(ISqlExpression expr, DbDataType toDataType)
+		{
+			if (expr is SqlValue sqlValue && sqlValue.Value is null && toDataType.DataType is DataType.Interval 
+				    or DataType.IntervalSecond 
+				    or DataType.IntervalMinute
+				    or DataType.IntervalHour
+				    or DataType.IntervalDay
+				    or DataType.IntervalWeek
+				    or DataType.IntervalMonth
+				    or DataType.IntervalQuarter
+				    or DataType.IntervalYear
+			   )
+			{
+				return true;
+			}
+
+			return false;
 		}
 	}
 }
