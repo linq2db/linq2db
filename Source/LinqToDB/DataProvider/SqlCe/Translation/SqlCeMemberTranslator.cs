@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 					_ => null
 				};
 			}
-			
+
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
 				DbDataType          resulType,
@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 				ISqlExpression?     millisecond)
 			{
 				var factory        = translationContext.ExpressionFactory;
-				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar);
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.VarChar);
 				var intDataType    = factory.GetDbDataType(typeof(int));
 
 				ISqlExpression CastToLength(ISqlExpression expression, int stringLength)
@@ -114,12 +114,16 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 						return factory.Value(stringDataType.WithLength(padLeft.Length), padLeft);
 					}
 
-					var stringValue = factory.Add(stringDataType, factory.Value(stringDataType, new string('0', padSize)), CastToLength(expression, padSize));
+					var castToLength = CastToLength(expression, padSize);
 
-					return factory.Function(stringDataType, "SUBSTRING",
-						stringValue,
-						factory.Decrement(factory.Function(intDataType, "LEN", stringValue)),
-						factory.Value(intDataType, padSize));
+					return
+						factory.Concat(
+							factory.Function(stringDataType, "REPLICATE",
+								factory.Value(stringDataType, "0"),
+								factory.Sub(intDataType, factory.Value(intDataType, padSize), factory.Function(intDataType, "LEN", castToLength))
+							),
+							castToLength
+						);
 				}
 
 				var yearString  = PartExpression(year, 4);
