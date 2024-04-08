@@ -2185,12 +2185,18 @@ namespace Tests.Data
 				db.AddInterceptor(closeInterceptor);
 				db.AddInterceptor(openInterceptor);
 
-				Assert.That(GetOpenedCount(), Is.Zero);
-				Assert.That(GetClosedCount(), Is.Zero);
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.Zero);
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
 
 				db.GetTable<Person>().LoadWith(p => p.Patient).ToList();
-				Assert.That(GetOpenedCount(), Is.Not.Zero);
-				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.Not.Zero);
+					Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+				});
 
 				db.GetTable<Parent>().LoadWith(p => p.Children).ToList();
 				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
@@ -2237,40 +2243,67 @@ namespace Tests.Data
 				db.AddInterceptor(closeInterceptor);
 				db.AddInterceptor(openInterceptor);
 
-				Assert.That(GetOpenedCount(), Is.Zero);
-				Assert.That(GetClosedCount(), Is.Zero);
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.Zero);
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
 
 				db.GetTable<Person>().LoadWith(p => p.Patient).ToList();
-				Assert.That(GetOpenedCount(), Is.EqualTo(1));
-				Assert.That(GetClosedCount(), Is.Zero);
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
 
 				db.GetTable<Parent>().LoadWith(p => p.Children).ToList();
-				Assert.That(GetOpenedCount(), Is.EqualTo(1));
-				Assert.That(GetClosedCount(), Is.Zero);
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
 
 				await db.GetTable<Person>().LoadWith(p => p.Patient).ToListAsync();
-				Assert.That(GetOpenedCount(), Is.EqualTo(1));
-				Assert.That(GetClosedCount(), Is.Zero);
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
 
 				await db.GetTable<Parent>().LoadWith(p => p.Children).ToListAsync();
-				Assert.That(GetOpenedCount(), Is.EqualTo(1));
-				Assert.That(GetClosedCount(), Is.Zero);
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
 
 				db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefault();
-				Assert.That(GetOpenedCount(), Is.EqualTo(1));
-				Assert.That(GetClosedCount(), Is.Zero);
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
 
 				db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefault();
-				Assert.That(GetOpenedCount(), Is.EqualTo(1));
-				Assert.That(GetClosedCount(), Is.Zero);
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
 
 				await db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefaultAsync();
-				Assert.That(GetOpenedCount(), Is.EqualTo(1));
-				Assert.That(GetClosedCount(), Is.Zero);
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
 
 				await db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefaultAsync();
-				Assert.That(GetOpenedCount(), Is.EqualTo(1));
-				Assert.That(GetClosedCount(), Is.Zero);
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
 
 				await db.CloseAsync();
 				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
