@@ -11,5 +11,4 @@
 
 	LoadSybaseMetadata(GetConnectionString("Sybase.Managed"));
 	GenerateModel();
-
 #>

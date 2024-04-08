@@ -7,43 +7,32 @@
 		<NoWarn>(NoWarn);618</NoWarn>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<ProjectCapability Remove="TestContainer" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-
-		<PackageReference Update="MySql.Data" Aliases="" />
-		<PackageReference Update="MySqlConnector" Aliases="" />
-	</ItemGroup>
-
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
 		<Reference Include="System.ComponentModel.DataAnnotations" />
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
 		<Reference Include="WindowsBase" />
-	</ItemGroup>
 
-	<ItemGroup>
-		<None Remove="Models\bbb.txt" />
-		<Content Include="Models\bbb.txt" />
+		<None    Update="WPF\ViewModel.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ViewModel.generated.cs" />
+		<Compile Update="WPF\ViewModel.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="ViewModel.tt" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
 		<Compile Remove="WPF\*.cs" />
 		<None Include="WPF\ViewModel.cs" />
-
-		<None Remove="SqlServerAzure.tt" />
-		<Compile Remove="SqlServerAzure.generated.cs" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-		<None    Update="WPF\ViewModel.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ViewModel.generated.cs" />
-		<Compile Update="WPF\ViewModel.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="ViewModel.tt" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
+		<ProjectCapability Remove="TestContainer" />
+
+		<PackageReference Update="MySql.Data" Aliases="" />
+		<PackageReference Update="MySqlConnector" Aliases="" />
+
+		<None Remove="Models\bbb.txt" />
+		<Content Include="Models\bbb.txt" />
+
 		<None    Update="Cli\Fluent.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Fluent.generated.cs" />
 		<Compile Update="Cli\Fluent.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Fluent.tt" />
 
