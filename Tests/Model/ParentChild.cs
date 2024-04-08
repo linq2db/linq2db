@@ -333,8 +333,8 @@ namespace Tests.Model
 	[Table("Parent")]
 	public class Parent1 : IEquatable<Parent1>, IComparable
 	{
-		[PrimaryKey] public int  ParentID;
-		[Column]     public int? Value1;
+		[PrimaryKey] public int  ParentID { get; set; }
+		[Column]     public int? Value1   { get; set; }
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public List<Child> Children = null!;
