@@ -52,7 +52,7 @@
 
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"                />
-		<PackageVersion Include="ClickHouse.Client"                                     Version="7.2.1"                 />
+		<PackageVersion Include="ClickHouse.Client"                                     Version="7.2.2"                 />
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.3.10"               />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"                 />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
