@@ -29,7 +29,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test1([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -51,7 +51,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test2([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
