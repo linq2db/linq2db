@@ -260,9 +260,8 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				Assert.AreEqual(
-					(from employee in dd.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(),
-					(from employee in db.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault());
+				Assert.That(
+					(from employee in db.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(), Is.EqualTo((from employee in dd.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault()));
 			}
 		}
 
@@ -381,8 +380,11 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.NotNull(list[0]);
-				Assert.Null   (list[1]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0], Is.Not.Null);
+					Assert.That(list[1], Is.Null);
+				});
 			}
 		}
 
@@ -401,8 +403,11 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.NotNull(list[0]);
-				Assert.Null   (list[1]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0], Is.Not.Null);
+					Assert.That(list[1], Is.Null);
+				});
 			}
 		}
 
@@ -421,8 +426,11 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.NotNull(list[0]);
-				Assert.Null   (list[1]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0], Is.Not.Null);
+					Assert.That(list[1], Is.Null);
+				});
 			}
 		}
 
@@ -435,7 +443,7 @@ namespace Tests.Linq
 			// should generate following SQL:
 			// parent_id <> 4 or parent_id is null
 			var result = db.GetTable<Top>().Where(t => t.Middle!.ParentID != 4).ToArray();
-			Assert.AreEqual(14, result.Length);
+			Assert.That(result, Has.Length.EqualTo(14));
 		}
 
 		[Table(Name="Child", IsColumnAttributeRequired=false)]
@@ -565,7 +573,7 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.That(list.Count,       Is.GreaterThan(0));
+				Assert.That(list,       Is.Not.Empty);
 				Assert.That(list[0].Children, Is.Not.Null);
 			}
 		}
@@ -777,8 +785,11 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.NotNull(list[0]);
-				Assert.Null   (list[1]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0], Is.Not.Null);
+					Assert.That(list[1], Is.Null);
+				});
 			}
 		}
 
@@ -804,8 +815,11 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.NotNull(list[0]);
-				Assert.Null   (list[1]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0], Is.Not.Null);
+					Assert.That(list[1], Is.Null);
+				});
 			}
 		}
 
@@ -832,7 +846,7 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.AreEqual(1, list.Count);
+				Assert.That(list, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -1066,8 +1080,8 @@ namespace Tests.Linq
 
 			var result = query.ToArray();
 
-			Assert.AreEqual(1, result.Length);
-			Assert.AreEqual(1, result[0].ParentID);
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].ParentID, Is.EqualTo(1));
 		}
 
 		[Test]
@@ -1081,9 +1095,12 @@ namespace Tests.Linq
 
 			var result = query.ToArray();
 
-			Assert.AreEqual(2, result.Length);
-			Assert.AreEqual(1, result[0].ParentID);
-			Assert.IsNull(result[1].ParentID);
+			Assert.That(result, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ParentID, Is.EqualTo(1));
+				Assert.That(result[1].ParentID, Is.Null);
+			});
 		}
 
 		[Test]
@@ -1106,7 +1123,7 @@ namespace Tests.Linq
 
 			var query = parent.Select(p => p.ChildInner.ParentID);
 
-			Assert.AreEqual(1, query.Count());
+			Assert.That(query.Count(), Is.EqualTo(1));
 		}
 
 		[Test]
@@ -1129,8 +1146,11 @@ namespace Tests.Linq
 
 			var query = parent.Select(p => p.ChildOuter!.ParentID);
 
-			Assert.AreEqual(2, query.Count());
-			Assert.AreEqual(1, query.GetTableSource().Joins.Count);
+			Assert.Multiple(() =>
+			{
+				Assert.That(query.Count(), Is.EqualTo(2));
+				Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
+			});
 		}
 
 		[Test]
@@ -1159,7 +1179,7 @@ namespace Tests.Linq
 				.Select(с => (int?)с.ChildID)
 				.FirstOrDefault();
 
-				Assert.AreEqual(11, result);
+				Assert.That(result, Is.EqualTo(11));
 			}
 		}
 
@@ -1271,8 +1291,8 @@ namespace Tests.Linq
 					.Select(e => new { e.Id, e.Department!.Name })
 					.ToList();
 
-				Assert.False(db.LastQuery!.Contains(" NOT"));
-				Assert.True(db.LastQuery!.Contains("AND [a_Department].[Deleted] = 0"));
+				Assert.That(db.LastQuery!, Does.Not.Contain(" NOT"));
+				Assert.That(db.LastQuery!, Does.Contain("AND [a_Department].[Deleted] = 0"));
 			}
 		}
 
@@ -1376,12 +1396,15 @@ namespace Tests.Linq
 					.Select(t => new { t, t.ActualStage });
 				var res = query.ToArray();
 
-				Assert.AreEqual(1, res.Length);
-				Assert.AreEqual(1, res[0].t.Id);
-				Assert.AreEqual("bda.Requests", res[0].t.TargetName);
-				Assert.AreEqual(1, res[0].ActualStage.Id);
-				Assert.AreEqual(1, res[0].ActualStage.TaskId);
-				Assert.AreEqual(true, res[0].ActualStage.Actual);
+				Assert.That(res, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].t.Id, Is.EqualTo(1));
+					Assert.That(res[0].t.TargetName, Is.EqualTo("bda.Requests"));
+					Assert.That(res[0].ActualStage.Id, Is.EqualTo(1));
+					Assert.That(res[0].ActualStage.TaskId, Is.EqualTo(1));
+					Assert.That(res[0].ActualStage.Actual, Is.EqualTo(true));
+				});
 			}
 		}
 
@@ -1562,13 +1585,16 @@ namespace Tests.Linq
 				.OrderBy(r => r.Id)
 				.ToList();
 
-			Assert.AreEqual(3, result.Count);
-			Assert.AreEqual(1, result[0].Id);
-			Assert.AreEqual(2, result[1].Id);
-			Assert.AreEqual(3, result[2].Id);
-			Assert.IsNull(null, result[0].Reason);
-			Assert.IsNull(null, result[1].Reason);
-			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+			Assert.That(result, Has.Count.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[0].Reason, Is.Null);
+				Assert.That(result[1].Reason, Is.Null);
+				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
+			});
 		}
 
 		[Test]
@@ -1593,13 +1619,16 @@ namespace Tests.Linq
 				.OrderBy(r => r.Id)
 				.ToList();
 
-			Assert.AreEqual(3, result.Count);
-			Assert.AreEqual(1, result[0].Id);
-			Assert.AreEqual(2, result[1].Id);
-			Assert.AreEqual(3, result[2].Id);
-			Assert.AreEqual(string.Empty, result[0].Reason);
-			Assert.AreEqual(string.Empty, result[1].Reason);
-			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+			Assert.That(result, Has.Count.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[0].Reason, Is.EqualTo(string.Empty));
+				Assert.That(result[1].Reason, Is.EqualTo(string.Empty));
+				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
+			});
 		}
 
 		[Test]
@@ -1624,13 +1653,16 @@ namespace Tests.Linq
 				.OrderBy(r => r.Id)
 				.ToList();
 
-			Assert.AreEqual(3, result.Count);
-			Assert.AreEqual(1, result[0].Id);
-			Assert.AreEqual(2, result[1].Id);
-			Assert.AreEqual(3, result[2].Id);
-			Assert.IsNull(null, result[0].Reason);
-			Assert.IsNull(null, result[1].Reason);
-			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+			Assert.That(result, Has.Count.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[0].Reason, Is.Null);
+				Assert.That(result[1].Reason, Is.Null);
+				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
+			});
 		}
 		#endregion
 
@@ -1740,8 +1772,8 @@ namespace Tests.Linq
 				.Where(r => r.Table2!.Table3!.Table4.Select(u => u.ID).Any(id => id == r.ID))
 				.ToList();
 
-			Assert.AreEqual(1, results.Count);
-			Assert.AreEqual(1, results[0].ID);
+			Assert.That(results, Has.Count.EqualTo(1));
+			Assert.That(results[0].ID, Is.EqualTo(1));
 		}
 
 		#endregion

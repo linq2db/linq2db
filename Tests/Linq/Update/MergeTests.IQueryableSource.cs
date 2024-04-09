@@ -29,7 +29,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -73,7 +73,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -134,7 +134,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -178,7 +178,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -221,7 +221,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -264,7 +264,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);

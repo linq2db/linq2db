@@ -883,7 +883,7 @@ namespace Tests.Extensions
 				"OPTION (RECOMPILE)"));
 		}
 
-		public void SubQueryTest1([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
+		private void SubQueryTest1([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 

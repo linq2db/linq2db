@@ -33,7 +33,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(2, result.Count);
+				Assert.That(result, Has.Count.EqualTo(2));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -66,7 +66,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -98,7 +98,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -127,7 +127,7 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Field2 == 4)
 					.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
 				Assert.That(exception.Message,  Does.EndWith(".Field2' cannot be converted to SQL."));
 			}
 		}
@@ -161,7 +161,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(2, result.Count);
+				Assert.That(result, Has.Count.EqualTo(2));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -191,7 +191,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -219,7 +219,7 @@ namespace Tests.xUpdate
 					.DeleteWhenMatched()
 					.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
 				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));
 			}
 		}
@@ -248,7 +248,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -288,7 +288,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -329,7 +329,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -369,7 +369,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -409,7 +409,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -437,7 +437,7 @@ namespace Tests.xUpdate
 						.DeleteWhenMatched()
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
 				Assert.That(exception.Message, Does.EndWith(".Id' cannot be converted to SQL."));
 			}
 		}

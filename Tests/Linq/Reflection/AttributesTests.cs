@@ -15,8 +15,11 @@ namespace Tests.Reflection
 		{
 			var prop = typeof(Derived).GetProperty(nameof(Base.Property))!;
 
-			Assert.False(prop.HasAttribute<MyAttribute>(false));
-			Assert.True(prop.HasAttribute<MyAttribute>(true));
+			Assert.Multiple(() =>
+			{
+				Assert.That(prop.HasAttribute<MyAttribute>(false), Is.False);
+				Assert.That(prop.HasAttribute<MyAttribute>(true), Is.True);
+			});
 		}
 
 		[Test]
@@ -24,8 +27,11 @@ namespace Tests.Reflection
 		{
 			var ev = typeof(Derived).GetEvent(nameof(Base.Event))!;
 
-			Assert.False(ev.HasAttribute<MyAttribute>(false));
-			Assert.True(ev.HasAttribute<MyAttribute>(true));
+			Assert.Multiple(() =>
+			{
+				Assert.That(ev.HasAttribute<MyAttribute>(false), Is.False);
+				Assert.That(ev.HasAttribute<MyAttribute>(true), Is.True);
+			});
 		}
 
 		public class Base

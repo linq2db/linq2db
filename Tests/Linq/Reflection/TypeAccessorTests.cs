@@ -131,8 +131,11 @@ namespace Tests.Reflection
 #pragma warning restore CA2263 // Prefer generic overload when type is known
 			var ma = ta["Prop1"];
 
-			Assert.That(ma.HasGetter, Is.True);
-			Assert.That(ma.HasSetter, Is.False);
+			Assert.Multiple(() =>
+			{
+				Assert.That(ma.HasGetter, Is.True);
+				Assert.That(ma.HasSetter, Is.False);
+			});
 		}
 
 		[Test]
@@ -143,8 +146,11 @@ namespace Tests.Reflection
 #pragma warning restore CA2263 // Prefer generic overload when type is known
 			var ma = ta["Prop3"];
 
-			Assert.That(ma.HasGetter, Is.False);
-			Assert.That(ma.HasSetter, Is.True);
+			Assert.Multiple(() =>
+			{
+				Assert.That(ma.HasGetter, Is.False);
+				Assert.That(ma.HasSetter, Is.True);
+			});
 		}
 
 	}

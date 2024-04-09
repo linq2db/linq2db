@@ -32,17 +32,20 @@ namespace Tests.Linq
 
 				var list = q.ToList().Where(n => n.Key < 6).OrderBy(n => n.Key).ToList();
 
-				Assert.AreEqual(4, list.Count);
+				Assert.That(list, Has.Count.EqualTo(4));
 
 				for (var i = 0; i < list.Count; i++)
 				{
 					var values = list[i].OrderBy(c => c.ChildID).ToList();
 
-					Assert.AreEqual(i + 1, list[i].Key);
-					Assert.AreEqual(i + 1, values.Count);
+					Assert.Multiple(() =>
+					{
+						Assert.That(list[i].Key, Is.EqualTo(i + 1));
+						Assert.That(values, Has.Count.EqualTo(i + 1));
+					});
 
 					for (var j = 0; j < values.Count; j++)
-						Assert.AreEqual((i + 1) * 10 + j + 1, values[j].ChildID);
+						Assert.That(values[j].ChildID, Is.EqualTo((i + 1) * 10 + j + 1));
 				}
 			}
 		}
@@ -60,8 +63,8 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.AreEqual   (8, list.Count);
-				Assert.AreNotEqual(0, list.OrderBy(c => c.Key.ParentID).First().ToList().Count);
+				Assert.That(list, Has.Count.EqualTo(8));
+				Assert.That(list.OrderBy(c => c.Key.ParentID).First().ToList(), Is.Not.Empty);
 			}
 		}
 
@@ -77,8 +80,8 @@ namespace Tests.Linq
 
 				var list = q.ToList().Where(n => n < 6).OrderBy(n => n).ToList();
 
-				Assert.AreEqual(4, list.Count);
-				for (var i = 0; i < list.Count; i++) Assert.AreEqual(i + 1, list[i]);
+				Assert.That(list, Has.Count.EqualTo(4));
+				for (var i = 0; i < list.Count; i++) Assert.That(list[i], Is.EqualTo(i + 1));
 			}
 		}
 
@@ -95,8 +98,8 @@ namespace Tests.Linq
 
 				var list = q.ToList().Where(n => n < 6).ToList();
 
-				Assert.AreEqual(4, list.Count);
-				for (var i = 0; i < list.Count; i++) Assert.AreEqual(i + 1, list[i]);
+				Assert.That(list, Has.Count.EqualTo(4));
+				for (var i = 0; i < list.Count; i++) Assert.That(list[i], Is.EqualTo(i + 1));
 			}
 		}
 
@@ -124,8 +127,11 @@ namespace Tests.Linq
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID);
 				var list = q.ToList();
 
-				Assert.AreNotEqual(0, list[0].Count());
-				Assert.AreEqual   (8, list.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0].Count(), Is.Not.EqualTo(0));
+					Assert.That(list, Has.Count.EqualTo(8));
+				});
 			}
 		}
 
@@ -139,7 +145,7 @@ namespace Tests.Linq
 					.Select (gr => new { gr.Key.ParentID, gr.Key.ChildID });
 
 				var list = q.ToList();
-				Assert.AreEqual(8, list.Count);
+				Assert.That(list, Has.Count.EqualTo(8));
 			}
 		}
 
@@ -151,7 +157,7 @@ namespace Tests.Linq
 				var q = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, (g,ch) => g.ChildID);
 
 				var list = q.ToList();
-				Assert.AreEqual(8, list.Count);
+				Assert.That(list, Has.Count.EqualTo(8));
 			}
 		}
 
@@ -163,7 +169,7 @@ namespace Tests.Linq
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID,  (g,ch) => g.ChildID);
 				var list = q.ToList();
 
-				Assert.AreEqual(8, list.Count);
+				Assert.That(list, Has.Count.EqualTo(8));
 			}
 		}
 
@@ -196,8 +202,8 @@ namespace Tests.Linq
 				var list1 = q1.AsEnumerable().OrderBy(_ => _.Key.ChildID).ToList();
 				var list2 = q2.AsEnumerable().OrderBy(_ => _.Key.ChildID).ToList();
 
-				Assert.AreEqual(list1.Count,       list2.Count);
-				Assert.AreEqual(list1[0].ToList(), list2[0].ToList());
+				Assert.That(list2, Has.Count.EqualTo(list1.Count));
+				Assert.That(list2[0].ToList(), Is.EqualTo(list1[0].ToList()));
 			}
 		}
 
@@ -210,7 +216,7 @@ namespace Tests.Linq
 					.GroupBy(ch => new { ParentID = ch.ParentID + 1, ch.ChildID }, (g,ch) => g.ChildID);
 
 				var list = q.ToList();
-				Assert.AreEqual(8, list.Count);
+				Assert.That(list, Has.Count.EqualTo(8));
 			}
 		}
 
@@ -223,26 +229,26 @@ namespace Tests.Linq
 					.GroupBy(ch => new { ParentID = ch.ParentID + 1, ch.ChildID }, ch => ch.ChildID, (g,ch) => g.ChildID);
 
 				var list = q.ToList();
-				Assert.AreEqual(8, list.Count);
+				Assert.That(list, Has.Count.EqualTo(8));
 			}
 		}
 
 		//[Test]
-		public void Simple14([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent
-					select
-						from c in p.Children
-						group c by c.ParentID into g
-						select g.Key,
-					from p in db.Parent
-					select
-						from c in p.Children
-						group c by c.ParentID into g
-						select g.Key);
-		}
+		//public void Simple14([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			from p in    Parent
+		//			select
+		//				from c in p.Children
+		//				group c by c.ParentID into g
+		//				select g.Key,
+		//			from p in db.Parent
+		//			select
+		//				from c in p.Children
+		//				group c by c.ParentID into g
+		//				select g.Key);
+		//}
 
 		[Test]
 		public void MemberInit1([DataSources] string context)
@@ -857,46 +863,42 @@ namespace Tests.Linq
 		public void Min1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Min(c => c.ChildID),
-					db.Child.Min(c => c.ChildID));
+				Assert.That(
+					db.Child.Min(c => c.ChildID), Is.EqualTo(Child.Min(c => c.ChildID)));
 		}
 
 		[Test]
 		public void Min2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Select(c => c.ChildID).Min(),
-					db.Child.Select(c => c.ChildID).Min());
+				Assert.That(
+					db.Child.Select(c => c.ChildID).Min(), Is.EqualTo(Child.Select(c => c.ChildID).Min()));
 		}
 
 		[Test]
 		public void Max1([DataSources] string context)
 		{
 			var expected = Child.Max(c => c.ChildID);
-			Assert.AreNotEqual(0, expected);
+			Assert.That(expected, Is.Not.EqualTo(0));
 
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(expected, db.Child.Max(c => c.ChildID));
+				Assert.That(db.Child.Max(c => c.ChildID), Is.EqualTo(expected));
 		}
 
 		[Test]
 		public void Max11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Max(c => c.ChildID > 20),
-					db.Child.Max(c => c.ChildID > 20));
+				Assert.That(
+					db.Child.Max(c => c.ChildID > 20), Is.EqualTo(Child.Max(c => c.ChildID > 20)));
 		}
 
 		[Test]
 		public void Max12([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Max(c => (bool?)(c.ChildID > 20)),
-					db.Child.Max(c => (bool?)(c.ChildID > 20)));
+				Assert.That(
+					db.Child.Max(c => (bool?)(c.ChildID > 20)), Is.EqualTo(Child.Max(c => (bool?)(c.ChildID > 20))));
 		}
 
 		[Test]
@@ -916,7 +918,7 @@ namespace Tests.Linq
 					where c.ChildID > 20
 					select p;
 
-				Assert.AreEqual(expected.Max(p => p.ParentID), result.Max(p => p.ParentID));
+				Assert.That(result.Max(p => p.ParentID), Is.EqualTo(expected.Max(p => p.ParentID)));
 			}
 		}
 
@@ -924,33 +926,15 @@ namespace Tests.Linq
 		public void Max3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Select(c => c.ChildID).Max(),
-					db.Child.Select(c => c.ChildID).Max());
+				Assert.That(
+					db.Child.Select(c => c.ChildID).Max(), Is.EqualTo(Child.Select(c => c.ChildID).Max()));
 		}
 
 		[Test]
 		public void Max4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					from t1 in Types
-					join t2 in
-						from sub in Types
-						where
-							sub.ID == 1 &&
-							sub.DateTimeValue <= TestData.Date
-						group sub by new
-						{
-							sub.ID
-						} into g
-						select new
-						{
-							g.Key.ID,
-							DateTimeValue = g.Max( p => p.DateTimeValue )
-						}
-					on new { t1.ID, t1.DateTimeValue } equals new { t2.ID, t2.DateTimeValue }
-					select t1.MoneyValue,
+				Assert.That(
 					from t1 in db.Types
 					join t2 in
 						from sub in db.Types
@@ -968,25 +952,39 @@ namespace Tests.Linq
 						}
 					on new { t1.ID, t1.DateTimeValue } equals new { t2.ID, t2.DateTimeValue }
 					select t1.MoneyValue
-					);
+, Is.EqualTo(from t1 in Types
+					join t2 in
+						from sub in Types
+						where
+							sub.ID == 1 &&
+							sub.DateTimeValue <= TestData.Date
+						group sub by new
+						{
+							sub.ID
+						} into g
+						select new
+						{
+							g.Key.ID,
+							DateTimeValue = g.Max( p => p.DateTimeValue )
+						}
+					on new { t1.ID, t1.DateTimeValue } equals new { t2.ID, t2.DateTimeValue }
+					select t1.MoneyValue));
 		}
 
 		[Test]
 		public void Average1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					(int)db.Child.Average(c => c.ChildID),
-					(int)   Child.Average(c => c.ChildID));
+				Assert.That(
+					(int)   Child.Average(c => c.ChildID), Is.EqualTo((int)db.Child.Average(c => c.ChildID)));
 		}
 
 		[Test]
 		public void Average2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					(int)   Child.Select(c => c.ChildID).Average(),
-					(int)db.Child.Select(c => c.ChildID).Average());
+				Assert.That(
+					(int)db.Child.Select(c => c.ChildID).Average(), Is.EqualTo((int)   Child.Select(c => c.ChildID).Average()));
 		}
 
 		[Test]
@@ -1133,7 +1131,7 @@ namespace Tests.Linq
 					select g.Key.CategoryName;
 
 				var list = result.ToList();
-				Assert.AreEqual(3, list.Count);
+				Assert.That(list, Has.Count.EqualTo(3));
 			}
 		}
 
@@ -1149,7 +1147,7 @@ namespace Tests.Linq
 					select g.Key.CategoryID;
 
 				var list = result.ToList();
-				Assert.AreEqual(3, list.Count);
+				Assert.That(list, Has.Count.EqualTo(3));
 			}
 		}
 
@@ -1370,18 +1368,18 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void Scalar51([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from ch in Child
-					group ch by ch.ParentID into g
-					select g.Max()
-					,
-					from ch in db.Child
-					group ch by ch.ParentID into g
-					select g.Max());
-		}
+		//public void Scalar51([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			from ch in Child
+		//			group ch by ch.ParentID into g
+		//			select g.Max()
+		//			,
+		//			from ch in db.Child
+		//			group ch by ch.ParentID into g
+		//			select g.Max());
+		//}
 
 		[Test]
 		public void Scalar6([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
@@ -1479,7 +1477,7 @@ namespace Tests.Linq
 
 				// check that our field does not present in the GROUP BY clause second time.
 				//
-				Assert.AreEqual(-1, lastQuery.IndexOf(fieldName, fieldPos + 1));
+				Assert.That(lastQuery.IndexOf(fieldName, fieldPos + 1), Is.EqualTo(-1));
 			}
 		}
 
@@ -1729,9 +1727,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(
-					(from t in    Child group t by t.ParentID into gr select new { gr.Key, List = gr.ToList() }).Count(),
-					(from t in db.Child group t by t.ParentID into gr select new { gr.Key, List = gr.ToList() }).Count());
+				Assert.That(
+					(from t in db.Child group t by t.ParentID into gr select new { gr.Key, List = gr.ToList() }).Count(), Is.EqualTo((from t in    Child group t by t.ParentID into gr select new { gr.Key, List = gr.ToList() }).Count()));
 			}
 		}
 
@@ -1762,9 +1759,8 @@ namespace Tests.Linq
 			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(
-					(from t in    Child group t by t.ParentID into gr select gr.OrderByDescending(g => g.ChildID).First()).AsEnumerable().OrderBy(t => t.ChildID),
-					(from t in db.Child group t by t.ParentID into gr select gr.OrderByDescending(g => g.ChildID).First()).AsEnumerable().OrderBy(t => t.ChildID));
+				Assert.That(
+					(from t in db.Child group t by t.ParentID into gr select gr.OrderByDescending(g => g.ChildID).First()).AsEnumerable().OrderBy(t => t.ChildID), Is.EqualTo((from t in    Child group t by t.ParentID into gr select gr.OrderByDescending(g => g.ChildID).First()).AsEnumerable().OrderBy(t => t.ChildID)));
 			}
 		}
 
@@ -1911,8 +1907,11 @@ namespace Tests.Linq
 
 				var orderItems = query2.GetSelectQuery().OrderBy.Items;
 
-				Assert.That(orderItems.Count, Is.EqualTo(1));
-				Assert.That(QueryHelper.GetUnderlyingField(orderItems[0].Expression)!.Name, Is.EqualTo("ParentID"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(orderItems, Has.Count.EqualTo(1));
+					Assert.That(QueryHelper.GetUnderlyingField(orderItems[0].Expression)!.Name, Is.EqualTo("ParentID"));
+				});
 			}
 		}
 
@@ -1986,8 +1985,8 @@ namespace Tests.Linq
 					.GroupBy(_ => _.Gender)
 					.ToDictionary(_ => _.Key, _ => _.ToList());
 
-				Assert.AreEqual(dictionary2.Count,               dictionary1.Count);
-				Assert.AreEqual(dictionary2.First().Value.Count, dictionary1.First().Value.Count);
+				Assert.That(dictionary1, Has.Count.EqualTo(dictionary2.Count));
+				Assert.That(dictionary1.First().Value, Has.Count.EqualTo(dictionary2.First().Value.Count));
 
 				var __ =
 				(
@@ -2110,9 +2109,9 @@ namespace Tests.Linq
 							  }).ToList();
 
 				var index = db.LastQuery!.IndexOf("SELECT");
-				Assert.AreNotEqual(-1, index);
+				Assert.That(index, Is.Not.EqualTo(-1));
 				index = db.LastQuery.IndexOf("SELECT", index + 1);
-				Assert.AreEqual(-1, index);
+				Assert.That(index, Is.EqualTo(-1));
 			}
 		}
 
@@ -2184,11 +2183,14 @@ namespace Tests.Linq
 
 				var x = q.ToList().OrderBy(_ => _.Count).ToArray();
 
-				Assert.AreEqual(2, x.Length);
-				Assert.True(x[0].IsDelisted);
-				Assert.AreEqual(1, x[0].Count);
-				Assert.False(x[1].IsDelisted);
-				Assert.AreEqual(2, x[1].Count);
+				Assert.That(x, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(x[0].IsDelisted, Is.True);
+					Assert.That(x[0].Count, Is.EqualTo(1));
+					Assert.That(x[1].IsDelisted, Is.False);
+					Assert.That(x[1].Count, Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -2234,23 +2236,26 @@ namespace Tests.Linq
 
 				var res = query.ToList().OrderBy(_ => _.SiteID).ToArray();
 
-				Assert.AreEqual(4, res.Length);
+				Assert.That(res, Has.Length.EqualTo(4));
 
-				Assert.AreEqual(1, res[0].SiteID);
-				Assert.AreEqual(3, res[0].Total);
-				Assert.AreEqual(1, res[0].Inactive);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].SiteID, Is.EqualTo(1));
+					Assert.That(res[0].Total, Is.EqualTo(3));
+					Assert.That(res[0].Inactive, Is.EqualTo(1));
 
-				Assert.AreEqual(2, res[1].SiteID);
-				Assert.AreEqual(4, res[1].Total);
-				Assert.AreEqual(3, res[1].Inactive);
+					Assert.That(res[1].SiteID, Is.EqualTo(2));
+					Assert.That(res[1].Total, Is.EqualTo(4));
+					Assert.That(res[1].Inactive, Is.EqualTo(3));
 
-				Assert.AreEqual(3, res[2].SiteID);
-				Assert.AreEqual(1, res[2].Total);
-				Assert.AreEqual(1, res[2].Inactive);
+					Assert.That(res[2].SiteID, Is.EqualTo(3));
+					Assert.That(res[2].Total, Is.EqualTo(1));
+					Assert.That(res[2].Inactive, Is.EqualTo(1));
 
-				Assert.AreEqual(4, res[3].SiteID);
-				Assert.AreEqual(1, res[3].Total);
-				Assert.AreEqual(0, res[3].Inactive);
+					Assert.That(res[3].SiteID, Is.EqualTo(4));
+					Assert.That(res[3].Total, Is.EqualTo(1));
+					Assert.That(res[3].Inactive, Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -2385,7 +2390,7 @@ namespace Tests.Linq
 					.Select(_ => new { _.Key, Count = _.Count() })
 					.ToList();
 
-				Assert.AreEqual(0, query.Count);
+				Assert.That(query, Is.Empty);
 			}
 		}
 
@@ -2442,7 +2447,7 @@ namespace Tests.Linq
 					});
 
 			query.ToList();
-			Assert.AreEqual(2, query.GetSelectQuery().GroupBy.Items.Count);
+			Assert.That(query.GetSelectQuery().GroupBy.Items, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -2484,8 +2489,11 @@ namespace Tests.Linq
 
 			var sql = query.GetSelectQuery();
 
-			Assert.AreEqual(2, sql.GroupBy.Items.Count);
-			Assert.AreEqual(2, sql.SetOperators[0].SelectQuery.GroupBy.Items.Count);
+			Assert.Multiple(() =>
+			{
+				Assert.That(sql.GroupBy.Items, Has.Count.EqualTo(2));
+				Assert.That(sql.SetOperators[0].SelectQuery.GroupBy.Items, Has.Count.EqualTo(2));
+			});
 		}
 
 		[Test]
@@ -2503,15 +2511,18 @@ namespace Tests.Linq
 
 			var ast = query.GetSelectQuery();
 
-			Assert.AreEqual(0, ast.GroupBy.Items.Count);
-			Assert.AreEqual(1, ast.From.Tables.Count);
+			Assert.Multiple(() =>
+			{
+				Assert.That(ast.GroupBy.Items, Is.Empty);
+				Assert.That(ast.From.Tables, Has.Count.EqualTo(1));
+			});
 			if (ast.From.Tables[0] is not SqlTableSource source)
 			{
 				Assert.Fail("fail");
 			}
 			else
 			{
-				Assert.AreEqual(QueryElementType.SqlTable, source.Source.ElementType);
+				Assert.That(source.Source.ElementType, Is.EqualTo(QueryElementType.SqlTable));
 			}
 		}
 
@@ -2634,13 +2645,16 @@ namespace Tests.Linq
 							  PAYMENTAMOUNT = p.TotalAmount,
 						  }).ToList().OrderBy(r => r.INVESTORID).ToArray();
 
-			Assert.AreEqual(2, retval.Length);
-			Assert.AreEqual("inv1", retval[0].INVESTORID);
-			Assert.AreEqual(100, retval[0].PAYMENTAMOUNT);
-			Assert.AreEqual(300, retval[0].TOTALUNITS);
-			Assert.AreEqual("inv2", retval[1].INVESTORID);
-			Assert.AreEqual(200, retval[1].PAYMENTAMOUNT);
-			Assert.AreEqual(700, retval[1].TOTALUNITS);
+			Assert.That(retval, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(retval[0].INVESTORID, Is.EqualTo("inv1"));
+				Assert.That(retval[0].PAYMENTAMOUNT, Is.EqualTo(100));
+				Assert.That(retval[0].TOTALUNITS, Is.EqualTo(300));
+				Assert.That(retval[1].INVESTORID, Is.EqualTo("inv2"));
+				Assert.That(retval[1].PAYMENTAMOUNT, Is.EqualTo(200));
+				Assert.That(retval[1].TOTALUNITS, Is.EqualTo(700));
+			});
 		}
 
 		[Test]
@@ -2693,13 +2707,16 @@ namespace Tests.Linq
 							  PAYMENTAMOUNT = p.TotalAmount,
 						  }).ToList().OrderBy(r => r.INVESTORID).ToArray();
 
-			Assert.AreEqual(2, retval.Length);
-			Assert.AreEqual("inv1", retval[0].INVESTORID);
-			Assert.AreEqual(100, retval[0].PAYMENTAMOUNT);
-			Assert.AreEqual(300, retval[0].TOTALUNITS);
-			Assert.AreEqual("inv2", retval[1].INVESTORID);
-			Assert.AreEqual(200, retval[1].PAYMENTAMOUNT);
-			Assert.AreEqual(700, retval[1].TOTALUNITS);
+			Assert.That(retval, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(retval[0].INVESTORID, Is.EqualTo("inv1"));
+				Assert.That(retval[0].PAYMENTAMOUNT, Is.EqualTo(100));
+				Assert.That(retval[0].TOTALUNITS, Is.EqualTo(300));
+				Assert.That(retval[1].INVESTORID, Is.EqualTo("inv2"));
+				Assert.That(retval[1].PAYMENTAMOUNT, Is.EqualTo(200));
+				Assert.That(retval[1].TOTALUNITS, Is.EqualTo(700));
+			});
 		}
 		#endregion
 

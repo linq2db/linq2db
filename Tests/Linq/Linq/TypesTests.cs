@@ -163,17 +163,7 @@ namespace Tests.Linq
 			var parm = Expression.Parameter(typeof(LinqDataTypes), "p");
 
 			using (var db = GetDataContext(context))
-				Assert.AreNotEqual(
-					db.Types
-						.Where(
-							Expression.Lambda<Func<LinqDataTypes,bool>>(
-								Expression.Equal(
-									Expression.PropertyOrField(parm, "GuidValue"),
-									Expression.Constant(guid3),
-									false,
-									typeof(Guid).GetMethodEx("op_Equality")),
-								new[] { parm }))
-						.Single().GuidValue,
+				Assert.That(
 					db.Types
 						.Where(
 							Expression.Lambda<Func<LinqDataTypes,bool>>(
@@ -183,7 +173,16 @@ namespace Tests.Linq
 									false,
 									typeof(Guid).GetMethodEx("op_Equality")),
 								new[] { parm }))
-						.Single().GuidValue);
+						.Single().GuidValue, Is.Not.EqualTo(db.Types
+						.Where(
+							Expression.Lambda<Func<LinqDataTypes,bool>>(
+								Expression.Equal(
+									Expression.PropertyOrField(parm, "GuidValue"),
+									Expression.Constant(guid3),
+									false,
+									typeof(Guid).GetMethodEx("op_Equality")),
+								new[] { parm }))
+						.Single().GuidValue));
 		}
 
 		[Test]
@@ -226,7 +225,7 @@ namespace Tests.Linq
 
 				var guid = db.Types.Single(_ => _.ID == 1001).GuidValue;
 
-				Assert.AreEqual(1001, db.Types.Single(_ => _.GuidValue == guid).ID);
+				Assert.That(db.Types.Single(_ => _.GuidValue == guid).ID, Is.EqualTo(1001));
 			}
 		}
 
@@ -314,7 +313,7 @@ namespace Tests.Linq
 				var g = from t in db.Types where new[] { 1, 2 }.Contains(t.ID) select t;
 
 				foreach (var binary in g)
-					Assert.AreEqual(binaries[binary.ID - 1], binary.BinaryValue!.ToArray());
+					Assert.That(binary.BinaryValue!.ToArray(), Is.EqualTo(binaries[binary.ID - 1]));
 			}
 		}
 
@@ -343,7 +342,7 @@ namespace Tests.Linq
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue = pdt });
 
-				Assert.AreNotEqual(dt.Ticks, dt2!.Value.Ticks);
+				Assert.That(dt2!.Value.Ticks, Is.Not.EqualTo(dt.Ticks));
 			}
 		}
 
@@ -377,7 +376,7 @@ namespace Tests.Linq
 				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
 					dt = dt.AddTicks(-dt.Ticks % 10);
 
-				Assert.AreEqual(dt, dt2);
+				Assert.That(dt2, Is.EqualTo(dt));
 			}
 		}
 
@@ -414,7 +413,7 @@ namespace Tests.Linq
 				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
 					dt = dt.AddTicks(-dt.Ticks % 10);
 
-				Assert.AreEqual(dt, dt2);
+				Assert.That(dt2, Is.EqualTo(dt));
 			}
 		}
 
@@ -451,7 +450,7 @@ namespace Tests.Linq
 				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
 					dt = dt.AddTicks(-dt.Ticks % 10);
 
-				Assert.AreEqual(dt, dt2);
+				Assert.That(dt2, Is.EqualTo(dt));
 			}
 		}
 
@@ -500,7 +499,7 @@ namespace Tests.Linq
 				foreach (var dateTime in arr)
 				{
 					var dt = DateTimeParams(db, dateTime);
-					Assert.AreEqual(dateTime, dt);
+					Assert.That(dt, Is.EqualTo(dateTime));
 				}
 			}
 		}
@@ -548,9 +547,12 @@ namespace Tests.Linq
 
 				var person = db.Person.Single(p => p.FirstName == "擊敗奴隸" && p.LastName == "Юникодкин");
 
-				Assert.NotNull (person);
-				Assert.AreEqual("擊敗奴隸", person.FirstName);
-				Assert.AreEqual("Юникодкин", person.LastName);
+				Assert.That(person, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(person.FirstName, Is.EqualTo("擊敗奴隸"));
+					Assert.That(person.LastName, Is.EqualTo("Юникодкин"));
+				});
 			}
 		}
 
@@ -871,25 +873,31 @@ namespace Tests.Linq
 					.Select(_ => new { _.floatDataType, _.doubleDataType})
 					.ToArray();
 
-				Assert.AreEqual (3   , res.Length);
-				Assert.IsNaN    (res[0].floatDataType);
-				Assert.IsNaN    (res[0].doubleDataType);
+				Assert.That(res, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].floatDataType, Is.NaN);
+					Assert.That(res[0].doubleDataType, Is.NaN);
 
-				Assert.IsNotNull(res[1].floatDataType);
-				Assert.IsNotNull(res[1].doubleDataType);
+					Assert.That(res[1].floatDataType, Is.Not.Null);
+					Assert.That(res[1].doubleDataType, Is.Not.Null);
+				});
 				if (skipFloatInf)
-					Assert.IsNaN(res[0].floatDataType);
+					Assert.That(res[0].floatDataType, Is.NaN);
 				else
-					Assert.True(float.IsNegativeInfinity(res[1].floatDataType!.Value));
-				Assert.True(double.IsNegativeInfinity(res[1].doubleDataType!.Value));
+					Assert.That(float.IsNegativeInfinity(res[1].floatDataType!.Value), Is.True);
+				Assert.Multiple(() =>
+				{
+					Assert.That(double.IsNegativeInfinity(res[1].doubleDataType!.Value), Is.True);
 
-				Assert.IsNotNull(res[2].floatDataType);
-				Assert.IsNotNull(res[2].doubleDataType);
+					Assert.That(res[2].floatDataType, Is.Not.Null);
+					Assert.That(res[2].doubleDataType, Is.Not.Null);
+				});
 				if (skipFloatInf)
-					Assert.IsNaN(res[0].floatDataType);
+					Assert.That(res[0].floatDataType, Is.NaN);
 				else
-					Assert.True     (float.IsPositiveInfinity(res[2].floatDataType!.Value));
-				Assert.True     (double.IsPositiveInfinity(res[2].doubleDataType!.Value));
+					Assert.That(float.IsPositiveInfinity(res[2].floatDataType!.Value), Is.True);
+				Assert.That(double.IsPositiveInfinity(res[2].doubleDataType!.Value), Is.True);
 			}
 		}
 

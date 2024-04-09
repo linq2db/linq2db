@@ -114,24 +114,33 @@ namespace Tests.Data
 						trace = ti.SqlText;
 				};
 
-				// assert provider-specific parameter type name
-				// DateTime, DateTime2 => Date
-				// Text => LongVarChar
-				// NText => LongVarWChar
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE datetimeDataType = @p", new DataParameter("@p", new DateTime(2012, 12, 12, 12, 12, 12), DataType.DateTime)));
-				Assert.True    (trace.Contains("DECLARE @p Date "));
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE datetimeDataType = @p", new DataParameter("@p", new DateTime(2012, 12, 12, 12, 12, 12), DataType.DateTime2)));
-				Assert.True    (trace.Contains("DECLARE @p Date "));
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE textDataType = @p", new DataParameter("@p", "567", DataType.Text)));
-				Assert.True    (trace.Contains("DECLARE @p LongVarChar(3)"));
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE ntextDataType = @p", new DataParameter("@p", "111", DataType.NText)));
-				Assert.True    (trace.Contains("DECLARE @p LongVarWChar(3)"));
+				Assert.Multiple(() =>
+				{
+					// assert provider-specific parameter type name
+					// DateTime, DateTime2 => Date
+					// Text => LongVarChar
+					// NText => LongVarWChar
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE datetimeDataType = @p", new DataParameter("@p", new DateTime(2012, 12, 12, 12, 12, 12), DataType.DateTime)), Is.EqualTo(2));
+					Assert.That(trace, Does.Contain("DECLARE @p Date "));
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE datetimeDataType = @p", new DataParameter("@p", new DateTime(2012, 12, 12, 12, 12, 12), DataType.DateTime2)), Is.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(trace, Does.Contain("DECLARE @p Date "));
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE textDataType = @p", new DataParameter("@p", "567", DataType.Text)), Is.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(trace, Does.Contain("DECLARE @p LongVarChar(3)"));
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE ntextDataType = @p", new DataParameter("@p", "111", DataType.NText)), Is.EqualTo(2));
+				});
+				Assert.That(trace, Does.Contain("DECLARE @p LongVarWChar(3)"));
 
 				// TODO: reenable, when issue with OleDb transactions under .net core fixed
 #if NETFRAMEWORK
 				// assert custom schema table access
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Count > 0));
+				Assert.That(schema.Tables.Any(t => t.ForeignKeys.Count > 0), Is.EqualTo(!unmapped));
 #endif
 			}
 		}
@@ -153,10 +162,13 @@ namespace Tests.Data
 						trace = ti.SqlText;
 				};
 
-				// assert provider-specific parameter type name
-				// Variant => Binary
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE oleObjectDataType = ?", DataParameter.Variant("@p", new byte[] { 5, 6, 7, 8 })));
-				Assert.True(trace.Contains("DECLARE @p Binary("));
+				Assert.Multiple(() =>
+				{
+					// assert provider-specific parameter type name
+					// Variant => Binary
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE oleObjectDataType = ?", DataParameter.Variant("@p", new byte[] { 5, 6, 7, 8 })), Is.EqualTo(2));
+					Assert.That(trace, Does.Contain("DECLARE @p Binary("));
+				});
 			}
 		}
 
@@ -187,9 +199,12 @@ namespace Tests.Data
 						trace = ti.SqlText;
 				};
 
-				// assert provider-specific parameter type name
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM \"AllTypes\" WHERE \"nvarcharDataType\" = @p", new DataParameter("@p", "3323", DataType.NVarChar)));
-				Assert.True(trace.Contains("DECLARE @p VarChar"));
+				Assert.Multiple(() =>
+				{
+					// assert provider-specific parameter type name
+					Assert.That(db.Execute<int>("SELECT ID FROM \"AllTypes\" WHERE \"nvarcharDataType\" = @p", new DataParameter("@p", "3323", DataType.NVarChar)), Is.EqualTo(2));
+					Assert.That(trace, Does.Contain("DECLARE @p VarChar"));
+				});
 
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -202,15 +217,15 @@ namespace Tests.Data
 				{
 					var fbDecFloat = new FbDecFloat(BigInteger.Parse("12345"), 5);
 					var fbDecFloat1 = db.Execute<FbDecFloat>("SELECT CAST(@p as decfloat) from rdb$database", new DataParameter("@p", fbDecFloat, DataType.DecFloat));
-					Assert.AreEqual(fbDecFloat, fbDecFloat1);
+					Assert.That(fbDecFloat1, Is.EqualTo(fbDecFloat));
 
 					var fbZonedDateTime = new FbZonedDateTime(TestData.DateTime4Utc, "UTC");
 					var fbZonedDateTime1 = db.Execute<FbZonedDateTime>("SELECT CAST(@p as timestamp with time zone) from rdb$database", new DataParameter("@p", fbZonedDateTime, DataType.DateTimeOffset));
-					Assert.AreEqual(fbZonedDateTime, fbZonedDateTime1);
+					Assert.That(fbZonedDateTime1, Is.EqualTo(fbZonedDateTime));
 
 					var fbZonedTime = new FbZonedTime(TestData.TimeOfDay4, "UTC");
 					var fbZonedTime1 = db.Execute<FbZonedTime>("SELECT CAST(@p as time with time zone) from rdb$database", new DataParameter("@p", fbZonedTime, DataType.TimeTZ));
-					Assert.AreEqual(fbZonedTime, fbZonedTime1);
+					Assert.That(fbZonedTime1, Is.EqualTo(fbZonedTime));
 				}
 			}
 		}
@@ -228,25 +243,46 @@ namespace Tests.Data
 						trace = ti.SqlText;
 				};
 
-				// assert provider-specific parameter type name
-				Assert.AreEqual("111", db.Execute<string>("SELECT Cast(@p as ntext)", new DataParameter("@p", "111", DataType.Text)));
-				Assert.True    (trace.Contains("DECLARE @p NText"));
-				Assert.AreEqual("111", db.Execute<string>("SELECT Cast(@p as ntext)", new DataParameter("@p", "111", DataType.NText)));
-				Assert.True    (trace.Contains("DECLARE @p NText"));
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE nvarcharDataType = @p", new DataParameter("@p", "3323", DataType.VarChar)));
-				Assert.True    (trace.Contains("DECLARE @p NVarChar"));
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE nvarcharDataType = @p", new DataParameter("@p", "3323", DataType.NVarChar)));
-				Assert.True    (trace.Contains("DECLARE @p NVarChar"));
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE binaryDataType = @p", new DataParameter("@p", new byte[] { 1 }, DataType.Binary)));
-				Assert.True    (trace.Contains("DECLARE @p Binary("));
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE varbinaryDataType = @p", new DataParameter("@p", new byte[] { 2 }, DataType.VarBinary)));
-				Assert.True    (trace.Contains("DECLARE @p VarBinary("));
-				Assert.AreEqual(new byte[] { 0, 0, 0, 3 }, db.Execute<byte[]>("SELECT Cast(@p as image)", new DataParameter("@p", new byte[] { 0, 0, 0, 3 }, DataType.Image)));
-				Assert.True    (trace.Contains("DECLARE @p Image("));
+				Assert.Multiple(() =>
+				{
+					// assert provider-specific parameter type name
+					Assert.That(db.Execute<string>("SELECT Cast(@p as ntext)", new DataParameter("@p", "111", DataType.Text)), Is.EqualTo("111"));
+					Assert.That(trace, Does.Contain("DECLARE @p NText"));
+					Assert.That(db.Execute<string>("SELECT Cast(@p as ntext)", new DataParameter("@p", "111", DataType.NText)), Is.EqualTo("111"));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(trace, Does.Contain("DECLARE @p NText"));
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE nvarcharDataType = @p", new DataParameter("@p", "3323", DataType.VarChar)), Is.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(trace, Does.Contain("DECLARE @p NVarChar"));
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE nvarcharDataType = @p", new DataParameter("@p", "3323", DataType.NVarChar)), Is.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(trace, Does.Contain("DECLARE @p NVarChar"));
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE binaryDataType = @p", new DataParameter("@p", new byte[] { 1 }, DataType.Binary)), Is.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(trace, Does.Contain("DECLARE @p Binary("));
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE varbinaryDataType = @p", new DataParameter("@p", new byte[] { 2 }, DataType.VarBinary)), Is.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(trace, Does.Contain("DECLARE @p VarBinary("));
+					Assert.That(db.Execute<byte[]>("SELECT Cast(@p as image)", new DataParameter("@p", new byte[] { 0, 0, 0, 3 }, DataType.Image)), Is.EqualTo(new byte[] { 0, 0, 0, 3 }));
+				});
+				Assert.That(trace, Does.Contain("DECLARE @p Image("));
 
 				var tsVal = db.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 2");
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE timestampDataType = @p", new DataParameter("@p", tsVal, DataType.Timestamp)));
-				Assert.True    (trace.Contains("DECLARE @p Timestamp("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE timestampDataType = @p", new DataParameter("@p", tsVal, DataType.Timestamp)), Is.EqualTo(2));
+					Assert.That(trace, Does.Contain("DECLARE @p Timestamp("));
+				});
 
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -288,12 +324,18 @@ namespace Tests.Data
 			{
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value);
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.FromSql<MapperExpressionTest1>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value, Is.EqualTo(dtValue));
+					Assert.That(db.FromSql<MapperExpressionTest2>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value.Value, Is.EqualTo(dtValue));
+				});
 
 				var rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value;
-				Assert.True    (rawDtValue is MySqlDataDateTime);
-				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue!).Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawDtValue is MySqlDataDateTime, Is.True);
+					Assert.That(((MySqlDataDateTime)rawDtValue!).Value, Is.EqualTo(dtValue));
+				});
 			}
 		}
 
@@ -334,7 +376,7 @@ namespace Tests.Data
 					case ConnectionType.MiniProfiler:
 						if (MiniProfiler.Current == null)
 							MiniProfiler.DefaultOptions.StartProfiler();
-						Assert.IsNotNull(MiniProfiler.Current);
+						Assert.That(MiniProfiler.Current, Is.Not.Null);
 						return new ProfiledDbConnection(cn, MiniProfiler.Current);
 				}
 
@@ -353,9 +395,12 @@ namespace Tests.Data
 
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
-				// ExecuteReader
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value);
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value.Value);
+				Assert.Multiple(() =>
+				{
+					// ExecuteReader
+					Assert.That(db.FromSql<MapperExpressionTest1>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value, Is.EqualTo(dtValue));
+					Assert.That(db.FromSql<MapperExpressionTest2>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value.Value, Is.EqualTo(dtValue));
+				});
 
 				// TODO: doesn't work due to object use, probably we should add type to remote context data
 				//var rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value;
@@ -387,39 +432,51 @@ namespace Tests.Data
 				if (type != ConnectionType.MiniProfilerNoMappings)
 				{
 					mysqlDecValue = db.Execute<MySqlDataDecimal>("SELECT Cast(@p as decimal(6, 3))", new DataParameter("@p", decValue, DataType.Decimal));
-					Assert.AreEqual(decValue, mysqlDecValue.Value);
+					Assert.That(mysqlDecValue.Value, Is.EqualTo(decValue));
 				}
 
 				var rawDecValue = db.Execute<object>("SELECT Cast(@p as decimal(6, 3))", new DataParameter("@p", decValue, DataType.Decimal));
-				Assert.True    (rawDecValue is decimal);
-				Assert.AreEqual(decValue, (decimal)rawDecValue);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawDecValue is decimal, Is.True);
+					Assert.That((decimal)rawDecValue, Is.EqualTo(decValue));
+				});
 
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
-				Assert.AreEqual(dtValue, db.Execute<MySqlDataDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).Value);
+				Assert.That(db.Execute<MySqlDataDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).Value, Is.EqualTo(dtValue));
 				var rawDtValue = db.Execute<object>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime));
-				Assert.True    (rawDtValue is MySqlDataDateTime);
-				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue).Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawDtValue is MySqlDataDateTime, Is.True);
+					Assert.That(((MySqlDataDateTime)rawDtValue).Value, Is.EqualTo(dtValue));
 
-				// test readers + mapper.map
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value);
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value.Value);
+					// test readers + mapper.map
+					Assert.That(db.FromSql<MapperExpressionTest1>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value, Is.EqualTo(dtValue));
+					Assert.That(db.FromSql<MapperExpressionTest2>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value.Value, Is.EqualTo(dtValue));
+				});
 				rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value!;
-				Assert.True    (rawDtValue is MySqlDataDateTime);
-				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue).Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawDtValue is MySqlDataDateTime, Is.True);
+					Assert.That(((MySqlDataDateTime)rawDtValue).Value, Is.EqualTo(dtValue));
+				});
 
 				// test provider-specific parameter values
 				if (type == ConnectionType.MiniProfilerNoMappings)
 					decValue = 0;
 
-				Assert.AreEqual(decValue, db.Execute<decimal>("SELECT Cast(@p as decimal(6, 3))", new DataParameter("@p", mysqlDecValue, DataType.Decimal)));
-				Assert.AreEqual(decValue, db.Execute<decimal>("SELECT Cast(@p as decimal(6, 3))", new DataParameter("@p", mysqlDecValue, DataType.VarNumeric)));
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDataDateTime(dtValue), DataType.Date)));
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDataDateTime(dtValue), DataType.DateTime)));
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDataDateTime(dtValue), DataType.DateTime2)));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Execute<decimal>("SELECT Cast(@p as decimal(6, 3))", new DataParameter("@p", mysqlDecValue, DataType.Decimal)), Is.EqualTo(decValue));
+					Assert.That(db.Execute<decimal>("SELECT Cast(@p as decimal(6, 3))", new DataParameter("@p", mysqlDecValue, DataType.VarNumeric)), Is.EqualTo(decValue));
+					Assert.That(db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDataDateTime(dtValue), DataType.Date)), Is.EqualTo(dtValue));
+					Assert.That(db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDataDateTime(dtValue), DataType.DateTime)), Is.EqualTo(dtValue));
+					Assert.That(db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDataDateTime(dtValue), DataType.DateTime2)), Is.EqualTo(dtValue));
 
-				// assert provider-specific parameter type name
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)));
-				Assert.True(trace.Contains("DECLARE @p Byte "));
+					// assert provider-specific parameter type name
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)), Is.EqualTo(2));
+					Assert.That(trace, Does.Contain("DECLARE @p Byte "));
+				});
 
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -442,33 +499,42 @@ namespace Tests.Data
 
 				// test provider-specific type readers
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
-				Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
-				Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
+				Assert.That(db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime(), Is.EqualTo(dtValue));
+				Assert.That(db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime(), Is.EqualTo(dtValue));
 				var rawDtValue = db.Execute<object>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime));
-				Assert.True    (rawDtValue is MySqlConnectorDateTime);
-				Assert.AreEqual(dtValue, ((MySqlConnectorDateTime)rawDtValue).GetDateTime());
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawDtValue is MySqlConnectorDateTime, Is.True);
+					Assert.That(((MySqlConnectorDateTime)rawDtValue).GetDateTime(), Is.EqualTo(dtValue));
+				});
 
 				// test provider-specific parameter values
 				using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 				{
-					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.Date)));
-					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime)));
-					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime2)));
+					Assert.Multiple(() =>
+					{
+						Assert.That(db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.Date)), Is.EqualTo(dtValue));
+						Assert.That(db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime)), Is.EqualTo(dtValue));
+						Assert.That(db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime2)), Is.EqualTo(dtValue));
+					});
 				}
 
-				// assert provider-specific parameter type name
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)));
-				Assert.True    (trace.Contains("DECLARE @p Byte "));
+				Assert.Multiple(() =>
+				{
+					// assert provider-specific parameter type name
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)), Is.EqualTo(2));
+					Assert.That(trace, Does.Contain("DECLARE @p Byte "));
+				});
 
 				// bulk copy
-				MySqlTests.EnableNativeBulk(db, context);
+				MySqlTestUtils.EnableNativeBulk(db, context);
 				try
 				{
 					db.BulkCopy(
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
 						Enumerable.Range(0, 1000).Select(n => new MySqlTests.AllTypeBaseProviderSpecific() { ID = 2000 + n }));
 
-					Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+					Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
 				}
 				finally
 				{
@@ -482,7 +548,7 @@ namespace Tests.Data
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
 						Enumerable.Range(0, 1000).Select(n => new MySqlTests.AllTypeBaseProviderSpecific() { ID = 2000 + n }));
 
-					Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
+					Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
 				}
 				finally
 				{
@@ -538,18 +604,21 @@ namespace Tests.Data
 				// we have DB2 tests for all types, so here we will test only one type (they all look the same)
 				// test provider-specific type readers
 				var longValue = -12335L;
-				Assert.AreEqual(longValue, db.Execute<DB2Int64>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", longValue, DataType.Int64)).Value);
+				Assert.That(db.Execute<DB2Int64>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", longValue, DataType.Int64)).Value, Is.EqualTo(longValue));
 				var rawValue = db.Execute<object>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", longValue, DataType.Int64));
-				// DB2DataReader returns provider-specific types only if asked explicitly
-				Assert.True    (rawValue is long);
-				Assert.AreEqual(longValue, (long)rawValue);
+				Assert.Multiple(() =>
+				{
+					// DB2DataReader returns provider-specific types only if asked explicitly
+					Assert.That(rawValue is long, Is.True);
+					Assert.That((long)rawValue, Is.EqualTo(longValue));
 
-				// test provider-specific parameter values
-				Assert.AreEqual(longValue, db.Execute<long>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", new DB2Int64(longValue), DataType.Int64)));
+					// test provider-specific parameter values
+					Assert.That(db.Execute<long>("SELECT Cast(@p as bigint) FROM SYSIBM.SYSDUMMY1", new DataParameter("p", new DB2Int64(longValue), DataType.Int64)), Is.EqualTo(longValue));
 
-				//// assert provider-specific parameter type name
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE blobDataType = @p", new DataParameter("p", new byte[] { 50, 51, 52 }, DataType.Blob)));
-				Assert.True    (trace.Contains("DECLARE @p Blob("));
+					//// assert provider-specific parameter type name
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE blobDataType = @p", new DataParameter("p", new byte[] { 50, 51, 52 }, DataType.Blob)), Is.EqualTo(2));
+					Assert.That(trace, Does.Contain("DECLARE @p Blob("));
+				});
 
 				// bulk copy
 				try
@@ -558,7 +627,7 @@ namespace Tests.Data
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
 						Enumerable.Range(0, 1000).Select(n => new ALLTYPE() { ID = 2000 + n }));
 
-					Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+					Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
 				}
 				finally
 				{
@@ -574,7 +643,7 @@ namespace Tests.Data
 				{
 					cn.Open();
 
-					Assert.AreEqual(DB2ProviderAdapter.DB2ServerTypes.DB2_UW, cn.eServerType);
+					Assert.That(cn.eServerType, Is.EqualTo(DB2ProviderAdapter.DB2ServerTypes.DB2_UW));
 				}
 			}
 		}
@@ -625,39 +694,48 @@ namespace Tests.Data
 				};
 
 				var testValue = -1.2335m;
-				Assert.AreEqual(testValue, db.Execute<SqlMoney>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money)).Value);
+				Assert.That(db.Execute<SqlMoney>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money)).Value, Is.EqualTo(testValue));
 				var rawValue = db.Execute<object>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money));
-				Assert.True    (rawValue is decimal);
-				Assert.AreEqual(testValue, (decimal)rawValue);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawValue is decimal, Is.True);
+					Assert.That((decimal)rawValue, Is.EqualTo(testValue));
 
-				// test provider-specific parameter values
-				Assert.AreEqual(testValue, db.Execute<decimal>("SELECT Cast(@p as money)", new DataParameter("@p", new SqlMoney(testValue), DataType.Money)));
+					// test provider-specific parameter values
+					Assert.That(db.Execute<decimal>("SELECT Cast(@p as money)", new DataParameter("@p", new SqlMoney(testValue), DataType.Money)), Is.EqualTo(testValue));
 
-				//// assert provider-specific parameter type name
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE smalldatetimeDataType = @p", new DataParameter("@p", new DateTime(2012, 12, 12, 12, 12, 00), DataType.SmallDateTime)));
-				Assert.True    (trace.Contains("DECLARE @p SmallDateTime "));
+					//// assert provider-specific parameter type name
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE smalldatetimeDataType = @p", new DataParameter("@p", new DateTime(2012, 12, 12, 12, 12, 00), DataType.SmallDateTime)), Is.EqualTo(2));
+					Assert.That(trace, Does.Contain("DECLARE @p SmallDateTime "));
+				});
 
 				if (hierarchyidSupported)
 				{
 					//// assert UDT type name
 					var hid = SqlHierarchyId.Parse("/1/3/");
-					Assert.AreEqual(hid, db.Execute<SqlHierarchyId>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)));
-					Assert.True(trace.Contains("DECLARE @p hierarchyid -- Udt"));
-					Assert.AreEqual(hid, db.Execute<object>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)));
+					Assert.Multiple(() =>
+					{
+						Assert.That(db.Execute<SqlHierarchyId>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)), Is.EqualTo(hid));
+						Assert.That(trace, Does.Contain("DECLARE @p hierarchyid -- Udt"));
+						Assert.That(db.Execute<object>("SELECT Cast(@p as hierarchyid)", new DataParameter("@p", hid, DataType.Udt)), Is.EqualTo(hid));
+					});
 				}
 
 				if (tvpSupported)
 				{
 					//// assert TVP type name
-					var record     = SqlServerTypesTests.TestUDTData[0];
-					var parameter  = new DataParameter("p", SqlServerTypesTests.GetSqlDataRecords()) { DbType = SqlServerTypesTests.TYPE_NAME };
-					var readRecord = (from r in db.FromSql<SqlServerTypesTests.TVPRecord>($"select * from {parameter}")
+					var record     = SqlServerTestUtils.TestUDTData[0];
+					var parameter  = new DataParameter("p", SqlServerTestUtils.GetSqlDataRecords()) { DbType = SqlServerTypesTests.TYPE_NAME };
+					var readRecord = (from r in db.FromSql<SqlServerTestUtils.TVPRecord>($"select * from {parameter}")
 									  where r.Id == record.Id
-									  select new SqlServerTypesTests.TVPRecord() { Id = record.Id, Name = record.Name }).Single();
+									  select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name }).Single();
 
-					Assert.AreEqual(record.Id, readRecord.Id);
-					Assert.AreEqual(record.Name, readRecord.Name);
-					Assert.True    (trace.Contains($"DECLARE @p {SqlServerTypesTests.TYPE_NAME} "));
+					Assert.Multiple(() =>
+					{
+						Assert.That(readRecord.Id, Is.EqualTo(record.Id));
+						Assert.That(readRecord.Name, Is.EqualTo(record.Name));
+						Assert.That(trace, Does.Contain($"DECLARE @p {SqlServerTypesTests.TYPE_NAME} "));
+					});
 				}
 
 				// bulk copy
@@ -674,12 +752,12 @@ namespace Tests.Data
 				if (tvpSupported)
 				{
 					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc")!;
-					Assert.IsNotNull(proc);
-					Assert.AreEqual ("[dbo].[TestTableType]", proc.Parameters[0].SchemaType);
+					Assert.That(proc, Is.Not.Null);
+					Assert.That(proc.Parameters[0].SchemaType, Is.EqualTo("[dbo].[TestTableType]"));
 				}
 
 				// test SqlException handing
-				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new InvalidOperationException(), out var errors));
+				Assert.That(SqlServerTransientExceptionDetector.IsHandled(new InvalidOperationException(), out var errors), Is.False);
 				Exception? sex = null;
 				try
 				{
@@ -690,21 +768,24 @@ namespace Tests.Data
 					sex = ex;
 				}
 
-				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex!, out errors));
-				Assert.AreEqual(1, errors!.Count());
-				Assert.AreEqual(8134, errors!.Single());
+				Assert.Multiple(() =>
+				{
+					Assert.That(SqlServerTransientExceptionDetector.IsHandled(sex!, out errors), Is.True);
+					Assert.That(errors!.Count(), Is.EqualTo(1));
+					Assert.That(errors!.Single(), Is.EqualTo(8134));
+				});
 
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 
 				// test MARS not set
-				Assert.AreEqual(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true"), db.IsMarsEnabled);
+				Assert.That(db.IsMarsEnabled, Is.EqualTo(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true")));
 
 				// test server version
 				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
 				{
 					cn.Open();
 
-					Assert.IsNotNull(cn.ServerVersion);
+					Assert.That(cn.ServerVersion, Is.Not.Null);
 				}
 
 				void TestBulkCopy()
@@ -723,15 +804,18 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 					finally
 					{
 						db.GetTable<SqlServerTests.AllTypes>().Delete(p => p.ID >= 3);
 
 						// test quotation works
-						Assert.True(trace.Contains("[AllTypes]"));
+						Assert.That(trace, Does.Contain("[AllTypes]"));
 					}
 				}
 
@@ -751,15 +835,18 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 					finally
 					{
 						await db.GetTable<SqlServerTests.AllTypes>().DeleteAsync(p => p.ID >= 2000);
 
 						// test quotation works
-						Assert.True(trace.Contains("[AllTypes]"));
+						Assert.That(trace, Does.Contain("[AllTypes]"));
 					}
 				}
 			}
@@ -791,17 +878,20 @@ namespace Tests.Data
 				};
 
 				var testValue = -1.2335m;
-				Assert.AreEqual(testValue, db.Execute<SqlMoney>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money)).Value);
+				Assert.That(db.Execute<SqlMoney>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money)).Value, Is.EqualTo(testValue));
 				var rawValue = db.Execute<object>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money));
-				Assert.True    (rawValue is decimal);
-				Assert.AreEqual(testValue, (decimal)rawValue);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawValue is decimal, Is.True);
+					Assert.That((decimal)rawValue, Is.EqualTo(testValue));
 
-				// test provider-specific parameter values
-				Assert.AreEqual(testValue, db.Execute<decimal>("SELECT Cast(@p as money)", new DataParameter("@p", new SqlMoney(testValue), DataType.Money)));
+					// test provider-specific parameter values
+					Assert.That(db.Execute<decimal>("SELECT Cast(@p as money)", new DataParameter("@p", new SqlMoney(testValue), DataType.Money)), Is.EqualTo(testValue));
 
-				//// assert provider-specific parameter type name
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE smalldatetimeDataType = @p", new DataParameter("@p", new DateTime(2012, 12, 12, 12, 12, 00), DataType.SmallDateTime)));
-				Assert.True(trace.Contains("DECLARE @p SmallDateTime "));
+					//// assert provider-specific parameter type name
+					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE smalldatetimeDataType = @p", new DataParameter("@p", new DateTime(2012, 12, 12, 12, 12, 00), DataType.SmallDateTime)), Is.EqualTo(2));
+					Assert.That(trace, Does.Contain("DECLARE @p SmallDateTime "));
+				});
 
 				// not supported by provider
 				// assert UDT type name
@@ -813,15 +903,18 @@ namespace Tests.Data
 				if (tvpSupported)
 				{
 					//// assert TVP type name
-					var record     = SqlServerTypesTests.TestUDTData[0];
-					var parameter  = new DataParameter("p", SqlServerTypesTests.GetSqlDataRecordsMS()) { DbType = SqlServerTypesTests.TYPE_NAME };
-					var readRecord = (from r in db.FromSql<SqlServerTypesTests.TVPRecord>($"select * from {parameter}")
+					var record     = SqlServerTestUtils.TestUDTData[0];
+					var parameter  = new DataParameter("p", SqlServerTestUtils.GetSqlDataRecordsMS()) { DbType = SqlServerTypesTests.TYPE_NAME };
+					var readRecord = (from r in db.FromSql<SqlServerTestUtils.TVPRecord>($"select * from {parameter}")
 									  where r.Id == record.Id
-									  select new SqlServerTypesTests.TVPRecord() { Id = record.Id, Name = record.Name }).Single();
+									  select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name }).Single();
 
-					Assert.AreEqual(record.Id, readRecord.Id);
-					Assert.AreEqual(record.Name, readRecord.Name);
-					Assert.True    (trace.Contains($"DECLARE @p {SqlServerTypesTests.TYPE_NAME} "));
+					Assert.Multiple(() =>
+					{
+						Assert.That(readRecord.Id, Is.EqualTo(record.Id));
+						Assert.That(readRecord.Name, Is.EqualTo(record.Name));
+						Assert.That(trace, Does.Contain($"DECLARE @p {SqlServerTypesTests.TYPE_NAME} "));
+					});
 				}
 
 				// bulk copy
@@ -839,12 +932,12 @@ namespace Tests.Data
 				if (tvpSupported)
 				{
 					var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "TableTypeTestProc")!;
-					Assert.IsNotNull(proc);
-					Assert.AreEqual("[dbo].[TestTableType]", proc.Parameters[0].SchemaType);
+					Assert.That(proc, Is.Not.Null);
+					Assert.That(proc.Parameters[0].SchemaType, Is.EqualTo("[dbo].[TestTableType]"));
 				}
 
 				// test SqlException handing
-				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new InvalidOperationException(), out var errors));
+				Assert.That(SqlServerTransientExceptionDetector.IsHandled(new InvalidOperationException(), out var errors), Is.False);
 				Exception? sex = null;
 				try
 				{
@@ -854,21 +947,25 @@ namespace Tests.Data
 				{
 					sex = ex;
 				}
-				Assert.IsTrue  (SqlServerTransientExceptionDetector.IsHandled(sex!, out errors));
-				Assert.AreEqual(1, errors!.Count());
-				Assert.AreEqual(8134, errors!.Single());
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(SqlServerTransientExceptionDetector.IsHandled(sex!, out errors), Is.True);
+					Assert.That(errors!.Count(), Is.EqualTo(1));
+					Assert.That(errors!.Single(), Is.EqualTo(8134));
+				});
 
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 
 				// test MARS not set
-				Assert.AreEqual(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true"), db.IsMarsEnabled);
+				Assert.That(db.IsMarsEnabled, Is.EqualTo(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true")));
 
 				// test server version
 				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
 				{
 					cn.Open();
 
-					Assert.IsNotNull(cn.ServerVersion);
+					Assert.That(cn.ServerVersion, Is.Not.Null);
 				}
 
 				void TestBulkCopy()
@@ -887,15 +984,18 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 					finally
 					{
 						db.GetTable<SqlServerTests.AllTypes>().Delete(p => p.ID >= 2000);
 
 						// test quotation works
-						Assert.True(trace.Contains("[AllTypes]"));
+						Assert.That(trace, Does.Contain("[AllTypes]"));
 					}
 				}
 
@@ -915,15 +1015,18 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 					finally
 					{
 						await db.GetTable<SqlServerTests.AllTypes>().DeleteAsync(p => p.ID >= 2000);
 
 						// test quotation works
-						Assert.True(trace.Contains("[AllTypes]"));
+						Assert.That(trace, Does.Contain("[AllTypes]"));
 					}
 				}
 			}
@@ -947,16 +1050,25 @@ namespace Tests.Data
 				};
 
 				var binaryValue = new byte[] { 1, 2, 3 };
-				Assert.AreEqual(binaryValue, db.Execute<byte[]>("SELECT cast(:p as blob) from dummy", new DataParameter("p", binaryValue, DataType.Image)));
-				Assert.True    (trace.Contains("DECLARE @p Binary("));
-				Assert.AreEqual(binaryValue, db.Execute<byte[]>("SELECT cast(:p as varbinary) from dummy", new DataParameter("p", binaryValue, DataType.Binary)));
-				Assert.True    (trace.Contains("DECLARE @p Binary("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Execute<byte[]>("SELECT cast(:p as blob) from dummy", new DataParameter("p", binaryValue, DataType.Image)), Is.EqualTo(binaryValue));
+					Assert.That(trace, Does.Contain("DECLARE @p Binary("));
+					Assert.That(db.Execute<byte[]>("SELECT cast(:p as varbinary) from dummy", new DataParameter("p", binaryValue, DataType.Binary)), Is.EqualTo(binaryValue));
+				});
+				Assert.That(trace, Does.Contain("DECLARE @p Binary("));
 				var textValue = "test";
-				Assert.AreEqual(textValue, db.Execute<string>("SELECT cast(:p as text) from dummy", new DataParameter("p", textValue, DataType.Text)));
-				Assert.True    (trace.Contains("DECLARE @p NVarChar("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Execute<string>("SELECT cast(:p as text) from dummy", new DataParameter("p", textValue, DataType.Text)), Is.EqualTo(textValue));
+					Assert.That(trace, Does.Contain("DECLARE @p NVarChar("));
+				});
 				var ntextValue = "тест";
-				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT cast(:p as nclob) from dummy", new DataParameter("p", ntextValue, DataType.NText)));
-				Assert.True    (trace.Contains("DECLARE @p  -- Xml"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Execute<string>("SELECT cast(:p as nclob) from dummy", new DataParameter("p", ntextValue, DataType.NText)), Is.EqualTo(ntextValue));
+					Assert.That(trace, Does.Contain("DECLARE @p  -- Xml"));
+				});
 
 				// bulk copy without and with transaction
 				TestBulkCopy();
@@ -987,8 +1099,11 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SapHanaTests.AllType() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 					finally
 					{
@@ -1012,13 +1127,16 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SapHanaTests.AllType() { ID = 2000 + n }));
 
+						Assert.Multiple(() =>
+						{
 #if NETFRAMEWORK
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
+							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
 #else
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
+						Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
 #endif
 
-						Assert.AreEqual(1000, copied);
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 					finally
 					{
@@ -1042,8 +1160,11 @@ namespace Tests.Data
 				};
 
 				var ntextValue = "тест";
-				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT @p", new DataParameter("p", ntextValue, DataType.NText)));
-				Assert.True    (trace.Contains("DECLARE @p Unitext("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Execute<string>("SELECT @p", new DataParameter("p", ntextValue, DataType.NText)), Is.EqualTo(ntextValue));
+					Assert.That(trace, Does.Contain("DECLARE @p Unitext("));
+				});
 
 				// bulk copy without and with transaction
 				TestBulkCopy();
@@ -1069,8 +1190,11 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 500).Select(n => new SybaseTests.AllType() { ID = 2000 + n, bitDataType = true }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(500, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(500));
+						});
 					}
 					finally
 					{
@@ -1094,8 +1218,11 @@ namespace Tests.Data
 				};
 
 				var ntextValue = "тест";
-				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT @p", new DataParameter("p", ntextValue, DataType.NText)));
-				Assert.True    (trace.Contains("DECLARE @p Unitext("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Execute<string>("SELECT @p", new DataParameter("p", ntextValue, DataType.NText)), Is.EqualTo(ntextValue));
+					Assert.That(trace, Does.Contain("DECLARE @p Unitext("));
+				});
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
@@ -1125,24 +1252,30 @@ namespace Tests.Data
 				catch
 				{
 				}
-				Assert.True(trace.Contains("DECLARE @p Clob("));
+				Assert.That(trace, Does.Contain("DECLARE @p Clob("));
 
 				// provider-specific type classes
 				if (!provider.Adapter.IsIDSProvider)
 				{
 					var ifxTSVal = db.Execute<IfxTimeSpan>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType IS NOT NULL");
-					Assert.AreEqual(ifxTSVal, db.Execute<IfxTimeSpan>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType  = ?", new DataParameter("@p", ifxTSVal, DataType.Time)));
+					Assert.That(db.Execute<IfxTimeSpan>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType  = ?", new DataParameter("@p", ifxTSVal, DataType.Time)), Is.EqualTo(ifxTSVal));
 					var rawValue = db.Execute<object>("SELECT FIRST 1 intervalDataType FROM ALLTYPES WHERE intervalDataType  = ?", new DataParameter("@p", ifxTSVal, DataType.Time));
-					Assert.True    (rawValue is TimeSpan);
-					Assert.AreEqual((TimeSpan)ifxTSVal, rawValue);
+					Assert.Multiple(() =>
+					{
+						Assert.That(rawValue is TimeSpan, Is.True);
+						Assert.That(rawValue, Is.EqualTo((TimeSpan)ifxTSVal));
+					});
 				}
 				else
 				{
 					var dateTimeValue = db.Execute<IfxDateTime>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE ID = 2");
-					Assert.AreEqual(dateTimeValue, db.Execute<IfxDateTime>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE datetimeDataType  = ?", new DataParameter("@p", dateTimeValue, DataType.DateTime)));
+					Assert.That(db.Execute<IfxDateTime>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE datetimeDataType  = ?", new DataParameter("@p", dateTimeValue, DataType.DateTime)), Is.EqualTo(dateTimeValue));
 					var rawValue = db.Execute<object>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE datetimeDataType  = ?", new DataParameter("@p", dateTimeValue, DataType.DateTime));
-					Assert.True    (rawValue is DateTime);
-					Assert.AreEqual((DateTime)dateTimeValue, rawValue);
+					Assert.Multiple(() =>
+					{
+						Assert.That(rawValue is DateTime, Is.True);
+						Assert.That(rawValue, Is.EqualTo((DateTime)dateTimeValue));
+					});
 				}
 
 				// bulk copy (transaction not supported)
@@ -1168,8 +1301,11 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new InformixTests.AllType() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 					finally
 					{
@@ -1210,14 +1346,17 @@ namespace Tests.Data
 				}
 				catch { }
 
-				Assert.True(trace.Contains("DECLARE @p Clob("));
+				Assert.That(trace, Does.Contain("DECLARE @p Clob("));
 
 				// provider-specific type classes
 				var dateTimeValue = db.Execute<DB2DateTime>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE ID = 2");
-				Assert.AreEqual(dateTimeValue, db.Execute<DB2DateTime>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE datetimeDataType  = ?", new DataParameter("@p", dateTimeValue, DataType.DateTime)));
+				Assert.That(db.Execute<DB2DateTime>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE datetimeDataType  = ?", new DataParameter("@p", dateTimeValue, DataType.DateTime)), Is.EqualTo(dateTimeValue));
 				var rawValue = db.Execute<object>("SELECT FIRST 1 datetimeDataType FROM ALLTYPES WHERE datetimeDataType  = ?", new DataParameter("@p", dateTimeValue, DataType.DateTime));
-				Assert.True    (rawValue is DateTime);
-				Assert.AreEqual((DateTime)dateTimeValue, rawValue);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawValue is DateTime, Is.True);
+					Assert.That(rawValue, Is.EqualTo((DateTime)dateTimeValue));
+				});
 
 				// bulk copy (transaction not supported)
 				if (provider.Adapter.DB2BulkCopy != null)
@@ -1242,8 +1381,11 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new InformixTests.AllType() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 					finally
 					{
@@ -1277,30 +1419,39 @@ namespace Tests.Data
 				db.AddInterceptor(commandInterceptor);
 
 				var ntextValue = "тест";
-				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)));
-				Assert.True(trace.Contains("DECLARE @p NClob "));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)), Is.EqualTo(ntextValue));
+					Assert.That(trace, Does.Contain("DECLARE @p NClob "));
+				});
 
 				// provider-specific type classes and readers
 				var decValue = 123.45m;
 				var decimalValue = db.Execute<Oracle.DataAccess.Types.OracleDecimal>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
-				Assert.AreEqual(decValue, (decimal)decimalValue);
+				Assert.That((decimal)decimalValue, Is.EqualTo(decValue));
 				var rawValue = db.Execute<object>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
-				Assert.True    (rawValue is decimal);
-				Assert.AreEqual(decValue, (decimal)rawValue);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawValue is decimal, Is.True);
+					Assert.That((decimal)rawValue, Is.EqualTo(decValue));
+				});
 
 				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
 				var dtoVal = DateTimeOffset.Now;
 				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6});
 				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
-				Assert.AreEqual(dtoVal, dtoValue);
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, commandInterceptor.Parameters[0].Value.GetType());
+				Assert.Multiple(() =>
+				{
+					Assert.That(dtoValue, Is.EqualTo(dtoVal));
+					Assert.That(commandInterceptor.Parameters[0].Value.GetType(), Is.EqualTo(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType));
+				});
 
 				// bulk copy without transaction (transaction not supported)
 				TestBulkCopy();
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				// ToLower, because native prodiver returns it lowercased
-				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db, context).ToUpperInvariant(), schema.Database.ToUpperInvariant());
+				Assert.That(schema.Database.ToUpperInvariant(), Is.EqualTo(unmapped ? string.Empty : TestUtils.GetServerName(db, context).ToUpperInvariant()));
 				//schema.DataSource not asserted, as it returns db hostname
 
 				// dbcommand properties
@@ -1311,15 +1462,15 @@ namespace Tests.Data
 				dynamic cmd = commandInterceptor.Command!;
 				if (unmapped)
 				{
-					Assert.AreEqual(false, cmd.BindByName);
-					Assert.AreEqual(0, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, cmd.ArrayBindCount);
+					Assert.That(cmd.BindByName, Is.False);
+					Assert.That(cmd.InitialLONGFetchSize, Is.Zero);
+					Assert.That(cmd.ArrayBindCount, Is.Zero);
 				}
 				else
 				{
-					Assert.AreEqual(true, cmd.BindByName);
-					Assert.AreEqual(-1, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, cmd.ArrayBindCount);
+					Assert.That(cmd.BindByName, Is.True);
+					Assert.That(cmd.InitialLONGFetchSize, Is.EqualTo(-1));
+					Assert.That(cmd.ArrayBindCount, Is.Zero);
 				}
 
 				void TestBulkCopy()
@@ -1339,8 +1490,11 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new OracleBulkCopyTable() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 				}
 			}
@@ -1370,16 +1524,22 @@ namespace Tests.Data
 				db.AddInterceptor(commandInterceptor);
 
 				var ntextValue = "тест";
-				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)));
-				Assert.True(trace.Contains("DECLARE @p NClob "));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)), Is.EqualTo(ntextValue));
+					Assert.That(trace, Does.Contain("DECLARE @p NClob "));
+				});
 
 				// provider-specific type classes and readers
 				var decValue = 123.45m;
 				var decimalValue = db.Execute<Oracle.ManagedDataAccess.Types.OracleDecimal>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
-				Assert.AreEqual(decValue, (decimal)decimalValue);
+				Assert.That((decimal)decimalValue, Is.EqualTo(decValue));
 				var rawValue = db.Execute<object>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
-				Assert.True    (rawValue is decimal);
-				Assert.AreEqual(decValue, (decimal)rawValue);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawValue is decimal, Is.True);
+					Assert.That((decimal)rawValue, Is.EqualTo(decValue));
+				});
 
 				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
 				var dtoVal = TestData.DateTimeOffset;
@@ -1391,15 +1551,18 @@ namespace Tests.Data
 				{
 					var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
 					dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
-					Assert.AreEqual(dtoVal, dtoValue);
-					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, commandInterceptor.Parameters[0].Value!.GetType()!);
+					Assert.Multiple(() =>
+					{
+						Assert.That(dtoValue, Is.EqualTo(dtoVal));
+						Assert.That(commandInterceptor.Parameters[0].Value!.GetType()!, Is.EqualTo(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType));
+					});
 				}
 
 				// bulk copy without transaction (transaction not supported)
 				TestBulkCopy();
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				Assert.AreEqual(unmapped ? string.Empty : TestUtils.GetServerName(db, context).ToUpperInvariant(), schema.Database.ToUpperInvariant());
+				Assert.That(schema.Database.ToUpperInvariant(), Is.EqualTo(unmapped ? string.Empty : TestUtils.GetServerName(db, context).ToUpperInvariant()));
 				//schema.DataSource not asserted, as it returns db hostname
 
 				// dbcommand properties
@@ -1410,15 +1573,15 @@ namespace Tests.Data
 				dynamic cmd = commandInterceptor.Command!;
 				if (unmapped)
 				{
-					Assert.AreEqual(false, cmd.BindByName);
-					Assert.AreEqual(0, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, cmd.ArrayBindCount);
+					Assert.That(cmd.BindByName, Is.False);
+					Assert.That(cmd.InitialLONGFetchSize, Is.Zero);
+					Assert.That(cmd.ArrayBindCount, Is.Zero);
 				}
 				else
 				{
-					Assert.AreEqual(true, cmd.BindByName);
-					Assert.AreEqual(-1, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, cmd.ArrayBindCount);
+					Assert.That(cmd.BindByName, Is.True);
+					Assert.That(cmd.InitialLONGFetchSize, Is.EqualTo(-1));
+					Assert.That(cmd.ArrayBindCount, Is.Zero);
 				}
 
 				void TestBulkCopy()
@@ -1438,8 +1601,11 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new OracleBulkCopyTable() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 				}
 			}
@@ -1469,16 +1635,22 @@ namespace Tests.Data
 				db.AddInterceptor(commandInterceptor);
 
 				var ntextValue = "тест";
-				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)));
-				Assert.True(trace.Contains("DECLARE @p NClob(4) "));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)), Is.EqualTo(ntextValue));
+					Assert.That(trace, Does.Contain("DECLARE @p NClob(4) "));
+				});
 
 				// provider-specific type classes and readers
 				var decValue = 123.45m;
 				var decimalValue = db.Execute<Devart.Data.Oracle.OracleNumber>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
-				Assert.AreEqual(decValue, (decimal)decimalValue);
+				Assert.That((decimal)decimalValue, Is.EqualTo(decValue));
 				var rawValue = db.Execute<object>("SELECT :p FROM SYS.DUAL", new DataParameter("p", decValue, DataType.Decimal));
-				Assert.True    (rawValue is decimal);
-				Assert.AreEqual(decValue, (decimal)rawValue);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawValue is decimal, Is.True);
+					Assert.That((decimal)rawValue, Is.EqualTo(decValue));
+				});
 
 				// OracleTimeStampTZ parameter creation and conversion to DateTimeOffset
 				var dtoVal = TestData.DateTimeOffset;
@@ -1490,8 +1662,11 @@ namespace Tests.Data
 				{
 					var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
 					dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
-					Assert.AreEqual(dtoVal, dtoValue);
-					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampType, commandInterceptor.Parameters[0].Value!.GetType()!);
+					Assert.Multiple(() =>
+					{
+						Assert.That(dtoValue, Is.EqualTo(dtoVal));
+						Assert.That(commandInterceptor.Parameters[0].Value!.GetType()!, Is.EqualTo(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampType));
+					});
 				}
 
 				TestBulkCopy();
@@ -1504,7 +1679,7 @@ namespace Tests.Data
 				db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 
 				dynamic cmd = commandInterceptor.Command!;
-				Assert.AreEqual(!unmapped, cmd.PassParametersByName);
+				Assert.That(cmd.PassParametersByName, Is.Not.EqualTo(unmapped));
 
 				void TestBulkCopy()
 				{
@@ -1523,8 +1698,11 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new OracleBulkCopyTable() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 				}
 			}
@@ -1565,16 +1743,22 @@ namespace Tests.Data
 				};
 
 				var jsonValue = /*lang=json,strict*/ "{ \"x\": 1 }";
-				Assert.AreEqual(jsonValue, db.Execute<string>("SELECT @p", new DataParameter("@p", jsonValue, DataType.Json)));
-				Assert.True    (trace.Contains("DECLARE @p Json"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Execute<string>("SELECT @p", new DataParameter("@p", jsonValue, DataType.Json)), Is.EqualTo(jsonValue));
+					Assert.That(trace, Does.Contain("DECLARE @p Json"));
+				});
 
 				// provider-specific type classes and readers
 				var interval = TimeSpan.FromSeconds(-1234);
 				var nValue = db.Execute<NpgsqlTypes.NpgsqlInterval>("SELECT @p", new DataParameter("@p", interval, DataType.Interval));
-				Assert.AreEqual(interval, TimeSpan.FromTicks(nValue.Time * 10));
+				Assert.That(TimeSpan.FromTicks(nValue.Time * 10), Is.EqualTo(interval));
 				var rawValue = db.Execute<object>("SELECT @p", new DataParameter("@p", interval, DataType.Interval));
-				Assert.True    (rawValue is TimeSpan);
-				Assert.AreEqual(interval, (TimeSpan)rawValue);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rawValue is TimeSpan, Is.True);
+					Assert.That((TimeSpan)rawValue, Is.EqualTo(interval));
+				});
 
 				// bulk copy without and with transaction
 				TestBulkCopy();
@@ -1589,17 +1773,20 @@ namespace Tests.Data
 				// provider types support by schema
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var allTypes = schema.Tables.Where(t => t.TableName == "AllTypes").SingleOrDefault()!;
-				Assert.NotNull (allTypes);
+				Assert.That(allTypes, Is.Not.Null);
 				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "intervalDataType").SingleOrDefault()!;
-				Assert.NotNull (tsColumn);
-				Assert.AreEqual("NpgsqlInterval", tsColumn.ProviderSpecificType);
+				Assert.That(tsColumn, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(tsColumn.ProviderSpecificType, Is.EqualTo("NpgsqlInterval"));
 
-				// provider properties
-				Assert.AreEqual(true, provider.HasMacAddr8);
+					// provider properties
+					Assert.That(provider.HasMacAddr8, Is.EqualTo(true));
+				});
 
 				// type name generation from provider type
 				using (db.CreateLocalTable<TestPostgreSQLTypeName>())
-					Assert.True(trace.Contains("\"Column\" circle     NULL"));
+					Assert.That(trace, Does.Contain("\"Column\" circle     NULL"));
 
 				// test server version
 				var serverVersion = db.Execute<int>("SHOW server_version_num");
@@ -1608,13 +1795,13 @@ namespace Tests.Data
 				{
 					cn.Open();
 
-					Assert.AreEqual(serverVersion / 10000, cn.PostgreSqlVersion.Major);
+					Assert.That(cn.PostgreSqlVersion.Major, Is.EqualTo(serverVersion / 10000));
 
 					// machine-readable version number... sure
 					if (cn.PostgreSqlVersion.Major == 9)
-						Assert.AreEqual((serverVersion / 100) % 100, cn.PostgreSqlVersion.Minor);
+						Assert.That(cn.PostgreSqlVersion.Minor, Is.EqualTo((serverVersion / 100) % 100));
 					else
-						Assert.AreEqual(serverVersion % 100, cn.PostgreSqlVersion.Minor);
+						Assert.That(cn.PostgreSqlVersion.Minor, Is.EqualTo(serverVersion % 100));
 
 				}
 
@@ -1635,8 +1822,11 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new PostgreSQLTests.AllTypes() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 					finally
 					{
@@ -1661,8 +1851,11 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new PostgreSQLTests.AllTypes() { ID = 2000 + n }));
 
-						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.Multiple(() =>
+						{
+							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
+							Assert.That(copied, Is.EqualTo(1000));
+						});
 					}
 					finally
 					{
@@ -1737,10 +1930,10 @@ namespace Tests.Data
 
 						// Client provider supports only async API
 						if (context.IsAnyOf(ProviderName.ClickHouseClient))
-							Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
+							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
 						else
-							Assert.AreEqual(true, trace.Contains("INSERT INTO"));
-						Assert.AreEqual(1000, copied);
+							Assert.That(trace.Contains("INSERT INTO"), Is.EqualTo(true));
+						Assert.That(copied, Is.EqualTo(1000));
 					}
 				}
 
@@ -1761,10 +1954,10 @@ namespace Tests.Data
 							Enumerable.Range(0, 1000).Select(n => new ClickHouseBulkCopyTable() { ID = 2000 + n }));
 
 						if (context.IsAnyOf(ProviderName.ClickHouseClient))
-							Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
+							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
 						else
-							Assert.AreEqual(true, trace.Contains("INSERT INTO"));
-						Assert.AreEqual(1000, copied);
+							Assert.That(trace.Contains("INSERT INTO"), Is.EqualTo(true));
+						Assert.That(copied, Is.EqualTo(1000));
 					}
 				}
 			}
@@ -1798,7 +1991,7 @@ namespace Tests.Data
 				{
 					case ConnectionType.MiniProfilerNoMappings      :
 					case ConnectionType.MiniProfiler                :
-						Assert.IsNotNull(MiniProfiler.Current);
+						Assert.That(MiniProfiler.Current, Is.Not.Null);
 						return new ProfiledDbConnection(cn, MiniProfiler.Current);
 				}
 

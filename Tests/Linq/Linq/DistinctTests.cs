@@ -88,7 +88,7 @@ namespace Tests.Linq
 					where c.ChildID > 20
 					select p;
 
-				Assert.AreEqual(expected.Distinct().Count(), result.Distinct().Count());
+				Assert.That(result.Distinct().Count(), Is.EqualTo(expected.Distinct().Count()));
 			}
 		}
 
@@ -109,7 +109,7 @@ namespace Tests.Linq
 					where c.ChildID > 20
 					select p;
 
-				Assert.AreEqual(expected.Distinct().Max(p => p.ParentID), result.Distinct().Max(p => p.ParentID));
+				Assert.That(result.Distinct().Max(p => p.ParentID), Is.EqualTo(expected.Distinct().Max(p => p.ParentID)));
 			}
 		}
 

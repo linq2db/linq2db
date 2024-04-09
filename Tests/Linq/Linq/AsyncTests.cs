@@ -31,7 +31,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context + LinqServiceSuffix))
 			{
 				var list = await db.Parent.ToArrayAsync();
-				Assert.That(list.Length, Is.Not.EqualTo(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
@@ -44,7 +44,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context + LinqServiceSuffix))
 			{
 				var list = db.Parent.ToArrayAsync().Result;
-				Assert.That(list.Length, Is.Not.EqualTo(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
@@ -65,7 +65,7 @@ namespace Tests.Linq
 
 				await db.Parent.ForEachAsync(list.Add);
 
-				Assert.That(list.Count, Is.Not.EqualTo(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 

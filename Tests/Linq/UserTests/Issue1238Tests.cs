@@ -46,7 +46,7 @@ namespace Tests.UserTests
 							Data = 1
 						});
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 
 				db.GetTable<TestTable>()
 					.InsertOrUpdate(
@@ -61,7 +61,7 @@ namespace Tests.UserTests
 							Data = 1
 						});
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -86,11 +86,11 @@ namespace Tests.UserTests
 
 				db.InsertOrReplace(record);
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 
 				db.InsertOrReplace(record);
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -117,7 +117,7 @@ namespace Tests.UserTests
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 
 				db.GetTable<TestTable>()
 					.Merge()
@@ -127,7 +127,7 @@ namespace Tests.UserTests
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -154,7 +154,7 @@ namespace Tests.UserTests
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 
 				db.GetTable<TestTable>()
 					.Merge()
@@ -164,7 +164,7 @@ namespace Tests.UserTests
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 			}
 		}
 	}

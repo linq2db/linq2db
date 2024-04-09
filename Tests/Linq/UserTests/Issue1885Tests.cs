@@ -60,13 +60,16 @@ namespace Tests.UserTests
 
 				var list = q.ToList();
 
-				Assert.AreEqual(2, list.Count);
+				Assert.That(list, Has.Count.EqualTo(2));
 
-				Assert.AreEqual("Testing", list[0].Value);
-				Assert.AreEqual(values,    list[0].Ids);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0].Value, Is.EqualTo("Testing"));
+					Assert.That(list[0].Ids, Is.EqualTo(values));
 
-				Assert.AreEqual("Testing", list[1].Value);
-				Assert.AreEqual(values,    list[1].Ids);
+					Assert.That(list[1].Value, Is.EqualTo("Testing"));
+					Assert.That(list[1].Ids, Is.EqualTo(values));
+				});
 			}
 		}
 

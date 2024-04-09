@@ -33,7 +33,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(0, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -66,7 +66,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(0, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);

@@ -117,7 +117,7 @@ namespace Tests.Linq
 					.OrderBy(_ => _.Id)
 					.ToArray();
 
-				Assert.AreEqual(expected, projection);
+				Assert.That(projection, Is.EqualTo(expected));
 			}
 		}
 
@@ -144,7 +144,7 @@ namespace Tests.Linq
 					.OrderBy(_ => _.Id)
 					.ToArray();
 
-				Assert.AreEqual(expected, projection);
+				Assert.That(projection, Is.EqualTo(expected));
 			}
 		}
 
@@ -171,7 +171,7 @@ namespace Tests.Linq
 					.OrderBy(_ => _.Id)
 					.ToArray();
 
-				Assert.AreEqual(expected, projection);
+				Assert.That(projection, Is.EqualTo(expected));
 			}
 		}
 
@@ -201,7 +201,7 @@ namespace Tests.Linq
 					.OrderBy(_ => _.Id)
 					.ToArray();
 
-				Assert.AreEqual(expected, projection);
+				Assert.That(projection, Is.EqualTo(expected));
 			}
 		}
 
@@ -231,7 +231,7 @@ namespace Tests.Linq
 					.OrderBy(_ => _.Id)
 					.ToArray();
 
-				Assert.AreEqual(expected, projection);
+				Assert.That(projection, Is.EqualTo(expected));
 			}
 		}
 
@@ -258,7 +258,7 @@ namespace Tests.Linq
 					.OrderBy(_ => _.Id)
 					.ToArray();
 
-				Assert.AreEqual(expected, projection);
+				Assert.That(projection, Is.EqualTo(expected));
 			}
 		}
 
@@ -289,7 +289,7 @@ namespace Tests.Linq
 					.OrderBy(_ => _.Id)
 					.ToArray();
 
-				Assert.AreEqual(expected, projection);
+				Assert.That(projection, Is.EqualTo(expected));
 			}
 		}
 
@@ -321,7 +321,7 @@ namespace Tests.Linq
 					.OrderBy(_ => _.Id)
 					.ToArray();
 
-				Assert.AreEqual(expected, projection);
+				Assert.That(projection, Is.EqualTo(expected));
 			}
 		}
 
@@ -530,7 +530,7 @@ namespace Tests.Linq
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
-				Assert.True(ReferenceEquals(query1, query2));
+				Assert.That(ReferenceEquals(query1, query2), Is.True);
 
 				IQueryable<SampleClass> GetQuery(int startId, int endId)
 				{
@@ -556,7 +556,7 @@ namespace Tests.Linq
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
-				Assert.False(ReferenceEquals(query1, query2));
+				Assert.That(ReferenceEquals(query1, query2), Is.False);
 
 				IQueryable<SampleClass> GetQuery(int startId, int endId)
 				{
@@ -582,7 +582,7 @@ namespace Tests.Linq
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
-				Assert.False(ReferenceEquals(query1, query2));
+				Assert.That(ReferenceEquals(query1, query2), Is.False);
 
 				IQueryable<SampleClass> GetQuery<T>(ITable<T> table, int startId, int endId)
 					where T : notnull
@@ -608,7 +608,7 @@ namespace Tests.Linq
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
-				Assert.True(ReferenceEquals(query1, query2));
+				Assert.That(ReferenceEquals(query1, query2), Is.True);
 
 				IQueryable<SampleClass> GetQuery(int startId, int endId)
 				{
@@ -636,7 +636,7 @@ namespace Tests.Linq
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
-				Assert.False(ReferenceEquals(query1, query2));
+				Assert.That(ReferenceEquals(query1, query2), Is.False);
 
 				IQueryable<SampleClass> GetQuery(int startId, int endId)
 				{
@@ -665,7 +665,7 @@ namespace Tests.Linq
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
-				Assert.False(ReferenceEquals(query1, query2));
+				Assert.That(ReferenceEquals(query1, query2), Is.False);
 
 				IQueryable<SampleClass> GetQuery<T>(ITable<T> table, int startId, int endId)
 					where T : notnull
@@ -705,8 +705,8 @@ namespace Tests.Linq
 				void Test(int? value)
 				{
 					var res = db.FromSql<Scalar<int?>>($"SELECT {new DataParameter("value", value, DataType.Int32)} as Value1 /*TestQueryCaching_ByParameter_Interpolation1*/").ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.AreEqual(value, res[0].Value1);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.That(res[0].Value1, Is.EqualTo(value));
 				}
 			}
 		}
@@ -726,8 +726,8 @@ namespace Tests.Linq
 				void Test(int? value)
 				{
 					var res = db.FromSql<Scalar<int?>>("SELECT {0} as Value1 /*TestQueryCaching_ByParameter_Formatted1*/", new DataParameter("value", value, DataType.Int32)).ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.AreEqual(value, res[0].Value1);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.That(res[0].Value1, Is.EqualTo(value));
 				}
 			}
 		}
@@ -747,9 +747,12 @@ namespace Tests.Linq
 				void Test(int? value1, int? value2)
 				{
 					var res = db.FromSql<Values<int?>>($"SELECT {new DataParameter("value1", value1, DataType.Int32)} as Value1, {new DataParameter("value2", value2, DataType.Int32)} as Value2 /*TestQueryCaching_ByParameter_Interpolation2*/").ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.AreEqual(value1, res[0].Value1);
-					Assert.AreEqual(value2, res[0].Value2);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.Multiple(() =>
+					{
+						Assert.That(res[0].Value1, Is.EqualTo(value1));
+						Assert.That(res[0].Value2, Is.EqualTo(value2));
+					});
 				}
 			}
 		}
@@ -769,9 +772,12 @@ namespace Tests.Linq
 				void Test(int? value1, int? value2)
 				{
 					var res = db.FromSql<Values<int?>>("SELECT {0} as Value1, {1} as Value2 /*TestQueryCaching_ByParameter_Formatted2*/", new DataParameter("value1", value1, DataType.Int32), new DataParameter("value2", value2, DataType.Int32)).ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.AreEqual(value1, res[0].Value1);
-					Assert.AreEqual(value2, res[0].Value2);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.Multiple(() =>
+					{
+						Assert.That(res[0].Value1, Is.EqualTo(value1));
+						Assert.That(res[0].Value2, Is.EqualTo(value2));
+					});
 				}
 			}
 		}
@@ -791,9 +797,12 @@ namespace Tests.Linq
 				void Test(int? value1, int? value2)
 				{
 					var res = db.FromSql<Values<int?>>("SELECT {0} as Value1, {1} as Value2 /*TestQueryCaching_ByParameter_Formatted21*/", new object?[] { new DataParameter("value1", value1, DataType.Int32), new DataParameter("value2", value2, DataType.Int32) }).ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.AreEqual(value1, res[0].Value1);
-					Assert.AreEqual(value2, res[0].Value2);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.Multiple(() =>
+					{
+						Assert.That(res[0].Value1, Is.EqualTo(value1));
+						Assert.That(res[0].Value2, Is.EqualTo(value2));
+					});
 				}
 			}
 		}
@@ -814,8 +823,8 @@ namespace Tests.Linq
 				{
 					var p = new DataParameter("value", value, DataType.Int32);
 					var res = db.FromSql<Scalar<int?>>($"SELECT {p} as Value1 /*TestQueryCaching_ByParameter_Interpolation3*/").ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.AreEqual(value, res[0].Value1);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.That(res[0].Value1, Is.EqualTo(value));
 				}
 			}
 		}
@@ -836,8 +845,8 @@ namespace Tests.Linq
 				{
 					var p = new DataParameter("value", value, DataType.Int32);
 					var res = db.FromSql<Scalar<int?>>("SELECT {0} as Value1 /*TestQueryCaching_ByParameter_Formatted3*/", p).ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.AreEqual(value, res[0].Value1);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.That(res[0].Value1, Is.EqualTo(value));
 				}
 			}
 		}
@@ -858,8 +867,8 @@ namespace Tests.Linq
 				{
 					var p = new DataParameter("value", value, DataType.Int32);
 					var res = db.FromSql<Scalar<int?>>($"SELECT {null} as Value1 /*TestQueryCaching_ByParameter_Interpolation4*/").ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.IsNull(res[0].Value1);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.That(res[0].Value1, Is.Null);
 				}
 			}
 		}
@@ -880,8 +889,8 @@ namespace Tests.Linq
 				{
 					var p = new DataParameter("value", value, DataType.Int32);
 					var res = db.FromSql<Scalar<int?>>("SELECT {0} as Value1 /*TestQueryCaching_ByParameter_Formatted4*/", new object?[] { null }).ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.IsNull(res[0].Value1);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.That(res[0].Value1, Is.Null);
 				}
 			}
 		}
@@ -901,9 +910,12 @@ namespace Tests.Linq
 				void Test(int? value1, int? value2)
 				{
 					var res = db.FromSql<Values<int?>>($"SELECT {value1} as Value1, {value2} as Value2 /*TestQueryCaching_ByParameter_Interpolation5*/").ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.AreEqual(value1, res[0].Value1);
-					Assert.AreEqual(value2, res[0].Value2);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.Multiple(() =>
+					{
+						Assert.That(res[0].Value1, Is.EqualTo(value1));
+						Assert.That(res[0].Value2, Is.EqualTo(value2));
+					});
 				}
 			}
 		}
@@ -923,9 +935,12 @@ namespace Tests.Linq
 				void Test(int? value1, int? value2)
 				{
 					var res = db.FromSql<Values<int?>>("SELECT {0} as Value1, {1} as Value2 /*TestQueryCaching_ByParameter_Formatted5*/", value1, value2).ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.AreEqual(value1, res[0].Value1);
-					Assert.AreEqual(value2, res[0].Value2);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.Multiple(() =>
+					{
+						Assert.That(res[0].Value1, Is.EqualTo(value1));
+						Assert.That(res[0].Value2, Is.EqualTo(value2));
+					});
 				}
 			}
 		}
@@ -945,9 +960,12 @@ namespace Tests.Linq
 				void Test(int? value1, int? value2)
 				{
 					var res = db.FromSql<Values<int?>>("SELECT {0} as Value1, {1} as Value2 /*TestQueryCaching_ByParameter_Formatted51*/", new object?[] { value1, value2 }).ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.AreEqual(value1, res[0].Value1);
-					Assert.AreEqual(value2, res[0].Value2);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.Multiple(() =>
+					{
+						Assert.That(res[0].Value1, Is.EqualTo(value1));
+						Assert.That(res[0].Value2, Is.EqualTo(value2));
+					});
 				}
 			}
 		}
@@ -969,9 +987,12 @@ namespace Tests.Linq
 				void Test(int? value1, int? value2)
 				{
 					var res = db.FromSql<Values<int?>>(sql, new object?[] { value1, value2 }).ToArray();
-					Assert.AreEqual(1, res.Length);
-					Assert.AreEqual(value1, res[0].Value1);
-					Assert.AreEqual(value2, res[0].Value2);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.Multiple(() =>
+					{
+						Assert.That(res[0].Value1, Is.EqualTo(value1));
+						Assert.That(res[0].Value2, Is.EqualTo(value2));
+					});
 				}
 			}
 		}
