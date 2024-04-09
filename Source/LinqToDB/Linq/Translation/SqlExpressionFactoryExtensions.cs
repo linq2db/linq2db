@@ -160,5 +160,10 @@ namespace LinqToDB.Linq.Translation
 			return factory.Mod(x, new SqlValue(dbDataType, value));
 		}
 
+		public static ISqlExpression TypeExpression(this ISqlExpressionFactory factory, DbDataType dbDataType)
+		{
+			return new SqlDataType(dbDataType);
+		}
+
 	}
 }
