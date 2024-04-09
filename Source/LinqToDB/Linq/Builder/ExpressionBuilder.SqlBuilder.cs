@@ -4460,7 +4460,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
 				{
-					var subqueryExpression = TryGetSubQueryExpression(currentContext, root, null, flags, out var isSequence);
+					var subqueryExpression = TryGetSubQueryExpression(currentContext, root, null, flags, out var isSequence, out var corrected);
 					if (subqueryExpression != null)
 					{
 						root = subqueryExpression;
@@ -4471,6 +4471,12 @@ namespace LinqToDB.Linq.Builder
 					}
 					else if (isSequence)
 					{
+						if (corrected != null)
+						{
+							// Failed to build sequence, but we transformed First/FirstOrDefault.
+							return memberExpression.Update(corrected);
+						}
+
 						// Failed to build sequence. Do not continue.
 						return memberExpression;
 					}
@@ -4654,7 +4660,7 @@ namespace LinqToDB.Linq.Builder
 						var ctx = rootContext?.BuildContext ?? currentContext;
 						if (ctx != null)
 						{
-							var subqueryExpression = TryGetSubQueryExpression(ctx, path, null, flags, out var isSequence);
+							var subqueryExpression = TryGetSubQueryExpression(ctx, path, null, flags, out var isSequence, out var corrected);
 							if (subqueryExpression != null)
 							{
 								if (subqueryExpression is SqlErrorExpression)
@@ -4674,6 +4680,12 @@ namespace LinqToDB.Linq.Builder
 							}
 							else if (isSequence)
 							{
+								if (corrected != null)
+								{
+									// Failed to build sequence, but we transformed First/FirstOrDefault.
+									expression = corrected;
+								}
+
 								handled = true;
 							}
 						}

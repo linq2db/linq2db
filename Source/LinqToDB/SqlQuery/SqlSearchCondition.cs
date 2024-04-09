@@ -150,6 +150,17 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
+		public bool IsFalse()
+		{
+			if (Predicates.Count == 0)
+				return false;
+
+			if (Predicates is [{ ElementType: QueryElementType.FalsePredicate }])
+				return true;
+
+			return false;
+		}
+
 		#endregion
 
 		#region ISqlExpression Members

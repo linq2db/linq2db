@@ -14,6 +14,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
+	using Reflection;
 
 	partial class ExpressionBuilder
 	{
@@ -630,9 +631,55 @@ namespace LinqToDB.Linq.Builder
 			return newExpr;
 		}
 
-		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, ProjectFlags flags, out bool isSequence)
+		static string [] _singleElementMethods =
+		{
+			nameof(Enumerable.FirstOrDefault),
+			nameof(Enumerable.First),
+			nameof(Enumerable.Single),
+			nameof(Enumerable.SingleOrDefault),
+		};
+
+		public Expression PrepareSubqueryExpression(Expression expr)
+		{
+			var newExpr = expr;
+
+			if (expr.NodeType == ExpressionType.Call)
+			{
+				var mc = (MethodCallExpression)expr;
+				if (mc.IsQueryable(_singleElementMethods))
+				{
+					if (mc.Arguments.Count == 2)
+					{
+						Expression whereMethod;
+
+						var typeArguments = mc.Method.GetGenericArguments();
+						if (mc.Method.DeclaringType == typeof(Queryable))
+						{
+							var methodInfo = Methods.Queryable.Where.MakeGenericMethod(typeArguments);
+							whereMethod = Expression.Call(methodInfo, mc.Arguments[0], mc.Arguments[1]);
+							var limitCall = Expression.Call(typeof(Queryable), mc.Method.Name, typeArguments, whereMethod);
+
+							newExpr = limitCall;
+						}
+						else
+						{
+							var methodInfo = Methods.Enumerable.Where.MakeGenericMethod(typeArguments);
+							whereMethod = Expression.Call(methodInfo, mc.Arguments[0], mc.Arguments[1]);
+							var limitCall = Expression.Call(typeof(Enumerable), mc.Method.Name, typeArguments, whereMethod);
+
+							newExpr = limitCall;
+						}
+					}
+				}
+			}
+
+			return newExpr;
+		}
+
+		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, ProjectFlags flags, out bool isSequence, out Expression? corrected)
 		{
 			isSequence = false;
+			corrected  = null;
 
 			if (flags.IsTraverse())
 				return null;
@@ -681,6 +728,18 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (isSequence)
 				{
+					if (flags.IsExpression())
+					{
+						// Trying to relax eager for First[OrDefault](predicate)
+						var prepared = PrepareSubqueryExpression(expr);
+						if (!ReferenceEquals(prepared, expr))
+						{
+							corrected = prepared;
+						}
+
+						return null;
+					}
+
 					return new SqlErrorExpression(expr, info.ErrorMessage, expr.Type);
 				}
 

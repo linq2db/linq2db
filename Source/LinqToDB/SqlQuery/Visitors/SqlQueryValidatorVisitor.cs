@@ -8,6 +8,8 @@ namespace LinqToDB.SqlQuery.Visitors
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
 	{
 		SelectQuery?     _parentQuery;
+		SqlJoinedTable?  _fakeJoin;
+		//SelectQuery?     _joinQuery;
 		SqlProviderFlags _providerFlags = default!;
 		int?             _columnSubqueryLevel;
 
@@ -31,6 +33,7 @@ namespace LinqToDB.SqlQuery.Visitors
 		public void Cleanup()
 		{
 			_parentQuery         = null;
+			//_joinQuery           = null;
 			_providerFlags       = default!;
 			_isValid             = true;
 			_columnSubqueryLevel = default;
@@ -53,16 +56,17 @@ namespace LinqToDB.SqlQuery.Visitors
 			return true;
 		}
 
-		public bool IsValidQuery(
-			IQueryElement    element,       
-			SelectQuery?     parentQuery, 
-			bool             forColumn,
-			SqlProviderFlags providerFlags, 
-			out string?      errorMessage)
+		public bool IsValidQuery(IQueryElement element,
+			SelectQuery?                       parentQuery,
+			SqlJoinedTable?                    fakeJoin,
+			bool                               forColumn,
+			SqlProviderFlags                   providerFlags,
+			out string?                        errorMessage)
 		{
 			_isValid             = true;
 			_errorMessage        = default!;
 			_parentQuery         = parentQuery;
+			_fakeJoin            = fakeJoin;
 			_providerFlags       = providerFlags;
 			_columnSubqueryLevel = forColumn ? 0 : null;
 
@@ -77,18 +81,6 @@ namespace LinqToDB.SqlQuery.Visitors
 		{
 			if (_columnSubqueryLevel != null)
 			{
-				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
-				{
-					errorMessage = ErrorHelper.Error_Take_in_Subquery;
-					return false;
-				}
-
-				if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null)
-				{
-					errorMessage = ErrorHelper.Error_Skip_in_Subquery;
-					return false;
-				}
-
 				if (_providerFlags.DoesNotSupportCorrelatedSubquery)
 				{
 					if (QueryHelper.IsDependsOnOuterSources(selectQuery))
@@ -111,6 +103,18 @@ namespace LinqToDB.SqlQuery.Visitors
 					errorMessage = ErrorHelper.Error_OrderBy_in_Derived;
 					return false;
 				}
+			}
+
+			if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
+			{
+				errorMessage = ErrorHelper.Error_Take_in_Subquery;
+				return false;
+			}
+
+			if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null)
+			{
+				errorMessage = ErrorHelper.Error_Skip_in_Subquery;
+				return false;
 			}
 
 			errorMessage = null;
@@ -147,7 +151,25 @@ namespace LinqToDB.SqlQuery.Visitors
 				}
 			}
 
-			return base.VisitSqlJoinedTable(element);
+			if (element != _fakeJoin)
+			{
+				if (!_providerFlags.IsSupportsJoinWithoutCondition && element.JoinType is JoinType.Left or JoinType.Inner)
+				{
+					if (element.Condition.IsTrue() || element.Condition.IsFalse())
+					{
+						SetInvlaid(ErrorHelper.Error_Join_Without_Condition);
+						return element;
+					}
+				}
+			}
+
+			//_joinQuery = element.Table.Source as SelectQuery;
+
+			var result = base.VisitSqlJoinedTable(element);
+
+			//_joinQuery = null;
+
+			return result;
 		}
 
 		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)

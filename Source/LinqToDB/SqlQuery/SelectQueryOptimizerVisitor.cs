@@ -2292,7 +2292,7 @@ namespace LinqToDB.SqlQuery
 								if (!IsLimitedToOneRecord(sq, tsQuery, evaluationContext))
 									continue;
 
-								if (!SqlProviderHelper.IsValidQuery(tsQuery, parentQuery: sq, forColumn: true, _providerFlags, out _))
+								if (!SqlProviderHelper.IsValidQuery(tsQuery, parentQuery: sq, fakeJoin: null, forColumn: true, _providerFlags, out _))
 									continue;
 
 								if (_providerFlags.DoesNotSupportCorrelatedSubquery)

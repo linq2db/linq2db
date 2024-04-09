@@ -891,16 +891,6 @@ namespace LinqToDB.Linq.Builder
 			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
 			{
 				// We are trying to simulate what will be with query after optimizer's work
-
-				// shortcut for derived table limitations
-				if (context.Builder.DataContext.SqlProviderFlags.IsDerivedTableOrderBySupported)
-				{
-					if (!QueryHelper.IsDependsOnOuterSources(context.SelectQuery))
-					{
-						return true;
-					}
-				}
-				// We are trying to simulate what will be with query after optimizer's work
 				//
 				var cloningContext = new CloningContext();
 
@@ -914,12 +904,14 @@ namespace LinqToDB.Linq.Builder
 
 				expr = parent.Builder.ToColumns(clonedParentContext, expr);
 
-			    // add fake join there is no still reference
+				SqlJoinedTable? fakeJoin = null;
+
+				// add fake join there is no still reference
 				if (null == clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery))
 				{
-				 	var fakeJoin = clonedContext.SelectQuery.OuterApply();
+				 	fakeJoin = clonedContext.SelectQuery.OuterApply().JoinedTable;
 				
-				    clonedParentContext.SelectQuery.From.Tables[0].Joins.Add(fakeJoin.JoinedTable);
+				    clonedParentContext.SelectQuery.From.Tables[0].Joins.Add(fakeJoin);
 				}
 
 				using var visitor = QueryHelper.SelectOptimizer.Allocate();
@@ -940,7 +932,7 @@ namespace LinqToDB.Linq.Builder
 					evaluationContext : new EvaluationContext()
 				);
 
-				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, forColumn: false, parent.Builder.DataContext.SqlProviderFlags, out errorMessage))
+				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, fakeJoin: fakeJoin, forColumn: false, parent.Builder.DataContext.SqlProviderFlags, out errorMessage))
 				{
 					return false;
 				}
