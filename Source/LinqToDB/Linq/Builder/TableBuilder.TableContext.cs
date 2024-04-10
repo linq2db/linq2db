@@ -125,7 +125,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (context.builder.CanBeCompiled(a, false))
 					{
-						var param = context.builder.ParametersContext.BuildParameter(a, columnDescriptor: null, forceConstant: true, doNotCheckCompatibility: true);
+						var param = context.builder.ParametersContext.BuildParameter(context.context, a, columnDescriptor : null, forceConstant : true, doNotCheckCompatibility : true);
 						if (param != null)
 						{
 							if (inline == true)

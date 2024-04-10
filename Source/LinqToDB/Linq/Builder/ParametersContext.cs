@@ -70,6 +70,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public ParameterAccessor? BuildParameter(
+			IBuildContext?     context,
 			Expression         expr,
 			ColumnDescriptor?  columnDescriptor,
 			bool               forceConstant           = false,
@@ -80,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			string? name = alias;
 
-			var newExpr = ReplaceParameter(expr, columnDescriptor, forceConstant, nm => name = nm);
+			var newExpr = ReplaceParameter(context?.MappingSchema ?? MappingSchema, expr, columnDescriptor, forceConstant, nm => name = nm);
 
 			var newAccessor = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, doNotCheckCompatibility, buildParameterType);
 			if (newAccessor == null)
@@ -447,12 +448,12 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public ValueTypeExpression ReplaceParameter(Expression expression, ColumnDescriptor? columnDescriptor, bool forceConstant, Action<string>? setName)
+		public ValueTypeExpression ReplaceParameter(MappingSchema mappingSchema, Expression expression, ColumnDescriptor? columnDescriptor, bool forceConstant, Action<string>? setName)
 		{
 			var result = new ValueTypeExpression
 			{
 				DataType             = columnDescriptor?.GetDbDataType(true) ?? new DbDataType(expression.Type),
-				DbDataTypeExpression = Expression.Constant(new DbDataType(expression.Type), typeof(DbDataType)),
+				DbDataTypeExpression = Expression.Constant(mappingSchema.GetDbDataType(expression.Type), typeof(DbDataType)),
 			};
 
 			var unwrapped = expression.Unwrap();
@@ -639,43 +640,6 @@ namespace LinqToDB.Linq.Builder
 			})!;
 
 			return accessorExpression;
-		}
-
-		internal ISqlExpression GetParameter(Expression ex, MemberInfo member, ColumnDescriptor? columnDescriptor)
-		{
-			if (member is MethodInfo mi)
-				member = mi.GetPropertyInfo()!; // ??
-
-			var vte  = ReplaceParameter(ex, columnDescriptor, forceConstant: false, null);
-			var par  = vte.ValueExpression;
-			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType ?? typeof(object)) : par, member);
-
-			vte.ValueExpression = expr;
-
-			if (columnDescriptor != null)
-			{
-				var dbDataType = columnDescriptor.GetDbDataType(true);
-				vte.DataType             = dbDataType;
-				vte.DbDataTypeExpression = Expression.Constant(dbDataType);
-			}
-
-			if (!expr.Type.IsSameOrParentOf(vte.DataType.SystemType))
-			{
-				var dbDataType = new DbDataType(expr.Type);
-				vte.DataType             = dbDataType;
-				vte.DbDataTypeExpression = Expression.Constant(dbDataType);
-			}
-
-			var p = PrepareConvertersAndCreateParameter(vte, expr, member?.Name, columnDescriptor, false, BuildParameterType.Default);
-
-#pragma warning disable CS8620 // TODO:WAITFIX
-			(_parameters ??= new()).Add((expr, columnDescriptor, p));
-#pragma warning restore CS8620
-#pragma warning disable CS8604 // TODO:WAITFIX
-			AddCurrentSqlParameter(p);
-#pragma warning restore CS8604
-
-			return p.SqlParameter;
 		}
 
 		List<Expression>? _parametrized;

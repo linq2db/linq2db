@@ -1316,14 +1316,6 @@ namespace LinqToDB.SqlProvider
 			return Div<int>(expr1, new SqlValue(value));
 		}
 
-		protected ISqlExpression ConvertToBooleanCondition(ISqlExpression expression)
-		{
-			var predicate = new SqlPredicate.ExprExpr(expression, SqlPredicate.Operator.Equal, new SqlValue(0), DataOptions.LinqOptions.CompareNullsAsValues)
-				.MakeNot();
-
-			return new SqlConditionExpression(predicate, new SqlValue(true), new SqlValue(false));
-		}
-
 		protected ISqlExpression ConvertToBooleanSearchCondition(ISqlExpression expression)
 		{
 			var sc = new SqlSearchCondition();

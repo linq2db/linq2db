@@ -142,13 +142,17 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				case DataType.DateTime  :
 				case DataType.DateTime2 :
+				{
 					StringBuilder.Append("timestamp");
 					if (type.Precision != null && type.Precision != 6)
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
 					return;
+				}
+				case DataType.SByte:
 				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
 				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
 				case DataType.NVarChar  :
+				{
 					if (type.Length == null || type.Length > 8168 || type.Length < 1)
 					{
 						StringBuilder.Append("NVarChar(8168)");
@@ -156,6 +160,7 @@ namespace LinqToDB.DataProvider.DB2
 					}
 
 					break;
+				}
 			}
 
 			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);

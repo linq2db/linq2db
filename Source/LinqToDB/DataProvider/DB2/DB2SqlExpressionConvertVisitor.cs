@@ -70,8 +70,11 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			var toType   = cast.ToType;
-			var argument = cast.Expression;
+			cast = FloorBeforeConvert(cast);
+
+			var toType       = cast.ToType;
+			var argument     = cast.Expression;
+			var argumentType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
 
 			var isNull = argument is SqlValue sqlValue && sqlValue.Value == null;
 
@@ -85,8 +88,10 @@ namespace LinqToDB.DataProvider.DB2
 				return ConvertToBooleanSearchCondition(cast.Expression);
 			}
 
-			if (toType.SystemType == typeof(string) && argument.SystemType != typeof(string))
-					return new SqlFunction(cast.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", argument));
+			if (toType.SystemType == typeof(string) && argumentType.SystemType != typeof(string))
+			{
+				return new SqlFunction(cast.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", argument));
+			}
 
 			if (toType.Length > 0)
 				return new SqlFunction(cast.SystemType, toType.DataType.ToString(), argument, new SqlValue(toType.Length));
@@ -118,7 +123,7 @@ namespace LinqToDB.DataProvider.DB2
 				}
 			}
 
-			return new SqlFunction(cast.SystemType, toType.DataType.ToString(), argument);
+			return base.ConvertConversion(cast);
 		}
 	}
 }

@@ -54,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 				return BuildValuesTableFromArray((NewArrayExpression)expr);
 			}
 
-			var param = Builder.ParametersContext.BuildParameter(expr, null, true,
+			var param = Builder.ParametersContext.BuildParameter(this, expr, null, forceConstant : true,
 				buildParameterType : ParametersContext.BuildParameterType.InPredicate);
 
 			if (param == null)

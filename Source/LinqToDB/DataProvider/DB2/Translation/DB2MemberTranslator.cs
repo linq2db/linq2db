@@ -12,6 +12,12 @@ namespace LinqToDB.DataProvider.DB2.Translation
 	{
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
+			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(19, 4));
+
+			protected override Expression? ConvertSmallMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(10, 4));
+
 			protected override Expression? ConvertDefaultNChar(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 			{
 				var dbDataType = translationContext.MappingSchema.GetDbDataType(typeof(char));
@@ -34,6 +40,14 @@ namespace LinqToDB.DataProvider.DB2.Translation
 				var dbDataType = translationContext.MappingSchema.GetDbDataType(typeof(string));
 
 				dbDataType = dbDataType.WithDataType(DataType.Char);
+
+				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, new SqlValue(dbDataType, ""), memberExpression);
+			}
+
+			protected override Expression? ConvertDefaultChar(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+			{
+				var dbDataType = translationContext.MappingSchema.GetDbDataType(typeof(char));
+				dbDataType = dbDataType.WithSystemType(typeof(string)).WithDataType(DataType.Char).WithLength(null);
 
 				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, new SqlValue(dbDataType, ""), memberExpression);
 			}

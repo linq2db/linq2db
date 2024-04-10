@@ -466,11 +466,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (valid)
-					sql = ConvertToInlinedSqlExpression(newExpr);
+					sql = ConvertToInlinedSqlExpression(context, newExpr);
 			}
 			else if (typeof(IToSqlConverter).IsSameOrParentOf(newExpr.Type) || typeof(IToSqlConverter).IsSameOrParentOf(noConvert.Type))
 			{
-				sql = ConvertToSqlConvertible(newExpr);
+				sql = ConvertToSqlConvertible(context, newExpr);
 			}
 
 			if (sql == null && !flags.IsExpression())
@@ -490,7 +490,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (newExpr is not SqlGenericConstructorExpression)
 							{
-								sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias: alias, forceNew: forceParameter)?.SqlParameter;
+								sql = ParametersContext.BuildParameter(context, newExpr, columnDescriptor, forceNew : forceParameter, alias : alias)?.SqlParameter;
 							}
 						}
 					}
@@ -1317,7 +1317,7 @@ namespace LinqToDB.Linq.Builder
 			return sqlExpression;
 		}
 
-		ISqlExpression? ConvertToInlinedSqlExpression(Expression newExpr)
+		ISqlExpression? ConvertToInlinedSqlExpression(IBuildContext? context, Expression newExpr)
 		{
 			ISqlExpression? innerSql;
 			innerSql = EvaluateExpression<ISqlExpression>(newExpr);
@@ -1325,7 +1325,7 @@ namespace LinqToDB.Linq.Builder
 			if (innerSql == null)
 				return null;
 
-			var param = ParametersContext.BuildParameter(newExpr, null, doNotCheckCompatibility : true);
+			var param = ParametersContext.BuildParameter(context, newExpr, null, doNotCheckCompatibility : true);
 			if (param == null)
 			{
 				return null;
@@ -1334,14 +1334,14 @@ namespace LinqToDB.Linq.Builder
 			return new SqlInlinedSqlExpression(param.SqlParameter, innerSql);
 		}
 
-		public ISqlExpression? ConvertToSqlConvertible(Expression expression)
+		public ISqlExpression? ConvertToSqlConvertible(IBuildContext? context, Expression expression)
 		{
 			if (EvaluateExpression(Expression.Convert(expression, typeof(IToSqlConverter))) is not IToSqlConverter converter)
 				throw new LinqToDBException($"Expression '{expression}' cannot be converted to `IToSqlConverter`");
 
 			var innerExpr = converter.ToSql(converter);
 
-			var param = ParametersContext.BuildParameter(expression, null, doNotCheckCompatibility : true);
+			var param = ParametersContext.BuildParameter(context, expression, null, doNotCheckCompatibility : true);
 			if (param == null)
 			{
 				return null;
@@ -1470,7 +1470,7 @@ namespace LinqToDB.Linq.Builder
 				expr = Expression.OrElse(expr, Expression.Equal(variable, Expression.Constant(StringComparison.Ordinal)));
 				expr = Expression.Block(new[] {variable}, assignment, expr);
 
-				var parameter = ParametersContext.BuildParameter(expr, columnDescriptor : null, forceConstant : true)!;
+				var parameter = ParametersContext.BuildParameter(context, expr, columnDescriptor : null, forceConstant : true)!;
 				parameter.SqlParameter.IsQueryParameter = false;
 
 				return parameter.SqlParameter;
@@ -1478,7 +1478,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (CanBeCompiled(expression, false))
 			{
-				var param = _parametersContext.BuildParameter(expression, null);
+				var param = _parametersContext.BuildParameter(context, expression, null);
 				if (param != null)
 				{
 					return new SqlPredicate.Expr(param.SqlParameter);
@@ -2830,7 +2830,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (CanBeCompiled(arr, false))
 					{
-						var p = ParametersContext.BuildParameter(arr, columnDescriptor, forceConstant : false,
+						var p = ParametersContext.BuildParameter(context, arr, columnDescriptor, forceConstant : false,
 							buildParameterType : ParametersContext.BuildParameterType.InPredicate)!.SqlParameter;
 						p.IsQueryParameter = false;
 						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false, p);
