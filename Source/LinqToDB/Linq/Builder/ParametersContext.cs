@@ -453,7 +453,7 @@ namespace LinqToDB.Linq.Builder
 			var result = new ValueTypeExpression
 			{
 				DataType             = columnDescriptor?.GetDbDataType(true) ?? new DbDataType(expression.Type),
-				DbDataTypeExpression = Expression.Constant(mappingSchema.GetDbDataType(expression.Type), typeof(DbDataType)),
+				DbDataTypeExpression = Expression.Constant(mappingSchema.GetDbDataType(expression.UnwrapConvertToObject().Type), typeof(DbDataType)),
 			};
 
 			var unwrapped = expression.Unwrap();
