@@ -81,6 +81,18 @@ namespace LinqToDB.SqlQuery.Visitors
 		{
 			if (_columnSubqueryLevel != null)
 			{
+				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
+				{
+					errorMessage = ErrorHelper.Error_Take_in_Subquery;
+					return false;
+				}
+
+				if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null)
+				{
+					errorMessage = ErrorHelper.Error_Skip_in_Subquery;
+					return false;
+				}
+
 				if (_providerFlags.DoesNotSupportCorrelatedSubquery)
 				{
 					if (QueryHelper.IsDependsOnOuterSources(selectQuery))
@@ -105,16 +117,13 @@ namespace LinqToDB.SqlQuery.Visitors
 				}
 			}
 
-			if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
+			if (!_providerFlags.IsCorrelatedSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
 			{
-				errorMessage = ErrorHelper.Error_Take_in_Subquery;
-				return false;
-			}
-
-			if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null)
-			{
-				errorMessage = ErrorHelper.Error_Skip_in_Subquery;
-				return false;
+				if (QueryHelper.IsDependsOnOuterSources(selectQuery))
+				{
+					errorMessage = ErrorHelper.Error_Take_in_Correlated_Subquery;
+					return false;
+				}
 			}
 
 			errorMessage = null;

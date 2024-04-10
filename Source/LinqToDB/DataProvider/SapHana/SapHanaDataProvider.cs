@@ -28,7 +28,8 @@ namespace LinqToDB.DataProvider.SapHana
 			//instead of replace with left join, in which case returns incorrect data
 			SqlProviderFlags.IsSubQueryColumnSupported         = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsSubQueryTakeSupported           = false;
+			SqlProviderFlags.IsSubQueryTakeSupported           = true;
+			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = true;

@@ -82,6 +82,13 @@ namespace LinqToDB.SqlProvider
 		public bool        IsSubQueryTakeSupported        { get; set; }
 
 		/// <summary>
+		/// Indicates support for paging clause in correlated subquery.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// </summary>
+		[DataMember(Order = 81)]
+		public bool IsCorrelatedSubQueryTakeSupported { get; set; }
+
+		/// <summary>
 		/// Indicates support trah provider supports JOIN without condition ON 1=1.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
@@ -501,6 +508,7 @@ namespace LinqToDB.SqlProvider
 				^ IsSkipSupported                                      .GetHashCode()
 				^ IsSkipSupportedIfTake                                .GetHashCode()
 				^ IsSubQueryTakeSupported                              .GetHashCode()
+				^ IsCorrelatedSubQueryTakeSupported                    .GetHashCode()
 				^ IsSupportsJoinWithoutCondition                       .GetHashCode()
 				^ IsSubQuerySkipSupported                              .GetHashCode()
 				^ IsSubQueryColumnSupported                            .GetHashCode()
@@ -559,6 +567,7 @@ namespace LinqToDB.SqlProvider
 				&& IsSkipSupported                                       == other.IsSkipSupported
 				&& IsSkipSupportedIfTake                                 == other.IsSkipSupportedIfTake
 				&& IsSubQueryTakeSupported                               == other.IsSubQueryTakeSupported
+				&& IsCorrelatedSubQueryTakeSupported                     == other.IsCorrelatedSubQueryTakeSupported
 				&& IsSupportsJoinWithoutCondition                        == other.IsSupportsJoinWithoutCondition
 				&& IsSubQuerySkipSupported                               == other.IsSubQuerySkipSupported
 				&& IsSubQueryColumnSupported                             == other.IsSubQueryColumnSupported
