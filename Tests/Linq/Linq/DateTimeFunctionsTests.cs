@@ -547,7 +547,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = "The LINQ expression 't.DateTimeValue.Millisecond' could not be converted to SQL.")]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess,   ErrorMessage = "The LINQ expression 't.DateTimeValue.Millisecond' could not be converted to SQL.")]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllInformix, ErrorMessage = "The LINQ expression 't.DateTimeValue.Millisecond' could not be converted to SQL.")]
 		public void Millisecond([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

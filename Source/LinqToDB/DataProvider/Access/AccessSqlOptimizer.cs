@@ -82,50 +82,6 @@ namespace LinqToDB.DataProvider.Access
 			return statement;
 		}
 
-		SqlStatement CorrectMultiTableQueries(SqlStatement statement)
-		{
-			var isModified = false;
-
-			statement.Visit(e =>
-			{
-				if (e.ElementType == QueryElementType.SqlQuery)
-				{
-					var sqlQuery = (SelectQuery)e;
-
-					if (sqlQuery.From.Tables.Count > 1)
-					{
-						// if multitable query has joins, we need to move tables to subquery and left joins on the current level
-						//
-						if (sqlQuery.From.Tables.Any(t => t.Joins.Count > 0))
-						{
-							var sub = new SelectQuery { DoNotRemove = true };
-
-							sub.From.Tables.AddRange(sqlQuery.From.Tables);
-
-							sqlQuery.From.Tables.Clear();
-
-							sqlQuery.From.Tables.Add(new SqlTableSource(sub, "sub", sub.From.Tables.SelectMany(t => t.Joins).ToArray()));
-
-							sub.From.Tables.ForEach(t => t.Joins.Clear());
-
-							isModified = true;
-						}
-					}
-						
-				}
-
-			});
-
-			if (isModified)
-			{
-				var corrector = new SqlQueryColumnNestingCorrector();
-				corrector.CorrectColumnNesting(statement);
-			}
-				
-
-			return statement;
-		}
-
 		SqlStatement CorrectInnerJoins(SqlStatement statement)
 		{
 			statement.Visit(static e =>

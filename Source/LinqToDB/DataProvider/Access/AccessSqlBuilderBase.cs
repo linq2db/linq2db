@@ -57,14 +57,6 @@ namespace LinqToDB.DataProvider.Access
 			return "TOP {0}";
 		}
 
-		protected override IEnumerable<SqlColumn> GetSelectedColumns(SelectQuery selectQuery)
-		{
-			if (NeedSkip(selectQuery.Select.TakeValue, selectQuery.Select.SkipValue) && !selectQuery.OrderBy.IsEmpty)
-				return AlternativeGetSelectedColumns(selectQuery, base.GetSelectedColumns(selectQuery));
-
-			return base.GetSelectedColumns(selectQuery);
-		}
-
 		#endregion
 
 		protected override bool ParenthesizeJoin(List<SqlJoinedTable> joins) => true;

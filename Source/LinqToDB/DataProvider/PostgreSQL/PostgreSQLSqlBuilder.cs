@@ -445,9 +445,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
+			var saveStep = BuildStep;
+			BuildStep = Step.TypedExpression;
+
 			BuildExpression(Precedence.Primary, value);
 			StringBuilder.Append("::");
 			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
+
+			BuildStep = saveStep;
 		}
 
 		protected override void BuildSql()

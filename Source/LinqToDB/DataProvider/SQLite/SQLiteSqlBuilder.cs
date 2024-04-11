@@ -199,7 +199,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
-			valuesTable = ConvertElement(valuesTable, checkBoolean: false);
+			valuesTable = ConvertElement(valuesTable);
 			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
 
 			if (rows.Count == 0)

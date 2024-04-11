@@ -142,10 +142,10 @@ namespace LinqToDB.SqlProvider
 		#region Helpers
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public T? ConvertElement<T>(T? element, bool checkBoolean)
+		public T? ConvertElement<T>(T? element)
 			where T : class, IQueryElement
 		{
-			return OptimizationContext.OptimizeAndConvert(element, NullabilityContext, _isInsideNot, checkBoolean);
+			return OptimizationContext.OptimizeAndConvert(element, NullabilityContext, _isInsideNot);
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -695,18 +695,15 @@ namespace LinqToDB.SqlProvider
 					;
 		}
 
-		protected virtual IEnumerable<SqlColumn> GetSelectedColumns(SelectQuery selectQuery)
-		{
-			return selectQuery.Select.Columns;
-		}
-
 		protected virtual void BuildColumns(SelectQuery selectQuery)
 		{
 			Indent++;
 
 			var first = true;
 
-			foreach (var col in GetSelectedColumns(selectQuery))
+			var select = ConvertElement(selectQuery.Select);
+
+			foreach (var col in select.Columns)
 			{
 				if (!first)
 					StringBuilder.AppendLine(Comma);
@@ -714,7 +711,7 @@ namespace LinqToDB.SqlProvider
 				first = false;
 
 				var addAlias = true;
-				var expr     = ConvertElement(col.Expression, checkBoolean : true);
+				var expr     = ConvertElement(col.Expression);
 
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);
@@ -748,10 +745,9 @@ namespace LinqToDB.SqlProvider
 				first = false;
 
 				var addAlias  = true;
-				var converted = ConvertElement(expr, checkBoolean : true);
 
 				AppendIndent();
-				BuildColumnExpression(null, converted, null, ref addAlias);
+				BuildColumnExpression(null, expr, null, ref addAlias);
 			}
 
 			Indent--;
@@ -761,7 +757,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
-			BuildExpression(ConvertElement(expr, checkBoolean : true), true, true, alias, ref addAlias, true);
+			BuildExpression(expr, true, true, alias, ref addAlias, true);
 		}
 
 		#endregion
@@ -844,7 +840,7 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
-				if (expr.Column is SqlRowExpression row)
+				if (expr.Column is SqlRowExpression)
 				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
 						throw new LinqToDBException("This provider does not support SqlRow in UPDATE.");
@@ -854,9 +850,11 @@ namespace LinqToDB.SqlProvider
 
 				BuildExpression(expr.Column, updateClause.TableSource != null, true, false);
 
-				if (expr.Expression != null)
+				var updateSet = ConvertElement(expr);
+
+				if (updateSet.Expression != null)
 				{
-					var updateExpression = ConvertElement(expr.Expression, checkBoolean : false);
+					var updateExpression = updateSet.Expression;
 
 					StringBuilder.Append(" = ");
 
@@ -920,7 +918,9 @@ namespace LinqToDB.SqlProvider
 
 						AppendIndent();
 
-						BuildExpression(oi.Expression!);
+						var converted = ConvertElement(oi);
+
+						BuildExpression(converted.Expression!);
 					}
 
 					StringBuilder
@@ -1053,7 +1053,7 @@ namespace LinqToDB.SqlProvider
 						first = false;
 
 						AppendIndent();
-						BuildExpression(ConvertElement(expr.Expression!, checkBoolean : true));
+						BuildExpression(ConvertElement(expr.Expression!));
 					}
 
 					Indent--;
@@ -1109,10 +1109,12 @@ namespace LinqToDB.SqlProvider
 						StringBuilder.AppendLine(Comma);
 					first = false;
 
+					var updateItem = ConvertElement(expr);
+
 					AppendIndent();
-					BuildExpression(expr.Column, false, true);
+					BuildExpression(updateItem.Column, false, true);
 					StringBuilder.Append(" = ");
-					BuildExpression(ConvertElement(expr.Expression!, false), true, true);
+					BuildExpression(updateItem.Expression!, true, true);
 				}
 
 				Indent--;
@@ -1803,7 +1805,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
-			valuesTable = ConvertElement(valuesTable, checkBoolean : true);
+			valuesTable = ConvertElement(valuesTable);
 			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
 			if (rows?.Count > 0)
 			{
@@ -1834,7 +1836,7 @@ namespace LinqToDB.SqlProvider
 
 		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias)
 		{
-			valuesTable = ConvertElement(valuesTable, checkBoolean : true);
+			valuesTable = ConvertElement(valuesTable);
 			StringBuilder.Append(' ');
 
 			BuildObjectName(StringBuilder, new (alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
@@ -2024,7 +2026,7 @@ namespace LinqToDB.SqlProvider
 
 				foreach (var ext in sqlQueryExtensions!)
 				{
-					var convertedExt = ConvertElement(ext, checkBoolean : false);
+					var convertedExt = ConvertElement(ext);
 					if (convertedExt.BuilderType != null)
 					{
 						var extensionBuilder = GetExtensionBuilder(convertedExt.BuilderType!);
@@ -2055,7 +2057,7 @@ namespace LinqToDB.SqlProvider
 			Indent++;
 			AppendIndent();
 
-			var condition = ConvertElement(join.Condition, checkBoolean : false);
+			var condition = ConvertElement(join.Condition);
 			var buildOn   = BuildJoinType (join, condition);
 
 			if (IsNestedJoinParenthesisRequired && join.Table.Joins.Count != 0)
@@ -2253,18 +2255,20 @@ namespace LinqToDB.SqlProvider
 			if (selectQuery.OrderBy.Items.Count == 0)
 				return;
 
+			var orderBy = ConvertElement(selectQuery.OrderBy);
+
 			AppendIndent();
 
 			StringBuilder.Append("ORDER BY").AppendLine();
 
 			Indent++;
 
-			for (var i = 0; i < selectQuery.OrderBy.Items.Count; i++)
+			for (var i = 0; i < orderBy.Items.Count; i++)
 			{
 				AppendIndent();
 
-				var item            = selectQuery.OrderBy.Items[i];
-				var orderExpression = ConvertElement(item.Expression, true);
+				var item            = orderBy.Items[i];
+				var orderExpression = item.Expression;
 
 				if (item.IsPositioned)
 				{
@@ -2280,7 +2284,7 @@ namespace LinqToDB.SqlProvider
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
 
-				if (i + 1 < selectQuery.OrderBy.Items.Count)
+				if (i + 1 < orderBy.Items.Count)
 					StringBuilder.AppendLine(Comma);
 				else
 					StringBuilder.AppendLine();
@@ -2835,7 +2839,7 @@ namespace LinqToDB.SqlProvider
 			if (_binaryOptimized > 0)
 				return searchCondition;
 
-			var condition = ConvertElement(searchCondition, checkBoolean : false);
+			var condition = ConvertElement(searchCondition);
 			var optimized = Optimize(condition, true);
 
 			if (optimized is SqlSearchCondition optimizedCondition)
@@ -3370,7 +3374,7 @@ namespace LinqToDB.SqlProvider
 
 				for (var i = 0; i < values.Length; i++)
 				{
-					var value = ConvertElement(parameters[i], false);
+					var value = ConvertElement(parameters[i]);
 
 					values[i] = WithStringBuilderBuildExpression(precedence, value);
 				}
@@ -3680,19 +3684,6 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region Alternative Builders
-
-		protected IEnumerable<SqlColumn> AlternativeGetSelectedColumns(SelectQuery selectQuery, IEnumerable<SqlColumn> columns)
-		{
-			foreach (var col in columns)
-				yield return col;
-
-			SkipAlias = false;
-
-			var obys = GetTempAliases(selectQuery.OrderBy.Items.Count, "oby");
-
-			for (var i = 0; i < obys.Length; i++)
-				yield return new SqlColumn(selectQuery, selectQuery.OrderBy.Items[i].Expression, obys[i]);
-		}
 
 		protected static bool IsDateDataType(ISqlExpression expr, string dateName)
 		{

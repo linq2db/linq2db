@@ -77,12 +77,17 @@ namespace LinqToDB.DataProvider.Informix
 							return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("%Y-%m-%d %H:%M:%S.%F"));
 						}
 #if NET6_0_OR_GREATER
-						else if (stype == typeof(DateOnly))
+						if (stype == typeof(DateOnly))
 						{
 							return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("%Y-%m-%d"));
 						}
 #endif
-						return new SqlFunction(cast.SystemType, "To_Char", argument);
+						if (stype.IsNumeric())
+						{
+							return new SqlFunction(cast.SystemType, "To_Char", argument);
+						}
+
+						break;
 					}
 
 					case TypeCode.Boolean  :
@@ -120,7 +125,7 @@ namespace LinqToDB.DataProvider.Informix
 
 						if (IsTimeDataType(cast.ToType))
 						{
-							return new SqlCastExpression(new SqlExpression(cast.Expression.SystemType, "Extend({0}, hour to second)", Precedence.Primary, argument), new DbDataType(typeof(string), DataType.Char, "Char", 8), null, true);
+							return new SqlCastExpression(new SqlExpression(cast.Expression.SystemType, "Extend({0}, Hour to Second)", Precedence.Primary, argument), new DbDataType(typeof(string), DataType.Char, null, 8), null, true);
 						}
 
 						return new SqlFunction(cast.SystemType, "To_Date", argument);

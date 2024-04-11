@@ -34,8 +34,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual bool SupportsBooleanInColumn    => false;
 		protected virtual bool SupportsNullInColumn       => true;
 
-		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries, bool isInsideNot,
-			bool                                                 checkBoolean)
+		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries, bool isInsideNot)
 		{
 			Cleanup();
 
@@ -46,11 +45,6 @@ namespace LinqToDB.SqlProvider
 			SetTransformationInfo(optimizationContext.TransformationInfoConvert);
 
 			var newElement = ProcessElement(element);
-
-			if (checkBoolean)
-			{
-				newElement = WrapBooleanExpression((ISqlExpression)newElement);
-			}
 
 			return newElement;
 		}
@@ -80,6 +74,11 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return expression;
+		}
+
+		protected override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
+		{
+			return base.VisitSqlValuesTable(element);
 		}
 
 		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
@@ -746,6 +745,27 @@ namespace LinqToDB.SqlProvider
 			return newElement;
 		}
 
+		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+		{
+			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
+
+			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression);
+
+			if (!ReferenceEquals(wrapped, newElement.Expression))
+			{
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Expression = wrapped;
+				}
+				else
+				{
+					newElement = new SqlSetExpression(newElement.Column, wrapped);
+				}
+			}
+
+			return newElement;
+		}
+
 		protected override ISqlExpression VisitSqlGroupByItem(ISqlExpression element)
 		{
 			var newItem = base.VisitSqlGroupByItem(element);
@@ -971,7 +991,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
-			if (!SupportsNullInColumn && expr is SqlValue sqlValue && sqlValue.Value == null)
+			if (!SupportsNullInColumn && QueryHelper.UnwrapNullablity(expr) is SqlValue sqlValue && sqlValue.Value == null)
 			{
 				return new SqlCastExpression(sqlValue, QueryHelper.GetDbDataType(sqlValue, MappingSchema), null, true);
 			}
@@ -1000,7 +1020,7 @@ namespace LinqToDB.SqlProvider
 					return new SqlValue(cast.Type, charValue.ToString());
 			}
 
-			var fromDbType = cast.FromType?.Type ?? QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
+			var fromDbType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
 
 			if (toDataType.Length > 0)
 			{
@@ -1022,8 +1042,8 @@ namespace LinqToDB.SqlProvider
 			{
 				if (cast.SystemType.ToUnderlying() == typeof(bool))
 				{
-					var sc = new SqlSearchCondition().AddNotEqual(cast.Expression, new SqlValue(0), DataOptions.LinqOptions.CompareNullsAsValues);
-					return sc;
+					if (ReferenceEquals(cast, IsForPredicate))
+						return ConvertToBooleanSearchCondition(cast.Expression);
 				}
 			}
 

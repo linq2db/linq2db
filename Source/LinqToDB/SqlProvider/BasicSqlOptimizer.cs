@@ -1912,5 +1912,70 @@ namespace LinqToDB.SqlProvider
 				allowMutation: true,
 				withStack: false);
 		}
+
+		protected SqlStatement CorrectMultiTableQueries(SqlStatement statement)
+		{
+			var isModified = false;
+
+			statement.Visit(e =>
+			{
+				if (e.ElementType == QueryElementType.SqlQuery)
+				{
+					var sqlQuery = (SelectQuery)e;
+
+					if (sqlQuery.From.Tables.Count > 1)
+					{
+						// if multitable query has joins, we need to move tables to subquery and left joins on the current level
+						//
+						if (sqlQuery.From.Tables.Any(t => t.Joins.Count > 0))
+						{
+							var sub = new SelectQuery { DoNotRemove = true };
+
+							sub.From.Tables.AddRange(sqlQuery.From.Tables);
+
+							var restJoins = sqlQuery.From.Tables.SelectMany(t => t.Joins).ToArray();
+
+							sqlQuery.From.Tables.Clear();
+
+							sqlQuery.From.Tables.Add(new SqlTableSource(sub, "sub", restJoins));
+
+							sub.From.Tables.ForEach(t => t.Joins.Clear());
+
+							isModified = true;
+						}
+					}
+
+					if (SqlProviderFlags.IsCrossJoinSupported)
+					{
+						var allJoins = sqlQuery.From.Tables.SelectMany(t => t.Joins).ToList();
+
+						if (allJoins.Any(j => j.JoinType == JoinType.Cross) && allJoins.Any(j => j.JoinType != JoinType.Cross))
+						{
+							var sub = new SelectQuery { DoNotRemove = true };
+
+							sub.From.Tables.AddRange(sqlQuery.From.Tables);
+							sub.From.Tables.AddRange(allJoins.Where(j => j.JoinType == JoinType.Cross).Select(j => j.Table));
+
+							sqlQuery.From.Tables.Clear();
+
+							sqlQuery.From.Tables.Add(new SqlTableSource(sub, "sub", allJoins.Where(j => j.JoinType != JoinType.Cross).ToArray()));
+
+							sub.From.Tables.ForEach(t => t.Joins.Clear());
+
+							isModified = true;
+						}
+					}
+				}
+			});
+
+			if (isModified)
+			{
+				var corrector = new SqlQueryColumnNestingCorrector();
+				corrector.CorrectColumnNesting(statement);
+			}
+
+			return statement;
+		}
+
 	}
 }

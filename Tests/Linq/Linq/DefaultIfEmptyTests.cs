@@ -11,7 +11,7 @@ namespace Tests.Linq
 	public class DefaultIfEmptyTests : TestBase
 	{
 		[Test]
-		public void WithoutDefault([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void WithoutDefault([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -24,7 +24,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WithDefault([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void WithDefault([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 

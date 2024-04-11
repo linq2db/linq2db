@@ -1217,6 +1217,17 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
+			if (_reduceBinary)
+			{
+				var reduced = isTrue.Reduce(_nullabilityContext, _isInsideNot);
+
+				if (!ReferenceEquals(reduced, isTrue))
+				{
+					return (ISqlPredicate)Visit(reduced);
+				}
+			}
+
+
 			return isTrue;
 		}
 

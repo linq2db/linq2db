@@ -883,7 +883,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UnionGroupByTest1([DataSources] string context)
+		public void UnionGroupByTest1([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

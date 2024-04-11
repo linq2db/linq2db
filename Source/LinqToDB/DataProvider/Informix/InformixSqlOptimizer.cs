@@ -85,6 +85,8 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = CorrectMultiTableQueries(statement);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:

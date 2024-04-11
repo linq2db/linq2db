@@ -1538,7 +1538,7 @@ namespace Tests.xUpdate
 						db.Person
 						.Insert(() => new Person
 						{
-							FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).FirstOrDefault(),
+							FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).SingleOrDefault(),
 							LastName  = "Shepard",
 							Gender = Gender.Male
 						}));

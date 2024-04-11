@@ -130,6 +130,17 @@ namespace LinqToDB.SqlQuery.Visitors
 			return true;
 		}
 
+		protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
+		{
+			var saveColumnSubqueryLevel = _columnSubqueryLevel;
+			_columnSubqueryLevel = null;
+
+			var result = base.VisitSqlSearchCondition(element);
+
+			_columnSubqueryLevel = saveColumnSubqueryLevel;
+			return result;
+		}
+
 		public override IQueryElement? Visit(IQueryElement? element)
 		{
 			if (!IsValid)

@@ -1334,8 +1334,29 @@ namespace LinqToDB.SqlQuery
 					return false;
 			}
 
-			if (!parentQuery.GroupBy.IsEmpty && !subQuery.GroupBy.IsEmpty)
-				return false;
+			if (!parentQuery.GroupBy.IsEmpty)
+			{
+				if (!subQuery.GroupBy.IsEmpty)
+					return false;
+				if (parentQuery.Select.Columns.Count == 0)
+					return false;
+
+				// Check that all grouping columns are simple
+				if (parentQuery.GroupBy.EnumItems().Any(gi =>
+				    {
+					    if (gi is not SqlColumn sc)
+						    return true;
+
+					    if (QueryHelper.UnwrapNullablity(sc.Expression) is not (SqlColumn or SqlField or SqlParameter or SqlValue))
+						    return true;
+
+					    return false;
+				    }))
+				{
+					return false;
+				}
+			}
+
 
 			var nullability = NullabilityContext.GetContext(parentQuery);
 

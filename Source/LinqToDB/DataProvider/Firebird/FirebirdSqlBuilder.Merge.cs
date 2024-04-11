@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
 		{
-			if (row >= 0 && ConvertElement(rows[row][column], checkBoolean : false) is SqlParameter parameter && parameter.IsQueryParameter)
+			if (row >= 0 && ConvertElement(rows[row][column]) is SqlParameter parameter && parameter.IsQueryParameter)
 			{
 				return true;
 			}
@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				// without type Firebird with convert string values in column to CHAR(LENGTH_OF_BIGGEST_VALUE_IN_COLUMN) with
 				// padding shorter values with spaces
-				if (rows.Any(r => ConvertElement(r[column], checkBoolean : false) is SqlValue value && value.Value is string))
+				if (rows.Any(r => ConvertElement(r[column]) is SqlValue value && value.Value is string))
 				{
 					_typedColumns.Add(Tuple.Create(source, column));
 					return rows[0][column] is SqlValue val && val.Value != null;
@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 
 			return _typedColumns.Contains(Tuple.Create(source, column))
-				&& ConvertElement(rows[row][column], checkBoolean: false) is SqlValue sqlValue && sqlValue.Value != null;
+				&& ConvertElement(rows[row][column]) is SqlValue sqlValue && sqlValue.Value != null;
 		}
 
 		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)

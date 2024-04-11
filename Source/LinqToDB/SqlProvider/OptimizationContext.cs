@@ -129,13 +129,13 @@ namespace LinqToDB.SqlProvider
 			where T : class, IQueryElement
 		{
 			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, MappingSchema, element, visitQueries : true, isInsideNot : false, reduceBinary: false);
-			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true, isInsideNot : false, checkBoolean: false);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true, isInsideNot : false);
 
 			return result;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public T? OptimizeAndConvert<T>(T? element, NullabilityContext nullabilityContext, bool isInsideNot, bool checkBoolean)
+		public T? OptimizeAndConvert<T>(T? element, NullabilityContext nullabilityContext, bool isInsideNot)
 			where T : class, IQueryElement
 		{
 			if (IsAlreadyOptimizedAndConverted)
@@ -145,7 +145,7 @@ namespace LinqToDB.SqlProvider
 				return null;
 
 			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, TransformationInfo, DataOptions, MappingSchema, element, visitQueries : false, isInsideNot, reduceBinary : false);
-			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, false, isInsideNot, checkBoolean);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, false, isInsideNot);
 
 			return result;
 		}
