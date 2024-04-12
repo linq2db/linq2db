@@ -2799,6 +2799,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1455Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			using (var queryLastUpd = db.CreateLocalTable<Alert>())
 			using (db.CreateLocalTable<AuditAlert>())
