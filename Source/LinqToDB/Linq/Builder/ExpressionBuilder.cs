@@ -137,7 +137,7 @@ namespace LinqToDB.Linq.Builder
 			DataOptions        = dataContext.Options;
 			OriginalExpression = expression;
 
-			_memberTranslator = dataContext.ServiceProvider.GetRequiredService<IMemberTranslator>();
+			_memberTranslator = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberTranslator>();
 
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;

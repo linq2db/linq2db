@@ -8,9 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
-using LinqToDB.Linq.Translation;
-using LinqToDB.Tools;
-
 namespace LinqToDB.Remote
 {
 	using Common;
@@ -19,14 +16,17 @@ namespace LinqToDB.Remote
 	using DataProvider;
 	using Expressions;
 	using Extensions;
-	
+	using Infrastructure;
+	using Linq.Translation;
+	using Tools;
+
 	using Data;
 
 	using Mapping;
 	using SqlProvider;
 
 	[PublicAPI]
-	public abstract partial class RemoteDataContextBase : IDataContext
+	public abstract partial class RemoteDataContextBase : IDataContext, IInfrastructure<IServiceProvider>
 	{
 		protected RemoteDataContextBase(DataOptions options)
 		{
@@ -52,7 +52,7 @@ namespace LinqToDB.Remote
 		SimpleServiceProvider? _serviceProvider;
 		readonly object        _guard = new();
 
-		public IServiceProvider ServiceProvider
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{
 			get
 			{
@@ -75,8 +75,8 @@ namespace LinqToDB.Remote
 
 		sealed class ConfigurationInfo
 		{
-			public LinqServiceInfo       LinqServiceInfo      = null!;
-			public MappingSchema         MappingSchema        = null!;
+			public LinqServiceInfo   LinqServiceInfo  = null!;
+			public MappingSchema     MappingSchema    = null!;
 			public IMemberTranslator MemberTranslator = null!;
 		}
 
@@ -551,5 +551,6 @@ namespace LinqToDB.Remote
 						dataContext.AddInterceptor(interceptor);
 			}
 		}
+
 	}
 }

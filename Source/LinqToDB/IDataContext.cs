@@ -10,6 +10,8 @@ namespace LinqToDB
 	using Common.Internal;
 	using Interceptors;
 	using Linq;
+	using Infrastructure;
+
 	using Mapping;
 	using SqlProvider;
 
@@ -127,7 +129,5 @@ namespace LinqToDB
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
 		string?                       ConfigurationString         { get; }
-
-		IServiceProvider ServiceProvider { get; }
 	}
 }

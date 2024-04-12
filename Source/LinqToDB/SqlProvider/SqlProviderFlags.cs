@@ -89,7 +89,7 @@ namespace LinqToDB.SqlProvider
 		public bool IsCorrelatedSubQueryTakeSupported { get; set; }
 
 		/// <summary>
-		/// Indicates support trah provider supports JOIN without condition ON 1=1.
+		/// Indicates that provider supports JOIN without condition ON 1=1.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 10)]

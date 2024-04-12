@@ -16,13 +16,13 @@ namespace LinqToDB
 	using Mapping;
 	using SqlProvider;
 	using Tools;
-	using Linq.Translation;
+	using Infrastructure;
 
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataContext : IDataContext
+	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
 	{
 		bool _disposed;
 
@@ -93,11 +93,6 @@ namespace LinqToDB
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
-
-		/// <summary>
-		/// Gets service provider, used for data connection instance.
-		/// </summary>
-		public IServiceProvider ServiceProvider => DataProvider.ServiceProvider;
 
 		/// <summary>
 		/// Gets initial value for database connection string.
@@ -670,5 +665,10 @@ namespace LinqToDB
 						dataContext.AddInterceptor(interceptor, false);
 			}
 		}
+
+		/// <summary>
+		/// Gets service provider, used for data connection instance.
+		/// </summary>
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance => DataProvider.ServiceProvider;
 	}
 }

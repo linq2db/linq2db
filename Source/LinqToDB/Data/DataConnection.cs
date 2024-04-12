@@ -19,6 +19,7 @@ namespace LinqToDB.Data
 	using Mapping;
 	using RetryPolicy;
 	using Tools;
+	using Infrastructure;
 
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines.
@@ -26,7 +27,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : IDataContext
+	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>
 	{
 		#region .ctor
 
@@ -1477,5 +1478,7 @@ namespace LinqToDB.Data
 		{
 			return DataProvider.GetCommandBehavior(commandBehavior);
 		}
+
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance => DataProvider.ServiceProvider;
 	}
 }
