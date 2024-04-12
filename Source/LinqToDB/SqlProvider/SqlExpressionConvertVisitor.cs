@@ -76,6 +76,29 @@ namespace LinqToDB.SqlProvider
 			return expression;
 		}
 
+		protected override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
+		{
+			var result = (SqlOutputClause)base.VisitSqlOutputClause(element);
+
+			if (result.OutputColumns != null)
+			{
+				var newElements = VisitElements(result.OutputColumns, GetVisitMode(element), WrapBooleanExpression);
+				if (!ReferenceEquals(newElements, result.OutputColumns))
+				{
+					return new SqlOutputClause()
+					{
+						DeletedTable = result.DeletedTable, 
+						InsertedTable = result.InsertedTable,
+						OutputTable = result.OutputTable,
+						OutputItems = result.OutputItems,
+						OutputColumns = newElements
+					};
+				}
+			}
+
+			return result;
+		}
+
 		protected override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 		{
 			return base.VisitSqlValuesTable(element);

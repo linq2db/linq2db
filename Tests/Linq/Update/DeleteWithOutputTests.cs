@@ -180,6 +180,7 @@ namespace Tests.xUpdate
 						{
 							Id       = Sql.AsSql(deleted.Id       + 1),
 							ValueStr = Sql.AsSql(deleted.ValueStr + 1),
+							Bool = deleted.ValueStr != null
 						})
 					.ToArray();
 
@@ -189,6 +190,7 @@ namespace Tests.xUpdate
 						{
 							Id       = t.Id       + 1,
 							ValueStr = t.ValueStr + 1,
+							Bool     = t.ValueStr != null
 						}),
 					output);
 			}

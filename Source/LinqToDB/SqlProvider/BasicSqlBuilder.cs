@@ -895,6 +895,8 @@ namespace LinqToDB.SqlProvider
 		{
 			if (output?.HasOutput == true)
 			{
+				output = ConvertElement(output);
+
 				AppendIndent()
 					.AppendLine(OutputKeyword);
 
@@ -918,9 +920,7 @@ namespace LinqToDB.SqlProvider
 
 						AppendIndent();
 
-						var converted = ConvertElement(oi);
-
-						BuildExpression(converted.Expression!);
+						BuildExpression(oi.Expression!);
 					}
 
 					StringBuilder
