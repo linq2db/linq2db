@@ -128,14 +128,14 @@ namespace LinqToDB.DataProvider.Informix
 
 		public sealed class IfxMappingSchema : LockedMappingSchema
 		{
-			public IfxMappingSchema() : base(ProviderName.Informix, InformixProviderAdapter.GetInstance(ProviderName.Informix).MappingSchema, Instance)
+			public IfxMappingSchema(MappingSchema adapterSchema) : base(ProviderName.Informix, adapterSchema, Instance)
 			{
 			}
 		}
 
 		public sealed class DB2MappingSchema : LockedMappingSchema
 		{
-			public DB2MappingSchema() : base(ProviderName.InformixDB2, InformixProviderAdapter.GetInstance(ProviderName.InformixDB2).MappingSchema, Instance)
+			public DB2MappingSchema(MappingSchema adapterSchema) : base(ProviderName.InformixDB2, adapterSchema, Instance)
 			{
 			}
 		}

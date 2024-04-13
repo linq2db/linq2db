@@ -309,8 +309,8 @@ namespace Tests.Data
 
 		sealed class TestMySqlDataProvider : MySqlDataProvider
 		{
-			public TestMySqlDataProvider(string providerName)
-				: base(providerName)
+			public TestMySqlDataProvider(string name, MySqlProvider provider)
+				: base(name, provider)
 			{
 			}
 		}
@@ -320,7 +320,7 @@ namespace Tests.Data
 		public void TestMapperMap([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlOfficial), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlOfficial, MySqlProvider.MySqlData), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
 			{
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
@@ -343,7 +343,7 @@ namespace Tests.Data
 		{
 			private readonly Func<string, DbConnection> _connectionFactory;
 			public LinqMySqlDataProvider(Func<string, DbConnection> connectionFactory)
-				: base(ProviderName.MySqlOfficial)
+				: base(ProviderName.MySqlOfficial, MySqlProvider.MySqlData)
 			{
 				_connectionFactory = connectionFactory;
 			}
@@ -414,7 +414,7 @@ namespace Tests.Data
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlOfficial), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlOfficial, MySqlProvider.MySqlData), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -488,7 +488,7 @@ namespace Tests.Data
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var connectionTypeName = "MySqlConnector.MySqlConnection, MySqlConnector";
-			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlConnector), context, type, connectionTypeName, ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlConnector, MySqlProvider.MySqlConnector), context, type, connectionTypeName, ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -563,7 +563,7 @@ namespace Tests.Data
 		[Test]
 		public void TestSystemSqlite([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] ConnectionType type)
 		{
-			using (var db = CreateDataConnection(SQLiteTools.GetDataProvider(ProviderName.SQLiteClassic), context, type, "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"))
+			using (var db = CreateDataConnection(SQLiteTools.GetDataProvider(SQLiteProvider.System), context, type, "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"))
 			{
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -573,7 +573,7 @@ namespace Tests.Data
 		[Test]
 		public void TestMicrosoftSqlite([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values] ConnectionType type)
 		{
-			using (var db = CreateDataConnection(SQLiteTools.GetDataProvider(ProviderName.SQLiteMS), context, type, "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite"))
+			using (var db = CreateDataConnection(SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), context, type, "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite"))
 			{
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -1150,7 +1150,7 @@ namespace Tests.Data
 		public void TestSybaseNative([IncludeDataSources(ProviderName.Sybase)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(ProviderName.Sybase), context, type, DbProviderFactories.GetFactory("Sybase.Data.AseClient").GetType().Assembly.GetType("Sybase.Data.AseClient.AseConnection")!))
+			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(SybaseProvider.Unmanaged), context, type, DbProviderFactories.GetFactory("Sybase.Data.AseClient").GetType().Assembly.GetType("Sybase.Data.AseClient.AseConnection")!))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1208,7 +1208,7 @@ namespace Tests.Data
 		public void TestSybaseManaged([IncludeDataSources(ProviderName.SybaseManaged)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(ProviderName.SybaseManaged), context, type, "AdoNetCore.AseClient.AseConnection, AdoNetCore.AseClient"))
+			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(SybaseProvider.DataAction), context, type, "AdoNetCore.AseClient.AseConnection, AdoNetCore.AseClient"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1233,7 +1233,7 @@ namespace Tests.Data
 		public void TestInformixIFX([IncludeDataSources(ProviderName.Informix)] string context, [Values] ConnectionType type)
 		{
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
-			var provider  = new TestInformixDataProvider(ProviderName.Informix);
+			var provider  = new TestInformixDataProvider(ProviderName.Informix, InformixProvider.Informix);
 			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"))
 			{
 				var trace = string.Empty;
@@ -1318,8 +1318,8 @@ namespace Tests.Data
 
 		sealed class TestInformixDataProvider : InformixDataProvider
 		{
-			public TestInformixDataProvider(string providerName)
-				: base(providerName)
+			public TestInformixDataProvider(string providerName, InformixProvider provider)
+				: base(providerName, provider)
 			{
 			}
 		}
@@ -1328,7 +1328,7 @@ namespace Tests.Data
 		public void TestInformixDB2([IncludeDataSources(ProviderName.InformixDB2)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			var provider = new TestInformixDataProvider(ProviderName.InformixDB2);
+			var provider = new TestInformixDataProvider(ProviderName.InformixDB2, InformixProvider.DB2);
 			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
 			{
 				var trace = string.Empty;

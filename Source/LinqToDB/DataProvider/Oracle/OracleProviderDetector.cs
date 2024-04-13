@@ -4,8 +4,10 @@ using System.Globalization;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using System.IO;
 	using Configuration;
 	using Data;
+	using LinqToDB.Common;
 
 	sealed class OracleProviderDetector : ProviderDetectorBase<OracleProvider,OracleVersion,DbConnection>
 	{
@@ -24,7 +26,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			OracleProvider? provider = null;
+			var provider = options.ProviderName switch
+			{
+				OracleProviderAdapter.ManagedClientNamespace => OracleProvider.Managed,
+				OracleProviderAdapter.DevartClientNamespace  => OracleProvider.Devart,
+				OracleProviderAdapter.NativeClientNamespace  => OracleProvider.Native,
+				_                                            => DetectProvider()
+			};
 
 			switch (options.ProviderName)
 			{
@@ -53,7 +61,7 @@ namespace LinqToDB.DataProvider.Oracle
 						goto case ProviderName.Oracle;
 					break;
 				case ProviderName.Oracle                         :
-					if (provider == null)
+					if (provider == OracleProvider.AutoDetect)
 					{
 						if (options.ConfigurationString?.Contains("Native") == true || options.ProviderName?.Contains("Native") == true)
 							provider = OracleProvider.Native;
@@ -63,19 +71,19 @@ namespace LinqToDB.DataProvider.Oracle
 							provider = OracleProvider.Managed;
 					}
 
-					if (options.ConfigurationString?.Contains("11") == true || options.ProviderName?.Contains("11") == true) return GetDataProvider(options, provider.Value, OracleVersion.v11);
-					if (options.ConfigurationString?.Contains("12") == true || options.ProviderName?.Contains("12") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
-					if (options.ConfigurationString?.Contains("18") == true || options.ProviderName?.Contains("18") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
-					if (options.ConfigurationString?.Contains("19") == true || options.ProviderName?.Contains("19") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
-					if (options.ConfigurationString?.Contains("21") == true || options.ProviderName?.Contains("21") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("11") == true || options.ProviderName?.Contains("11") == true) return GetDataProvider(options, provider, OracleVersion.v11);
+					if (options.ConfigurationString?.Contains("12") == true || options.ProviderName?.Contains("12") == true) return GetDataProvider(options, provider, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("18") == true || options.ProviderName?.Contains("18") == true) return GetDataProvider(options, provider, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("19") == true || options.ProviderName?.Contains("19") == true) return GetDataProvider(options, provider, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("21") == true || options.ProviderName?.Contains("21") == true) return GetDataProvider(options, provider, OracleVersion.v12);
 
 					if (AutoDetectProvider)
 					{
 						try
 						{
-							var dv = DetectServerVersion(options, provider.Value);
+							var dv = DetectServerVersion(options, provider);
 
-							return dv != null ? GetDataProvider(options, provider.Value, dv.Value) : null;
+							return dv != null ? GetDataProvider(options, provider, dv.Value) : null;
 						}
 						catch
 						{
@@ -83,7 +91,7 @@ namespace LinqToDB.DataProvider.Oracle
 						}
 					}
 
-					return GetDataProvider(options, provider.Value, DefaultVersion);
+					return GetDataProvider(options, provider, DefaultVersion);
 			}
 
 			return null;
@@ -91,6 +99,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override IDataProvider GetDataProvider(ConnectionOptions options, OracleProvider provider, OracleVersion version)
 		{
+			if (provider == OracleProvider.AutoDetect)
+				provider = DetectProvider();
+
 			return (provider, version) switch
 			{
 				(_,                      OracleVersion.AutoDetect) => GetDataProvider(options, provider, DetectServerVersion(options, provider) ?? DefaultVersion),
@@ -102,6 +113,20 @@ namespace LinqToDB.DataProvider.Oracle
 				(OracleProvider.Devart , OracleVersion.v12)        => _oracleDevartDataProvider12 .Value,
 				_                                                  => _oracleManagedDataProvider12.Value,
 			};
+		}
+
+		public static OracleProvider DetectProvider()
+		{
+			var fileName = typeof(OracleProviderDetector).Assembly.GetFileName();
+			var dirName  = Path.GetDirectoryName(fileName);
+
+			return File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.ManagedAssemblyName + ".dll"))
+				? OracleProvider.Managed
+				: File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.DevartAssemblyName + ".dll"))
+					? OracleProvider.Devart
+					: File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.NativeAssemblyName + ".dll"))
+						? OracleProvider.Native
+						: OracleProvider.Managed;
 		}
 
 		public override OracleVersion? DetectServerVersion(DbConnection connection)

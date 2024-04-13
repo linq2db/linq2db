@@ -49,7 +49,9 @@ namespace LinqToDB.DataProvider.Informix
 			Func  <DbParameter, IfxType> ifxTypeGetter,
 
 			Func<TimeSpan, object>? timeSpanFactory,
-			BulkCopyAdapter? bulkCopy)
+			BulkCopyAdapter? bulkCopy,
+
+			Func<string, IfxConnection> connectionFactory)
 		{
 			IsIDSProvider   = bulkCopy != null;
 			ConnectionType  = connectionType;
@@ -79,6 +81,8 @@ namespace LinqToDB.DataProvider.Informix
 			GetBigIntReaderMethod   = IsIDSProvider ? null : "GetBigInt";
 
 			ProviderTypesNamespace  = IfxTypesNamespace;
+
+			CreateConnection = cs => ((IConnectionWrapper)connectionFactory(cs)).Connection;
 		}
 
 		private InformixProviderAdapter(DB2ProviderAdapter db2Adapter)
@@ -110,6 +114,8 @@ namespace LinqToDB.DataProvider.Informix
 			GetBigIntReaderMethod   = null;
 
 			ProviderTypesNamespace  = db2Adapter.ProviderTypesNamespace;
+
+			CreateConnection = cs => ((IConnectionWrapper)db2Adapter.CreateConnection(cs)).Connection;
 		}
 
 		public Type ConnectionType  { get; }
@@ -150,6 +156,8 @@ namespace LinqToDB.DataProvider.Informix
 
 		public string ProviderTypesNamespace   { get; }
 
+		internal Func<string, DbConnection> CreateConnection { get; }
+
 		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
@@ -164,9 +172,9 @@ namespace LinqToDB.DataProvider.Informix
 			public Func<int, string, IfxBulkCopyColumnMapping>         CreateColumnMapping { get; }
 		}
 
-		public static InformixProviderAdapter GetInstance(string name)
+		public static InformixProviderAdapter GetInstance(InformixProvider provider)
 		{
-			if (name == ProviderName.Informix)
+			if (provider == InformixProvider.Informix)
 			{
 				if (_ifxAdapter == null)
 				{
@@ -248,6 +256,8 @@ namespace LinqToDB.DataProvider.Informix
 			else
 				typeMapper.FinalizeMappings();
 
+			var connectionFactory = typeMapper.BuildWrappedFactory((string connectionString) => new IfxConnection(connectionString));
+
 			var paramMapper   = typeMapper.Type<IfxParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.IfxType);
 
@@ -270,7 +280,8 @@ namespace LinqToDB.DataProvider.Informix
 				dbTypeBuilder.BuildSetter<DbParameter>(),
 				dbTypeBuilder.BuildGetter<DbParameter>(),
 				timespanFactory,
-				bulkCopy);
+				bulkCopy,
+				connectionFactory);
 
 			Type? loadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
 			{
@@ -373,8 +384,27 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		[Wrapper]
-		public class IfxConnection
+		public sealed class IfxConnection : TypeWrapper, IConnectionWrapper
 		{
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+					// [0]: Open
+					(Expression<Action<IfxConnection>>)((IfxConnection this_) => this_.Open()),
+					// [1]: Dispose
+					(Expression<Action<IfxConnection>>)((IfxConnection this_) => this_.Dispose()),
+			};
+
+			public IfxConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
+			public IfxConnection(string connectionString) => throw new NotImplementedException();
+
+			public void Open() => ((Action<IfxConnection>)CompiledWrappers[0])(this);
+			public void Dispose() => ((Action<IfxConnection>)CompiledWrappers[1])(this);
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		#region BulkCopy

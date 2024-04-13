@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
-using LinqToDB.Expressions;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
+	using Expressions;
+
 	public class OdbcProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _syncRoot = new object();
@@ -20,7 +21,8 @@ namespace LinqToDB.DataProvider
 			Type commandType,
 			Type transactionType,
 			Action<DbParameter, OdbcType> dbTypeSetter,
-			Func  <DbParameter, OdbcType> dbTypeGetter)
+			Func  <DbParameter, OdbcType> dbTypeGetter,
+			Func<string, OdbcConnection> connectionFactory)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -30,6 +32,8 @@ namespace LinqToDB.DataProvider
 
 			SetDbType = dbTypeSetter;
 			GetDbType = dbTypeGetter;
+
+			CreateConnection = connectionFactory;
 		}
 
 		public Type ConnectionType  { get; }
@@ -40,6 +44,8 @@ namespace LinqToDB.DataProvider
 
 		public Action<DbParameter, OdbcType> SetDbType { get; }
 		public Func  <DbParameter, OdbcType> GetDbType { get; }
+
+		internal Func<string, OdbcConnection> CreateConnection { get; }
 
 		public static OdbcProviderAdapter GetInstance()
 		{
@@ -70,6 +76,8 @@ namespace LinqToDB.DataProvider
 						typeMapper.RegisterTypeWrapper<OdbcParameter>(parameterType);
 						typeMapper.FinalizeMappings();
 
+						var connectionFactory  = typeMapper.BuildWrappedFactory((string connectionString) => new OdbcConnection(connectionString));
+
 						var dbTypeBuilder = typeMapper.Type<OdbcParameter>().Member(p => p.OdbcType);
 						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
 						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
@@ -81,7 +89,8 @@ namespace LinqToDB.DataProvider
 							commandType,
 							transactionType,
 							typeSetter,
-							typeGetter);
+							typeGetter,
+							connectionFactory);
 					}
 			}
 
@@ -89,6 +98,30 @@ namespace LinqToDB.DataProvider
 		}
 
 		#region Wrappers
+
+		[Wrapper]
+		internal sealed class OdbcConnection : TypeWrapper, IConnectionWrapper
+		{
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+					// [0]: Open
+					(Expression<Action<OdbcConnection>>)((OdbcConnection this_) => this_.Open()),
+					// [1]: Dispose
+					(Expression<Action<OdbcConnection>>)((OdbcConnection this_) => this_.Dispose()),
+			};
+
+			public OdbcConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
+			public OdbcConnection(string connectionString) => throw new NotImplementedException();
+
+			public void Open()    => ((Action<OdbcConnection>)CompiledWrappers[0])(this);
+			public void Dispose() => ((Action<OdbcConnection>)CompiledWrappers[1])(this);
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
+		}
 
 		[Wrapper]
 		private sealed class OdbcParameter

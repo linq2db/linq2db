@@ -1,8 +1,11 @@
 ﻿using System;
-using LinqToDB.Expressions;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Expressions;
+
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _systemSyncRoot = new ();
@@ -18,16 +21,17 @@ namespace LinqToDB.DataProvider.SQLite
 		public const string MicrosoftDataSQLiteClientNamespace = "Microsoft.Data.Sqlite";
 
 		private SQLiteProviderAdapter(
-			Type    connectionType,
-			Type    dataReaderType,
-			Type    parameterType,
-			Type    commandType,
-			Type    transactionType,
-			bool    disposeCommandOnError,
-			bool    supportsRowValue,
-			bool    supportsUpdateFrom,
-			bool    supportsDateOnly,
-			Action? clearAllPulls)
+			Type                           connectionType,
+			Type                           dataReaderType,
+			Type                           parameterType,
+			Type                           commandType,
+			Type                           transactionType,
+			bool                           disposeCommandOnError,
+			bool                           supportsRowValue,
+			bool                           supportsUpdateFrom,
+			bool                           supportsDateOnly,
+			Action?                        clearAllPulls,
+			Func<string, SQLiteConnection> connectionFactory)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -40,7 +44,8 @@ namespace LinqToDB.DataProvider.SQLite
 			SupportsUpdateFrom    = supportsUpdateFrom;
 			SupportsDateOnly      = supportsDateOnly;
 
-			ClearAllPools = clearAllPulls;
+			ClearAllPools    = clearAllPulls;
+			CreateConnection = connectionFactory;
 		}
 
 		public Type ConnectionType  { get; }
@@ -64,6 +69,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public Action? ClearAllPools { get; }
 
+		internal Func<string, SQLiteConnection> CreateConnection { get; }
+
 		private static SQLiteProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string prefix)
 		{
 			var assembly = Common.Tools.TryLoadAssembly(assemblyName, null);
@@ -80,28 +87,29 @@ namespace LinqToDB.DataProvider.SQLite
 
 			var version = assembly.GetName().Version;
 
+			var typeMapper = new TypeMapper();
+			typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
+			typeMapper.FinalizeMappings();
+
 			Action? clearAllPools = null;
+
 			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
 			{
 				if (version >= ClearPoolsMinVersionMDS)
 				{
-					var typeMapper = new TypeMapper();
-					typeMapper.RegisterTypeWrapper<SqliteConnection>(connectionType);
-					typeMapper.FinalizeMappings();
+					// !!! note type name casing
 					clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SqliteConnection.ClearAllPools()));
 				}
 			}
 			else if (version >= ClearPoolsMinVersionSDS)
 			{
-				var typeMapper = new TypeMapper();
-				typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
-				typeMapper.FinalizeMappings();
 				clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SQLiteConnection.ClearAllPools()));
 			}
 
 			var supportsRowValue   = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? RowValueMinVersionMDS   : RowValueMinVersionSDS);
 			var supportsUpdateFrom = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? UpdateFromMinVersionMDS : UpdateFromMinVersionSDS);
 			var supportsDateOnly   = clientNamespace == MicrosoftDataSQLiteClientNamespace && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
+			var connectionFactory  = typeMapper.BuildWrappedFactory((string connectionString) => new SQLiteConnection(connectionString));
 
 			return new SQLiteProviderAdapter(
 				connectionType,
@@ -113,7 +121,8 @@ namespace LinqToDB.DataProvider.SQLite
 				supportsRowValue,
 				supportsUpdateFrom,
 				supportsDateOnly,
-				clearAllPools);
+				clearAllPools,
+				connectionFactory);
 		}
 
 		private static readonly Version ClearPoolsMinVersionMDS       = new (6, 0, 0);
@@ -125,9 +134,9 @@ namespace LinqToDB.DataProvider.SQLite
 		private static readonly Version MinDateOnlyAssemblyVersionMDS = new (6, 0, 0);
 		
 
-		public static SQLiteProviderAdapter GetInstance(string name)
+		public static SQLiteProviderAdapter GetInstance(SQLiteProvider provider)
 		{
-			if (name == ProviderName.SQLiteClassic)
+			if (provider == SQLiteProvider.System)
 			{
 				if (_systemDataSQLite == null)
 				{
@@ -161,10 +170,31 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 		[Wrapper]
-		private sealed class SQLiteConnection
+		internal sealed class SQLiteConnection : TypeWrapper, IConnectionWrapper
 		{
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+					// [0]: Open
+					(Expression<Action<SQLiteConnection>>)((SQLiteConnection this_) => this_.Open()),
+					// [1]: Dispose
+					(Expression<Action<SQLiteConnection>>)((SQLiteConnection this_) => this_.Dispose()),
+			};
+
+			public SQLiteConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
+			public SQLiteConnection(string connectionString) => throw new NotImplementedException();
+
+			public void Open()    => ((Action<SQLiteConnection>)CompiledWrappers[0])(this);
+			public void Dispose() => ((Action<SQLiteConnection>)CompiledWrappers[1])(this);
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
+
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
+
 		#endregion
 	}
 }

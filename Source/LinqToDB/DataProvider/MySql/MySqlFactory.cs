@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 using JetBrains.Annotations;
 
@@ -11,7 +12,16 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return MySqlTools.GetDataProvider();
+			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
+
+			var provider = assemblyName switch
+			{
+				MySqlProviderAdapter.MySqlConnectorAssemblyName => MySqlProvider.MySqlConnector,
+				MySqlProviderAdapter.MySqlDataAssemblyName      => MySqlProvider.MySqlData,
+				_                                               => MySqlProvider.AutoDetect
+			};
+
+			return MySqlTools.GetDataProvider(provider);
 		}
 	}
 }

@@ -13,47 +13,52 @@ namespace LinqToDB.DataProvider.Access
 	/// </summary>
 	public static partial class AccessTools
 	{
-		static readonly Lazy<IDataProvider> _accessOleDbDataProvider = DataConnection.CreateDataProvider<AccessOleDbDataProvider>();
-		static readonly Lazy<IDataProvider> _accessODBCDataProvider  = DataConnection.CreateDataProvider<AccessODBCDataProvider>();
+		internal static AccessProviderDetector ProviderDetector = new();
 
-		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
+		public static bool AutoDetectProvider
 		{
-			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB") == true || options.ConnectionString?.Contains("Microsoft.Jet.OLEDB") == true)
-			{
-				return _accessOleDbDataProvider.Value;
-			}
+			get => ProviderDetector.AutoDetectProvider;
+			set => ProviderDetector.AutoDetectProvider = value;
+		}
 
-			if (options.ProviderName == ProviderName.AccessOdbc
-				|| options.ConfigurationString?.Contains("Access.Odbc") == true)
-			{
-				return _accessODBCDataProvider.Value;
-			}
-
-			if (options.ProviderName == ProviderName.Access || (options.ConfigurationString?.Contains("Access") == true && !options.ConfigurationString.Contains("DataAccess")))
-			{
-				if (options.ConnectionString?.Contains("*.mdb") == true
-					|| options.ConnectionString?.Contains("*.accdb") == true)
-					return _accessODBCDataProvider.Value;
-
-				return _accessOleDbDataProvider.Value;
-			}
-
-			return null;
+		/// <summary>
+		/// Returns instance of Access database provider.
+		/// </summary>
+		public static IDataProvider GetDataProvider(AccessProvider provider = AccessProvider.AutoDetect, string? connectionString = null)
+		{
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), provider, default);
 		}
 
 		/// <summary>
 		/// Returns instance of Access database provider.
 		/// </summary>
 		/// <returns><see cref="AccessOleDbDataProvider"/> or <see cref="AccessODBCDataProvider"/> instance.</returns>
-		public static IDataProvider GetDataProvider(string? providerName = null)
+		[Obsolete($"Use overload with {nameof(AccessProvider)} parameter")]
+		public static IDataProvider GetDataProvider(string? providerName = null, string? connectionString = null)
 		{
-			if (providerName == ProviderName.AccessOdbc)
-				return _accessODBCDataProvider.Value;
-
-			return _accessOleDbDataProvider.Value;
+			return providerName switch
+			{
+				ProviderName.AccessOdbc => GetDataProvider(AccessProvider.ODBC, connectionString),
+				_                       => GetDataProvider(AccessProvider.AutoDetect, connectionString),
+			};
 		}
 
 		#region CreateDataConnection
+
+		public static DataConnection CreateDataConnection(string connectionString, AccessProvider provider = AccessProvider.AutoDetect)
+		{
+			return new DataConnection(GetDataProvider(provider, connectionString), connectionString);
+		}
+
+		public static DataConnection CreateDataConnection(DbConnection connection, AccessProvider provider = AccessProvider.AutoDetect)
+		{
+			return new DataConnection(GetDataProvider(provider), connection);
+		}
+
+		public static DataConnection CreateDataConnection(DbTransaction transaction, AccessProvider provider = AccessProvider.AutoDetect)
+		{
+			return new DataConnection(GetDataProvider(provider), transaction);
+		}
 
 		/// <summary>
 		/// Creates <see cref="DataConnection"/> object using provided Access connection string.
@@ -61,9 +66,10 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="connectionString">Connection string.</param>
 		/// <param name="providerName">Provider name.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
+		[Obsolete($"Use overload with {nameof(AccessProvider)} parameter")]
 		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
-			return new DataConnection(GetDataProvider(providerName), connectionString);
+			return new DataConnection(GetDataProvider(providerName, connectionString), connectionString);
 		}
 
 		/// <summary>
@@ -72,6 +78,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="connection">Connection instance.</param>
 		/// <param name="providerName">Provider name.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
+		[Obsolete($"Use overload with {nameof(AccessProvider)} parameter")]
 		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connection);
@@ -83,6 +90,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="transaction">Transaction instance.</param>
 		/// <param name="providerName">Provider name.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
+		[Obsolete($"Use overload with {nameof(AccessProvider)} parameter")]
 		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);

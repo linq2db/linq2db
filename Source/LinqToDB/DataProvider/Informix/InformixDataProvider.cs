@@ -13,13 +13,18 @@ namespace LinqToDB.DataProvider.Informix
 	using Mapping;
 	using SqlProvider;
 
-	sealed class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix)    {} }
-	sealed class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2) {} }
+	sealed class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix,    InformixProvider.Informix) {} }
+	sealed class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2, InformixProvider.DB2     ) {} }
 
 	public abstract class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
-		protected InformixDataProvider(string providerName)
-			: base(providerName, GetMappingSchema(providerName), InformixProviderAdapter.GetInstance(providerName))
+		protected InformixDataProvider(string name, InformixProvider provider)
+			: this(name, InformixProviderAdapter.GetInstance(provider == InformixProvider.AutoDetect ? provider = InformixProviderDetector.DetectProvider() : provider))
+		{
+		}
+
+		protected InformixDataProvider(string providerName, InformixProviderAdapter adapter)
+			: base(providerName, GetMappingSchema(providerName, adapter.MappingSchema), adapter)
 		{
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
@@ -190,12 +195,12 @@ namespace LinqToDB.DataProvider.Informix
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		static MappingSchema GetMappingSchema(string name)
+		static MappingSchema GetMappingSchema(string name, MappingSchema adapterSchema)
 		{
 			return name switch
 			{
-				ProviderName.Informix => new InformixMappingSchema.IfxMappingSchema(),
-				_                     => new InformixMappingSchema.DB2MappingSchema(),
+				ProviderName.Informix => new InformixMappingSchema.IfxMappingSchema(adapterSchema),
+				_                     => new InformixMappingSchema.DB2MappingSchema(adapterSchema),
 			};
 		}
 

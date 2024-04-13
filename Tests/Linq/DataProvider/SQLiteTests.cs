@@ -538,15 +538,15 @@ namespace Tests.DataProvider
 			SQLiteTools.CreateDatabase("TestDatabase");
 			Assert.That(File.Exists ("TestDatabase.sqlite"), Is.True);
 
-			using (var db = new DataConnection(SQLiteTools.GetDataProvider(context), "Data Source=TestDatabase.sqlite"))
+			using (var db = new DataConnection(SQLiteTools.GetDataProvider(SQLiteProvider.AutoDetect), "Data Source=TestDatabase.sqlite"))
 			{
 				db.CreateTable<CreateTableTest>();
 				db.DropTable  <CreateTableTest>();
 			}
 
-			SQLiteTools.ClearAllPools  ();
-			SQLiteTools.DropDatabase   ("TestDatabase");
-			Assert.That(File.Exists ("TestDatabase.sqlite"), Is.False);
+			SQLiteTools.ClearAllPools(SQLiteProvider.AutoDetect);
+			SQLiteTools.DropDatabase ("TestDatabase");
+			Assert.That(File.Exists  ("TestDatabase.sqlite"), Is.False);
 		}
 
 		[Test]

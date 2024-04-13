@@ -35,12 +35,6 @@ namespace LinqToDB.DataProvider.MySql
 		public const string OldMySqlConnectorNamespace       = "MySql.Data.MySqlClient";
 		public const string OldMySqlConnectorTypesNamespace  = "MySql.Data.Types";
 
-		public enum MySqlProvider
-		{
-			MySqlData,
-			MySqlConnector
-		}
-
 		MySqlProviderAdapter()
 		{
 		}
@@ -93,6 +87,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		public abstract bool    IsPackageProceduresSupported { get; }
 
+		internal Func<string, MySqlConnection> CreateConnection { get; set; } = null!;
+
 		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
@@ -107,9 +103,9 @@ namespace LinqToDB.DataProvider.MySql
 			internal Func<int, string, MySqlBulkCopyColumnMapping>                    CreateColumnMapping { get; }
 		}
 
-		public static MySqlProviderAdapter GetInstance(string name)
+		public static MySqlProviderAdapter GetInstance(MySqlProvider provider)
 		{
-			if (name == ProviderName.MySqlConnector)
+			if (provider == MySqlProvider.MySqlConnector)
 			{
 				if (_mysqlConnectorInstance == null)
 				{
@@ -160,16 +156,20 @@ namespace LinqToDB.DataProvider.MySql
 					var mySqlGeometryType = assembly.GetType($"{MySqlDataTypesNamespace}.MySqlGeometry"    , true)!;
 
 					var typeMapper = new TypeMapper();
+					typeMapper.RegisterTypeWrapper<MySqlConnection>(connectionType);
 					typeMapper.RegisterTypeWrapper<MySqlParameter>(parameterType);
 					typeMapper.RegisterTypeWrapper<MySqlDbType>(dbType);
 					typeMapper.RegisterTypeWrapper<MySqlDateTime>(mySqlDateTimeType);
 					typeMapper.RegisterTypeWrapper<MySqlDecimal>(mySqlDecimalType);
+					typeMapper.FinalizeMappings();
 
-					var dbTypeGetter      = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
+					var dbTypeGetter       = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
 					var decimalGetter      = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((MySqlDecimal)value).ToString()));
 					var toDecimalConverter = typeMapper.MapLambda((MySqlDecimal d) => d.Value);
 					var toDoubleConverter  = typeMapper.MapLambda((MySqlDecimal d) => d.ToDouble());
-					var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
+					var dateTimeConverter  = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
+
+					CreateConnection = typeMapper.BuildWrappedFactory((string connectionString) => new MySqlConnection(connectionString));
 
 					var mappingSchema = new MySqlDataAdapterMappingSchema();
 
@@ -351,6 +351,8 @@ namespace LinqToDB.DataProvider.MySql
 					else
 						typeMapper.FinalizeMappings();
 
+					CreateConnection = typeMapper.BuildWrappedFactory((string connectionString) => new MySqlConnection(connectionString));
+
 					var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
 					var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
 
@@ -474,11 +476,6 @@ namespace LinqToDB.DataProvider.MySql
 				VarChar    = 253,
 				VarString  = 15,
 				Year       = 13
-			}
-
-			[Wrapper]
-			internal sealed class MySqlConnection
-			{
 			}
 
 			[Wrapper]
@@ -697,6 +694,30 @@ namespace LinqToDB.DataProvider.MySql
 			public MySqlBulkCopyResult(object instance) : base(instance, null)
 			{
 			}
+		}
+
+		[Wrapper]
+		internal sealed class MySqlConnection : TypeWrapper, IConnectionWrapper
+		{
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+					// [0]: Open
+					(Expression<Action<MySqlConnection>>)((MySqlConnection this_) => this_.Open()),
+					// [1]: Dispose
+					(Expression<Action<MySqlConnection>>)((MySqlConnection this_) => this_.Dispose()),
+			};
+
+			public MySqlConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
+			public MySqlConnection(string connectionString) => throw new NotImplementedException();
+
+			public void Open() => ((Action<MySqlConnection>)CompiledWrappers[0])(this);
+			public void Dispose() => ((Action<MySqlConnection>)CompiledWrappers[1])(this);
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 	}
 }

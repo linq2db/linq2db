@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static IDataProvider GetDataProvider(
 			OracleVersion  version          = OracleVersion.AutoDetect,
-			OracleProvider provider         = OracleProvider.Managed,
+			OracleProvider provider         = OracleProvider.AutoDetect,
 			string?        connectionString = null)
 		{
 			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString : connectionString), provider, version);
@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public static DataConnection CreateDataConnection(
 			string connectionString,
 			OracleVersion version   = OracleVersion.AutoDetect,
-			OracleProvider provider = OracleProvider.Managed)
+			OracleProvider provider = OracleProvider.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(version, provider, connectionString), connectionString);
 		}
@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public static DataConnection CreateDataConnection(
 			DbConnection connection,
 			OracleVersion version   = OracleVersion.AutoDetect,
-			OracleProvider provider = OracleProvider.Managed)
+			OracleProvider provider = OracleProvider.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(version, provider), connection);
 		}
@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public static DataConnection CreateDataConnection(
 			DbTransaction transaction,
 			OracleVersion version   = OracleVersion.AutoDetect,
-			OracleProvider provider = OracleProvider.Managed)
+			OracleProvider provider = OracleProvider.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(version, provider), transaction);
 		}

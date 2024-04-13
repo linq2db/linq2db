@@ -7,47 +7,30 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 	public static partial class ClickHouseTools
 	{
-		static readonly Lazy<IDataProvider> _octonicaDataProvider = DataConnection.CreateDataProvider<ClickHouseOctonicaDataProvider>();
-		static readonly Lazy<IDataProvider> _clientDataProvider   = DataConnection.CreateDataProvider<ClickHouseClientDataProvider>();
-		static readonly Lazy<IDataProvider> _mysqlDataProvider    = DataConnection.CreateDataProvider<ClickHouseMySqlDataProvider>();
+		internal static ClickHouseProviderDetector ProviderDetector = new();
 
-		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
+		public static bool AutoDetectProvider
 		{
-			if ((options.ProviderName?.Contains("Octonica") == true && options.ProviderName?.Contains("ClickHouse") == true)
-				|| (options.ConfigurationString?.Contains("Octonica") == true && options.ConfigurationString?.Contains("ClickHouse") == true))
-				return _octonicaDataProvider.Value;
-
-			if ((options.ProviderName?.Contains("ClickHouse") == true && options.ProviderName?.Contains("MySql") == true)
-				|| (options.ConfigurationString?.Contains("ClickHouse") == true && options.ConfigurationString?.Contains("MySql") == true))
-				return _mysqlDataProvider.Value;
-
-			if (options.ProviderName?.Contains("ClickHouse.Client") == true || options.ConfigurationString?.Contains("ClickHouse.Client") == true)
-				return _clientDataProvider.Value;
-
-			return null;
+			get => ProviderDetector.AutoDetectProvider;
+			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(ClickHouseProvider provider = ClickHouseProvider.Octonica)
+		public static IDataProvider GetDataProvider(ClickHouseProvider provider = ClickHouseProvider.AutoDetect, string? connectionString = null)
 		{
-			return provider switch
-			{
-				ClickHouseProvider.ClickHouseClient => _clientDataProvider.Value,
-				ClickHouseProvider.MySqlConnector   => _mysqlDataProvider.Value,
-				_                                   => _octonicaDataProvider.Value
-			};
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), provider, default);
 		}
 
-		public static DataConnection CreateDataConnection(string connectionString, ClickHouseProvider provider = ClickHouseProvider.Octonica)
+		public static DataConnection CreateDataConnection(string connectionString, ClickHouseProvider provider = ClickHouseProvider.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(provider), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(DbConnection connection, ClickHouseProvider provider = ClickHouseProvider.Octonica)
+		public static DataConnection CreateDataConnection(DbConnection connection, ClickHouseProvider provider = ClickHouseProvider.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(provider), connection);
 		}
 
-		public static DataConnection CreateDataConnection(DbTransaction transaction, ClickHouseProvider provider = ClickHouseProvider.Octonica)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, ClickHouseProvider provider = ClickHouseProvider.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(provider), transaction);
 		}

@@ -63,7 +63,7 @@ namespace Tests.UserTests
 			const int recordsCount = 20;
 
 			// sqlite connection pooling is not compatible with tested template
-			SQLiteTools.ClearAllPools();
+			SQLiteTools.ClearAllPools(provider: null);
 
 			using (new DisableBaseline("Multi-threading"))
 			using (var db = GetDataConnection(context))
