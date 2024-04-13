@@ -90,7 +90,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current fluent entity mapping builder.</returns>
 		public EntityMappingBuilder<TEntity> HasAttribute(MappingAttribute attribute)
 		{
-			_builder.HasAttribute(typeof(TEntity), attribute);
+			_builder.HasAttribute<TEntity>(attribute);
 			return this;
 		}
 
@@ -581,8 +581,7 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, string, object?, object?>> getter,
 			Expression<Action<TEntity, string, object?>>        setter)
 		{
-			_builder.HasAttribute(
-				typeof(TEntity),
+			_builder.HasAttribute<TEntity>(
 				new DynamicColumnAccessorAttribute()
 				{
 					GetterExpression = getter,
@@ -634,12 +633,12 @@ namespace LinqToDB.Mapping
 					var na = overrideAttribute(attr);
 
 					modifyExisting(na);
-					_builder.HasAttribute(typeof(TEntity), na);
+					_builder.HasAttribute<TEntity>(na);
 
 					return this;
 				}
 
-				_builder.HasAttribute(typeof(TEntity), getNew());
+				_builder.HasAttribute<TEntity>(getNew());
 			}
 			else
 				modifyExisting(existingAttr);
@@ -657,7 +656,7 @@ namespace LinqToDB.Mapping
 
 			if (attr == null)
 			{
-				_builder.HasAttribute(typeof(TEntity), getNew());
+				_builder.HasAttribute<TEntity>(getNew());
 			}
 			else
 			{

@@ -101,7 +101,7 @@ namespace Tests.UserTests
 				var distinct = q2.EnumQueries().FirstOrDefault(q => q.Select.IsDistinct)!;
 
 				Assert.That(distinct, Is.Not.Null);
-				Assert.That(distinct.Select.Columns.Count, Is.EqualTo(3));
+				Assert.That(distinct.Select.Columns, Has.Count.EqualTo(3));
 			}
 		}
 	}

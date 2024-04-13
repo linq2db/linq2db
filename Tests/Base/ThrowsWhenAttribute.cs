@@ -91,7 +91,7 @@ namespace Tests
 					var parameters = context.CurrentTest.Method.GetParameters();
 					var idx        = GetParameterIndex(parameters, _attribute.ParameterName);
 
-					Assert.That(idx >= 0, "Invalid parameter name '{_parameterName}' for 'ThrowsWhenAttribute'.");
+					Assert.That(idx, Is.GreaterThanOrEqualTo(0), $"Invalid parameter name '{_attribute.ParameterName}' for 'ThrowsWhenAttribute'.");
 
 					var parameterValue = context.CurrentTest.Arguments[idx];
 					if (parameterValue != null)

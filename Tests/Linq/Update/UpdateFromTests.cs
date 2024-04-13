@@ -347,11 +347,11 @@ namespace Tests.xUpdate
 					.Set(v => v.Value1, v => v.Relation!.RelatedValue3)
 					.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11).Select(v => v.Value1).First();
 
-				Assert.AreEqual(13, updatedValue);
+				Assert.That(updatedValue, Is.EqualTo(13));
 			}
 		}
 
@@ -374,11 +374,11 @@ namespace Tests.xUpdate
 
 				var affected = updatable.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11).Select(v => v.Value1).First();
 
-				Assert.AreEqual(13, updatedValue);
+				Assert.That(updatedValue, Is.EqualTo(13));
 			}
 		}
 
@@ -400,15 +400,18 @@ namespace Tests.xUpdate
 					.Set(v => v.Value3, v => 1)
 					.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11)
 					.Select(v => new {v.Value1, v.Value2, v.Value3})
 					.First();
 
-				Assert.AreEqual(36, updatedValue.Value1);
-				Assert.AreEqual(36, updatedValue.Value2);
-				Assert.AreEqual(1,  updatedValue.Value3);
+				Assert.Multiple(() =>
+				{
+					Assert.That(updatedValue.Value1, Is.EqualTo(36));
+					Assert.That(updatedValue.Value2, Is.EqualTo(36));
+					Assert.That(updatedValue.Value3, Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -433,15 +436,18 @@ namespace Tests.xUpdate
 
 				var affected = updatable.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11)
 					.Select(v => new {v.Value1, v.Value2, v.Value3})
 					.First();
 
-				Assert.AreEqual(36, updatedValue.Value1);
-				Assert.AreEqual(36, updatedValue.Value2);
-				Assert.AreEqual(1,  updatedValue.Value3);
+				Assert.Multiple(() =>
+				{
+					Assert.That(updatedValue.Value1, Is.EqualTo(36));
+					Assert.That(updatedValue.Value2, Is.EqualTo(36));
+					Assert.That(updatedValue.Value3, Is.EqualTo(1));
+				});
 			}
 		}
 	}

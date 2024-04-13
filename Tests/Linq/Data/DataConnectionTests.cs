@@ -36,8 +36,11 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
-				Assert.That(conn.ConfigurationString, Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(conn.ConfigurationString, Is.Null);
+				});
 			}
 		}
 
@@ -46,8 +49,11 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
-				Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+				});
 			}
 		}
 
@@ -61,8 +67,11 @@ namespace Tests.Data
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
-				Assert.That(conn.ConfigurationString, Is.EqualTo(context));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(conn.ConfigurationString, Is.EqualTo(context));
+				});
 
 				if (context.EndsWith(".2005"))
 				{
@@ -265,11 +274,17 @@ namespace Tests.Data
 					null,
 					async (args, cn, се) => await Task.Run(() => openedAsync = true)));
 
-				Assert.False(opened);
-				Assert.False(openedAsync);
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
-				Assert.True(opened);
-				Assert.False(openedAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.False);
+					Assert.That(openedAsync, Is.False);
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.True);
+					Assert.That(openedAsync, Is.False);
+				});
 			}
 		}
 
@@ -286,11 +301,17 @@ namespace Tests.Data
 					null,
 					async (args, cn, ct) => await Task.Run(() => openedAsync = true, ct)));
 
-				Assert.False(opened);
-				Assert.False(openedAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.False);
+					Assert.That(openedAsync, Is.False);
+				});
 				await conn.SelectAsync(() => 1);
-				Assert.False(opened);
-				Assert.True(openedAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.False);
+					Assert.That(openedAsync, Is.True);
+				});
 			}
 		}
 
@@ -319,8 +340,11 @@ namespace Tests.Data
 			collection.AddLinqToDB((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<IDataContext>()!;
-			Assert.True(con is DataConnection);
-			Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
+			Assert.Multiple(() =>
+			{
+				Assert.That(con is DataConnection, Is.True);
+				Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
+			});
 		}
 
 		[Test]
@@ -406,8 +430,11 @@ namespace Tests.Data
 			var serviceProvider = collection.BuildServiceProvider();
 			var c1 = serviceProvider.GetService<DbConnection1>()!;
 			var c2 = serviceProvider.GetService<DbConnection2>()!;
-			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
-			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+			Assert.Multiple(() =>
+			{
+				Assert.That(c1.ConfigurationString, Is.EqualTo(context));
+				Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+			});
 		}
 
 		// informix connection limits interfere with test
@@ -508,11 +535,17 @@ namespace Tests.Data
 					}, ct),
 					null));
 
-				Assert.False(open);
-				Assert.False(openAsync);
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
-				Assert.True(open);
-				Assert.False(openAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.False);
+					Assert.That(openAsync, Is.False);
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.True);
+					Assert.That(openAsync, Is.False);
+				});
 			}
 		}
 
@@ -537,11 +570,17 @@ namespace Tests.Data
 					}, ct),
 					null));
 
-				Assert.False(open);
-				Assert.False(openAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.False);
+					Assert.That(openAsync, Is.False);
+				});
 				await conn.SelectAsync(() => 1);
-				Assert.False(open);
-				Assert.True(openAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.False);
+					Assert.That(openAsync, Is.True);
+				});
 			}
 		}
 
@@ -562,8 +601,8 @@ namespace Tests.Data
 				finally
 				{
 					var time = DateTimeOffset.Now - start;
-					Assert.True(time >= TimeSpan.FromSeconds(30));
-					Assert.True(time < TimeSpan.FromSeconds(32));
+					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(30)));
+					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(32)));
 				}
 
 				start = DateTimeOffset.Now;
@@ -576,16 +615,16 @@ namespace Tests.Data
 				finally
 				{
 					var time = DateTimeOffset.Now - start;
-					Assert.True(time >= TimeSpan.FromSeconds(10));
-					Assert.True(time < TimeSpan.FromSeconds(12));
+					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(10)));
+					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(12)));
 				}
 
 				start = DateTimeOffset.Now;
 				db.CommandTimeout = 0;
 				db.Update(forUpdate);
 				var time2 = DateTimeOffset.Now - start;
-				Assert.True(time2 >= TimeSpan.FromSeconds(60));
-				Assert.True(time2 < TimeSpan.FromSeconds(62));
+				Assert.That(time2, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(60)));
+				Assert.That(time2, Is.LessThan(TimeSpan.FromSeconds(62)));
 			}
 		}
 
@@ -708,7 +747,7 @@ namespace Tests.Data
 
 					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
-					Assert.AreEqual(3, ids.Length);
+					Assert.That(ids, Has.Length.EqualTo(3));
 				}
 			}
 			finally
@@ -744,8 +783,8 @@ namespace Tests.Data
 
 					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
-					Assert.AreEqual(1, ids.Length);
-					Assert.AreEqual(3, ids[0]);
+					Assert.That(ids, Has.Length.EqualTo(1));
+					Assert.That(ids[0], Is.EqualTo(3));
 				}
 			}
 			finally
@@ -783,9 +822,12 @@ namespace Tests.Data
 
 					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
-					Assert.AreEqual(2, ids.Length);
-					Assert.AreEqual(1, ids[0]);
-					Assert.AreEqual(3, ids[1]);
+					Assert.That(ids, Has.Length.EqualTo(2));
+					Assert.Multiple(() =>
+					{
+						Assert.That(ids[0], Is.EqualTo(1));
+						Assert.That(ids[1], Is.EqualTo(3));
+					});
 				}
 			}
 			finally
@@ -846,13 +888,16 @@ namespace Tests.Data
 								}
 							}
 
-							Assert.True(cnt3 > 0);
+							Assert.That(cnt3, Is.GreaterThan(0));
 						}
 					}
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -975,14 +1020,17 @@ namespace Tests.Data
 									}
 								}
 
-								Assert.True(cnt3 > 0);
+								Assert.That(cnt3, Is.GreaterThan(0));
 							}
 						}
 					}
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1113,13 +1161,16 @@ namespace Tests.Data
 								}
 							}
 
-							Assert.True(cnt3 > 0);
+							Assert.That(cnt3, Is.GreaterThan(0));
 						}
 					}
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1203,8 +1254,11 @@ namespace Tests.Data
 					cnt2++;
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1247,7 +1301,7 @@ namespace Tests.Data
 
 				db.Person.Where(_ => _.LastName == param).ToList();
 
-				Assert.AreEqual(1, commandInterceptor.Parameters.Length);
+				Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
 			}
 		}
 
@@ -1263,7 +1317,7 @@ namespace Tests.Data
 
 				await db.Person.Where(_ => _.LastName == param).ToListAsync();
 
-				Assert.AreEqual(1, commandInterceptor.Parameters.Length);
+				Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
 			}
 		}
 
@@ -1291,8 +1345,11 @@ namespace Tests.Data
 					cnt2++;
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1331,7 +1388,7 @@ namespace Tests.Data
 			using var cn1 = GetDataContext(context);
 			using var cn2 = GetDataContext(context);
 
-			Assert.AreEqual(cn1.MappingSchema, cn2.MappingSchema);
+			Assert.That(cn2.MappingSchema, Is.EqualTo(cn1.MappingSchema));
 		}
 
 		[Test]
@@ -1343,7 +1400,7 @@ namespace Tests.Data
 			using var cn1 = GetDataContext(context, ms);
 			using var cn2 = GetDataContext(context, ms);
 
-			Assert.AreEqual(cn1.MappingSchema, cn2.MappingSchema);
+			Assert.That(cn2.MappingSchema, Is.EqualTo(cn1.MappingSchema));
 		}
 	}
 }

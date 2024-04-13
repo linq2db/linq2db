@@ -164,7 +164,7 @@ namespace Tests.Linq
 
 			var res = db.Child.Select(c => c.ParentID).Contains(1);
 
-			Assert.IsTrue(res);
+			Assert.That(res, Is.True);
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));

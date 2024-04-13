@@ -98,12 +98,12 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			AreEqual(
-				(from c in    Child where c.ParentID == 1 select c).Concat(
+				AreEqual(
+					(from c in    Child where c.ParentID == 1 select c).Concat(
 				(from c in    Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 })
 				.Where(c => c.ChildID != 1032))
-				,
-				(from c in db.Child where c.ParentID == 1 select c).Concat(
+					,
+					(from c in db.Child where c.ParentID == 1 select c).Concat(
 				(from c in db.Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 }))
 				.Where(c => c.ChildID != 1032));
 		}
@@ -528,10 +528,10 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			AreEqual(
-				(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
+				AreEqual(
+					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
 				(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() })),
-				(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
+					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
 				(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() })), sort: e => e.OrderBy(x => x.ch == null).ThenBy(x => x.ParentID));
 		}
 
@@ -713,7 +713,7 @@ namespace Tests.Linq
 					select new { t1, t2 };
 
 				var join1Sql = join1.ToString();
-				Assert.IsNotNull(join1Sql);
+				Assert.That(join1Sql, Is.Not.Null);
 
 				var join2 =
 					from t2 in context.GetTable<TestEntity2>()
@@ -725,12 +725,12 @@ namespace Tests.Linq
 					select new { t1, t2 };
 
 				var join2Sql = join2.ToString();
-				Assert.IsNotNull(join2Sql);
+				Assert.That(join2Sql, Is.Not.Null);
 
 				var fullJoin = join1.Concat(join2);
 
 				var fullJoinSql = fullJoin.ToString(); // BLToolkit.Data.Linq.LinqException : Types in Concat are constructed incompatibly.
-				Assert.IsNotNull(fullJoinSql);
+				Assert.That(fullJoinSql, Is.Not.Null);
 
 				TestContext.Write(fullJoinSql);
 			}
@@ -1189,11 +1189,14 @@ namespace Tests.Linq
 			var i3 = sql.IndexOf("INTERSECT");
 			var i4 = sql.IndexOf("INTERSECT ALL");
 			var i5 = sql.IndexOf("EXCEPT");
-			Assert.AreNotEqual(-1, i1);
-			Assert.Less(i1, i2);
-			Assert.Less(i2, i3);
-			Assert.Less(i3, i4);
-			Assert.Less(i4, i5);
+			Assert.That(i1, Is.Not.EqualTo(-1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(i1, Is.LessThan(i2));
+				Assert.That(i2, Is.LessThan(i3));
+				Assert.That(i3, Is.LessThan(i4));
+				Assert.That(i4, Is.LessThan(i5));
+			});
 
 			// queries order correct
 			i1 = sql.IndexOf("q1");
@@ -1201,11 +1204,14 @@ namespace Tests.Linq
 			i3 = sql.IndexOf("q3");
 			i4 = sql.IndexOf("q4");
 			i5 = sql.IndexOf("q5");
-			Assert.AreNotEqual(-1, i1);
-			Assert.Less(i1, i2);
-			Assert.Less(i2, i3);
-			Assert.Less(i3, i4);
-			Assert.Less(i4, i5);
+			Assert.That(i1, Is.Not.EqualTo(-1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(i1, Is.LessThan(i2));
+				Assert.That(i2, Is.LessThan(i3));
+				Assert.That(i3, Is.LessThan(i4));
+				Assert.That(i4, Is.LessThan(i5));
+			});
 		}
 
 		public record class RecordClass (int Id, string FirstName, string LastName);
@@ -1293,9 +1299,12 @@ namespace Tests.Linq
 
 			var res = tb.Concat(tb).ToArray();
 
-			Assert.AreEqual(2, res.Length);
-			Assert.AreEqual("one two", res[0].FullName);
-			Assert.AreEqual("one two", res[1].FullName);
+			Assert.That(res, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].FullName, Is.EqualTo("one two"));
+				Assert.That(res[1].FullName, Is.EqualTo("one two"));
+			});
 		}
 
 		[Test(Description = "calculated column in set select")]
@@ -1316,15 +1325,21 @@ namespace Tests.Linq
 
 			var res = query1.Concat(query2).ToArray().OrderBy(r => r.Id).ToArray();
 
-			Assert.AreEqual(2        , res.Length);
-			Assert.AreEqual("one two", res[0].Text);
-			Assert.AreEqual("text"   , res[1].Text);
+			Assert.That(res, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].Text, Is.EqualTo("one two"));
+				Assert.That(res[1].Text, Is.EqualTo("text"));
+			});
 
 			res = query2.Concat(query1).ToArray().OrderBy(r => r.Id).ToArray();
 
-			Assert.AreEqual(2        , res.Length);
-			Assert.AreEqual("one two", res[0].Text);
-			Assert.AreEqual("text"   , res[1].Text);
+			Assert.That(res, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].Text, Is.EqualTo("one two"));
+				Assert.That(res[1].Text, Is.EqualTo("text"));
+			});
 		}
 
 		[Test(Description = "NullReferenceException : Object reference not set to an instance of an object.")]
@@ -1444,10 +1459,10 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var main = (from p in db.Person
-				select new Issue2948RankData<Issue2948MyModel>()
-				{
-					Model = { Id = p.ID, Name = p.FirstName },
-					Rank  = Sql.Ext.RowNumber().Over().PartitionBy(p.ID).OrderBy(p.ID).ToValue()
+						select new Issue2948RankData<Issue2948MyModel>()
+						{
+							Model = { Id = p.ID, Name = p.FirstName },
+							Rank  = Sql.Ext.RowNumber().Over().PartitionBy(p.ID).OrderBy(p.ID).ToValue()
 				}).Where(x => x.Rank == 1).Select(x => x.Model);
 
 			var first  = main.Where(x => x.Id != 2);
@@ -1557,14 +1572,14 @@ namespace Tests.Linq
 
 			var res = db.Person.LoadWith(p => p.Patient).Concat(db.Person.LoadWith(p => p.Patient).Take(2)).ToArray();
 
-			Assert.AreEqual(6, res.Length);
-			Assert.AreEqual(2, res.Where(r => r.ID == 2).Count());
+			Assert.That(res, Has.Length.EqualTo(6));
+			Assert.That(res.Where(r => r.ID == 2).Count(), Is.EqualTo(2));
 			var pat = res.Where(r => r.ID == 2).First();
-			Assert.IsNotNull(pat.Patient);
-			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
+			Assert.That(pat.Patient, Is.Not.Null);
+			Assert.That(pat.Patient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
 			pat = res.Where(r => r.ID == 2).Skip(1).First();
-			Assert.IsNotNull(pat.Patient);
-			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
+			Assert.That(pat.Patient, Is.Not.Null);
+			Assert.That(pat.Patient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
 		}
 
 		[Test(Description = "Associations with Concat/Union or other Set operations are not supported")]

@@ -23,8 +23,11 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual("11", query(db, "1", 1));
-				Assert.AreEqual("22", query(db, "2", 2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, "1", 1), Is.EqualTo("11"));
+					Assert.That(query(db, "2", 2), Is.EqualTo("22"));
+				});
 			}
 		}
 
@@ -36,8 +39,11 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, 1).ToList().Count);
-				Assert.AreEqual(2, query(db, 2).ToList().Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, 1).ToList(), Has.Count.EqualTo(1));
+					Assert.That(query(db, 2).ToList(), Has.Count.EqualTo(2));
+				});
 			}
 		}
 
@@ -49,21 +55,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, 1).ToList().Count);
-				Assert.AreEqual(2, query(db, 2).ToList().Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, 1).ToList(), Has.Count.EqualTo(1));
+					Assert.That(query(db, 2).ToList(), Has.Count.EqualTo(2));
+				});
 			}
 		}
 
 		[Test]
-		public async Task CompiledTest3Async([DataSources] string context)
+		public void CompiledTest3Async([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.GetTable<Child>().Where(c => c.ParentID == n).Take(n).ToListAsync(default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, (await query(db, 1)).Count);
-				Assert.AreEqual(2, (await query(db, 2)).Count);
+				Assert.Multiple(async () =>
+				{
+					Assert.That((await query(db, 1)), Has.Count.EqualTo(1));
+					Assert.That((await query(db, 2)), Has.Count.EqualTo(2));
+				});
 			}
 		}
 
@@ -74,7 +86,7 @@ namespace Tests.Linq
 				db.GetTable<Child>().Where(c => n.Contains(c.ParentID)));
 
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(3, query(db, new[] { 1, 2 }).ToList().Count);
+				Assert.That(query(db, new[] { 1, 2 }).ToList(), Has.Count.EqualTo(3));
 		}
 
 		[Test]
@@ -85,8 +97,11 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, new object[] { 1, 1     }).ToList().Count);
-				Assert.AreEqual(1, query(db, new object?[] { 2, null }).ToList().Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, new object[] { 1, 1 }).ToList(), Has.Count.EqualTo(1));
+					Assert.That(query(db, new object?[] { 2, null }).ToList(), Has.Count.EqualTo(1));
+				});
 			}
 		}
 
@@ -143,7 +158,7 @@ namespace Tests.Linq
 				Task.WaitAll(threads);
 
 				for (var i = 0; i < count; i++)
-					Assert.AreEqual(results[i, 0], results[i, 1]);
+					Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
 			}
 		}
 
@@ -178,7 +193,7 @@ namespace Tests.Linq
 				Task.WaitAll(threads);
 
 				for (var i = 0; i < count; i++)
-					Assert.AreEqual(results[i, 0], results[i, 1]);
+					Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
 			}
 		}
 
@@ -208,7 +223,7 @@ namespace Tests.Linq
 				Task.WaitAll(threads);
 
 				for (var i = 0; i < 100; i++)
-					Assert.AreEqual(results[i, 0], results[i, 1]);
+					Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
 			}
 		}
 
@@ -240,7 +255,7 @@ namespace Tests.Linq
 				Task.WaitAll(threads);
 
 				for (var i = 0; i < threadCount; i++)
-					Assert.AreEqual(results[i, 0], results[i, 1]);
+					Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
 			}
 		}
 
@@ -257,7 +272,7 @@ namespace Tests.Linq
 				});
 
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(2, query(db, 2).ToList().Count);
+				Assert.That(query(db, 2).ToList(), Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -268,34 +283,43 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, 1).ParentID);
-				Assert.AreEqual(2, query(db, 2).ParentID);
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, 1).ParentID, Is.EqualTo(1));
+					Assert.That(query(db, 2).ParentID, Is.EqualTo(2));
+				});
 			}
 		}
 
 		[Test]
-		public async Task ElementTestAsync1([DataSources] string context)
+		public void ElementTestAsync1([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).FirstAsync(default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, (await query(db, 1)).ParentID);
-				Assert.AreEqual(2, (await query(db, 2)).ParentID);
+				Assert.Multiple(async () =>
+				{
+					Assert.That((await query(db, 1)).ParentID, Is.EqualTo(1));
+					Assert.That((await query(db, 2)).ParentID, Is.EqualTo(2));
+				});
 			}
 		}
 
 		[Test]
-		public async Task ElementTestAsync2([DataSources] string context)
+		public void ElementTestAsync2([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.FirstAsync(c => c.ParentID == n, default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, (await query(db, 1)).ParentID);
-				Assert.AreEqual(2, (await query(db, 2)).ParentID);
+				Assert.Multiple(async () =>
+				{
+					Assert.That((await query(db, 1)).ParentID, Is.EqualTo(1));
+					Assert.That((await query(db, 2)).ParentID, Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -322,7 +346,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(FilterExpression))]
-		public static IQueryable<Parent> Filter(ITestDataContext db, int date)
+		private static IQueryable<Parent> Filter(ITestDataContext db, int date)
 		{
 			throw new NotImplementedException();
 		}
@@ -344,21 +368,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.IsTrue (query(db,  1));
-				Assert.IsFalse(query(db, -1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, 1), Is.True);
+					Assert.That(query(db, -1), Is.False);
+				});
 			}
 		}
 
 		[Test]
-		public async Task ContainsTestAsync([DataSources] string context)
+		public void ContainsTestAsync([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Select(c => c.ParentID).ContainsAsync(n, default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.IsTrue (await query(db,  1));
-				Assert.IsFalse(await query(db, -1));
+				Assert.Multiple(async () =>
+				{
+					Assert.That(await query(db, 1), Is.True);
+					Assert.That(await query(db, -1), Is.False);
+				});
 			}
 		}
 
@@ -370,21 +400,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.IsTrue (query(db,  1));
-				Assert.IsFalse(query(db, -1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, 1), Is.True);
+					Assert.That(query(db, -1), Is.False);
+				});
 			}
 		}
 
 		[Test]
-		public async Task AnyTestAsync([DataSources] string context)
+		public void AnyTestAsync([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.AnyAsync(c => c.ParentID == n, default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.IsTrue (await query(db,  1));
-				Assert.IsFalse(await query(db, -1));
+				Assert.Multiple(async () =>
+				{
+					Assert.That(await query(db, 1), Is.True);
+					Assert.That(await query(db, -1), Is.False);
+				});
 			}
 		}
 
@@ -396,21 +432,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.IsTrue (query(db,  1));
-				Assert.IsFalse(query(db, -1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, 1), Is.True);
+					Assert.That(query(db, -1), Is.False);
+				});
 			}
 		}
 
 		[Test]
-		public async Task AnyTestAsync2([DataSources] string context)
+		public void AnyTestAsync2([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).AnyAsync(default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.IsTrue (await query(db,  1));
-				Assert.IsFalse(await query(db, -1));
+				Assert.Multiple(async () =>
+				{
+					Assert.That(await query(db, 1), Is.True);
+					Assert.That(await query(db, -1), Is.False);
+				});
 			}
 		}
 
@@ -422,21 +464,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.That(query(db,  1), Is.EqualTo(1));
-				Assert.That(query(db, -1), Is.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, 1), Is.EqualTo(1));
+					Assert.That(query(db, -1), Is.EqualTo(0));
+				});
 			}
 		}
 
 		[Test]
-		public async Task CountTestAsync([DataSources] string context)
+		public void CountTestAsync([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.LongCountAsync(c => c.ParentID == n, default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.That(await query(db,  1), Is.EqualTo(1L));
-				Assert.That(await query(db, -1), Is.EqualTo(0L));
+				Assert.Multiple(async () =>
+				{
+					Assert.That(await query(db, 1), Is.EqualTo(1L));
+					Assert.That(await query(db, -1), Is.EqualTo(0L));
+				});
 			}
 		}
 
@@ -448,21 +496,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.That(query(db,  1), Is.EqualTo(1));
-				Assert.That(query(db, -1), Is.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, 1), Is.EqualTo(1));
+					Assert.That(query(db, -1), Is.EqualTo(0));
+				});
 			}
 		}
 
 		[Test]
-		public async Task CountTestAsync2([DataSources] string context)
+		public void CountTestAsync2([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).CountAsync(default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.That(await query(db,  1), Is.EqualTo(1));
-				Assert.That(await query(db, -1), Is.EqualTo(0));
+				Assert.Multiple(async () =>
+				{
+					Assert.That(await query(db, 1), Is.EqualTo(1));
+					Assert.That(await query(db, -1), Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -474,21 +528,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.That(query(db,  1), Is.EqualTo(1));
-				Assert.That(query(db, -1), Is.EqualTo(null));
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, 1), Is.EqualTo(1));
+					Assert.That(query(db, -1), Is.EqualTo(null));
+				});
 			}
 		}
 
 		[Test]
-		public async Task MaxTestAsync([DataSources] string context)
+		public void MaxTestAsync([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).MaxAsync(p => (int?)p.ParentID, default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.That(await query(db,  1), Is.EqualTo(1));
-				Assert.That(await query(db, -1), Is.EqualTo(null));
+				Assert.Multiple(async () =>
+				{
+					Assert.That(await query(db, 1), Is.EqualTo(1));
+					Assert.That(await query(db, -1), Is.EqualTo(null));
+				});
 			}
 		}
 
@@ -500,21 +560,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.That(query(db,  1), Is.EqualTo(1));
-				Assert.That(query(db, -1), Is.EqualTo(null));
+				Assert.Multiple(() =>
+				{
+					Assert.That(query(db, 1), Is.EqualTo(1));
+					Assert.That(query(db, -1), Is.EqualTo(null));
+				});
 			}
 		}
 
 		[Test]
-		public async Task MaxTestAsync2([DataSources] string context)
+		public void MaxTestAsync2([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).Select(p => (int?)p.ParentID).MaxAsync(default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.That(await query(db,  1), Is.EqualTo(1));
-				Assert.That(await query(db, -1), Is.EqualTo(null));
+				Assert.Multiple(async () =>
+				{
+					Assert.That(await query(db, 1), Is.EqualTo(1));
+					Assert.That(await query(db, -1), Is.EqualTo(null));
+				});
 			}
 		}
 	}

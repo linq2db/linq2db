@@ -24,7 +24,7 @@ namespace Tests.Linq
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], ([Description]), @term)");
 			}
@@ -41,7 +41,7 @@ namespace Tests.Linq
 					  orderby t.ProductName descending
 					  select t;
 				var list = q.ToList();
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], ([Description]), N'sweetest candy bread and dry meat')");
 			}
@@ -63,11 +63,14 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(3, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(7, results[2].CategoryID);
-				Assert.AreEqual(5, results[3].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(4));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(3));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+					Assert.That(results[2].CategoryID, Is.EqualTo(7));
+					Assert.That(results[3].CategoryID, Is.EqualTo(5));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], ([Description]), @term)");
 			}
@@ -177,10 +180,13 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(3, results.Count);
-				Assert.AreEqual(3, results[0].CategoryID);
-				Assert.AreEqual(5, results[1].CategoryID);
-				Assert.AreEqual(8, results[2].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(3));
+					Assert.That(results[1].CategoryID, Is.EqualTo(5));
+					Assert.That(results[2].CategoryID, Is.EqualTo(8));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, @term)");
 			}
@@ -200,8 +206,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, @term, LANGUAGE @language)");
 			}
@@ -221,9 +227,12 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(2, results.Count);
-				Assert.AreEqual(3, results[0].CategoryID);
-				Assert.AreEqual(5, results[1].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(3));
+					Assert.That(results[1].CategoryID, Is.EqualTo(5));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, @term, LANGUAGE @language, @top)");
 			}
@@ -243,8 +252,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, @term, LANGUAGE @language)");
 			}
@@ -264,8 +273,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, @term, LANGUAGE @language, @top)");
 			}
@@ -285,9 +294,12 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(2, results.Count);
-				Assert.AreEqual(3, results[0].CategoryID);
-				Assert.AreEqual(5, results[1].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(3));
+					Assert.That(results[1].CategoryID, Is.EqualTo(5));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, @term, @top)");
 			}
@@ -307,10 +319,13 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(3, results.Count);
-				Assert.AreEqual(6, results[0].CategoryID);
-				Assert.AreEqual(3, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(6));
+					Assert.That(results[1].CategoryID, Is.EqualTo(3));
+					Assert.That(results[2].CategoryID, Is.EqualTo(5));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], ([CategoryName], [Description]), @term)");
 			}
@@ -441,11 +456,14 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(3, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(7, results[2].CategoryID);
-				Assert.AreEqual(5, results[3].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(4));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(3));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+					Assert.That(results[2].CategoryID, Is.EqualTo(7));
+					Assert.That(results[3].CategoryID, Is.EqualTo(5));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], ([Description]), N'sweetest candy bread and dry meat')");
 			}
@@ -549,10 +567,13 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(3, results.Count);
-				Assert.AreEqual(3, results[0].CategoryID);
-				Assert.AreEqual(5, results[1].CategoryID);
-				Assert.AreEqual(8, results[2].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(3));
+					Assert.That(results[1].CategoryID, Is.EqualTo(5));
+					Assert.That(results[2].CategoryID, Is.EqualTo(8));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, N'seafood bread')");
 			}
@@ -571,8 +592,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, N'seafood bread', LANGUAGE N'Russian')");
 			}
@@ -591,9 +612,12 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(2, results.Count);
-				Assert.AreEqual(3, results[0].CategoryID);
-				Assert.AreEqual(5, results[1].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(3));
+					Assert.That(results[1].CategoryID, Is.EqualTo(5));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, N'seafood bread', LANGUAGE N'English', 2)");
 			}
@@ -612,8 +636,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, N'seafood bread', LANGUAGE 1062)");
 			}
@@ -632,8 +656,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, N'seafood bread', LANGUAGE 1053, 2)");
 			}
@@ -652,9 +676,12 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(2, results.Count);
-				Assert.AreEqual(3, results[0].CategoryID);
-				Assert.AreEqual(5, results[1].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(3));
+					Assert.That(results[1].CategoryID, Is.EqualTo(5));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], *, N'seafood bread', 2)");
 			}
@@ -673,10 +700,13 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(3, results.Count);
-				Assert.AreEqual(6, results[0].CategoryID);
-				Assert.AreEqual(3, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(6));
+					Assert.That(results[1].CategoryID, Is.EqualTo(3));
+					Assert.That(results[2].CategoryID, Is.EqualTo(5));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXTTABLE([Categories], ([CategoryName], [Description]), N'meat bread')");
 			}
@@ -801,8 +831,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 			}
 		}
 
@@ -936,8 +966,8 @@ namespace Tests.Linq
 				if (iteration > 1)
 					q.GetCacheMissCount().Should().Be(save);
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery.Should().Contain("CONTAINSTABLE([Categories], *, @search)");
 			}
@@ -957,8 +987,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery!.Should().Contain("CONTAINSTABLE([Categories], *, @search, LANGUAGE @language)");
 			}
@@ -978,8 +1008,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery.Should().Contain("CONTAINSTABLE([Categories], *, @search, LANGUAGE @language, @top)");
 			}
@@ -1267,8 +1297,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery.Should().Contain("CONTAINSTABLE([Categories], *, N'seafood OR bread')");
 			}
@@ -1287,8 +1317,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery.Should().Contain("CONTAINSTABLE([Categories], *, N'seafood OR bread', LANGUAGE N'Russian')");
 			}
@@ -1307,8 +1337,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 
 				db.LastQuery.Should().Contain("CONTAINSTABLE([Categories], *, N'seafood | bread', LANGUAGE N'English', 2)");
 			}
@@ -1501,8 +1531,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(8, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(8));
 			}
 		}
 		#endregion
@@ -1521,11 +1551,14 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(4));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(7));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+					Assert.That(results[2].CategoryID, Is.EqualTo(5));
+					Assert.That(results[3].CategoryID, Is.EqualTo(3));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXT(([c_1].*), N'sweetest candy bread and dry meat')");
 			}
@@ -1544,11 +1577,14 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(4));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(7));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+					Assert.That(results[2].CategoryID, Is.EqualTo(5));
+					Assert.That(results[3].CategoryID, Is.EqualTo(3));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXT(([c_1].*), N'sweetest candy bread and dry meat', LANGUAGE N'English')");
 			}
@@ -1567,11 +1603,14 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(4));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(7));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+					Assert.That(results[2].CategoryID, Is.EqualTo(5));
+					Assert.That(results[3].CategoryID, Is.EqualTo(3));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXT(([c_1].*), N'sweetest candy bread and dry meat', LANGUAGE 1033)");
 			}
@@ -1590,11 +1629,14 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(4));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(7));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+					Assert.That(results[2].CategoryID, Is.EqualTo(5));
+					Assert.That(results[3].CategoryID, Is.EqualTo(3));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXT(([c_1].[Description]), N'sweetest candy bread and dry meat')");
 			}
@@ -1613,11 +1655,14 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(4));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(7));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+					Assert.That(results[2].CategoryID, Is.EqualTo(5));
+					Assert.That(results[3].CategoryID, Is.EqualTo(3));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXT(([c_1].[Description]), N'sweetest candy bread and dry meat', LANGUAGE N'English')");
 			}
@@ -1636,8 +1681,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(6, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(6));
 
 				db.LastQuery.Should().Contain("FREETEXT(([c_1].[CategoryName]), N'sweetest candy bread and dry meat', LANGUAGE 1033)");
 			}
@@ -1656,11 +1701,14 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(4));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(7));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+					Assert.That(results[2].CategoryID, Is.EqualTo(5));
+					Assert.That(results[3].CategoryID, Is.EqualTo(3));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXT(([c_1].[Description], [c_1].[Description]), N'sweetest candy bread and dry meat')");
 			}
@@ -1679,11 +1727,14 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(4));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(7));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+					Assert.That(results[2].CategoryID, Is.EqualTo(5));
+					Assert.That(results[3].CategoryID, Is.EqualTo(3));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXT(([c_1].[CategoryName], [c_1].[Description]), N'sweetest candy bread and dry meat', LANGUAGE N'English')");
 			}
@@ -1702,11 +1753,14 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(4));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(7));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+					Assert.That(results[2].CategoryID, Is.EqualTo(5));
+					Assert.That(results[3].CategoryID, Is.EqualTo(3));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXT(([c_1].[CategoryName], [c_1].[Description]), N'sweetest candy bread and dry meat', LANGUAGE 1033)");
 			}
@@ -1730,16 +1784,19 @@ namespace Tests.Linq
 
 				if (lang == "English")
 				{
-					Assert.AreEqual(4, results.Count);
-					Assert.AreEqual(7, results[0].CategoryID);
-					Assert.AreEqual(6, results[1].CategoryID);
-					Assert.AreEqual(5, results[2].CategoryID);
-					Assert.AreEqual(3, results[3].CategoryID);
+					Assert.That(results, Has.Count.EqualTo(4));
+					Assert.Multiple(() =>
+					{
+						Assert.That(results[0].CategoryID, Is.EqualTo(7));
+						Assert.That(results[1].CategoryID, Is.EqualTo(6));
+						Assert.That(results[2].CategoryID, Is.EqualTo(5));
+						Assert.That(results[3].CategoryID, Is.EqualTo(3));
+					});
 				}
 				else
 				{
-					Assert.AreEqual(1, results.Count);
-					Assert.AreEqual(6, results[0].CategoryID);
+					Assert.That(results, Has.Count.EqualTo(1));
+					Assert.That(results[0].CategoryID, Is.EqualTo(6));
 				}
 
 				db.LastQuery.Should().Contain("FREETEXT(([c_1].[CategoryName], [c_1].[Description]), @search, LANGUAGE @lang)");
@@ -1759,11 +1816,14 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(4, results.Count);
-				Assert.AreEqual(7, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
-				Assert.AreEqual(5, results[2].CategoryID);
-				Assert.AreEqual(3, results[3].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(4));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(7));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+					Assert.That(results[2].CategoryID, Is.EqualTo(5));
+					Assert.That(results[3].CategoryID, Is.EqualTo(3));
+				});
 			}
 		}
 
@@ -1780,9 +1840,12 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(2, results.Count);
-				Assert.AreEqual(6, results[0].CategoryID);
-				Assert.AreEqual(6, results[1].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].CategoryID, Is.EqualTo(6));
+					Assert.That(results[1].CategoryID, Is.EqualTo(6));
+				});
 
 				db.LastQuery.Should().Contain("FREETEXT(([c2].*), N'bread')");
 				db.LastQuery.Should().Contain("FREETEXT(([c1].*), N'meat')");
@@ -1805,8 +1868,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(6, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(6));
 
 				db.LastQuery.Should().Contain("CONTAINS(([c_1].*), N'candy OR meat')");
 			}
@@ -1825,7 +1888,7 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(0, results.Count);
+				Assert.That(results, Is.Empty);
 
 				db.LastQuery.Should().Contain("CONTAINS(([c_1].*), N'dry', LANGUAGE N'English')");
 			}
@@ -1844,7 +1907,7 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(0, results.Count);
+				Assert.That(results, Is.Empty);
 
 				db.LastQuery.Should().Contain("CONTAINS(([c_1].*), N'sweetest', LANGUAGE 1033)");
 			}
@@ -1863,7 +1926,7 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(0, results.Count);
+				Assert.That(results, Is.Empty);
 
 				db.LastQuery.Should().Contain("CONTAINS(([c_1].[Description]), N'bread')");
 			}
@@ -1882,7 +1945,7 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(0, results.Count);
+				Assert.That(results, Is.Empty);
 
 				db.LastQuery.Should().Contain("CONTAINS(([c_1].[Description]), N'dry & bread', LANGUAGE N'English')");
 			}
@@ -1901,8 +1964,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(6, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(6));
 
 				db.LastQuery.Should().Contain("CONTAINS(([c_1].[CategoryName]), N'candy | meat', LANGUAGE 1033)");
 			}
@@ -1921,7 +1984,7 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(0, results.Count);
+				Assert.That(results, Is.Empty);
 
 				db.LastQuery.Should().Contain("CONTAINS(([c_1].[Description], [c_1].[Description]), N'ананас')");
 			}
@@ -1940,7 +2003,7 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(0, results.Count);
+				Assert.That(results, Is.Empty);
 
 				db.LastQuery.Should().Contain("CONTAINS(([c_1].[CategoryName], [c_1].[Description]), N'salo & bread', LANGUAGE N'English')");
 			}
@@ -1959,8 +2022,8 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(6, results[0].CategoryID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].CategoryID, Is.EqualTo(6));
 
 				db.LastQuery.Should().Contain("CONTAINS(([c_1].[CategoryName], [c_1].[Description]), N'meat', LANGUAGE 1033)");
 			}
@@ -1999,7 +2062,7 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(0, results.Count);
+				Assert.That(results, Is.Empty);
 			}
 		}
 
@@ -2016,7 +2079,7 @@ namespace Tests.Linq
 
 				var results = q.ToList();
 
-				Assert.AreEqual(0, results.Count);
+				Assert.That(results, Is.Empty);
 
 				db.LastQuery.Should().Contain("CONTAINS(([c2].*), N'bread')");
 				db.LastQuery.Should().Contain("CONTAINS(([c1].*), N'meat')");

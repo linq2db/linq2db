@@ -103,7 +103,7 @@ namespace Tests.UserTests
 					.SelectMany(c => c.Children)
 					.ToList();
 
-				Assert.IsNotEmpty(children);
+				Assert.That(children, Is.Not.Empty);
 
 				var expected = Child.Where(c => c.ParentID == 1);
 				var result = children.Select(c => new Model.Child { ChildID = c.ChildID, ParentID = c.ParentID!.Value });
@@ -121,7 +121,7 @@ namespace Tests.UserTests
 					.Select(p => new {p.Children})
 					.ToList();
 
-				Assert.IsNotEmpty(children);
+				Assert.That(children, Is.Not.Empty);
 			}
 		}
 
@@ -135,7 +135,7 @@ namespace Tests.UserTests
 					.SelectMany(p => p.Children)
 					.ToList();
 
-				Assert.IsNotEmpty(children);
+				Assert.That(children, Is.Not.Empty);
 
 				var expected = Child.Where(p => p.ParentID == 1);
 				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = (int)c.ParentID });
@@ -153,7 +153,7 @@ namespace Tests.UserTests
 					.Select(p => new {p.Children})
 					.ToList();
 
-				Assert.IsNotEmpty(children);
+				Assert.That(children, Is.Not.Empty);
 			}
 		}
 
@@ -189,7 +189,7 @@ namespace Tests.UserTests
 					.SelectMany(p => p.Children)
 					.ToList();
 
-				Assert.IsNotEmpty(children);
+				Assert.That(children, Is.Not.Empty);
 
 				var expected = Child.Where(c => c.ParentID == 1);
 				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID!.RealValue });
@@ -209,7 +209,7 @@ namespace Tests.UserTests
 					.SelectMany(p => p.Children)
 					.ToList();
 
-				Assert.IsNotEmpty(children);
+				Assert.That(children, Is.Not.Empty);
 
 				var expected = Child.Where(c => c.ParentID == 1);
 				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID });
@@ -229,7 +229,7 @@ namespace Tests.UserTests
 					.SelectMany(p => p.Children)
 					.ToList();
 
-				Assert.IsNotEmpty(children);
+				Assert.That(children, Is.Not.Empty);
 
 				var expected = Child.Where(c => c.ParentID == 1);
 				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID!.RealValue });

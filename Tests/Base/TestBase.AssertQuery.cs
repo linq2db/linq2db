@@ -20,7 +20,7 @@ namespace Tests
 {
 	partial class TestBase
 	{
-		public static List<Expression> GetMemberPath(Expression? expression)
+		protected static List<Expression> GetMemberPath(Expression? expression)
 		{
 			var result = new List<Expression>();
 
@@ -208,7 +208,7 @@ namespace Tests
 			return items1;
 		}
 
-		public static MethodCallExpression RemapMethod(MethodCallExpression mc)
+		protected static MethodCallExpression RemapMethod(MethodCallExpression mc)
 		{
 			MethodCallExpression SetOperationRemap(MethodInfo genericMethodInfo)
 			{
@@ -271,7 +271,7 @@ namespace Tests
 			return mc;
 		}
 
-		public T[] AssertQuery<T>(IQueryable<T> query, IEqualityComparer<T>? comparer = null)
+		protected T[] AssertQuery<T>(IQueryable<T> query, IEqualityComparer<T>? comparer = null)
 		{
 			var expr   = query.Expression;
 			var actual = query.ToArray();

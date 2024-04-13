@@ -445,7 +445,7 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreNotEqual(Guid.Empty, (from p in db.Types select Sql.NewGuid()).First());
+				Assert.That((from p in db.Types select Sql.NewGuid()).First(), Is.Not.EqualTo(Guid.Empty));
 		}
 
 		[Test]
@@ -484,22 +484,20 @@ namespace Tests.Linq
 		public void Count1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Count(c => c.ParentID == 1),
-					db.Child.Count(c => c.ParentID == 1));
+				Assert.That(
+					db.Child.Count(c => c.ParentID == 1), Is.EqualTo(Child.Count(c => c.ParentID == 1)));
 		}
 
 		[Test]
 		public void Sum1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Sum(c => c.ParentID),
-					db.Child.Sum(c => c.ParentID));
+				Assert.That(
+					db.Child.Sum(c => c.ParentID), Is.EqualTo(Child.Sum(c => c.ParentID)));
 		}
 
 		[ExpressionMethod("ChildCountExpression")]
-		public static int ChildCount(Parent parent)
+		private static int ChildCount(Parent parent)
 		{
 			throw new NotSupportedException();
 		}
@@ -616,7 +614,7 @@ namespace Tests.Linq
 					select c;
 
 				var str = q.ToString()!;
-				Assert.True(str.Contains(" matches "));
+				Assert.That(str, Does.Contain(" matches "));
 			}
 		}
 

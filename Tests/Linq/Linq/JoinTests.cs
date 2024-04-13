@@ -283,14 +283,20 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.AreEqual(1, list.Count);
-				Assert.AreEqual(1, list[0].p.ParentID);
-				Assert.AreEqual(1, list[0].lj.Count());
+				Assert.That(list, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0].p.ParentID, Is.EqualTo(1));
+					Assert.That(list[0].lj.Count(), Is.EqualTo(1));
+				});
 
 				var ch = list[0].lj.ToList();
 
-				Assert.AreEqual( 1, ch[0].ParentID);
-				Assert.AreEqual(11, ch[0].ChildID);
+				Assert.Multiple(() =>
+				{
+					Assert.That(ch[0].ParentID, Is.EqualTo(1));
+					Assert.That(ch[0].ChildID, Is.EqualTo(11));
+				});
 			}
 		}
 
@@ -323,9 +329,12 @@ namespace Tests.Linq
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,              list2.Count);
-				Assert.AreEqual(list1[0].p.ParentID,      list2[0].p.ParentID);
-				Assert.AreEqual(list1[0].lj1.lj1.Count(), list2[0].lj1.lj1.Count());
+				Assert.That(list2, Has.Count.EqualTo(list1.Count));
+				Assert.Multiple(() =>
+				{
+					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
+					Assert.That(list2[0].lj1.lj1.Count(), Is.EqualTo(list1[0].lj1.lj1.Count()));
+				});
 			}
 		}
 
@@ -354,9 +363,12 @@ namespace Tests.Linq
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,          list2.Count);
-				Assert.AreEqual(list1[0].p.ParentID,  list2[0].p.ParentID);
-				Assert.AreEqual(list1[0].lj1.Count(), list2[0].lj1.Count());
+				Assert.That(list2, Has.Count.EqualTo(list1.Count));
+				Assert.Multiple(() =>
+				{
+					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
+					Assert.That(list2[0].lj1.Count(), Is.EqualTo(list1[0].lj1.Count()));
+				});
 			}
 		}
 
@@ -405,7 +417,7 @@ namespace Tests.Linq
 					select new { p1 = lj1, p2 = lj1.OrderByDescending(e => e.ChildID).First() }
 				).ToList();
 
-				Assert.AreEqual(expected.Count, result.Count);
+				Assert.That(result, Has.Count.EqualTo(expected.Count));
 				AreEqual(expected[0].p1, result[0].p1);
 			}
 		}
@@ -482,14 +494,20 @@ namespace Tests.Linq
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,         list2.Count);
-				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
-				Assert.AreEqual(list1[0].lj.Count(), list2[0].lj.Count());
+				Assert.That(list2, Has.Count.EqualTo(list1.Count));
+				Assert.Multiple(() =>
+				{
+					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
+					Assert.That(list2[0].lj.Count(), Is.EqualTo(list1[0].lj.Count()));
+				});
 
 				var ch2 = list2[0].lj.OrderBy(_ => _.ChildID).ToList();
 
-				Assert.AreEqual(ch1[0].ParentID, ch2[0].ParentID);
-				Assert.AreEqual(ch1[0].ChildID,  ch2[0].ChildID);
+				Assert.Multiple(() =>
+				{
+					Assert.That(ch2[0].ParentID, Is.EqualTo(ch1[0].ParentID));
+					Assert.That(ch2[0].ChildID, Is.EqualTo(ch1[0].ChildID));
+				});
 			}
 		}
 
@@ -517,14 +535,20 @@ namespace Tests.Linq
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,         list2.Count);
-				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
-				Assert.AreEqual(list1[0].j.Count(),  list2[0].j.Count());
+				Assert.That(list2, Has.Count.EqualTo(list1.Count));
+				Assert.Multiple(() =>
+				{
+					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
+					Assert.That(list2[0].j.Count(), Is.EqualTo(list1[0].j.Count()));
+				});
 
 				var ch2 = list2[0].j.OrderBy(_ => _.ChildID).ThenBy(_ => _.ParentID).ToList();
 
-				Assert.AreEqual(ch1[0].ParentID, ch2[0].ParentID);
-				Assert.AreEqual(ch1[0].ChildID,  ch2[0].ChildID);
+				Assert.Multiple(() =>
+				{
+					Assert.That(ch2[0].ParentID, Is.EqualTo(ch1[0].ParentID));
+					Assert.That(ch2[0].ChildID, Is.EqualTo(ch1[0].ChildID));
+				});
 			}
 		}
 
@@ -819,7 +843,7 @@ namespace Tests.Linq
 
 				var _ = q.ToList();
 
-				Assert.AreEqual(0, CountedChild.Count);
+				Assert.That(CountedChild.Count, Is.EqualTo(0));
 			}
 		}
 
@@ -1021,7 +1045,7 @@ namespace Tests.Linq
 				}
 
 				var list = q.ToList();
-				Assert.IsNotEmpty(list);
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
@@ -1434,7 +1458,7 @@ namespace Tests.Linq
 					&& Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
 					.Single();
 
-				Assert.True(areEqual);
+				Assert.That(areEqual, Is.True);
 			}
 		}
 
@@ -1457,7 +1481,7 @@ namespace Tests.Linq
 					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
 					.Single();
 
-				Assert.False(areEqual);
+				Assert.That(areEqual, Is.False);
 			}
 		}
 
@@ -1480,7 +1504,7 @@ namespace Tests.Linq
 					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
 					.Single();
 
-				Assert.False(areEqual);
+				Assert.That(areEqual, Is.False);
 			}
 		}
 
@@ -1504,7 +1528,7 @@ namespace Tests.Linq
 					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
 					.Single();
 
-				Assert.False(areEqual);
+				Assert.That(areEqual, Is.False);
 			}
 		}
 
@@ -1527,7 +1551,7 @@ namespace Tests.Linq
 					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
 					.Single();
 
-				Assert.True(areEqual);
+				Assert.That(areEqual, Is.True);
 			}
 		}
 
@@ -2211,11 +2235,14 @@ namespace Tests.Linq
 
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2234,11 +2261,14 @@ namespace Tests.Linq
 
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2257,11 +2287,14 @@ namespace Tests.Linq
 
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2280,11 +2313,14 @@ namespace Tests.Linq
 
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2302,11 +2338,14 @@ namespace Tests.Linq
 
 				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2324,11 +2363,14 @@ namespace Tests.Linq
 
 				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2347,11 +2389,14 @@ namespace Tests.Linq
 
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2370,11 +2415,14 @@ namespace Tests.Linq
 
 				var results = t.ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2393,11 +2441,14 @@ namespace Tests.Linq
 
 				var results = t.ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2415,11 +2466,14 @@ namespace Tests.Linq
 
 				var results = q.ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2437,11 +2491,14 @@ namespace Tests.Linq
 
 				var results = q.ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2465,10 +2522,13 @@ namespace Tests.Linq
 
 				var results = t.ToArray();
 
-				Assert.AreEqual(3, results.Length);
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
-				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+				Assert.That(results, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -2492,10 +2552,13 @@ namespace Tests.Linq
 
 				var results = t.ToArray();
 
-				Assert.AreEqual(3, results.Length);
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
-				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+				Assert.That(results, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -2518,10 +2581,13 @@ namespace Tests.Linq
 
 				var results = q.ToArray();
 
-				Assert.AreEqual(3, results.Length);
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
-				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+				Assert.That(results, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -2544,10 +2610,13 @@ namespace Tests.Linq
 
 				var results = q.ToArray();
 
-				Assert.AreEqual(3, results.Length);
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
-				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+				Assert.That(results, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -2603,14 +2672,20 @@ namespace Tests.Linq
 							 };
 
 				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
-				Assert.IsNotNull(r);
-				Assert.AreEqual(1, r.MinQuantity);
-				Assert.AreEqual(2, r.MaxQuantity);
+				Assert.That(r, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r.MinQuantity, Is.EqualTo(1));
+					Assert.That(r.MaxQuantity, Is.EqualTo(2));
+				});
 
 				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
-				Assert.IsNotNull(r2);
-				Assert.AreEqual(3, r2.MinQuantity);
-				Assert.AreEqual(4, r2.MaxQuantity);
+				Assert.That(r2, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r2.MinQuantity, Is.EqualTo(3));
+					Assert.That(r2.MaxQuantity, Is.EqualTo(4));
+				});
 			}
 		}
 
@@ -2639,14 +2714,20 @@ namespace Tests.Linq
 							 };
 
 				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
-				Assert.IsNotNull(r);
-				Assert.AreEqual(1, r.MinQuantity);
-				Assert.AreEqual(2, r.MaxQuantity);
+				Assert.That(r, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r.MinQuantity, Is.EqualTo(1));
+					Assert.That(r.MaxQuantity, Is.EqualTo(2));
+				});
 
 				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
-				Assert.IsNotNull(r2);
-				Assert.AreEqual(3, r2.MinQuantity);
-				Assert.AreEqual(4, r2.MaxQuantity);
+				Assert.That(r2, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r2.MinQuantity, Is.EqualTo(3));
+					Assert.That(r2.MaxQuantity, Is.EqualTo(4));
+				});
 			}
 		}
 
@@ -2675,14 +2756,20 @@ namespace Tests.Linq
 							 };
 
 				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
-				Assert.IsNotNull(r);
-				Assert.AreEqual(1, r.MinQuantity);
-				Assert.AreEqual(2, r.MaxQuantity);
+				Assert.That(r, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r.MinQuantity, Is.EqualTo(1));
+					Assert.That(r.MaxQuantity, Is.EqualTo(2));
+				});
 
 				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
-				Assert.IsNotNull(r2);
-				Assert.AreEqual(3, r2.MinQuantity);
-				Assert.AreEqual(4, r2.MaxQuantity);
+				Assert.That(r2, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r2.MinQuantity, Is.EqualTo(3));
+					Assert.That(r2.MaxQuantity, Is.EqualTo(4));
+				});
 			}
 		}
 
@@ -2937,7 +3024,7 @@ namespace Tests.Linq
 					.Where(q => q.LeftCount == null || q.RightCount == null)
 					.Count();
 
-				Assert.AreNotEqual(0, count);
+				Assert.That(count, Is.Not.EqualTo(0));
 			}
 		}
 

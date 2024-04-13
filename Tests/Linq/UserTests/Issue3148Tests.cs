@@ -41,7 +41,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -64,7 +64,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -87,7 +87,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -120,7 +120,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Parent>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Parent>.CacheMissCount);
+				Assert.That(Query<Parent>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -153,7 +153,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Parent>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Parent>.CacheMissCount);
+				Assert.That(Query<Parent>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -186,7 +186,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Parent>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Parent>.CacheMissCount);
+				Assert.That(Query<Parent>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -230,7 +230,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Child>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Child>.CacheMissCount);
+				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -272,7 +272,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Child>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Child>.CacheMissCount);
+				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -304,7 +304,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Child>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Child>.CacheMissCount);
+				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -325,9 +325,9 @@ namespace Tests.UserTests
 				}
 
 				provider.Execute<int>(query1.Body);
-				Assert.True(db.LastQuery!.Contains("DELETE FROM"));
+				Assert.That(db.LastQuery!, Does.Contain("DELETE FROM"));
 				provider.Execute<int>(query2.Body);
-				Assert.True(db.LastQuery!.Contains("DROP TABLE IF EXISTS"));
+				Assert.That(db.LastQuery!, Does.Contain("DROP TABLE IF EXISTS"));
 			}
 		}
 
@@ -351,7 +351,7 @@ namespace Tests.UserTests
 				}
 				catch (Exception e)
 				{
-					Assert.True(e.Message.Contains("invalid table name"));
+					Assert.That(e.Message, Does.Contain("invalid table name"));
 				}
 			}
 		}
@@ -381,7 +381,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<TestTable>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<TestTable>.CacheMissCount);
+				Assert.That(Query<TestTable>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -404,7 +404,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -427,7 +427,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -450,7 +450,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -487,7 +487,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -508,7 +508,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<int>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<int>.CacheMissCount);
+				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -529,7 +529,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<int?>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<int?>.CacheMissCount);
+				Assert.That(Query<int?>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -551,7 +551,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<string>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<string>.CacheMissCount);
+				Assert.That(Query<string>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -574,7 +574,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -603,7 +603,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<TestTable>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<TestTable>.CacheMissCount);
+				Assert.That(Query<TestTable>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -636,7 +636,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Doctor>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Doctor>.CacheMissCount);
+				Assert.That(Query<Doctor>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -660,8 +660,8 @@ namespace Tests.UserTests
 		{
 			var restored = expr.Transform(RestoreDefault);
 
-			Assert.AreNotEqual(expr, restored);
-			Assert.IsNotNull(restored.Find<object?>(null, (_, e) => e.NodeType == ExpressionType.Default));
+			Assert.That(restored, Is.Not.EqualTo(expr));
+			Assert.That(restored.Find<object?>(null, (_, e) => e.NodeType == ExpressionType.Default), Is.Not.Null);
 
 			return (T)restored;
 		}

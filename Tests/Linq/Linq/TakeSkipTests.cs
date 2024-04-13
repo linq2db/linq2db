@@ -36,7 +36,7 @@ namespace Tests.Linq
 
 			// check only strong providers
 			if (!inline && db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter && db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip)
-				Assert.That(commandInterceptor.Parameters.Length, Is.GreaterThan(additional));
+				Assert.That(commandInterceptor.Parameters, Has.Length.GreaterThan(additional));
 		}
 
 		static void CheckTakeSkipParameterized(IDataContext dc, int additional = 0)
@@ -52,7 +52,7 @@ namespace Tests.Linq
 			{
 				for (var i = 2; i <= 3; i++)
 				{
-					Assert.AreEqual(i, (from ch in db.Child select ch).Take(i).ToList().Count);
+					Assert.That((from ch in db.Child select ch).Take(i).ToList(), Has.Count.EqualTo(i));
 					CheckTakeGlobalParams(db);
 				}
 
@@ -60,7 +60,7 @@ namespace Tests.Linq
 
 				for (var i = 2; i <= 3; i++)
 				{
-					Assert.AreEqual(i, (from ch in db.Child select ch).Take(i).ToList().Count);
+					Assert.That((from ch in db.Child select ch).Take(i).ToList(), Has.Count.EqualTo(i));
 					CheckTakeGlobalParams(db);
 				}
 
@@ -76,7 +76,7 @@ namespace Tests.Linq
 			{
 				for (var i = 2; i <= 3; i++)
 				{
-					Assert.AreEqual(i, (from ch in db.Child select ch).Take(i).ToList().Count);
+					Assert.That((from ch in db.Child select ch).Take(i).ToList(), Has.Count.EqualTo(i));
 					CheckTakeGlobalParams(db);
 				}
 
@@ -84,7 +84,7 @@ namespace Tests.Linq
 
 				for (var i = 2; i <= 3; i++)
 				{
-					Assert.AreEqual(i, (await (from ch in db.Child select ch).Take(i).ToListAsync()).Count);
+					Assert.That((await (from ch in db.Child select ch).Take(i).ToListAsync()), Has.Count.EqualTo(i));
 					CheckTakeGlobalParams(db);
 				}
 
@@ -220,7 +220,7 @@ namespace Tests.Linq
 			{
 				var expected =    Child.OrderBy(c => c.ChildID).Take(3);
 				var result   = db.Child.OrderBy(c => c.ChildID).Take(3);
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -231,7 +231,7 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(3, db.Child.Take(() => 3).ToList().Count);
+				Assert.That(db.Child.Take(() => 3).ToList(), Has.Count.EqualTo(3));
 			}
 		}
 
@@ -242,7 +242,7 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(3, db.Child.Take(() => n).ToList().Count);
+				Assert.That(db.Child.Take(() => n).ToList(), Has.Count.EqualTo(3));
 			}
 		}
 
@@ -252,9 +252,8 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(
-					Child.Take(5).Count(),
-					db.Child.Take(5).Count());
+				Assert.That(
+					db.Child.Take(5).Count(), Is.EqualTo(Child.Take(5).Count()));
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -305,7 +304,7 @@ namespace Tests.Linq
 			{
 				var expected = Child.OrderByDescending(c => c.ChildID).Skip(3);
 				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(3);
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -353,9 +352,8 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(
-					   Child.Skip(2).Count(),
-					db.Child.Skip(2).Count());
+				Assert.That(
+					db.Child.Skip(2).Count(), Is.EqualTo(Child.Skip(2).Count()));
 			}
 		}
 
@@ -373,7 +371,7 @@ namespace Tests.Linq
 				{
 					var expected =    Child.OrderByDescending(c => c.ChildID).Skip(2).Take(5);
 					var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(2).Take(5);
-					Assert.IsTrue(result.ToList().SequenceEqual(expected));
+					Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 					CheckTakeGlobalParams(db);
 				}
 			}
@@ -393,7 +391,7 @@ namespace Tests.Linq
 				{
 					var expected =    Child.OrderByDescending(c => c.ChildID).Take(7).Skip(2);
 					var result   = db.Child.OrderByDescending(c => c.ChildID).Take(7).Skip(2);
-					Assert.IsTrue(result.ToList().SequenceEqual(expected));
+					Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 					CheckTakeGlobalParams(db);
 				}
 			}
@@ -413,7 +411,7 @@ namespace Tests.Linq
 				{
 					var expected = Child.OrderBy(c => c.ChildID).Skip(1).Take(7).Skip(2);
 					var result   = db.Child.OrderBy(c => c.ChildID).Skip(1).Take(7).Skip(2);
-					Assert.IsTrue(result.ToList().SequenceEqual(expected));
+					Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 					CheckTakeGlobalParams(db);
 				}
 			}
@@ -435,7 +433,7 @@ namespace Tests.Linq
 					var take = 5;
 					var expected =    Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
 					var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
-					Assert.IsTrue(result.ToList().SequenceEqual(expected));
+					Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 					CheckTakeGlobalParams(db);
 				}
 			}
@@ -457,7 +455,7 @@ namespace Tests.Linq
 					var take = 7;
 					var expected =    Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
 					var result   = db.Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
-					Assert.IsTrue(result.ToList().SequenceEqual(expected));
+					Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 					CheckTakeGlobalParams(db);
 				}
 			}
@@ -480,7 +478,7 @@ namespace Tests.Linq
 					var take = 7;
 					var expected = Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
 					var result   = db.Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
-					Assert.IsTrue(result.ToList().SequenceEqual(expected));
+					Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 					CheckTakeGlobalParams(db);
 				}
 			}
@@ -503,7 +501,7 @@ namespace Tests.Linq
 					var expected =    Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
 					var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(skip).Take(take);
 
-					Assert.IsTrue(result.ToList().SequenceEqual(expected));
+					Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 
 					CheckTakeSkipParams(db, inline);
 				}
@@ -527,7 +525,7 @@ namespace Tests.Linq
 					var expected =    Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
 					var result   = db.Child.OrderByDescending(c => c.ChildID).Take(take).Skip(skip);
 
-					Assert.IsTrue(result.ToList().SequenceEqual(expected));
+					Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 
 					CheckTakeSkipParams(db, inline);
 				}
@@ -552,7 +550,7 @@ namespace Tests.Linq
 					var expected = Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
 					var result   = db.Child.OrderBy(c => c.ChildID).Skip(skip1).Take(take).Skip(skip2);
 
-					Assert.IsTrue(result.ToList().SequenceEqual(expected));
+					Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 
 					CheckTakeSkipParams(db, inline);
 				}
@@ -572,7 +570,7 @@ namespace Tests.Linq
 			{
 				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(1).Take(7).OrderBy(c => c.ChildID).Skip(2);
 				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(1).Take(7).OrderBy(c => c.ChildID).Skip(2);
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -584,7 +582,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var list = db.Child.Skip(2).Take(5).ToList();
-				Assert.AreEqual(5, list.Count);
+				Assert.That(list, Has.Count.EqualTo(5));
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -650,9 +648,8 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(
-					   Child.Skip(2).Take(5).Count(),
-					db.Child.Skip(2).Take(5).Count());
+				Assert.That(
+					db.Child.Skip(2).Take(5).Count(), Is.EqualTo(Child.Skip(2).Take(5).Count()));
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -668,7 +665,7 @@ namespace Tests.Linq
 				result = from p in result where p.ParentID > 1 select p;
 				var b = result.OrderBy(_ => _.ParentID).Skip(1).First();
 
-				Assert.AreEqual(expected, b);
+				Assert.That(b, Is.EqualTo(expected));
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -679,9 +676,8 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(
-					(from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAt(at),
-					(from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAt(at));
+				Assert.That(
+					(from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAt(at), Is.EqualTo((from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAt(at)));
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -692,9 +688,8 @@ namespace Tests.Linq
 			var n = 3;
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					(from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAt(n),
-					(from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAt(() => n));
+				Assert.That(
+					(from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAt(() => n), Is.EqualTo((from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAt(n)));
 		}
 
 		[Test]
@@ -704,9 +699,8 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(
-					      (from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAt(n),
-					await (from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtAsync(() => n));
+				Assert.That(
+					await (from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtAsync(() => n), Is.EqualTo((from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAt(n)));
 				CheckTakeSkipParameterized(db);
 			}
 		}
@@ -717,9 +711,8 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(
-					(from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefault(3),
-					(from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefault(3));
+				Assert.That(
+					(from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefault(3), Is.EqualTo((from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefault(3)));
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -730,7 +723,7 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(300000));
+				Assert.That((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(300000), Is.Null);
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -742,9 +735,8 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(
-					(from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefault(n),
-					(from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefault(() => n));
+				Assert.That(
+					(from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefault(() => n), Is.EqualTo((from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefault(n)));
 				CheckTakeSkipParameterized(db);
 			}
 		}
@@ -756,9 +748,8 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(
-					      (from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefault(n),
-					await (from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefaultAsync(() => n));
+				Assert.That(
+					await (from p in db.Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefaultAsync(() => n), Is.EqualTo((from p in    Parent where p.ParentID > 1 select p).OrderBy(_ => _.ParentID).ElementAtOrDefault(n)));
 				CheckTakeSkipParameterized(db);
 			}
 		}
@@ -770,7 +761,7 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
+				Assert.That((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n), Is.Null);
 				CheckTakeSkipParameterized(db);
 			}
 		}
@@ -782,9 +773,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var missCount = Query<Person>.CacheMissCount;
-				Assert.AreEqual(
-					Person.   OrderBy(p => p.LastName).ElementAtOrDefault(idx),
-					db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(idx));
+				Assert.That(
+					db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(idx), Is.EqualTo(Person.   OrderBy(p => p.LastName).ElementAtOrDefault(idx)));
 				CheckTakeGlobalParams(db);
 
 				if (idx == 3)
@@ -800,10 +790,10 @@ namespace Tests.Linq
 			{
 				var q = db.Person.Take(50, TakeHints.Percent).Select(_ => _);
 
-				Assert.IsNotEmpty(q);
+				Assert.That(q, Is.Not.Empty);
 
 				var qry = q.ToString()!;
-				Assert.That(qry.Contains("PERCENT"));
+				Assert.That(qry, Does.Contain("PERCENT"));
 				CheckTakeGlobalParams(db);
 			}
 
@@ -817,10 +807,10 @@ namespace Tests.Linq
 			{
 				var q = db.Person.Take(() => 50, TakeHints.Percent).Select(_ => _);
 
-				Assert.IsNotEmpty(q);
+				Assert.That(q, Is.Not.Empty);
 
 				var qry = q.ToString()!;
-				Assert.That(qry.Contains("PERCENT"));
+				Assert.That(qry, Does.Contain("PERCENT"));
 			}
 
 		}
@@ -833,11 +823,11 @@ namespace Tests.Linq
 			{
 				var q = db.Person.OrderBy(_ => _.FirstName).Take(50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
 
-				Assert.IsNotEmpty(q);
+				Assert.That(q, Is.Not.Empty);
 
 				var qry = q.ToString()!;
-				Assert.That(qry.Contains("PERCENT"));
-				Assert.That(qry.Contains("WITH"));
+				Assert.That(qry, Does.Contain("PERCENT"));
+				Assert.That(qry, Does.Contain("WITH"));
 				CheckTakeGlobalParams(db);
 			}
 
@@ -851,11 +841,11 @@ namespace Tests.Linq
 			{
 				var q = db.Person.OrderBy(_ => _.FirstName).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
 
-				Assert.IsNotEmpty(q);
+				Assert.That(q, Is.Not.Empty);
 
 				var qry = q.ToString()!;
-				Assert.That(qry.Contains("PERCENT"));
-				Assert.That(qry.Contains("WITH"));
+				Assert.That(qry, Does.Contain("PERCENT"));
+				Assert.That(qry, Does.Contain("WITH"));
 			}
 
 		}
@@ -964,13 +954,16 @@ namespace Tests.Linq
 
 					var res = query.ToList();
 
-					Assert.That(res.Count,           Is.EqualTo(2));
-					Assert.That(res[0].BatchId,      Is.EqualTo(2));
-					Assert.That(res[0].Value,        Is.EqualTo("V2"));
-					Assert.That(res[1].BatchId,      Is.EqualTo(3));
-					Assert.That(res[1].Value,        Is.EqualTo("V3"));
-					Assert.That(res[0].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:20 GMT", DateTimeFormatInfo.InvariantInfo)));
-					Assert.That(res[1].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:35 GMT", DateTimeFormatInfo.InvariantInfo)));
+					Assert.That(res, Has.Count.EqualTo(2));
+					Assert.Multiple(() =>
+					{
+						Assert.That(res[0].BatchId, Is.EqualTo(2));
+						Assert.That(res[0].Value, Is.EqualTo("V2"));
+						Assert.That(res[1].BatchId, Is.EqualTo(3));
+						Assert.That(res[1].Value, Is.EqualTo("V3"));
+						Assert.That(res[0].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:20 GMT", DateTimeFormatInfo.InvariantInfo)));
+						Assert.That(res[1].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:35 GMT", DateTimeFormatInfo.InvariantInfo)));
+					});
 
 					CheckTakeGlobalParams(db);
 				}
@@ -1033,7 +1026,7 @@ namespace Tests.Linq
 					.Take(1)
 					.Any();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1096,7 +1089,7 @@ namespace Tests.Linq
 					.Take(2)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1129,12 +1122,12 @@ namespace Tests.Linq
 					.Take(2)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1168,12 +1161,12 @@ namespace Tests.Linq
 					.Take(3)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1213,12 +1206,12 @@ namespace Tests.Linq
 					.Take(2)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1258,12 +1251,12 @@ namespace Tests.Linq
 					.Take(1)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1296,12 +1289,12 @@ namespace Tests.Linq
 					.Skip(2)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 			}
 		}
@@ -1333,12 +1326,12 @@ namespace Tests.Linq
 					.Skip(2)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 			}
 		}
@@ -1374,12 +1367,12 @@ namespace Tests.Linq
 						.Skip(i)
 						.ToArray();
 
-					Assert.AreEqual(expected, actual);
+					Assert.That(actual, Is.EqualTo(expected));
 
 					if (db is TestDataConnection cn)
 					{
-						Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-						Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+						Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+						Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 					}
 
 					if (i == 2)
@@ -1423,12 +1416,12 @@ namespace Tests.Linq
 					.Skip(1)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 			}
 		}
@@ -1467,12 +1460,12 @@ namespace Tests.Linq
 					.Skip(2)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 			}
 		}
@@ -1513,12 +1506,12 @@ namespace Tests.Linq
 					.Skip(1)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1560,12 +1553,12 @@ namespace Tests.Linq
 					.Take(2)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1612,12 +1605,12 @@ namespace Tests.Linq
 					.Skip(1)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}
@@ -1664,12 +1657,12 @@ namespace Tests.Linq
 					.Take(2)
 					.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 
 				if (db is TestDataConnection cn)
 				{
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
-					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
+					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
 				CheckTakeGlobalParams(db);
 			}

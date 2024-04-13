@@ -23,11 +23,11 @@ namespace Tests.Linq
 	{
 		[Sql.Expression("{0} << {1}", Precedence = Precedence.Primary)]
 		[Sql.Expression(ProviderName.ClickHouse, "bitShiftLeft({0}, {1})", Precedence = Precedence.Primary)]
-		public static long Shl(long v, int s) => v << s;
+		private static long Shl(long v, int s) => v << s;
 
 		[Sql.Expression("{0} >> {1}", Precedence = Precedence.Primary)]
 		[Sql.Expression(ProviderName.ClickHouse, "bitShiftRight({0}, {1})", Precedence = Precedence.Primary)]
-		public static long Shr(long v, int s) => v >> s;
+		private static long Shr(long v, int s) => v >> s;
 
 		static ExpressionsTests()
 		{
@@ -560,7 +560,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(WrapExpression))]
-		public static T Wrap<T>(T value)
+		private static T Wrap<T>(T value)
 		{
 			return value;
 		}
@@ -594,8 +594,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// NULL == NULL
-				Assert.True(db.Parent
-					.Any(p => p.ParentID == 2 && p.Value1 == Noop(FirstIfNullOrSecondAsNumber(null, "-1"))));
+				Assert.That(db.Parent
+					.Any(p => p.ParentID == 2 && p.Value1 == Noop(FirstIfNullOrSecondAsNumber(null, "-1"))), Is.True);
 			}
 		}
 
@@ -605,8 +605,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// NULL == NULL
-				Assert.True(db.Parent
-					.Any(p => p.ParentID == 2 && Noop(FirstIfNullOrSecondAsNumber(null, "-1")) == p.Value1));
+				Assert.That(db.Parent
+					.Any(p => p.ParentID == 2 && Noop(FirstIfNullOrSecondAsNumber(null, "-1")) == p.Value1), Is.True);
 			}
 		}
 
@@ -616,8 +616,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// 3 == 3
-				Assert.True(db.Parent
-					.Any(p => p.ParentID == 3 && p.Value1 == Noop(FirstIfNullOrSecondAsNumber("", "3"))));
+				Assert.That(db.Parent
+					.Any(p => p.ParentID == 3 && p.Value1 == Noop(FirstIfNullOrSecondAsNumber("", "3"))), Is.True);
 			}
 		}
 
@@ -627,8 +627,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// 3 == 3
-				Assert.True(db.Parent
-					.Any(p => p.ParentID == 3 && Noop(FirstIfNullOrSecondAsNumber("", "3")) == p.Value1));
+				Assert.That(db.Parent
+					.Any(p => p.ParentID == 3 && Noop(FirstIfNullOrSecondAsNumber("", "3")) == p.Value1), Is.True);
 			}
 		}
 
@@ -638,8 +638,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// 3 != NULL
-				Assert.True(db.Parent
-					.Any(p => p.ParentID == 3 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber(null, "-1"))));
+				Assert.That(db.Parent
+					.Any(p => p.ParentID == 3 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber(null, "-1"))), Is.True);
 			}
 		}
 
@@ -649,8 +649,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// NULL != 3
-				Assert.True(db.Parent
-					.Any(p => p.ParentID == 3 && Noop(FirstIfNullOrSecondAsNumber(null, "-1")) != p.Value1));
+				Assert.That(db.Parent
+					.Any(p => p.ParentID == 3 && Noop(FirstIfNullOrSecondAsNumber(null, "-1")) != p.Value1), Is.True);
 			}
 		}
 
@@ -660,8 +660,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// NULL != 4
-				Assert.True(db.Parent
-					.Any(p => p.ParentID == 2 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber("4", "4"))));
+				Assert.That(db.Parent
+					.Any(p => p.ParentID == 2 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber("4", "4"))), Is.True);
 			}
 		}
 
@@ -671,8 +671,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// 4 != NULL
-				Assert.True(db.Parent
-					.Any(p => p.ParentID == 2 && Noop(FirstIfNullOrSecondAsNumber("4", "4")) != p.Value1));
+				Assert.That(db.Parent
+					.Any(p => p.ParentID == 2 && Noop(FirstIfNullOrSecondAsNumber("4", "4")) != p.Value1), Is.True);
 			}
 		}
 
@@ -682,8 +682,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// 5 != 6
-				Assert.True(db.Parent
-					.Any(p => p.ParentID == 5 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber("not5", "6"))));
+				Assert.That(db.Parent
+					.Any(p => p.ParentID == 5 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber("not5", "6"))), Is.True);
 			}
 		}
 
@@ -693,8 +693,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// 6 != 5
-				Assert.True(db.Parent
-					.Any(p => p.ParentID == 5 && Noop(FirstIfNullOrSecondAsNumber("not5", "6")) != p.Value1));
+				Assert.That(db.Parent
+					.Any(p => p.ParentID == 5 && Noop(FirstIfNullOrSecondAsNumber("not5", "6")) != p.Value1), Is.True);
 			}
 		}
 
@@ -704,8 +704,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// NULL == NULL
-				Assert.True(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 1 && p.intDataType == Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "-1"))));
+				Assert.That(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 1 && p.intDataType == Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "-1"))), Is.True);
 			}
 		}
 
@@ -715,8 +715,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// NULL == NULL
-				Assert.True(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 1 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "-1")) == p.intDataType));
+				Assert.That(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 1 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "-1")) == p.intDataType), Is.True);
 			}
 		}
 
@@ -726,8 +726,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// 7777777 == 7777777
-				Assert.True(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && p.intDataType == Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "7777777"))));
+				Assert.That(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && p.intDataType == Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "7777777"))), Is.True);
 			}
 		}
 
@@ -737,8 +737,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// 7777777 == 7777777
-				Assert.True(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "7777777")) == p.intDataType));
+				Assert.That(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "7777777")) == p.intDataType), Is.True);
 			}
 		}
 
@@ -748,8 +748,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// 7777777 != NULL
-				Assert.True(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && p.intDataType != Noop(FirstIfNullOrSecondAsNumber(p.char20DataType, "1"))));
+				Assert.That(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && p.intDataType != Noop(FirstIfNullOrSecondAsNumber(p.char20DataType, "1"))), Is.True);
 			}
 		}
 
@@ -759,8 +759,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// NULL != 7777777
-				Assert.True(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.char20DataType, "1")) != p.intDataType));
+				Assert.That(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.char20DataType, "1")) != p.intDataType), Is.True);
 			}
 		}
 
@@ -770,8 +770,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// 7777777 != 1
-				Assert.True(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && p.intDataType != Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "1"))));
+				Assert.That(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && p.intDataType != Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "1"))), Is.True);
 			}
 		}
 
@@ -781,8 +781,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				// 1 != 7777777
-				Assert.True(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "1")) != p.intDataType));
+				Assert.That(db.GetTable<AllTypes>()
+					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "1")) != p.intDataType), Is.True);
 			}
 		}
 
@@ -796,13 +796,13 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("COALESCE({0}, {0})", ServerSideOnly = true)]
-		public static int? Noop(int? value)
+		private static int? Noop(int? value)
 		{
 			throw new InvalidOperationException();
 		}
 
 		[ExpressionMethod(nameof(Func2Expr))]
-		public static int? FirstIfNullOrSecondAsNumber(string? value, string intValue)
+		private static int? FirstIfNullOrSecondAsNumber(string? value, string intValue)
 		{
 			throw new InvalidOperationException();
 		}
@@ -865,7 +865,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(GetTernaryExpressionValue1Expr))]
-		public static int? GetTernaryExpressionValue1(int? value)
+		private static int? GetTernaryExpressionValue1(int? value)
 		{
 			throw new InvalidOperationException();
 		}
@@ -877,7 +877,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(GetTernaryExpressionValue2Expr))]
-		public static int? GetTernaryExpressionValue2(int? value)
+		private static int? GetTernaryExpressionValue2(int? value)
 		{
 			throw new InvalidOperationException();
 		}
@@ -889,7 +889,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(GetTernaryExpressionValue3Expr))]
-		public static int? GetTernaryExpressionValue3(int? value)
+		private static int? GetTernaryExpressionValue3(int? value)
 		{
 			throw new InvalidOperationException();
 		}
@@ -901,7 +901,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(GetTernaryExpressionValue4Expr))]
-		public static int? GetTernaryExpressionValue4(int? value)
+		private static int? GetTernaryExpressionValue4(int? value)
 		{
 			throw new InvalidOperationException();
 		}
@@ -913,7 +913,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(GetTernaryExpressionValue5Expr))]
-		public static int? GetTernaryExpressionValue5(int? value)
+		private static int? GetTernaryExpressionValue5(int? value)
 		{
 			throw new InvalidOperationException();
 		}
@@ -963,7 +963,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(JsonExtractPathExpression))]
-		public static TJsonProp JsonExtractPathText<TColumn, TJsonProp>(
+		private static TJsonProp JsonExtractPathText<TColumn, TJsonProp>(
 			TColumn field,
 			Expression<Func<TColumn, TJsonProp>> path)
 			=> throw new InvalidOperationException();
@@ -975,10 +975,10 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0}::json #>> {1}", ServerSideOnly = true, IsPredicate = true)]
-		public static TJsonProp JsonExtractPathText<TColumn, TJsonProp>(TColumn left, string right)
+		private static TJsonProp JsonExtractPathText<TColumn, TJsonProp>(TColumn left, string right)
 			=> throw new InvalidOperationException();
 
-		public static string JsonPath<TColumn, TJsonProp>(Expression<Func<TColumn, TJsonProp>> extractor) => "'{json, text}'";
+		private static string JsonPath<TColumn, TJsonProp>(Expression<Func<TColumn, TJsonProp>> extractor) => "'{json, text}'";
 		#endregion
 
 		#region issue 2434
@@ -1085,13 +1085,13 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		public static int? Function2(int? Value) => throw new InvalidOperationException();
+		private static int? Function2(int? Value) => throw new InvalidOperationException();
 
 		[ExpressionMethod(nameof(Function1LeftExpr))]
-		public static int? Function1Left(int? value) => throw new InvalidOperationException();
+		private static int? Function1Left(int? value) => throw new InvalidOperationException();
 
 		[ExpressionMethod(nameof(Function1RightExpr))]
-		public static int? Function1Right(int? value) => throw new InvalidOperationException();
+		private static int? Function1Right(int? value) => throw new InvalidOperationException();
 
 		[Sql.Expression("CAST(N'SHOULD NOT BE CALLED' AS INT)", ServerSideOnly = true)]
 		private static int Fail(int value) => throw new InvalidOperationException();
@@ -1119,12 +1119,12 @@ namespace Tests.Linq
 
 				var cacheMiss = Query<Patient>.CacheMissCount;
 
-				Assert.False(
+				Assert.That(
 					db.Person.Where(_ =>
 					left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0
 					&&
 					right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0)
-					.Any());
+					.Any(), Is.False);
 
 				if (iteration > 1)
 					Query<Patient>.CacheMissCount.Should().Be(cacheMiss);
@@ -1139,12 +1139,12 @@ namespace Tests.Linq
 				var left  = GetQuery(db, null);
 				var right = GetQuery(db, 2);
 
-				Assert.False(
+				Assert.That(
 					db.Person.Where(_ =>
 					left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0
 					&&
 					right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0)
-					.Any());
+					.Any(), Is.False);
 			}
 		}
 

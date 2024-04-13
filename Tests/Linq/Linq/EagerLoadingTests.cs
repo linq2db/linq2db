@@ -251,8 +251,8 @@ namespace Tests.Linq
 				query = query.LoadWith(d => d.SubDetails).ThenLoad(sd => sd.Detail);
 				var result = query.ToArray();
 
-				Assert.That(result.Length, Is.EqualTo(1));
-				Assert.That(result[0].SubDetails.Length, Is.EqualTo(100));
+				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(result[0].SubDetails, Has.Length.EqualTo(100));
 				Assert.That(result[0].SubDetails[0].Detail, Is.Not.Null);
 			}
 		}
@@ -321,8 +321,11 @@ namespace Tests.Linq
 
 				foreach (var item in result)
 				{
-					Assert.That(ReferenceEquals(item.One.d, item.Two), Is.True);
-					Assert.That(item.Two.SubDetails.Length, Is.GreaterThan(0));
+					Assert.Multiple(() =>
+					{
+						Assert.That(ReferenceEquals(item.One.d, item.Two), Is.True);
+						Assert.That(item.Two.SubDetails, Is.Not.Empty);
+					});
 					Assert.That(item.Two.SubDetails[0].Detail, Is.Not.Null);
 				}
 			}
@@ -336,7 +339,7 @@ namespace Tests.Linq
 			{
 				var sql = db.Parent.LoadWith(p => p.Children).ToString()!;
 
-				Assert.False(sql.Contains("LoadWithQueryable"));
+				Assert.That(sql, Does.Not.Contain("LoadWithQueryable"));
 
 				// two queries generated, now returns sql for main query
 				CompareSql(@"SELECT
@@ -360,7 +363,7 @@ FROM
 
 			var select = query.GetSelectQuery();
 
-			// one query with join generated
+				// one query with join generated
 
 			select.From.Tables.Should().HaveCount(1);
 			select.From.Tables[0].Joins.Should().HaveCount(1);
@@ -1031,7 +1034,7 @@ FROM
 			}
 		}
 
-		public static X InitData<X>(X entity) => entity; // for simplicity
+		private static X InitData<X>(X entity) => entity; // for simplicity
 
 		[Test]
 		public void ProjectionWithExtension([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1047,7 +1050,7 @@ FROM
 				var result2 = master.LoadWith(x => x.Details).Select(x => InitData(x)).Select(x => new { x = InitData(x)})
 					.ToArray();
 
-				Assert.That(result.Length, Is.EqualTo(result2.Length));
+				Assert.That(result, Has.Length.EqualTo(result2.Length));
 			}
 		}
 
@@ -1308,38 +1311,53 @@ FROM
 					Blog = query.ToArray()
 				};
 
-				Assert.AreEqual(1, result.Blog.Length);
-				Assert.AreEqual(1, result.Blog[0].Id);
-				Assert.AreEqual("Another .NET Core Guy", result.Blog[0].Title);
-				Assert.AreEqual(4, result.Blog[0].Posts.Length);
+				Assert.That(result.Blog, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Blog[0].Id, Is.EqualTo(1));
+					Assert.That(result.Blog[0].Title, Is.EqualTo("Another .NET Core Guy"));
+					Assert.That(result.Blog[0].Posts, Has.Length.EqualTo(4));
+				});
 
-				Assert.AreEqual(1, result.Blog[0].Posts[0].Id);
-				Assert.AreEqual("Post 1", result.Blog[0].Posts[0].Title);
-				Assert.AreEqual("Content 1 is about EF Core and Razor page", result.Blog[0].Posts[0].PostContent);
-				Assert.AreEqual(2, result.Blog[0].Posts[0].Tags.Length);
-				Assert.AreEqual(1, result.Blog[0].Posts[0].Tags[0].Id);
-				Assert.AreEqual("Razor Page", result.Blog[0].Posts[0].Tags[0].Name);
-				Assert.AreEqual(2, result.Blog[0].Posts[0].Tags[1].Id);
-				Assert.AreEqual("EF Core", result.Blog[0].Posts[0].Tags[1].Name);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Blog[0].Posts[0].Id, Is.EqualTo(1));
+					Assert.That(result.Blog[0].Posts[0].Title, Is.EqualTo("Post 1"));
+					Assert.That(result.Blog[0].Posts[0].PostContent, Is.EqualTo("Content 1 is about EF Core and Razor page"));
+					Assert.That(result.Blog[0].Posts[0].Tags, Has.Length.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Blog[0].Posts[0].Tags[0].Id, Is.EqualTo(1));
+					Assert.That(result.Blog[0].Posts[0].Tags[0].Name, Is.EqualTo("Razor Page"));
+					Assert.That(result.Blog[0].Posts[0].Tags[1].Id, Is.EqualTo(2));
+					Assert.That(result.Blog[0].Posts[0].Tags[1].Name, Is.EqualTo("EF Core"));
 
-				Assert.AreEqual(2, result.Blog[0].Posts[1].Id);
-				Assert.AreEqual("Post 2", result.Blog[0].Posts[1].Title);
-				Assert.AreEqual("Content 2 is about Dapper", result.Blog[0].Posts[1].PostContent);
-				Assert.AreEqual(1, result.Blog[0].Posts[1].Tags.Length);
-				Assert.AreEqual(3, result.Blog[0].Posts[1].Tags[0].Id);
-				Assert.AreEqual("Dapper", result.Blog[0].Posts[1].Tags[0].Name);
+					Assert.That(result.Blog[0].Posts[1].Id, Is.EqualTo(2));
+					Assert.That(result.Blog[0].Posts[1].Title, Is.EqualTo("Post 2"));
+					Assert.That(result.Blog[0].Posts[1].PostContent, Is.EqualTo("Content 2 is about Dapper"));
+					Assert.That(result.Blog[0].Posts[1].Tags, Has.Length.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Blog[0].Posts[1].Tags[0].Id, Is.EqualTo(3));
+					Assert.That(result.Blog[0].Posts[1].Tags[0].Name, Is.EqualTo("Dapper"));
 
-				Assert.AreEqual(3, result.Blog[0].Posts[2].Id);
-				Assert.AreEqual("Post 3", result.Blog[0].Posts[2].Title);
-				Assert.AreEqual("Content 3", result.Blog[0].Posts[2].PostContent);
-				Assert.AreEqual(0, result.Blog[0].Posts[2].Tags.Length);
+					Assert.That(result.Blog[0].Posts[2].Id, Is.EqualTo(3));
+					Assert.That(result.Blog[0].Posts[2].Title, Is.EqualTo("Post 3"));
+					Assert.That(result.Blog[0].Posts[2].PostContent, Is.EqualTo("Content 3"));
+					Assert.That(result.Blog[0].Posts[2].Tags, Is.Empty);
 
-				Assert.AreEqual(4, result.Blog[0].Posts[3].Id);
-				Assert.AreEqual("Post 4", result.Blog[0].Posts[3].Title);
-				Assert.AreEqual("Content 4", result.Blog[0].Posts[3].PostContent);
-				Assert.AreEqual(1, result.Blog[0].Posts[3].Tags.Length);
-				Assert.AreEqual(5, result.Blog[0].Posts[3].Tags[0].Id);
-				Assert.AreEqual("SqlKata", result.Blog[0].Posts[3].Tags[0].Name);
+					Assert.That(result.Blog[0].Posts[3].Id, Is.EqualTo(4));
+					Assert.That(result.Blog[0].Posts[3].Title, Is.EqualTo("Post 4"));
+					Assert.That(result.Blog[0].Posts[3].PostContent, Is.EqualTo("Content 4"));
+					Assert.That(result.Blog[0].Posts[3].Tags, Has.Length.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Blog[0].Posts[3].Tags[0].Id, Is.EqualTo(5));
+					Assert.That(result.Blog[0].Posts[3].Tags[0].Name, Is.EqualTo("SqlKata"));
+				});
 			}
 		}
 #endregion
@@ -1462,8 +1480,8 @@ FROM
 
 				var result = query.ToList();
 
-				Assert.That(result.Count, Is.EqualTo(1));
-				Assert.That(result[0].Persons.Count, Is.EqualTo(1));
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result[0].Persons, Has.Count.EqualTo(1));
 			}
 		}
 #endregion
@@ -1567,7 +1585,7 @@ FROM
 					.WithTableExpression($"{{0}} {{1}}")
 					.ToList();
 
-				Assert.AreEqual(result.Count, 1);
+				Assert.That(result, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -1586,7 +1604,7 @@ FROM
 					.LoadWithAsTable( _ => _.Details)
 					.ToList();
 
-				Assert.AreEqual(result.Count, 1);
+				Assert.That(result, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -1640,18 +1658,24 @@ FROM
 
 			var id = 11;
 			var result = records.LoadWith(a => a.Items, a => a.Where(a => a.Id == id)).ToList();
-			Assert.AreEqual(1, result.Count);
-			Assert.AreEqual(1, result[0].Id);
-			Assert.AreEqual(1, result[0].Items.Count);
-			Assert.AreEqual(11, result[0].Items[0].Id);
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Items, Has.Count.EqualTo(1));
+			});
+			Assert.That(result[0].Items[0].Id, Is.EqualTo(11));
 
 			id = 12;
 			result = records.LoadWith(a => a.Items, a => a.Where(a => a.Id == id)).ToList();
 
-			Assert.AreEqual(1, result.Count);
-			Assert.AreEqual(1, result[0].Id);
-			Assert.AreEqual(1, result[0].Items.Count);
-			Assert.AreEqual(12, result[0].Items[0].Id);
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Items, Has.Count.EqualTo(1));
+			});
+			Assert.That(result[0].Items[0].Id, Is.EqualTo(12));
 		}
 		#endregion
 

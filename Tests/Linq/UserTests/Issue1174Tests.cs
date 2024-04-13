@@ -70,8 +70,11 @@ namespace Tests.UserTests
 
 					Assert.DoesNotThrowAsync(() => Task.WhenAll(user1Task, user2Task));
 
-					Assert.IsNotNull(user1Task.Result);
-					Assert.IsNotNull(user2Task.Result);
+					Assert.Multiple(() =>
+					{
+						Assert.That(user1Task.Result, Is.Not.Null);
+						Assert.That(user2Task.Result, Is.Not.Null);
+					});
 				}
 			}
 		}

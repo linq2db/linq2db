@@ -10,6 +10,9 @@ using LinqToDB.DataProvider.Firebird;
 
 namespace Tests
 {
+	using System.Diagnostics.CodeAnalysis;
+	using System.IO;
+
 	using Model;
 #if NETFRAMEWORK
 	using Model.Remote.Wcf;
@@ -302,6 +305,7 @@ namespace Tests
 			};
 		}
 
+		[return: NotNullIfNotNull(nameof(s))]
 		public static string? Clean(this string? s)
 		{
 			return s?
@@ -310,6 +314,60 @@ namespace Tests
 				.Replace("\r", "")
 				.Replace("\n", "")
 				;
+		}
+
+		internal static string GetConfigName()
+		{
+#if NET6_0
+			return "NET60";
+#elif NET8_0
+			return "NET80";
+#elif NETFRAMEWORK
+			return "NETFX";
+#else
+#error Unknown framework
+#endif
+		}
+
+		public static void Log(Exception ex)
+		{
+			Log($"Exception: {ex.Message}");
+			Log(ex.StackTrace);
+		}
+
+		public static void Log(string? message)
+		{
+			var path = Path.GetTempPath();
+			File.AppendAllText(path + "linq2db.Tests." + GetConfigName() + ".log", (message ?? "") + Environment.NewLine);
+		}
+
+		public static string GetTableName(string context, [System.Runtime.CompilerServices.CallerMemberName] string? methodName = null)
+		{
+			var tableName  = "xxPerson";
+
+			if (context.IsAnyOf(TestProvName.AllFirebird))
+			{
+				tableName += context.IsAnyOf(TestProvName.Firebird4)
+					? "_f4"
+					: (context.IsAnyOf(TestProvName.Firebird3)
+						? "_f3"
+						: "_f");
+
+				if (context.IsRemote())
+					tableName += "l";
+
+				tableName += "_" + methodName;
+			}
+
+			if (context.IsAnyOf(TestProvName.AllOracle))
+			{
+				tableName += "_o";
+
+				if (context.IsRemote())
+					tableName += "l";
+			}
+
+			return tableName;
 		}
 	}
 }

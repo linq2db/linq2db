@@ -305,8 +305,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.That(db.Patient.Where(x => x.PersonID < 0).Select(x => (int?)x.PersonID).Max(), Is.Null);
-				Assert.That(db.Patient.Where(x => x.PersonID < 0).Max(x => (int?)x.PersonID), Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Patient.Where(x => x.PersonID < 0).Select(x => (int?)x.PersonID).Max(), Is.Null);
+					Assert.That(db.Patient.Where(x => x.PersonID < 0).Max(x => (int?)x.PersonID), Is.Null);
+				});
 				Assert.Catch<InvalidOperationException>(
 					() => db.Patient.Where(x => x.PersonID < 0).Select(x => x.PersonID).Max());
 				Assert.Catch<InvalidOperationException>(
@@ -323,8 +326,11 @@ namespace Tests.Linq
 				var r1 = ds.Patients().ToList();
 				var r2 = ds.Persons().ToList();
 
-				Assert.That(r1, Is.Not.Empty);
-				Assert.That(r2, Is.Not.Empty);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r1, Is.Not.Empty);
+					Assert.That(r2, Is.Not.Empty);
+				});
 
 				var r3 = ds.Patients().ToIdlPatientEx(ds);
 				var r4 = r3.ToList();
@@ -637,7 +643,7 @@ namespace Tests.Linq
 				var rqr = resultquery.LastIndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
 				var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
 
-				Assert.That(rqp.Length, Is.EqualTo(3));
+				Assert.That(rqp, Has.Length.EqualTo(3));
 			}
 		}
 
@@ -784,7 +790,7 @@ namespace Tests.Linq
 				Assert.That(new GenericConcatQuery(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null);
 		}
 
-		public static IQueryable<TSource> Concat2<TSource>(IQueryable<TSource> source1, IEnumerable<TSource> source2)
+		private static IQueryable<TSource> Concat2<TSource>(IQueryable<TSource> source1, IEnumerable<TSource> source2)
 		{
 			return source1.Provider.CreateQuery<TSource>(
 				Expression.Call(

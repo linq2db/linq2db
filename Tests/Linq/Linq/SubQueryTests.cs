@@ -184,7 +184,7 @@ namespace Tests.Linq
 
 				var chs2 = chilren.ToList();
 
-				Assert.AreEqual(chs2.Count, chs2.Except(chs1).Count());
+				Assert.That(chs2.Except(chs1).Count(), Is.EqualTo(chs2.Count));
 			}
 		}
 
@@ -343,47 +343,47 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void SubSub201([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p1 in
-						from p2 in Parent
-						select new { p2, ID = p2.ParentID + 1 } into p3
-						where p3.ID > 0
-						select new { p2 = p3, ID = p3.ID + 1 }
-					where p1.ID > 0
-					select new
-					{
-						Count =
-						(
-							from c in p1.p2.p2.Children
-							select new { c, ID = c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select new { c.c, ID = c.c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select c
-						).FirstOrDefault()
-					},
-					from p1 in
-						from p2 in db.Parent
-						select new { p2, ID = p2.ParentID + 1 } into p3
-						where p3.ID > 0
-						select new { p2 = p3, ID = p3.ID + 1 }
-					where p1.ID > 0
-					select new
-					{
-						Count =
-						(
-							from c in p1.p2.p2.Children
-							select new { c, ID = c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select new { c.c, ID = c.c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select c
-						).FirstOrDefault()
-					});
-		}
+		//public void SubSub201([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			from p1 in
+		//				from p2 in Parent
+		//				select new { p2, ID = p2.ParentID + 1 } into p3
+		//				where p3.ID > 0
+		//				select new { p2 = p3, ID = p3.ID + 1 }
+		//			where p1.ID > 0
+		//			select new
+		//			{
+		//				Count =
+		//				(
+		//					from c in p1.p2.p2.Children
+		//					select new { c, ID = c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select new { c.c, ID = c.c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select c
+		//				).FirstOrDefault()
+		//			},
+		//			from p1 in
+		//				from p2 in db.Parent
+		//				select new { p2, ID = p2.ParentID + 1 } into p3
+		//				where p3.ID > 0
+		//				select new { p2 = p3, ID = p3.ID + 1 }
+		//			where p1.ID > 0
+		//			select new
+		//			{
+		//				Count =
+		//				(
+		//					from c in p1.p2.p2.Children
+		//					select new { c, ID = c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select new { c.c, ID = c.c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select c
+		//				).FirstOrDefault()
+		//			});
+		//}
 
 		[Test]
 		public void SubSub21([DataSources(TestProvName.AllClickHouse)] string context)
@@ -657,7 +657,7 @@ namespace Tests.Linq
 
 				query.ToList();
 
-				Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(db.LastQuery!, "Types").Count);
+				Assert.That(System.Text.RegularExpressions.Regex.Matches(db.LastQuery!, "Types"), Has.Count.EqualTo(1));
 			}
 		}
 
@@ -801,8 +801,8 @@ namespace Tests.Linq
 
 				var res = query.ToList();
 
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("Urupinsk", res[0].City_Name.Single().City_Name);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].City_Name.Single().City_Name, Is.EqualTo("Urupinsk"));
 			}
 		}
 
@@ -849,8 +849,8 @@ namespace Tests.Linq
 
 				var res = query.ToList();
 
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("Urupinsk", res[0].City_Name);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].City_Name, Is.EqualTo("Urupinsk"));
 			}
 		}
 

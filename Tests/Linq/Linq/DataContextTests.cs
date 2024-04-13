@@ -85,7 +85,9 @@ namespace Tests.Linq
 			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
 			{
-				NUnitAssert.ThrowsAny(() => db1.GetTable<Child>().ToList(), typeof(ArgumentException), typeof(InvalidOperationException));
+				Assert.That(
+					() => db1.GetTable<Child>().ToList(),
+					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
 			}
 		}
 
@@ -96,8 +98,11 @@ namespace Tests.Linq
 			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString!))
 			{
-				Assert.AreEqual(db.DataProvider.Name, db1.DataProvider.Name);
-				Assert.AreEqual(db.ConnectionString, db1.ConnectionString);
+				Assert.Multiple(() =>
+				{
+					Assert.That(db1.DataProvider.Name, Is.EqualTo(db.DataProvider.Name));
+					Assert.That(db1.ConnectionString, Is.EqualTo(db.ConnectionString));
+				});
 
 				AreEqual(
 					db.GetTable<Child>().OrderBy(_ => _.ChildID).ToList(),
@@ -175,9 +180,9 @@ namespace Tests.Linq
 			{
 				db.KeepConnectionAlive = true;
 				db.CommandTimeout = 10;
-				Assert.Null(db.DataConnection);
+				Assert.That(db.DataConnection, Is.Null);
 				db.GetTable<Person>().ToList();
-				Assert.NotNull(db.DataConnection);
+				Assert.That(db.DataConnection, Is.Not.Null);
 				Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(10));
 
 				db.CommandTimeout = -10;
@@ -195,16 +200,16 @@ namespace Tests.Linq
 		{
 			using (var db = new NewDataContext(context))
 			{
-				Assert.AreEqual(0, db.CreateCalled);
+				Assert.That(db.CreateCalled, Is.EqualTo(0));
 
 				db.KeepConnectionAlive = true;
 				db.GetTable<Person>().ToList();
-				Assert.AreEqual(1, db.CreateCalled);
+				Assert.That(db.CreateCalled, Is.EqualTo(1));
 				db.GetTable<Person>().ToList();
-				Assert.AreEqual(1, db.CreateCalled);
+				Assert.That(db.CreateCalled, Is.EqualTo(1));
 				db.KeepConnectionAlive = false;
 				db.GetTable<Person>().ToList();
-				Assert.AreEqual(2, db.CreateCalled);
+				Assert.That(db.CreateCalled, Is.EqualTo(2));
 			}
 		}
 

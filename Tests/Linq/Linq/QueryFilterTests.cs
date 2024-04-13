@@ -161,7 +161,7 @@ namespace Tests.Linq
 			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
 			var resultNotFiltered1 = query.ToArray();
 
-			Assert.That(resultFiltered1.Length, Is.LessThan(resultNotFiltered1.Length));
+			Assert.That(resultFiltered1, Has.Length.LessThan(resultNotFiltered1.Length));
 
 			var currentMissCount = Query<T>.CacheMissCount;
 
@@ -173,7 +173,7 @@ namespace Tests.Linq
 			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
 			var resultNotFiltered2 = query.ToArray();
 
-			Assert.That(resultFiltered2.Length, Is.LessThan(resultNotFiltered2.Length));
+			Assert.That(resultFiltered2, Has.Length.LessThan(resultNotFiltered2.Length));
 
 			AreEqualWithComparer(resultFiltered1,    resultFiltered2);
 			AreEqualWithComparer(resultNotFiltered1, resultNotFiltered2);

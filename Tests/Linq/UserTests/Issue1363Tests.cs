@@ -37,7 +37,7 @@ namespace Tests.UserTests
 				insert(id2, id1);
 
 				var record = tbl.Where(_ => _.Required == id2).Single();
-				Assert.AreEqual(id1, record.Optional);
+				Assert.That(record.Optional, Is.EqualTo(id1));
 
 				void insert(Guid id, Guid? testId)
 				{

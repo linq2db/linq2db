@@ -72,10 +72,16 @@ namespace Tests.Linq
 				var l = q.ToList();
 
 				Assert.That(l,                  Is.Not.Empty);
-				Assert.That(l[0].FullName,      Is.Not.Null);
-				Assert.That(l[0].AsSqlFullName, Is.Not.Null);
-				Assert.That(l[0].FullName,      Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
-				Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
+				Assert.Multiple(() =>
+				{
+					Assert.That(l[0].FullName, Is.Not.Null);
+					Assert.That(l[0].AsSqlFullName, Is.Not.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(l[0].FullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
+					Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
+				});
 			}
 		}
 
@@ -87,7 +93,7 @@ namespace Tests.Linq
 				var list  = db.GetTable<PersonCalculated>().ToList();
 				var query = db.GetTable<PersonCalculated>().Where(i => i.FullName != "Pupkin, John").ToList();
 
-				Assert.That(list.Count, Is.Not.EqualTo(query.Count));
+				Assert.That(list, Has.Count.Not.EqualTo(query.Count));
 
 				AreEqual(
 					list.Where(i => i.FullName != "Pupkin, John"),
@@ -111,11 +117,17 @@ namespace Tests.Linq
 				var l = q.ToList();
 
 				Assert.That(l,                    Is.Not.Empty);
-				Assert.That(l[0].t.FullName,      Is.Not.Null);
-				Assert.That(l[0].t.AsSqlFullName, Is.Not.Null);
-				Assert.That(l[0].t.FullName,      Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
-				Assert.That(l[0].t.AsSqlFullName, Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
-				Assert.That(l[0].t.DoctorCount,   Is.EqualTo(l[0].cnt));
+				Assert.Multiple(() =>
+				{
+					Assert.That(l[0].t.FullName, Is.Not.Null);
+					Assert.That(l[0].t.AsSqlFullName, Is.Not.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(l[0].t.FullName, Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
+					Assert.That(l[0].t.AsSqlFullName, Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
+					Assert.That(l[0].t.DoctorCount, Is.EqualTo(l[0].cnt));
+				});
 			}
 		}
 

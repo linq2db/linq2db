@@ -84,14 +84,17 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => _.Id).ToArray();
 				AssertRowCount(source.Length, rows, context);
-				Assert.AreEqual(source.Length,     result.Length);
+				Assert.That(result, Has.Length.EqualTo(source.Length));
 
 				for (var i = 0; i < source.Length; i++)
 				{
-					Assert.AreEqual(source[i].Id,     result[i].Id);
-					Assert.AreEqual(source[i].Field1, result[i].Field1);
-					Assert.AreEqual(source[i].Field2, result[i].Field2);
-					Assert.AreEqual(source[i].Field4, result[i].Field4);
+					Assert.Multiple(() =>
+					{
+						Assert.That(result[i].Id, Is.EqualTo(source[i].Id));
+						Assert.That(result[i].Field1, Is.EqualTo(source[i].Field1));
+						Assert.That(result[i].Field2, Is.EqualTo(source[i].Field2));
+						Assert.That(result[i].Field4, Is.EqualTo(source[i].Field4));
+					});
 				}
 			}
 		}

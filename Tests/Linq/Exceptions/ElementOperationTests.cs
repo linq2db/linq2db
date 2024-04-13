@@ -12,14 +12,14 @@ namespace Tests.Exceptions
 		public void First([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.Throws(typeof(InvalidOperationException), () => db.Parent.First(p => p.ParentID == 100));
+				Assert.Throws<InvalidOperationException>(() => db.Parent.First(p => p.ParentID == 100));
 		}
 
 		[Test]
 		public void Single([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.Throws(typeof(InvalidOperationException), () => db.Parent.Single());
+				Assert.Throws<InvalidOperationException>(() => db.Parent.Single());
 		}
 	}
 }

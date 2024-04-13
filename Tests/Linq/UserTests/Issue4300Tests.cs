@@ -51,8 +51,8 @@ namespace Tests.UserTests
 				var query1 = tbl1.Where(row1 => expr.Compile()(row1)).Select(row1 => row1.Id1); //doesn't work
 				var query2 = tbl2.Where(row2 => query1.Contains(row2.Table1Id)).Select(row2 => row2.Id2);
 				var ret    = query2.ToList();
-				Assert.AreEqual(1, ret.Count);
-				Assert.AreEqual(expectedTable2Id, ret[0]);
+				Assert.That(ret, Has.Count.EqualTo(1));
+				Assert.That(ret[0], Is.EqualTo(expectedTable2Id));
 			}
 		}
 	}

@@ -124,12 +124,12 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#endregion
 
-		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
+		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, string extension = ".sqlite")
 		{
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DataTools.CreateFileDatabase(
-				databaseName, deleteIfExists, ".sqlite",
+				databaseName, deleteIfExists, extension,
 				dbName =>
 				{
 					// don't use CreateFile method of System.Data.Sqlite as it just creates empty file

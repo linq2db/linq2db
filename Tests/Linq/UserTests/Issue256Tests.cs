@@ -81,7 +81,7 @@ namespace Tests.UserTests
 			Test(context, action, 3);
 		}
 
-		public void Test(string context, Action<ITestDataContext, byte[], int> testAction, int calls)
+		private void Test(string context, Action<ITestDataContext, byte[], int> testAction, int calls)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -115,7 +115,7 @@ namespace Tests.UserTests
 			GC.WaitForPendingFinalizers();
 			GC.Collect();
 
-			Assert.False(value.IsAlive);
+			Assert.That(value.IsAlive, Is.False);
 		}
 
 		private static WeakReference RunTest(ITestDataContext db, Action<ITestDataContext, byte[], int> test, int calls)
@@ -138,8 +138,8 @@ namespace Tests.UserTests
 			{
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result[0].ID, Is.EqualTo(256));
 
 				calls--;
 			}
@@ -153,8 +153,8 @@ namespace Tests.UserTests
 			{
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result[0].ID, Is.EqualTo(256));
 
 				calls--;
 			}
@@ -168,8 +168,8 @@ namespace Tests.UserTests
 			{
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result[0].ID, Is.EqualTo(256));
 
 				calls--;
 			}
@@ -183,8 +183,8 @@ namespace Tests.UserTests
 			{
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result[0].ID, Is.EqualTo(256));
 
 				calls--;
 			}
@@ -200,9 +200,12 @@ namespace Tests.UserTests
 				query.Set(_ => _.BoolValue, _ => !_.BoolValue).Update();
 				var result = db.Types.Where(_ => _.ID == 256).ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
-				Assert.AreEqual(expected, result[0].BoolValue);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].ID, Is.EqualTo(256));
+					Assert.That(result[0].BoolValue, Is.EqualTo(expected));
+				});
 
 				calls--;
 				expected = !expected;
@@ -218,16 +221,22 @@ namespace Tests.UserTests
 				query.Set(_ => _.BinaryValue, _ => null).Update();
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
-				Assert.IsNull(result[0].BinaryValue);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].ID, Is.EqualTo(256));
+					Assert.That(result[0].BinaryValue, Is.Null);
+				});
 
 				query.Set(_ => _.BinaryValue, _ => value).Update();
 				result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].ID, Is.EqualTo(256));
+					Assert.That(value.SequenceEqual(result[0].BinaryValue!.ToArray()), Is.True);
+				});
 
 				calls--;
 			}
@@ -242,16 +251,22 @@ namespace Tests.UserTests
 				query.Update(_ => new LinqDataTypes() { BinaryValue = null });
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
-				Assert.IsNull(result[0].BinaryValue);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].ID, Is.EqualTo(256));
+					Assert.That(result[0].BinaryValue, Is.Null);
+				});
 
 				query.Update(_ => new LinqDataTypes() { BinaryValue = value });
 				result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].ID, Is.EqualTo(256));
+					Assert.That(value.SequenceEqual(result[0].BinaryValue!.ToArray()), Is.True);
+				});
 
 				calls--;
 			}
@@ -263,13 +278,16 @@ namespace Tests.UserTests
 
 			while (calls > 0)
 			{
-				Assert.AreEqual(1, query.Delete());
+				Assert.That(query.Delete(), Is.EqualTo(1));
 				db.Types.Insert(() => new LinqDataTypes() { ID = 256, BinaryValue = value });
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].ID, Is.EqualTo(256));
+					Assert.That(value.SequenceEqual(result[0].BinaryValue!.ToArray()), Is.True);
+				});
 
 				calls--;
 			}
@@ -284,7 +302,7 @@ namespace Tests.UserTests
 				query.Delete();
 				var result = db.Types.Where(_ => _.ID == 256).ToList();
 
-				Assert.AreEqual(0, result.Count);
+				Assert.That(result, Is.Empty);
 
 				calls--;
 				db.Types.Insert(() => new LinqDataTypes() { ID = 256, BinaryValue = value });
@@ -297,9 +315,12 @@ namespace Tests.UserTests
 			var result = db.Types.Where(_ => _.ID == 10256).ToList();
 			db.Types.Where(_ => _.ID == 10256).Delete();
 
-			Assert.AreEqual(1, result.Count);
-			Assert.AreEqual(10256, result[0].ID);
-			Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ID, Is.EqualTo(10256));
+				Assert.That(value.SequenceEqual(result[0].BinaryValue!.ToArray()), Is.True);
+			});
 		}
 
 		private static void NonLinqUpdate(ITestDataContext db, byte[] value, int calls)
@@ -311,16 +332,22 @@ namespace Tests.UserTests
 				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = null, DateTimeValue = _date });
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
-				Assert.IsNull(result[0].BinaryValue);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].ID, Is.EqualTo(256));
+					Assert.That(result[0].BinaryValue, Is.Null);
+				});
 
 				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = value, DateTimeValue = _date });
 				result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(256, result[0].ID);
-				Assert.True(value.SequenceEqual(result[0].BinaryValue!.ToArray()));
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].ID, Is.EqualTo(256));
+					Assert.That(value.SequenceEqual(result[0].BinaryValue!.ToArray()), Is.True);
+				});
 
 				calls--;
 			}
@@ -333,7 +360,7 @@ namespace Tests.UserTests
 				db.Delete(new LinqDataTypesWithPK() { ID = 256, BinaryValue = value, DateTimeValue = _date });
 				var result = db.Types.Where(_ => _.ID == 256).ToList();
 
-				Assert.AreEqual(0, result.Count);
+				Assert.That(result, Is.Empty);
 
 				calls--;
 				db.Types.Insert(() => new LinqDataTypes() { ID = 256, BinaryValue = value });

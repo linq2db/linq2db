@@ -8016,7 +8016,7 @@ static LinqToDB.DataProvider.SQLite.SQLiteTools.AlwaysCheckDbNull.get -> bool
 static LinqToDB.DataProvider.SQLite.SQLiteTools.AlwaysCheckDbNull.set -> void
 static LinqToDB.DataProvider.SQLite.SQLiteTools.AsSQLite<TSource>(this LinqToDB.ITable<TSource>! table) -> LinqToDB.DataProvider.SQLite.ISQLiteSpecificTable<TSource>!
 static LinqToDB.DataProvider.SQLite.SQLiteTools.ClearAllPools(string? provider = null) -> void
-static LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDatabase(string! databaseName, bool deleteIfExists = false) -> void
+static LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDatabase(string! databaseName, bool deleteIfExists = false, string! extension = ".sqlite") -> void
 static LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(string! connectionString, string? providerName = null) -> LinqToDB.Data.DataConnection!
 static LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(System.Data.Common.DbConnection! connection, string? providerName = null) -> LinqToDB.Data.DataConnection!
 static LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, string? providerName = null) -> LinqToDB.Data.DataConnection!

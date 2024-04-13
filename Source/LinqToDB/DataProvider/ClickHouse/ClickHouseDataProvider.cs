@@ -62,16 +62,16 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// 2. not tested as we don't support parameters currently
 			//SqlProviderFlags.AcceptsTakeAsParameter = true;
 
-			if (Adapter.GetSByteReaderMethod          != null) SetProviderField(typeof(sbyte         ), Adapter.GetSByteReaderMethod,          Adapter.DataReaderType);
-			if (Adapter.GetUInt16ReaderMethod         != null) SetProviderField(typeof(ushort        ), Adapter.GetUInt16ReaderMethod,         Adapter.DataReaderType);
-			if (Adapter.GetUInt32ReaderMethod         != null) SetProviderField(typeof(uint          ), Adapter.GetUInt32ReaderMethod,         Adapter.DataReaderType);
-			if (Adapter.GetUInt64ReaderMethod         != null) SetProviderField(typeof(ulong         ), Adapter.GetUInt64ReaderMethod,         Adapter.DataReaderType);
-			if (Adapter.GetBigIntegerReaderMethod     != null) SetProviderField(typeof(BigInteger    ), Adapter.GetBigIntegerReaderMethod,     Adapter.DataReaderType);
-			if (Adapter.GetIPAddressReaderMethod      != null) SetProviderField(typeof(IPAddress     ), Adapter.GetIPAddressReaderMethod,      Adapter.DataReaderType);
-			if (Adapter.GetDateTimeOffsetReaderMethod != null) SetProviderField(typeof(DateTimeOffset), Adapter.GetDateTimeOffsetReaderMethod, Adapter.DataReaderType);
+			if (Adapter.GetSByteReaderMethod          != null) SetProviderField<sbyte         >(Adapter.GetSByteReaderMethod,          Adapter.DataReaderType);
+			if (Adapter.GetUInt16ReaderMethod         != null) SetProviderField<ushort        >(Adapter.GetUInt16ReaderMethod,         Adapter.DataReaderType);
+			if (Adapter.GetUInt32ReaderMethod         != null) SetProviderField<uint          >(Adapter.GetUInt32ReaderMethod,         Adapter.DataReaderType);
+			if (Adapter.GetUInt64ReaderMethod         != null) SetProviderField<ulong         >(Adapter.GetUInt64ReaderMethod,         Adapter.DataReaderType);
+			if (Adapter.GetBigIntegerReaderMethod     != null) SetProviderField<BigInteger    >(Adapter.GetBigIntegerReaderMethod,     Adapter.DataReaderType);
+			if (Adapter.GetIPAddressReaderMethod      != null) SetProviderField<IPAddress     >(Adapter.GetIPAddressReaderMethod,      Adapter.DataReaderType);
+			if (Adapter.GetDateTimeOffsetReaderMethod != null) SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetReaderMethod, Adapter.DataReaderType);
 
 #if NET6_0_OR_GREATER
-			if (Adapter.GetDateOnlyReaderMethod != null) SetProviderField(typeof(DateOnly), Adapter.GetDateOnlyReaderMethod, Adapter.DataReaderType);
+			if (Adapter.GetDateOnlyReaderMethod != null) SetProviderField<DateOnly>(Adapter.GetDateOnlyReaderMethod, Adapter.DataReaderType);
 #endif
 
 			if (Provider == ClickHouseProvider.Octonica)

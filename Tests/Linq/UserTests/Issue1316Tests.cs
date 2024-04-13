@@ -18,12 +18,12 @@ namespace Tests.UserTests
 			public int ID { get; set; }
 		}
 
-		public static int GetValue()
+		private static int GetValue()
 		{
 			return 5;
 		}
 
-		public static Tuple<int, int> GetTuple()
+		private static Tuple<int, int> GetTuple()
 		{
 			return Tuple.Create(5, 3);
 		}

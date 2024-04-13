@@ -102,13 +102,13 @@ namespace Tests.Linq
 			}
 		}
 
-		public string PrintExpression(Expression expression)
+		private string PrintExpression(Expression expression)
 		{
 			var printer = new ExpressionPrinter();
 			return printer.PrintExpression(expression);
 		}
 
-		public void CheckPredicate<T>(IQueryable<T> query, Expression<Func<T, bool>> predicate, bool includeNot = true, bool withPermutations = true)
+		private void CheckPredicate<T>(IQueryable<T> query, Expression<Func<T, bool>> predicate, bool includeNot = true, bool withPermutations = true)
 		{
 			var originalParameter = predicate.Parameters[0];
 

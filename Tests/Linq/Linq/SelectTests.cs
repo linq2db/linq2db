@@ -56,7 +56,7 @@ namespace Tests.Linq
 			{
 				var expected = from p in    Person select new { p.ID, p.FirstName };
 				var result   = from p in db.Person select new { p.ID, p.FirstName };
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -65,7 +65,7 @@ namespace Tests.Linq
 			var expected = from p in Person select new { i, p.ID, p.FirstName };
 			var result   = from p in table  select new { i, p.ID, p.FirstName };
 
-			Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 		}
 
 		[Test]
@@ -188,8 +188,11 @@ namespace Tests.Linq
 						.Select(p2 => new        { ID = p2.ID / "22".Length, p2.FirstName })
 
 				).ToList().First(p => p.ID == 1);
-				Assert.AreEqual(1,      person.ID);
-				Assert.AreEqual("John", person.FirstName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(person.ID, Is.EqualTo(1));
+					Assert.That(person.FirstName, Is.EqualTo("John"));
+				});
 			}
 		}
 
@@ -300,7 +303,7 @@ namespace Tests.Linq
 				var _=  q.ToList();
 			}
 
-			Assert.IsTrue((DateTime.Now - dt).TotalSeconds < 30);
+			Assert.That((DateTime.Now - dt).TotalSeconds, Is.LessThan(30));
 		}
 
 		[Test]
@@ -319,7 +322,7 @@ namespace Tests.Linq
 					.Split(' ', '\t', '\n', '\r')
 					.Count(s => s.Equals("select", StringComparison.OrdinalIgnoreCase));
 
-				Assert.AreEqual(1, selectCount, "Why do we need \"select from select\"??");
+				Assert.That(selectCount, Is.EqualTo(1), "Why do we need \"select from select\"??");
 			}
 		}
 
@@ -341,9 +344,12 @@ namespace Tests.Linq
 
 				).ToList().First();
 
-				Assert.AreEqual(1,      q.ID);
-				Assert.AreEqual("John", q.FirstName);
-				Assert.AreEqual("None", q.MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(q.ID, Is.EqualTo(1));
+					Assert.That(q.FirstName, Is.EqualTo("John"));
+					Assert.That(q.MiddleName, Is.EqualTo("None"));
+				});
 			}
 		}
 
@@ -366,10 +372,13 @@ namespace Tests.Linq
 
 				).ToList().First();
 
-				Assert.AreEqual(1,        q.ID);
-				Assert.AreEqual("John",   q.FirstName);
-				Assert.AreEqual("Pupkin", q.LastName);
-				Assert.AreEqual("None",   q.MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(q.ID, Is.EqualTo(1));
+					Assert.That(q.FirstName, Is.EqualTo("John"));
+					Assert.That(q.LastName, Is.EqualTo("Pupkin"));
+					Assert.That(q.MiddleName, Is.EqualTo("None"));
+				});
 			}
 		}
 
@@ -406,10 +415,13 @@ namespace Tests.Linq
 
 					).ToList().First();
 
-					Assert.AreEqual(1,        q.ID);
-					Assert.AreEqual("John",   q.FirstName);
-					Assert.AreEqual("Pupkin", q.LastName);
-					Assert.AreEqual("None",   q.MiddleName);
+					Assert.Multiple(() =>
+					{
+						Assert.That(q.ID, Is.EqualTo(1));
+						Assert.That(q.FirstName, Is.EqualTo("John"));
+						Assert.That(q.LastName, Is.EqualTo("Pupkin"));
+						Assert.That(q.MiddleName, Is.EqualTo("None"));
+					});
 				}
 			}
 		}
@@ -441,7 +453,7 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.ID == 1 select new { p.ID, FirstName  = "123" + p.FirstName + "456" };
 				var f = q.Where(p => p.FirstName == "123John456").ToList().First();
-				Assert.AreEqual(1, f.ID);
+				Assert.That(f.ID, Is.EqualTo(1));
 			}
 		}
 
@@ -513,9 +525,12 @@ namespace Tests.Linq
 						(m, i) =>
 							ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
 
-				Assert.AreEqual("7.77.True.0",  lines[0]);
-				Assert.AreEqual("6.66.False.1", lines[1]);
-				Assert.AreEqual("6.65.True.2",  lines[2]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(lines[0], Is.EqualTo("7.77.True.0"));
+					Assert.That(lines[1], Is.EqualTo("6.66.False.1"));
+					Assert.That(lines[2], Is.EqualTo("6.65.True.2"));
+				});
 
 				q =
 					db.Child
@@ -527,7 +542,7 @@ namespace Tests.Linq
 						(m, i) =>
 							ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
 
-				Assert.AreEqual("7.77.True.0", lines[0]);
+				Assert.That(lines[0], Is.EqualTo("7.77.True.0"));
 			}
 		}
 
@@ -592,7 +607,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = (from p in db.Parent select new { p1 = p, p2 = p }).First();
-				Assert.AreSame(q.p1, q.p2);
+				Assert.That(q.p2, Is.SameAs(q.p1));
 			}
 		}
 
@@ -643,8 +658,11 @@ namespace Tests.Linq
 
 				TestContext.WriteLine(sql);
 
-				Assert.That(sql.IndexOf("First"),    Is.LessThan(0));
-				Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
+				Assert.Multiple(() =>
+				{
+					Assert.That(sql.IndexOf("First"), Is.LessThan(0));
+					Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
+				});
 			}
 		}
 
@@ -655,9 +673,12 @@ namespace Tests.Linq
 			{
 				var r = db.GetTable<ComplexPerson>().First(_ => _.ID == 1);
 
-				Assert.AreEqual("John", r.Name.FirstName);
-				Assert.IsNull(r.Name.MiddleName);
-				Assert.AreEqual("Pupkin", r.Name.LastName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
+					Assert.That(r.Name.MiddleName, Is.Null);
+					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
+				});
 			}
 		}
 
@@ -668,9 +689,12 @@ namespace Tests.Linq
 			{
 				var r = db.GetTable<ComplexPerson2>().First(_ => _.ID == 1);
 
-				Assert.AreEqual("John", r.Name.FirstName);
-				Assert.IsNull(r.Name.MiddleName);
-				Assert.AreEqual("Pupkin", r.Name.LastName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
+					Assert.That(r.Name.MiddleName, Is.Null);
+					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
+				});
 			}
 		}
 
@@ -692,9 +716,12 @@ namespace Tests.Linq
 			{
 				var r = db.GetTable<ComplexPerson3>().First(_ => _.ID == 1);
 
-				Assert.AreEqual("John", r.Name.FirstName);
-				Assert.IsNull(r.Name.MiddleName);
-				Assert.AreEqual("Pupkin", r.Name.LastName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
+					Assert.That(r.Name.MiddleName, Is.Null);
+					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
+				});
 			}
 		}
 
@@ -710,7 +737,7 @@ namespace Tests.Linq
 
 					var e2 = db.Types2.First(_ => _.ID == 1000);
 
-					Assert.AreEqual(e, e2);
+					Assert.That(e2, Is.EqualTo(e));
 				}
 				finally
 				{
@@ -733,7 +760,7 @@ namespace Tests.Linq
 
 					var e2 = db.Types.First(_ => _.ID == 1000);
 
-					Assert.AreEqual(e, e2);
+					Assert.That(e2, Is.EqualTo(e));
 				}
 				finally
 				{
@@ -978,13 +1005,19 @@ namespace Tests.Linq
 			{
 				var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
 
-				Assert.NotNull(person);
-				Assert.AreEqual(3, person.ID);
-				Assert.AreEqual(Gender.Female, person.Gender);
-				Assert.NotNull(person.Name);
-				Assert.AreEqual("Jane", person.Name.FirstName);
-				Assert.IsNull(person.Name.MiddleName);
-				Assert.AreEqual("Doe", person.Name.LastName);
+				Assert.That(person, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(person.ID, Is.EqualTo(3));
+					Assert.That(person.Gender, Is.EqualTo(Gender.Female));
+					Assert.That(person.Name, Is.Not.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(person.Name.FirstName, Is.EqualTo("Jane"));
+					Assert.That(person.Name.MiddleName, Is.Null);
+					Assert.That(person.Name.LastName, Is.EqualTo("Doe"));
+				});
 			}
 		}
 
@@ -1063,8 +1096,11 @@ namespace Tests.Linq
 				query = query.OrderByDescending(c => c.Child!.Id);
 				var result = query.ToArray();
 
-				Assert.NotNull(result[0].Child);
-				Assert.Null(result[1].Child);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Child, Is.Not.Null);
+					Assert.That(result[1].Child, Is.Null);
+				});
 			}
 		}
 
@@ -1152,21 +1188,30 @@ namespace Tests.Linq
 
 				var result = query.OrderBy(_ => _.Id).ToArray();
 
-				Assert.NotNull(result[0].Child1);
-				Assert.IsNull (result[1].Child1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Child1, Is.Not.Null);
+					Assert.That(result[1].Child1, Is.Null);
 
-				Assert.NotNull(result[0].Child2);
-				Assert.AreEqual(1,         result[0].Child2.Id);
-				Assert.AreEqual("Value 1", result[0].Child2.Value);
-				Assert.Null(result[1].Child2);
+					Assert.That(result[0].Child2, Is.Not.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Child2.Id, Is.EqualTo(1));
+					Assert.That(result[0].Child2.Value, Is.EqualTo("Value 1"));
+					Assert.That(result[1].Child2, Is.Null);
 
-				Assert.NotNull(result[0].Child3);
-				Assert.NotNull(result[1].Child3);
-				Assert.AreEqual(4,           result[1].Child3.Id);
-				Assert.AreEqual("Generated", result[1].Child3.Value);
+					Assert.That(result[0].Child3, Is.Not.Null);
+					Assert.That(result[1].Child3, Is.Not.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[1].Child3.Id, Is.EqualTo(4));
+					Assert.That(result[1].Child3.Value, Is.EqualTo("Generated"));
 
-				Assert.Null(result[0].Child4);
-				Assert.IsNull(result[1].Child4);
+					Assert.That(result[0].Child4, Is.Null);
+					Assert.That(result[1].Child4, Is.Null);
+				});
 			}
 		}
 
@@ -1359,7 +1404,7 @@ namespace Tests.Linq
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value!.Value));
 
-				Assert.AreEqual(value, result);
+				Assert.That(result, Is.EqualTo(value));
 			}
 		}
 
@@ -1373,7 +1418,7 @@ namespace Tests.Linq
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value!.Value) : (int?)null);
 
-				Assert.AreEqual(value, result);
+				Assert.That(result, Is.EqualTo(value));
 			}
 		}
 
@@ -1387,7 +1432,7 @@ namespace Tests.Linq
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
 
-				Assert.AreEqual(value, result);
+				Assert.That(result, Is.EqualTo(value));
 			}
 		}
 
@@ -1401,7 +1446,7 @@ namespace Tests.Linq
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
 
-				Assert.AreEqual(value, result);
+				Assert.That(result, Is.EqualTo(value));
 			}
 		}
 
@@ -1604,9 +1649,12 @@ namespace Tests.Linq
 					var item = actual[i];
 					if (item.Child1 != null)
 					{
-						Assert.That(item.ChildDictionary1[item.Child1.ChildID], Is.EqualTo(item.Child1.ParentID));
-						Assert.That(item.ChildDictionary2["ChildID"],           Is.EqualTo(item.Child1.ChildID));
-						Assert.That(item.ChildDictionary2["ParentID"],          Is.EqualTo(item.Child1.ParentID));
+						Assert.Multiple(() =>
+						{
+							Assert.That(item.ChildDictionary1[item.Child1.ChildID], Is.EqualTo(item.Child1.ParentID));
+							Assert.That(item.ChildDictionary2["ChildID"], Is.EqualTo(item.Child1.ChildID));
+							Assert.That(item.ChildDictionary2["ParentID"], Is.EqualTo(item.Child1.ParentID));
+						});
 					}
 				}
 			}
@@ -1644,16 +1692,16 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
-		public static T Wrap1<T>(T value) => throw new InvalidOperationException();
+		private static T Wrap1<T>(T value) => throw new InvalidOperationException();
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
-		public static T Wrap2<T>(T value) => value;
+		private static T Wrap2<T>(T value) => value;
 
 		[Sql.Expression("{0}", ServerSideOnly = false)]
-		public static T Wrap3<T>(T value) => throw new InvalidOperationException();
+		private static T Wrap3<T>(T value) => throw new InvalidOperationException();
 
 		[Sql.Expression("{0}", ServerSideOnly = false)]
-		public static T Wrap4<T>(T value) => value;
+		private static T Wrap4<T>(T value) => value;
 
 		[Test]
 		public void SelectExpression1([DataSources(ProviderName.DB2, TestProvName.AllFirebird)] string context)
@@ -1663,7 +1711,7 @@ namespace Tests.Linq
 			{
 				var res = table.Take(1).Select(_ => Wrap1(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap1(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
 
-				Assert.True(res);
+				Assert.That(res, Is.True);
 			}
 		}
 
@@ -1675,7 +1723,7 @@ namespace Tests.Linq
 			{
 				var res = table.Take(1).Select(_ => Wrap2(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap2(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
 
-				Assert.True(res);
+				Assert.That(res, Is.True);
 			}
 		}
 
@@ -1687,7 +1735,7 @@ namespace Tests.Linq
 			{
 				var res = table.Take(1).Select(_ => new Guid("b3d9b51c89f9442a893bcd8a6f667d37") != new Guid("61efdcd4659d41e8910c506a9c2f31c5")).SingleOrDefault();
 
-				Assert.True(res);
+				Assert.That(res, Is.True);
 			}
 		}
 
@@ -1709,7 +1757,7 @@ namespace Tests.Linq
 			{
 				var res = table.Take(1).Select(_ => Wrap4(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap4(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
 
-				Assert.True(res);
+				Assert.That(res, Is.True);
 			}
 		}
 
@@ -1856,7 +1904,7 @@ namespace Tests.Linq
 					});
 
 				foreach (var p in q.ToArray())
-					Assert.AreEqual($"{p.FirstName} {p.LastName}", p.FullName);
+					Assert.That(p.FullName, Is.EqualTo($"{p.FirstName} {p.LastName}"));
 			}
 		}
 
@@ -1868,9 +1916,12 @@ namespace Tests.Linq
 			// suppressSequentialAccess: true to avoid interceptor added twice
 			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
 			{
-				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
-				Assert.AreEqual(typeof(InheritanceParent1)   , InheritanceParent[1].GetType());
-				Assert.AreEqual(typeof(InheritanceParent2)   , InheritanceParent[2].GetType());
+				Assert.Multiple(() =>
+				{
+					Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
+					Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
+					Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
+				});
 
 				AreEqual(InheritanceParent, db.InheritanceParent);
 				AreEqual(InheritanceChild, db.InheritanceChild);

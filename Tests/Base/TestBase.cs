@@ -168,7 +168,7 @@ namespace Tests
 				var userDataProvidersJson =
 					File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-				var configName = GetConfigName();
+				var configName = TestUtils.GetConfigName();
 
 #if AZURE
 			TestContext.WriteLine("Azure configuration detected.");
@@ -283,7 +283,7 @@ namespace Tests
 			}
 			catch (Exception ex)
 			{
-				Log(ex);
+				TestUtils.Log(ex);
 				throw;
 			}
 		}
@@ -291,34 +291,9 @@ namespace Tests
 		static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
 			if (e.ExceptionObject is Exception ex)
-				Log(ex);
+				TestUtils.Log(ex);
 			else
-				Log(e.ExceptionObject.ToString());
-			}
-
-		internal static string GetConfigName()
-		{
-#if NET6_0
-			return "NET60";
-#elif NET8_0
-			return "NET80";
-#elif NETFRAMEWORK
-			return "NETFX";
-#else
-#error Unknown framework
-#endif
-		}
-
-		public static void Log(Exception ex)
-		{
-			Log($"Exception: {ex.Message}");
-			Log(ex.StackTrace);
-		}
-
-		static void Log(string? message)
-		{
-			var path = Path.GetTempPath();
-			File.AppendAllText(path + "linq2db.Tests." + GetConfigName() + ".log", (message ?? "") + Environment.NewLine);
+				TestUtils.Log(e.ExceptionObject.ToString());
 		}
 
 		static void CopyDatabases()
@@ -586,12 +561,15 @@ namespace Tests
 		{
 			var list = persons.ToList();
 
-			Assert.AreEqual(1, list.Count);
+			Assert.That(list, Has.Count.EqualTo(1));
 
 			var person = list[0];
 
-			Assert.AreEqual(id, person.ID);
-			Assert.AreEqual(firstName, person.FirstName);
+			Assert.Multiple(() =>
+			{
+				Assert.That(person.ID, Is.EqualTo(id));
+				Assert.That(person.FirstName, Is.EqualTo(firstName));
+			});
 		}
 
 		protected void TestOneJohn(IQueryable<Person> persons)
@@ -603,8 +581,11 @@ namespace Tests
 		{
 			var person = persons.ToList().First(p => p.ID == id);
 
-			Assert.AreEqual(id, person.ID);
-			Assert.AreEqual(firstName, person.FirstName);
+			Assert.Multiple(() =>
+			{
+				Assert.That(person.ID, Is.EqualTo(id));
+				Assert.That(person.FirstName, Is.EqualTo(firstName));
+			});
 		}
 
 		protected void TestJohn(IQueryable<IPerson> persons)
@@ -919,7 +900,7 @@ namespace Tests
 
 		#region Northwind
 
-		public TestBaseNorthwind GetNorthwindAsList(string context)
+		protected TestBaseNorthwind GetNorthwindAsList(string context)
 		{
 			return new TestBaseNorthwind(context);
 		}
@@ -1284,8 +1265,8 @@ namespace Tests
 			}
 
 			if (!allowEmpty)
-				Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
-			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
+				Assert.That(expectedList, Is.Not.Empty, "Expected list cannot be empty.");
+			Assert.That(resultList, Has.Count.EqualTo(expectedList.Count), "Expected and result lists are different. Length: ");
 
 			var exceptExpectedList = resultList.  Except(expectedList, comparer).ToList();
 			var exceptResultList   = expectedList.Except(resultList,   comparer).ToList();
@@ -1308,8 +1289,11 @@ namespace Tests
 				}
 			}
 
-			Assert.AreEqual(0, exceptExpected, $"Expected Was{Environment.NewLine}{message}");
-			Assert.AreEqual(0, exceptResult  , $"Expect Result{Environment.NewLine}{message}");
+			Assert.Multiple(() =>
+			{
+				Assert.That(exceptExpected, Is.EqualTo(0), $"Expected Was{Environment.NewLine}{message}");
+				Assert.That(exceptResult, Is.EqualTo(0), $"Expect Result{Environment.NewLine}{message}");
+			});
 
 			LastQuery = lastQuery;
 		}
@@ -1319,8 +1303,11 @@ namespace Tests
 			var resultList   = result.ToList();
 			var expectedList = expected.ToList();
 
-			Assert.AreNotEqual(0, expectedList.Count);
-			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
+			Assert.Multiple(() =>
+			{
+				Assert.That(expectedList, Is.Not.Empty);
+				Assert.That(resultList, Has.Count.EqualTo(expectedList.Count), "Expected and result lists are different. Length: ");
+			});
 
 			for (var i = 0; i < resultList.Count; i++)
 			{
@@ -1337,8 +1324,11 @@ namespace Tests
 			var resultList   = result.ToList();
 			var expectedList = expected.ToList();
 
-			Assert.AreNotEqual(0, expectedList.Count);
-			Assert.AreEqual(expectedList.Count, resultList.Count);
+			Assert.Multiple(() =>
+			{
+				Assert.That(expectedList, Is.Not.Empty);
+				Assert.That(resultList, Has.Count.EqualTo(expectedList.Count));
+			});
 
 			var b = expectedList.SequenceEqual(resultList);
 
@@ -1346,14 +1336,14 @@ namespace Tests
 				for (var i = 0; i < resultList.Count; i++)
 					Debug.WriteLine("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 
-			Assert.IsTrue(b);
+			Assert.That(b, Is.True);
 		}
 
 		static readonly char[] _newlineSeparators = new char[] { '\r', '\n' };
 		
 		protected void CompareSql(string expected, string result)
 		{
-			Assert.AreEqual(normalize(expected), normalize(result));
+			Assert.That(normalize(result), Is.EqualTo(normalize(expected)));
 
 			static string normalize(string sql)
 			{
@@ -1367,13 +1357,13 @@ namespace Tests
 			return DataCache<LinqDataTypes>.Get(context);
 		}
 
-		public static TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
+		protected static TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
 			where T : notnull
 		{
 			return TempTable.Create<T>(db, GetTempTableName(tableName, context));
 		}
 
-		public static string GetTempTableName(string tableName, string context)
+		protected static string GetTempTableName(string tableName, string context)
 		{
 			var finalTableName = tableName;
 			switch (context)
@@ -1529,7 +1519,7 @@ namespace Tests
 		}
 
 		private static readonly JsonSerializerOptions _dumpObjectOptions = new JsonSerializerOptions { WriteIndented = true };
-		public virtual void DumpObject(object? obj)
+		protected virtual void DumpObject(object? obj)
 		{
 			if (obj == null)
 				return;
@@ -1538,7 +1528,7 @@ namespace Tests
 		}
 
 		[SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-		public void ConcurrentRunner<TParam, TResult>(DataConnection dc, string context, int threadsPerParam, Func<DataConnection, TParam, TResult> queryFunc,
+		protected void ConcurrentRunner<TParam, TResult>(DataConnection dc, string context, int threadsPerParam, Func<DataConnection, TParam, TResult> queryFunc,
 			Action<TResult, TParam> checkAction, params TParam[] parameters)
 		{
 			var threadCount = threadsPerParam * parameters.Length;
