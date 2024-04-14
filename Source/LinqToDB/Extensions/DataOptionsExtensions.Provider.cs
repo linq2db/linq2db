@@ -359,16 +359,18 @@ namespace LinqToDB
 		/// Configure MySQL or MariaDB connection.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="dialect">MySql dialect.</param>
 		/// <param name="provider">MySql ADO.NET provider.</param>
 		/// <param name="optionSetter">Optional <see cref="MySqlOptions"/> configuration callback.</param>
 		/// <returns>New options instance with applied changes.</returns>
 		[Pure]
 		public static DataOptions UseMySql(
 			this DataOptions                       options,
-			     MySqlProvider                     provider     = MySqlProvider.AutoDetect,
+				 MySqlVersion                      dialect      = MySqlVersion.AutoDetect,
+				 MySqlProvider                     provider     = MySqlProvider.AutoDetect,
 			     Func<MySqlOptions, MySqlOptions>? optionSetter = null)
 		{
-			options = MySqlTools.ProviderDetector.CreateOptions(options, default, provider);
+			options = MySqlTools.ProviderDetector.CreateOptions(options, dialect, provider);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 
@@ -377,6 +379,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
 		/// <param name="connectionString">MySql connection string.</param>
+		/// <param name="dialect">MySql dialect.</param>
 		/// <param name="provider">MySql ADO.NET provider.</param>
 		/// <param name="optionSetter">Optional <see cref="MySqlOptions"/> configuration callback.</param>
 		/// <returns>New options instance with applied changes.</returns>
@@ -384,11 +387,12 @@ namespace LinqToDB
 		public static DataOptions UseMySql(
 			this DataOptions                       options,
 			     string                            connectionString,
+				 MySqlVersion                      dialect      = MySqlVersion.AutoDetect,
 			     MySqlProvider                     provider     = MySqlProvider.AutoDetect,
 			     Func<MySqlOptions, MySqlOptions>? optionSetter = null)
 		{
 			options = options.UseConnectionString(connectionString);
-			options = MySqlTools.ProviderDetector.CreateOptions(options, default, provider);
+			options = MySqlTools.ProviderDetector.CreateOptions(options, dialect, provider);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 

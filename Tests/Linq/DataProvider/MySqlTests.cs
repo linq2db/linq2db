@@ -74,8 +74,6 @@ namespace Tests.DataProvider
 					Assert.That(TestType<DateTime?>(conn, "timestampDataType", DataType.Timestamp), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 					Assert.That(TestType<TimeSpan?>(conn, "timeDataType", DataType.Time), Is.EqualTo(new TimeSpan(12, 12, 12)));
 					Assert.That(TestType<int?>(conn, "yearDataType", DataType.Int32), Is.EqualTo(1998));
-					Assert.That(TestType<int?>(conn, "year2DataType", DataType.Int32), Is.EqualTo(context.IsAnyOf(TestProvName.AllMySql57Plus) ? 1997 : 97));
-					Assert.That(TestType<int?>(conn, "year4DataType", DataType.Int32), Is.EqualTo(2012));
 
 					Assert.That(TestType<char?>(conn, "charDataType", DataType.Char), Is.EqualTo('1'));
 					Assert.That(TestType<string>(conn, "charDataType", DataType.Char), Is.EqualTo("1"));
@@ -490,10 +488,6 @@ namespace Tests.DataProvider
 		{
 			[IgnoreComparison]
 			[Column,     Nullable] public int?      yearDataType        { get; set; } // year(4)
-			[IgnoreComparison]
-			[Column,     Nullable] public int?      year2DataType       { get; set; } // year(2)
-			[IgnoreComparison]
-			[Column,     Nullable] public int?      year4DataType       { get; set; } // year(4)
 		}
 
 		// excludes year columns, as they doesn't supported by native bulk copy
@@ -559,8 +553,6 @@ namespace Tests.DataProvider
 								timestampDataType   = TestUtils.StripMilliseconds(TestData.DateTime, true),
 								timeDataType        = TestUtils.StripMilliseconds(TestData.DateTime, true).TimeOfDay,
 								yearDataType        = (1000 + n) % 100,
-								year2DataType       = (1000 + n) % 100,
-								year4DataType       = (1000 + n) % 100,
 								charDataType        = 'A',
 								varcharDataType     = "_btest",
 								textDataType        = "test",
@@ -645,8 +637,6 @@ namespace Tests.DataProvider
 								timestampDataType   = TestUtils.StripMilliseconds(TestData.DateTime, true),
 								timeDataType        = TestUtils.StripMilliseconds(TestData.DateTime, true).TimeOfDay,
 								yearDataType        = (1000 + n) % 100,
-								year2DataType       = (1000 + n) % 100,
-								year4DataType       = (1000 + n) % 100,
 								charDataType        = 'A',
 								varcharDataType     = "_btest",
 								textDataType        = "test",
@@ -1543,17 +1533,12 @@ namespace Tests.DataProvider
 			[Column(DataType = DataType.Text)                                    ] public string? TextDefault;
 			[Column(DataType = DataType.Date)                                    ] public DateTime Date;
 			[Column                                                              ] public DateTime DateTime;
-			[NotColumn(Configuration = TestProvName.MySql55)                     ]
-			[NotColumn(Configuration = TestProvName.MySql55Connector)            ]
 			[Column(Precision = 3)                                               ] public DateTime DateTime3;
 			// MySQL.Data provider has issues with timestamps
 			// TODO: look into it later
-			[Column(Configuration = ProviderName.MySqlConnector)                 ] public DateTimeOffset TimeStamp;
-			[NotColumn(Configuration = TestProvName.MySql55Connector)            ]
-			[Column(Precision = 5, Configuration = ProviderName.MySqlConnector)  ] public DateTimeOffset TimeStamp5;
+			[Column(Configuration = TestProvName.MySqlConnector)                 ] public DateTimeOffset TimeStamp;
+			[Column(Precision = 5, Configuration = TestProvName.MySqlConnector)  ] public DateTimeOffset TimeStamp5;
 			[Column                                                              ] public TimeSpan Time;
-			[NotColumn(Configuration = TestProvName.MySql55)                     ]
-			[NotColumn(Configuration = TestProvName.MySql55Connector)            ]
 			[Column(Precision = 2)                                               ] public TimeSpan Time2;
 			[Column                                                              ] public sbyte TinyInt;
 			[Column                                                              ] public byte UnsignedTinyInt;
@@ -1578,8 +1563,6 @@ namespace Tests.DataProvider
 			[Column(DataType = DataType.BitArray)                                ] public int Bit32;
 			[Column(DataType = DataType.BitArray, Length = 10)                   ] public int Bit10;
 			[Column(DataType = DataType.BitArray)                                ] public long Bit64;
-			[NotColumn(Configuration = TestProvName.MySql55)                     ]
-			[NotColumn(Configuration = TestProvName.MySql55Connector)            ]
 			[Column(DataType = DataType.Json)                                    ] public string? Json;
 			// not mysql type, just mapping testing
 			[Column                                                              ] public Guid Guid;
@@ -1638,19 +1621,13 @@ namespace Tests.DataProvider
 					Assert.That(sql, Does.Contain("\t`TextDefault`      TEXT                  NULL"));
 					Assert.That(sql, Does.Contain("\t`Date`             DATE              NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`DateTime`         DATETIME          NOT NULL"));
-					if (context.IsAnyOf(TestProvName.AllMySql57Plus))
-					{
-						Assert.That(sql, Does.Contain("\t`DateTime3`        DATETIME(3)       NOT NULL"));
-						Assert.That(sql, Does.Contain("\t`Time2`            TIME(2)           NOT NULL"));
-						Assert.That(sql, Does.Contain("\t`Json`             JSON                  NULL"));
-					}
+					Assert.That(sql, Does.Contain("\t`DateTime3`        DATETIME(3)       NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Time2`            TIME(2)           NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Json`             JSON                  NULL"));
 					if (isMySqlConnector)
 					{
 						Assert.That(sql, Does.Contain("\t`TimeStamp`        TIMESTAMP         NOT NULL"));
-						if (context.IsAnyOf(TestProvName.AllMySql57Plus))
-						{
-							Assert.That(sql, Does.Contain("\t`TimeStamp5`       TIMESTAMP(5)      NOT NULL"));
-						}
+						Assert.That(sql, Does.Contain("\t`TimeStamp5`       TIMESTAMP(5)      NOT NULL"));
 					}
 					Assert.That(sql, Does.Contain("\t`Time`             TIME              NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`TinyInt`          TINYINT           NOT NULL"));
@@ -1768,23 +1745,17 @@ namespace Tests.DataProvider
 						Assert.That(readRecord.TextDefault, Is.EqualTo(testRecord.TextDefault));
 						Assert.That(readRecord.Date, Is.EqualTo(testRecord.Date));
 						Assert.That(readRecord.DateTime, Is.EqualTo(testRecord.DateTime));
+						Assert.That(readRecord.DateTime3, Is.EqualTo(testRecord.DateTime3));
+						Assert.That(readRecord.Time2, Is.EqualTo(testRecord.Time2));
+						Assert.That(readRecord.Json, Is.EqualTo(testRecord.Json));
 					});
-					if (context.IsAnyOf(TestProvName.AllMySql57Plus))
+					if (isMySqlConnector)
 					{
 						Assert.Multiple(() =>
 						{
-							Assert.That(readRecord.DateTime3, Is.EqualTo(testRecord.DateTime3));
-							Assert.That(readRecord.Time2, Is.EqualTo(testRecord.Time2));
-							Assert.That(readRecord.Json, Is.EqualTo(testRecord.Json));
-						});
-					}
-					if (isMySqlConnector)
-					{
-						Assert.That(readRecord.TimeStamp, Is.EqualTo(testRecord.TimeStamp));
-						if (context.IsAnyOf(TestProvName.AllMySql57Plus))
-						{
+							Assert.That(readRecord.TimeStamp, Is.EqualTo(testRecord.TimeStamp));
 							Assert.That(readRecord.TimeStamp5, Is.EqualTo(testRecord.TimeStamp5));
-						}
+						});
 					}
 
 					Assert.Multiple(() =>
@@ -1847,16 +1818,10 @@ namespace Tests.DataProvider
 			[Column(DataType = DataType.Text)                        ] public string? TextDefault;
 			[Column(DataType = DataType.Date)                        ] public DateTime Date;
 			[Column                                                  ] public DateTime DateTime;
-			[NotColumn(Configuration = TestProvName.MySql55)         ]
-			[NotColumn(Configuration = TestProvName.MySql55Connector)]
 			[Column(Precision = 3)                                   ] public DateTime DateTime3;
 			[Column                                                  ] public DateTimeOffset TimeStamp;
-			[NotColumn(Configuration = TestProvName.MySql55)         ]
-			[NotColumn(Configuration = TestProvName.MySql55Connector)]
 			[Column(Precision = 5)                                   ] public DateTimeOffset TimeStamp5;
 			[Column                                                  ] public TimeSpan Time;
-			[NotColumn(Configuration = TestProvName.MySql55)         ]
-			[NotColumn(Configuration = TestProvName.MySql55Connector)]
 			[Column(Precision = 2)                                   ] public TimeSpan Time2;
 			[Column                                                  ] public sbyte TinyInt;
 			[Column                                                  ] public byte UnsignedTinyInt;
@@ -1881,8 +1846,6 @@ namespace Tests.DataProvider
 			[Column(DataType = DataType.BitArray)                    ] public int Bit32;
 			[Column(DataType = DataType.BitArray, Length = 10)       ] public int Bit10;
 			[Column(DataType = DataType.BitArray)                    ] public long Bit64;
-			[NotColumn(Configuration = TestProvName.MySql55)         ]
-			[NotColumn(Configuration = TestProvName.MySql55Connector)]
 			[Column(DataType = DataType.Json)                        ] public string? Json;
 			// not mysql type, just mapping testing
 			[Column                                                  ] public Guid Guid;
@@ -1980,17 +1943,14 @@ namespace Tests.DataProvider
 					assertColumn("MultiPolygon"      , "byte[]"  , DataType.Undefined);
 					assertColumn("GeometryCollection", "byte[]"  , DataType.Undefined);
 
-					if (context.IsAnyOf(TestProvName.AllMySql57Plus))
-					{
-						assertColumn("DateTime3" , "DateTime", DataType.DateTime);
-						assertColumn("Time2"     , "TimeSpan", DataType.Time);
-						assertColumn("TimeStamp5", "DateTime", DataType.DateTime);
+					assertColumn("DateTime3" , "DateTime", DataType.DateTime);
+					assertColumn("Time2"     , "TimeSpan", DataType.Time);
+					assertColumn("TimeStamp5", "DateTime", DataType.DateTime);
 
-						if (context.IsAnyOf(TestProvName.AllMySqlServer))
-							assertColumn("Json", "string", DataType.Json);
-						else
-							assertColumn("Json", "string", DataType.Text);
-					}
+					if (context.IsAnyOf(TestProvName.AllMySqlServer))
+						assertColumn("Json", "string", DataType.Json);
+					else
+						assertColumn("Json", "string", DataType.Text);
 
 					void assertColumn(string name, string type, DataType dataType)
 					{
@@ -2067,13 +2027,10 @@ namespace Tests.DataProvider
 				assertParameter("MultiPolygon"      , "byte[]"   , DataType.Undefined);
 				assertParameter("GeometryCollection", "byte[]"   , DataType.Undefined);
 
-				if (context.IsAnyOf(TestProvName.AllMySql57Plus))
-				{
-					if (context.IsAnyOf(TestProvName.AllMySqlServer))
-						assertParameter("Json", "string", DataType.Json);
-					else
-						assertParameter("Json", "string", DataType.Text);
-				}
+				if (context.IsAnyOf(TestProvName.AllMySqlServer))
+					assertParameter("Json", "string", DataType.Json);
+				else
+					assertParameter("Json", "string", DataType.Text);
 
 				void assertParameter(string name, string type, DataType dataType)
 				{
@@ -2154,10 +2111,7 @@ namespace Tests.DataProvider
 					assertColumn("Geometry"            , "byte[]", DataType.Undefined);
 					assertColumn("GeometryCollection"  , "byte[]", DataType.Undefined);
 
-					if (context.IsAnyOf(TestProvName.AllMySql57Plus))
-					{
-						assertColumn("Json", "string", !context.IsAnyOf(TestProvName.AllMySqlServer) ? DataType.Text : DataType.Json);
-					}
+					assertColumn("Json"    , "string", !context.IsAnyOf(TestProvName.AllMySqlServer) ? DataType.Text : DataType.Json);
 					assertColumn("Enum"    , "string", DataType.VarChar);
 					assertColumn("Set"     , "string", DataType.VarChar);
 				}

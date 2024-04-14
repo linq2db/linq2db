@@ -3,6 +3,9 @@ const LinqToDB.ProviderName.Firebird25 = "Firebird2_5" -> string!
 const LinqToDB.ProviderName.Firebird3 = "Firebird3" -> string!
 const LinqToDB.ProviderName.Firebird4 = "Firebird4" -> string!
 const LinqToDB.ProviderName.Firebird5 = "Firebird5" -> string!
+const LinqToDB.ProviderName.MariaDB10 = "MariaDB10" -> string!
+const LinqToDB.ProviderName.MySql57 = "MySql57" -> string!
+const LinqToDB.ProviderName.MySql80 = "MySql80" -> string!
 LinqToDB.DataProvider.Firebird.FirebirdDataProvider.FirebirdDataProvider(string! name, LinqToDB.DataProvider.Firebird.FirebirdVersion version) -> void
 LinqToDB.DataProvider.Firebird.FirebirdDataProvider.Version.get -> LinqToDB.DataProvider.Firebird.FirebirdVersion
 LinqToDB.DataProvider.Firebird.FirebirdProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
@@ -12,6 +15,14 @@ LinqToDB.DataProvider.Firebird.FirebirdVersion.v25 = 1 -> LinqToDB.DataProvider.
 LinqToDB.DataProvider.Firebird.FirebirdVersion.v3 = 2 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
 LinqToDB.DataProvider.Firebird.FirebirdVersion.v4 = 3 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
 LinqToDB.DataProvider.Firebird.FirebirdVersion.v5 = 4 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.MySql.MySqlDataProvider.MySqlDataProvider(string! name, LinqToDB.DataProvider.MySql.MySqlVersion version, LinqToDB.DataProvider.MySql.MySqlProvider provider) -> void
+LinqToDB.DataProvider.MySql.MySqlDataProvider.Provider.get -> LinqToDB.DataProvider.MySql.MySqlProvider
+LinqToDB.DataProvider.MySql.MySqlDataProvider.Version.get -> LinqToDB.DataProvider.MySql.MySqlVersion
+LinqToDB.DataProvider.MySql.MySqlVersion
+LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect = 0 -> LinqToDB.DataProvider.MySql.MySqlVersion
+LinqToDB.DataProvider.MySql.MySqlVersion.MariaDB10 = 3 -> LinqToDB.DataProvider.MySql.MySqlVersion
+LinqToDB.DataProvider.MySql.MySqlVersion.MySql57 = 1 -> LinqToDB.DataProvider.MySql.MySqlVersion
+LinqToDB.DataProvider.MySql.MySqlVersion.MySql80 = 2 -> LinqToDB.DataProvider.MySql.MySqlVersion
 LinqToDB.Mapping.Nullability
 override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.BuildMergeOperationDeleteBySource(LinqToDB.SqlQuery.SqlMergeOperationClause! operation) -> void
 override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.BuildMergeOperationUpdateBySource(LinqToDB.SqlQuery.SqlMergeOperationClause! operation) -> void
@@ -19,6 +30,8 @@ static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! opt
 static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.Firebird.FirebirdVersion dialect = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>! optionSetter) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.MySql.MySqlVersion dialect = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.MySql.MySqlVersion dialect = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
 static LinqToDB.DataProvider.Firebird.FirebirdTools.AutoDetectProvider.get -> bool
 static LinqToDB.DataProvider.Firebird.FirebirdTools.AutoDetectProvider.set -> void
 static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.Firebird.FirebirdVersion version = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect) -> LinqToDB.Data.DataConnection!
@@ -130,6 +143,10 @@ static LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForGroupByHint<TSource>(this
 static LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForJoinHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>! table, params string![]! indexNames) -> LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>!
 static LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForOrderByHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>! table, params string![]! indexNames) -> LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>!
 static LinqToDB.DataProvider.MySql.MySqlHints.UseKeyHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>! table, params string![]! indexNames) -> LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>!
+static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.MySql.MySqlVersion version = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.MySql.MySqlVersion version = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.MySql.MySqlVersion version = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.MySql.MySqlTools.GetDataProvider(LinqToDB.DataProvider.MySql.MySqlVersion version = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
 static LinqToDB.DataProvider.Oracle.OracleHints.AllRowsHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
 static LinqToDB.DataProvider.Oracle.OracleHints.AppendHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
 static LinqToDB.DataProvider.Oracle.OracleHints.AppendValuesHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
@@ -396,7 +413,6 @@ LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxConnection.Dispose() -
 LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxConnection.IfxConnection(object! instance, System.Delegate![]! wrappers) -> void
 LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxConnection.IfxConnection(string! connectionString) -> void
 LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxConnection.Open() -> void
-LinqToDB.DataProvider.MySql.MySqlDataProvider.MySqlDataProvider(string! name, LinqToDB.DataProvider.MySql.MySqlProvider provider) -> void
 LinqToDB.DataProvider.MySql.MySqlProvider
 LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect = 0 -> LinqToDB.DataProvider.MySql.MySqlProvider
 LinqToDB.DataProvider.MySql.MySqlProvider.MySqlConnector = 2 -> LinqToDB.DataProvider.MySql.MySqlProvider
@@ -451,8 +467,6 @@ static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! opt
 static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.Informix.InformixProvider provider = LinqToDB.DataProvider.Informix.InformixProvider.AutoDetect, System.Func<LinqToDB.DataProvider.Informix.InformixOptions!, LinqToDB.DataProvider.Informix.InformixOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Informix.InformixOptions!, LinqToDB.DataProvider.Informix.InformixOptions!>! optionSetter) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Informix.InformixOptions!, LinqToDB.DataProvider.Informix.InformixOptions!>! optionSetter) -> LinqToDB.DataOptions!
-static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
-static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>! optionSetter) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>! optionSetter) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseOracle(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.Oracle.OracleVersion dialect = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.AutoDetect, System.Func<LinqToDB.DataProvider.Oracle.OracleOptions!, LinqToDB.DataProvider.Oracle.OracleOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
@@ -495,10 +509,6 @@ static LinqToDB.DataProvider.Informix.InformixTools.GetDataProvider(string? prov
 static LinqToDB.DataProvider.MySql.MySqlProviderAdapter.GetInstance(LinqToDB.DataProvider.MySql.MySqlProvider provider) -> LinqToDB.DataProvider.MySql.MySqlProviderAdapter!
 static LinqToDB.DataProvider.MySql.MySqlTools.AutoDetectProvider.get -> bool
 static LinqToDB.DataProvider.MySql.MySqlTools.AutoDetectProvider.set -> void
-static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
-static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
-static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
-static LinqToDB.DataProvider.MySql.MySqlTools.GetDataProvider(LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
 static LinqToDB.DataProvider.MySql.MySqlTools.GetDataProvider(string? providerName = null, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
 static LinqToDB.DataProvider.Oracle.OracleTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.Oracle.OracleVersion version = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
 static LinqToDB.DataProvider.Oracle.OracleTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.Oracle.OracleVersion version = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.AutoDetect) -> LinqToDB.Data.DataConnection!

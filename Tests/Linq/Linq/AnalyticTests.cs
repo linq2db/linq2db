@@ -1335,7 +1335,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
-			TestProvName.AllMySql55,
+			TestProvName.AllMySql57,
 			// doesn't support LAG with 3 parameters
 			TestProvName.AllMariaDB)] string context)
 		{
@@ -1382,7 +1382,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
-			TestProvName.AllMySql55,
+			TestProvName.AllMySql57,
 			// doesn't support 3-rd parameter for LEAD
 			TestProvName.AllMariaDB)] string context)
 		{
@@ -1482,7 +1482,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
-			TestProvName.AllMySql55)] string context)
+			TestProvName.AllMySql57)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1525,7 +1525,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
-			TestProvName.AllMySql55)] string context)
+			TestProvName.AllMySql57)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1572,7 +1572,7 @@ namespace Tests.Linq
 			ProviderName.Firebird25,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
-			TestProvName.AllMySql55,
+			TestProvName.AllMySql57,
 			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -1640,7 +1640,7 @@ namespace Tests.Linq
 			ProviderName.Firebird25,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
-			TestProvName.AllMySql55)] string context)
+			TestProvName.AllMySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1695,7 +1695,7 @@ namespace Tests.Linq
 			ProviderName.Firebird25,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
-			TestProvName.AllMySql55)] string context)
+			TestProvName.AllMySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1749,7 +1749,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
-			TestProvName.AllMySql55,
+			TestProvName.AllMySql57,
 			// doesn't support 3-rd parameter for LEAD
 			TestProvName.AllMariaDB)] string context)
 		{
@@ -1785,7 +1785,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
-			TestProvName.AllMySql55)] string context)
+			TestProvName.AllMySql57)] string context)
 		{
 			var data = new Issue1799Table3[]
 			{

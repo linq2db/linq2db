@@ -577,7 +577,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay1([DataSources(TestProvName.AllMySqlServer57Plus)] string context)
+		public void TimeOfDay1([DataSources(TestProvName.AllMySqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -586,7 +586,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay2([IncludeDataSources(TestProvName.AllMySqlServer57Plus, TestProvName.AllClickHouse)] string context)
+		public void TimeOfDay2([IncludeDataSources(TestProvName.AllMySqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

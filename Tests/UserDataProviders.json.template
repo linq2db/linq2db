@@ -53,8 +53,8 @@
 			// MySQL and MariaDB
 			//"MySql",
 			//"MySqlConnector",
-			//"MySql55",
-			//"MySql55Connector",
+			//"MySql57",
+			//"MySql57Connector",
 			//"MariaDB",
 
 			// PostgreSQL
@@ -176,8 +176,8 @@
 			// MySQL and MariaDB
 			//"MySql",
 			//"MySqlConnector",
-			//"MySql55",
-			//"MySql55Connector",
+			//"MySql57",
+			//"MySql57Connector",
 			//"MariaDB",
 
 			// PostgreSQL
@@ -291,8 +291,8 @@
 			// MySQL and MariaDB
 			//"MySql",
 			//"MySqlConnector",
-			//"MySql55",
-			//"MySql55Connector",
+			//"MySql57",
+			//"MySql57Connector",
 			//"MariaDB",
 
 			// PostgreSQL
@@ -488,11 +488,11 @@
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySql55": {
+			"MySql57": {
 				"Provider": "MySql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySql55Connector": {
+			"MySql57Connector": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},

@@ -165,20 +165,7 @@ namespace Tests
 
 		public static bool ProviderNeedsTimeFix(this IDataContext db, string context)
 		{
-			if (context.IsAnyOf(TestProvName.AllMySql55))
-			{
-				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
-				// them from expected data too
-				var version = db.GetTable<LinqDataTypes>().Select(_ => MySqlVersion()).First();
-				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
-				if (match.Success)
-				{
-					var versionParts = match.Value.Split('.').Select(int.Parse).ToArray();
-
-					return (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604);
-				}
-			}
-			else if (context.IsAnyOf(ProviderName.AccessOdbc))
+			if (context.IsAnyOf(ProviderName.AccessOdbc))
 			{
 				// ODBC driver strips milliseconds from values on both save and load
 				return true;

@@ -67,18 +67,23 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal static readonly MySqlMappingSchema Instance = new ();
 
-		public sealed class MySqlOfficialMappingSchema : LockedMappingSchema
+		public sealed class MySql57MappingSchema : LockedMappingSchema
 		{
-			public MySqlOfficialMappingSchema(MappingSchema adapterSchema)
-				: base(ProviderName.MySqlOfficial, adapterSchema, Instance)
+			public MySql57MappingSchema(MappingSchema adapterSchema) : base(ProviderName.MySql57, adapterSchema, Instance)
 			{
 			}
 		}
 
-		public sealed class MySqlConnectorMappingSchema : LockedMappingSchema
+		public sealed class MySql80MappingSchema : LockedMappingSchema
 		{
-			public MySqlConnectorMappingSchema(MappingSchema adapterSchema)
-				: base(ProviderName.MySqlConnector, adapterSchema, Instance)
+			public MySql80MappingSchema(MappingSchema adapterSchema) : base(ProviderName.MySql80, adapterSchema, Instance)
+			{
+			}
+		}
+
+		public sealed class MariaDB10MappingSchema : LockedMappingSchema
+		{
+			public MariaDB10MappingSchema(MappingSchema adapterSchema) : base(ProviderName.MariaDB10, adapterSchema, Instance)
 			{
 			}
 		}

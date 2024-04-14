@@ -96,7 +96,6 @@ namespace Tests.xUpdate
 
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
-			[Column(IsColumn = false, Configuration = TestProvName.MySql55)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
@@ -527,9 +526,6 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (provider.IsAnyOf(TestProvName.AllMySqlServer57Plus) && expected.Value.Millisecond > 500)
-					expected = expected.Value.AddSeconds(1);
-
 				if (provider.IsAnyOf(TestProvName.AllSybase))
 				{
 					switch (expected.Value.Millisecond % 10)
@@ -583,7 +579,6 @@ namespace Tests.xUpdate
 			if (   provider.IsAnyOf(TestProvName.AllSqlServer2005)
 				|| provider.IsAnyOf(TestProvName.AllOracle)
 				|| provider.IsAnyOf(TestProvName.AllSQLite)
-				|| provider.IsAnyOf(TestProvName.AllMySql55)
 				|| provider.IsAnyOf(TestProvName.AllFirebird)
 				|| provider == ProviderName.SqlCe)
 				return;
@@ -627,15 +622,6 @@ namespace Tests.xUpdate
 						break;
 					case string when provider.IsAnyOf(ProviderName.DB2, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMariaDB):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
-						break;
-					case string when provider.IsAnyOf(TestProvName.AllMySqlServer57Plus):
-						var msecs = expected.Value.Milliseconds;
-
-						if (msecs > 500)
-							expected = expected.Value.Add(TimeSpan.FromSeconds(1));
-
-						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
-
 						break;
 				}
 			}

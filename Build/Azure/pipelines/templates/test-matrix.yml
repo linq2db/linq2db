@@ -313,12 +313,12 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
             enabled: false
 
-        - name: MySQL55
-          title: MySQL 5.5 (both providers)
-          config_linux: mysql55
-          config_macos: mysql55
-          script_linux_global: mysql55.sh
-          script_macos_global: mac.mysql55.sh
+        - name: MySQL57
+          title: MySQL 5.7 (both providers)
+          config_linux: mysql57
+          config_macos: mysql57
+          script_linux_global: mysql57.sh
+          script_macos_global: mac.mysql57.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true

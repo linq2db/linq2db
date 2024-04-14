@@ -27,22 +27,26 @@ namespace Tests
 
 		#region MySQL/MariaDB
 		/// <summary>
-		/// MySQL 5.5 over MySql.Data.
+		/// MySQL 5.7 over MySql.Data.
 		/// </summary>
-		public const string MySql55           = "MySql55";
+		public const string MySql57           = "MySql57";
 		/// <summary>
-		/// MySQL 5.5 over MySqlConnector.
+		/// MySQL 5.7 over MySqlConnector.
 		/// </summary>
-		public const string MySql55Connector  = "MySql55Connector";
+		public const string MySql57Connector  = "MySql57Connector";
+		/// <summary>
+		/// MySQL 8.x over MySqlConnector.
+		/// </summary>
+		public const string MySqlConnector    = "MySqlConnector";
 
 		/// <summary>
 		/// All MySql.Data providers.
 		/// </summary>
-		public const string AllMySqlData      = $"{MySql55},{ProviderName.MySql}";
+		public const string AllMySqlData      = $"{MySql57},{ProviderName.MySql}";
 		/// <summary>
 		/// All MySqlConnector providers.
 		/// </summary>
-		public const string AllMySqlConnector = $"{MySql55Connector},{ProviderName.MySqlConnector},{ProviderName.MariaDB}";
+		public const string AllMySqlConnector = $"{MySql57Connector},{MySqlConnector},{ProviderName.MariaDB}";
 		/// <summary>
 		/// All mysql/mariadb test providers.
 		/// </summary>
@@ -50,32 +54,23 @@ namespace Tests
 		/// <summary>
 		/// All mysql test providers (no mariadb).
 		/// </summary>
-		public const string AllMySqlServer    = $"{MySql55},{MySql55Connector},{ProviderName.MySql},{ProviderName.MySqlConnector}";
+		public const string AllMySqlServer    = $"{MySql57},{MySql57Connector},{ProviderName.MySql},{MySqlConnector}";
 		/// <summary>
 		/// All mariadb test providers.
 		/// </summary>
 		public const string AllMariaDB        = $"{ProviderName.MariaDB}";
 		/// <summary>
-		/// MySQL 5.5.
+		/// MySQL 5.7.
 		/// </summary>
-		public const string AllMySql55        = $"{MySql55},{MySql55Connector}";
+		public const string AllMySql57        = $"{MySql57},{MySql57Connector}";
 		/// <summary>
-		/// MySQL > 5.7 (8.0 currently) and MariaDB.
+		/// MySQL 8.x and MariaDB.
 		/// </summary>
-		public const string AllMySql57Plus    = $"{ProviderName.MySql},{ProviderName.MySqlConnector},{ProviderName.MariaDB}";
-		/// <summary>
-		/// MySQL/MariaDB with supported FTS support.
-		/// MySql less than 5.7 excluded due to inadequate FTS behavior.
-		/// </summary>
-		public const string AllMySqlFullText  = AllMySql57Plus;
-		/// <summary>
-		/// MySQL > 5.7 (8.0 currently). No MariaDB.
-		/// </summary>
-		public const string AllMySqlServer57Plus = $"{ProviderName.MySql},{ProviderName.MySqlConnector}";
+		public const string AllMySql8Plus     = $"{ProviderName.MySql},{MySqlConnector},{ProviderName.MariaDB}";
 		/// <summary>
 		/// MySQL/MariaDB with CTE support.
 		/// </summary>
-		public const string AllMySqlWithCTE   = AllMySql57Plus;
+		public const string AllMySqlWithCTE   = AllMySql8Plus;
 		#endregion
 
 		#region PostgreSQL

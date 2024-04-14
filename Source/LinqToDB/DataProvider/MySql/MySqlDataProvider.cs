@@ -12,25 +12,35 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlProvider;
 
-	sealed class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial, MySqlProvider.MySqlData      )  {} }
-	sealed class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector, MySqlProvider.MySqlConnector) {} }
+	sealed class MySql57DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql57,   MySqlVersion.MySql57,   MySqlProvider.MySqlData     ) { }
+	sealed class MySql57DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql57,   MySqlVersion.MySql57,   MySqlProvider.MySqlConnector) { }
+	sealed class MySql80DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql80,   MySqlVersion.MySql80,   MySqlProvider.MySqlData     ) { }
+	sealed class MySql80DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql80,   MySqlVersion.MySql80,   MySqlProvider.MySqlConnector) { }
+	sealed class MariaDB10DataProviderMySqlData()      : MySqlDataProvider(ProviderName.MariaDB10, MySqlVersion.MariaDB10, MySqlProvider.MySqlData     ) { }
+	sealed class MariaDB10DataProviderMySqlConnector() : MySqlDataProvider(ProviderName.MariaDB10, MySqlVersion.MariaDB10, MySqlProvider.MySqlConnector) { }
 
 	public abstract class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
 	{
-		protected MySqlDataProvider(string name, MySqlProvider provider)
-			: this(name, MySqlProviderAdapter.GetInstance(provider == MySqlProvider.AutoDetect ? provider = MySqlProviderDetector.DetectProvider() : provider))
+		protected MySqlDataProvider(string name, MySqlVersion version, MySqlProvider provider)
+			: this(name, version, MySqlProviderAdapter.GetInstance(provider == MySqlProvider.AutoDetect ? provider = MySqlProviderDetector.DetectProvider() : provider))
 		{
+			Provider = provider;
 		}
 
-		private MySqlDataProvider(string name, MySqlProviderAdapter adapter)
-			: base(name, GetMappingSchema(name, adapter.MappingSchema), adapter)
+		private MySqlDataProvider(string name, MySqlVersion version, MySqlProviderAdapter adapter)
+			: base(name, GetMappingSchema(version, adapter.MappingSchema), adapter)
 		{
+			Version = version;
+
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = version > MySqlVersion.MySql57;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
+			SqlProviderFlags.IsAllSetOperationsSupported       = version > MySqlVersion.MySql57;
+			SqlProviderFlags.IsDistinctSetOperationsSupported  = version > MySqlVersion.MySql57;
+			SqlProviderFlags.IsApplyJoinSupported              = version > MySqlVersion.MySql57;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
@@ -62,6 +72,9 @@ namespace LinqToDB.DataProvider.MySql
 #endif
 		}
 
+		public MySqlVersion  Version  { get; }
+		public MySqlProvider Provider { get; }
+
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new MySqlSchemaProvider(this);
@@ -76,15 +89,22 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
+			if (Version == MySqlVersion.MySql57)
+			{
+				return new MySql57SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			}
+
 			return new MySqlSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
-		private static MappingSchema GetMappingSchema(string name, MappingSchema adapterSchema)
+		private static MappingSchema GetMappingSchema(MySqlVersion version, MappingSchema adapterSchema)
 		{
-			return name switch
+			return version switch
 			{
-				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(adapterSchema),
-				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(adapterSchema),
+				MySqlVersion.MySql57   => new MySqlMappingSchema.MySql57MappingSchema  (adapterSchema),
+				MySqlVersion.MySql80   => new MySqlMappingSchema.MySql80MappingSchema  (adapterSchema),
+				MySqlVersion.MariaDB10 => new MySqlMappingSchema.MariaDB10MappingSchema(adapterSchema),
+				_                      => new MySqlMappingSchema.MySql57MappingSchema  (adapterSchema),
 			};
 		}
 

@@ -7,16 +7,18 @@ namespace LinqToDB.DataProvider.MySql
 	using Common;
 	using Data;
 
-	sealed class MySqlProviderDetector : ProviderDetectorBase<MySqlProvider, MySqlProviderDetector.Dialect, MySqlProviderAdapter.MySqlConnection>
+	sealed class MySqlProviderDetector : ProviderDetectorBase<MySqlProvider, MySqlVersion, MySqlProviderAdapter.MySqlConnection>
 	{
-		internal enum Dialect { }
-
-		public MySqlProviderDetector() : base(default, default)
+		public MySqlProviderDetector() : base(MySqlVersion.AutoDetect, MySqlVersion.MySql57)
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _mySqlDataProvider          = DataConnection.CreateDataProvider<MySqlDataProviderMySqlOfficial>();
-		static readonly Lazy<IDataProvider> _mySqlConnectorDataProvider = DataConnection.CreateDataProvider<MySqlDataProviderMySqlConnector>();
+		static readonly Lazy<IDataProvider> _mySql57DataProvider            = DataConnection.CreateDataProvider<MySql57DataProviderMySqlData>();
+		static readonly Lazy<IDataProvider> _mySql57ConnectorDataProvider   = DataConnection.CreateDataProvider<MySql57DataProviderMySqlConnector>();
+		static readonly Lazy<IDataProvider> _mySql80DataProvider            = DataConnection.CreateDataProvider<MySql80DataProviderMySqlData>();
+		static readonly Lazy<IDataProvider> _mySql80ConnectorDataProvider   = DataConnection.CreateDataProvider<MySql80DataProviderMySqlConnector>();
+		static readonly Lazy<IDataProvider> _mariadb10DataProvider          = DataConnection.CreateDataProvider<MariaDB10DataProviderMySqlData>();
+		static readonly Lazy<IDataProvider> _mariadb10ConnectorDataProvider = DataConnection.CreateDataProvider<MariaDB10DataProviderMySqlConnector>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
@@ -33,61 +35,69 @@ namespace LinqToDB.DataProvider.MySql
 
 			switch (options.ProviderName)
 			{
-				case ProviderName.MySqlOfficial                :
-				case MySqlProviderAdapter.MySqlDataAssemblyName: return _mySqlDataProvider.Value;
-				case ProviderName.MariaDB                      :
-				case ProviderName.MySqlConnector               : return _mySqlConnectorDataProvider.Value;
-
-				case ""                         :
-				case null                       :
+				case ""                      :
+				case null                    :
 					if (options.ConfigurationString?.Contains("MySql") == true)
 						goto case ProviderName.MySql;
+					if (options.ConfigurationString?.Contains("MariaDB") == true)
+						goto case ProviderName.MariaDB;
 					break;
-				case MySqlProviderAdapter.MySqlDataClientNamespace:
-				case ProviderName.MySql                           :
-					if (options.ConfigurationString?.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName) == true)
-						return _mySqlConnectorDataProvider.Value;
+				case ProviderName.MySql57:
+					return GetDataProvider(options, provider, MySqlVersion.MySql57);
+				case ProviderName.MySql80:
+					return GetDataProvider(options, provider, MySqlVersion.MySql80);
+				case ProviderName.MariaDB:
+				case ProviderName.MariaDB10:
+					return GetDataProvider(options, provider, MySqlVersion.MariaDB10);
+				case ProviderName.MySql:
+					if (options.ConfigurationString?.Contains("5.") == true
+						|| options.ProviderName?    .Contains("55") == true
+						|| options.ProviderName?    .Contains("56") == true
+						|| options.ProviderName?    .Contains("57") == true) return GetDataProvider(options, provider, MySqlVersion.MySql57);
+					if (options.ConfigurationString?.Contains("8.") == true
+						|| options.ProviderName?    .Contains("80") == true
+						|| options.ProviderName?    .Contains("81") == true
+						|| options.ProviderName?    .Contains("82") == true
+						|| options.ProviderName?    .Contains("83") == true) return GetDataProvider(options, provider, MySqlVersion.MySql80);
 
-					if (options.ConfigurationString?.Contains(MySqlProviderAdapter.MySqlDataAssemblyName) == true)
-						return _mySqlDataProvider.Value;
+					if (options.ProviderName?   .Contains("MariaDB") == true
+						|| options.ProviderName?.Contains("10")      == true
+						|| options.ProviderName?.Contains("11")      == true) return GetDataProvider(options, provider, MySqlVersion.MariaDB10);
 
-					//if (AutoDetectProvider)
-					//{
-					//	try
-					//	{
-					//		var dv = DetectServerVersion(options, provider);
+					if (AutoDetectProvider)
+					{
+						try
+						{
+							var dv = DetectServerVersion(options, provider);
 
-					//		return dv != null ? GetDataProvider(options, provider, dv.Value) : null;
-					//	}
-					//	catch
-					//	{
-					//		// ignored
-					//	}
-					//}
+							return dv != null ? GetDataProvider(options, provider, dv.Value) : null;
+						}
+						catch
+						{
+							// ignored
+						}
+					}
 
 					return GetDataProvider(options, provider, DefaultVersion);
-				case var providerName when providerName.Contains("MySql"):
-					if (providerName.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName))
-						return _mySqlConnectorDataProvider.Value;
-
-					if (providerName.Contains(MySqlProviderAdapter.MySqlDataAssemblyName))
-						return _mySqlDataProvider.Value;
-
-					goto case ProviderName.MySql;
 			}
 
 			return null;
 		}
 
-		public override IDataProvider GetDataProvider(ConnectionOptions options, MySqlProvider provider, Dialect version)
+		public override IDataProvider GetDataProvider(ConnectionOptions options, MySqlProvider provider, MySqlVersion version)
 		{
 			if (provider == MySqlProvider.AutoDetect)
 				provider = DetectProvider();
 
-			return provider switch
+			return (provider, version) switch
 			{
-				MySqlProvider.MySqlData => _mySqlDataProvider.Value,
-				_                       => _mySqlConnectorDataProvider.Value,
+				(MySqlProvider.MySqlData, MySqlVersion.MySql57)        => _mySql57DataProvider.Value,
+				(MySqlProvider.MySqlData, MySqlVersion.MySql80)        => _mySql80DataProvider.Value,
+				(MySqlProvider.MySqlData, MySqlVersion.MariaDB10)      => _mariadb10DataProvider.Value,
+				(MySqlProvider.MySqlConnector, MySqlVersion.MySql57)   => _mySql57ConnectorDataProvider.Value,
+				(MySqlProvider.MySqlConnector, MySqlVersion.MySql80)   => _mySql80ConnectorDataProvider.Value,
+				(MySqlProvider.MySqlConnector, MySqlVersion.MariaDB10) => _mariadb10ConnectorDataProvider.Value,
+				_                                                      => _mySql57ConnectorDataProvider.Value,
 			};
 		}
 
@@ -101,9 +111,38 @@ namespace LinqToDB.DataProvider.MySql
 				: MySqlProvider.MySqlConnector;
 		}
 
-		public override Dialect? DetectServerVersion(MySqlProviderAdapter.MySqlConnection connection)
+		public override MySqlVersion? DetectServerVersion(MySqlProviderAdapter.MySqlConnection connection)
 		{
-			return default(Dialect);
+			using var cmd = ((IConnectionWrapper)connection).Connection.CreateCommand();
+
+			cmd.CommandText = "SELECT VERSION()";
+			var versionString = cmd.ExecuteScalar() as string;
+
+			if (versionString == null)
+				return null;
+
+			// format
+			// MySQL: X.Y.Z[-optionalsuffix]
+			// MariaDB: X.Y.Z-MariaDB[-optionalsuffix]
+
+			var isMariaDB = versionString.Contains("-MariaDB");
+
+			var idx = versionString.IndexOf('-');
+			if (idx != -1)
+				versionString = versionString.Substring(0, idx);
+
+			if (!Version.TryParse(versionString, out var version))
+				return null;
+
+			// note that it will also include MariaDB < 10 as pre-10 release of MariaDB is 5.x
+			// because they are based on MySQL 5.x this is correct to use MySql57 dialect
+			if (version.Major < 8)
+				return MySqlVersion.MySql57;
+
+			if (version.Major >= 10 && isMariaDB)
+				return MySqlVersion.MariaDB10;
+
+			return MySqlVersion.MySql80;
 		}
 
 		protected override MySqlProviderAdapter.MySqlConnection CreateConnection(MySqlProvider provider, string connectionString)

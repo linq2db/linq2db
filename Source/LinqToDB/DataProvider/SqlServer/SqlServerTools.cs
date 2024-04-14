@@ -110,9 +110,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerProvider provider = SqlServerProvider.AutoDetect)
 		{
 			if (version is SqlServerVersion.AutoDetect)
-			{
 				version = ProviderDetector.DetectServerVersion((SqlServerProviderAdapter.SqlConnection)(IDbConnection)transaction.Connection!) ?? ProviderDetector.DefaultVersion;
-			}
 
 			return new DataConnection(GetDataProvider(version, provider), transaction);
 		}

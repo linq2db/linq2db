@@ -32,9 +32,9 @@ echo ========== MariaDB ==========
 
 call mariadb.cmd
 
-echo ========== MySql 5.5 ==========
+echo ========== MySql 5.7 ==========
 
-call mysql55.cmd
+call mysql57.cmd
 
 echo ========== MySql ==========
 

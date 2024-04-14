@@ -7,6 +7,9 @@ namespace LinqToDB
 	using DataProvider.DB2;
 	using DataProvider.SqlServer;
 
+	using LinqToDB.DataProvider.MySql;
+
+	// TODO: v6: obsolete/remove all provider-specific entries as it should be used for dialects only
 	/// <summary>
 	/// Default names for providers.
 	/// </summary>
@@ -121,24 +124,41 @@ namespace LinqToDB
 		public const string SqlServer2022 = "SqlServer.2022";
 		/// <summary>
 		/// MySql provider.
-		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema"/>.
 		/// </summary>
 		public const string MySql         = "MySql";
 		/// <summary>
-		/// MySql provider.
-		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
+		/// MariaDB provider.
+		/// Used as an additional configuration name for MySql mapping schema <see cref="MySqlMappingSchema"/>.
 		/// </summary>
+		public const string MariaDB       = "MariaDB";
+		/// <summary>
+		/// MySql 5.7.x provider.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySql57MappingSchema"/>.
+		/// </summary>
+		public const string MySql57         = "MySql57";
+		/// <summary>
+		/// MySql 8.0.x provider.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySql80MappingSchema"/>.
+		/// </summary>
+		public const string MySql80         = "MySql80";
+		/// <summary>
+		/// MariaDB 10+ provider.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MariaDB10MappingSchema"/>.
+		/// </summary>
+		public const string MariaDB10       = "MariaDB10";
+		/// <summary>
+		/// MySql provider.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema"/>.
+		/// </summary>
+		[Obsolete($"Use {nameof(MySqlProvider)}.{nameof(MySqlProvider.MySqlData)} enumeration value instead")]
 		public const string MySqlOfficial = "MySql.Official";
 		/// <summary>
 		/// MySqlConnector provider.
-		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema"/>.
 		/// </summary>
+		[Obsolete($"Use {nameof(MySqlProvider)}.{nameof(MySqlProvider.MySqlConnector)} enumeration value instead")]
 		public const string MySqlConnector = "MySqlConnector";
-		/// <summary>
-		/// MariaDB provider.
-		/// Used as an additional configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
-		/// </summary>
-		public const string MariaDB       = "MariaDB";
 		/// <summary>
 		/// Oracle ODP.NET autodetected provider (native or managed).
 		/// Used as configuration name for Oracle base mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema"/>.

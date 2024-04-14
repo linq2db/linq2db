@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Data.Common;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -12,26 +12,25 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using SqlQuery;
 
-	sealed class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
+	class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
 		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		MySqlSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected MySqlSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new MySqlSqlBuilder(this) { _hintBuilder = _hintBuilder };
+			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
 		protected override bool   IsRecursiveCteKeywordRequired   => true;
 		public    override bool   IsNestedJoinParenthesisRequired => true;
 		protected override bool   IsValuesSyntaxSupported         => false;
-		protected override string FakeTable                       => "DUAL";
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{
@@ -46,20 +45,6 @@ namespace LinqToDB.DataProvider.MySql
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement.NeedsIdentity() ? 2 : 1;
-		}
-
-		protected override void BuildSelectClause(SelectQuery selectQuery)
-		{
-			// mysql <= 5.5 doesn't support WHERE without FROM
-			// https://docs.oracle.com/cd/E19957-01/mysql-refman-5.5/sql-syntax.html#select
-			if (selectQuery.From.Tables.Count == 0 && !selectQuery.Where.IsEmpty)
-			{
-				AppendIndent().Append("SELECT").AppendLine();
-				BuildColumns(selectQuery);
-				AppendIndent().Append("FROM DUAL").AppendLine();
-			}
-			else
-				base.BuildSelectClause(selectQuery);
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
@@ -117,10 +102,8 @@ namespace LinqToDB.DataProvider.MySql
 					(DataType.Date,           _,                   _,                  _                   ) => "DATE",
 					(DataType.Json,           _,                   _,                  _                   ) => "JSON",
 					(DataType.Guid,           _,                   _,                  _                   ) => "CHAR(36)",
-					// TODO: FLOAT/DOUBLE support in CAST added just recently (v8.0.17)
-					// and needs version sniffing
-					(DataType.Double or
-					 DataType.Single,         _,                   _,                  _                   ) => "$decimal$",
+					(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
+					(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
 					(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})"),
 					(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Type.Precision})"),
 					(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
@@ -155,7 +138,6 @@ namespace LinqToDB.DataProvider.MySql
 				})
 				{
 					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable, canBeNull); break;
-					case "$decimal$" : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable, canBeNull); break;
 					case var t       : StringBuilder.Append(t);                                                        break;
 				};
 
@@ -189,9 +171,7 @@ namespace LinqToDB.DataProvider.MySql
 				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIME({type.Type.Precision})"),
 				(DataType.Time,           _,                   _,                  _                   ) => "TIME",
 				(DataType.Boolean,        _,                   _,                  _                   ) => "BOOLEAN",
-				(DataType.Double,         >= 0 and <= 53,      _,                  _                   ) => FormattableString.Invariant($"FLOAT({type.Type.Precision})"), // this is correct, FLOAT(p)
 				(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
-				(DataType.Single,         >= 0 and <= 53,      _,                  _                   ) => FormattableString.Invariant($"FLOAT({type.Type.Precision})"),
 				(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
 				(DataType.BitArray,       _,                   _,                  null                ) =>
 					type.Type.SystemType.ToNullableUnderlying()
@@ -245,7 +225,7 @@ namespace LinqToDB.DataProvider.MySql
 				 DataType.Text,           _,                  _,                   _                   ) => "LONGTEXT",
 				_ => null
 			})
-						{
+			{
 				case null  : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 				case var t : StringBuilder.Append(t);                                         break;
 			};
@@ -440,6 +420,17 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(')');
 		}
 
+		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
+		{
+			switch (join.JoinType)
+			{
+				case JoinType.CrossApply: StringBuilder.Append("LATERAL "); return true;
+				case JoinType.OuterApply: StringBuilder.Append("LEFT JOIN LATERAL "); return true;
+			}
+
+			return base.BuildJoinType(join, condition);
+		}
+
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			if (name.Database != null)
@@ -560,16 +551,16 @@ namespace LinqToDB.DataProvider.MySql
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
-		private StringBuilder? _hintBuilder;
+		protected StringBuilder? HintBuilder { get; set; }
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;
 
 		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
 		{
-			if (_hintBuilder == null)
+			if (HintBuilder == null)
 			{
-				_hintBuilder        = new();
+				HintBuilder        = new();
 				_isTopLevelBuilder = true;
 				_hintPosition      = StringBuilder.Length;
 
@@ -577,7 +568,7 @@ namespace LinqToDB.DataProvider.MySql
 					_hintPosition -= " INTO ".Length;
 
 				if (selectQuery?.QueryName is {} queryName)
-					_hintBuilder
+					HintBuilder
 						.Append("QB_NAME(")
 						.Append(queryName)
 						.Append(')')
@@ -597,19 +588,19 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			base.FinalizeBuildQuery(statement);
 
-			if (statement.SqlQueryExtensions is not null && _hintBuilder is not null)
+			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
 			{
-				if (_hintBuilder.Length > 0 && _hintBuilder[^1] != ' ')
-					_hintBuilder.Append(' ');
-				BuildQueryExtensions(_hintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
+				if (HintBuilder.Length > 0 && HintBuilder[^1] != ' ')
+					HintBuilder.Append(' ');
+				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 			}
 
-			if (_isTopLevelBuilder && _hintBuilder!.Length > 0)
+			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
 			{
-				_hintBuilder.Insert(0, " /*+ ");
-				_hintBuilder.Append(" */");
+				HintBuilder.Insert(0, " /*+ ");
+				HintBuilder.Append(" */");
 
-				StringBuilder.Insert(_hintPosition, _hintBuilder.ToString());
+				StringBuilder.Insert(_hintPosition, HintBuilder.ToString());
 			}
 		}
 
@@ -617,8 +608,8 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			if (table.SqlQueryExtensions is not null)
 			{
-				if (_hintBuilder is not null)
-					BuildTableExtensions(_hintBuilder, table, alias, null, " ", null, ext =>
+				if (HintBuilder is not null)
+					BuildTableExtensions(HintBuilder, table, alias, null, " ", null, ext =>
 						ext.Scope is
 							Sql.QueryExtensionScope.TableHint or
 							Sql.QueryExtensionScope.TablesInScopeHint);

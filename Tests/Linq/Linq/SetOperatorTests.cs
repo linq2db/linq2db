@@ -186,8 +186,6 @@ namespace Tests.Linq
 			}
 		}
 
-
-
 		private SampleData[] GenerateTestData()
 		{
 			return Enumerable.Range(1, 10)

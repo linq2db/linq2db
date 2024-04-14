@@ -317,20 +317,21 @@ namespace Tests.Data
 			public object? Value { get; set; }
 		}
 
-		sealed class TestMySqlDataProvider : MySqlDataProvider
-		{
-			public TestMySqlDataProvider(string name, MySqlProvider provider)
-				: base(name, provider)
-			{
-			}
-		}
-
 		// tests support of data reader methods by Mapper.Map (using MySql.Data provider only)
 		[Test]
 		public void TestMapperMap([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
+			Type providerType;
+
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				providerType = db.DataProvider.GetType();
+			}
+
+			var provider = (FirebirdDataProvider)Activator.CreateInstance(providerType)!;
+
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlOfficial, MySqlProvider.MySqlData), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(provider, context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
 			{
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
@@ -352,8 +353,8 @@ namespace Tests.Data
 		sealed class LinqMySqlDataProvider : MySqlDataProvider
 		{
 			private readonly Func<string, DbConnection> _connectionFactory;
-			public LinqMySqlDataProvider(Func<string, DbConnection> connectionFactory)
-				: base(ProviderName.MySqlOfficial, MySqlProvider.MySqlData)
+			public LinqMySqlDataProvider(MySqlVersion version, Func<string, DbConnection> connectionFactory)
+				: base(ProviderName.MySql, version, MySqlProvider.MySqlData)
 			{
 				_connectionFactory = connectionFactory;
 			}
@@ -370,13 +371,18 @@ namespace Tests.Data
 		public void TestLinqService([IncludeDataSources(true, TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
 			var provider = GetProviderName(context, out var isLinq);
+			MySqlVersion version;
+			using (var db = (DataConnection)GetDataContext(provider))
+			{
+				version = ((MySqlDataProvider)db.DataProvider).Version;
+			}
 
 			const string testContext = "test-linq-service-reader";
 
 			// hacks to make remote context to work new custom dataprovider instance
 			var cs = DataConnection.GetConnectionString(provider);
 			DataConnection.AddOrSetConfiguration(testContext, cs + ";AllowZeroDateTime=true", testContext);
-			DataConnection.AddDataProvider(testContext,  new LinqMySqlDataProvider(cs =>
+			DataConnection.AddDataProvider(testContext, new LinqMySqlDataProvider(version, cs =>
 			{
 				var cn = new MySqlDataMySqlConnection(cs);
 
@@ -422,9 +428,18 @@ namespace Tests.Data
 		[Test]
 		public void TestMySqlData([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
+			Type providerType;
+
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				providerType = db.DataProvider.GetType();
+			}
+
+			var provider = (FirebirdDataProvider)Activator.CreateInstance(providerType)!;
+
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlOfficial, MySqlProvider.MySqlData), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(provider, context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -496,9 +511,18 @@ namespace Tests.Data
 		[Test]
 		public async Task TestMySqlConnector([IncludeDataSources(TestProvName.AllMySqlConnector)] string context, [Values] ConnectionType type)
 		{
+			Type providerType;
+
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				providerType = db.DataProvider.GetType();
+			}
+
+			var provider = (FirebirdDataProvider)Activator.CreateInstance(providerType)!;
+
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var connectionTypeName = "MySqlConnector.MySqlConnection, MySqlConnector";
-			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlConnector, MySqlProvider.MySqlConnector), context, type, connectionTypeName, ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(provider, context, type, connectionTypeName, ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>

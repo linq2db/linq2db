@@ -133,13 +133,7 @@ CREATE TABLE LinqDataTypes
 (
 	ID             int,
 	MoneyValue     decimal(10,4),
-	DateTimeValue  datetime
--- SKIP MySql55 BEGIN
--- SKIP MySql55Connector BEGIN
-	(3)
--- SKIP MySql55Connector END
--- SKIP MySql55 END
-	,
+	DateTimeValue  datetime(3),
 	DateTimeValue2 datetime NULL,
 	BoolValue      boolean,
 	GuidValue      char(36),
@@ -176,19 +170,6 @@ CREATE TABLE `AllTypes`
 	timestampDataType   timestamp                    NULL,
 	timeDataType        time                         NULL,
 	yearDataType        year                         NULL,
--- SKIP MySql BEGIN
--- SKIP MySqlConnector BEGIN
--- SKIP MariaDB BEGIN
-	year2DataType       year(2)                      NULL,
--- SKIP MariaDB END
--- SKIP MySqlConnector END
--- SKIP MySql END
--- SKIP MySql55 BEGIN
--- SKIP MySql55Connector BEGIN
-	year2DataType       year(4)                      NULL,
--- SKIP MySql55Connector END
--- SKIP MySql55 END
-	year4DataType       year(4)                      NULL,
 
 	charDataType        char(1)                      NULL,
 	char20DataType      char(20)                     NULL,
@@ -226,8 +207,6 @@ INSERT INTO `AllTypes`
 	timestampDataType,
 	timeDataType,
 	yearDataType,
-	year2DataType,
-	year4DataType,
 
 	charDataType,
 	varcharDataType,
@@ -253,8 +232,6 @@ SELECT
 	NULL,
 	NULL,
 
-	NULL,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -289,9 +266,7 @@ SELECT
 	'2012-12-12 12:12:12',
 	'2012-12-12 12:12:12',
 	'12:12:12',
-	98,
-	'97',
-	'2012',
+	1998,
 
 	'1',
 	'234',
@@ -469,14 +444,6 @@ CREATE TABLE FullTextIndexTest (
 	FULLTEXT idx_field1 (TestField1),
 	FULLTEXT idx_field2 (TestField2)
 )
--- SKIP MySql BEGIN
--- SKIP MySqlConnector BEGIN
--- SKIP MariaDB BEGIN
-	ENGINE=MyISAM
--- SKIP MariaDB END
--- SKIP MySqlConnector END
--- SKIP MySql END
-;
 GO
 INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('this is text1', 'this is text2');
 INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('looking for something?', 'found it!');
@@ -506,11 +473,7 @@ CREATE PROCEDURE `Issue2313Parameters`(
 	IN `DateTime` DATETIME,
 	IN `TimeStamp` TIMESTAMP,
 	IN `Time` TIME,
--- SKIP MySql55 BEGIN
--- SKIP MySql55Connector BEGIN
 	IN `Json` JSON,
--- SKIP MySql55Connector END
--- SKIP MySql55 END
 	IN `TinyInt` TINYINT,
 	IN `TinyIntUnsigned` TINYINT UNSIGNED,
 	IN `SmallInt` SMALLINT,
@@ -563,11 +526,7 @@ BEGIN
 	`DateTime`,
 	`TimeStamp`,
 	`Time`,
--- SKIP MySql55 BEGIN
--- SKIP MySql55Connector BEGIN
 	`Json`,
--- SKIP MySql55Connector END
--- SKIP MySql55 END
 	`TinyInt`,
 	`TinyIntUnsigned`,
 	`SmallInt`,
@@ -644,15 +603,9 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `Enum` ENUM('one', 'two'),
 	IN `Set` ENUM('one', 'two'),
 
--- SKIP MySql55 BEGIN
--- SKIP MySql55Connector BEGIN
+-- SKIP MySql57 BEGIN
 -- SKIP MySql BEGIN
 	IN `Json` JSON,
--- SKIP MySql END
--- SKIP MySql55Connector END
--- SKIP MySql55 END
--- SKIP MySql55 BEGIN
--- SKIP MySql BEGIN
 	IN `Geometry` GEOMETRY,
 	IN `Point` POINT,
 	IN `LineString` LINESTRING,
@@ -662,7 +615,7 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `MultiPolygon` MULTIPOLYGON,
 	IN `GeometryCollection` GEOMETRYCOLLECTION,
 -- SKIP MySql END
--- SKIP MySql55 END
+-- SKIP MySql57 END
 
 	IN `Year` YEAR
 )
@@ -710,16 +663,10 @@ BEGIN
 	`Set`,
 	`Year`
 
--- SKIP MySql55 BEGIN
--- SKIP MySql55Connector BEGIN
+-- SKIP MySql57 BEGIN
 -- SKIP MySql BEGIN
-	,`Json`
--- SKIP MySql END
--- SKIP MySql55Connector END
--- SKIP MySql55 END
--- SKIP MySql55 BEGIN
--- SKIP MySql BEGIN
-	,`Geometry`,
+	,`Json`,
+	`Geometry`,
 	`Point`,
 	`LineString`,
 	`Polygon`,
@@ -728,7 +675,7 @@ BEGIN
 	`MultiPolygon`,
 	`GeometryCollection`
 -- SKIP MySql END
--- SKIP MySql55 END
+-- SKIP MySql57 END
 
 	FROM Person;
 END
@@ -746,8 +693,8 @@ GO
 
 -- SKIP MySql BEGIN
 -- SKIP MySqlConnector BEGIN
--- SKIP MySql55 BEGIN
--- SKIP MySql55Connector BEGIN
+-- SKIP MySql57 BEGIN
+-- SKIP MySql57Connector BEGIN
 
 CREATE OR REPLACE FUNCTION TEST_FUNCTION(i INT) RETURNS INT RETURN i + 3
 
@@ -799,7 +746,7 @@ GO
 set session sql_mode=default
 GO
 
--- SKIP MySql55Connector END
--- SKIP MySql55 END
+-- SKIP MySql57Connector END
+-- SKIP MySql57 END
 -- SKIP MySqlConnector END
 -- SKIP MySql END

@@ -186,7 +186,6 @@ namespace LinqToDB.CommandLine
 				case ProviderName.Firebird          :
 					break;
 				case ProviderName.MySql             :
-					provider = ProviderName.MySqlConnector;
 					break;
 				case ProviderName.Oracle            :
 					OracleTools.AutoDetectProvider = true;

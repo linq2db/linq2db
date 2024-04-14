@@ -4,6 +4,7 @@ using System.Reflection;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using System.Data;
 	using Data;
 
 	public static partial class MySqlTools
@@ -16,9 +17,12 @@ namespace LinqToDB.DataProvider.MySql
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(MySqlProvider provider = MySqlProvider.AutoDetect, string? connectionString = null)
+		public static IDataProvider GetDataProvider(
+			MySqlVersion  version          = MySqlVersion.AutoDetect,
+			MySqlProvider provider         = MySqlProvider.AutoDetect,
+			string?       connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), provider, default);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version);
 		}
 
 		[Obsolete($"Use overload with {nameof(MySqlProvider)} parameter")]
@@ -26,9 +30,9 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			return providerName switch
 			{
-				ProviderName.MySqlOfficial  => GetDataProvider(MySqlProvider.MySqlData, connectionString),
-				ProviderName.MySqlConnector => GetDataProvider(MySqlProvider.MySqlConnector, connectionString),
-				_                           => GetDataProvider(MySqlProvider.AutoDetect, connectionString),
+				ProviderName.MySqlOfficial  => GetDataProvider(provider: MySqlProvider.MySqlData     , connectionString: connectionString),
+				ProviderName.MySqlConnector => GetDataProvider(provider: MySqlProvider.MySqlConnector, connectionString: connectionString),
+				_                           => GetDataProvider(provider: MySqlProvider.AutoDetect    , connectionString: connectionString),
 			};
 		}
 
@@ -44,19 +48,28 @@ namespace LinqToDB.DataProvider.MySql
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString, MySqlProvider provider = MySqlProvider.AutoDetect)
+		public static DataConnection CreateDataConnection(
+			string        connectionString,
+			MySqlVersion  version  = MySqlVersion.AutoDetect,
+			MySqlProvider provider = MySqlProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider, connectionString), connectionString);
+			return new DataConnection(GetDataProvider(version, provider, connectionString), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(DbConnection connection, MySqlProvider provider = MySqlProvider.AutoDetect)
+		public static DataConnection CreateDataConnection(
+			DbConnection  connection,
+			MySqlVersion  version  = MySqlVersion.AutoDetect,
+			MySqlProvider provider = MySqlProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), connection);
+			return new DataConnection(GetDataProvider(version, provider), connection);
 		}
 
-		public static DataConnection CreateDataConnection(DbTransaction transaction, MySqlProvider provider = MySqlProvider.AutoDetect)
+		public static DataConnection CreateDataConnection(
+			DbTransaction transaction,
+			MySqlVersion  version  = MySqlVersion.AutoDetect,
+			MySqlProvider provider = MySqlProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), transaction);
+			return new DataConnection(GetDataProvider(version, provider), transaction);
 		}
 
 		[Obsolete($"Use overload with {nameof(MySqlProvider)} parameter")]
