@@ -19,9 +19,10 @@
 			//"SqlCe",
 
 			// Firebird 2.5-4
-			//"Firebird",
+			//"Firebird25",
 			//"Firebird3",
 			//"Firebird4",
+			//"Firebird5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -141,9 +142,10 @@
 			//"SqlCe",
 
 			// Firebird 2.5-4
-			//"Firebird",
+			//"Firebird25",
 			//"Firebird3",
 			//"Firebird4",
+			//"Firebird5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -255,9 +257,10 @@
 			//"SqlCe",
 
 			// Firebird 2.5-4
-			//"Firebird",
+			//"Firebird25",
 			//"Firebird3",
 			//"Firebird4",
+			//"Firebird5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -458,13 +461,16 @@
 				"Provider": "IBM.Data.DB2",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Firebird": {
+			"Firebird25": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"Firebird3": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"Firebird4": {
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Firebird5": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"Informix": {

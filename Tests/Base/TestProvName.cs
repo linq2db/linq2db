@@ -97,11 +97,12 @@ namespace Tests
 		#endregion
 
 		#region Firebird
-		public const string Firebird3        = "Firebird3";
-		public const string Firebird4        = "Firebird4";
-		public const string AllFirebird3Plus = $"{Firebird3},{Firebird4}";
-		public const string AllFirebirdLess4 = $"{ProviderName.Firebird},{Firebird3}";
-		public const string AllFirebird      = $"{AllFirebirdLess4},{Firebird4}";
+		public const string AllFirebird5Plus = ProviderName.Firebird5;
+		public const string AllFirebird4Plus = $"{ProviderName.Firebird4},{AllFirebird5Plus}";
+		public const string AllFirebird3Plus = $"{ProviderName.Firebird3},{AllFirebird4Plus}";
+		public const string AllFirebirdLess4 = $"{ProviderName.Firebird25},{ProviderName.Firebird3}";
+		public const string AllFirebirdLess5 = $"{AllFirebirdLess4},{ProviderName.Firebird4}";
+		public const string AllFirebird      = $"{AllFirebirdLess5},{ProviderName.Firebird5}";
 		#endregion
 
 		#region Sybase

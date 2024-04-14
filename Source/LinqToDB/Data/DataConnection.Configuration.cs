@@ -195,7 +195,7 @@ namespace LinqToDB.Data
 			// lazy registration of embedded providers using detectors
 			AddProviderDetector(LinqToDB.DataProvider.Access    .AccessTools    .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.DB2       .DB2Tools       .ProviderDetector.DetectProvider);
-			AddProviderDetector(LinqToDB.DataProvider.Firebird  .FirebirdTools  .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.Firebird  .FirebirdTools  .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.Informix  .InformixTools  .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.MySql     .MySqlTools     .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.Oracle    .OracleTools    .ProviderDetector.DetectProvider);

@@ -8,7 +8,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		public void TargetAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TargetAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -42,7 +42,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TargetQueryAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TargetQueryAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -151,7 +151,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceAssociationInDeleteBySourcePredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void OtherSourceAssociationInDeleteBySourcePredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -230,7 +230,7 @@ namespace Tests.xUpdate
 			false,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -341,7 +341,7 @@ namespace Tests.xUpdate
 		public void OtherSourceAssociationInInsertPredicate([MergeDataContextSource(
 			false,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -489,7 +489,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void OtherSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -539,7 +539,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void OtherSourceAssociationInUpdateBySourcePredicate(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -591,7 +591,7 @@ namespace Tests.xUpdate
 		public void OtherSourceAssociationInUpdatePredicate([MergeDataContextSource(
 			false,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -639,7 +639,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceAssociationInDeleteBySourcePredicate(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -677,7 +677,7 @@ namespace Tests.xUpdate
 			false,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -718,7 +718,7 @@ namespace Tests.xUpdate
 			false,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -831,7 +831,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInInsertPredicate([MergeDataContextSource(
 			false,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -981,7 +981,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void SameSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -1032,7 +1032,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceAssociationInUpdateBySourcePredicate(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -1085,7 +1085,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInUpdatePredicate([MergeDataContextSource(
 			false,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);

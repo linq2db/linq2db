@@ -29,16 +29,18 @@ namespace LinqToDB.DataProvider.Firebird
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
 			// firebird string literals can contain only limited set of characters, so we should encode them
-			SetValueToSqlConverter(typeof(string)  , (sb, _,o,v) => ConvertStringToSql(sb, o, (string)v));
-			SetValueToSqlConverter(typeof(char)    , (sb, _,o,v) => ConvertCharToSql  (sb, o, (char)v));
-			SetValueToSqlConverter(typeof(byte[])  , (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => BuildDateTime     (sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(Guid)    , (sb,dt,_,v) => ConvertGuidToSql  (sb, dt, (Guid)v));
-
+			SetValueToSqlConverter(typeof(string)  , (sb, _,o,v) => ConvertStringToSql (sb, o, (string)v));
+			SetValueToSqlConverter(typeof(char)    , (sb, _,o,v) => ConvertCharToSql   (sb, o, (char)v));
+			SetValueToSqlConverter(typeof(byte[])  , (sb, _,_,v) => ConvertBinaryToSql (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => BuildDateTime      (sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid)    , (sb,dt,_,v) => ConvertGuidToSql   (sb, dt, (Guid)v));
 #if NET6_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDateOnly(sb, dt, (DateOnly)v));
 #endif
+
+			SetDataType(typeof(bool), new SqlDataType(DataType.Boolean, typeof(bool), "BOOLEAN"));
+			SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => ConvertBooleanToSql(sb, dt, (bool)v));
 
 			SetDataType(typeof(BigInteger), new SqlDataType(DataType.Int128, typeof(BigInteger), "INT128"));
 			SetValueToSqlConverter(typeof(BigInteger), (sb,_,_,v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
@@ -185,14 +187,42 @@ namespace LinqToDB.DataProvider.Firebird
 			stringBuilder.Append('\'');
 		}
 
+		static void ConvertBooleanToSql(StringBuilder sb, SqlDataType dataType, bool value)
+		{
+			if (dataType.Type.DataType is DataType.Char)
+			{
+				sb
+					.Append('\'')
+					.Append(value ? '1' : '0')
+					.Append('\'');
+			}
+			else
+			{
+				sb.Append(value ? "TRUE" : "FALSE");
+			}
+		}
+
 		internal static MappingSchema Instance { get; } = new FirebirdMappingSchema();
 
-		// internal as it will be replaced with versioned schemas in v4
-		public sealed class FirebirdProviderMappingSchema : LockedMappingSchema
+		public sealed class Firebird25MappingSchema : LockedMappingSchema
 		{
-			public FirebirdProviderMappingSchema() : base(ProviderName.Firebird, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+			public Firebird25MappingSchema()
+				: base(ProviderName.Firebird25, Instance)
 			{
+				SetDataType(typeof(bool), new SqlDataType(DataType.Char, typeof(bool), length: 1, null, null, dbType: "CHAR"));
 			}
+		}
+
+		public sealed class Firebird3MappingSchema() : LockedMappingSchema(ProviderName.Firebird3, Instance)
+		{
+		}
+
+		public sealed class Firebird4MappingSchema() : LockedMappingSchema(ProviderName.Firebird4, Instance)
+		{
+		}
+
+		public sealed class Firebird5MappingSchema() : LockedMappingSchema(ProviderName.Firebird5, Instance)
+		{
 		}
 	}
 }

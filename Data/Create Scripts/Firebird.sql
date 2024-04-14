@@ -1,4 +1,4 @@
-﻿-- SKIP Firebird BEGIN
+﻿-- SKIP Firebird25 BEGIN
 DROP PACKAGE TEST_PACKAGE1;                     COMMIT;
 DROP PACKAGE TEST_PACKAGE2;                     COMMIT;
 DROP PROCEDURE TEST_PROCEDURE;                  COMMIT;
@@ -6,11 +6,13 @@ DROP PROCEDURE TEST_TABLE_FUNCTION;             COMMIT;
 DROP FUNCTION TEST_FUNCTION;
 -- SKIP Firebird3 BEGIN
 -- SKIP Firebird4 BEGIN
+-- SKIP Firebird5 BEGIN
 SELECT 1 FROM rdb$database
+-- SKIP Firebird5 END
 -- SKIP Firebird4 END
 -- SKIP Firebird3 END
 COMMIT;
--- SKIP Firebird END
+-- SKIP Firebird25 END
 
 DROP PROCEDURE "AddIssue792Record";             COMMIT;
 DROP PROCEDURE "Person_SelectByKey";            COMMIT;
@@ -27,14 +29,16 @@ DROP PROCEDURE "OutRefEnumTest";                COMMIT;
 DROP PROCEDURE "Scalar_DataReader";             COMMIT;
 DROP PROCEDURE "Scalar_OutputParameter";        COMMIT;
 DROP PROCEDURE "Scalar_ReturnParameter";        COMMIT;
--- SKIP Firebird BEGIN
+-- SKIP Firebird25 BEGIN
 -- SKIP Firebird3 BEGIN
 DROP PROCEDURE test_v4_types;
--- SKIP Firebird END
+-- SKIP Firebird25 END
 -- SKIP Firebird3 END
 -- SKIP Firebird4 BEGIN
+-- SKIP Firebird5 BEGIN
 SELECT 1 FROM rdb$database
 -- SKIP Firebird4 END
+-- SKIP Firebird5 END
 COMMIT;
 
 DROP VIEW "PersonView";                         COMMIT;
@@ -167,14 +171,23 @@ COMMIT;
 Data definitions according to:
 http://www.firebirdsql.org/manual/migration-mssql-data-types.html
 
-BUT! BLOB is ised for BINARY data! not CHAR
+BUT! BLOB is used for BINARY data! not CHAR
 */
 
 CREATE TABLE "DataTypeTest"
 (
 	"DataTypeID"      INTEGER NOT NULL PRIMARY KEY,
 	"Binary_"         BLOB,
+-- SKIP Firebird25 BEGIN
+	"Boolean_"        BOOLEAN,
+-- SKIP Firebird25 END
+-- SKIP Firebird3 BEGIN
+-- SKIP Firebird4 BEGIN
+-- SKIP Firebird5 BEGIN
 	"Boolean_"        CHAR(1),
+-- SKIP Firebird5 END
+-- SKIP Firebird4 END
+-- SKIP Firebird3 END
 	"Byte_"           SMALLINT,
 	"Bytes_"          BLOB,
 	CHAR_             CHAR(1),
@@ -223,7 +236,18 @@ INSERT INTO "DataTypeTest"
 	 "Single_",	"Stream_",	"String_", "UInt16_", "UInt32_",	"UInt64_",
 	 "Xml_")
 VALUES
-	('dddddddddddddddd', 1,  255,'dddddddddddddddd', 'B', 'NOW', 12345.67,
+	('dddddddddddddddd',
+-- SKIP Firebird25 BEGIN
+	TRUE
+-- SKIP Firebird25 END
+-- SKIP Firebird3 BEGIN
+-- SKIP Firebird4 BEGIN
+-- SKIP Firebird5 BEGIN
+	'1'
+-- SKIP Firebird5 END
+-- SKIP Firebird4 END
+-- SKIP Firebird3 END
+	,255,'dddddddddddddddd', 'B', 'NOW', 12345.67,
 	1234.567, X'dddddddddddddddddddddddddddddddd', 32767, 32768, 1000000, 12.3456, 127,
 	1234.123, 'dddddddddddddddd', 'string', 32767, 32768, 200000000,
 	'<root><element strattr="strvalue" intattr="12345"/></root>');
@@ -248,7 +272,16 @@ CREATE TABLE "LinqDataTypes"
 	"MoneyValue"     decimal(10,4),
 	"DateTimeValue"  timestamp,
 	"DateTimeValue2" timestamp,
+-- SKIP Firebird25 BEGIN
+	"BoolValue"      BOOLEAN,
+-- SKIP Firebird25 END
+-- SKIP Firebird3 BEGIN
+-- SKIP Firebird4 BEGIN
+-- SKIP Firebird5 BEGIN
 	"BoolValue"      char(1),
+-- SKIP Firebird5 END
+-- SKIP Firebird4 END
+-- SKIP Firebird3 END
 	"GuidValue"      CHAR(16) CHARACTER SET OCTETS,
 	"BinaryValue"    blob,
 	"SmallIntValue"  smallint,
@@ -329,7 +362,7 @@ CREATE TABLE "AllTypes"
 	"ncharDataType"            char(20) character set UNICODE_FSS,
 	"nvarcharDataType"         varchar(20) character set UNICODE_FSS,
 
--- SKIP Firebird BEGIN
+-- SKIP Firebird25 BEGIN
 -- SKIP Firebird3 BEGIN
 	"timestampTZDataType"      timestamp with time zone,
 	"timeTZDataType"           time with time zone,
@@ -337,7 +370,7 @@ CREATE TABLE "AllTypes"
 	"decfloat34DataType"       decfloat,
 	"int128DataType"           int128,
 -- SKIP Firebird3 END
--- SKIP Firebird END
+-- SKIP Firebird25 END
 
 	"blobDataType"             blob
 );
@@ -375,7 +408,7 @@ VALUES
 	NULL,
 	NULL,
 
--- SKIP Firebird BEGIN
+-- SKIP Firebird25 BEGIN
 -- SKIP Firebird3 BEGIN
 	NULL,
 	NULL,
@@ -383,7 +416,7 @@ VALUES
 	NULL,
 	NULL,
 -- SKIP Firebird3 END
--- SKIP Firebird END
+-- SKIP Firebird25 END
 
 	NULL
 );
@@ -411,7 +444,7 @@ VALUES
 	'23233',
 	'3323',
 
--- SKIP Firebird BEGIN
+-- SKIP Firebird25 BEGIN
 -- SKIP Firebird3 BEGIN
 	'2020-12-12 12:24:35 Europe/Andorra',
 	'12:13 Australia/Hobart',
@@ -419,7 +452,7 @@ VALUES
 	123456789012345678901234567890.1234,
 	170141183460469231731687303715884105727,
 -- SKIP Firebird3 END
--- SKIP Firebird END
+-- SKIP Firebird25 END
 
 	'12345'
 );
@@ -780,7 +813,16 @@ CREATE TABLE "TestMerge1"
 	"Field5" INTEGER,
 
 	"FieldInt64"      BIGINT,
+-- SKIP Firebird25 BEGIN
+	"FieldBoolean"    BOOLEAN,
+-- SKIP Firebird25 END
+-- SKIP Firebird3 BEGIN
+-- SKIP Firebird4 BEGIN
+-- SKIP Firebird5 BEGIN
 	"FieldBoolean"    CHAR(1),
+-- SKIP Firebird5 END
+-- SKIP Firebird4 END
+-- SKIP Firebird3 END
 	"FieldString"     VARCHAR(20),
 	"FieldNString"    VARCHAR(20) CHARACTER SET UNICODE_FSS,
 	"FieldChar"       CHAR(1),
@@ -808,7 +850,16 @@ CREATE TABLE "TestMerge2"
 	"Field5" INTEGER,
 
 	"FieldInt64"      BIGINT,
+-- SKIP Firebird25 BEGIN
+	"FieldBoolean"    BOOLEAN,
+-- SKIP Firebird25 END
+-- SKIP Firebird3 BEGIN
+-- SKIP Firebird4 BEGIN
+-- SKIP Firebird5 BEGIN
 	"FieldBoolean"    CHAR(1),
+-- SKIP Firebird5 END
+-- SKIP Firebird4 END
+-- SKIP Firebird3 END
 	"FieldString"     VARCHAR(20),
 	"FieldNString"    VARCHAR(20) CHARACTER SET UNICODE_FSS,
 	"FieldChar"       CHAR(1),
@@ -834,10 +885,12 @@ END;
 COMMIT;
 
 -- SKIP Firebird4 BEGIN
+-- SKIP Firebird5 BEGIN
 SELECT 1 FROM rdb$database
+-- SKIP Firebird5 END
 -- SKIP Firebird4 END
 
--- SKIP Firebird BEGIN
+-- SKIP Firebird25 BEGIN
 -- SKIP Firebird3 BEGIN
 CREATE PROCEDURE test_v4_types
 (
@@ -867,7 +920,7 @@ BEGIN
 	DO SUSPEND;
 END;
 -- SKIP Firebird3 END
--- SKIP Firebird END
+-- SKIP Firebird25 END
 COMMIT;
 
 DROP TABLE "CollatedTable"
@@ -881,7 +934,7 @@ CREATE TABLE "CollatedTable"
 )
 COMMIT;
 
--- SKIP Firebird BEGIN
+-- SKIP Firebird25 BEGIN
 
 CREATE OR ALTER PACKAGE TEST_PACKAGE1
 AS
@@ -970,10 +1023,12 @@ AS
 		RETURN I + 3;
 	END
 
--- SKIP Firebird END
+-- SKIP Firebird25 END
 -- SKIP Firebird3 BEGIN
 -- SKIP Firebird4 BEGIN
+-- SKIP Firebird5 BEGIN
 SELECT 1 FROM rdb$database
+-- SKIP Firebird5 END
 -- SKIP Firebird4 END
 -- SKIP Firebird3 END
 COMMIT;

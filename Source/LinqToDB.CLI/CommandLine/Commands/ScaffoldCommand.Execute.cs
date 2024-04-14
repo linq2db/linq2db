@@ -184,10 +184,8 @@ namespace LinqToDB.CommandLine
 					provider = ProviderName.SQLiteClassic;
 					break;
 				case ProviderName.Firebird          :
-					// TODO                         : don't forget to add versioning here after Firebird versioning feature merged
 					break;
 				case ProviderName.MySql             :
-					// TODO                         : remove provider hint after MySQL.Data support removed
 					provider = ProviderName.MySqlConnector;
 					break;
 				case ProviderName.Oracle            :

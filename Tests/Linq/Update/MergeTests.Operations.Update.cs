@@ -127,7 +127,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceUpdateWithPredicate([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -169,7 +169,7 @@ namespace Tests.xUpdate
 		// Firebird: update of match key leads to incorrect update
 		[Test]
 		public void SameSourceUpdateWithUpdate([MergeDataContextSource(
-			TestProvName.AllOracle, ProviderName.Firebird)]
+			TestProvName.AllOracle, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -375,7 +375,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceUpdateWithPredicateAndUpdate([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -425,7 +425,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithPredicatePartialSourceProjection_UnknownFieldInCondition([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -505,7 +505,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void OtherSourceUpdateWithPredicate([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -554,7 +554,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdatePartialSourceProjection_KnownFieldInCondition([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -605,7 +605,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousSourceUpdateWithPredicate([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -662,7 +662,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousListSourceUpdateWithPredicate([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -720,7 +720,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateReservedAndCaseNames([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -777,7 +777,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateReservedAndCaseNamesFromList([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird, ProviderName.Sybase)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25, ProviderName.Sybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

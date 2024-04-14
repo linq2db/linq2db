@@ -840,15 +840,16 @@ namespace LinqToDB
 		/// Configure Firebird connection.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
-		/// <param name="optionSetter">Optional <see cref="FirebirdOptions"/> configuration callback.</param>
+		/// <param name="optionSetter"><see cref="FirebirdOptions"/> configuration callback.</param>
 		/// <returns>New options instance with applied changes.</returns>
 		[Pure]
 		public static DataOptions UseFirebird(
-			this DataOptions                             options,
-			     Func<FirebirdOptions, FirebirdOptions>? optionSetter = null)
+			this DataOptions                            options,
+			     Func<FirebirdOptions, FirebirdOptions> optionSetter)
 		{
-			options = options.UseProvider(ProviderName.Firebird);
-			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+			return FirebirdTools.ProviderDetector
+				.CreateOptions(options, FirebirdVersion.AutoDetect, default)
+				.WithOptions(optionSetter);
 		}
 
 		/// <summary>
@@ -860,11 +861,50 @@ namespace LinqToDB
 		/// <returns>New options instance with applied changes.</returns>
 		[Pure]
 		public static DataOptions UseFirebird(
-			this DataOptions                             options,
-			     string                                  connectionString,
-			     Func<FirebirdOptions, FirebirdOptions>? optionSetter = null)
+			this DataOptions                            options,
+			     string                                 connectionString,
+			     Func<FirebirdOptions, FirebirdOptions> optionSetter)
 		{
-			options = options.UseConnectionString(ProviderName.Firebird, connectionString);
+			options = options.UseConnectionString(connectionString);
+			return FirebirdTools.ProviderDetector
+				.CreateOptions(options, FirebirdVersion.AutoDetect, default)
+				.WithOptions(optionSetter);
+		}
+
+		/// <summary>
+		/// Configure Firebird connection.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="dialect">Firebird dialect support level.</param>
+		/// <param name="optionSetter">Optional <see cref="FirebirdOptions"/> configuration callback.</param>
+		/// <returns>New options instance with applied changes.</returns>
+		[Pure]
+		public static DataOptions UseFirebird(
+			this DataOptions                             options,
+				 FirebirdVersion                         dialect      = FirebirdVersion.AutoDetect,
+				 Func<FirebirdOptions, FirebirdOptions>? optionSetter = null)
+		{
+			options = FirebirdTools.ProviderDetector.CreateOptions(options, dialect, default);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
+		/// Configure Firebird connection.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="connectionString">Firebird connection string.</param>
+		/// <param name="dialect">Firebird dialect support level.</param>
+		/// <param name="optionSetter">Optional <see cref="FirebirdOptions"/> configuration callback.</param>
+		/// <returns>New options instance with applied changes.</returns>
+		[Pure]
+		public static DataOptions UseFirebird(
+			this DataOptions options,
+				 string                                  connectionString,
+				 FirebirdVersion                         dialect      = FirebirdVersion.AutoDetect,
+				 Func<FirebirdOptions, FirebirdOptions>? optionSetter = null)
+		{
+			options = options.UseConnectionString(connectionString);
+			options = FirebirdTools.ProviderDetector.CreateOptions(options, dialect, default);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 

@@ -12,20 +12,17 @@ namespace LinqToDB.DataProvider.Firebird
 	[PublicAPI]
 	public static class FirebirdTools
 	{
-		static readonly Lazy<IDataProvider> _firebirdDataProvider = DataConnection.CreateDataProvider<FirebirdDataProvider>();
+		internal static FirebirdProviderDetector ProviderDetector = new();
 
-		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
+		public static bool AutoDetectProvider
 		{
-			if (options.ProviderName is ProviderName.Firebird or FirebirdProviderAdapter.ClientNamespace ||
-				options.ConfigurationString?.Contains("Firebird") == true)
-				return _firebirdDataProvider.Value;
-
-			return null;
+			get => ProviderDetector.AutoDetectProvider;
+			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider()
+		public static IDataProvider GetDataProvider(FirebirdVersion version = FirebirdVersion.AutoDetect, string? connectionString = null)
 		{
-			return _firebirdDataProvider.Value;
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version);
 		}
 
 		public static void ResolveFirebird(string path)
@@ -42,19 +39,19 @@ namespace LinqToDB.DataProvider.Firebird
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString)
+		public static DataConnection CreateDataConnection(string connectionString, FirebirdVersion version = FirebirdVersion.AutoDetect)
 		{
-			return new DataConnection(_firebirdDataProvider.Value, connectionString);
+			return new DataConnection(GetDataProvider(version, connectionString: connectionString), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(DbConnection connection)
+		public static DataConnection CreateDataConnection(DbConnection connection, FirebirdVersion version = FirebirdVersion.AutoDetect)
 		{
-			return new DataConnection(_firebirdDataProvider.Value, connection);
+			return new DataConnection(GetDataProvider(version), connection);
 		}
 
-		public static DataConnection CreateDataConnection(DbTransaction transaction)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, FirebirdVersion version = FirebirdVersion.AutoDetect)
 		{
-			return new DataConnection(_firebirdDataProvider.Value, transaction);
+			return new DataConnection(GetDataProvider(version), transaction);
 		}
 
 		#endregion

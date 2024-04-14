@@ -76,7 +76,7 @@ namespace Tests.DataProvider
 					Assert.That(TestType<byte[]>(conn, "\"blobDataType\"", DataType.Binary), Is.EqualTo(new byte[] { 49, 50, 51, 52, 53 }));
 				});
 
-				if (context == TestProvName.Firebird4)
+				if (context.IsAnyOf(TestProvName.AllFirebird4Plus))
 				{
 					TestType<FbDecFloat?     >(conn, "\"decfloat16DataType\"" , DataType.DecFloat);
 					TestType<FbDecFloat?     >(conn, "\"decfloat34DataType\"" , DataType.DecFloat);
@@ -464,22 +464,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		public class AllTypes
-		{
-			[PrimaryKey] public int      ID                { get; set; } // INTEGER
-			[Column]     public DateTime timestampDataType { get; set; } // TIMESTAMP
-		}
-
-		[Test]
-		public void DataProviderTest([IncludeDataSources(TestProvName.AllFirebird)] string context)
-		{
-			using (var con = new FbConnection(DataConnection.GetConnectionString(context)))
-			using (var dbm = new DataConnection(new FirebirdDataProvider(), con))
-			{
-				dbm.GetTable<AllTypes>().Where(t => t.timestampDataType == TestData.DateTime).ToList();
-			}
-		}
-
 		[Table("LinqDataTypes")]
 		sealed class MyLinqDataType
 		{
@@ -863,7 +847,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestFb4TypesProcedureSchema([IncludeDataSources(false, TestProvName.Firebird4)] string context)
+		public void TestFb4TypesProcedureSchema([IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (var t = db.CreateLocalTable(TestFbTypesTable.Data))
@@ -929,7 +913,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestFb4TypesCreateTable([IncludeDataSources(false, TestProvName.Firebird4)] string context)
+		public void TestFb4TypesCreateTable([IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (var t = db.CreateTempTable<TestFbTypesTable>())
@@ -950,7 +934,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void TestFb4TypesParametersAndLiterals(
-			[IncludeDataSources(false, TestProvName.Firebird4)] string context,
+			[IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context,
 			[Values] bool inline)
 		{
 			using (var db = new TestDataConnection(context))
@@ -1031,7 +1015,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void TestFb4TypesLiterals(
-			[IncludeDataSources(false, TestProvName.Firebird4)] string context,
+			[IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context,
 			[ValueSource(nameof(FB4LiteralTestCases))] FB4LiteralTestCase testCase)
 		{
 			using (var db = new TestDataConnection(context))
@@ -1055,7 +1039,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestFb4TypesTableSchema([IncludeDataSources(false, TestProvName.Firebird4)] string context)
+		public void TestFb4TypesTableSchema([IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (var t = db.CreateLocalTable(TestFbTypesTable.Data))
@@ -1100,7 +1084,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestFb4TypesProcedure([IncludeDataSources(false, TestProvName.Firebird4)] string context)
+		public void TestFb4TypesProcedure([IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

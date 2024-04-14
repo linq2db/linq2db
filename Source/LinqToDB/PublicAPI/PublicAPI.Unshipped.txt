@@ -1,5 +1,30 @@
 ﻿#nullable enable
+const LinqToDB.ProviderName.Firebird25 = "Firebird2_5" -> string!
+const LinqToDB.ProviderName.Firebird3 = "Firebird3" -> string!
+const LinqToDB.ProviderName.Firebird4 = "Firebird4" -> string!
+const LinqToDB.ProviderName.Firebird5 = "Firebird5" -> string!
+LinqToDB.DataProvider.Firebird.FirebirdDataProvider.FirebirdDataProvider(string! name, LinqToDB.DataProvider.Firebird.FirebirdVersion version) -> void
+LinqToDB.DataProvider.Firebird.FirebirdDataProvider.Version.get -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect = 0 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdVersion.v25 = 1 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdVersion.v3 = 2 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdVersion.v4 = 3 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdVersion.v5 = 4 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
 LinqToDB.Mapping.Nullability
+override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.BuildMergeOperationDeleteBySource(LinqToDB.SqlQuery.SqlMergeOperationClause! operation) -> void
+override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.BuildMergeOperationUpdateBySource(LinqToDB.SqlQuery.SqlMergeOperationClause! operation) -> void
+static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.Firebird.FirebirdVersion dialect = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.Firebird.FirebirdVersion dialect = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataProvider.Firebird.FirebirdTools.AutoDetectProvider.get -> bool
+static LinqToDB.DataProvider.Firebird.FirebirdTools.AutoDetectProvider.set -> void
+static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.Firebird.FirebirdVersion version = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.Firebird.FirebirdVersion version = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.Firebird.FirebirdVersion version = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Firebird.FirebirdTools.GetDataProvider(LinqToDB.DataProvider.Firebird.FirebirdVersion version = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
 static LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable<TSource>! query, params LinqToDB.Sql.SqlID[]! tableIDs) -> LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable<TSource>!
 static LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>! table) -> LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>!
 static LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessInScopeHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable<TSource>!
@@ -568,3 +593,12 @@ static LinqToDB.DataProvider.Sybase.SybaseTools.ResolveSybase(string! path, stri
 *REMOVED*LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.Octonica = 0 -> LinqToDB.DataProvider.ClickHouse.ClickHouseProvider
 *REMOVED*LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.MySqlConnector = 2 -> LinqToDB.DataProvider.ClickHouse.ClickHouseProvider
 *REMOVED*LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.ClickHouseClient = 1 -> LinqToDB.DataProvider.ClickHouse.ClickHouseProvider
+*REMOVED*static LinqToDB.DataProvider.Firebird.FirebirdTools.GetDataProvider() -> LinqToDB.DataProvider.IDataProvider!
+*REMOVED*static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(System.Data.Common.DbConnection! connection) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(string! connectionString) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*LinqToDB.DataProvider.Firebird.FirebirdDataProvider.FirebirdDataProvider(string! name, LinqToDB.SqlProvider.ISqlOptimizer? sqlOptimizer) -> void
+*REMOVED*LinqToDB.DataProvider.Firebird.FirebirdDataProvider.FirebirdDataProvider(LinqToDB.SqlProvider.ISqlOptimizer! sqlOptimizer) -> void
+*REMOVED*LinqToDB.DataProvider.Firebird.FirebirdDataProvider.FirebirdDataProvider() -> void

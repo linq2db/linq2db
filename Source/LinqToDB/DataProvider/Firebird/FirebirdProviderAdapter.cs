@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -76,6 +77,8 @@ namespace LinqToDB.DataProvider.Firebird
 			ClearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => FbConnection.ClearAllPools()));
 
 			IsDateOnlySupported = assembly.GetName().Version >= MinDateOnlyVersion;
+
+			_connectionCreator = typeMapper.BuildWrappedFactory((string connectionString) => new FbConnection(connectionString));
 		}
 
 		static readonly Lazy<FirebirdProviderAdapter> _lazy    = new (() => new ());
@@ -93,6 +96,9 @@ namespace LinqToDB.DataProvider.Firebird
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
+
+		private readonly Func<string, FbConnection> _connectionCreator;
+		public DbConnection CreateConnection(string connectionString) => ((IConnectionWrapper)_connectionCreator(connectionString)).Connection;
 
 		/// <summary>
 		/// FB client 7.10.0+.
@@ -132,9 +138,28 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		[Wrapper]
-		private sealed class FbConnection
+		private sealed class FbConnection : TypeWrapper, IConnectionWrapper
 		{
+			private static LambdaExpression[] Wrappers { get; } =
+			{
+				// [0]: Open
+				(Expression<Action<FbConnection>>       )((FbConnection this_) => this_.Open()),
+				// [1]: Dispose
+				(Expression<Action<FbConnection>>       )((FbConnection this_) => this_.Dispose()),
+			};
+
+			public FbConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
+			public FbConnection(string connectionString) => throw new NotImplementedException();
+
 			public static void ClearAllPools() => throw new NotImplementedException();
+
+			public void Open() => ((Action<FbConnection>)CompiledWrappers[0])(this);
+			public void Dispose() => ((Action<FbConnection>)CompiledWrappers[1])(this);
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		[Wrapper]
@@ -162,7 +187,7 @@ namespace LinqToDB.DataProvider.Firebird
 			Text      = 13,
 			Time      = 14,
 			TimeStamp = 15,
-			VarChar       = 16,
+			VarChar   = 16,
 
 			// new in 7.10.0
 			TimeStampTZ   = 17,

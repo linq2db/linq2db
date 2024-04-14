@@ -1334,7 +1334,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			ProviderName.Firebird25,
 			TestProvName.AllMySql55,
 			// doesn't support LAG with 3 parameters
 			TestProvName.AllMariaDB)] string context)
@@ -1381,7 +1381,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			ProviderName.Firebird25,
 			TestProvName.AllMySql55,
 			// doesn't support 3-rd parameter for LEAD
 			TestProvName.AllMariaDB)] string context)
@@ -1481,7 +1481,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			ProviderName.Firebird25,
 			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -1524,7 +1524,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			ProviderName.Firebird25,
 			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -1569,7 +1569,7 @@ namespace Tests.Linq
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			ProviderName.Firebird25,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
 			TestProvName.AllMySql55,
@@ -1637,7 +1637,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			ProviderName.Firebird25,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
 			TestProvName.AllMySql55)] string context)
@@ -1692,7 +1692,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			ProviderName.Firebird25,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
 			TestProvName.AllMySql55)] string context)
@@ -1748,7 +1748,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			ProviderName.Firebird25,
 			TestProvName.AllMySql55,
 			// doesn't support 3-rd parameter for LEAD
 			TestProvName.AllMariaDB)] string context)
@@ -1784,7 +1784,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			ProviderName.Firebird25,
 			TestProvName.AllMySql55)] string context)
 		{
 			var data = new Issue1799Table3[]

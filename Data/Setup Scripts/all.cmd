@@ -20,6 +20,10 @@ echo ========== Firebird 4.x ==========
 
 call firebird40.cmd
 
+echo ========== Firebird 5.x ==========
+
+call firebird50.cmd
+
 echo ========== Informix ==========
 
 call informix.cmd

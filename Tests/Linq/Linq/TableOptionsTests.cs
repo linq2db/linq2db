@@ -112,7 +112,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsGlobalTemporaryTest([IncludeDataSources(
 			ProviderName.DB2,
-			ProviderName.Firebird,
+			ProviderName.Firebird25,
 			TestProvName.AllOracle,
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context,

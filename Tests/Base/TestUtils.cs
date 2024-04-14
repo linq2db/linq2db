@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -10,9 +12,6 @@ using LinqToDB.DataProvider.Firebird;
 
 namespace Tests
 {
-	using System.Diagnostics.CodeAnalysis;
-	using System.IO;
-
 	using Model;
 #if NETFRAMEWORK
 	using Model.Remote.Wcf;
@@ -347,11 +346,7 @@ namespace Tests
 
 			if (context.IsAnyOf(TestProvName.AllFirebird))
 			{
-				tableName += context.IsAnyOf(TestProvName.Firebird4)
-					? "_f4"
-					: (context.IsAnyOf(TestProvName.Firebird3)
-						? "_f3"
-						: "_f");
+				tableName += "_f";
 
 				if (context.IsRemote())
 					tableName += "l";

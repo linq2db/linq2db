@@ -931,6 +931,25 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
             enabled: false
 
+        - name: Firebird5
+          title: Firebird 5.0
+          config_linux: firebird5
+          config_macos: firebird5
+          script_linux_global: firebird5.sh
+          script_macos_global: firebird5.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net60: true
+          enable_fw_net80: true
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
+            enabled: false
+
 # DB2
         - name: DB2
           title: DB2 LUW 11.5

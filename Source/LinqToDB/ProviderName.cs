@@ -46,6 +46,26 @@ namespace LinqToDB
 		/// </summary>
 		public const string Firebird      = "Firebird";
 		/// <summary>
+		/// Firebird 2.5 provider.
+		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird25MappingSchema"/>.
+		/// </summary>
+		public const string Firebird25      = "Firebird2_5";
+		/// <summary>
+		/// Firebird 3 provider.
+		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird3MappingSchema"/>.
+		/// </summary>
+		public const string Firebird3      = "Firebird3";
+		/// <summary>
+		/// Firebird 4 provider.
+		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird4MappingSchema"/>.
+		/// </summary>
+		public const string Firebird4      = "Firebird4";
+		/// <summary>
+		/// Firebird 5 provider.
+		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird5MappingSchema"/>.
+		/// </summary>
+		public const string Firebird5      = "Firebird5";
+		/// <summary>
 		/// Informix IBM.Data.Informix provider (including IDS provider).
 		/// Used as configuration name for Informix mapping schema <see cref="DataProvider.Informix.InformixMappingSchema"/>.
 		/// </summary>

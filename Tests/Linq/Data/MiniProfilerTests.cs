@@ -190,7 +190,17 @@ namespace Tests.Data
 		public void TestFirebird([IncludeDataSources(TestProvName.AllFirebird)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new FirebirdDataProvider(), context, type, "FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient"))
+
+			Type providerType;
+
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				providerType = db.DataProvider.GetType();
+			}
+
+			var provider = (FirebirdDataProvider)Activator.CreateInstance(providerType)!;
+
+			using (var db = CreateDataConnection(provider, context, type, "FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -213,7 +223,7 @@ namespace Tests.Data
 				FirebirdTools.ClearAllPools();
 
 				// test provider-specific types
-				if (context == TestProvName.Firebird4)
+				if (context == TestProvName.AllFirebird4Plus)
 				{
 					var fbDecFloat = new FbDecFloat(BigInteger.Parse("12345"), 5);
 					var fbDecFloat1 = db.Execute<FbDecFloat>("SELECT CAST(@p as decfloat) from rdb$database", new DataParameter("@p", fbDecFloat, DataType.DecFloat));

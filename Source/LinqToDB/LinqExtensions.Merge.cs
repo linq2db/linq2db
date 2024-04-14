@@ -933,7 +933,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
-		/// <item>Firebird 3+ (doesn't support more than one record and "action" parameter; database limitation)</item>
+		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<TOutput> MergeWithOutput<TTarget,TSource,TOutput>(
@@ -969,7 +969,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
-		/// <item>Firebird 3+ (doesn't support more than one record and "action" parameter; database limitation)</item>
+		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<TOutput> MergeWithOutput<TTarget,TSource,TOutput>(
@@ -1005,7 +1005,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
-		/// <item>Firebird 3+ (doesn't support more than one record and "action" parameter; database limitation)</item>
+		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget, TSource, TOutput>(
@@ -1041,7 +1041,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
-		/// <item>Firebird 3+ (doesn't support more than one record and "action" parameter; database limitation)</item>
+		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget,TSource,TOutput>(

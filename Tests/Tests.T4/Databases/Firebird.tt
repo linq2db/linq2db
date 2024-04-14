@@ -10,6 +10,6 @@
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
 
-	LoadFirebirdMetadata(GetConnectionString("Firebird"));
+	LoadFirebirdMetadata(GetConnectionString("Firebird5"));
 	GenerateModel();
 #>

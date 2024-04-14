@@ -47,7 +47,7 @@
 	RunCliTool("Access"         , null                 , "Cli.All.Access.OleDb"       , Path.Combine(targetDir, "AccessOleDb")        , mode, connectionString: accessOleDbCN, extraOptions: extraOptions);
 	RunCliTool("Access"         , null                 , "Cli.All.Access.Both"        , Path.Combine(targetDir, "AccessBoth")         , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN, extraOptions: extraOptions);
 	RunCliTool("DB2"            , "DB2"                , "Cli.All.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
-	RunCliTool("Firebird"       , "Firebird4"          , "Cli.All.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode, extraOptions: extraOptions);
+	RunCliTool("Firebird"       , "Firebird5"          , "Cli.All.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode, extraOptions: extraOptions);
 	RunCliTool("Informix"       , "Informix.DB2"       , "Cli.All.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
 	RunCliTool("MySQL"          , "MariaDB"            , "Cli.All.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode, extraOptions: extraOptionsWithoutTypes);
 	RunCliTool("MySQL"          , "MySqlConnector"     , "Cli.All.MySql"              , Path.Combine(targetDir, "MySql")              , mode, extraOptions: extraOptionsWithoutTypes);
