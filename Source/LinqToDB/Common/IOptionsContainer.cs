@@ -24,8 +24,9 @@ namespace LinqToDB.Common
 		/// Gets the extension of the specified type. Returns null if no extension of the specified type is configured.
 		/// </summary>
 		/// <typeparam name="TSet">The type of the option set to get.</typeparam>
+		/// <param name="createKnownOptions">if <see langword="true" />, the implementation should create a new instance of the known option type set if none is found.</param>
 		/// <returns>The extension, or <see langword="null" /> if none was found.</returns>
-		TSet? Find<TSet>()
+		TSet? Find<TSet>(bool createKnownOptions)
 			where TSet : class, IOptionSet;
 	}
 }

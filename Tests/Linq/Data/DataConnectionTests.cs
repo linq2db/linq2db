@@ -410,6 +410,29 @@ namespace Tests.Data
 			}
 		}
 
+		public class DbConnection5 : DataConnection
+		{
+			public DbConnection5(DataOptions options) : base(options)
+			{
+				Assert.That(options.DataContextOptions.CommandTimeout, Is.EqualTo(91));
+				Assert.That(CommandTimeout,                            Is.EqualTo(91));
+			}
+		}
+
+		[Test]
+		public void TestServiceCollection_Issue4476([DataSources(false)] string context)
+		{
+			var collection = new ServiceCollection();
+
+			collection.AddLinqToDBContext<DbConnection5>((serviceProvider, options) =>
+				options.UseConfigurationString(context).WithOptions<DataContextOptions>(o => o with { CommandTimeout = 91 }));
+
+			var provider = collection.BuildServiceProvider();
+			var con      = provider.GetService<DbConnection5>()!;
+
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
 		[Test]
 		public void TestSettingsPerDb([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

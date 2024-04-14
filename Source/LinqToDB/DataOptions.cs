@@ -94,7 +94,7 @@ namespace LinqToDB
 		}
 
 		[Pure]
-		public override TSet? Find<TSet>()
+		public override TSet? Find<TSet>(bool createKnownOptions = true)
 			where TSet : class
 		{
 			var type = typeof(TSet);
@@ -102,11 +102,11 @@ namespace LinqToDB
 			if (type == typeof(LinqOptions))        return (TSet?)(IOptionSet?)LinqOptions;
 			if (type == typeof(RetryPolicyOptions)) return (TSet?)(IOptionSet?)RetryPolicyOptions;
 			if (type == typeof(ConnectionOptions))  return (TSet?)(IOptionSet?)ConnectionOptions;
-			if (type == typeof(DataContextOptions)) return (TSet?)(IOptionSet?)_dataContextOptions;
-			if (type == typeof(BulkCopyOptions))    return (TSet?)(IOptionSet?)_bulkCopyOptions;
-			if (type == typeof(SqlOptions))         return (TSet?)(IOptionSet?)_sqlOptions;
+			if (type == typeof(DataContextOptions)) return (TSet?)(IOptionSet?)(createKnownOptions ? DataContextOptions : _dataContextOptions);
+			if (type == typeof(BulkCopyOptions))    return (TSet?)(IOptionSet?)(createKnownOptions ? BulkCopyOptions    : _bulkCopyOptions);
+			if (type == typeof(SqlOptions))         return (TSet?)(IOptionSet?)(createKnownOptions ? SqlOptions         : _sqlOptions);
 
-			return base.Find<TSet>();
+			return base.Find<TSet>(createKnownOptions);
 		}
 
 		public void Apply(DataConnection dataConnection)
