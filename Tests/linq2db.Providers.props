@@ -57,7 +57,7 @@
 				<!--PackageReference + Reference beelongs to same nuget-->
 				<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
 				<Reference Include="IBM.Data.DB2">
-					<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
+					<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.DLL</HintPath>
 				</Reference>
 			</ItemGroup>
 			<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">

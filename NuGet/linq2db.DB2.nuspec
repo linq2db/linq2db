@@ -20,7 +20,7 @@
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                   />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                   />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                   />
-		<file src="..\Tests\Linq\bin\Azure\net472\IBM.Data.DB2.dll"                  target="tools"                                   />
+		<file src="..\NuGet\bin\Release\net472\IBM.Data.DB2.DLL"                     target="tools"                                   />
 
 		<file src="..\NuGet\DB2\linq2db.DB2.props"                                   target="build"                                   />
 		<file src="..\NuGet\DB2\*.*"                            exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />

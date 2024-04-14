@@ -128,23 +128,9 @@ namespace LinqToDB.Tools.ModelGeneration
 					var rc = new TMethod   { TypeBuilder = static () => "void", Name = "RejectChanges", IsVirtual = true };
 					var id = new TProperty { TypeBuilder = static () => "bool", Name = "IsDirty",       IsVirtual = true, IsAuto = false, HasSetter = false };
 
-					ac.BodyBuilders.AddRange(
-					[
-						static () =>
-						[
-							"BeforeAcceptChanges();",
-							""
-						],
-						static () =>
-						[
-							"BeforeRejectChanges();",
-							""
-						],
-						static () =>
-						[
-							"return"
-						]
-					]);
+					ac.BodyBuilders.   Add(static () => ["BeforeAcceptChanges();", ""]);
+					rc.BodyBuilders.   Add(static () => ["BeforeRejectChanges();", ""]);
+					id.GetBodyBuilders.Add(static () => ["return"]);
 
 					foreach (var p in props)
 					{

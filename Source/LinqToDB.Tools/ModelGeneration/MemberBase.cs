@@ -23,6 +23,8 @@ namespace LinqToDB.Tools.ModelGeneration
 		int ParamLen          { get; set; }
 		int BodyLen           { get; set; }
 
+		public string? Type { get; set; }
+
 		string? BuildType();
 	}
 

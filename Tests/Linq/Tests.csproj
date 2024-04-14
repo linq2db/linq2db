@@ -38,7 +38,7 @@
 		<Reference Include="Sap.Data.Hana.v4.5">
 			<HintPath>..\..\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
 		</Reference>
-		<None Include="$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll" Link="IBM.Data.DB2.x64.dll">
+		<None Include="$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.DLL" Link="IBM.Data.DB2.x64.DLL">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

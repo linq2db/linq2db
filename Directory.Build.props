@@ -44,15 +44,16 @@
 		<LinqToDBT4SharedTools>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SharedTools>
 
 		<LinqToDBT4ClickHouseClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4ClickHouseClientPath>
-		<LinqToDBT4DB2ClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4DB2ClientPath>
+		<LinqToDBT4DB2ClientPath>$(SolutionDir)Nuget\bin\Debug\net472\</LinqToDBT4DB2ClientPath>
 		<LinqToDBT4FirebirdClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4FirebirdClientPath>
+		<LinqToDBT4InformixClientPath>$(SolutionDir)Nuget\bin\Debug\net472\</LinqToDBT4InformixClientPath>
 		<LinqToDBT4MySqlConnectorClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4MySqlConnectorClientPath>
 		<LinqToDBT4OracleManagedClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4OracleManagedClientPath>
 		<LinqToDBT4NpgsqlClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4NpgsqlClientPath>
 		<LinqToDBT4SQLiteClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SQLiteClientPath>
 		<LinqToDBT4SQLServerClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SQLServerClientPath>
 		<LinqToDBT4SybaseDataActionClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SybaseDataActionClientPath>
-		<LinqToDBT4SybaseClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SybaseClientPath>
+		<LinqToDBT4SybaseClientPath>$(SolutionDir)Nuget\bin\Debug\net472\</LinqToDBT4SybaseClientPath>
 
 		<LinqToDBT4TemplatesPath>$(SolutionDir)Source\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
 		<LinqToDBT4AccessTemplatesPath>$(SolutionDir)Nuget\Access\</LinqToDBT4AccessTemplatesPath>

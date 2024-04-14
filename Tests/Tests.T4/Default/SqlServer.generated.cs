@@ -43,11 +43,13 @@ namespace Default.SqlServer
 		public ITable<Issue1115>                Issue1115                { get { return this.GetTable<Issue1115>(); } }
 		public ITable<Issue1144>                Issue1144                { get { return this.GetTable<Issue1144>(); } }
 		public ITable<LinqDataType>             LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Member>                   Members                  { get { return this.GetTable<Member>(); } }
 		public ITable<NameTest>                 NameTests                { get { return this.GetTable<NameTest>(); } }
 		public ITable<ParentChildView>          ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
 		public ITable<ParentView>               ParentViews              { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                  Patients                 { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>                   People                   { get { return this.GetTable<Person>(); } }
+		public ITable<Provider>                 Providers                { get { return this.GetTable<Provider>(); } }
 		public ITable<SameTableName>            SameTableNames           { get { return this.GetTable<SameTableName>(); } }
 		public ITable<TestSchema_SameTableName> SameTableNames0          { get { return this.GetTable<TestSchema_SameTableName>(); } }
 		public ITable<SqlType>                  SqlTypes                 { get { return this.GetTable<SqlType>(); } }
@@ -124,8 +126,19 @@ namespace Default.SqlServer
 
 		public partial class Issue1921Result
 		{
-			public string name  { get; set; } = null!;
-			public int?   objid { get; set; }
+			[Column("name") ] public string Name  { get; set; } = null!;
+			[Column("objid")] public int?   Objid { get; set; }
+		}
+
+		#endregion
+
+		#region SchemaTableFunction
+
+		[Sql.TableFunction(Schema="TestSchema", Name="SchemaTableFunction")]
+		public ITable<TheParent> SchemaTableFunction(int? @id)
+		{
+			return this.GetTable<TheParent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+				@id);
 		}
 
 		#endregion
@@ -353,6 +366,23 @@ namespace Default.SqlServer
 		[Column(),      Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
+	[Table(Schema="dbo", Name="Member")]
+	public partial class Member
+	{
+		[PrimaryKey, Identity] public int    MemberId { get; set; } // int
+		[Column,     NotNull ] public string Alias    { get; set; } = null!; // nvarchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member_BackReference (dbo.Provider)
+		/// </summary>
+		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		public Provider? Provider { get; set; }
+
+		#endregion
+	}
+
 	[Table(Schema="dbo", Name="Name.Test")]
 	public partial class NameTest
 	{
@@ -414,6 +444,23 @@ namespace Default.SqlServer
 		/// </summary>
 		[Association(ThisKey="ID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? Patient { get; set; }
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="Provider")]
+	public partial class Provider
+	{
+		[PrimaryKey, NotNull] public int    ProviderId { get; set; } // int
+		[Column,     NotNull] public string Test       { get; set; } = null!; // nvarchar(max)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member (dbo.Member)
+		/// </summary>
+		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		public Member Member { get; set; } = null!;
 
 		#endregion
 	}
@@ -668,7 +715,7 @@ namespace Default.SqlServer
 			return dataConnection.QueryProc(dataReader =>
 				new DuplicateColumnNamesResult
 				{
-					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
+					Id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
 					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
 				},
 				"[dbo].[DuplicateColumnNames]");
@@ -676,7 +723,7 @@ namespace Default.SqlServer
 
 		public partial class DuplicateColumnNamesResult
 		{
-			               public int    id      { get; set; }
+			[Column("id")] public int    Id      { get; set; }
 			[Column("id")] public string Column2 { get; set; } = null!;
 		}
 
@@ -1337,6 +1384,12 @@ namespace Default.SqlServer
 				t.Id == Id);
 		}
 
+		public static Member? Find(this ITable<Member> table, int MemberId)
+		{
+			return table.FirstOrDefault(t =>
+				t.MemberId == MemberId);
+		}
+
 		public static Patient? Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
@@ -1347,6 +1400,12 @@ namespace Default.SqlServer
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
+		}
+
+		public static Provider? Find(this ITable<Provider> table, int ProviderId)
+		{
+			return table.FirstOrDefault(t =>
+				t.ProviderId == ProviderId);
 		}
 
 		public static SqlType? Find(this ITable<SqlType> table, int ID)

@@ -15,10 +15,10 @@
 		};
 	}
 #><#+
-partial class Property
+partial class Property : IEditableObjectProperty
 {
-	public bool   IsEditable;
-	public string IsDirtyText = "{0} != {1}";
+	public bool   IsEditable  { get; set; }
+	public string IsDirtyText { get; set; } = "{0} != {1}";
 }
 
 public class EditableProperty : Property

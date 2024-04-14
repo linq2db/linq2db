@@ -500,7 +500,7 @@ namespace Default.Oracle
 		#region Associations
 
 		/// <summary>
-		/// SYS_C009481_BackReference (TEST.t_test_user_contract)
+		/// SYS_C009576_BackReference (TEST.t_test_user_contract)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
@@ -519,7 +519,7 @@ namespace Default.Oracle
 		#region Associations
 
 		/// <summary>
-		/// SYS_C009481 (TEST.t_test_user)
+		/// SYS_C009576 (TEST.t_test_user)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false)]
 		public TTestUser User { get; set; } = null!;

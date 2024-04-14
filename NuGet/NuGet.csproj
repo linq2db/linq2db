@@ -1,5 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net472</TargetFramework>
+		<PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Source\LinqToDB\LinqToDB.csproj" />
+
+		<PackageReference Include="AdoNetCore.AseClient" />
+
+		<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
+		<Reference Include="IBM.Data.DB2">
+			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.DLL</HintPath>
+		</Reference>
+		<Reference Include="IBM.Data.Informix">
+			<HintPath>$(SolutionDir)\Redist\IBM\x64\IBM.Data.Informix.DLL</HintPath>
+		</Reference>
+	</ItemGroup>
 </Project>
