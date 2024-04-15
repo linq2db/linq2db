@@ -23,6 +23,7 @@ namespace LinqToDB.Linq
 	using Reflection;
 	using SqlQuery;
 	using Tools;
+	using Interceptors;
 
 	static partial class QueryRunner
 	{
@@ -449,10 +450,10 @@ namespace LinqToDB.Linq
 				{
 					DbDataReader origDataReader;
 
-					if (_dataContext.UnwrapDataObjectInterceptor is { } interceptor)
+					if (_dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
 					{
 						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-							origDataReader = interceptor.UnwrapDataReader(_dataContext, dataReader);
+							origDataReader = interceptable.Interceptor.UnwrapDataReader(_dataContext, dataReader);
 					}
 					else
 					{
@@ -514,10 +515,10 @@ namespace LinqToDB.Linq
 					{
 						DbDataReader origDataReader;
 
-						if (_dataContext.UnwrapDataObjectInterceptor is { } interceptor)
+						if (_dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
 						{
 							using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-								origDataReader = interceptor.UnwrapDataReader(_dataContext, dr.DataReader);
+								origDataReader = interceptable.Interceptor.UnwrapDataReader(_dataContext, dr.DataReader);
 						}
 						else
 						{
@@ -643,10 +644,10 @@ namespace LinqToDB.Linq
 				{
 					DbDataReader dataReader;
 
-					if (_dataContext.UnwrapDataObjectInterceptor is { } interceptor)
+					if (_dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
 					{
 						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-							dataReader = interceptor.UnwrapDataReader(_dataContext, _dataReader.DataReader);
+							dataReader = interceptable.Interceptor.UnwrapDataReader(_dataContext, _dataReader.DataReader);
 					}
 					else
 					{
@@ -810,10 +811,10 @@ namespace LinqToDB.Linq
 
 			DbDataReader dataReader;
 
-			if (dataContext.UnwrapDataObjectInterceptor is { } interceptor)
+			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
 			{
 				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-					dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader!);
+					dataReader = interceptable.Interceptor.UnwrapDataReader(dataContext, dr.DataReader!);
 			}
 			else
 			{
@@ -853,10 +854,10 @@ namespace LinqToDB.Linq
 						{
 							DbDataReader dataReader;
 
-							if (dataContext.UnwrapDataObjectInterceptor is { } interceptor)
+							if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
 							{
 								using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-									dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader);
+									dataReader = interceptable.Interceptor.UnwrapDataReader(dataContext, dr.DataReader);
 							}
 							else
 							{

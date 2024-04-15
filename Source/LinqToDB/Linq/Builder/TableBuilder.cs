@@ -7,8 +7,9 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Mapping;
 	using Reflection;
+	using Interceptors;
 
 	sealed partial class TableBuilder : ISequenceBuilder
 	{
@@ -135,6 +136,9 @@ namespace LinqToDB.Linq.Builder
 
 			var filterLambda = Expression.Lambda(filterFunc.Body.Replace(dcParam, dcExpr), filterFunc.Parameters[0]);
 			filterLambda = (LambdaExpression)builder.ConvertExpressionTree(filterLambda);
+
+			if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null } queryInterceptable)
+				filterLambda = (LambdaExpression)queryInterceptable.Interceptor.ProcessExpression(filterLambda, new QueryExpressionArgs(builder.DataContext, filterLambda, QueryExpressionArgs.ExpressionKind.QueryFilter));
 
 			Expression sequenceExpr = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), refExpression, filterLambda);
 

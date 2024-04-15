@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using JetBrains.Annotations;
 
@@ -9,8 +10,7 @@ namespace LinqToDB
 	using Common.Internal;
 	using Data;
 	using Data.RetryPolicy;
-
-	using LinqToDB.Remote;
+	using Interceptors;
 
 	/// <summary>
 	/// Immutable context configuration object.
@@ -20,6 +20,13 @@ namespace LinqToDB
 		public DataOptions()
 		{
 		}
+
+		IReadOnlyCollection<IInterceptor>? _interceptors;
+
+		/// <summary>
+		/// Contains registered interceptors.
+		/// </summary>
+		public IEnumerable<IInterceptor> Interceptors => _interceptors ?? Enumerable.Empty<IInterceptor>();
 
 		public DataOptions(ConnectionOptions connectionOptions)
 		{
@@ -34,6 +41,7 @@ namespace LinqToDB
 			_dataContextOptions = options._dataContextOptions;
 			_bulkCopyOptions    = options._bulkCopyOptions;
 			_sqlOptions         = options._sqlOptions;
+			_interceptors       = options._interceptors;
 		}
 
 		protected override DataOptions Clone()
@@ -95,6 +103,27 @@ namespace LinqToDB
 			}
 		}
 
+		public DataOptions AddInterceptor(IInterceptor interceptor)
+		{
+			var options = new DataOptions(this) { _interceptors = new List<IInterceptor>(Interceptors) { interceptor } };
+			return options;
+		}
+
+		public DataOptions AddInterceptors(IEnumerable<IInterceptor> interceptors)
+		{
+			var options = new DataOptions(this) { _interceptors = new List<IInterceptor>(Interceptors.Concat(interceptors)) };
+			return options;
+		}
+
+		public DataOptions RemoveInterceptor(IInterceptor interceptor)
+		{
+			if (_interceptors == null)
+				return this;
+
+			var options = new DataOptions(this) { _interceptors = new List<IInterceptor>(Interceptors.Except(new[] { interceptor })) };
+			return options;
+		}
+
 		[Pure]
 		public override TSet? Find<TSet>()
 			where TSet : class
@@ -109,37 +138,6 @@ namespace LinqToDB
 			if (type == typeof(SqlOptions))         return (TSet?)(IOptionSet?)_sqlOptions;
 
 			return base.Find<TSet>();
-		}
-
-		public void Apply(DataConnection dataConnection)
-		{
-			((IApplicable<DataConnection>)ConnectionOptions). Apply(dataConnection);
-			((IApplicable<DataConnection>)RetryPolicyOptions).Apply(dataConnection);
-
-			if (_dataContextOptions is IApplicable<DataConnection> a)
-				a.Apply(dataConnection);
-
-			base.Apply(dataConnection);
-		}
-
-		public void Apply(DataContext dataContext)
-		{
-			((IApplicable<DataContext>)ConnectionOptions).Apply(dataContext);
-
-			if (_dataContextOptions is IApplicable<DataContext> a)
-				a.Apply(dataContext);
-
-			base.Apply(dataContext);
-		}
-
-		public void Apply(RemoteDataContextBase dataContext)
-		{
-			((IApplicable<RemoteDataContextBase>)ConnectionOptions).Apply(dataContext);
-
-			if (_dataContextOptions is IApplicable<RemoteDataContextBase> a)
-				a.Apply(dataContext);
-
-			base.Apply(dataContext);
 		}
 
 		int? _configurationID;
@@ -157,6 +155,7 @@ namespace LinqToDB
 						.Add(DataContextOptions)
 						.Add(BulkCopyOptions)
 						.Add(SqlOptions)
+						.AddRange(Interceptors)
 						.AddRange(base.OptionSets)
 						.CreateID();
 				}

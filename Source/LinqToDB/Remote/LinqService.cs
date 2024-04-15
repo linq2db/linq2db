@@ -17,6 +17,7 @@ namespace LinqToDB.Remote
 	using Tools;
 	using Infrastructure;
 	using Linq.Translation;
+	using Interceptors;
 
 	public class LinqService : ILinqService
 	{
@@ -340,10 +341,10 @@ namespace LinqToDB.Remote
 		{
 			DbDataReader reader;
 
-			if (((IDataContext)db).UnwrapDataObjectInterceptor is {} interceptor)
+			if (db is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
 			{
 				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-					reader = interceptor.UnwrapDataReader(db, rd.DataReader!);
+					reader = interceptable.Interceptor.UnwrapDataReader(db, rd.DataReader!);
 			}
 			else
 			{

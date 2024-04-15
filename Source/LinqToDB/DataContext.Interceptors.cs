@@ -41,8 +41,6 @@ namespace LinqToDB
 			set => _entityServiceInterceptor = (AggregatedEntityServiceInterceptor?)value;
 		}
 
-		IUnwrapDataObjectInterceptor? IDataContext.UnwrapDataObjectInterceptor => _unwrapDataObjectInterceptor;
-
 		AggregatedUnwrapDataObjectInterceptor? _unwrapDataObjectInterceptor;
 		IUnwrapDataObjectInterceptor? IInterceptable<IUnwrapDataObjectInterceptor>.Interceptor
 		{
@@ -113,7 +111,8 @@ namespace LinqToDB
 			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
 			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
 			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
-			((IInterceptable<IEntityBindingInterceptor>)      this).RemoveInterceptor(interceptor);
+			((IInterceptable<IEntityBindingInterceptor>)   this).RemoveInterceptor(interceptor);
+			((IInterceptable<IQueryExpressionInterceptor>) this).RemoveInterceptor(interceptor);
 		}
 	}
 }

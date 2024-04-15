@@ -11,6 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
+	using Interceptors;
 
 	static class AssociationHelper
 	{
@@ -45,18 +46,14 @@ namespace LinqToDB.Linq.Builder
 			LambdaExpression? definedQueryMethod  = null;
 			if (association.HasQueryMethod())
 			{
-				/*// here we tell for Expression Comparer to compare optimized Association expressions
-				//
-				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors((association, parentType, objectType), onMember, builder.DataContext, static (context, mi, dc) =>
-				{
-					var queryLambda         = context.association.GetQueryMethod(context.parentType, context.objectType) ?? throw new InvalidOperationException();
-					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
-					var optimizedExpr       = optimizationContext.ExposeExpression(queryLambda);
-					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
-					return optimizedExpr;
-				});*/
-
 				definedQueryMethod = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
+
+				if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null } queryInterceptable)
+				{
+					definedQueryMethod = (LambdaExpression)queryInterceptable.Interceptor.ProcessExpression(definedQueryMethod,
+						new QueryExpressionArgs(builder.DataContext, definedQueryMethod, QueryExpressionArgs.ExpressionKind.AssociationExpression));
+				}
+
 				cacheCheckAdded = true;
 
 				var parameterMatch = new Dictionary<ParameterExpression, Expression>();
@@ -204,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr = ExpressionBuilder.ExposeExpression(closureExpr, dc, optimizationContext, optimizeConditions : true, compactBinary : true);
-					    optimizedExpr       = optimizedExpr.OptimizeExpression(dc.MappingSchema)!;
+					optimizedExpr = optimizedExpr.OptimizeExpression(dc.MappingSchema)!;
 					return optimizedExpr;
 				});
 			}

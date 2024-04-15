@@ -3,8 +3,6 @@ using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Linq.Expressions;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB.Expressions
 {
 	using Common;
@@ -13,6 +11,8 @@ namespace LinqToDB.Expressions
 	using Linq;
 	using Reflection;
 	using Mapping;
+	using Tools;
+	using Interceptors;
 
 	sealed class ConvertFromDataReaderExpression : Expression
 	{
@@ -65,9 +65,9 @@ namespace LinqToDB.Expressions
 
 		public Expression Reduce(IDataContext dataContext, DbDataReader dataReader)
 		{
-			if (dataContext.UnwrapDataObjectInterceptor is {} interceptor)
+			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
 				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-					dataReader = interceptor.UnwrapDataReader(dataContext, dataReader);
+					dataReader = interceptable.Interceptor.UnwrapDataReader(dataContext, dataReader);
 
 			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, _dataReaderParam, forceNullCheck: CanBeNull == true);
 		}

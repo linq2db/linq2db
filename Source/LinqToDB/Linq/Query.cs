@@ -529,7 +529,10 @@ namespace LinqToDB.Linq
 				// No LambdaExpressions which are located in constants, they will be expanded and injected into tree
 				//
 				var exposed = ExpressionBuilder.ExposeExpression(expr, dataContext, optimizationContext,
-				optimizeConditions : true, compactBinary : false /* binary already compacted by AggregateExpression*/);
+					optimizeConditions : true, compactBinary : false /* binary already compacted by AggregateExpression*/);
+
+				if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null } queryInterceptable)
+					exposed = queryInterceptable.Interceptor.ProcessExpression(exposed, new QueryExpressionArgs(dataContext, exposed, QueryExpressionArgs.ExpressionKind.Query));
 
 				// simple trees do not mutate
 				var isExposed = !ReferenceEquals(exposed, expr);
