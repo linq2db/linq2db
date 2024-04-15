@@ -16,6 +16,7 @@ namespace LinqToDB
 	using DataProvider;
 	using Interceptors;
 	using Mapping;
+	using Linq.Translation;
 
 	/// <summary>
 	/// Set of extensions for <see cref="DataOptions"/>.
@@ -850,7 +851,7 @@ namespace LinqToDB
 		/// </para>
 		/// </summary>
 		/// <param name="interceptors"> The interceptors to add. </param>
-		/// <returns> The same builder instance so that multiple calls can be chained. </returns>
+		/// <returns>The new DataOptions instance.</returns>
 		[Pure]
 		public static DataOptions UseInterceptors(this DataOptions options, IEnumerable<IInterceptor> interceptors)
 		{
@@ -886,7 +887,7 @@ namespace LinqToDB
 		/// </para>
 		/// </summary>
 		/// <param name="interceptors"> The interceptors to add. </param>
-		/// <returns> The same builder instance so that multiple calls can be chained. </returns>
+		/// <returns>The new DataOptions instance.</returns>
 		[Pure]
 		public static DataOptions UseInterceptors(this DataOptions options, params IInterceptor[] interceptors)
 		{
@@ -922,7 +923,7 @@ namespace LinqToDB
 		/// </para>
 		/// </summary>
 		/// <param name="interceptor"> The interceptor to add. </param>
-		/// <returns> The same builder instance so that multiple calls can be chained.</returns>
+		/// <returns>The new DataOptions instance.</returns>
 		[Pure]
 		public static DataOptions UseInterceptor(this DataOptions options, IInterceptor interceptor)
 		{
@@ -941,6 +942,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Removes <see cref="IInterceptor" /> instance from the context.
 		/// </summary>
+		/// <returns>The new DataOptions instance.</returns>
 		[Pure]
 		public static DataOptions RemoveInterceptor(this DataOptions options, IInterceptor interceptor)
 		{
@@ -954,6 +956,76 @@ namespace LinqToDB
 							list.Add(i);
 
 				return o with { Interceptors = list };
+			});
+		}
+
+		/// <summary>
+		/// <para>
+		/// Adds <see cref="IMemberTranslator" /> instance to those registered on the context.
+		/// </para>
+		/// <para>
+		/// Translators can be used translate member expressions to SQL expressions.
+		/// </para>	
+		/// </summary>
+		/// <param name="options"></param>
+		/// <param name="translator"></param>
+		/// <returns>The new DataOptions instance.</returns>
+		public static DataOptions UseMemberTranslator(this DataOptions options, IMemberTranslator translator)
+		{
+			return options.WithOptions<DataContextOptions>(o =>
+			{
+				var list = new List<IMemberTranslator>();
+
+				if (o.MemberTranslators != null)
+					list.AddRange(o.MemberTranslators);
+				list.Add(translator);
+
+				return o with { MemberTranslators = list };
+			});
+		}
+
+		/// <summary>
+		/// <para>
+		/// Adds collection <see cref="IMemberTranslator" /> instance to those registered on the context.
+		/// </para>
+		/// <para>
+		/// Translators can be used translate member expressions to SQL expressions.
+		/// </para>	
+		/// </summary>
+		/// <param name="options"></param>
+		/// <param name="translators"></param>
+		/// <returns>The new DataOptions instance.</returns>
+		public static DataOptions UseMemberTranslator(this DataOptions options, IEnumerable<IMemberTranslator> translators)
+		{
+			return options.WithOptions<DataContextOptions>(o =>
+			{
+				var list = new List<IMemberTranslator>();
+
+				if (o.MemberTranslators != null)
+					list.AddRange(o.MemberTranslators);
+				list.AddRange(translators);
+
+				return o with { MemberTranslators = list };
+			});
+		}
+
+		/// <summary>
+		/// Removes <see cref="IMemberTranslator" /> instance from the context.
+		/// </summary>
+		/// <returns>The new DataOptions instance.</returns>
+		[Pure]
+		public static DataOptions RemoveTranslator(this DataOptions options, IMemberTranslator translator)
+		{
+			return options.WithOptions<DataContextOptions>(o =>
+			{
+				var list = new List<IMemberTranslator>();
+
+				if (o.MemberTranslators != null)
+					foreach (var i in o.MemberTranslators)
+						if (i != translator)
+							list.Add(i);
+
+				return o with { MemberTranslators = list };
 			});
 		}
 

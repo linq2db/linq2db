@@ -13,7 +13,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using RetryPolicy;
 
-	public partial class DataConnection : IConfigurationID
+	public partial class DataConnection
 	{
 		static class Configuration
 		{
@@ -680,6 +680,17 @@ namespace LinqToDB.Data
 				if (options.TraceLevel != null) dataConnection.TraceSwitchConnection    = new("DataConnection", "DataConnection trace switch") {Level = options.TraceLevel.Value};
 				if (options.WriteTrace != null) dataConnection.WriteTraceLineConnection = options.WriteTrace;
 			}
+		}
+
+		protected virtual void ApplyOptions(DataOptions options)
+		{
+			ConfigurationApplier.Apply(this, options.ConnectionOptions);
+			ConfigurationApplier.Apply(this, options.RetryPolicyOptions);
+			ConfigurationApplier.Apply(this, options.DataContextOptions);
+
+			var queryTraceOptions = options.Find<QueryTraceOptions>();
+			if (queryTraceOptions != null)
+				ConfigurationApplier.Apply(this, queryTraceOptions);
 		}
 	}
 }

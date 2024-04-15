@@ -139,6 +139,12 @@ namespace LinqToDB.Linq.Builder
 
 			_memberTranslator = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberTranslator>();
 
+			if (DataOptions.DataContextOptions.MemberTranslators != null)
+			{
+				// register overriden translators first
+				_memberTranslator = new CombinedMemberTranslator(DataOptions.DataContextOptions.MemberTranslators.Concat(new[] { _memberTranslator }));
+			}
+
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
 			Expression           = expression;

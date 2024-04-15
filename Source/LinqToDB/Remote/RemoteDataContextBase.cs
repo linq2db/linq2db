@@ -27,13 +27,16 @@ namespace LinqToDB.Remote
 	using SqlProvider;
 
 	[PublicAPI]
-	public abstract partial class RemoteDataContextBase : IDataContext, IInfrastructure<IServiceProvider>
+	public abstract partial class RemoteDataContextBase : IDataContext, 
+		IInfrastructure<IServiceProvider>
 	{
 		protected RemoteDataContextBase(DataOptions options)
 		{
 			Options = options;
 
-			options.Apply(this);
+#pragma warning disable CA2214
+			ApplyOptions(options);
+#pragma warning restore CA2214
 		}
 
 		[Obsolete("Use ConfigurationString instead.")]
@@ -551,6 +554,12 @@ namespace LinqToDB.Remote
 					foreach (var interceptor in options.Interceptors)
 						dataContext.AddInterceptor(interceptor);
 			}
+		}
+
+		protected virtual void ApplyOptions(DataOptions options)
+		{
+			ConfigurationApplier.Apply(this, options.ConnectionOptions);
+			ConfigurationApplier.Apply(this, options.DataContextOptions);
 		}
 
 	}

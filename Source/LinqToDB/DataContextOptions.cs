@@ -7,8 +7,7 @@ namespace LinqToDB
 	using Common.Internal;
 	using Data;
 	using Interceptors;
-
-	using LinqToDB.Remote;
+	using Linq.Translation;
 
 	/// <param name="CommandTimeout">
 	/// The command timeout, or <c>null</c> if none has been set.
@@ -18,12 +17,14 @@ namespace LinqToDB
 	/// </param>
 	public sealed record DataContextOptions
 	(
-		int?                         CommandTimeout = default,
-		IReadOnlyList<IInterceptor>? Interceptors   = default
+		int?                              CommandTimeout    = default,
+		IReadOnlyList<IInterceptor>?      Interceptors      = default,
+		IReadOnlyList<IMemberTranslator>? MemberTranslators = default
+
 		// If you add another parameter here, don't forget to update
 		// DataContextOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
-		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>, IApplicable<RemoteDataContextBase>
+		: IOptionSet
 	{
 		public DataContextOptions() : this((int?)default)
 		{
@@ -31,8 +32,9 @@ namespace LinqToDB
 
 		DataContextOptions(DataContextOptions original)
 		{
-			CommandTimeout = original.CommandTimeout;
-			Interceptors   = original.Interceptors;
+			CommandTimeout    = original.CommandTimeout;
+			Interceptors      = original.Interceptors;
+			MemberTranslators = original.MemberTranslators;
 		}
 
 		int? _configurationID;
@@ -46,6 +48,7 @@ namespace LinqToDB
 					_configurationID = idBuilder
 						.Add(CommandTimeout)
 						.AddTypes(Interceptors)
+						.AddRange(MemberTranslators)
 						.CreateID();
 				}
 
@@ -54,21 +57,6 @@ namespace LinqToDB
 		}
 
 		public static readonly DataContextOptions Empty = new();
-
-		void IApplicable<DataConnection>.Apply(DataConnection obj)
-		{
-			DataConnection.ConfigurationApplier.Apply(obj, this);
-		}
-
-		void IApplicable<DataContext>.Apply(DataContext obj)
-		{
-			DataContext.ConfigurationApplier.Apply(obj, this);
-		}
-
-		void IApplicable<RemoteDataContextBase>.Apply(RemoteDataContextBase obj)
-		{
-			RemoteDataContextBase.ConfigurationApplier.Apply(obj, this);
-		}
 
 		#region IEquatable implementation
 

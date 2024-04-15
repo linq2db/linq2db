@@ -78,12 +78,21 @@ namespace LinqToDB
 		/// Creates database context object that uses a <see cref="DataOptions"/> to configure the connection.
 		/// </summary>
 		/// <param name="options">Options, setup ahead of time.</param>
-#pragma warning disable CS8618
 		public DataContext(DataOptions options)
 		{
-			(Options = options).Apply(this);
+			Options       = options;
+			MappingSchema = default!;
+			DataProvider  = default!;
+#pragma warning disable CA2214
+			ApplyOptions(options);
+#pragma warning restore CA2214
 		}
-#pragma warning restore CS8618
+
+		protected virtual void ApplyOptions(DataOptions options)
+		{
+			ConfigurationApplier.Apply(this, options.ConnectionOptions);
+			ConfigurationApplier.Apply(this, options.DataContextOptions);
+		}
 
 		/// <summary>
 		/// Current DataContext options

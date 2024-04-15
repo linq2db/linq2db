@@ -40,7 +40,7 @@ namespace LinqToDB.Data.RetryPolicy
 		// If you add another parameter here, don't forget to update
 		// RetryPolicyOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
-		: IOptionSet, IApplicable<DataConnection>
+		: IOptionSet
 	{
 		public RetryPolicyOptions() : this((IRetryPolicy?)null)
 		{
@@ -78,11 +78,6 @@ namespace LinqToDB.Data.RetryPolicy
 
 				return _configurationID.Value;
 			}
-		}
-
-		void IApplicable<DataConnection>.Apply(DataConnection obj)
-		{
-			DataConnection.ConfigurationApplier.Apply(obj, this);
 		}
 
 		#region IEquatable implementation

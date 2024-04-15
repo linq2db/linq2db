@@ -27,6 +27,24 @@ namespace LinqToDB.Linq.Translation
 			return new SqlFunction(dataType, functionName, parameters);
 		}
 
+		public static ISqlPredicate FuncLikePredicate(this ISqlExpressionFactory factory, ISqlExpression function)
+		{
+			if (function is not SqlFunction func)
+				throw new InvalidOperationException("Function must be of type SqlFunction.");
+
+			return new SqlPredicate.FuncLike(func);
+		}
+
+		public static ISqlPredicate ExprPredicate(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return new SqlPredicate.Expr(expression);
+		}
+
+		public static SqlSearchCondition SearchCondition(this ISqlExpressionFactory factory, bool isOr = false)
+		{
+			return new SqlSearchCondition(isOr);
+		}
+
 		public static ISqlExpression NonPureFunction(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, params ISqlExpression[] parameters)
 		{
 			return new SqlFunction(dataType, functionName, false, false, parameters);
@@ -84,6 +102,11 @@ namespace LinqToDB.Linq.Translation
 		public static ISqlExpression Add(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
 			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Additive);
+		}
+
+		public static ISqlExpression Binary(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string operation, ISqlExpression y)
+		{
+			return new SqlBinaryExpression(dbDataType, x, operation, y, Precedence.Additive);
 		}
 
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, ISqlExpression x, ISqlExpression y)

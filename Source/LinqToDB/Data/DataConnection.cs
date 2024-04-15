@@ -423,10 +423,13 @@ namespace LinqToDB.Data
 		{
 			Options = options ?? throw new ArgumentNullException(nameof(options));
 
-			options.Apply(this);
+#pragma warning disable CA2214
+			ApplyOptions(options);
+#pragma warning restore CA2214
 
 			DataProvider!.InitContext(this);
 		}
+
 #pragma warning restore CS8618
 
 		#endregion

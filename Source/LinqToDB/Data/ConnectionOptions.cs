@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
@@ -9,8 +7,6 @@ namespace LinqToDB.Data
 	using Common.Internal;
 	using DataProvider;
 	using Interceptors;
-
-	using LinqToDB.Remote;
 
 	using Mapping;
 
@@ -70,7 +66,7 @@ namespace LinqToDB.Data
 		// If you add another parameter here, don't forget to update
 		// ConnectionOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
-		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>, IApplicable<RemoteDataContextBase>
+		: IOptionSet
 	{
 		public ConnectionOptions() : this((string?)null)
 		{
@@ -125,21 +121,6 @@ namespace LinqToDB.Data
 		internal string?        SavedConnectionString;
 		internal string?        SavedConfigurationString;
 		internal bool           SavedEnableContextSchemaEdit;
-
-		void IApplicable<DataConnection>.Apply(DataConnection obj)
-		{
-			DataConnection.ConfigurationApplier.Apply(obj, this);
-		}
-
-		void IApplicable<DataContext>.Apply(DataContext obj)
-		{
-			DataContext.ConfigurationApplier.Apply(obj, this);
-		}
-
-		void IApplicable<RemoteDataContextBase>.Apply(RemoteDataContextBase obj)
-		{
-			RemoteDataContextBase.ConfigurationApplier.Apply(obj, this);
-		}
 
 		#region IEquatable implementation
 
