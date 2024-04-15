@@ -137,8 +137,8 @@ namespace LinqToDB.Linq.Builder
 			var filterLambda = Expression.Lambda(filterFunc.Body.Replace(dcParam, dcExpr), filterFunc.Parameters[0]);
 			filterLambda = (LambdaExpression)builder.ConvertExpressionTree(filterLambda);
 
-			if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null } queryInterceptable)
-				filterLambda = (LambdaExpression)queryInterceptable.Interceptor.ProcessExpression(filterLambda, new QueryExpressionArgs(builder.DataContext, filterLambda, QueryExpressionArgs.ExpressionKind.QueryFilter));
+			if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+				filterLambda = (LambdaExpression)interceptor.ProcessExpression(filterLambda, new QueryExpressionArgs(builder.DataContext, filterLambda, QueryExpressionArgs.ExpressionKind.QueryFilter));
 
 			Expression sequenceExpr = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), refExpression, filterLambda);
 

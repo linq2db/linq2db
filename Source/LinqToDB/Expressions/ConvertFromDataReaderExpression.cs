@@ -65,9 +65,9 @@ namespace LinqToDB.Expressions
 
 		public Expression Reduce(IDataContext dataContext, DbDataReader dataReader)
 		{
-			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
+			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-					dataReader = interceptable.Interceptor.UnwrapDataReader(dataContext, dataReader);
+					dataReader = interceptor.UnwrapDataReader(dataContext, dataReader);
 
 			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, _dataReaderParam, forceNullCheck: CanBeNull == true);
 		}

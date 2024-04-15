@@ -48,9 +48,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				definedQueryMethod = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
 
-				if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null } queryInterceptable)
+				if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
 				{
-					definedQueryMethod = (LambdaExpression)queryInterceptable.Interceptor.ProcessExpression(definedQueryMethod,
+					definedQueryMethod = (LambdaExpression)interceptor.ProcessExpression(definedQueryMethod,
 						new QueryExpressionArgs(builder.DataContext, definedQueryMethod, QueryExpressionArgs.ExpressionKind.AssociationExpression));
 				}
 

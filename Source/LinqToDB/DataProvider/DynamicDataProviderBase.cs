@@ -166,18 +166,18 @@ namespace LinqToDB.DataProvider
 			if (command is RetryingDbCommand rcmd)
 				command = rcmd.UnderlyingObject;
 
-			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
+			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapCommand))
-					command = interceptable.Interceptor.UnwrapCommand(dataContext, command);
+					command = interceptor.UnwrapCommand(dataContext, command);
 
 			return Adapter.CommandType.IsSameOrParentOf(command.GetType()) ? command : null;
 		}
 
 		public virtual DbConnection? TryGetProviderConnection(IDataContext dataContext, DbConnection connection)
 		{
-			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
+			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapConnection))
-					connection = interceptable.Interceptor.UnwrapConnection(dataContext, connection);
+					connection = interceptor.UnwrapConnection(dataContext, connection);
 
 			return Adapter.ConnectionType.IsSameOrParentOf(connection.GetType()) ? connection : null;
 		}
@@ -187,9 +187,9 @@ namespace LinqToDB.DataProvider
 			if (Adapter.TransactionType == null)
 				return null;
 
-			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
+			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapTransaction))
-					transaction = interceptable.Interceptor.UnwrapTransaction(dataContext, transaction);
+					transaction = interceptor.UnwrapTransaction(dataContext, transaction);
 
 			return Adapter.TransactionType.IsSameOrParentOf(transaction.GetType()) ? transaction : null;
 		}

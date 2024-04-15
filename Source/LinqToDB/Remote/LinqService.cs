@@ -341,10 +341,10 @@ namespace LinqToDB.Remote
 		{
 			DbDataReader reader;
 
-			if (db is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: not null } interceptable)
+			if (db is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 			{
 				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-					reader = interceptable.Interceptor.UnwrapDataReader(db, rd.DataReader!);
+					reader = interceptor.UnwrapDataReader(db, rd.DataReader!);
 			}
 			else
 			{
