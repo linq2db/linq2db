@@ -4,7 +4,7 @@ namespace LinqToDB.Remote
 {
 	using Interceptors;
 
-	using LinqToDB.Interceptors.Internal;
+	using Interceptors.Internal;
 
 	public abstract partial class RemoteDataContextBase :
 		IInterceptable<IDataContextInterceptor>,
@@ -15,40 +15,11 @@ namespace LinqToDB.Remote
 	{
 		// remote context interceptors support is quite limited and supports only IDataContextInterceptor
 		// interceptors, but not other interceptors, including AggregatedInterceptor<T>
-		IDataContextInterceptor? _dataContextInterceptor;
-		IDataContextInterceptor? IInterceptable<IDataContextInterceptor>.Interceptor
-		{
-			get => _dataContextInterceptor;
-			set => _dataContextInterceptor= value;
-		}
-
-		IEntityServiceInterceptor? _entityServiceInterceptor;
-		IEntityServiceInterceptor? IInterceptable<IEntityServiceInterceptor>.Interceptor
-		{
-			get => _entityServiceInterceptor;
-			set => _entityServiceInterceptor = value;
-		}
-
-		IUnwrapDataObjectInterceptor? _unwrapDataObjectInterceptor;
-		IUnwrapDataObjectInterceptor? IInterceptable<IUnwrapDataObjectInterceptor>.Interceptor
-		{
-			get => _unwrapDataObjectInterceptor;
-			set => _unwrapDataObjectInterceptor = value;
-		}
-
-		IEntityBindingInterceptor? _entityBindingInterceptor;
-		IEntityBindingInterceptor? IInterceptable<IEntityBindingInterceptor>.Interceptor
-		{
-			get => _entityBindingInterceptor;
-			set => _entityBindingInterceptor = value;
-		}
-
-		IQueryExpressionInterceptor? _queryExpressionInterceptor;
-		IQueryExpressionInterceptor? IInterceptable<IQueryExpressionInterceptor>.Interceptor
-		{
-			get => _queryExpressionInterceptor;
-			set => _queryExpressionInterceptor = value;
-		}
+		IDataContextInterceptor?      IInterceptable<IDataContextInterceptor>.     Interceptor { get; set; }
+		IEntityServiceInterceptor?    IInterceptable<IEntityServiceInterceptor>.   Interceptor { get; set; }
+		IUnwrapDataObjectInterceptor? IInterceptable<IUnwrapDataObjectInterceptor>.Interceptor { get; set; }
+		IEntityBindingInterceptor?    IInterceptable<IEntityBindingInterceptor>.   Interceptor { get; set; }
+		IQueryExpressionInterceptor?  IInterceptable<IQueryExpressionInterceptor>. Interceptor { get; set; }
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)

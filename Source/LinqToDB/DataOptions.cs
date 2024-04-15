@@ -21,13 +21,6 @@ namespace LinqToDB
 		{
 		}
 
-		IReadOnlyCollection<IInterceptor>? _interceptors;
-
-		/// <summary>
-		/// Contains registered interceptors.
-		/// </summary>
-		public IEnumerable<IInterceptor> Interceptors => _interceptors ?? Enumerable.Empty<IInterceptor>();
-
 		public DataOptions(ConnectionOptions connectionOptions)
 		{
 			_connectionOptions = connectionOptions;
@@ -41,7 +34,6 @@ namespace LinqToDB
 			_dataContextOptions = options._dataContextOptions;
 			_bulkCopyOptions    = options._bulkCopyOptions;
 			_sqlOptions         = options._sqlOptions;
-			_interceptors       = options._interceptors;
 		}
 
 		protected override DataOptions Clone()
@@ -103,27 +95,6 @@ namespace LinqToDB
 			}
 		}
 
-		public DataOptions AddInterceptor(IInterceptor interceptor)
-		{
-			var options = new DataOptions(this) { _interceptors = new List<IInterceptor>(Interceptors) { interceptor } };
-			return options;
-		}
-
-		public DataOptions AddInterceptors(IEnumerable<IInterceptor> interceptors)
-		{
-			var options = new DataOptions(this) { _interceptors = new List<IInterceptor>(Interceptors.Concat(interceptors)) };
-			return options;
-		}
-
-		public DataOptions RemoveInterceptor(IInterceptor interceptor)
-		{
-			if (_interceptors == null)
-				return this;
-
-			var options = new DataOptions(this) { _interceptors = new List<IInterceptor>(Interceptors.Except(new[] { interceptor })) };
-			return options;
-		}
-
 		[Pure]
 		public override TSet? Find<TSet>()
 			where TSet : class
@@ -155,7 +126,6 @@ namespace LinqToDB
 						.Add(DataContextOptions)
 						.Add(BulkCopyOptions)
 						.Add(SqlOptions)
-						.AddRange(Interceptors)
 						.AddRange(base.OptionSets)
 						.CreateID();
 				}

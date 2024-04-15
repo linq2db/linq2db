@@ -226,7 +226,7 @@ namespace Tests.Linq
 		[Test]
 		public void EnrichSimple([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.AddInterceptor(new EnrichInterceptor())))
+			using (var db = GetDataContext(context, o => o.UseInterceptor(new EnrichInterceptor())))
 			using (var users = db.CreateLocalTable(new[]
 				   {
 					   new User { UserId = 1, FirstName = "First", LastName = "Last", Supervisor = "Sup" }
@@ -260,7 +260,7 @@ namespace Tests.Linq
 		[Test]
 		public void EnrichViaQueryableMethod([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.AddInterceptor(new EnrichInterceptor())))
+			using (var db = GetDataContext(context, o => o.UseInterceptor(new EnrichInterceptor())))
 			using (var users = db.CreateLocalTable(new[]
 			       {
 				       new User { UserId = 1, FirstName = "First", LastName = "Last", Supervisor = "Sup" }

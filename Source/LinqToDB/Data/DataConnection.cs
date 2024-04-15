@@ -20,6 +20,7 @@ namespace LinqToDB.Data
 	using RetryPolicy;
 	using Tools;
 	using Infrastructure;
+	using Interceptors;
 
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines.
@@ -683,16 +684,16 @@ namespace LinqToDB.Data
 
 				if (connect && _connection.State == ConnectionState.Closed)
 				{
-					if (_connectionInterceptor != null)
+					if (((IInterceptable<IConnectionInterceptor>)this).Interceptor != null)
 						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
-							_connectionInterceptor.ConnectionOpening(new(this), _connection.Connection);
+							((IInterceptable<IConnectionInterceptor>)this).Interceptor.ConnectionOpening(new(this), _connection.Connection);
 
 					_connection.Open();
 					_closeConnection = true;
 
-					if (_connectionInterceptor != null)
+					if (((IInterceptable<IConnectionInterceptor>)this).Interceptor != null)
 						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
-							_connectionInterceptor.ConnectionOpened(new(this), _connection.Connection);
+							((IInterceptable<IConnectionInterceptor>)this).Interceptor.ConnectionOpened(new(this), _connection.Connection);
 				}
 			}
 			catch (Exception ex)
@@ -718,9 +719,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void Close()
 		{
-			if (_dataContextInterceptor != null)
+			if (((IInterceptable<IDataContextInterceptor>)this).Interceptor != null)
 				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosing))
-					_dataContextInterceptor.OnClosing(new(this));
+					((IInterceptable<IDataContextInterceptor>)this).Interceptor.OnClosing(new(this));
 
 			DisposeCommand();
 
@@ -741,9 +742,9 @@ namespace LinqToDB.Data
 					_connection.Close();
 			}
 
-			if (_dataContextInterceptor != null)
+			if (((IInterceptable<IDataContextInterceptor>)this).Interceptor != null)
 				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosed))
-					_dataContextInterceptor.OnClosed(new (this));
+					((IInterceptable<IDataContextInterceptor>)this).Interceptor.OnClosed(new (this));
 		}
 
 		#endregion
@@ -782,9 +783,9 @@ namespace LinqToDB.Data
 
 		internal void CommitCommandInit()
 		{
-			if (_commandInterceptor != null)
+			if (((IInterceptable<ICommandInterceptor>)this).Interceptor != null)
 				using (ActivityService.Start(ActivityID.CommandInterceptorCommandInitialized))
-					_command = _commandInterceptor.CommandInitialized(new (this), _command!);
+					_command = ((IInterceptable<ICommandInterceptor>)this).Interceptor.CommandInitialized(new (this), _command!);
 
 			LastQuery = _command!.CommandText;
 		}
@@ -850,14 +851,14 @@ namespace LinqToDB.Data
 
 		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
-			if (_commandInterceptor == null)
+			if (((IInterceptable<ICommandInterceptor>)this).Interceptor == null)
 				using(ActivityService.Start(ActivityID.CommandExecuteNonQuery))
 					return command.ExecuteNonQuery();
 
 			Option<int> result;
 
 			using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
-				result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+				result = ((IInterceptable<ICommandInterceptor>)this).Interceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
 
 			if (result.HasValue)
 				return result.Value;
@@ -926,13 +927,13 @@ namespace LinqToDB.Data
 
 		internal int ExecuteNonQueryCustom(DbCommand command, Func<DbCommand, int> customExecute)
 		{
-			if (_commandInterceptor == null)
+			if (((IInterceptable<ICommandInterceptor>)this).Interceptor == null)
 				return customExecute(command);
 
 			Option<int> result;
 
 			using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
-				result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+				result = ((IInterceptable<ICommandInterceptor>)this).Interceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
 
 			return result.HasValue
 				? result.Value
@@ -1004,9 +1005,9 @@ namespace LinqToDB.Data
 		{
 			var result = Option<object?>.None;
 
-			if (_commandInterceptor != null)
+			if (((IInterceptable<ICommandInterceptor>)this).Interceptor != null)
 				using (ActivityService.Start(ActivityID.CommandInterceptorExecuteScalar))
-					result = _commandInterceptor.ExecuteScalar(new (this), command, result);
+					result = ((IInterceptable<ICommandInterceptor>)this).Interceptor.ExecuteScalar(new (this), command, result);
 
 			if (result.HasValue)
 				return result.Value;
@@ -1080,9 +1081,9 @@ namespace LinqToDB.Data
 		{
 			var result = Option<DbDataReader>.None;
 
-			if (_commandInterceptor != null)
+			if (((IInterceptable<ICommandInterceptor>)this).Interceptor != null)
 				using (ActivityService.Start(ActivityID.CommandInterceptorExecuteReader))
-					result = _commandInterceptor.ExecuteReader(new (this), _command!, commandBehavior, result);
+					result = ((IInterceptable<ICommandInterceptor>)this).Interceptor.ExecuteReader(new (this), _command!, commandBehavior, result);
 
 			DbDataReader? rd;
 
@@ -1096,9 +1097,9 @@ namespace LinqToDB.Data
 				rd = _command!.ExecuteReader(commandBehavior);
 			}
 
-			if (_commandInterceptor != null)
+			if (((IInterceptable<ICommandInterceptor>)this).Interceptor != null)
 				using (ActivityService.Start(ActivityID.CommandInterceptorAfterExecuteReader))
-					_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
+					((IInterceptable<ICommandInterceptor>)this).Interceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
 
 			var wrapper = new DataReaderWrapper(this, rd, _command!);
 
