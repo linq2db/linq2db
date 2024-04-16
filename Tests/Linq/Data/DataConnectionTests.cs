@@ -424,7 +424,7 @@ namespace Tests.Data
 		{
 			var collection = new ServiceCollection();
 
-			collection.AddLinqToDBContext<DbConnection5>((serviceProvider, options) =>
+			collection.AddLinqToDBContext<DbConnection5>((_, options) =>
 				options.UseConfigurationString(context).WithOptions<DataContextOptions>(o => o with { CommandTimeout = 91 }));
 
 			var provider = collection.BuildServiceProvider();

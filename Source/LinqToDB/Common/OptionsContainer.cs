@@ -78,10 +78,9 @@ namespace LinqToDB.Common
 		/// Search for options set by set type <typeparamref name="TSet"/>.
 		/// </summary>
 		/// <typeparam name="TSet">Options set type.</typeparam>
-		/// <param name="createKnownOptions">if <see langword="true" />, the implementation should create a new instance of the known option type set if none is found.</param>
 		/// <returns>Options set or <c>null</c> if set with type <typeparamref name="TSet"/> not found in options.</returns>
 		[Pure]
-		public virtual TSet? Find<TSet>(bool createKnownOptions)
+		public virtual TSet? Find<TSet>()
 			where TSet : class, IOptionSet
 		{
 			if (_sets?.TryGetValue(typeof(TSet), out var set) == true)
@@ -94,7 +93,7 @@ namespace LinqToDB.Common
 		public TSet FindOrDefault<TSet>(TSet defaultOptions)
 			where TSet : class, IOptionSet
 		{
-			return Find<TSet>(false) ?? defaultOptions;
+			return Find<TSet>() ?? defaultOptions;
 		}
 
 		readonly object _sync = new ();
@@ -110,7 +109,7 @@ namespace LinqToDB.Common
 		public virtual TSet Get<TSet>()
 			where TSet : class, IOptionSet, new()
 		{
-			if (Find<TSet>(true) is { } set)
+			if (Find<TSet>() is { } set)
 				return set;
 
 			lock (_sync)
