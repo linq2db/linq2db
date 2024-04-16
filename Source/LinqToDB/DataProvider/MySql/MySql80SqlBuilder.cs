@@ -1,0 +1,42 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+
+namespace LinqToDB.DataProvider.MySql
+{
+	using Extensions;
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
+
+	sealed class MySql80SqlBuilder : MySqlSqlBuilder
+	{
+		public MySql80SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
+		{
+		}
+
+		MySql80SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new MySql80SqlBuilder(this) { HintBuilder = HintBuilder };
+		}
+
+		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
+		{
+			switch (join.JoinType)
+			{
+				case JoinType.CrossApply: StringBuilder.Append("INNER JOIN LATERAL "); return true;
+				case JoinType.OuterApply: StringBuilder.Append("LEFT JOIN LATERAL "); return true;
+			}
+
+			return base.BuildJoinType(join, condition);
+		}
+	}
+}

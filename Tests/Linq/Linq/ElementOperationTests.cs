@@ -92,7 +92,8 @@ namespace Tests.Linq
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
 			TestProvName.AllClickHouse,
-			TestProvName.AllSybase)]
+			TestProvName.AllSybase,
+			TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

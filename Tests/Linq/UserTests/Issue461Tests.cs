@@ -209,7 +209,7 @@ namespace Tests.UserTests
 
 		// Sybase do not supports limiting subqueries
 		[Test]
-		public void SelectPlainTest1([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void SelectPlainTest1([DataSources(TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -222,7 +222,7 @@ namespace Tests.UserTests
 
 		// Sybase do not supports limiting subqueries
 		[Test]
-		public void SelectPlainTest2([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void SelectPlainTest2([DataSources(TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

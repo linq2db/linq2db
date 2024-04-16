@@ -420,17 +420,6 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(')');
 		}
 
-		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
-		{
-			switch (join.JoinType)
-			{
-				case JoinType.CrossApply: StringBuilder.Append("INNER JOIN LATERAL "); return true;
-				case JoinType.OuterApply: StringBuilder.Append("LEFT JOIN LATERAL " ); return true;
-			}
-
-			return base.BuildJoinType(join, condition);
-		}
-
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			if (name.Database != null)

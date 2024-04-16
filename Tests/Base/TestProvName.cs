@@ -72,6 +72,10 @@ namespace Tests
 		/// </summary>
 		public const string AllMySql57        = $"{MySql57},{MySql57Connector}";
 		/// <summary>
+		/// MySQL 5.7.
+		/// </summary>
+		public const string AllMySql80        = $"{MySql80},{MySql80Connector}";
+		/// <summary>
 		/// MySQL 8.x and MariaDB.
 		/// </summary>
 		public const string AllMySql8Plus     = $"{MySql80},{MySql80Connector},{MariaDB11Connector}";
@@ -82,7 +86,7 @@ namespace Tests
 		/// <summary>
 		/// MySQL/MariaDB with LATERAL support.
 		/// </summary>
-		public const string AllMySqlWithApply = $"{MySql80},{MySql80Connector}";
+		public const string AllMySqlWithApply = AllMySql80;
 		#endregion
 
 		#region PostgreSQL

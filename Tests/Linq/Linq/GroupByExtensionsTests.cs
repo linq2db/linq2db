@@ -89,7 +89,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByRollupGroupingMany([IncludeDataSources(true,
-			TestProvName.AllMySqlServer, TestProvName.AllClickHouse)] string context)
+			TestProvName.AllMySql80, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
