@@ -17,27 +17,9 @@ namespace LinqToDB.DataProvider.SQLite
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		[Obsolete("Use SQLiteOptions.Default.AlwaysCheckDbNull instead.")]
-		public static bool AlwaysCheckDbNull
-		{
-			get => SQLiteOptions.Default.AlwaysCheckDbNull;
-			set => SQLiteOptions.Default = SQLiteOptions.Default with { AlwaysCheckDbNull = value };
-		}
-
 		public static IDataProvider GetDataProvider(SQLiteProvider provider = SQLiteProvider.AutoDetect, string? connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), provider, default);
-		}
-
-		[Obsolete($"Use overload with {nameof(SQLiteProvider)} parameter")]
-		public static IDataProvider GetDataProvider(string? providerName = null, string? connectionString = null)
-		{
-			return providerName switch
-			{
-				ProviderName.SQLiteClassic => GetDataProvider(SQLiteProvider.System, connectionString),
-				ProviderName.SQLiteMS      => GetDataProvider(SQLiteProvider.Microsoft, connectionString),
-				_                          => GetDataProvider(SQLiteProvider.AutoDetect, connectionString),
-			};
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
 		}
 
 		public static void ResolveSQLite(string path, string? assemblyName = null)
@@ -54,35 +36,17 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static DataConnection CreateDataConnection(string connectionString, SQLiteProvider provider = SQLiteProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider, connectionString), connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, SQLiteProvider provider = SQLiteProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, SQLiteProvider provider = SQLiteProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), transaction);
-		}
-
-		[Obsolete($"Use overload with {nameof(SQLiteProvider)} parameter")]
-		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName, connectionString), connectionString);
-		}
-
-		[Obsolete($"Use overload with {nameof(SQLiteProvider)} parameter")]
-		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), connection);
-		}
-
-		[Obsolete($"Use overload with {nameof(SQLiteProvider)} parameter")]
-		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), transaction);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
 		}
 
 		#endregion
@@ -126,39 +90,5 @@ namespace LinqToDB.DataProvider.SQLite
 				((SQLiteDataProvider)SQLiteProviderDetector._SQLiteClassicDataProvider.Value).Adapter.ClearAllPools?.Invoke();
 			}
 		}
-
-		/// <summary>
-		/// Invokes ClearAllPools() method for specified provider.
-		/// </summary>
-		/// <param name="providerName">For which provider ClearAllPools should be called:
-		/// <list type="bullet">
-		/// <item><see cref="ProviderName.SQLiteClassic"/>: System.Data.SQLite</item>
-		/// <item><see cref="ProviderName.SQLiteMS"/>: Microsoft.Data.Sqlite</item>
-		/// <item><c>null</c>: both (any)</item>
-		/// </list>
-		/// </param>
-		[Obsolete($"Use overload with {nameof(SQLiteProvider)} parameter")]
-		public static void ClearAllPools(string? providerName = null)
-		{
-			var provider = providerName switch
-			{
-				ProviderName.SQLiteClassic => SQLiteProvider.System,
-				ProviderName.SQLiteMS      => SQLiteProvider.Microsoft,
-				_                          => (SQLiteProvider?)null,
-			};
-
-			ClearAllPools(provider);
-		}
-
-		#region BulkCopy
-
-		[Obsolete("Use SQLiteOptions.Default.BulkCopyType instead.")]
-		public static BulkCopyType DefaultBulkCopyType
-		{
-			get => SQLiteOptions.Default.BulkCopyType;
-			set => SQLiteOptions.Default = SQLiteOptions.Default with { BulkCopyType = value };
-		}
-
-		#endregion
 	}
 }

@@ -39,12 +39,21 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		public MySqlProvider ProviderType    { get; protected set; }
+#region IDynamicProviderAdapter
+
 		public Type          ConnectionType  { get; protected set; } = null!;
 		public Type          DataReaderType  { get; protected set; } = null!;
 		public Type          ParameterType   { get; protected set; } = null!;
 		public Type          CommandType     { get; protected set; } = null!;
 		public Type          TransactionType { get; protected set; } = null!;
+
+		Func<string, DbConnection> _connectionFactory = null!;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
+
+
+		public MySqlProvider ProviderType    { get; protected set; }
 		public MappingSchema MappingSchema   { get; protected set; } = null!;
 
 		/// <summary>
@@ -86,8 +95,6 @@ namespace LinqToDB.DataProvider.MySql
 		public bool             IsDateOnlySupported { get; protected set; }
 
 		public abstract bool    IsPackageProceduresSupported { get; }
-
-		internal Func<string, MySqlConnection> CreateConnection { get; set; } = null!;
 
 		public class BulkCopyAdapter
 		{
@@ -169,7 +176,7 @@ namespace LinqToDB.DataProvider.MySql
 					var toDoubleConverter  = typeMapper.MapLambda((MySqlDecimal d) => d.ToDouble());
 					var dateTimeConverter  = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
 
-					CreateConnection = typeMapper.BuildWrappedFactory((string connectionString) => new MySqlConnection(connectionString));
+					_connectionFactory = typeMapper.BuildTypedFactory<string, MySqlConnection, DbConnection>((string connectionString) => new MySqlConnection(connectionString));
 
 					var mappingSchema = new MySqlDataAdapterMappingSchema();
 
@@ -210,7 +217,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			sealed class MySqlDataAdapterMappingSchema : LockedMappingSchema
 			{
-				public MySqlDataAdapterMappingSchema() : base("MySqlDataAdapter")
+				public MySqlDataAdapterMappingSchema() : base("MySql.Data")
 				{
 				}
 			}
@@ -351,7 +358,7 @@ namespace LinqToDB.DataProvider.MySql
 					else
 						typeMapper.FinalizeMappings();
 
-					CreateConnection = typeMapper.BuildWrappedFactory((string connectionString) => new MySqlConnection(connectionString));
+					_connectionFactory = typeMapper.BuildTypedFactory<string, MySqlConnection, DbConnection>((string connectionString) => new MySqlConnection(connectionString));
 
 					var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
 					var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
@@ -405,7 +412,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			sealed class MySqlConnectorAdapterMappingSchema : LockedMappingSchema
 			{
-				public MySqlConnectorAdapterMappingSchema() : base("MySqlConnectorAdapter")
+				public MySqlConnectorAdapterMappingSchema() : base("MySqlConnector")
 				{
 				}
 			}
@@ -697,27 +704,9 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		[Wrapper]
-		internal sealed class MySqlConnection : TypeWrapper, IConnectionWrapper
+		internal sealed class MySqlConnection
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-					// [0]: Open
-					(Expression<Action<MySqlConnection>>)((MySqlConnection this_) => this_.Open()),
-					// [1]: Dispose
-					(Expression<Action<MySqlConnection>>)((MySqlConnection this_) => this_.Dispose()),
-			};
-
-			public MySqlConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
 			public MySqlConnection(string connectionString) => throw new NotImplementedException();
-
-			public void Open() => ((Action<MySqlConnection>)CompiledWrappers[0])(this);
-			public void Dispose() => ((Action<MySqlConnection>)CompiledWrappers[1])(this);
-
-			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 	}
 }

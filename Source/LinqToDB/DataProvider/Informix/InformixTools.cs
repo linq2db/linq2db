@@ -17,64 +17,24 @@ namespace LinqToDB.DataProvider.Informix
 
 		public static IDataProvider GetDataProvider(InformixProvider provider = InformixProvider.AutoDetect, string? connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), provider, default);
-		}
-
-		[Obsolete($"Use overload with {nameof(InformixProvider)} parameter")]
-		public static IDataProvider GetDataProvider(string? providerName = null, string? connectionString = null)
-		{
-			return providerName switch
-			{
-				ProviderName.Informix    => GetDataProvider(InformixProvider.Informix, connectionString),
-				ProviderName.InformixDB2 => GetDataProvider(InformixProvider.DB2, connectionString),
-				_                        => GetDataProvider(InformixProvider.AutoDetect, connectionString),
-			};
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, InformixProvider provider = InformixProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider, connectionString), connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, InformixProvider provider = InformixProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, InformixProvider provider = InformixProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), transaction);
-		}
-
-		[Obsolete($"Use overload with {nameof(InformixProvider)} parameter")]
-		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName, connectionString), connectionString);
-		}
-
-		[Obsolete($"Use overload with {nameof(InformixProvider)} parameter")]
-		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), connection);
-		}
-
-		[Obsolete($"Use overload with {nameof(InformixProvider)} parameter")]
-		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), transaction);
-		}
-
-		#endregion
-
-		#region BulkCopy
-
-		[Obsolete("Use InformixOptions.Default.BulkCopyType instead.")]
-		public static BulkCopyType DefaultBulkCopyType
-		{
-			get => InformixOptions.Default.BulkCopyType;
-			set => InformixOptions.Default = InformixOptions.Default with { BulkCopyType = value };
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
 		}
 
 		#endregion

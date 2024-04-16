@@ -424,8 +424,8 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			switch (join.JoinType)
 			{
-				case JoinType.CrossApply: StringBuilder.Append("LATERAL "); return true;
-				case JoinType.OuterApply: StringBuilder.Append("LEFT JOIN LATERAL "); return true;
+				case JoinType.CrossApply: StringBuilder.Append("INNER JOIN LATERAL "); return true;
+				case JoinType.OuterApply: StringBuilder.Append("LEFT JOIN LATERAL " ); return true;
 			}
 
 			return base.BuildJoinType(join, condition);

@@ -52,22 +52,22 @@ namespace LinqToDB
 		/// Firebird 2.5 provider.
 		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird25MappingSchema"/>.
 		/// </summary>
-		public const string Firebird25      = "Firebird2_5";
+		public const string Firebird25      = "Firebird.2.5";
 		/// <summary>
 		/// Firebird 3 provider.
 		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird3MappingSchema"/>.
 		/// </summary>
-		public const string Firebird3      = "Firebird3";
+		public const string Firebird3      = "Firebird.3";
 		/// <summary>
 		/// Firebird 4 provider.
 		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird4MappingSchema"/>.
 		/// </summary>
-		public const string Firebird4      = "Firebird4";
+		public const string Firebird4      = "Firebird.4";
 		/// <summary>
 		/// Firebird 5 provider.
 		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird5MappingSchema"/>.
 		/// </summary>
-		public const string Firebird5      = "Firebird5";
+		public const string Firebird5      = "Firebird.5";
 		/// <summary>
 		/// Informix IBM.Data.Informix provider (including IDS provider).
 		/// Used as configuration name for Informix mapping schema <see cref="DataProvider.Informix.InformixMappingSchema"/>.
@@ -128,37 +128,36 @@ namespace LinqToDB
 		/// </summary>
 		public const string MySql         = "MySql";
 		/// <summary>
-		/// MariaDB provider.
-		/// Used as an additional configuration name for MySql mapping schema <see cref="MySqlMappingSchema"/>.
+		/// MySql 5.7.x using MySql.Data provider.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySqlData57MappingSchema"/>.
 		/// </summary>
-		public const string MariaDB       = "MariaDB";
+		public const string MySql57MySqlData = "MySql.5.7.MySql.Data";
 		/// <summary>
-		/// MySql 5.7.x provider.
-		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySql57MappingSchema"/>.
+		/// MySql 5.7.x using MySqlConnector provider.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySqlConnector57MappingSchema"/>.
 		/// </summary>
-		public const string MySql57         = "MySql57";
+		public const string MySql57MySqlConnector = "MySql.5.7.MySqlConnector";
 		/// <summary>
-		/// MySql 8.0.x provider.
-		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySql80MappingSchema"/>.
+		/// MySql 8.x using MySql.Data provider.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySqlData80MappingSchema"/>.
 		/// </summary>
-		public const string MySql80         = "MySql80";
+		public const string MySql80MySqlData = "MySql.8.0.MySql.Data";
 		/// <summary>
-		/// MariaDB 10+ provider.
-		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MariaDB10MappingSchema"/>.
+		/// MySql 8.x using MySqlConnector provider.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySqlConnector80MappingSchema"/>.
 		/// </summary>
-		public const string MariaDB10       = "MariaDB10";
+		public const string MySql80MySqlConnector = "MySql.8.0.MySqlConnector";
 		/// <summary>
-		/// MySql provider.
-		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema"/>.
+		/// MariaDB 10+ using MySql.Data provider.
+		/// Used as configuration name for MariaDB mapping schema <see cref="MySqlMappingSchema.MySqlDataMariaDB10MappingSchema"/>.
 		/// </summary>
-		[Obsolete($"Use {nameof(MySqlProvider)}.{nameof(MySqlProvider.MySqlData)} enumeration value instead")]
-		public const string MySqlOfficial = "MySql.Official";
+		public const string MariaDB10MySqlData = "MariaDB.10.MySql.Data";
 		/// <summary>
-		/// MySqlConnector provider.
-		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema"/>.
+		/// MariaDB 10+ using MySqlConnector provider.
+		/// Used as configuration name for MariaDB mapping schema <see cref="MySqlMappingSchema.MySqlConnectorMariaDB10MappingSchema"/>.
 		/// </summary>
-		[Obsolete($"Use {nameof(MySqlProvider)}.{nameof(MySqlProvider.MySqlConnector)} enumeration value instead")]
-		public const string MySqlConnector = "MySqlConnector";
+		public const string MariaDB10MySqlConnector = "MariaDB.10.MySqlConnector";
+
 		/// <summary>
 		/// Oracle ODP.NET autodetected provider (native or managed).
 		/// Used as configuration name for Oracle base mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema"/>.

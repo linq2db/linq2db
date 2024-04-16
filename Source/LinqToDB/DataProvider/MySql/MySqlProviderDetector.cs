@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Common;
 	using Data;
 
-	sealed class MySqlProviderDetector : ProviderDetectorBase<MySqlProvider, MySqlVersion, MySqlProviderAdapter.MySqlConnection>
+	sealed class MySqlProviderDetector : ProviderDetectorBase<MySqlProvider, MySqlVersion>
 	{
 		public MySqlProviderDetector() : base(MySqlVersion.AutoDetect, MySqlVersion.MySql57)
 		{
@@ -40,15 +40,23 @@ namespace LinqToDB.DataProvider.MySql
 					if (options.ConfigurationString?.Contains("MySql") == true)
 						goto case ProviderName.MySql;
 					if (options.ConfigurationString?.Contains("MariaDB") == true)
-						goto case ProviderName.MariaDB;
+						goto case "MariaDB";
 					break;
-				case ProviderName.MySql57:
-					return GetDataProvider(options, provider, MySqlVersion.MySql57);
-				case ProviderName.MySql80:
-					return GetDataProvider(options, provider, MySqlVersion.MySql80);
-				case ProviderName.MariaDB:
-				case ProviderName.MariaDB10:
+				case ProviderName.MySql57MySqlData:
+					return GetDataProvider(options, MySqlProvider.MySqlData, MySqlVersion.MySql57);
+				case ProviderName.MySql57MySqlConnector:
+					return GetDataProvider(options, MySqlProvider.MySqlConnector, MySqlVersion.MySql57);
+				case ProviderName.MySql80MySqlData:
+					return GetDataProvider(options, MySqlProvider.MySqlData, MySqlVersion.MySql80);
+				case ProviderName.MySql80MySqlConnector:
+					return GetDataProvider(options, MySqlProvider.MySqlConnector, MySqlVersion.MySql80);
+				case ProviderName.MariaDB10MySqlData:
+					return GetDataProvider(options, MySqlProvider.MySqlData, MySqlVersion.MariaDB10);
+				case ProviderName.MariaDB10MySqlConnector:
+					return GetDataProvider(options, MySqlProvider.MySqlConnector, MySqlVersion.MariaDB10);
+				case "MariaDB":
 					return GetDataProvider(options, provider, MySqlVersion.MariaDB10);
+				case MySqlProviderAdapter.MySqlConnectorNamespace:
 				case ProviderName.MySql:
 					if (options.ConfigurationString?.Contains("5.") == true
 						|| options.ProviderName?    .Contains("55") == true
@@ -111,9 +119,9 @@ namespace LinqToDB.DataProvider.MySql
 				: MySqlProvider.MySqlConnector;
 		}
 
-		public override MySqlVersion? DetectServerVersion(MySqlProviderAdapter.MySqlConnection connection)
+		public override MySqlVersion? DetectServerVersion(DbConnection connection)
 		{
-			using var cmd = ((IConnectionWrapper)connection).Connection.CreateCommand();
+			using var cmd = connection.CreateCommand();
 
 			cmd.CommandText = "SELECT VERSION()";
 			var versionString = cmd.ExecuteScalar() as string;
@@ -145,7 +153,7 @@ namespace LinqToDB.DataProvider.MySql
 			return MySqlVersion.MySql80;
 		}
 
-		protected override MySqlProviderAdapter.MySqlConnection CreateConnection(MySqlProvider provider, string connectionString)
+		protected override DbConnection CreateConnection(MySqlProvider provider, string connectionString)
 		{
 			return MySqlProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
 		}

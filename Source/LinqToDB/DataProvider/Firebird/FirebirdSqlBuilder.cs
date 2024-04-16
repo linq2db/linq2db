@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		FirebirdSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected FirebirdSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 

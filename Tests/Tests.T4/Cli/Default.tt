@@ -23,10 +23,10 @@
 	RunCliTool("Access"         , null                 , "Cli.Default.Access.OleDb"       , Path.Combine(targetDir, "AccessOleDb")        , mode, connectionString: accessOleDbCN);
 	RunCliTool("Access"         , null                 , "Cli.Default.Access.Both"        , Path.Combine(targetDir, "AccessBoth")         , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN);
 	RunCliTool("DB2"            , "DB2"                , "Cli.Default.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation);
-	RunCliTool("Firebird"       , "Firebird5"          , "Cli.Default.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode);
+	RunCliTool("Firebird"       , "Firebird.5"          , "Cli.Default.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode);
 	RunCliTool("Informix"       , "Informix.DB2"       , "Cli.Default.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation);
-	RunCliTool("MySQL"          , "MariaDB"            , "Cli.Default.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode);
-	RunCliTool("MySQL"          , "MySqlConnector"     , "Cli.Default.MySql"              , Path.Combine(targetDir, "MySql")              , mode);
+	RunCliTool("MySQL"          , "MariaDB.11"         , "Cli.Default.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode);
+	RunCliTool("MySQL"          , "MySqlConnector.8.0" , "Cli.Default.MySql"              , Path.Combine(targetDir, "MySql")              , mode);
 	RunCliTool("Oracle"         , "Oracle.11.Managed"  , "Cli.Default.Oracle"             , Path.Combine(targetDir, "Oracle")             , mode);
 	RunCliTool("PostgreSQL"     , "PostgreSQL.10"      , "Cli.Default.PostgreSQL"         , Path.Combine(targetDir, "PostgreSQL")         , mode);
 	RunCliTool("SapHana"        , "SapHana.Native"     , "Cli.Default.SapHana"            , Path.Combine(targetDir, "SapHana")            , mode);

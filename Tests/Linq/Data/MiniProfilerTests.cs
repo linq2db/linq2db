@@ -328,7 +328,7 @@ namespace Tests.Data
 				providerType = db.DataProvider.GetType();
 			}
 
-			var provider = (FirebirdDataProvider)Activator.CreateInstance(providerType)!;
+			var provider = (MySqlDataProvider)Activator.CreateInstance(providerType)!;
 
 			// AllowZeroDateTime is to enable MySqlDateTime type
 			using (var db = CreateDataConnection(provider, context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
@@ -435,7 +435,7 @@ namespace Tests.Data
 				providerType = db.DataProvider.GetType();
 			}
 
-			var provider = (FirebirdDataProvider)Activator.CreateInstance(providerType)!;
+			var provider = (MySqlDataProvider)Activator.CreateInstance(providerType)!;
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			// AllowZeroDateTime is to enable MySqlDateTime type
@@ -518,7 +518,7 @@ namespace Tests.Data
 				providerType = db.DataProvider.GetType();
 			}
 
-			var provider = (FirebirdDataProvider)Activator.CreateInstance(providerType)!;
+			var provider = (MySqlDataProvider)Activator.CreateInstance(providerType)!;
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var connectionTypeName = "MySqlConnector.MySqlConnection, MySqlConnector";
@@ -677,7 +677,7 @@ namespace Tests.Data
 				{
 					cn.Open();
 
-					Assert.That(cn.eServerType, Is.EqualTo(DB2ProviderAdapter.DB2ServerTypes.DB2_UW));
+					Assert.That(DB2ProviderAdapter.Instance.ConnectionWrapper(cn).eServerType, Is.EqualTo(DB2ProviderAdapter.DB2ServerTypes.DB2_UW));
 				}
 			}
 		}
@@ -1829,13 +1829,15 @@ namespace Tests.Data
 				{
 					cn.Open();
 
-					Assert.That(cn.PostgreSqlVersion.Major, Is.EqualTo(serverVersion / 10000));
+					var version = ((PostgreSQLDataProvider)db.DataProvider).Adapter.ConnectionWrapper(cn).PostgreSqlVersion;
+
+					Assert.That(version.Major, Is.EqualTo(serverVersion / 10000));
 
 					// machine-readable version number... sure
-					if (cn.PostgreSqlVersion.Major == 9)
-						Assert.That(cn.PostgreSqlVersion.Minor, Is.EqualTo((serverVersion / 100) % 100));
+					if (version.Major == 9)
+						Assert.That(version.Minor, Is.EqualTo((serverVersion / 100) % 100));
 					else
-						Assert.That(cn.PostgreSqlVersion.Minor, Is.EqualTo(serverVersion % 100));
+						Assert.That(version.Minor, Is.EqualTo(serverVersion % 100));
 
 				}
 

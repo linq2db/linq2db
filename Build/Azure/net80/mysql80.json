@@ -1,7 +1,8 @@
 ﻿{
 	"NET80.Azure": {
 		"Providers": [
-			"Firebird.4"
+			"MySql.8.0",
+			"MySqlConnector.8.0"
 		]
 	}
 }

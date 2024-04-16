@@ -18,7 +18,9 @@ namespace Tests.Linq
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllPostgreSQL93Plus,
-				TestProvName.AllOracle12Plus)]
+				TestProvName.AllOracle12Plus,
+				TestProvName.AllMySql8Plus,
+				TestProvName.AllSapHana)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";

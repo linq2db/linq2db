@@ -21,38 +21,45 @@ namespace LinqToDB.DataProvider.SQLite
 		public const string MicrosoftDataSQLiteClientNamespace = "Microsoft.Data.Sqlite";
 
 		private SQLiteProviderAdapter(
-			Type                           connectionType,
-			Type                           dataReaderType,
-			Type                           parameterType,
-			Type                           commandType,
-			Type                           transactionType,
-			bool                           disposeCommandOnError,
-			bool                           supportsRowValue,
-			bool                           supportsUpdateFrom,
-			bool                           supportsDateOnly,
-			Action?                        clearAllPulls,
-			Func<string, SQLiteConnection> connectionFactory)
+			Type                       connectionType,
+			Type                       dataReaderType,
+			Type                       parameterType,
+			Type                       commandType,
+			Type                       transactionType,
+			Func<string, DbConnection> connectionFactory,
+			bool                       disposeCommandOnError,
+			bool                       supportsRowValue,
+			bool                       supportsUpdateFrom,
+			bool                       supportsDateOnly,
+			Action?                    clearAllPulls)
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			TransactionType    = transactionType;
+			_connectionFactory = connectionFactory;
 
 			DisposeCommandOnError = disposeCommandOnError;
 			SupportsRowValue      = supportsRowValue;
 			SupportsUpdateFrom    = supportsUpdateFrom;
 			SupportsDateOnly      = supportsDateOnly;
 
-			ClearAllPools    = clearAllPulls;
-			CreateConnection = connectionFactory;
+			ClearAllPools      = clearAllPulls;
 		}
+
+#region IDynamicProviderAdapter
 
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
+
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
 
 		/// <summary>
 		/// Enables workaround for https://github.com/aspnet/EntityFrameworkCore/issues/17521
@@ -68,8 +75,6 @@ namespace LinqToDB.DataProvider.SQLite
 		internal bool SupportsDateOnly { get; }
 
 		public Action? ClearAllPools { get; }
-
-		internal Func<string, SQLiteConnection> CreateConnection { get; }
 
 		private static SQLiteProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string prefix)
 		{
@@ -88,7 +93,14 @@ namespace LinqToDB.DataProvider.SQLite
 			var version = assembly.GetName().Version;
 
 			var typeMapper = new TypeMapper();
-			typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
+			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			{
+				typeMapper.RegisterTypeWrapper<SqliteConnection>(connectionType);
+			}
+			else
+			{
+				typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
+			}
 			typeMapper.FinalizeMappings();
 
 			Action? clearAllPools = null;
@@ -97,7 +109,6 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				if (version >= ClearPoolsMinVersionMDS)
 				{
-					// !!! note type name casing
 					clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SqliteConnection.ClearAllPools()));
 				}
 			}
@@ -109,7 +120,16 @@ namespace LinqToDB.DataProvider.SQLite
 			var supportsRowValue   = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? RowValueMinVersionMDS   : RowValueMinVersionSDS);
 			var supportsUpdateFrom = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? UpdateFromMinVersionMDS : UpdateFromMinVersionSDS);
 			var supportsDateOnly   = clientNamespace == MicrosoftDataSQLiteClientNamespace && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
-			var connectionFactory  = typeMapper.BuildWrappedFactory((string connectionString) => new SQLiteConnection(connectionString));
+
+			Func<string, DbConnection> connectionFactory;
+			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			{
+				connectionFactory = typeMapper.BuildTypedFactory<string, SqliteConnection, DbConnection>((string connectionString) => new SqliteConnection(connectionString));
+			}
+			else
+			{
+				connectionFactory = typeMapper.BuildTypedFactory<string, SQLiteConnection, DbConnection>((string connectionString) => new SQLiteConnection(connectionString));
+			}
 
 			return new SQLiteProviderAdapter(
 				connectionType,
@@ -117,12 +137,12 @@ namespace LinqToDB.DataProvider.SQLite
 				parameterType,
 				commandType,
 				transactionType,
+				connectionFactory,
 				disposeCommandOnError,
 				supportsRowValue,
 				supportsUpdateFrom,
 				supportsDateOnly,
-				clearAllPools,
-				connectionFactory);
+				clearAllPools);
 		}
 
 		private static readonly Version ClearPoolsMinVersionMDS       = new (6, 0, 0);
@@ -166,31 +186,15 @@ namespace LinqToDB.DataProvider.SQLite
 		[Wrapper]
 		private sealed class SqliteConnection
 		{
+			public SqliteConnection(string connectionString) => throw new NotImplementedException();
+
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
 		[Wrapper]
-		internal sealed class SQLiteConnection : TypeWrapper, IConnectionWrapper
+		private sealed class SQLiteConnection
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-					// [0]: Open
-					(Expression<Action<SQLiteConnection>>)((SQLiteConnection this_) => this_.Open()),
-					// [1]: Dispose
-					(Expression<Action<SQLiteConnection>>)((SQLiteConnection this_) => this_.Dispose()),
-			};
-
-			public SQLiteConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
 			public SQLiteConnection(string connectionString) => throw new NotImplementedException();
-
-			public void Open()    => ((Action<SQLiteConnection>)CompiledWrappers[0])(this);
-			public void Dispose() => ((Action<SQLiteConnection>)CompiledWrappers[1])(this);
-
-			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}

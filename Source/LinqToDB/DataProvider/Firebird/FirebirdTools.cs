@@ -41,36 +41,21 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public static DataConnection CreateDataConnection(string connectionString, FirebirdVersion version = FirebirdVersion.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(version, connectionString: connectionString), connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version), connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, FirebirdVersion version = FirebirdVersion.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(version), connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), default, version), connection);
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, FirebirdVersion version = FirebirdVersion.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(version), transaction);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), default, version), transaction);
 		}
 
 		#endregion
-
-		#region BulkCopy
-
-		[Obsolete("Use FirebirdOptions.Default.BulkCopyType instead.")]
-		public static BulkCopyType DefaultBulkCopyType
-		{
-			get => FirebirdOptions.Default.BulkCopyType;
-			set => FirebirdOptions.Default = FirebirdOptions.Default with { BulkCopyType = value };
-		}
-
-		#endregion
-
-		#region ClearAllPools
 
 		public static void ClearAllPools() => FirebirdProviderAdapter.Instance.ClearAllPools();
-
-		#endregion
 	}
 }

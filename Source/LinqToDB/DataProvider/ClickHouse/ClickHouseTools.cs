@@ -17,33 +17,22 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		public static IDataProvider GetDataProvider(ClickHouseProvider provider = ClickHouseProvider.AutoDetect, string? connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), provider, default);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
 		}
 
 		public static DataConnection CreateDataConnection(string connectionString, ClickHouseProvider provider = ClickHouseProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, ClickHouseProvider provider = ClickHouseProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, ClickHouseProvider provider = ClickHouseProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), transaction);
-		}
-
-		/// <summary>
-		/// Default bulk copy mode.
-		/// Default value: <c>BulkCopyType.ProviderSpecific</c>.
-		/// </summary>
-		[Obsolete("Use ClickHouseOptions.Default.BulkCopyType instead.")]
-		public static BulkCopyType DefaultBulkCopyType
-		{
-			get => ClickHouseOptions.Default.BulkCopyType;
-			set => ClickHouseOptions.Default = ClickHouseOptions.Default with { BulkCopyType = value };
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
 		}
 	}
 }

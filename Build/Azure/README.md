@@ -135,9 +135,9 @@ Legend:
 |`TestProvName.NorthwindSQLiteMS`|Microsoft.Data.Sqlite FTS||
 |`ProviderName.MySql57`|MySQL 5.7 using MySQL.Data||
 |`TestProvName.MySql57Connector`|MySQL 5.7 using MySqlConnector||
-|`ProviderName.MySql`|Latest MySQL using MySQL.Data||
-|`ProviderName.MySqlConnector`|Latest MySQL using MySqlConnector||
-|`ProviderName.MariaDB`|Latest MariaDB using MySqlConnector||
+|`ProviderName.MySql80`|Latest MySQL using MySQL.Data||
+|`TestProvName.MySql80Connector`|Latest MySQL using MySqlConnector||
+|`TestProvName.MariaDB11Connector`|Latest MariaDB using MySqlConnector||
 |`ProviderName.PostgreSQL92`|PostgreSQL 9.2-|PGSQL 9 not tested by CI|
 |`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)|PGSQL 9 not tested by CI|
 |`ProviderName.PostgreSQL95`|PostgreSQL 9.5+|PGSQL 9 not tested by CI|

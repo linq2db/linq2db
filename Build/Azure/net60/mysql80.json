@@ -1,7 +1,8 @@
 ﻿{
 	"NET60.Azure": {
 		"Providers": [
-			"MariaDB"
+			"MySql.8.0",
+			"MySqlConnector.8.0"
 		]
 	}
 }

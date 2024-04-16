@@ -2,9 +2,11 @@
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Data.Common;
+
 	using Data;
 
-	sealed class DB2ProviderDetector : ProviderDetectorBase<DB2ProviderDetector.Provider, DB2Version, DB2ProviderAdapter.DB2Connection>
+	sealed class DB2ProviderDetector : ProviderDetectorBase<DB2ProviderDetector.Provider, DB2Version>
 	{
 		internal enum Provider { }
 
@@ -73,16 +75,16 @@ namespace LinqToDB.DataProvider.DB2
 			};
 		}
 
-		public override DB2Version? DetectServerVersion(DB2ProviderAdapter.DB2Connection connection)
+		public override DB2Version? DetectServerVersion(DbConnection connection)
 		{
-			return connection.eServerType switch
+			return DB2ProviderAdapter.Instance.ConnectionWrapper(connection).eServerType switch
 			{
 				DB2ProviderAdapter.DB2ServerTypes.DB2_390 => DB2Version.zOS,
 				_                                         => DB2Version.LUW
 			};
 		}
 
-		protected override DB2ProviderAdapter.DB2Connection CreateConnection(Provider provider, string connectionString)
+		protected override DbConnection CreateConnection(Provider provider, string connectionString)
 		{
 			return DB2ProviderAdapter.Instance.CreateConnection(connectionString);
 		}

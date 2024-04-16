@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	using Data;
 	using DataProvider.MySql;
 
-	sealed class ClickHouseProviderDetector : ProviderDetectorBase<ClickHouseProvider, ClickHouseProviderDetector.Dialect, DbConnection>
+	sealed class ClickHouseProviderDetector : ProviderDetectorBase<ClickHouseProvider, ClickHouseProviderDetector.Dialect>
 	{
 		internal enum Dialect { }
 

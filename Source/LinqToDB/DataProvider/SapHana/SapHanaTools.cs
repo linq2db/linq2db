@@ -31,65 +31,26 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public static IDataProvider GetDataProvider(SapHanaProvider provider = SapHanaProvider.AutoDetect, string? connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), provider, default);
-		}
-
-
-		[Obsolete($"Use overload with {nameof(SapHanaProvider)} parameter")]
-		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
-		{
-			return (assemblyName, providerName) switch
-			{
-				(SapHanaProviderAdapter.AssemblyName, _) => GetDataProvider(SapHanaProvider.Unmanaged),
-				(OdbcProviderAdapter.AssemblyName, _)    => GetDataProvider(SapHanaProvider.ODBC),
-				(_, ProviderName.SapHanaOdbc)            => GetDataProvider(SapHanaProvider.ODBC),
-				(_, ProviderName.SapHanaNative)          => GetDataProvider(SapHanaProvider.Unmanaged),
-				_                                        => GetDataProvider(SapHanaProvider.AutoDetect)
-			};
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, SapHanaProvider provider = SapHanaProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider, connectionString), connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, SapHanaProvider provider = SapHanaProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, SapHanaProvider provider = SapHanaProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), transaction);
-		}
-
-		[Obsolete($"Use overload with {nameof(SapHanaProvider)} parameter")]
-		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName, connectionString), connectionString);
-		}
-
-		[Obsolete($"Use overload with {nameof(SapHanaProvider)} parameter")]
-		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), connection);
-		}
-
-		[Obsolete($"Use overload with {nameof(SapHanaProvider)} parameter")]
-		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), transaction);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
 		}
 
 		#endregion
-
-		[Obsolete("Use SapHanaOptions.Default.BulkCopyType instead.")]
-		public static BulkCopyType DefaultBulkCopyType
-		{
-			get => SapHanaOptions.Default.BulkCopyType;
-			set => SapHanaOptions.Default = SapHanaOptions.Default with { BulkCopyType = value };
-		}
 	}
 }

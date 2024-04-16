@@ -603,8 +603,8 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `Enum` ENUM('one', 'two'),
 	IN `Set` ENUM('one', 'two'),
 
--- SKIP MySql57 BEGIN
--- SKIP MySql BEGIN
+-- SKIP MySql.5.7 BEGIN
+-- SKIP MySql.8.0 BEGIN
 	IN `Json` JSON,
 	IN `Geometry` GEOMETRY,
 	IN `Point` POINT,
@@ -614,8 +614,8 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `MultiLineString` MULTILINESTRING,
 	IN `MultiPolygon` MULTIPOLYGON,
 	IN `GeometryCollection` GEOMETRYCOLLECTION,
--- SKIP MySql END
--- SKIP MySql57 END
+-- SKIP MySql.8.0 END
+-- SKIP MySql.5.7 END
 
 	IN `Year` YEAR
 )
@@ -663,8 +663,8 @@ BEGIN
 	`Set`,
 	`Year`
 
--- SKIP MySql57 BEGIN
--- SKIP MySql BEGIN
+-- SKIP MySql.5.7 BEGIN
+-- SKIP MySql.8.0 BEGIN
 	,`Json`,
 	`Geometry`,
 	`Point`,
@@ -674,8 +674,8 @@ BEGIN
 	`MultiLineString`,
 	`MultiPolygon`,
 	`GeometryCollection`
--- SKIP MySql END
--- SKIP MySql57 END
+-- SKIP MySql.8.0 END
+-- SKIP MySql.5.7 END
 
 	FROM Person;
 END
@@ -691,10 +691,10 @@ CREATE TABLE `CollatedTable`
 )
 GO
 
--- SKIP MySql BEGIN
--- SKIP MySqlConnector BEGIN
--- SKIP MySql57 BEGIN
--- SKIP MySql57Connector BEGIN
+-- SKIP MySql.8.0 BEGIN
+-- SKIP MySqlConnector.8.0 BEGIN
+-- SKIP MySql.5.7 BEGIN
+-- SKIP MySqlConnector.5.7 BEGIN
 
 CREATE OR REPLACE FUNCTION TEST_FUNCTION(i INT) RETURNS INT RETURN i + 3
 
@@ -746,7 +746,7 @@ GO
 set session sql_mode=default
 GO
 
--- SKIP MySql57Connector END
--- SKIP MySql57 END
--- SKIP MySqlConnector END
--- SKIP MySql END
+-- SKIP MySqlConnector.5.7 END
+-- SKIP MySql.5.7 END
+-- SKIP MySqlConnector.8.0 END
+-- SKIP MySql.8.0 END

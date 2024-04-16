@@ -18,11 +18,11 @@
 			// SQL CE
 			//"SqlCe",
 
-			// Firebird 2.5-4
-			//"Firebird25",
-			//"Firebird3",
-			//"Firebird4",
-			//"Firebird5",
+			// Firebird
+			//"Firebird.2.5",
+			//"Firebird.3",
+			//"Firebird.4",
+			//"Firebird.5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -51,11 +51,11 @@
 			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
-			//"MySql",
-			//"MySqlConnector",
-			//"MySql57",
-			//"MySql57Connector",
-			//"MariaDB",
+			//"MySql.8.0",
+			//"MySqlConnector.8.0",
+			//"MySql.5.7",
+			//"MySqlConnector.5.7",
+			//"MariaDB.11",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -141,11 +141,11 @@
 			// SQL CE
 			//"SqlCe",
 
-			// Firebird 2.5-4
-			//"Firebird25",
-			//"Firebird3",
-			//"Firebird4",
-			//"Firebird5",
+			// Firebird
+			//"Firebird.2.5",
+			//"Firebird.3",
+			//"Firebird.4",
+			//"Firebird.5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -174,11 +174,11 @@
 			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
-			//"MySql",
-			//"MySqlConnector",
-			//"MySql57",
-			//"MySql57Connector",
-			//"MariaDB",
+			//"MySql.8.0",
+			//"MySqlConnector.8.0",
+			//"MySql.5.7",
+			//"MySqlConnector.5.7",
+			//"MariaDB.11",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -256,11 +256,11 @@
 			// SQL CE
 			//"SqlCe",
 
-			// Firebird 2.5-4
-			//"Firebird25",
-			//"Firebird3",
-			//"Firebird4",
-			//"Firebird5",
+			// Firebird
+			//"Firebird.2.5",
+			//"Firebird.3",
+			//"Firebird.4",
+			//"Firebird.5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -289,11 +289,11 @@
 			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
-			//"MySql",
-			//"MySqlConnector",
-			//"MySql57",
-			//"MySql57Connector",
-			//"MariaDB",
+			//"MySql.8.0",
+			//"MySqlConnector.8.0",
+			//"MySql.5.7",
+			//"MySqlConnector.5.7",
+			//"MariaDB.11",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -461,16 +461,16 @@
 				"Provider": "IBM.Data.DB2",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Firebird25": {
+			"Firebird.2.5": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Firebird3": {
+			"Firebird.3": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Firebird4": {
+			"Firebird.4": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Firebird5": {
+			"Firebird.5": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"Informix": {
@@ -480,24 +480,24 @@
 			"Informix.DB2": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySql": {
+			"MySql.8.0": {
 				"Provider": "MySql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySqlConnector": {
+			"MySqlConnector.8.0": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySql57": {
+			"MySql.5.7": {
 				"Provider": "MySql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySql57Connector": {
+			"MySqlConnector.5.7": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 
-			"MariaDB": {
+			"MariaDB.11": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "Server=localhost;Port=3316;SslMode=None;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
 			},

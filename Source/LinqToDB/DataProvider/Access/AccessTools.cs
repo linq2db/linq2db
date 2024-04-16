@@ -26,74 +26,24 @@ namespace LinqToDB.DataProvider.Access
 		/// </summary>
 		public static IDataProvider GetDataProvider(AccessProvider provider = AccessProvider.AutoDetect, string? connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), provider, default);
-		}
-
-		/// <summary>
-		/// Returns instance of Access database provider.
-		/// </summary>
-		/// <returns><see cref="AccessOleDbDataProvider"/> or <see cref="AccessODBCDataProvider"/> instance.</returns>
-		[Obsolete($"Use overload with {nameof(AccessProvider)} parameter")]
-		public static IDataProvider GetDataProvider(string? providerName = null, string? connectionString = null)
-		{
-			return providerName switch
-			{
-				ProviderName.AccessOdbc => GetDataProvider(AccessProvider.ODBC, connectionString),
-				_                       => GetDataProvider(AccessProvider.AutoDetect, connectionString),
-			};
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider, connectionString), connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(provider), transaction);
-		}
-
-		/// <summary>
-		/// Creates <see cref="DataConnection"/> object using provided Access connection string.
-		/// </summary>
-		/// <param name="connectionString">Connection string.</param>
-		/// <param name="providerName">Provider name.</param>
-		/// <returns><see cref="DataConnection"/> instance.</returns>
-		[Obsolete($"Use overload with {nameof(AccessProvider)} parameter")]
-		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName, connectionString), connectionString);
-		}
-
-		/// <summary>
-		/// Creates <see cref="DataConnection"/> object using provided connection object.
-		/// </summary>
-		/// <param name="connection">Connection instance.</param>
-		/// <param name="providerName">Provider name.</param>
-		/// <returns><see cref="DataConnection"/> instance.</returns>
-		[Obsolete($"Use overload with {nameof(AccessProvider)} parameter")]
-		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), connection);
-		}
-
-		/// <summary>
-		/// Creates <see cref="DataConnection"/> object using provided transaction object.
-		/// </summary>
-		/// <param name="transaction">Transaction instance.</param>
-		/// <param name="providerName">Provider name.</param>
-		/// <returns><see cref="DataConnection"/> instance.</returns>
-		[Obsolete($"Use overload with {nameof(AccessProvider)} parameter")]
-		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), transaction);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
 		}
 
 		#endregion
@@ -149,22 +99,6 @@ namespace LinqToDB.DataProvider.Access
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DataTools.DropFileDatabase(databaseName, ".mdb");
-		}
-
-		#endregion
-
-		#region BulkCopy
-
-		/// <summary>
-		/// Default bulk copy mode, used for Access by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
-		/// methods, if mode is not specified explicitly.
-		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
-		/// </summary>
-		[Obsolete("Use AccessOptions.Default.BulkCopyType instead.")]
-		public static BulkCopyType DefaultBulkCopyType
-		{
-			get => AccessOptions.Default.BulkCopyType;
-			set => AccessOptions.Default = AccessOptions.Default with { BulkCopyType = value };
 		}
 
 		#endregion

@@ -3,10 +3,12 @@ using System.IO;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using System.Data.Common;
+
 	using Common;
 	using Data;
 
-	sealed class SybaseProviderDetector : ProviderDetectorBase<SybaseProvider, SybaseProviderDetector.Dialect, SybaseProviderAdapter.AseConnection>
+	sealed class SybaseProviderDetector : ProviderDetectorBase<SybaseProvider, SybaseProviderDetector.Dialect>
 	{
 		internal enum Dialect { }
 
@@ -71,12 +73,12 @@ namespace LinqToDB.DataProvider.Sybase
 				: SybaseProvider.DataAction;
 		}
 
-		public override Dialect? DetectServerVersion(SybaseProviderAdapter.AseConnection connection)
+		public override Dialect? DetectServerVersion(DbConnection connection)
 		{
 			return default(Dialect);
 		}
 
-		protected override SybaseProviderAdapter.AseConnection CreateConnection(SybaseProvider provider, string connectionString)
+		protected override DbConnection CreateConnection(SybaseProvider provider, string connectionString)
 		{
 			return SybaseProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
 		}

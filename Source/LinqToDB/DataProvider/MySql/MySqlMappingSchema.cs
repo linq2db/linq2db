@@ -67,23 +67,50 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal static readonly MySqlMappingSchema Instance = new ();
 
-		public sealed class MySql57MappingSchema : LockedMappingSchema
+		public sealed class MySqlData57MappingSchema : LockedMappingSchema
 		{
-			public MySql57MappingSchema(MappingSchema adapterSchema) : base(ProviderName.MySql57, adapterSchema, Instance)
+			public MySqlData57MappingSchema()
+				: base(ProviderName.MySql57MySqlData, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, Instance)
 			{
 			}
 		}
 
-		public sealed class MySql80MappingSchema : LockedMappingSchema
+		public sealed class MySqlData80MappingSchema : LockedMappingSchema
 		{
-			public MySql80MappingSchema(MappingSchema adapterSchema) : base(ProviderName.MySql80, adapterSchema, Instance)
+			public MySqlData80MappingSchema()
+				: base(ProviderName.MySql80MySqlData, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, Instance)
 			{
 			}
 		}
 
-		public sealed class MariaDB10MappingSchema : LockedMappingSchema
+		public sealed class MySqlDataMariaDB10MappingSchema : LockedMappingSchema
 		{
-			public MariaDB10MappingSchema(MappingSchema adapterSchema) : base(ProviderName.MariaDB10, adapterSchema, Instance)
+			public MySqlDataMariaDB10MappingSchema()
+				: base(ProviderName.MariaDB10MySqlData, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, Instance)
+			{
+			}
+		}
+
+		public sealed class MySqlConnector57MappingSchema : LockedMappingSchema
+		{
+			public MySqlConnector57MappingSchema()
+				: base(ProviderName.MySql57MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, Instance)
+			{
+			}
+		}
+
+		public sealed class MySqlConnector80MappingSchema : LockedMappingSchema
+		{
+			public MySqlConnector80MappingSchema()
+				: base(ProviderName.MySql80MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, Instance)
+			{
+			}
+		}
+
+		public sealed class MySqlConnectorMariaDB10MappingSchema : LockedMappingSchema
+		{
+			public MySqlConnectorMariaDB10MappingSchema()
+				: base(ProviderName.MariaDB10MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, Instance)
 			{
 			}
 		}

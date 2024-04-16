@@ -300,7 +300,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			ProviderName.DB2,
 			TestProvName.AllOracle,
-			TestProvName.AllMySql,
+			TestProvName.AllMySql57,
 			TestProvName.AllSybase,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana)]

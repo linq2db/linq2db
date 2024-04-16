@@ -1540,8 +1540,16 @@ namespace Tests.Linq
 			}
 		}
 
+		// TODO: disable parameters in lateral sub-queries
+		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle12Plus)] string context)
+		public void OuterApplyTest(
+			[IncludeDataSources(
+				TestProvName.AllPostgreSQL95Plus,
+				TestProvName.AllSqlServer2008Plus,
+				TestProvName.AllOracle12Plus,
+				TestProvName.AllMySqlWithApply,
+				TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

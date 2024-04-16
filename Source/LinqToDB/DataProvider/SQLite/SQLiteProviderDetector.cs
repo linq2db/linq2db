@@ -3,10 +3,12 @@ using System.IO;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using System.Data.Common;
+
 	using Common;
 	using Data;
 
-	sealed class SQLiteProviderDetector : ProviderDetectorBase<SQLiteProvider, SQLiteProviderDetector.Dialect, SQLiteProviderAdapter.SQLiteConnection>
+	sealed class SQLiteProviderDetector : ProviderDetectorBase<SQLiteProvider, SQLiteProviderDetector.Dialect>
 	{
 		internal enum Dialect { }
 
@@ -81,12 +83,12 @@ namespace LinqToDB.DataProvider.SQLite
 				: SQLiteProvider.Microsoft;
 		}
 
-		public override Dialect? DetectServerVersion(SQLiteProviderAdapter.SQLiteConnection connection)
+		public override Dialect? DetectServerVersion(DbConnection connection)
 		{
 			return default(Dialect);
 		}
 
-		protected override SQLiteProviderAdapter.SQLiteConnection CreateConnection(SQLiteProvider provider, string connectionString)
+		protected override DbConnection CreateConnection(SQLiteProvider provider, string connectionString)
 		{
 			return SQLiteProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
 		}

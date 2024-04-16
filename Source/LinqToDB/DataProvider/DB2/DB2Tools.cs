@@ -15,14 +15,14 @@ namespace LinqToDB.DataProvider.DB2
 		internal static DB2ProviderDetector ProviderDetector = new();
 
 		public static bool AutoDetectProvider
-						{
+		{
 			get => ProviderDetector.AutoDetectProvider;
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
 		public static IDataProvider GetDataProvider(DB2Version version = DB2Version.AutoDetect, string? connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), default, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version);
 		}
 
 		public static void ResolveDB2(string path)
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.DB2
 		/// <returns><see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateDataConnection(string connectionString, DB2Version version = DB2Version.LUW)
 		{
-			return new DataConnection(GetDataProvider(version, connectionString), connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version), connectionString);
 		}
 
 		/// <summary>
@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider.DB2
 		/// <returns><see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateDataConnection(DbConnection connection, DB2Version version = DB2Version.LUW)
 		{
-			return new DataConnection(GetDataProvider(version), connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), default, version), connection);
 		}
 
 		/// <summary>
@@ -70,23 +70,7 @@ namespace LinqToDB.DataProvider.DB2
 		/// <returns><see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateDataConnection(DbTransaction transaction, DB2Version version = DB2Version.LUW)
 		{
-			return new DataConnection(GetDataProvider(version), transaction);
-		}
-
-		#endregion
-
-		#region BulkCopy
-
-		/// <summary>
-		/// Default bulk copy mode, used for DB2 by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
-		/// methods, if mode is not specified explicitly.
-		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
-		/// </summary>
-		[Obsolete("Use DB2Options.Default.BulkCopyType instead.")]
-		public static BulkCopyType DefaultBulkCopyType
-		{
-			get => DB2Options.Default.BulkCopyType;
-			set => DB2Options.Default = DB2Options.Default with { BulkCopyType = value };
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), default, version), transaction);
 		}
 
 		#endregion

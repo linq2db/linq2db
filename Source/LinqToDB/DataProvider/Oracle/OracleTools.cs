@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Oracle
 			OracleVersion version   = OracleVersion.AutoDetect,
 			OracleProvider provider = OracleProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(version, provider, connectionString), connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.Oracle
 			OracleVersion version   = OracleVersion.AutoDetect,
 			OracleProvider provider = OracleProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(version, provider), connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection);
 		}
 
 		public static DataConnection CreateDataConnection(
@@ -52,43 +52,9 @@ namespace LinqToDB.DataProvider.Oracle
 			OracleVersion version   = OracleVersion.AutoDetect,
 			OracleProvider provider = OracleProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(version, provider), transaction);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction);
 		}
 
 		#endregion
-
-		#region BulkCopy
-
-		[Obsolete("Use OracleOptions.Default.BulkCopyType instead.")]
-		public static BulkCopyType  DefaultBulkCopyType
-		{
-			get => OracleOptions.Default.BulkCopyType;
-			set => OracleOptions.Default = OracleOptions.Default with { BulkCopyType = value };
-		}
-
-		#endregion
-
-		/// <summary>
-		/// Specifies type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
-		/// Default value: <see cref="AlternativeBulkCopy.InsertAll"/>.
-		/// </summary>
-		[Obsolete("Use OracleOptions.Default.AlternativeBulkCopy instead.")]
-		public static AlternativeBulkCopy UseAlternativeBulkCopy
-		{
-			get => OracleOptions.Default.AlternativeBulkCopy;
-			set => OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = value };
-		}
-
-		/// <summary>
-		/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.
-		/// Default value: <c>false</c>.
-		/// This flag is added for backward compatibility and not recommended for use with new applications.
-		/// </summary>
-		[Obsolete("Use OracleOptions.Default.DontEscapeLowercaseIdentifiers instead.")]
-		public static bool DontEscapeLowercaseIdentifiers
-		{
-			get => OracleOptions.Default.DontEscapeLowercaseIdentifiers;
-			set => OracleOptions.Default = OracleOptions.Default with { DontEscapeLowercaseIdentifiers = value };
-		}
 	}
 }

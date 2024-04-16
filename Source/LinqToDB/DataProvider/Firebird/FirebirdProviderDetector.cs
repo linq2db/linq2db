@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Configuration;
 	using Data;
 
-	sealed class FirebirdProviderDetector : ProviderDetectorBase<FirebirdProviderDetector.Provider, FirebirdVersion, DbConnection>
+	sealed class FirebirdProviderDetector : ProviderDetectorBase<FirebirdProviderDetector.Provider, FirebirdVersion>
 	{
 		internal enum Provider {}
 
@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.Firebird
 				case ProviderName.Firebird5  : return _firebirdDataProvider5.Value;
 				case ""                      :
 				case null                    :
-					if (options.ConfigurationString == ProviderName.Firebird)
+					if (options.ConfigurationString?.Contains(ProviderName.Firebird) == true)
 						goto case FirebirdProviderAdapter.ClientNamespace;
 					break;
 				case FirebirdProviderAdapter.ClientNamespace :

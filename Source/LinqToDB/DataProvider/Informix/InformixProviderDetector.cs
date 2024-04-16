@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Data;
 	using LinqToDB.DataProvider.DB2;
 
-	sealed class InformixProviderDetector : ProviderDetectorBase<InformixProvider, InformixProviderDetector.Dialect, DbConnection>
+	sealed class InformixProviderDetector : ProviderDetectorBase<InformixProvider, InformixProviderDetector.Dialect>
 	{
 		internal enum Dialect { }
 

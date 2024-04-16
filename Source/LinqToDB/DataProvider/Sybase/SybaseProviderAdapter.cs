@@ -28,24 +28,26 @@ namespace LinqToDB.DataProvider.Sybase
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
+			Func<string, DbConnection> connectionFactory,
+
 			Action<DbParameter, AseDbType> dbTypeSetter,
 			Func  <DbParameter, AseDbType> dbTypeGetter,
-			BulkCopyAdapter? bulkCopy,
-			Func<string, AseConnection> connectionFactory)
+			BulkCopyAdapter? bulkCopy)
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			TransactionType    = transactionType;
+			_connectionFactory = connectionFactory;
 
 			GetDbType = dbTypeGetter;
 			SetDbType = dbTypeSetter;
 
 			BulkCopy = bulkCopy;
-
-			CreateConnection = connectionFactory;
 		}
+
+#region IDynamicProviderAdapter
 
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
@@ -53,12 +55,15 @@ namespace LinqToDB.DataProvider.Sybase
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
+
 		public Action<DbParameter, AseDbType> SetDbType { get; }
 		public Func  <DbParameter, AseDbType> GetDbType { get; }
 
 		public BulkCopyAdapter? BulkCopy { get; }
-
-		internal Func<string, AseConnection> CreateConnection { get; }
 
 		public class BulkCopyAdapter
 		{
@@ -70,8 +75,8 @@ namespace LinqToDB.DataProvider.Sybase
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<DbConnection, AseBulkCopyOptions, DbTransaction?, AseBulkCopy> Create              { get; }
-			public Func<string, string, AseBulkCopyColumnMapping>                      CreateColumnMapping { get; }
+			internal Func<DbConnection, AseBulkCopyOptions, DbTransaction?, AseBulkCopy> Create              { get; }
+			public   Func<string, string, AseBulkCopyColumnMapping>                      CreateColumnMapping { get; }
 		}
 
 		public static SybaseProviderAdapter GetInstance(SybaseProvider provider)
@@ -150,7 +155,7 @@ namespace LinqToDB.DataProvider.Sybase
 			var paramMapper   = typeMapper.Type<AseParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.AseDbType);
 
-			var connectionFactory = typeMapper.BuildWrappedFactory((string connectionString) => new AseConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, AseConnection, DbConnection>((string connectionString) => new AseConnection(connectionString));
 
 			return new SybaseProviderAdapter(
 				connectionType,
@@ -158,10 +163,10 @@ namespace LinqToDB.DataProvider.Sybase
 				parameterType,
 				commandType,
 				transactionType,
+				connectionFactory,
 				dbTypeBuilder.BuildSetter<DbParameter>(),
 				dbTypeBuilder.BuildGetter<DbParameter>(),
-				bulkCopy,
-				connectionFactory);
+				bulkCopy);
 		}
 
 		[Wrapper]
@@ -208,27 +213,9 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		[Wrapper]
-		public sealed class AseConnection : TypeWrapper, IConnectionWrapper
+		internal sealed class AseConnection
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-					// [0]: Open
-					(Expression<Action<AseConnection>>)((AseConnection this_) => this_.Open()),
-					// [1]: Dispose
-					(Expression<Action<AseConnection>>)((AseConnection this_) => this_.Dispose()),
-			};
-
-			public AseConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
 			public AseConnection(string connectionString) => throw new NotImplementedException();
-
-			public void Open()    => ((Action<AseConnection>)CompiledWrappers[0])(this);
-			public void Dispose() => ((Action<AseConnection>)CompiledWrappers[1])(this);
-
-			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		[Wrapper]
@@ -238,7 +225,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		#region BulkCopy
 		[Wrapper]
-		public class AseBulkCopy : TypeWrapper, IDisposable
+		internal class AseBulkCopy : TypeWrapper, IDisposable
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]

@@ -39,6 +39,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			Type dataReaderType,
 			Type parameterType,
 			Type commandType,
+			Func<string, DbConnection> connectionFactory,
 
 			Type?                 clientDecimalType,
 			Func<object, string>? clientDecimalToStringConverter,
@@ -58,16 +59,16 @@ namespace LinqToDB.DataProvider.ClickHouse
 			Func<Type, OctonicaWrappers.ClickHouseColumnSettings                                       >? octonicaColumnSettings,
 
 			Func<string, ClientWrappers.ClickHouseConnectionStringBuilder>? clientConnectionStringBuilder,
-			Func<string, DbConnection>                                      connectionCreator,
 
 			MappingSchema? mappingSchema)
 		{
-			ConnectionType = connectionType;
-			DataReaderType = dataReaderType;
-			ParameterType  = parameterType;
-			CommandType    = commandType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			_connectionFactory = connectionFactory;
 
-			ClientDecimalType              = clientDecimalType;
+			ClientDecimalType = clientDecimalType;
 			ClientDecimalToStringConverter = clientDecimalToStringConverter;
 
 			GetDateTimeOffsetReaderMethod = getDateTimeOffsetReaderMethod;
@@ -85,7 +86,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 			OctonicaColumnSettings    = octonicaColumnSettings;
 
 			CreateClientConnectionStringBuilder = clientConnectionStringBuilder;
-			CreateConnection                    = connectionCreator;
 
 			MappingSchema = mappingSchema;
 		}
@@ -103,15 +103,21 @@ namespace LinqToDB.DataProvider.ClickHouse
 			GetUInt64ReaderMethod       = mySqlProviderAdapter.GetUInt64MethodName;
 			GetMySqlDecimalReaderMethod = mySqlProviderAdapter.GetMySqlDecimalMethodName;
 
-			CreateConnection = cs => ((IConnectionWrapper)mySqlProviderAdapter.CreateConnection(cs)).Connection;
+			_connectionFactory          = mySqlProviderAdapter.CreateConnection;
 		}
 
-		// IDynamicProviderAdapter
-		public Type ConnectionType { get; }
-		public Type DataReaderType { get; }
-		public Type ParameterType  { get; }
-		public Type CommandType    { get; }
+#region IDynamicProviderAdapter
+
+		public Type  ConnectionType  { get; }
+		public Type  DataReaderType  { get; }
+		public Type  ParameterType   { get; }
+		public Type  CommandType     { get; }
 		public Type? TransactionType => null;
+
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
 
 		public Type?                 ClientDecimalType              { get; }
 		public Func<object, string>? ClientDecimalToStringConverter { get; }
@@ -139,7 +145,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		// Client connection management
 		internal Func<string, ClientWrappers.ClickHouseConnectionStringBuilder>? CreateClientConnectionStringBuilder { get; }
-		internal Func<string, DbConnection                                    >  CreateConnection                    { get; }
 
 		public static ClickHouseProviderAdapter GetInstance(ClickHouseProvider provider)
 		{
@@ -218,13 +223,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 			else
 				typeMapper.FinalizeMappings();
 
-			var connectionFactory = typeMapper.BuildWrappedFactory((string connectionString) => new ClientWrappers.ClickHouseConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, ClientWrappers.ClickHouseConnection, DbConnection>((string connectionString) => new ClientWrappers.ClickHouseConnection(connectionString));
 
 			return new ClickHouseProviderAdapter(
 				connectionType,
 				dataReaderType,
 				parameterType,
 				commandType,
+				connectionFactory,
 
 				decimalType,
 				decimalConverter,
@@ -244,7 +250,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 				null,
 
 				typeMapper.BuildWrappedFactory((string connectionString) => new ClientWrappers.ClickHouseConnectionStringBuilder(connectionString)),
-				cs => (DbConnection)connectionFactory(cs).instance_,
 
 				mappingSchema);
 		}
@@ -286,13 +291,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			ClickHouseTransientExceptionDetector.RegisterExceptionType(sqlExceptionType, exceptionErrorsGettter);
 
-			var connectionFactory = typeMapper.BuildWrappedFactory((string connectionString) => new OctonicaWrappers.ClickHouseConnection() { ConnectionString = connectionString });
+			var connectionFactory = typeMapper.BuildTypedFactory<string, OctonicaWrappers.ClickHouseConnection, DbConnection>((string connectionString) => new OctonicaWrappers.ClickHouseConnection(connectionString));
 
 			return new ClickHouseProviderAdapter(
 				connectionType,
 				dataReaderType,
 				parameterType,
 				commandType,
+				connectionFactory,
 
 				null,
 				null,
@@ -312,7 +318,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 				typeMapper.BuildWrappedFactory((Type columnType) => new OctonicaWrappers.ClickHouseColumnSettings(columnType)),
 
 				null,
-				cs => (DbConnection)connectionFactory(cs).instance_,
 				null);
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => new[] { typeMapper.Wrap<OctonicaWrappers.ClickHouseException>(ex).ErrorCode };
@@ -324,26 +329,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		internal static class ClientWrappers
 		{
 			[Wrapper]
-			public sealed class ClickHouseConnection : TypeWrapper, IDisposable
+			internal sealed class ClickHouseConnection
 			{
-				private static LambdaExpression[] Wrappers { get; }
-					= new LambdaExpression[]
-				{
-					// [0]: Dispose
-					(Expression<Action<ClickHouseConnection>>)((ClickHouseConnection this_) => ((IDisposable)this_).Dispose()),
-					// [1]: get ConnectionString
-					(Expression<Func<ClickHouseConnection, string>>)((ClickHouseConnection this_) => this_.ConnectionString),
-				};
-
-				public ClickHouseConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
-				{
-				}
-
 				public ClickHouseConnection(string connectionString) => throw new NotImplementedException();
-
-				public string ConnectionString => ((Func<ClickHouseConnection, string>)CompiledWrappers[1])(this);
-
-				void IDisposable.Dispose() => ((Action<ClickHouseConnection>)CompiledWrappers[0])(this);
 			}
 
 			[Wrapper]
@@ -382,7 +370,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			[Wrapper]
-			public sealed class ClickHouseBulkCopy : TypeWrapper, IDisposable
+			internal sealed class ClickHouseBulkCopy : TypeWrapper, IDisposable
 			{
 				private static object[] Wrappers { get; }
 					= new []
@@ -462,34 +450,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 		public static class OctonicaWrappers
 		{
 			[Wrapper]
-			public sealed class ClickHouseConnection : TypeWrapper, IDisposable
+			internal sealed class ClickHouseConnection
 			{
-				private static LambdaExpression[] Wrappers { get; }
-					= new LambdaExpression[]
-				{
-					// [0]: Dispose
-					(Expression<Action<ClickHouseConnection>>)((ClickHouseConnection this_) => ((IDisposable)this_).Dispose()),
-					// [1]: get ConnectionString
-					(Expression<Func<ClickHouseConnection, string>>)((ClickHouseConnection this_) => this_.ConnectionString),
-					// [2]: set ConnectionString
-					PropertySetter((ClickHouseConnection this_) => this_.ConnectionString),
-				};
+				public ClickHouseConnection(string connectionString) => throw new NotImplementedException();
 
-				public ClickHouseConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
-				{
-				}
-
-				public ClickHouseConnection() => throw new NotImplementedException();
-
-				public string ConnectionString
-			{
-					get => ((Func  <ClickHouseConnection, string>)CompiledWrappers[1])(this);
-					set => ((Action<ClickHouseConnection, string>)CompiledWrappers[2])(this, value);
-				}
-
-				void IDisposable.Dispose() => ((Action<ClickHouseConnection>)CompiledWrappers[0])(this);
-
-				public ClickHouseColumnWriter       CreateColumnWriter(string insertFormatCommand)                                           => throw new NotImplementedException();
+				public ClickHouseColumnWriter       CreateColumnWriter     (string insertFormatCommand                                     ) => throw new NotImplementedException();
 				public Task<ClickHouseColumnWriter> CreateColumnWriterAsync(string insertFormatCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
 			}
 

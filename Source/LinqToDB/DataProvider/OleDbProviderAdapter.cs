@@ -21,23 +21,26 @@ namespace LinqToDB.DataProvider
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
+			Func<string, DbConnection> connectionFactory,
+
 			Action<DbParameter, OleDbType> dbTypeSetter,
 			Func  <DbParameter, OleDbType> dbTypeGetter,
-			Func  <DbConnection, Guid, object[]?, DataTable> schemaTableGetter,
-			Func<string, OleDbConnection> connectionFactory)
+			Func  <DbConnection, Guid, object[]?, DataTable> schemaTableGetter)
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			TransactionType    = transactionType;
+			_connectionFactory = connectionFactory;
 
 			SetDbType = dbTypeSetter;
 			GetDbType = dbTypeGetter;
 
 			GetOleDbSchemaTable = schemaTableGetter;
-			CreateConnection    = connectionFactory;
 		}
+
+#region IDynamicProviderAdapter
 
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
@@ -45,12 +48,15 @@ namespace LinqToDB.DataProvider
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
+
 		public Action<DbParameter, OleDbType> SetDbType { get; }
 		public Func  <DbParameter, OleDbType> GetDbType { get; }
 
 		public Func<DbConnection, Guid, object[]?, DataTable> GetOleDbSchemaTable { get; }
-
-		internal Func<string, OleDbConnection> CreateConnection { get; }
 
 		public static OleDbProviderAdapter GetInstance()
 		{
@@ -82,8 +88,6 @@ namespace LinqToDB.DataProvider
 						typeMapper.RegisterTypeWrapper<OleDbParameter>(parameterType);
 						typeMapper.FinalizeMappings();
 
-						var connectionFactory  = typeMapper.BuildWrappedFactory((string connectionString) => new OleDbConnection(connectionString));
-
 						var dbTypeBuilder = typeMapper.Type<OleDbParameter>().Member(p => p.OleDbType);
 						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
 						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
@@ -96,10 +100,10 @@ namespace LinqToDB.DataProvider
 							parameterType,
 							commandType,
 							transactionType,
+							typeMapper.BuildTypedFactory<string, OleDbConnection, DbConnection>((string connectionString) => new OleDbConnection(connectionString)),
 							typeSetter,
 							typeGetter,
-							oleDbSchemaTableGetter,
-							connectionFactory);
+							oleDbSchemaTableGetter);
 					}
 			}
 
@@ -121,27 +125,9 @@ namespace LinqToDB.DataProvider
 		}
 
 		[Wrapper]
-		internal sealed class OleDbConnection : TypeWrapper, IConnectionWrapper
+		private sealed class OleDbConnection
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
-			{
-					// [0]: Open
-					(Expression<Action<OleDbConnection>>)((OleDbConnection this_) => this_.Open()),
-					// [1]: Dispose
-					(Expression<Action<OleDbConnection>>)((OleDbConnection this_) => this_.Dispose()),
-			};
-
-			public OleDbConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
 			public OleDbConnection(string connectionString) => throw new NotImplementedException();
-
-			public void Open()    => ((Action<OleDbConnection>)CompiledWrappers[0])(this);
-			public void Dispose() => ((Action<OleDbConnection>)CompiledWrappers[1])(this);
-
-			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 
 			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotImplementedException();
 		}

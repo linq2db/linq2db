@@ -29,24 +29,32 @@ namespace Tests
 		/// <summary>
 		/// MySQL 5.7 over MySql.Data.
 		/// </summary>
-		public const string MySql57           = "MySql57";
+		public const string MySql57  = "MySql.5.7";
+		/// <summary>
+		/// MySQL 8.x over MySql.Data.
+		/// </summary>
+		public const string MySql80  = "MySql.8.0";
 		/// <summary>
 		/// MySQL 5.7 over MySqlConnector.
 		/// </summary>
-		public const string MySql57Connector  = "MySql57Connector";
+		public const string MySql57Connector  = "MySqlConnector.5.7";
 		/// <summary>
 		/// MySQL 8.x over MySqlConnector.
 		/// </summary>
-		public const string MySqlConnector    = "MySqlConnector";
+		public const string MySql80Connector    = "MySqlConnector.8.0";
+		/// <summary>
+		/// MySQL 8.x over MySqlConnector.
+		/// </summary>
+		public const string MariaDB11Connector  = "MariaDB.11";
 
 		/// <summary>
 		/// All MySql.Data providers.
 		/// </summary>
-		public const string AllMySqlData      = $"{MySql57},{ProviderName.MySql}";
+		public const string AllMySqlData      = $"{MySql57},{MySql80}";
 		/// <summary>
 		/// All MySqlConnector providers.
 		/// </summary>
-		public const string AllMySqlConnector = $"{MySql57Connector},{MySqlConnector},{ProviderName.MariaDB}";
+		public const string AllMySqlConnector = $"{MySql57Connector},{MySql80Connector},{MariaDB11Connector}";
 		/// <summary>
 		/// All mysql/mariadb test providers.
 		/// </summary>
@@ -54,11 +62,11 @@ namespace Tests
 		/// <summary>
 		/// All mysql test providers (no mariadb).
 		/// </summary>
-		public const string AllMySqlServer    = $"{MySql57},{MySql57Connector},{ProviderName.MySql},{MySqlConnector}";
+		public const string AllMySqlServer    = $"{MySql57},{MySql57Connector},{MySql80},{MySql80Connector}";
 		/// <summary>
 		/// All mariadb test providers.
 		/// </summary>
-		public const string AllMariaDB        = $"{ProviderName.MariaDB}";
+		public const string AllMariaDB        = MariaDB11Connector;
 		/// <summary>
 		/// MySQL 5.7.
 		/// </summary>
@@ -66,11 +74,15 @@ namespace Tests
 		/// <summary>
 		/// MySQL 8.x and MariaDB.
 		/// </summary>
-		public const string AllMySql8Plus     = $"{ProviderName.MySql},{MySqlConnector},{ProviderName.MariaDB}";
+		public const string AllMySql8Plus     = $"{MySql80},{MySql80Connector},{MariaDB11Connector}";
 		/// <summary>
 		/// MySQL/MariaDB with CTE support.
 		/// </summary>
 		public const string AllMySqlWithCTE   = AllMySql8Plus;
+		/// <summary>
+		/// MySQL/MariaDB with LATERAL support.
+		/// </summary>
+		public const string AllMySqlWithApply = $"{MySql80},{MySql80Connector}";
 		#endregion
 
 		#region PostgreSQL

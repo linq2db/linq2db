@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.Access
 	using Common;
 	using Data;
 
-	sealed class AccessProviderDetector : ProviderDetectorBase<AccessProvider, AccessProviderDetector.Dialect, DbConnection>
+	sealed class AccessProviderDetector : ProviderDetectorBase<AccessProvider, AccessProviderDetector.Dialect>
 	{
 		internal enum Dialect { }
 
@@ -79,10 +79,9 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override DbConnection CreateConnection(AccessProvider provider, string connectionString)
 		{
-			return (provider == AccessProvider.ODBC
-					? (IConnectionWrapper)OdbcProviderAdapter.GetInstance().CreateConnection(connectionString)
-					: OleDbProviderAdapter.GetInstance().CreateConnection(connectionString))
-				.Connection;
+			return provider == AccessProvider.ODBC
+				? OdbcProviderAdapter.GetInstance().CreateConnection(connectionString)
+				: OleDbProviderAdapter.GetInstance().CreateConnection(connectionString);
 		}
 	}
 }

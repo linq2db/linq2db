@@ -1536,8 +1536,8 @@ namespace Tests.DataProvider
 			[Column(Precision = 3)                                               ] public DateTime DateTime3;
 			// MySQL.Data provider has issues with timestamps
 			// TODO: look into it later
-			[Column(Configuration = TestProvName.MySqlConnector)                 ] public DateTimeOffset TimeStamp;
-			[Column(Precision = 5, Configuration = TestProvName.MySqlConnector)  ] public DateTimeOffset TimeStamp5;
+			[Column(Configuration = "MySqlConnector")                            ] public DateTimeOffset TimeStamp;
+			[Column(Precision = 5, Configuration = "MySqlConnector")             ] public DateTimeOffset TimeStamp5;
 			[Column                                                              ] public TimeSpan Time;
 			[Column(Precision = 2)                                               ] public TimeSpan Time2;
 			[Column                                                              ] public sbyte TinyInt;

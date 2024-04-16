@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Common;
 	using Data;
 
-	sealed class SapHanaProviderDetector : ProviderDetectorBase<SapHanaProvider, SapHanaProviderDetector.Dialect, DbConnection>
+	sealed class SapHanaProviderDetector : ProviderDetectorBase<SapHanaProvider, SapHanaProviderDetector.Dialect>
 	{
 		internal enum Dialect { }
 
@@ -82,9 +82,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override DbConnection CreateConnection(SapHanaProvider provider, string connectionString)
 		{
-			return (provider == SapHanaProvider.Unmanaged
-				? (IConnectionWrapper)SapHanaProviderAdapter.GetInstance().CreateConnection(connectionString)
-				: OdbcProviderAdapter.GetInstance().CreateConnection(connectionString)).Connection;
+			return provider == SapHanaProvider.Unmanaged
+				? SapHanaProviderAdapter.GetInstance().CreateConnection(connectionString)
+				: OdbcProviderAdapter.GetInstance().CreateConnection(connectionString);
 		}
 	}
 }

@@ -6,6 +6,6 @@
 <#
 	NamespaceName = "MySqlDataContext";
 
-	LoadMySqlMetadata(GetConnectionString("MySql"));
+	LoadMySqlMetadata(GetConnectionString("MySql.8.0"));
 	GenerateModel();
 #>

@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 			IsDateOnlySupported = assembly.GetName().Version >= MinDateOnlyVersion;
 
-			_connectionCreator = typeMapper.BuildWrappedFactory((string connectionString) => new FbConnection(connectionString));
+			_connectionFactory = typeMapper.BuildTypedFactory<string, FbConnection, DbConnection>((string connectionString) => new FbConnection(connectionString));
 		}
 
 		static readonly Lazy<FirebirdProviderAdapter> _lazy    = new (() => new ());
@@ -91,14 +91,18 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
+#region IDynamicProviderAdapter
+
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		private readonly Func<string, FbConnection> _connectionCreator;
-		public DbConnection CreateConnection(string connectionString) => ((IConnectionWrapper)_connectionCreator(connectionString)).Connection;
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
 
 		/// <summary>
 		/// FB client 7.10.0+.
@@ -138,28 +142,11 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		[Wrapper]
-		private sealed class FbConnection : TypeWrapper, IConnectionWrapper
+		private sealed class FbConnection
 		{
-			private static LambdaExpression[] Wrappers { get; } =
-			{
-				// [0]: Open
-				(Expression<Action<FbConnection>>       )((FbConnection this_) => this_.Open()),
-				// [1]: Dispose
-				(Expression<Action<FbConnection>>       )((FbConnection this_) => this_.Dispose()),
-			};
-
-			public FbConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
-			{
-			}
-
 			public FbConnection(string connectionString) => throw new NotImplementedException();
 
 			public static void ClearAllPools() => throw new NotImplementedException();
-
-			public void Open() => ((Action<FbConnection>)CompiledWrappers[0])(this);
-			public void Dispose() => ((Action<FbConnection>)CompiledWrappers[1])(this);
-
-			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		[Wrapper]
