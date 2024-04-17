@@ -1536,8 +1536,14 @@ namespace Tests.DataProvider
 			[Column(Precision = 3)                                               ] public DateTime DateTime3;
 			// MySQL.Data provider has issues with timestamps
 			// TODO: look into it later
-			[Column(Configuration = "MySqlConnector")                            ] public DateTimeOffset TimeStamp;
-			[Column(Precision = 5, Configuration = "MySqlConnector")             ] public DateTimeOffset TimeStamp5;
+			[Column(Configuration = "MySqlConnector.5.7")                        ]
+			[Column(Configuration = "MySqlConnector.8.0")                        ]
+			[Column(Configuration = "MariaDB.11")                                ]
+			                                                                       public DateTimeOffset TimeStamp;
+			[Column(Precision = 5, Configuration = "MySqlConnector.5.7", CreateFormat = "{0}{1}{2}{3} DEFAULT '1970-01-01 00:00:01'")]
+			[Column(Precision = 5, Configuration = "MySqlConnector.8.0")         ]
+			[Column(Precision = 5, Configuration = "MariaDB.11")                 ]
+			                                                                       public DateTimeOffset TimeStamp5;
 			[Column                                                              ] public TimeSpan Time;
 			[Column(Precision = 2)                                               ] public TimeSpan Time2;
 			[Column                                                              ] public sbyte TinyInt;
@@ -1643,9 +1649,9 @@ namespace Tests.DataProvider
 					Assert.That(sql, Does.Contain("\t`Decimal10_5`      DECIMAL(10, 5)    NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Decimal20_2`      DECIMAL(20, 2)    NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Float`            FLOAT             NOT NULL"));
-					Assert.That(sql, Does.Contain("\t`Float10`          FLOAT(10)         NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Float10`          FLOAT             NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Double`           DOUBLE            NOT NULL"));
-					Assert.That(sql, Does.Contain("\t`Float30`          FLOAT(30)         NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Float30`          DOUBLE            NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Bool`             BOOLEAN           NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Bit1`             BIT               NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Bit8`             BIT(8)            NOT NULL"));
@@ -1820,6 +1826,7 @@ namespace Tests.DataProvider
 			[Column                                                  ] public DateTime DateTime;
 			[Column(Precision = 3)                                   ] public DateTime DateTime3;
 			[Column                                                  ] public DateTimeOffset TimeStamp;
+			[Column(Precision = 5, Configuration = ProviderName.MySql57, CreateFormat = "{0}{1}{2}{3} DEFAULT '1970-01-01 00:00:01'")]
 			[Column(Precision = 5)                                   ] public DateTimeOffset TimeStamp5;
 			[Column                                                  ] public TimeSpan Time;
 			[Column(Precision = 2)                                   ] public TimeSpan Time2;

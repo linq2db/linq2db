@@ -365,12 +365,23 @@ CREATE TABLE TestMerge1
 	FieldNChar      NCHAR(1)          NULL,
 	FieldFloat      FLOAT             NULL,
 	FieldDouble     DOUBLE            NULL,
-	FieldDateTime   DATETIME          NULL,
+	FieldDateTime   DATETIME(6)       NULL,
 	FieldBinary     VARBINARY(20)     NULL,
 	FieldGuid       CHAR(36)          NULL,
 	FieldDecimal    DECIMAL(24, 10)   NULL,
 	FieldDate       DATE              NULL,
+-- SKIP MySql.5.7 BEGIN
+-- SKIP MySql.8.0 BEGIN
+-- SKIP MySqlConnector.5.7 BEGIN
+-- SKIP MySqlConnector.8.0 BEGIN
+	FieldTime       TIME(6)           NULL,
+-- SKIP MySql.5.7 END
+-- SKIP MySql.8.0 END
+-- SKIP MySqlConnector.5.7 END
+-- SKIP MySqlConnector.8.0 END
+-- SKIP MariaDB.11 BEGIN
 	FieldTime       TIME              NULL,
+-- SKIP MariaDB.11 END
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL,
 
@@ -394,12 +405,23 @@ CREATE TABLE TestMerge2
 	FieldNChar      NCHAR(1)          NULL,
 	FieldFloat      FLOAT             NULL,
 	FieldDouble     DOUBLE            NULL,
-	FieldDateTime   DATETIME          NULL,
+	FieldDateTime   DATETIME(6)       NULL,
 	FieldBinary     VARBINARY(20)     NULL,
 	FieldGuid       CHAR(36)          NULL,
 	FieldDecimal    DECIMAL(24, 10)   NULL,
 	FieldDate       DATE              NULL,
+-- SKIP MySql.5.7 BEGIN
+-- SKIP MySql.8.0 BEGIN
+-- SKIP MySqlConnector.5.7 BEGIN
+-- SKIP MySqlConnector.8.0 BEGIN
+	FieldTime       TIME(6)           NULL,
+-- SKIP MySql.5.7 END
+-- SKIP MySql.8.0 END
+-- SKIP MySqlConnector.5.7 END
+-- SKIP MySqlConnector.8.0 END
+-- SKIP MariaDB.11 BEGIN
 	FieldTime       TIME              NULL,
+-- SKIP MariaDB.11 END
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL,
 

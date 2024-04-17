@@ -27,14 +27,6 @@ namespace Tests
 
 		#region MySQL/MariaDB
 		/// <summary>
-		/// MySQL 5.7 over MySql.Data.
-		/// </summary>
-		public const string MySql57  = "MySql.5.7";
-		/// <summary>
-		/// MySQL 8.x over MySql.Data.
-		/// </summary>
-		public const string MySql80  = "MySql.8.0";
-		/// <summary>
 		/// MySQL 5.7 over MySqlConnector.
 		/// </summary>
 		public const string MySql57Connector  = "MySqlConnector.5.7";
@@ -50,7 +42,7 @@ namespace Tests
 		/// <summary>
 		/// All MySql.Data providers.
 		/// </summary>
-		public const string AllMySqlData      = $"{MySql57},{MySql80}";
+		public const string AllMySqlData      = $"{ProviderName.MySql57},{ProviderName.MySql80}";
 		/// <summary>
 		/// All MySqlConnector providers.
 		/// </summary>
@@ -62,7 +54,7 @@ namespace Tests
 		/// <summary>
 		/// All mysql test providers (no mariadb).
 		/// </summary>
-		public const string AllMySqlServer    = $"{MySql57},{MySql57Connector},{MySql80},{MySql80Connector}";
+		public const string AllMySqlServer    = $"{ProviderName.MySql57},{MySql57Connector},{ProviderName.MySql80},{MySql80Connector}";
 		/// <summary>
 		/// All mariadb test providers.
 		/// </summary>
@@ -70,15 +62,15 @@ namespace Tests
 		/// <summary>
 		/// MySQL 5.7.
 		/// </summary>
-		public const string AllMySql57        = $"{MySql57},{MySql57Connector}";
+		public const string AllMySql57        = $"{ProviderName.MySql57},{MySql57Connector}";
 		/// <summary>
 		/// MySQL 5.7.
 		/// </summary>
-		public const string AllMySql80        = $"{MySql80},{MySql80Connector}";
+		public const string AllMySql80        = $"{ProviderName.MySql80},{MySql80Connector}";
 		/// <summary>
 		/// MySQL 8.x and MariaDB.
 		/// </summary>
-		public const string AllMySql8Plus     = $"{MySql80},{MySql80Connector},{MariaDB11Connector}";
+		public const string AllMySql8Plus     = $"{ProviderName.MySql80},{MySql80Connector},{MariaDB11Connector}";
 		/// <summary>
 		/// MySQL/MariaDB with CTE support.
 		/// </summary>

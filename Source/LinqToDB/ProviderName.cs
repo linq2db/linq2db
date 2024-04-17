@@ -128,6 +128,21 @@ namespace LinqToDB
 		/// </summary>
 		public const string MySql         = "MySql";
 		/// <summary>
+		/// MySql 5.7.x provider.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySql57MappingSchema"/>.
+		/// </summary>
+		public const string MySql57 = "MySql.5.7";
+		/// <summary>
+		/// MySql 8.x provider.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySql80MappingSchema"/>.
+		/// </summary>
+		public const string MySql80 = "MySql.8.0";
+		/// <summary>
+		/// MariaDB 10+ provider.
+		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MariaDB10MappingSchema"/>.
+		/// </summary>
+		public const string MariaDB10 = "MariaDB.10";
+		/// <summary>
 		/// MySql 5.7.x using MySql.Data provider.
 		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySqlData57MappingSchema"/>.
 		/// </summary>
