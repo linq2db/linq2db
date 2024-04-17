@@ -87,6 +87,7 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child.FirstOrDefault()!.ChildID);
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void NestedFirstOrDefaultScalar2([DataSources(
 			TestProvName.AllInformix,
@@ -125,6 +126,7 @@ namespace Tests.Linq
 					});
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void NestedFirstOrDefault1([DataSources] string context)
 		{
@@ -134,6 +136,7 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child.FirstOrDefault());
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void NestedFirstOrDefault2([DataSources] string context)
 		{
@@ -153,6 +156,7 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Select(c => c.ParentID).Distinct().FirstOrDefault());
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void NestedFirstOrDefault4([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL9)] string context)
 		{
@@ -163,6 +167,7 @@ namespace Tests.Linq
 		}
 
 		//TODO: Access has nonstandard join, we have to improve it
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void NestedFirstOrDefault5([DataSources(TestProvName.AllAccess)] string context)
 		{

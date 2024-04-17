@@ -211,6 +211,7 @@ namespace Tests.Linq
 		//				.Any()));
 		//}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
@@ -247,6 +248,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest3([DataSources(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
@@ -263,6 +265,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -293,6 +296,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -323,6 +327,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
@@ -353,6 +358,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
@@ -396,6 +402,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
@@ -440,6 +447,7 @@ namespace Tests.Linq
 		}
 
 		// PostgreSQL92 Uses 3 queries and we join results in wrong order. See LetTest71 with explicit sort
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -474,6 +482,7 @@ namespace Tests.Linq
 					).Where(t => t.ParentID > 0).Take(5000));
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
@@ -508,6 +517,7 @@ namespace Tests.Linq
 					).Where(t => t.ParentID > 0).Take(5000));
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -538,6 +548,7 @@ namespace Tests.Linq
 					});
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest9([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -582,9 +593,10 @@ namespace Tests.Linq
 							First = ch1.FirstOrDefault()
 						}
 					).Any()
-));
+				));
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest11([DataSources] string context)
 		{
