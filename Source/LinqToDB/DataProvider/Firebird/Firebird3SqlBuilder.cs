@@ -24,12 +24,18 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override string? LimitFormat(SelectQuery selectQuery)
 		{
-			return selectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null;
+			// From doc:
+			// The choice between ROW or ROWS, or FIRST or NEXT in the clauses is just for aesthetic purposes
+			return "FETCH NEXT {0} ROWS ONLY";
 		}
 
 		protected override string OffsetFormat(SelectQuery selectQuery)
 		{
 			return "OFFSET {0} ROWS";
+		}
+
+		protected override void BuildSkipFirst(SelectQuery selectQuery)
+		{
 		}
 
 		protected override bool OffsetFirst => true;

@@ -90,6 +90,13 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+			// TODO: remove and enable conversion to DataParameter in mapping schema
+			if (value is bool boolVal && (dataType.DataType == DataType.Char || Version == FirebirdVersion.v25))
+			{
+				value = boolVal ? "1" : "0";
+				dataType = dataType.WithDataType(DataType.Char);
+			}
+
 #if NET6_0_OR_GREATER
 			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
 			{

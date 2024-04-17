@@ -61,6 +61,7 @@ LinqToDB.Mapping.MappingSchema.AddScalarType(System.Type! type, LinqToDB.SqlQuer
 LinqToDB.Mapping.Nullability
 LinqToDB.Sql.SqlExtensionParam.ParamNumber.get -> int
 LinqToDB.SqlQuery.SqlColumn.ColumnNumber.get -> int
+override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.BuildSkipFirst(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> void
 override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.ISqlBuilder!
 override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.LimitFormat(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> string?
 override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.OffsetFirst.get -> bool
