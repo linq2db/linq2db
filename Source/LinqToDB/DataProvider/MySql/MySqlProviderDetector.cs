@@ -57,6 +57,7 @@ namespace LinqToDB.DataProvider.MySql
 				case "MariaDB":
 					return GetDataProvider(options, provider, MySqlVersion.MariaDB10);
 				case MySqlProviderAdapter.MySqlConnectorNamespace:
+				case MySqlProviderAdapter.MySqlDataClientNamespace:
 				case ProviderName.MySql:
 					if (options.ConfigurationString?.Contains("5.") == true
 						|| options.ProviderName?    .Contains("55") == true
