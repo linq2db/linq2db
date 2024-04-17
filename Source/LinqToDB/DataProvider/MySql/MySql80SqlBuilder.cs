@@ -32,8 +32,20 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			switch (join.JoinType)
 			{
-				case JoinType.CrossApply: StringBuilder.Append("INNER JOIN LATERAL "); return true;
-				case JoinType.OuterApply: StringBuilder.Append("LEFT JOIN LATERAL "); return true;
+				case JoinType.CrossApply:
+					// join with function implies lateral keyword
+					if (join.Table.SqlTableType == SqlTableType.Function)
+						StringBuilder.Append("INNER JOIN ");
+					else
+						StringBuilder.Append("INNER JOIN LATERAL ");
+					return true;
+				case JoinType.OuterApply:
+					// join with function implies lateral keyword
+					if (join.Table.SqlTableType == SqlTableType.Function)
+						StringBuilder.Append("LEFT JOIN ");
+					else
+						StringBuilder.Append("LEFT JOIN LATERAL ");
+					return true;
 			}
 
 			return base.BuildJoinType(join, condition);

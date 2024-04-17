@@ -20,13 +20,6 @@ namespace LinqToDB.DataProvider.Access
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			var provider = options.ProviderName switch
-			{
-				OdbcProviderAdapter.ClientNamespace  => AccessProvider.ODBC,
-				OleDbProviderAdapter.ClientNamespace => AccessProvider.OleDb,
-				_                                    => DetectProvider()
-			};
-
 			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB") == true || options.ConnectionString?.Contains("Microsoft.Jet.OLEDB") == true)
 			{
 				return _accessOleDbDataProvider.Value;
@@ -53,7 +46,13 @@ namespace LinqToDB.DataProvider.Access
 		public override IDataProvider GetDataProvider(ConnectionOptions options, AccessProvider provider, Dialect version)
 		{
 			if (provider == AccessProvider.AutoDetect)
+			{
+				var providerImpl = DetectProvider(options);
+				if (providerImpl != null)
+					return providerImpl;
+
 				provider = DetectProvider();
+			}
 
 			return provider switch
 			{

@@ -1043,8 +1043,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("HanaException : feature not supported: field or table alias is not allowed as an input of table functions", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context)
+		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllMySqlWithApply, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
