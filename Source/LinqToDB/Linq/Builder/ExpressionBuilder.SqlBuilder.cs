@@ -188,7 +188,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, expression, includeConvert : true, optimizeConditions : false, compactBinary : false);
+			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, ParameterValues, expression, includeConvert : true, optimizeConditions : false, compactBinary : false);
 
 			return result;
 		}

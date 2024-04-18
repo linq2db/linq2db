@@ -2,10 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,8 +15,8 @@ namespace LinqToDB.Linq
 	using Common;
 	using Common.Logging;
 	using Interceptors;
+	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Extensions;
 
 	using Mapping;
 	using SqlProvider;
@@ -72,15 +70,15 @@ namespace LinqToDB.Linq
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
 				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
-				Expression!.EqualsTo(expr, dataContext, _parametrized, _parametersDuplicates, _queryableMemberAccessorDic);
+				Expression!.EqualsTo(expr, dataContext, _parametrized, _parametersDuplicates, _dynamicAccessors);
 		}
 
-		Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
 		List<Expression>?                                _parametrized;
 
 		List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? _parametersDuplicates;
+		List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>?                    _dynamicAccessors;
 
-		internal bool IsFastCacheable => _queryableMemberAccessorDic == null;
+		internal bool IsFastCacheable => _dynamicAccessors == null;
 
 		internal void SetParametrized(List<Expression>? parametrized)
 		{
@@ -90,8 +88,13 @@ namespace LinqToDB.Linq
 		internal void SetParametersDuplicates(List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? parametersDuplicates)
 		{
 			_parametersDuplicates = parametersDuplicates;
-		}		
-		
+		}
+
+		public void SetDynamicAccessors(List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>? dynamicAccessors)
+		{
+			_dynamicAccessors = dynamicAccessors;
+		}
+
 		public bool IsParametrized(Expression expr)
 		{
 			return _parametrized?.Contains(expr) == true;
@@ -142,22 +145,9 @@ namespace LinqToDB.Linq
 			Expression     = result;
 		}
 
-		internal Expression AddQueryableMemberAccessors<TContext>(TContext context, MemberInfo memberInfo, IDataContext dataContext, Func<TContext, MemberInfo, IDataContext, Expression> qe)
+		internal void ClearDynamicQueryableInfo()
 		{
-			if (_queryableMemberAccessorDic != null && _queryableMemberAccessorDic.TryGetValue(memberInfo, out var e))
-				return e.Expression;
-
-			e = new QueryableMemberAccessor<TContext>(context, qe(context, memberInfo, dataContext), qe);
-
-			_queryableMemberAccessorDic ??= new Dictionary<MemberInfo, QueryableMemberAccessor>(MemberInfoComparer.Instance);
-			_queryableMemberAccessorDic.Add(memberInfo, e);
-
-			return e.Expression;
-		}
-
-		internal void ClearMemberQueryableInfo()
-		{
-			_queryableMemberAccessorDic = null;
+			_dynamicAccessors = null;
 		}
 
 		#endregion
@@ -255,7 +245,6 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
-
 	}
 
 	public class Query<T> : Query
@@ -528,8 +517,8 @@ namespace LinqToDB.Linq
 				// Parameters with SqlQueryDependentAttribute will be transferred to constants
 				// No LambdaExpressions which are located in constants, they will be expanded and injected into tree
 				//
-				var exposed = ExpressionBuilder.ExposeExpression(expr, dataContext, optimizationContext,
-				optimizeConditions : true, compactBinary : false /* binary already compacted by AggregateExpression*/);
+				var exposed = ExpressionBuilder.ExposeExpression(expr, dataContext, optimizationContext, null,
+					optimizeConditions : true, compactBinary : false /* binary already compacted by AggregateExpression*/);
 
 				// simple trees do not mutate
 				var isExposed = !ReferenceEquals(exposed, expr);

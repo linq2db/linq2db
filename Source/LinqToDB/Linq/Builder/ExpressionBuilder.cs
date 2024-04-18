@@ -210,6 +210,7 @@ namespace LinqToDB.Linq.Builder
 			_query.SetPreambles(preambles);
 			_query.SetParametrized(_parametersContext.GetParametrized());
 			_query.SetParametersDuplicates(_parametersContext.GetParameterDuplicates());
+			_query.SetDynamicAccessors(_parametersContext.GetDynamicAccessors());
 
 			return (Query<T>)_query;
 		}
@@ -250,11 +251,6 @@ namespace LinqToDB.Linq.Builder
 				return GetSequenceExpression(scoped.Context);
 
 			return null;
-		}
-
-		public void AddAsParametrized(Expression expression)
-		{
-			_parametersContext.AddAsParametrized(expression);
 		}
 
 		public void RegisterSequenceExpression(IBuildContext sequence, Expression expression)
@@ -405,7 +401,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var expr = expression;
 
-			expr = ExposeExpression(expression, DataContext, _optimizationContext, optimizeConditions:false, compactBinary:true);
+			expr = ExposeExpression(expression, DataContext, _optimizationContext, ParameterValues, optimizeConditions:false, compactBinary:true);
 
 			return expr;
 		}
@@ -439,11 +435,11 @@ namespace LinqToDB.Linq.Builder
 
 		static ObjectPool<ExposeExpressionVisitor> _exposeVisitorPool = new(() => new ExposeExpressionVisitor(), v => v.Cleanup(), 100);
 
-		public static Expression ExposeExpression(Expression expression, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, bool optimizeConditions, bool compactBinary)
+		public static Expression ExposeExpression(Expression expression, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, object?[]? parameterValues, bool optimizeConditions, bool compactBinary)
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, expression, false, optimizeConditions, compactBinary);
+			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, parameterValues, expression, false, optimizeConditions, compactBinary);
 
 			return result;
 		}
@@ -458,16 +454,6 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 		#region ConvertElementAt
-
-		#endregion
-
-		#region SqQueryDepended support
-
-		public Expression AddQueryableMemberAccessors<TContext>(TContext context, AccessorMember memberInfo, IDataContext dataContext,
-			Func<TContext, MemberInfo, IDataContext, Expression> qe)
-		{
-			return _query.AddQueryableMemberAccessors(context, memberInfo.MemberInfo, dataContext, qe);
-		}
 
 		#endregion
 

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
+	using Mapping;
 	using Extensions;
-	using Linq;
 
 	static class EqualsToVisitor
 	{
@@ -17,10 +16,10 @@ namespace LinqToDB.Expressions
 			IDataContext                                                                                                                         dataContext,
 			List<Expression>?                                                                                                                    parametrizedExpressions,
 			List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? parametersDuplicates,
-			IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>?                                                                            queryableMemberAccessorDic,
+			List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>?                    dynamicAccessors,
 			bool                                                                                                                                 compareConstantValues = false)
 		{
-			var result = EqualsTo(expr1, expr2, PrepareEqualsInfo(dataContext, parametrizedExpressions, queryableMemberAccessorDic, compareConstantValues));
+			var result = EqualsTo(expr1, expr2, PrepareEqualsInfo(dataContext, parametrizedExpressions, compareConstantValues));
 
 			if (result && parametersDuplicates != null)
 			{
@@ -35,6 +34,17 @@ namespace LinqToDB.Expressions
 				}
 			}
 
+			if (result && dynamicAccessors != null)
+			{
+				foreach (var (used, mappingSchema, accessorFunc) in dynamicAccessors)
+				{
+					var current = accessorFunc(dataContext, mappingSchema);
+					result = ExpressionEqualityComparer.Instance.Equals(used, current);
+					if (!result)
+						break;
+				}
+			}
+
 			return result;
 		}
 
@@ -42,34 +52,30 @@ namespace LinqToDB.Expressions
 		/// Creates reusable equality context.
 		/// </summary>
 		internal static EqualsToInfo PrepareEqualsInfo(
-			IDataContext                                              dataContext,
-			List<Expression>?                                         parametrizedExpressions,
-			IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic = null,
-			bool                                                      compareConstantValues      = false)
+			IDataContext      dataContext,
+			List<Expression>? parametrizedExpressions,
+			bool              compareConstantValues = false)
 		{
-			return new EqualsToInfo(dataContext, parametrizedExpressions, queryableMemberAccessorDic, compareConstantValues);
+			return new EqualsToInfo(dataContext, parametrizedExpressions, compareConstantValues);
 		}
 
 		internal sealed class EqualsToInfo
 		{
-			public EqualsToInfo(IDataContext                              dataContext,
-				List<Expression>?                                         parametrizedExpressions,
-				IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic,
-				bool                                                      compareConstantValues)
+			public EqualsToInfo(
+				IDataContext      dataContext,
+				List<Expression>? parametrizedExpressions,
+				bool              compareConstantValues)
 			{
 				DataContext                = dataContext;
 				ParametrizedExpressions    = parametrizedExpressions;
-				QueryableMemberAccessorDic = queryableMemberAccessorDic;
 				CompareConstantValues      = compareConstantValues;
 			}
 
 			public readonly IDataContext                                              DataContext;
 			public readonly List<Expression>?                                         ParametrizedExpressions;
-			public readonly IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? QueryableMemberAccessorDic;
 			public readonly bool                                                      CompareConstantValues;
 
-			public HashSet<Expression>?          Visited;
-			public Dictionary<MemberInfo, bool>? MemberCompareCache;
+			public HashSet<Expression>? Visited;
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public bool IsParametrized(Expression expr)
@@ -83,28 +89,11 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static bool CompareMemberExpression(MemberInfo memberInfo, EqualsToInfo info)
-		{
-			if (info.QueryableMemberAccessorDic == null ||
-				!info.QueryableMemberAccessorDic.TryGetValue(memberInfo, out var accessor))
-				return true;
-
-			if (info.MemberCompareCache == null || !info.MemberCompareCache.TryGetValue(memberInfo, out var compareResult))
-			{
-				compareResult = accessor.Expression.EqualsTo(accessor.Execute(memberInfo, info.DataContext), info);
-				(info.MemberCompareCache ??= new (MemberInfoComparer.Instance)).Add(memberInfo, compareResult);
-			}
-
-			return compareResult;
-		}
-
 		internal static bool EqualsTo(this Expression? expr1, Expression? expr2, EqualsToInfo info)
 		{
 			if (expr1 == expr2)
 			{
-				if (info.QueryableMemberAccessorDic == null || expr1 == null)
-					return true;
+				return true;
 			}
 
 			if (expr1 == null || expr2 == null || expr1.NodeType != expr2.NodeType || expr1.Type != expr2.Type)
@@ -325,12 +314,6 @@ namespace LinqToDB.Expressions
 		{
 			if (expr1.Member == expr2.Member)
 			{
-				if (expr1.Expression == expr2.Expression || expr1.Expression!.Type == expr2.Expression!.Type)
-				{
-					if (!CompareMemberExpression(expr1.Member, info))
-						return false;
-				}
-
 				return expr1.Expression.EqualsTo(expr2.Expression, info);
 			}
 
@@ -440,9 +423,6 @@ namespace LinqToDB.Expressions
 				}
 
 			}
-
-			if (!CompareMemberExpression(expr1.Method, info))
-				return false;
 
 			return true;
 		}

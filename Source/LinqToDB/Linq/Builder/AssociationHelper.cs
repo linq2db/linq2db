@@ -45,18 +45,16 @@ namespace LinqToDB.Linq.Builder
 			LambdaExpression? definedQueryMethod  = null;
 			if (association.HasQueryMethod())
 			{
-				/*// here we tell for Expression Comparer to compare optimized Association expressions
-				//
-				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors((association, parentType, objectType), onMember, builder.DataContext, static (context, mi, dc) =>
+				// Closure should handle only association, objectType and parentType.
+				// Here we tell for EqualsToVisitor to compare optimized Association expressions
+				definedQueryMethod = (LambdaExpression)builder.ParametersContext.RegisterDynamicExpressionAccessor(Expression.Constant(association), builder.DataContext, mappingSchema, (dc, _) =>
 				{
-					var queryLambda         = context.association.GetQueryMethod(context.parentType, context.objectType) ?? throw new InvalidOperationException();
-					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
-					var optimizedExpr       = optimizationContext.ExposeExpression(queryLambda);
-					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
-					return optimizedExpr;
-				});*/
+					var associationExpression = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
+					var optimizationContext   = new ExpressionTreeOptimizationContext(dc);
+					associationExpression = (LambdaExpression)ExpressionBuilder.ExposeExpression(associationExpression, dc, optimizationContext, null, optimizeConditions : true, compactBinary : true);
+					return associationExpression;
+				});
 
-				definedQueryMethod = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
 				cacheCheckAdded = true;
 
 				var parameterMatch = new Dictionary<ParameterExpression, Expression>();
@@ -142,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 				if (inline && !shouldAddDefaultIfEmpty)
 				{
 					var ed = builder.MappingSchema.GetEntityDescriptor(objectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
-					if (ed.QueryFilterFunc != null)
+					if (ed.QueryFilterLambda != null)
 					{
 						shouldAddDefaultIfEmpty = true;
 						shouldAddCacheCheck     = true;
@@ -200,11 +198,11 @@ namespace LinqToDB.Linq.Builder
 				// here we tell for Expression Comparer to compare optimized Association expressions
 				//
 				var closureExpr    = definedQueryMethod;
-				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(closureExpr, onMember, builder.DataContext, static (closureExpr, mi, dc) =>
+				definedQueryMethod = (LambdaExpression)builder.ParametersContext.RegisterDynamicExpressionAccessor(closureExpr, builder.DataContext, mappingSchema, (dc, ms) =>
 				{
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
-					var optimizedExpr = ExpressionBuilder.ExposeExpression(closureExpr, dc, optimizationContext, optimizeConditions : true, compactBinary : true);
-					    optimizedExpr       = optimizedExpr.OptimizeExpression(dc.MappingSchema)!;
+					var optimizedExpr       = ExpressionBuilder.ExposeExpression(closureExpr, dc, optimizationContext, null, optimizeConditions : true, compactBinary : true);
+					optimizedExpr = optimizedExpr.OptimizeExpression(ms);
 					return optimizedExpr;
 				});
 			}

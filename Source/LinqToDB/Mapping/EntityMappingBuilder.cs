@@ -541,7 +541,31 @@ namespace LinqToDB.Mapping
 		public EntityMappingBuilder<TEntity> HasQueryFilter<TDataContext>(Expression<Func<TEntity, TDataContext, bool>> filter)
 			where TDataContext : IDataContext
 		{
-			return HasAttribute(new QueryFilterAttribute { FilterFunc = filter });
+			return HasAttribute(new QueryFilterAttribute { FilterLambda = filter });
+		}
+
+		/// <summary>
+		///     Specifies a LINQ <see cref="IQueryable{T}" /> function that will automatically be applied to any queries targeting
+		///     this entity type.
+		/// </summary>
+		/// <param name="filterFunc">Function which corrects input IQueryable.</param>
+		/// <returns> The same builder instance so that multiple configuration calls can be chained. </returns>
+		public EntityMappingBuilder<TEntity> HasQueryFilter(Func<IQueryable<TEntity>, IDataContext, IQueryable<TEntity>> filterFunc)
+		{
+			return HasQueryFilter<IDataContext>(filterFunc);
+		}
+
+		/// <summary>
+		///     Specifies a LINQ <see cref="IQueryable{T}" /> function that will automatically be applied to any queries targeting
+		///     this entity type.
+		/// </summary>
+		/// <param name="filterFunc"> The LINQ predicate expression. </param>
+		/// <returns> The same builder instance so that multiple configuration calls can be chained. </returns>
+		public EntityMappingBuilder<TEntity> HasQueryFilter<TDataContext>(Func<IQueryable<TEntity>, TDataContext, IQueryable<TEntity>> filterFunc)
+			where TDataContext : IDataContext
+		{
+			HasAttribute(new QueryFilterAttribute { FilterFunc = filterFunc });
+			return this;
 		}
 
 		#region Dynamic Properties

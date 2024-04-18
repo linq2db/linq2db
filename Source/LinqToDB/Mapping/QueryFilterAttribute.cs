@@ -12,6 +12,14 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 	public class QueryFilterAttribute : MappingAttribute
 	{
+		/// <summary>
+		/// Filter LambdaExpression. <code>Expression&lt;Func&lt;TEntity, IDataContext, bool&gt;&gt;</code>
+		/// <para>
+		/// For example (e, db) => e.IsDeleted == false "/>
+		/// </para>
+		/// </summary>
+		public LambdaExpression? FilterLambda { get; set; }
+
 		// we cannot use
 		// <see cref="System.Func{System.Linq.IQueryable{T},LinqToDB.IDataContext,System.Linq.IQueryable{T}}"/>
 		// as it produce compiler/documentation errors due https://github.com/dotnet/csharplang/issues/401
@@ -22,11 +30,11 @@ namespace LinqToDB.Mapping
 		/// <item>- T2 is <see cref="IDataContext"/></item>
 		/// </list>
 		/// </summary>
-		public LambdaExpression? FilterFunc { get; set; }
+		public Delegate? FilterFunc { get; set; }
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($"{IdentifierBuilder.GetObjectID(FilterFunc)}");
+			return FormattableString.Invariant($"{IdentifierBuilder.GetObjectID(FilterLambda)}{IdentifierBuilder.GetObjectID(FilterFunc?.Method)}");
 		}
 	}
 }
