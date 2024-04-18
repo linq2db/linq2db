@@ -17,8 +17,8 @@ namespace LinqToDB.DataProvider.SQLite
 	using LinqToDB.Linq.Translation;
 	using System.Globalization;
 
-	sealed class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
-	sealed class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
+	sealed class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic, SQLiteProvider.System   ) {} }
+	sealed class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS,      SQLiteProvider.Microsoft) {} }
 
 	/*
 	 * For now we don't have SQLite versioning as SQLite engine usually provided by ADO.NET provider as nuget dependency
@@ -37,13 +37,18 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="name">If ProviderName.SQLite is provided,
 		/// the detection mechanism preferring System.Data.SQLite
 		/// to Microsoft.Data.Sqlite will be used.</param>
-		protected SQLiteDataProvider(string name)
-			: this(name, MappingSchemaInstance.Get(name))
+		protected SQLiteDataProvider(string name, SQLiteProvider provider)
+			: this(name, MappingSchemaInstance.Get(name), provider)
 		{
 		}
 
-		protected SQLiteDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema, SQLiteProviderAdapter.GetInstance(name))
+		protected SQLiteDataProvider(string name, MappingSchema mappingSchema, SQLiteProvider provider)
+			: this(name, mappingSchema, SQLiteProviderAdapter.GetInstance(provider == SQLiteProvider.AutoDetect ? provider = SQLiteProviderDetector.DetectProvider() : provider))
+		{
+		}
+
+		protected SQLiteDataProvider(string name, MappingSchema mappingSchema, SQLiteProviderAdapter adapter)
+			: base(name, mappingSchema, adapter)
 		{
 			SqlProviderFlags.IsSkipSupported                   = false;
 			SqlProviderFlags.IsSkipSupportedIfTake             = true;

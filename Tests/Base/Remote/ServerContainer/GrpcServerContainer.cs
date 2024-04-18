@@ -75,9 +75,6 @@ namespace Tests.Remote.ServerContainer
 			if (ms != null)
 				dx.MappingSchema = MappingSchema.CombineSchemas(ms, dx.MappingSchema);
 
-			if (configuration.IsAnyOf(TestProvName.AllMariaDB))
-				dx.MappingSchema = MappingSchema.CombineSchemas(TestBase._mariaDBSchema, dx.MappingSchema);
-
 			return dx;
 		}
 

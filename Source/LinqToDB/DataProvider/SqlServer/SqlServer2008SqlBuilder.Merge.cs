@@ -55,7 +55,7 @@
 		{
 			StringBuilder
 				.AppendLine()
-				.Append("WHEN NOT MATCHED By Source");
+				.Append("WHEN NOT MATCHED BY SOURCE");
 
 			if (operation.Where != null)
 			{

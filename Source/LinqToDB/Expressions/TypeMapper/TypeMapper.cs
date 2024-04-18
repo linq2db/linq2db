@@ -1140,27 +1140,43 @@ namespace LinqToDB.Expressions
 		}
 
 		public Func<object> BuildFactory<TR>(Expression<Func<TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<object>)BuildFactoryImpl<TR>(newFunc, false);
 		}
 
 		public Func<T, object> BuildFactory<T, TR>(Expression<Func<T, TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<T, object>)BuildFactoryImpl<TR>(newFunc, false);
 		}
 
 		public Func<T1, T2, object> BuildFactory<T1, T2, TR>(Expression<Func<T1, T2, TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<T1, T2, object>)BuildFactoryImpl<TR>(newFunc, false);
 		}
 
 		public Func<T1, T2, T3, object> BuildFactory<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<T1, T2, T3, object>)BuildFactoryImpl<TR>(newFunc, false);
+		}
+
+		public Func<TRes> BuildTypedFactory<TR, TRes>(Expression<Func<TR>> newFunc)
+		{
+			return (Func<TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
+		}
+
+		public Func<T, TRes> BuildTypedFactory<T, TR, TRes>(Expression<Func<T, TR>> newFunc)
+		{
+			return (Func<T, TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
+		}
+
+		public Func<T1, T2, TRes> BuildTypedFactory<T1, T2, TR, TRes>(Expression<Func<T1, T2, TR>> newFunc)
+		{
+			return (Func<T1, T2, TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
+		}
+
+		public Func<T1, T2, T3, TRes> BuildTypedFactory<T1, T2, T3, TR, TRes>(Expression<Func<T1, T2, T3, TR>> newFunc)
+		{
+			return (Func<T1, T2, T3, TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
 		}
 
 		#endregion
@@ -1179,12 +1195,24 @@ namespace LinqToDB.Expressions
 			return BuildWrapperImpl(lambda, wrapResult, false)!;
 		}
 
+		private Delegate BuildFactoryImpl<T, TRes>(LambdaExpression lambda, bool wrapResult)
+		{
+			// TODO: here are two optimizations that could be done to make generated action a bit faster:
+			// 1. require caller to pass unwrapped instance, so we don't need to generate instance_ property access
+			// 2. generate wrapper constructor call instead of Wrap method call (will need null check of wrapped value)
+			var wrapperType = typeof(T);
+			if (!TryMapType(wrapperType, out var _))
+				throw new LinqToDBException($"Wrapper type {wrapperType} is not registered");
+
+			return BuildWrapperImpl(lambda, wrapResult, false, typeof(TRes))!;
+		}
+
 		private Delegate? BuildWrapper(LambdaExpression lambda, bool optional)
 		{
 			return BuildWrapperImpl(lambda, true, optional);
 		}
 
-		private Delegate? BuildWrapperImpl(LambdaExpression lambda, bool wrapResult, bool optional)
+		private Delegate? BuildWrapperImpl(LambdaExpression lambda, bool wrapResult, bool optional, Type? returnTypeOverride = null)
 		{
 			var mappedLambda = MapLambdaInternal(lambda, true, ignoreMissingMembers: optional);
 			if (optional && mappedLambda == null)
@@ -1234,10 +1262,10 @@ namespace LinqToDB.Expressions
 				}
 				else
 				{
-					expr = expr.Transform(returnType, static (returnType, e) =>
+					expr = expr.Transform((returnTypeOverride, returnType), static (ctx, e) =>
 					{
-						if (e.Type == returnType)
-							return Expression.Convert(e, typeof(object));
+						if (e.Type == ctx.returnType)
+							return Expression.Convert(e, ctx.returnTypeOverride ?? typeof(object));
 
 						return e;
 					});

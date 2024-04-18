@@ -1,5 +1,85 @@
 ﻿#nullable enable
+const LinqToDB.ProviderName.Firebird25 = "Firebird.2.5" -> string!
+const LinqToDB.ProviderName.Firebird3 = "Firebird.3" -> string!
+const LinqToDB.ProviderName.Firebird4 = "Firebird.4" -> string!
+const LinqToDB.ProviderName.Firebird5 = "Firebird.5" -> string!
+const LinqToDB.ProviderName.MariaDB10 = "MariaDB.10" -> string!
+const LinqToDB.ProviderName.MariaDB10MySqlConnector = "MariaDB.10.MySqlConnector" -> string!
+const LinqToDB.ProviderName.MariaDB10MySqlData = "MariaDB.10.MySql.Data" -> string!
+const LinqToDB.ProviderName.MySql57 = "MySql.5.7" -> string!
+const LinqToDB.ProviderName.MySql57MySqlConnector = "MySql.5.7.MySqlConnector" -> string!
+const LinqToDB.ProviderName.MySql57MySqlData = "MySql.5.7.MySql.Data" -> string!
+const LinqToDB.ProviderName.MySql80 = "MySql.8.0" -> string!
+const LinqToDB.ProviderName.MySql80MySqlConnector = "MySql.8.0.MySqlConnector" -> string!
+const LinqToDB.ProviderName.MySql80MySqlData = "MySql.8.0.MySql.Data" -> string!
+LinqToDB.DataProvider.ClickHouse.ClickHouseProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.DB2.DB2ProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder
+LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.Firebird3SqlBuilder(LinqToDB.DataProvider.IDataProvider! provider, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions, LinqToDB.SqlProvider.ISqlOptimizer! sqlOptimizer, LinqToDB.SqlProvider.SqlProviderFlags! sqlProviderFlags) -> void
+LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.Firebird3SqlBuilder(LinqToDB.SqlProvider.BasicSqlBuilder! parentBuilder) -> void
+LinqToDB.DataProvider.Firebird.Firebird4SqlBuilder
+LinqToDB.DataProvider.Firebird.Firebird4SqlBuilder.Firebird4SqlBuilder(LinqToDB.DataProvider.IDataProvider! provider, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions, LinqToDB.SqlProvider.ISqlOptimizer! sqlOptimizer, LinqToDB.SqlProvider.SqlProviderFlags! sqlProviderFlags) -> void
+LinqToDB.DataProvider.Firebird.FirebirdDataProvider.FirebirdDataProvider(string! name, LinqToDB.DataProvider.Firebird.FirebirdVersion version) -> void
+LinqToDB.DataProvider.Firebird.FirebirdDataProvider.Version.get -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.FirebirdSqlBuilder(LinqToDB.SqlProvider.BasicSqlBuilder! parentBuilder) -> void
+LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect = 0 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdVersion.v25 = 1 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdVersion.v3 = 2 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdVersion.v4 = 3 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.Firebird.FirebirdVersion.v5 = 4 -> LinqToDB.DataProvider.Firebird.FirebirdVersion
+LinqToDB.DataProvider.IDynamicProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.Informix.InformixProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.MySql.MySqlDataProvider.MySqlDataProvider(string! name, LinqToDB.DataProvider.MySql.MySqlVersion version, LinqToDB.DataProvider.MySql.MySqlProvider provider) -> void
+LinqToDB.DataProvider.MySql.MySqlDataProvider.Provider.get -> LinqToDB.DataProvider.MySql.MySqlProvider
+LinqToDB.DataProvider.MySql.MySqlDataProvider.Version.get -> LinqToDB.DataProvider.MySql.MySqlVersion
+LinqToDB.DataProvider.MySql.MySqlProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.MySql.MySqlVersion
+LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect = 0 -> LinqToDB.DataProvider.MySql.MySqlVersion
+LinqToDB.DataProvider.MySql.MySqlVersion.MariaDB10 = 3 -> LinqToDB.DataProvider.MySql.MySqlVersion
+LinqToDB.DataProvider.MySql.MySqlVersion.MySql57 = 1 -> LinqToDB.DataProvider.MySql.MySqlVersion
+LinqToDB.DataProvider.MySql.MySqlVersion.MySql80 = 2 -> LinqToDB.DataProvider.MySql.MySqlVersion
+LinqToDB.DataProvider.OdbcProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.OleDbProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.PostgreSQL.NpgsqlProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.SqlCe.SqlCeProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.SQLite.SQLiteProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.Expressions.TypeMapper.BuildFactory<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! newFunc) -> System.Func<T, object!>!
+LinqToDB.Expressions.TypeMapper.BuildFactory<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! newFunc) -> System.Func<T1, T2, T3, object!>!
+LinqToDB.Expressions.TypeMapper.BuildFactory<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! newFunc) -> System.Func<T1, T2, object!>!
+LinqToDB.Expressions.TypeMapper.BuildFactory<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! newFunc) -> System.Func<object!>!
+LinqToDB.Expressions.TypeMapper.BuildTypedFactory<T, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! newFunc) -> System.Func<T, TRes>!
+LinqToDB.Expressions.TypeMapper.BuildTypedFactory<T1, T2, T3, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! newFunc) -> System.Func<T1, T2, T3, TRes>!
+LinqToDB.Expressions.TypeMapper.BuildTypedFactory<T1, T2, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! newFunc) -> System.Func<T1, T2, TRes>!
+LinqToDB.Expressions.TypeMapper.BuildTypedFactory<TR, TRes>(System.Linq.Expressions.Expression<System.Func<TR>!>! newFunc) -> System.Func<TRes>!
+LinqToDB.Mapping.MappingSchema.AddScalarType(System.Type! type, LinqToDB.DataType dataType = LinqToDB.DataType.Undefined) -> void
+LinqToDB.Mapping.MappingSchema.AddScalarType(System.Type! type, LinqToDB.SqlQuery.SqlDataType! dataType) -> void
 LinqToDB.Mapping.Nullability
+override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.BuildSkipFirst(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> void
+override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.LimitFormat(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> string?
+override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.OffsetFirst.get -> bool
+override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.OffsetFormat(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> string!
+override LinqToDB.DataProvider.Firebird.Firebird4SqlBuilder.BuildJoinType(LinqToDB.SqlQuery.SqlJoinedTable! join, LinqToDB.SqlQuery.SqlSearchCondition! condition) -> bool
+override LinqToDB.DataProvider.Firebird.Firebird4SqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.BuildMergeOperationDeleteBySource(LinqToDB.SqlQuery.SqlMergeOperationClause! operation) -> void
+override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.BuildMergeOperationUpdateBySource(LinqToDB.SqlQuery.SqlMergeOperationClause! operation) -> void
+static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.Firebird.FirebirdVersion dialect = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.Firebird.FirebirdVersion dialect = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.MySql.MySqlVersion dialect = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.MySql.MySqlVersion dialect = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataProvider.Firebird.FirebirdTools.AutoDetectProvider.get -> bool
+static LinqToDB.DataProvider.Firebird.FirebirdTools.AutoDetectProvider.set -> void
+static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.Firebird.FirebirdVersion version = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.Firebird.FirebirdVersion version = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.Firebird.FirebirdVersion version = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Firebird.FirebirdTools.GetDataProvider(LinqToDB.DataProvider.Firebird.FirebirdVersion version = LinqToDB.DataProvider.Firebird.FirebirdVersion.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
 static LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable<TSource>! query, params LinqToDB.Sql.SqlID[]! tableIDs) -> LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable<TSource>!
 static LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>! table) -> LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>!
 static LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessInScopeHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable<TSource>!
@@ -105,6 +185,10 @@ static LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForGroupByHint<TSource>(this
 static LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForJoinHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>! table, params string![]! indexNames) -> LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>!
 static LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForOrderByHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>! table, params string![]! indexNames) -> LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>!
 static LinqToDB.DataProvider.MySql.MySqlHints.UseKeyHint<TSource>(this LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>! table, params string![]! indexNames) -> LinqToDB.DataProvider.MySql.IMySqlSpecificTable<TSource>!
+static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.MySql.MySqlVersion version = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.MySql.MySqlVersion version = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.MySql.MySqlVersion version = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.MySql.MySqlTools.GetDataProvider(LinqToDB.DataProvider.MySql.MySqlVersion version = LinqToDB.DataProvider.MySql.MySqlVersion.AutoDetect, LinqToDB.DataProvider.MySql.MySqlProvider provider = LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
 static LinqToDB.DataProvider.Oracle.OracleHints.AllRowsHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
 static LinqToDB.DataProvider.Oracle.OracleHints.AppendHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
 static LinqToDB.DataProvider.Oracle.OracleHints.AppendValuesHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
@@ -334,6 +418,8 @@ static LinqToDB.DataProvider.SqlServer.SqlServerHints.WithUpdLock<TSource>(this 
 static LinqToDB.DataProvider.SqlServer.SqlServerHints.WithUpdLockInScope<TSource>(this LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable<TSource>!
 static LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLock<TSource>(this LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable<TSource>! table) -> LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable<TSource>!
 static LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLockInScope<TSource>(this LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.SqlServer.SqlServerTools.AutoDetectProvider.get -> bool
+static LinqToDB.DataProvider.SqlServer.SqlServerTools.AutoDetectProvider.set -> void
 static LinqToDB.Mapping.Nullability.TryAnalyzeMember(System.Reflection.MemberInfo! member, out bool isNullable) -> bool
 *REMOVED*static readonly LinqToDB.Common.Array<T>.Empty -> T[]!
 *REMOVED*LinqToDB.SqlQuery.SqlException.SqlException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
@@ -343,3 +429,373 @@ static LinqToDB.Mapping.Nullability.TryAnalyzeMember(System.Reflection.MemberInf
 *REMOVED*LinqToDB.Data.RetryPolicy.RetryLimitExceededException.RetryLimitExceededException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 *REMOVED*LinqToDB.Common.LinqToDBConvertException.LinqToDBConvertException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 *REMOVED*override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.CreateConnectionInternal(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.DataProvider.Access.AccessProvider
+LinqToDB.DataProvider.Access.AccessProvider.AutoDetect = 0 -> LinqToDB.DataProvider.Access.AccessProvider
+LinqToDB.DataProvider.Access.AccessProvider.ODBC = 2 -> LinqToDB.DataProvider.Access.AccessProvider
+LinqToDB.DataProvider.Access.AccessProvider.OleDb = 1 -> LinqToDB.DataProvider.Access.AccessProvider
+LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.AutoDetect = 0 -> LinqToDB.DataProvider.ClickHouse.ClickHouseProvider
+LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.ClickHouseClient = 2 -> LinqToDB.DataProvider.ClickHouse.ClickHouseProvider
+LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.MySqlConnector = 3 -> LinqToDB.DataProvider.ClickHouse.ClickHouseProvider
+LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.Octonica = 1 -> LinqToDB.DataProvider.ClickHouse.ClickHouseProvider
+LinqToDB.DataProvider.DB2.DB2Version.AutoDetect = 0 -> LinqToDB.DataProvider.DB2.DB2Version
+LinqToDB.DataProvider.DB2.DB2Version.LUW = 1 -> LinqToDB.DataProvider.DB2.DB2Version
+LinqToDB.DataProvider.DB2.DB2Version.zOS = 2 -> LinqToDB.DataProvider.DB2.DB2Version
+LinqToDB.DataProvider.Informix.InformixDataProvider.InformixDataProvider(string! name, LinqToDB.DataProvider.Informix.InformixProvider provider) -> void
+LinqToDB.DataProvider.Informix.InformixProvider
+LinqToDB.DataProvider.Informix.InformixProvider.AutoDetect = 0 -> LinqToDB.DataProvider.Informix.InformixProvider
+LinqToDB.DataProvider.Informix.InformixProvider.DB2 = 2 -> LinqToDB.DataProvider.Informix.InformixProvider
+LinqToDB.DataProvider.Informix.InformixProvider.Informix = 1 -> LinqToDB.DataProvider.Informix.InformixProvider
+LinqToDB.DataProvider.MySql.MySqlProvider
+LinqToDB.DataProvider.MySql.MySqlProvider.AutoDetect = 0 -> LinqToDB.DataProvider.MySql.MySqlProvider
+LinqToDB.DataProvider.MySql.MySqlProvider.MySqlConnector = 2 -> LinqToDB.DataProvider.MySql.MySqlProvider
+LinqToDB.DataProvider.MySql.MySqlProvider.MySqlData = 1 -> LinqToDB.DataProvider.MySql.MySqlProvider
+LinqToDB.DataProvider.MySql.MySqlProviderAdapter.ProviderType.get -> LinqToDB.DataProvider.MySql.MySqlProvider
+LinqToDB.DataProvider.Oracle.OracleProvider.AutoDetect = 0 -> LinqToDB.DataProvider.Oracle.OracleProvider
+LinqToDB.DataProvider.Oracle.OracleProvider.Devart = 3 -> LinqToDB.DataProvider.Oracle.OracleProvider
+LinqToDB.DataProvider.Oracle.OracleProvider.Managed = 1 -> LinqToDB.DataProvider.Oracle.OracleProvider
+LinqToDB.DataProvider.Oracle.OracleProvider.Native = 2 -> LinqToDB.DataProvider.Oracle.OracleProvider
+LinqToDB.DataProvider.SapHana.SapHanaProvider
+LinqToDB.DataProvider.SapHana.SapHanaProvider.AutoDetect = 0 -> LinqToDB.DataProvider.SapHana.SapHanaProvider
+LinqToDB.DataProvider.SapHana.SapHanaProvider.ODBC = 2 -> LinqToDB.DataProvider.SapHana.SapHanaProvider
+LinqToDB.DataProvider.SapHana.SapHanaProvider.Unmanaged = 1 -> LinqToDB.DataProvider.SapHana.SapHanaProvider
+LinqToDB.DataProvider.SQLite.SQLiteDataProvider.SQLiteDataProvider(string! name, LinqToDB.DataProvider.SQLite.SQLiteProvider provider) -> void
+LinqToDB.DataProvider.SQLite.SQLiteDataProvider.SQLiteDataProvider(string! name, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataProvider.SQLite.SQLiteProvider provider) -> void
+LinqToDB.DataProvider.SQLite.SQLiteDataProvider.SQLiteDataProvider(string! name, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataProvider.SQLite.SQLiteProviderAdapter! adapter) -> void
+LinqToDB.DataProvider.SQLite.SQLiteProvider
+LinqToDB.DataProvider.SQLite.SQLiteProvider.AutoDetect = 0 -> LinqToDB.DataProvider.SQLite.SQLiteProvider
+LinqToDB.DataProvider.SQLite.SQLiteProvider.Microsoft = 2 -> LinqToDB.DataProvider.SQLite.SQLiteProvider
+LinqToDB.DataProvider.SQLite.SQLiteProvider.System = 1 -> LinqToDB.DataProvider.SQLite.SQLiteProvider
+LinqToDB.DataProvider.Sybase.SybaseDataProvider.SybaseDataProvider(string! name, LinqToDB.DataProvider.Sybase.SybaseProvider provider) -> void
+LinqToDB.DataProvider.Sybase.SybaseDataProvider.SybaseDataProvider(string! name, LinqToDB.DataProvider.Sybase.SybaseProviderAdapter! adapter) -> void
+LinqToDB.DataProvider.Sybase.SybaseProvider
+LinqToDB.DataProvider.Sybase.SybaseProvider.AutoDetect = 0 -> LinqToDB.DataProvider.Sybase.SybaseProvider
+LinqToDB.DataProvider.Sybase.SybaseProvider.DataAction = 2 -> LinqToDB.DataProvider.Sybase.SybaseProvider
+LinqToDB.DataProvider.Sybase.SybaseProvider.Unmanaged = 1 -> LinqToDB.DataProvider.Sybase.SybaseProvider
+static LinqToDB.DataOptionsExtensions.UseAccess(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.Access.AccessProvider provider = LinqToDB.DataProvider.Access.AccessProvider.AutoDetect, System.Func<LinqToDB.DataProvider.Access.AccessOptions!, LinqToDB.DataProvider.Access.AccessOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseAccess(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.Access.AccessProvider provider = LinqToDB.DataProvider.Access.AccessProvider.AutoDetect, System.Func<LinqToDB.DataProvider.Access.AccessOptions!, LinqToDB.DataProvider.Access.AccessOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseAccess(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Access.AccessOptions!, LinqToDB.DataProvider.Access.AccessOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseAccess(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Access.AccessOptions!, LinqToDB.DataProvider.Access.AccessOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseAse(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.Sybase.SybaseProvider provider = LinqToDB.DataProvider.Sybase.SybaseProvider.AutoDetect, System.Func<LinqToDB.DataProvider.Sybase.SybaseOptions!, LinqToDB.DataProvider.Sybase.SybaseOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseAse(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.Sybase.SybaseProvider provider = LinqToDB.DataProvider.Sybase.SybaseProvider.AutoDetect, System.Func<LinqToDB.DataProvider.Sybase.SybaseOptions!, LinqToDB.DataProvider.Sybase.SybaseOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseAse(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Sybase.SybaseOptions!, LinqToDB.DataProvider.Sybase.SybaseOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseAse(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Sybase.SybaseOptions!, LinqToDB.DataProvider.Sybase.SybaseOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseClickHouse(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider = LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.AutoDetect, System.Func<LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!, LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseClickHouse(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider = LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.AutoDetect, System.Func<LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!, LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseClickHouse(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!, LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseClickHouse(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!, LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseDB2(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.DB2.DB2Version version = LinqToDB.DataProvider.DB2.DB2Version.AutoDetect, System.Func<LinqToDB.DataProvider.DB2.DB2Options!, LinqToDB.DataProvider.DB2.DB2Options!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseDB2(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.DB2.DB2Version version = LinqToDB.DataProvider.DB2.DB2Version.AutoDetect, System.Func<LinqToDB.DataProvider.DB2.DB2Options!, LinqToDB.DataProvider.DB2.DB2Options!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseDB2(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.DB2.DB2Options!, LinqToDB.DataProvider.DB2.DB2Options!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseDB2(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.DB2.DB2Options!, LinqToDB.DataProvider.DB2.DB2Options!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.Informix.InformixProvider provider = LinqToDB.DataProvider.Informix.InformixProvider.AutoDetect, System.Func<LinqToDB.DataProvider.Informix.InformixOptions!, LinqToDB.DataProvider.Informix.InformixOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.Informix.InformixProvider provider = LinqToDB.DataProvider.Informix.InformixProvider.AutoDetect, System.Func<LinqToDB.DataProvider.Informix.InformixOptions!, LinqToDB.DataProvider.Informix.InformixOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Informix.InformixOptions!, LinqToDB.DataProvider.Informix.InformixOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Informix.InformixOptions!, LinqToDB.DataProvider.Informix.InformixOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseOracle(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.Oracle.OracleVersion dialect = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.AutoDetect, System.Func<LinqToDB.DataProvider.Oracle.OracleOptions!, LinqToDB.DataProvider.Oracle.OracleOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseOracle(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.Oracle.OracleVersion dialect = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.AutoDetect, System.Func<LinqToDB.DataProvider.Oracle.OracleOptions!, LinqToDB.DataProvider.Oracle.OracleOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseOracle(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Oracle.OracleOptions!, LinqToDB.DataProvider.Oracle.OracleOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseOracle(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Oracle.OracleOptions!, LinqToDB.DataProvider.Oracle.OracleOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UsePostgreSQL(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions!, LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseSapHana(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.SapHana.SapHanaProvider provider = LinqToDB.DataProvider.SapHana.SapHanaProvider.AutoDetect, System.Func<LinqToDB.DataProvider.SapHana.SapHanaOptions!, LinqToDB.DataProvider.SapHana.SapHanaOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseSapHana(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.SapHana.SapHanaProvider provider = LinqToDB.DataProvider.SapHana.SapHanaProvider.AutoDetect, System.Func<LinqToDB.DataProvider.SapHana.SapHanaOptions!, LinqToDB.DataProvider.SapHana.SapHanaOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseSapHana(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.SapHana.SapHanaOptions!, LinqToDB.DataProvider.SapHana.SapHanaOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseSapHana(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.SapHana.SapHanaOptions!, LinqToDB.DataProvider.SapHana.SapHanaOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseSQLite(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.SQLite.SQLiteProvider provider = LinqToDB.DataProvider.SQLite.SQLiteProvider.AutoDetect, System.Func<LinqToDB.DataProvider.SQLite.SQLiteOptions!, LinqToDB.DataProvider.SQLite.SQLiteOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseSQLite(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.SQLite.SQLiteProvider provider = LinqToDB.DataProvider.SQLite.SQLiteProvider.AutoDetect, System.Func<LinqToDB.DataProvider.SQLite.SQLiteOptions!, LinqToDB.DataProvider.SQLite.SQLiteOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseSQLite(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.SQLite.SQLiteOptions!, LinqToDB.DataProvider.SQLite.SQLiteOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseSQLite(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.SQLite.SQLiteOptions!, LinqToDB.DataProvider.SQLite.SQLiteOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseSqlServer(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.SqlServer.SqlServerOptions!, LinqToDB.DataProvider.SqlServer.SqlServerOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseSqlServer(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.SqlServer.SqlServerOptions!, LinqToDB.DataProvider.SqlServer.SqlServerOptions!>! optionSetter) -> LinqToDB.DataOptions!
+static LinqToDB.DataProvider.Access.AccessTools.AutoDetectProvider.get -> bool
+static LinqToDB.DataProvider.Access.AccessTools.AutoDetectProvider.set -> void
+static LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.Access.AccessProvider provider = LinqToDB.DataProvider.Access.AccessProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.Access.AccessProvider provider = LinqToDB.DataProvider.Access.AccessProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.Access.AccessProvider provider = LinqToDB.DataProvider.Access.AccessProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Access.AccessTools.GetDataProvider(LinqToDB.DataProvider.Access.AccessProvider provider = LinqToDB.DataProvider.Access.AccessProvider.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
+static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.AutoDetectProvider.get -> bool
+static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.AutoDetectProvider.set -> void
+static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider = LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider = LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider = LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.GetDataProvider(LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider = LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
+static LinqToDB.DataProvider.DB2.DB2Tools.GetDataProvider(LinqToDB.DataProvider.DB2.DB2Version version = LinqToDB.DataProvider.DB2.DB2Version.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
+static LinqToDB.DataProvider.Informix.InformixProviderAdapter.GetInstance(LinqToDB.DataProvider.Informix.InformixProvider provider) -> LinqToDB.DataProvider.Informix.InformixProviderAdapter!
+static LinqToDB.DataProvider.Informix.InformixTools.AutoDetectProvider.get -> bool
+static LinqToDB.DataProvider.Informix.InformixTools.AutoDetectProvider.set -> void
+static LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.Informix.InformixProvider provider = LinqToDB.DataProvider.Informix.InformixProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.Informix.InformixProvider provider = LinqToDB.DataProvider.Informix.InformixProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.Informix.InformixProvider provider = LinqToDB.DataProvider.Informix.InformixProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Informix.InformixTools.GetDataProvider(LinqToDB.DataProvider.Informix.InformixProvider provider = LinqToDB.DataProvider.Informix.InformixProvider.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
+static LinqToDB.DataProvider.MySql.MySqlProviderAdapter.GetInstance(LinqToDB.DataProvider.MySql.MySqlProvider provider) -> LinqToDB.DataProvider.MySql.MySqlProviderAdapter!
+static LinqToDB.DataProvider.MySql.MySqlTools.AutoDetectProvider.get -> bool
+static LinqToDB.DataProvider.MySql.MySqlTools.AutoDetectProvider.set -> void
+static LinqToDB.DataProvider.Oracle.OracleTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.Oracle.OracleVersion version = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Oracle.OracleTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.Oracle.OracleVersion version = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Oracle.OracleTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.Oracle.OracleVersion version = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Oracle.OracleTools.GetDataProvider(LinqToDB.DataProvider.Oracle.OracleVersion version = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
+static LinqToDB.DataProvider.SapHana.SapHanaTools.AutoDetectProvider.get -> bool
+static LinqToDB.DataProvider.SapHana.SapHanaTools.AutoDetectProvider.set -> void
+static LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.SapHana.SapHanaProvider provider = LinqToDB.DataProvider.SapHana.SapHanaProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.SapHana.SapHanaProvider provider = LinqToDB.DataProvider.SapHana.SapHanaProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.SapHana.SapHanaProvider provider = LinqToDB.DataProvider.SapHana.SapHanaProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.SapHana.SapHanaTools.GetDataProvider(LinqToDB.DataProvider.SapHana.SapHanaProvider provider = LinqToDB.DataProvider.SapHana.SapHanaProvider.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
+static LinqToDB.DataProvider.SapHana.SapHanaTools.ResolveSapHana(string! path, string? assemblyName = null) -> void
+static LinqToDB.DataProvider.SQLite.SQLiteProviderAdapter.GetInstance(LinqToDB.DataProvider.SQLite.SQLiteProvider provider) -> LinqToDB.DataProvider.SQLite.SQLiteProviderAdapter!
+static LinqToDB.DataProvider.SQLite.SQLiteTools.AutoDetectProvider.get -> bool
+static LinqToDB.DataProvider.SQLite.SQLiteTools.AutoDetectProvider.set -> void
+static LinqToDB.DataProvider.SQLite.SQLiteTools.ClearAllPools(LinqToDB.DataProvider.SQLite.SQLiteProvider? provider) -> void
+static LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.SQLite.SQLiteProvider provider = LinqToDB.DataProvider.SQLite.SQLiteProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.SQLite.SQLiteProvider provider = LinqToDB.DataProvider.SQLite.SQLiteProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.SQLite.SQLiteProvider provider = LinqToDB.DataProvider.SQLite.SQLiteProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.SQLite.SQLiteTools.GetDataProvider(LinqToDB.DataProvider.SQLite.SQLiteProvider provider = LinqToDB.DataProvider.SQLite.SQLiteProvider.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
+static LinqToDB.DataProvider.SQLite.SQLiteTools.ResolveSQLite(string! path, string? assemblyName = null) -> void
+static LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.GetInstance(LinqToDB.DataProvider.Sybase.SybaseProvider provider) -> LinqToDB.DataProvider.Sybase.SybaseProviderAdapter!
+static LinqToDB.DataProvider.Sybase.SybaseTools.AutoDetectProvider.get -> bool
+static LinqToDB.DataProvider.Sybase.SybaseTools.AutoDetectProvider.set -> void
+static LinqToDB.DataProvider.Sybase.SybaseTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.Sybase.SybaseProvider provider = LinqToDB.DataProvider.Sybase.SybaseProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Sybase.SybaseTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.Sybase.SybaseProvider provider = LinqToDB.DataProvider.Sybase.SybaseProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Sybase.SybaseTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.Sybase.SybaseProvider provider = LinqToDB.DataProvider.Sybase.SybaseProvider.AutoDetect) -> LinqToDB.Data.DataConnection!
+static LinqToDB.DataProvider.Sybase.SybaseTools.GetDataProvider(LinqToDB.DataProvider.Sybase.SybaseProvider provider = LinqToDB.DataProvider.Sybase.SybaseProvider.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
+static LinqToDB.DataProvider.Sybase.SybaseTools.ResolveSybase(string! path, string? assemblyName = null) -> void
+*REMOVED*static LinqToDB.DataProvider.Sybase.SybaseTools.ResolveSybase(string! path) -> void
+*REMOVED*static LinqToDB.DataProvider.Sybase.SybaseTools.DetectedProviderName.get -> string!
+*REMOVED*static LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.GetInstance(string! name) -> LinqToDB.DataProvider.Sybase.SybaseProviderAdapter!
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteTools.ResolveSQLite(string! path) -> void
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteTools.GetDataProvider(string? providerName = null) -> LinqToDB.DataProvider.IDataProvider!
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteTools.DetectedProviderName.get -> string!
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteTools.ClearAllPools(string? provider = null) -> void
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteProviderAdapter.GetInstance(string! name) -> LinqToDB.DataProvider.SQLite.SQLiteProviderAdapter!
+*REMOVED*static LinqToDB.DataProvider.SapHana.SapHanaTools.ResolveSapHana(string! path) -> void
+*REMOVED*static LinqToDB.DataProvider.SapHana.SapHanaTools.DetectedProviderName.get -> string!
+*REMOVED*static LinqToDB.DataProvider.Oracle.OracleTools.GetDataProvider(LinqToDB.DataProvider.Oracle.OracleVersion version = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.Managed, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
+*REMOVED*static LinqToDB.DataProvider.Oracle.OracleTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.Oracle.OracleVersion version = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.Managed) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Oracle.OracleTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.Oracle.OracleVersion version = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.Managed) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Oracle.OracleTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.Oracle.OracleVersion version = LinqToDB.DataProvider.Oracle.OracleVersion.AutoDetect, LinqToDB.DataProvider.Oracle.OracleProvider provider = LinqToDB.DataProvider.Oracle.OracleProvider.Managed) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.MySql.MySqlTools.GetDataProvider(string? providerName = null) -> LinqToDB.DataProvider.IDataProvider!
+*REMOVED*static LinqToDB.DataProvider.MySql.MySqlTools.DetectedProviderName.get -> string!
+*REMOVED*static LinqToDB.DataProvider.MySql.MySqlProviderAdapter.GetInstance(string! name) -> LinqToDB.DataProvider.MySql.MySqlProviderAdapter!
+*REMOVED*static LinqToDB.DataProvider.Informix.InformixTools.GetDataProvider(string? providerName = null) -> LinqToDB.DataProvider.IDataProvider!
+*REMOVED*static LinqToDB.DataProvider.Informix.InformixProviderAdapter.GetInstance(string! name) -> LinqToDB.DataProvider.Informix.InformixProviderAdapter!
+*REMOVED*static LinqToDB.DataProvider.DB2.DB2Tools.GetDataProvider(LinqToDB.DataProvider.DB2.DB2Version version = LinqToDB.DataProvider.DB2.DB2Version.LUW) -> LinqToDB.DataProvider.IDataProvider!
+*REMOVED*static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.GetDataProvider(LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider = LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.Octonica) -> LinqToDB.DataProvider.IDataProvider!
+*REMOVED*static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider = LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.Octonica) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.CreateDataConnection(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider = LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.Octonica) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.CreateDataConnection(string! connectionString, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider = LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.Octonica) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Access.AccessTools.GetDataProvider(string? providerName = null) -> LinqToDB.DataProvider.IDataProvider!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSQLite(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.SQLite.SQLiteOptions!, LinqToDB.DataProvider.SQLite.SQLiteOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSQLite(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.SQLite.SQLiteOptions!, LinqToDB.DataProvider.SQLite.SQLiteOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSapHana(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.SapHana.SapHanaOptions!, LinqToDB.DataProvider.SapHana.SapHanaOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSapHana(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.SapHana.SapHanaOptions!, LinqToDB.DataProvider.SapHana.SapHanaOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseOracle(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Oracle.OracleOptions!, LinqToDB.DataProvider.Oracle.OracleOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseOracle(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.Oracle.OracleVersion dialect, LinqToDB.DataProvider.Oracle.OracleProvider provider, System.Func<LinqToDB.DataProvider.Oracle.OracleOptions!, LinqToDB.DataProvider.Oracle.OracleOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseOracle(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.Oracle.OracleVersion dialect, LinqToDB.DataProvider.Oracle.OracleProvider provider, System.Func<LinqToDB.DataProvider.Oracle.OracleOptions!, LinqToDB.DataProvider.Oracle.OracleOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseMySql(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Informix.InformixOptions!, LinqToDB.DataProvider.Informix.InformixOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Informix.InformixOptions!, LinqToDB.DataProvider.Informix.InformixOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseDB2(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.DB2.DB2Options!, LinqToDB.DataProvider.DB2.DB2Options!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseDB2(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.DB2.DB2Version version, System.Func<LinqToDB.DataProvider.DB2.DB2Options!, LinqToDB.DataProvider.DB2.DB2Options!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseDB2(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.DB2.DB2Version version, System.Func<LinqToDB.DataProvider.DB2.DB2Options!, LinqToDB.DataProvider.DB2.DB2Options!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseClickHouse(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider, System.Func<LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!, LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseAse(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Sybase.SybaseOptions!, LinqToDB.DataProvider.Sybase.SybaseOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseAse(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Sybase.SybaseOptions!, LinqToDB.DataProvider.Sybase.SybaseOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseAccess(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Access.AccessOptions!, LinqToDB.DataProvider.Access.AccessOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseConnection.AseConnection() -> void
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseDataProvider.SybaseDataProvider(string! name) -> void
+*REMOVED*LinqToDB.DataProvider.SQLite.SQLiteDataProvider.SQLiteDataProvider(string! name, LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
+*REMOVED*LinqToDB.DataProvider.SQLite.SQLiteDataProvider.SQLiteDataProvider(string! name) -> void
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaConnection.HanaConnection() -> void
+*REMOVED*LinqToDB.DataProvider.Oracle.OracleProvider.Native = 1 -> LinqToDB.DataProvider.Oracle.OracleProvider
+*REMOVED*LinqToDB.DataProvider.Oracle.OracleProvider.Managed = 0 -> LinqToDB.DataProvider.Oracle.OracleProvider
+*REMOVED*LinqToDB.DataProvider.Oracle.OracleProvider.Devart = 2 -> LinqToDB.DataProvider.Oracle.OracleProvider
+*REMOVED*LinqToDB.DataProvider.MySql.MySqlProviderAdapter.ProviderType.get -> LinqToDB.DataProvider.MySql.MySqlProviderAdapter.MySqlProvider
+*REMOVED*LinqToDB.DataProvider.MySql.MySqlProviderAdapter.MySqlProvider.MySqlData = 0 -> LinqToDB.DataProvider.MySql.MySqlProviderAdapter.MySqlProvider
+*REMOVED*LinqToDB.DataProvider.MySql.MySqlProviderAdapter.MySqlProvider.MySqlConnector = 1 -> LinqToDB.DataProvider.MySql.MySqlProviderAdapter.MySqlProvider
+*REMOVED*LinqToDB.DataProvider.MySql.MySqlProviderAdapter.MySqlProvider
+*REMOVED*LinqToDB.DataProvider.MySql.MySqlDataProvider.MySqlDataProvider(string! name) -> void
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxConnection.IfxConnection() -> void
+*REMOVED*LinqToDB.DataProvider.Informix.InformixDataProvider.InformixDataProvider(string! providerName) -> void
+*REMOVED*LinqToDB.DataProvider.DB2.DB2Version.zOS = 1 -> LinqToDB.DataProvider.DB2.DB2Version
+*REMOVED*LinqToDB.DataProvider.DB2.DB2Version.LUW = 0 -> LinqToDB.DataProvider.DB2.DB2Version
+*REMOVED*LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.Octonica = 0 -> LinqToDB.DataProvider.ClickHouse.ClickHouseProvider
+*REMOVED*LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.MySqlConnector = 2 -> LinqToDB.DataProvider.ClickHouse.ClickHouseProvider
+*REMOVED*LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.ClickHouseClient = 1 -> LinqToDB.DataProvider.ClickHouse.ClickHouseProvider
+*REMOVED*static LinqToDB.DataProvider.Firebird.FirebirdTools.GetDataProvider() -> LinqToDB.DataProvider.IDataProvider!
+*REMOVED*static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(System.Data.Common.DbConnection! connection) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(string! connectionString) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseFirebird(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Firebird.FirebirdOptions!, LinqToDB.DataProvider.Firebird.FirebirdOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*LinqToDB.DataProvider.Firebird.FirebirdDataProvider.FirebirdDataProvider(string! name, LinqToDB.SqlProvider.ISqlOptimizer? sqlOptimizer) -> void
+*REMOVED*LinqToDB.DataProvider.Firebird.FirebirdDataProvider.FirebirdDataProvider(LinqToDB.SqlProvider.ISqlOptimizer! sqlOptimizer) -> void
+*REMOVED*LinqToDB.DataProvider.Firebird.FirebirdDataProvider.FirebirdDataProvider() -> void
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSQLiteOfficial(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.SQLite.SQLiteOptions!, LinqToDB.DataProvider.SQLite.SQLiteOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSQLiteOfficial(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.SQLite.SQLiteOptions!, LinqToDB.DataProvider.SQLite.SQLiteOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSQLiteMicrosoft(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.SQLite.SQLiteOptions!, LinqToDB.DataProvider.SQLite.SQLiteOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSQLiteMicrosoft(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.SQLite.SQLiteOptions!, LinqToDB.DataProvider.SQLite.SQLiteOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSapHanaODBC(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.SapHana.SapHanaOptions!, LinqToDB.DataProvider.SapHana.SapHanaOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSapHanaODBC(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.SapHana.SapHanaOptions!, LinqToDB.DataProvider.SapHana.SapHanaOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSapHanaNative(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.SapHana.SapHanaOptions!, LinqToDB.DataProvider.SapHana.SapHanaOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseSapHanaNative(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.SapHana.SapHanaOptions!, LinqToDB.DataProvider.SapHana.SapHanaOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseOracle(this LinqToDB.DataOptions! options, string! connectionString, LinqToDB.DataProvider.Oracle.OracleProvider provider, System.Func<LinqToDB.DataProvider.Oracle.OracleOptions!, LinqToDB.DataProvider.Oracle.OracleOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseMySqlData(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseMySqlData(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseMySqlConnector(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseMySqlConnector(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.MySql.MySqlOptions!, LinqToDB.DataProvider.MySql.MySqlOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseClickHouse(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider, string! connectionString, System.Func<LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!, LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseAccessOleDb(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Access.AccessOptions!, LinqToDB.DataProvider.Access.AccessOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseAccessOleDb(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Access.AccessOptions!, LinqToDB.DataProvider.Access.AccessOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseAccessOdbc(this LinqToDB.DataOptions! options, System.Func<LinqToDB.DataProvider.Access.AccessOptions!, LinqToDB.DataProvider.Access.AccessOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseAccessOdbc(this LinqToDB.DataOptions! options, string! connectionString, System.Func<LinqToDB.DataProvider.Access.AccessOptions!, LinqToDB.DataProvider.Access.AccessOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataProvider.Sybase.SybaseTools.GetDataProvider(string? providerName = null, string? assemblyName = null) -> LinqToDB.DataProvider.IDataProvider!
+*REMOVED*static LinqToDB.DataProvider.Sybase.SybaseTools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.Sybase.SybaseTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.Sybase.SybaseTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Sybase.SybaseTools.CreateDataConnection(System.Data.Common.DbConnection! connection, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Sybase.SybaseTools.CreateDataConnection(string! connectionString, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.SqlServer.SqlServerTools.DetectServerVersion(LinqToDB.DataProvider.SqlServer.SqlServerProvider provider, string! connectionString) -> LinqToDB.DataProvider.SqlServer.SqlServerVersion?
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteTools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(System.Data.Common.DbConnection! connection, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(string! connectionString, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteTools.AlwaysCheckDbNull.set -> void
+*REMOVED*static LinqToDB.DataProvider.SQLite.SQLiteTools.AlwaysCheckDbNull.get -> bool
+*REMOVED*static LinqToDB.DataProvider.SqlCe.SqlCeTools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.SqlCe.SqlCeTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.SapHana.SapHanaTools.GetDataProvider(string? providerName = null, string? assemblyName = null) -> LinqToDB.DataProvider.IDataProvider!
+*REMOVED*static LinqToDB.DataProvider.SapHana.SapHanaTools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.SapHana.SapHanaTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(System.Data.Common.DbConnection! connection, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(string! connectionString, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.NormalizeTimestampData.set -> void
+*REMOVED*static LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.NormalizeTimestampData.get -> bool
+*REMOVED*static LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.Oracle.OracleTools.UseAlternativeBulkCopy.set -> void
+*REMOVED*static LinqToDB.DataProvider.Oracle.OracleTools.UseAlternativeBulkCopy.get -> LinqToDB.DataProvider.Oracle.AlternativeBulkCopy
+*REMOVED*static LinqToDB.DataProvider.Oracle.OracleTools.DontEscapeLowercaseIdentifiers.set -> void
+*REMOVED*static LinqToDB.DataProvider.Oracle.OracleTools.DontEscapeLowercaseIdentifiers.get -> bool
+*REMOVED*static LinqToDB.DataProvider.Oracle.OracleTools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.Oracle.OracleTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.MySql.MySqlTools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.MySql.MySqlTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(System.Data.Common.DbConnection! connection, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*const LinqToDB.ProviderName.MariaDB = "MariaDB" -> string!
+*REMOVED*const LinqToDB.ProviderName.MySqlConnector = "MySqlConnector" -> string!
+*REMOVED*const LinqToDB.ProviderName.MySqlOfficial = "MySql.Official" -> string!
+*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.CreateConnection.get -> System.Func<string!, LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2Connection!>!
+*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2Connection.Dispose() -> void
+*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2Connection.Open() -> void
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.BulkCopyAdapter
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.BulkCopyAdapter.Create.get -> System.Func<System.Data.Common.DbConnection!, LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopyOptions, LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy!>!
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.BulkCopyAdapter.CreateColumnMapping.get -> System.Func<int, string!, LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopyColumnMapping!>!
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.DB2BulkCopy.get -> LinqToDB.DataProvider.DB2.DB2ProviderAdapter.BulkCopyAdapter?
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.BulkCopyTimeout.get -> int
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.BulkCopyTimeout.set -> void
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.ColumnMappings.get -> LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopyColumnMappingCollection!
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.ColumnMappings.set -> void
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.DestinationTableName.get -> string?
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.DestinationTableName.set -> void
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.IfxBulkCopy(LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxConnection! connection, LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopyOptions options) -> void
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.IfxBulkCopy(object! instance, System.Delegate![]! wrappers) -> void
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.IfxRowsCopied -> LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxRowsCopiedEventHandler?
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.NotifyAfter.get -> int
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.NotifyAfter.set -> void
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy.WriteToServer(System.Data.IDataReader! dataReader) -> void
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxConnection
+*REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.InformixBulkCopy.get -> LinqToDB.DataProvider.Informix.InformixProviderAdapter.BulkCopyAdapter?
+*REMOVED*LinqToDB.DataProvider.PostgreSQL.NpgsqlProviderAdapter.CreateConnection(string! connectionString) -> LinqToDB.DataProvider.PostgreSQL.NpgsqlProviderAdapter.NpgsqlConnection!
+*REMOVED*LinqToDB.DataProvider.PostgreSQL.NpgsqlProviderAdapter.NpgsqlConnection
+*REMOVED*LinqToDB.DataProvider.PostgreSQL.NpgsqlProviderAdapter.NpgsqlConnection.Dispose() -> void
+*REMOVED*LinqToDB.DataProvider.PostgreSQL.NpgsqlProviderAdapter.NpgsqlConnection.NpgsqlConnection(object! instance, System.Delegate![]! wrappers) -> void
+*REMOVED*LinqToDB.DataProvider.PostgreSQL.NpgsqlProviderAdapter.NpgsqlConnection.NpgsqlConnection(string! connectionString) -> void
+*REMOVED*LinqToDB.DataProvider.PostgreSQL.NpgsqlProviderAdapter.NpgsqlConnection.Open() -> void
+*REMOVED*LinqToDB.DataProvider.PostgreSQL.NpgsqlProviderAdapter.NpgsqlConnection.PostgreSqlVersion.get -> System.Version!
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.CreateBulkCopy.get -> System.Func<System.Data.Common.DbConnection!, LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopyOptions, System.Data.Common.DbTransaction?, LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy!>!
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.BatchSize.get -> int
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.BatchSize.set -> void
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.BulkCopyTimeout.get -> int
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.BulkCopyTimeout.set -> void
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.CanWriteToServerAsync.get -> bool
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.ColumnMappings.get -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopyColumnMappingCollection!
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.DestinationTableName.get -> string?
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.DestinationTableName.set -> void
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.Dispose() -> void
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.HanaBulkCopy(LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaConnection! connection, LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopyOptions options, LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaTransaction? transaction) -> void
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.HanaBulkCopy(object! instance, System.Delegate![]! wrappers) -> void
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.HanaRowsCopied -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaRowsCopiedEventHandler?
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.NotifyAfter.get -> int
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.NotifyAfter.set -> void
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.WriteToServer(System.Data.IDataReader! dataReader) -> void
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopy.WriteToServerAsync(System.Data.IDataReader! dataReader, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+*REMOVED*LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaConnection
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.CreateBulkCopy(System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopyOptions options, System.Data.Common.DbTransaction? transaction) -> LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy!
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.CreateConnection(string! connectionString) -> LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlConnection!
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.BatchSize.get -> int
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.BatchSize.set -> void
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.BulkCopyTimeout.get -> int
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.BulkCopyTimeout.set -> void
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.ColumnMappings.get -> LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopyColumnMappingCollection!
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.DestinationTableName.get -> string?
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.DestinationTableName.set -> void
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.NotifyAfter.get -> int
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.NotifyAfter.set -> void
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.SqlBulkCopy(LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlConnection! connection, LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopyOptions options, LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlTransaction? transaction) -> void
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.SqlBulkCopy(object! instance, System.Delegate![]! wrappers) -> void
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.SqlRowsCopied -> LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlRowsCopiedEventHandler?
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.WriteToServer(System.Data.IDataReader! dataReader) -> void
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlBulkCopy.WriteToServerAsync(System.Data.IDataReader! dataReader, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlConnection
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlConnection.CreateCommand() -> System.Data.Common.DbCommand!
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlConnection.Dispose() -> void
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlConnection.Open() -> void
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlConnection.ServerVersion.get -> string!
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlConnection.SqlConnection(object! instance, System.Delegate![]! wrappers) -> void
+*REMOVED*LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlConnection.SqlConnection(string! connectionString) -> void
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.AseBulkCopy(LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseConnection! connection, LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopyOptions options, LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseTransaction? transaction) -> void
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.AseBulkCopy(object! instance, System.Delegate![]! wrappers) -> void
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.AseRowsCopied -> LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseRowsCopiedEventHandler?
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.BatchSize.get -> int
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.BatchSize.set -> void
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.BulkCopyTimeout.get -> int
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.BulkCopyTimeout.set -> void
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.ColumnMappings.get -> LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopyColumnMappingCollection!
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.DestinationTableName.get -> string?
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.DestinationTableName.set -> void
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.NotifyAfter.get -> int
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.NotifyAfter.set -> void
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy.WriteToServer(System.Data.IDataReader! dataReader) -> void
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseConnection
+*REMOVED*LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.BulkCopyAdapter.Create.get -> System.Func<System.Data.Common.DbConnection!, LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopyOptions, System.Data.Common.DbTransaction?, LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.AseBulkCopy!>!
+*REMOVED*LinqToDB.Expressions.TypeMapper.BuildFactory<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR!>!>! newFunc) -> System.Func<T, object!>!
+*REMOVED*LinqToDB.Expressions.TypeMapper.BuildFactory<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR!>!>! newFunc) -> System.Func<T1, T2, T3, object!>!
+*REMOVED*LinqToDB.Expressions.TypeMapper.BuildFactory<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR!>!>! newFunc) -> System.Func<T1, T2, object!>!
+*REMOVED*LinqToDB.Expressions.TypeMapper.BuildFactory<TR>(System.Linq.Expressions.Expression<System.Func<TR!>!>! newFunc) -> System.Func<object!>!
+*REMOVED*LinqToDB.Mapping.MappingSchema.AddScalarType(System.Type! type, LinqToDB.DataType dataType = LinqToDB.DataType.Undefined, bool withNullable = true) -> void
+*REMOVED*LinqToDB.Mapping.MappingSchema.AddScalarType(System.Type! type, LinqToDB.SqlQuery.SqlDataType! dataType, bool withNullable = true) -> void
+*REMOVED*static LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(string! connectionString, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(System.Data.Common.DbConnection! connection, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Access.AccessTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.Access.AccessTools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.DB2.DB2Tools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.DB2.DB2Tools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.Firebird.FirebirdTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.Firebird.FirebirdTools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(string! connectionString, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(System.Data.Common.DbConnection! connection, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(System.Data.Common.DbTransaction! transaction, string? providerName = null) -> LinqToDB.Data.DataConnection!
+*REMOVED*static LinqToDB.DataProvider.Informix.InformixTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
+*REMOVED*static LinqToDB.DataProvider.Informix.InformixTools.DefaultBulkCopyType.set -> void
+*REMOVED*static LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(string! connectionString, string? providerName = null) -> LinqToDB.Data.DataConnection!

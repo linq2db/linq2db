@@ -249,7 +249,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySqlServer57Plus)] string context,
+		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySql80)] string context,
 			[Values(
 				MySqlHints.SubQuery.ForUpdate,
 				MySqlHints.SubQuery.ForShare,
@@ -269,7 +269,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryTableHintTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryTableHintTest([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -286,7 +286,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryTableHintTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryTableHintTest2([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -305,7 +305,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintLockInShareModeTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintLockInShareModeTest([IncludeDataSources(true, TestProvName.AllMySql)] string context)
 		{
 			using var db = GetDataContext(context);
 

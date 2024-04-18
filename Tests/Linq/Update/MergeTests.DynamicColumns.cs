@@ -282,7 +282,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DynamicColumns_DeleteBySourceFromPartialSourceProjection(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
 			{
@@ -422,7 +422,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DynamicColumns_SameSourceDeleteBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void DynamicColumns_SameSourceDeleteBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
 			{

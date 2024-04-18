@@ -103,5 +103,41 @@ namespace LinqToDB.DataProvider.Firebird
 			else
 				base.BuildTypedExpression(dataType, value);
 		}
+
+		// available since FB5
+		protected override void BuildMergeOperationDeleteBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
+		{
+			StringBuilder
+				.AppendLine()
+				.Append("WHEN NOT MATCHED BY SOURCE");
+
+			if (operation.Where != null)
+			{
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+			}
+
+			StringBuilder.AppendLine(" THEN DELETE");
+		}
+
+		// available since FB5
+		protected override void BuildMergeOperationUpdateBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
+		{
+			StringBuilder
+				.AppendLine()
+				.Append("WHEN NOT MATCHED BY SOURCE");
+
+			if (operation.Where != null)
+			{
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+			}
+
+			StringBuilder.AppendLine(" THEN UPDATE");
+
+			var update = new SqlUpdateClause();
+			update.Items.AddRange(operation.Items);
+			BuildUpdateSet(null, update);
+		}
 	}
 }

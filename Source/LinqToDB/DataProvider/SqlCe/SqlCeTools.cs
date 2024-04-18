@@ -72,16 +72,5 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			DataTools.DropFileDatabase(databaseName, ".sdf");
 		}
-
-		#region BulkCopy
-
-		[Obsolete("Use SqlCeOptions.Default.BulkCopyType instead.")]
-		public static BulkCopyType DefaultBulkCopyType
-		{
-			get => SqlCeOptions.Default.BulkCopyType;
-			set => SqlCeOptions.Default = SqlCeOptions.Default with { BulkCopyType = value };
-		}
-
-		#endregion
 	}
 }

@@ -7,6 +7,8 @@ using System.Runtime.InteropServices;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
@@ -281,7 +283,7 @@ public class a_CreateData : TestBase
 	static void AccessODBCAction(DbConnection connection)
 	{
 
-		using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.AccessOdbc))
+		using (var conn = AccessTools.CreateDataConnection(connection, AccessProvider.ODBC))
 		{
 			conn.Execute(@"
 				INSERT INTO AllTypes
@@ -316,7 +318,7 @@ public class a_CreateData : TestBase
 
 	static void AccessAction(DbConnection connection)
 	{
-		using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.Access))
+		using (var conn = AccessTools.CreateDataConnection(connection, AccessProvider.OleDb))
 		{
 			conn.Execute(@"
 				INSERT INTO AllTypes
@@ -383,7 +385,7 @@ public class a_CreateData : TestBase
 
 	static void SQLiteAction(DbConnection connection)
 	{
-		using (var conn = LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connection))
+		using (var conn = SQLiteTools.CreateDataConnection(connection, SQLiteProvider.AutoDetect))
 		{
 			conn.Execute(@"
 				UPDATE AllTypes
@@ -420,7 +422,7 @@ public class a_CreateData : TestBase
 
 	static void InformixAction(DbConnection connection)
 	{
-		using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, ProviderName.Informix))
+		using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, InformixProvider.Informix))
 		{
 			conn.Execute(@"
 				UPDATE AllTypes
@@ -438,7 +440,7 @@ public class a_CreateData : TestBase
 
 	static void InformixDB2Action(DbConnection connection)
 	{
-		using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, ProviderName.InformixDB2))
+		using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, InformixProvider.DB2))
 		{
 			conn.Execute(@"
 				UPDATE AllTypes

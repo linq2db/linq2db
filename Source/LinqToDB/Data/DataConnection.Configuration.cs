@@ -193,19 +193,19 @@ namespace LinqToDB.Data
 		static DataConnection()
 		{
 			// lazy registration of embedded providers using detectors
-			AddProviderDetector(LinqToDB.DataProvider.Access    .AccessTools    .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.DB2       .DB2Tools       .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.Firebird  .FirebirdTools  .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.Informix  .InformixTools  .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.MySql     .MySqlTools     .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.Access    .AccessTools    .ProviderDetector.DetectProvider);
+			AddProviderDetector(LinqToDB.DataProvider.DB2       .DB2Tools       .ProviderDetector.DetectProvider);
+			AddProviderDetector(LinqToDB.DataProvider.Firebird  .FirebirdTools  .ProviderDetector.DetectProvider);
+			AddProviderDetector(LinqToDB.DataProvider.Informix  .InformixTools  .ProviderDetector.DetectProvider);
+			AddProviderDetector(LinqToDB.DataProvider.MySql     .MySqlTools     .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.Oracle    .OracleTools    .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ProviderDetector.DetectProvider);
-			AddProviderDetector(LinqToDB.DataProvider.SapHana   .SapHanaTools   .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.SapHana   .SapHanaTools   .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.SqlCe     .SqlCeTools     .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.SQLite    .SQLiteTools    .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.SQLite    .SQLiteTools    .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.SqlServer .SqlServerTools .ProviderDetector.DetectProvider);
-			AddProviderDetector(LinqToDB.DataProvider.Sybase    .SybaseTools    .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.ClickHouse.ClickHouseTools.ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.Sybase    .SybaseTools    .ProviderDetector.DetectProvider);
+			AddProviderDetector(LinqToDB.DataProvider.ClickHouse.ClickHouseTools.ProviderDetector.DetectProvider);
 
 			var section = DefaultSettings;
 

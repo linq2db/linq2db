@@ -1721,7 +1721,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForUpdateTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForUpdateTest([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1740,7 +1740,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForUpdateTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForUpdateTest2([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1759,7 +1759,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForUpdateNoWaitTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForUpdateNoWaitTest([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1778,7 +1778,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForUpdateNoWaitTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForUpdateNoWaitTest2([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1797,7 +1797,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForUpdateSkipLockedTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForUpdateSkipLockedTest([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1816,7 +1816,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForUpdateSkipLockedTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForUpdateSkipLockedTest2([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1835,7 +1835,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForShareTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForShareTest([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1854,7 +1854,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForShareTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForShareTest2([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1873,7 +1873,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForShareNoWaitTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForShareNoWaitTest([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1892,7 +1892,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForShareNoWaitTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForShareNoWaitTest2([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1911,7 +1911,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForShareSkipLockedTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForShareSkipLockedTest([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1930,7 +1930,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintForShareSkipLockedTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintForShareSkipLockedTest2([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 

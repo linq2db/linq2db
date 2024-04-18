@@ -4,12 +4,16 @@ using System.IO;
 using System.Globalization;
 using System.Reflection;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using LinqToDB.Common;
+	using System.Data.Common;
+
+	using Configuration;
 	using Data;
 
-	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion,SqlServerProviderAdapter.SqlConnection>
+	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion>
 	{
 		public SqlServerProviderDetector() : base(SqlServerVersion.AutoDetect, SqlServerVersion.v2012)
 		{
@@ -167,7 +171,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				: SqlServerProvider.SystemDataSqlClient;
 		}
 
-		public override SqlServerVersion? DetectServerVersion(SqlServerProviderAdapter.SqlConnection connection)
+		public override SqlServerVersion? DetectServerVersion(DbConnection connection)
 		{
 			if (!int.TryParse(connection.ServerVersion.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var version))
 				return null;
@@ -207,7 +211,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			};
 		}
 
-		protected override SqlServerProviderAdapter.SqlConnection CreateConnection(SqlServerProvider provider, string connectionString)
+		protected override DbConnection CreateConnection(SqlServerProvider provider, string connectionString)
 		{
 			return SqlServerProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
 		}

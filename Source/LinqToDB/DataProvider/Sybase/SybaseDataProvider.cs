@@ -20,15 +20,20 @@ namespace LinqToDB.DataProvider.Sybase
 	using LinqToDB.Linq.Translation;
 
 
-	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
-	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
+	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase,        SybaseProvider.Unmanaged ) {} }
+	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged, SybaseProvider.DataAction) {} }
 
 	public abstract class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
 		#region Init
 
-		protected SybaseDataProvider(string name)
-			: base(name, MappingSchemaInstance.Get(name), SybaseProviderAdapter.GetInstance(name))
+		protected SybaseDataProvider(string name, SybaseProvider provider)
+			: this(name, SybaseProviderAdapter.GetInstance(provider == SybaseProvider.AutoDetect ? provider = SybaseProviderDetector.DetectProvider() : provider))
+		{
+		}
+
+		protected SybaseDataProvider(string name, SybaseProviderAdapter adapter)
+			: base(name, MappingSchemaInstance.Get(name), adapter)
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;

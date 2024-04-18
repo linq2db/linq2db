@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 			}
 		}
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
