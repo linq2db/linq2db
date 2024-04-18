@@ -20,7 +20,8 @@ namespace LinqToDB.DataProvider.Access
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB") == true || options.ConnectionString?.Contains("Microsoft.Jet.OLEDB") == true)
+			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB") == true 
+			    || options.ConnectionString?.Contains("Microsoft.Jet.OLEDB") == true)
 			{
 				return _accessOleDbDataProvider.Value;
 			}
