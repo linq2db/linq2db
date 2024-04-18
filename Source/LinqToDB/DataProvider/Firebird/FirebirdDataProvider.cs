@@ -30,6 +30,7 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
 			SqlProviderFlags.IsExistsPreferableForContains     = true;
+			SqlProviderFlags.IsApplyJoinSupported              = Version >= FirebirdVersion.v4;
 
 			SqlProviderFlags.MaxInListValuesCount = Version >= FirebirdVersion.v5 ? 65535 : 1500;
 
