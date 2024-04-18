@@ -65,7 +65,8 @@ namespace Tests.Linq
 				var expected = e1.Where(e => !e2.Contains(e, ComparerBuilder.GetEqualityComparer<SampleData>())).ToArray();
 				var actual = query.ToArray();
 
-				if (!context.IsAnyOf(TestProvName.AllPostgreSQL)) // postgres has a bug?
+				// TODO: emulation is not correct, but pgsql and mysql native implementation working properly
+				//if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus))
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
@@ -88,7 +89,8 @@ namespace Tests.Linq
 				var expected = e1.Where(e => e2.Contains(e, ComparerBuilder.GetEqualityComparer<SampleData>())).ToArray();
 				var actual = query.ToArray();
 
-				if (!context.IsAnyOf(TestProvName.AllPostgreSQL)) // postgres has a bug?
+				// TODO: emulation is not correct, but pgsql and mysql native implementation working properly
+				//if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus))
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
@@ -185,8 +187,6 @@ namespace Tests.Linq
 				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
-
-
 
 		private SampleData[] GenerateTestData()
 		{

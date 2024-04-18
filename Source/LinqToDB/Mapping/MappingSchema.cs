@@ -1523,16 +1523,12 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="type">Type to configure.</param>
 		/// <param name="dataType">Optional scalar data type.</param>
-		/// <param name="withNullable">Also register <see cref="Nullable{T}"/> type.</param>
-		public void AddScalarType(Type type, DataType dataType = DataType.Undefined, bool withNullable = true)
+		public void AddScalarType(Type type, DataType dataType = DataType.Undefined)
 		{
 			SetScalarType(type);
 
 			if (dataType != DataType.Undefined)
 				SetDataType(type, dataType);
-
-			if (withNullable && type.IsValueType && !type.IsNullable())
-				AddScalarType(type.AsNullable(), dataType, false);
 		}
 
 		/// <summary>
@@ -1540,18 +1536,11 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="type">Type to configure.</param>
 		/// <param name="dataType">Database data type.</param>
-		/// <param name="withNullable">Also register <see cref="Nullable{T}"/> type.</param>
-		public void AddScalarType(Type type, SqlDataType dataType, bool withNullable = true)
+		public void AddScalarType(Type type, SqlDataType dataType)
 		{
 			SetScalarType(type);
 
 			SetDataType(type, dataType);
-
-			if (withNullable && type.IsValueType && !type.IsNullable())
-			{
-				var nullableType = type.AsNullable();
-				AddScalarType(nullableType, new SqlDataType(dataType.Type.WithSystemType(nullableType)), false);
-			}
 		}
 
 		#endregion

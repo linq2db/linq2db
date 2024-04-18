@@ -48,7 +48,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDelete([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDelete([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -65,7 +65,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -82,7 +82,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate3([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -116,7 +116,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate4([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -152,7 +152,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate5([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate5([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())

@@ -9,7 +9,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		public void SameSourceUpdateBySource([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void SameSourceUpdateBySource([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -64,7 +64,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceUpdateBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void SameSourceUpdateBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -116,7 +116,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void OnConditionPartialSourceProjection_KnownFieldInCondition(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -171,7 +171,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceUpdateBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void OtherSourceUpdateBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -233,7 +233,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousSourceUpdateBySourceWithPredicate(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -303,7 +303,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousListSourceUpdateBySourceWithPredicate(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -372,7 +372,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateBySourceReservedAndCaseNames([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateBySourceReservedAndCaseNames([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -442,7 +442,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateBySourceReservedAndCaseNamesFromList(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

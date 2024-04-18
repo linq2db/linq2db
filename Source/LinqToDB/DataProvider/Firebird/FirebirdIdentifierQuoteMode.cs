@@ -9,7 +9,7 @@
 		/// <summary>
 		/// Do not quote identifiers.
 		/// LINQ To DB will not check identifiers for validity (spaces, reserved words) is this mode.
-		/// This mode should be used only for SQL Dialect &lt; 3 and it is developer's responsibility to
+		/// This mode should be used only for SQL Dialect &lt; 1 and it is developer's responsibility to
 		/// ensure that there is no identifiers in use that require quotation.
 		/// </summary>
 		None,
@@ -17,7 +17,7 @@
 		/// Always quote identifiers.
 		/// LINQ To DB will quote all identifiers, even if it is not required.
 		/// Select this mode, if you need to preserve identifiers casing.
-		/// Quoted identifiers not supported by SQL Dialect &lt; 3.
+		/// Quoted identifiers not supported by SQL Dialect &lt; 1.
 		/// </summary>
 		Quote,
 		/// <summary>
@@ -29,7 +29,7 @@
 		/// - use digit, _ or $ as first character.
 		/// This is default mode.
 		/// Note that if you need to preserve casing of identifiers, you should use <see cref="Quote"/> mode.
-		/// Quoted identifiers not supported by SQL Dialect &lt; 3.
+		/// Quoted identifiers not supported by SQL Dialect &lt; 1.
 		/// </summary>
 		Auto
 	}

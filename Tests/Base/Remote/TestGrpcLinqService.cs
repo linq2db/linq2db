@@ -51,9 +51,6 @@ namespace Tests.Remote
 			if (_interceptor != null)
 				dc.AddInterceptor(_interceptor);
 
-			if (configuration?.IsAnyOf(TestProvName.AllMariaDB) == true)
-				dc.AddMappingSchema(TestBase._mariaDBSchema);
-
 			return dc;
 		}
 

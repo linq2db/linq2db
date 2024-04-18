@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 		{
 			using var db = GetDataContext(context);
 
-			using var table = db.CreateTempTable<TestIdTrun>("test_temp", tableOptions:TableOptions.CheckExistence);
+			using var table = db.CreateLocalTable<TestIdTrun>("test_temp");
 
 			table.Truncate(false);
 

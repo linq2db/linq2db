@@ -16,7 +16,7 @@ namespace Tests.xUpdate
 			false,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -75,7 +75,7 @@ namespace Tests.xUpdate
 			false,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -129,7 +129,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestParameters2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestParameters2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -233,7 +233,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInUpdateCondition([MergeDataContextSource(
 			false,
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -260,7 +260,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInInsertCondition([MergeDataContextSource(
 			false,
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -289,7 +289,7 @@ namespace Tests.xUpdate
 			false,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -314,7 +314,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestParametersInDeleteBySourceCondition([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestParametersInDeleteBySourceCondition([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -340,7 +340,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestParametersInUpdateBySourceCondition([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestParametersInUpdateBySourceCondition([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -452,7 +452,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestParametersInUpdateBySourceExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestParametersInUpdateBySourceExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

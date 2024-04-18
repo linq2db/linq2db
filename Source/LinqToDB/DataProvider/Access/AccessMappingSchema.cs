@@ -22,7 +22,6 @@ namespace LinqToDB.DataProvider.Access
 		AccessMappingSchema() : base(ProviderName.Access)
 		{
 			SetDataType(typeof(DateTime),  DataType.DateTime);
-			SetDataType(typeof(DateTime?), DataType.DateTime);
 
 			SetValueToSqlConverter(typeof(bool),     (sb,_,_,v) => sb.Append((bool)v));
 			SetValueToSqlConverter(typeof(Guid),     (sb,_,_,v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));

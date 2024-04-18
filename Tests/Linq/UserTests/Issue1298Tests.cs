@@ -56,7 +56,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Issue1298Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void Issue1298Test([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())

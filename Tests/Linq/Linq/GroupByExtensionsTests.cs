@@ -35,7 +35,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL95Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
-			TestProvName.AllMySql57Plus,
+			TestProvName.AllMySql,
 			TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
@@ -89,7 +89,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByRollupGroupingMany([IncludeDataSources(true,
-			TestProvName.AllMySqlServer57Plus, TestProvName.AllClickHouse)] string context)
+			TestProvName.AllMySql80, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 

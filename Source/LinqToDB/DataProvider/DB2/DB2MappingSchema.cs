@@ -61,7 +61,6 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 			SetDataType(typeof(byte), new SqlDataType(DataType.Int16, typeof(byte)));
-			SetDataType(typeof(byte?), new SqlDataType(DataType.Int16, typeof(byte)));
 
 			SetValueToSqlConverter(typeof(Guid),     (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
 			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));

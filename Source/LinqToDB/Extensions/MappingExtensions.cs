@@ -6,6 +6,9 @@ using System.Text;
 namespace LinqToDB.Extensions
 {
 	using Common;
+
+	using LinqToDB.Data;
+
 	using Mapping;
 	using SqlQuery;
 
@@ -20,6 +23,9 @@ namespace LinqToDB.Extensions
 
 		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? originalValue)
 		{
+			//if (originalValue is DataParameter p)
+			//	return new SqlValue(p.DbDataType, p.Value);
+
 			var underlyingType = systemType.ToNullableUnderlying();
 
 			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))

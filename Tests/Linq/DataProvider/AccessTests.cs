@@ -449,7 +449,8 @@ namespace Tests.DataProvider
 			AccessTools.CreateDatabase("TestDatabase", deleteIfExists: true, provider: providerName!);
 			Assert.That(File.Exists("TestDatabase.mdb"), Is.True);
 
-			using (var db = new DataConnection(AccessTools.GetDataProvider(), $"Provider={providerName};Data Source=TestDatabase.mdb;Locale Identifier=1033;Persist Security Info=True"))
+			var connectionString = $"Provider={providerName};Data Source=TestDatabase.mdb;Locale Identifier=1033;Persist Security Info=True";
+			using (var db = new DataConnection(AccessTools.GetDataProvider(AccessProvider.AutoDetect, connectionString), connectionString))
 			{
 				db.CreateTable<SqlCeTests.CreateTableTest>();
 				db.DropTable<SqlCeTests.CreateTableTest>();
@@ -530,7 +531,7 @@ namespace Tests.DataProvider
 
 			for (var i = 0; i < 1000; i++)
 			{
-				using (var db = AccessTools.CreateDataConnection(cs, context))
+				using (var db = AccessTools.CreateDataConnection(cs, AccessProvider.AutoDetect))
 				{
 					var list = db.GetTable<Person>().Where(p => p.ID > 0).ToList();
 				}

@@ -124,7 +124,8 @@ namespace LinqToDB.DataProvider.DB2
 				typeMapper.BuildWrappedFactory((DbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)(object)connection, options)),
 				typeMapper.BuildWrappedFactory((int source, string destination) => new DB2BulkCopyColumnMapping(source, destination)));
 
-			CreateConnection = typeMapper.BuildWrappedFactory((string connectionString) => new DB2Connection(connectionString));
+			_connectionFactory = typeMapper.BuildTypedFactory<string, DB2Connection, DbConnection>((string connectionString) => new DB2Connection(connectionString));
+			ConnectionWrapper  = typeMapper.Wrap<DB2Connection>;
 
 			Type? LoadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
 			{
@@ -156,11 +157,18 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
+#region IDynamicProviderAdapter
+
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
+
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
 
 		public MappingSchema MappingSchema { get; }
 
@@ -210,9 +218,9 @@ namespace LinqToDB.DataProvider.DB2
 		public Action<DbParameter, DB2Type> SetDbType { get; }
 		public Func  <DbParameter, DB2Type> GetDbType { get; }
 
-		public Func<string, DB2Connection> CreateConnection { get; }
-
 		public Func<object, bool> IsDB2BinaryNull { get; }
+
+		internal Func<DbConnection, DB2Connection> ConnectionWrapper { get; }
 
 		public BulkCopyAdapter BulkCopy { get; }
 
@@ -252,17 +260,13 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		[Wrapper]
-		public class DB2Connection : TypeWrapper, IConnectionWrapper
+		public class DB2Connection : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
 				// [0]: get eServerType
 				(Expression<Func<DB2Connection, DB2ServerTypes>>)((DB2Connection this_) => this_.eServerType),
-				// [1]: Open
-				(Expression<Action<DB2Connection>>              )((DB2Connection this_) => this_.Open()),
-				// [2]: Dispose
-				(Expression<Action<DB2Connection>>              )((DB2Connection this_) => this_.Dispose()),
 			};
 
 			public DB2Connection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -273,10 +277,6 @@ namespace LinqToDB.DataProvider.DB2
 
 			// internal actually
 			public DB2ServerTypes eServerType => ((Func<DB2Connection, DB2ServerTypes>)CompiledWrappers[0])(this);
-			public void           Open()      => ((Action<DB2Connection>)CompiledWrappers[1])(this);
-			public void           Dispose()   => ((Action<DB2Connection>)CompiledWrappers[2])(this);
-
-			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		[Wrapper]
