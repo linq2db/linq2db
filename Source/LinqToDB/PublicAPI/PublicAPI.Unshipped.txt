@@ -688,30 +688,8 @@ static LinqToDB.DataProvider.Sybase.SybaseTools.ResolveSybase(string! path, stri
 *REMOVED*const LinqToDB.ProviderName.MariaDB = "MariaDB" -> string!
 *REMOVED*const LinqToDB.ProviderName.MySqlConnector = "MySqlConnector" -> string!
 *REMOVED*const LinqToDB.ProviderName.MySqlOfficial = "MySql.Official" -> string!
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.BulkCopy.get -> LinqToDB.DataProvider.DB2.DB2ProviderAdapter.BulkCopyAdapter!
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.BulkCopyAdapter
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.BulkCopyAdapter.Create.get -> System.Func<System.Data.Common.DbConnection!, LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopyOptions, LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy!>!
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.BulkCopyAdapter.CreateColumnMapping.get -> System.Func<int, string!, LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopyColumnMapping!>!
 *REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.CreateConnection.get -> System.Func<string!, LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2Connection!>!
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.BulkCopyTimeout.get -> int
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.BulkCopyTimeout.set -> void
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.ColumnMappings.get -> LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopyColumnMappingCollection!
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.ColumnMappings.set -> void
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.DB2BulkCopy(LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2Connection! connection, LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopyOptions options) -> void
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.DB2BulkCopy(object! instance, System.Delegate![]! wrappers) -> void
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.DB2RowsCopied -> LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2RowsCopiedEventHandler?
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.DestinationTableName.get -> string?
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.DestinationTableName.set -> void
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.Dispose() -> void
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.NotifyAfter.get -> int
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.NotifyAfter.set -> void
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopy.WriteToServer(System.Data.IDataReader! dataReader) -> void
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2Connection
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2Connection.DB2Connection(object! instance, System.Delegate![]! wrappers) -> void
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2Connection.DB2Connection(string! connectionString) -> void
 *REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2Connection.Dispose() -> void
-*REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2Connection.eServerType.get -> LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2ServerTypes
 *REMOVED*LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2Connection.Open() -> void
 *REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.BulkCopyAdapter
 *REMOVED*LinqToDB.DataProvider.Informix.InformixProviderAdapter.BulkCopyAdapter.Create.get -> System.Func<System.Data.Common.DbConnection!, LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopyOptions, LinqToDB.DataProvider.Informix.InformixProviderAdapter.IfxBulkCopy!>!
@@ -811,7 +789,6 @@ static LinqToDB.DataProvider.Sybase.SybaseTools.ResolveSybase(string! path, stri
 *REMOVED*static LinqToDB.DataProvider.Access.AccessTools.DefaultBulkCopyType.set -> void
 *REMOVED*static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
 *REMOVED*static LinqToDB.DataProvider.ClickHouse.ClickHouseTools.DefaultBulkCopyType.set -> void
-*REMOVED*static LinqToDB.DataProvider.DB2.DB2BulkCopyShared.ProviderSpecificCopyImpl<T>(LinqToDB.ITable<T>! table, LinqToDB.Data.BulkCopyOptions! options, System.Collections.Generic.IEnumerable<T>! source, LinqToDB.Data.DataConnection! dataConnection, System.Data.Common.DbConnection! connection, LinqToDB.DataProvider.DB2.DB2ProviderAdapter.BulkCopyAdapter! bulkCopy, System.Action<LinqToDB.Data.DataConnection!, System.Func<string!>!, System.Func<int>!>! traceAction) -> LinqToDB.Data.BulkCopyRowsCopied!
 *REMOVED*static LinqToDB.DataProvider.DB2.DB2Tools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType
 *REMOVED*static LinqToDB.DataProvider.DB2.DB2Tools.DefaultBulkCopyType.set -> void
 *REMOVED*static LinqToDB.DataProvider.Firebird.FirebirdTools.DefaultBulkCopyType.get -> LinqToDB.Data.BulkCopyType

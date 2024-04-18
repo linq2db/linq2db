@@ -223,9 +223,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		internal Func<DbConnection, DB2Connection> ConnectionWrapper { get; }
 
-		internal BulkCopyAdapter BulkCopy { get; }
+		public BulkCopyAdapter BulkCopy { get; }
 
-		internal class BulkCopyAdapter
+		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, DB2BulkCopyOptions, DB2BulkCopy> bulkCopyCreator,
@@ -261,7 +261,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		[Wrapper]
-		internal class DB2Connection : TypeWrapper
+		public class DB2Connection : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -357,7 +357,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		#region BulkCopy
 		[Wrapper]
-		internal class DB2BulkCopy : TypeWrapper, IDisposable
+		public class DB2BulkCopy : TypeWrapper, IDisposable
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]

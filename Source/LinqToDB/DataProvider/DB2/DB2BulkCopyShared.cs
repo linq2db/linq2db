@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.DB2
 	// https://github.com/LinqToDB4iSeries/Linq2DB4iSeries/issues/69
 	public static class DB2BulkCopyShared
 	{
-		internal static BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(
+		public static BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(
 			ITable<T>                                       table,
 			BulkCopyOptions                                 options,
 			IEnumerable<T>                                  source,
