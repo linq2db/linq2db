@@ -56,6 +56,7 @@ namespace LinqToDB.DataProvider.MySql
 					return GetDataProvider(options, MySqlProvider.MySqlConnector, MySqlVersion.MariaDB10);
 				case "MariaDB":
 					return GetDataProvider(options, provider, MySqlVersion.MariaDB10);
+				case MySqlProviderAdapter.MySqlDataAssemblyName:
 				case MySqlProviderAdapter.MySqlConnectorNamespace:
 				case MySqlProviderAdapter.MySqlDataClientNamespace:
 				case ProviderName.MySql:
