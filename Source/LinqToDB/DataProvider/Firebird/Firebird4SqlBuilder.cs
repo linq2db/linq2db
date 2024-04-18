@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			switch (join.JoinType)
 			{
-				case JoinType.CrossApply: StringBuilder.Append("CROSS JOIN LATERAL "); return true;
+				case JoinType.CrossApply: StringBuilder.Append("CROSS JOIN LATERAL "); return false;
 				case JoinType.OuterApply: StringBuilder.Append("LEFT JOIN LATERAL " ); return true;
 			}
 
