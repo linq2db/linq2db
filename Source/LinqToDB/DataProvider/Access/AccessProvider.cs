@@ -16,6 +16,6 @@
 		/// <summary>
 		/// Access ODBC provider.
 		/// </summary>
-		ODBC
+		ODBC,
 	}
 }
