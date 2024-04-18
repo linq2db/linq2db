@@ -11,6 +11,6 @@
 	GenerateDbTypes   = true;
 	NormalizeParameterName = false;
 
-	LoadFirebirdMetadata(GetConnectionString("Firebird3"));
+	LoadFirebirdMetadata(GetConnectionString("Firebird.3"));
 	GenerateModel();
 #>

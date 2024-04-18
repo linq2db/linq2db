@@ -498,7 +498,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					if (cnBuilder.UseSession)
 					{
 						cnBuilder.UseSession = false;
-						connection           = _provider.Adapter.CreateConnection!(cnBuilder.ToString());
+						connection           = _provider.Adapter.CreateConnection(cnBuilder.ToString());
 						disposeConnection    = true;
 
 						if (options.ConnectionOptions.ConnectionInterceptor == null)

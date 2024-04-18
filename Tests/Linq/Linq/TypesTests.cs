@@ -810,9 +810,8 @@ namespace Tests.Linq
 				)] string context,
 			[Values] bool inline)
 		{
-			// TODO: update condition to include only Firebird 2.5 when
-			// https://github.com/FirebirdSQL/firebird/issues/6750 releases
-			var skipFloatInf = context.IsAnyOf(TestProvName.AllFirebird) && inline;
+			// Firebird25: https://github.com/FirebirdSQL/firebird/issues/6750
+			var skipFloatInf = context.IsAnyOf(ProviderName.Firebird25) && inline;
 			var skipId       = context.IsAnyOf(ProviderName.DB2) || context.IsAnyOf(TestProvName.AllSybase) || context.IsAnyOf(ProviderName.SqlCe);
 
 			using (var db = GetDataContext(context))

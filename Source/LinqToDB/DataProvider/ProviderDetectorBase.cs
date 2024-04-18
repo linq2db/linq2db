@@ -5,13 +5,14 @@ using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider
 {
+	using System.Data;
+
 	using Common.Internal.Cache;
 	using Data;
 
-	abstract class ProviderDetectorBase<TProvider,TVersion,TConnection>
+	abstract class ProviderDetectorBase<TProvider,TVersion>
 		where TProvider   : struct, Enum
 		where TVersion    : struct, Enum
-		where TConnection : IDisposable
 	{
 		protected ProviderDetectorBase(TVersion autoDetectVersion, TVersion defaultVersion)
 		{
@@ -45,41 +46,47 @@ namespace LinqToDB.DataProvider
 		/// <remarks>Uses cache to avoid unwanted connections to Database.</remarks>
 		public TVersion? DetectServerVersion(ConnectionOptions options, TProvider provider)
 		{
+			if (options.DbConnection != null)
+				return DetectVersion(options, options.DbConnection);
+
+			if (options.DbTransaction?.Connection != null)
+				return DetectVersion(options, options.DbTransaction.Connection);
+
 			if (options.ConnectionString == null)
 				throw new InvalidOperationException("Connection string is not provided.");
 
-			var version = _providerCache.GetOrCreate(options.ConnectionString, entry =>
+			var version = ProviderDetectorBase<TProvider, TVersion>._providerCache.GetOrCreate(options.ConnectionString, entry =>
 			{
 				entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 
 				using var conn = CreateConnection(provider, options.ConnectionString);
-
-				var cn = conn switch
-				{
-					DbConnection       c => c,
-					IConnectionWrapper m => m.Connection,
-					_                    => throw new InvalidOperationException()
-				};
-
-				if (options.ConnectionInterceptor == null)
-				{
-					cn.Open();
-				}
-				else
-				{
-					using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
-						options.ConnectionInterceptor.ConnectionOpening(new(null), cn);
-
-					cn.Open();
-
-					using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
-						options.ConnectionInterceptor.ConnectionOpened(new(null), cn);
-				}
-
-				return DetectServerVersion(conn);
+				return DetectVersion(options, conn);
 			});
 
 			return version;
+
+			TVersion? DetectVersion(ConnectionOptions options, DbConnection cn)
+			{
+				if (cn.State != ConnectionState.Open)
+				{
+					if (options.ConnectionInterceptor == null)
+					{
+						cn.Open();
+					}
+					else
+					{
+						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
+							options.ConnectionInterceptor.ConnectionOpening(new(null), cn);
+
+						cn.Open();
+
+						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
+							options.ConnectionInterceptor.ConnectionOpened(new(null), cn);
+					}
+				}
+
+				return DetectServerVersion(cn);
+			}
 		}
 
 		public DataOptions CreateOptions(DataOptions options, TVersion dialect, TProvider provider)
@@ -107,7 +114,7 @@ namespace LinqToDB.DataProvider
 
 		public    abstract IDataProvider? DetectProvider     (ConnectionOptions options);
 		public    abstract IDataProvider  GetDataProvider    (ConnectionOptions options, TProvider provider, TVersion version);
-		public    abstract TVersion?      DetectServerVersion(TConnection connection);
-		protected abstract TConnection    CreateConnection   (TProvider provider, string connectionString);
+		public    abstract TVersion?      DetectServerVersion(DbConnection connection);
+		protected abstract DbConnection   CreateConnection   (TProvider provider, string connectionString);
 	}
 }

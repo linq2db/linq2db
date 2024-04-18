@@ -1,7 +1,7 @@
 ﻿{
 	"NET80.Azure": {
 		"Providers": [
-			"MariaDB"
+			"MariaDB.11"
 		]
 	}
 }

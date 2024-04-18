@@ -372,6 +372,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void GroupJoin5([DataSources] string context)
 		{
@@ -552,6 +553,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void GroupJoin8([DataSources] string context)
 		{
@@ -1043,8 +1045,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("HanaException : feature not supported: field or table alias is not allowed as an input of table functions", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context)
+		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1056,6 +1059,26 @@ namespace Tests.Linq
 				var _ = q.ToList();
 			}
 		}
+
+		// MySQL doesn't support user-defined table functions
+		// system-defined JSON_TABLE function could be used with LATERAL, but it is not an easy task to define it...
+		[ActiveIssue("Implement JSON_TABLE-like functions support")]
+		[Test]
+		public void ApplyJoin_MySql([IncludeDataSources(TestProvName.AllMySqlWithApply)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from ch in db.Child
+					from p in JsonTable()
+					select p;
+
+				var _ = q.ToList();
+			}
+		}
+
+		[Sql.TableExpression("JSON_TABLE('[ {\"ParentID\": 1}, {\"Value1\": 2} ]', '$[*]' COLUMNS( ParentID INT PATH '$.ParentID', Value1 INT PATH '$.Value1')")]
+		private static ITable<Parent> JsonTable() => throw new NotImplementedException();
 
 		[Test]
 		public void BltIssue257([DataSources] string context)

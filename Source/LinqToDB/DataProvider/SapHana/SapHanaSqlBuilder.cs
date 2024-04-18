@@ -179,6 +179,29 @@ namespace LinqToDB.DataProvider.SapHana
 			StringBuilder.Append(')');
 		}
 
+		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
+		{
+			switch (join.JoinType)
+			{
+				case JoinType.CrossApply:
+					// join with function implies lateral keyword
+					if (join.Table.SqlTableType == SqlTableType.Function)
+						StringBuilder.Append("INNER JOIN ");
+					else
+						StringBuilder.Append("INNER JOIN LATERAL ");
+					return true;
+				case JoinType.OuterApply:
+					// join with function implies lateral keyword
+					if (join.Table.SqlTableType == SqlTableType.Function)
+						StringBuilder.Append("LEFT JOIN ");
+					else
+						StringBuilder.Append("LEFT JOIN LATERAL ");
+					return true;
+			}
+
+			return base.BuildJoinType(join, condition);
+		}
+
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			// <table_name> ::= [[<linked_server_name>.]<schema_name>.][library_name:]<identifier>

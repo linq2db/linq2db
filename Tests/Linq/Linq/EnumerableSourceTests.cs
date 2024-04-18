@@ -13,12 +13,15 @@ namespace Tests.Linq
 	[TestFixture]
 	public class EnumerableSourceTests : TestBase
 	{
+		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void ApplyJoinArray(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllPostgreSQL93Plus,
-				TestProvName.AllOracle12Plus)]
+				TestProvName.AllOracle12Plus,
+				TestProvName.AllMySqlWithApply,
+				TestProvName.AllSapHana)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";

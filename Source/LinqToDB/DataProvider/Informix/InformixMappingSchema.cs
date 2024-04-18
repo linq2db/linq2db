@@ -33,7 +33,6 @@ namespace LinqToDB.DataProvider.Informix
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 			SetDataType(typeof(byte),   new SqlDataType(DataType.Int16,    typeof(byte)));
-			SetDataType(typeof(byte?),  new SqlDataType(DataType.Int16,    typeof(byte)));
 
 			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
 			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
@@ -128,14 +127,14 @@ namespace LinqToDB.DataProvider.Informix
 
 		public sealed class IfxMappingSchema : LockedMappingSchema
 		{
-			public IfxMappingSchema() : base(ProviderName.Informix, InformixProviderAdapter.GetInstance(ProviderName.Informix).MappingSchema, Instance)
+			public IfxMappingSchema() : base(ProviderName.Informix, InformixProviderAdapter.GetInstance(InformixProvider.Informix).MappingSchema, Instance)
 			{
 			}
 		}
 
 		public sealed class DB2MappingSchema : LockedMappingSchema
 		{
-			public DB2MappingSchema() : base(ProviderName.InformixDB2, InformixProviderAdapter.GetInstance(ProviderName.InformixDB2).MappingSchema, Instance)
+			public DB2MappingSchema() : base(ProviderName.InformixDB2, InformixProviderAdapter.GetInstance(InformixProvider.DB2).MappingSchema, Instance)
 			{
 			}
 		}

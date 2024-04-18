@@ -20,9 +20,9 @@ namespace Tests.xUpdate
 				string when context.IsAnyOf (TestProvName.AllSybase)                         => 500,
 				// hard limit around 100 records
 				// also big queries could kill connection with server
-				string when context.IsAnyOf (ProviderName.Firebird)                          => 100,
+				string when context.IsAnyOf (ProviderName.Firebird25)                        => 100,
 				// hard limit around 250 records
-				string when context.IsAnyOf (TestProvName.Firebird3, TestProvName.Firebird4) => 250,
+				string when context.IsAnyOf (TestProvName.AllFirebird3Plus)                  => 250,
 				// takes too long
 				string when context.IsAnyOf (TestProvName.AllInformix)                       => 500,
 				// original 2500 actually works, but sometimes fails with

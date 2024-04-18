@@ -6,6 +6,10 @@
 	public enum ClickHouseProvider
 	{
 		/// <summary>
+		/// Detect provider automatically.
+		/// </summary>
+		AutoDetect,
+		/// <summary>
 		/// Octonica ClickHouse provider: https://github.com/Octonica/ClickHouseClient.
 		/// </summary>
 		Octonica,

@@ -27,6 +27,7 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
+			SqlProviderFlags.IsApplyJoinSupported              = true;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}

@@ -453,9 +453,6 @@ namespace Tests
 
 				options = options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, _sequentialAccessSchema));
 			}
-			else
-			if (configuration.IsAnyOf(TestProvName.AllMariaDB))
-				options = options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? _mariaDBSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, _mariaDBSchema));
 
 			options = dbOptionsBuilder(options);
 
@@ -504,8 +501,6 @@ namespace Tests
 
 				options = options.UseMappingSchema(ms == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(ms, _sequentialAccessSchema));
 			}
-			else if (configuration.IsAnyOf(TestProvName.AllMariaDB))
-				options = options.UseMappingSchema(ms == null ? _mariaDBSchema : MappingSchema.CombineSchemas(ms, _mariaDBSchema));
 
 			if (interceptor != null)
 				options = options.UseInterceptor(interceptor);
@@ -521,9 +516,6 @@ namespace Tests
 			if (options.ConnectionOptions.ConfigurationString?.IsRemote() == true)
 				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
 
-			if (options.ConnectionOptions.ConfigurationString?.IsAnyOf(TestProvName.AllMariaDB) == true)
-				options = options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? _mariaDBSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, _mariaDBSchema));
-
 			Debug.WriteLine(options.ConnectionOptions.ConfigurationString, "Provider ");
 
 			var res = new TestDataConnection(options);
@@ -532,7 +524,6 @@ namespace Tests
 		}
 
 		private  static readonly MappingSchema _sequentialAccessSchema = new ("SequentialAccess");
-		internal static readonly MappingSchema _mariaDBSchema          = new (ProviderName.MariaDB);
 
 		protected static char GetParameterToken(string context)
 		{

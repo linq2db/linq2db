@@ -36,10 +36,10 @@
 	RunCliTool("Access"         , null                 , "Cli.NoMetadata.Access.OleDb"       , Path.Combine(targetDir, "AccessOleDb")        , mode, connectionString: accessOleDbCN, extraOptions: extraOptions);
 	RunCliTool("Access"         , null                 , "Cli.NoMetadata.Access.Both"        , Path.Combine(targetDir, "AccessBoth")         , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN, extraOptions: extraOptions);
 	RunCliTool("DB2"            , "DB2"                , "Cli.NoMetadata.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
-	RunCliTool("Firebird"       , "Firebird4"          , "Cli.NoMetadata.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode, extraOptions: extraOptions);
+	RunCliTool("Firebird"       , "Firebird.5"         , "Cli.NoMetadata.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode, extraOptions: extraOptions);
 	RunCliTool("Informix"       , "Informix.DB2"       , "Cli.NoMetadata.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
-	RunCliTool("MySQL"          , "MariaDB"            , "Cli.NoMetadata.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode, extraOptions: extraOptions);
-	RunCliTool("MySQL"          , "MySqlConnector"     , "Cli.NoMetadata.MySql"              , Path.Combine(targetDir, "MySql")              , mode, extraOptions: extraOptions);
+	RunCliTool("MySQL"          , "MariaDB.11"         , "Cli.NoMetadata.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode, extraOptions: extraOptions);
+	RunCliTool("MySQL"          , "MySqlConnector.8.0" , "Cli.NoMetadata.MySql"              , Path.Combine(targetDir, "MySql")              , mode, extraOptions: extraOptions);
 	RunCliTool("Oracle"         , "Oracle.11.Managed"  , "Cli.NoMetadata.Oracle"             , Path.Combine(targetDir, "Oracle")             , mode, extraOptions: extraOptions);
 	RunCliTool("PostgreSQL"     , "PostgreSQL.10"      , "Cli.NoMetadata.PostgreSQL"         , Path.Combine(targetDir, "PostgreSQL")         , mode, extraOptions: extraOptions);
 	RunCliTool("SapHana"        , "SapHana.Native"     , "Cli.NoMetadata.SapHana"            , Path.Combine(targetDir, "SapHana")            , mode, extraOptions: extraOptions);
