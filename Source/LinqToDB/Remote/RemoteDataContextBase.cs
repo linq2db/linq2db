@@ -34,9 +34,7 @@ namespace LinqToDB.Remote
 		{
 			Options = options;
 
-#pragma warning disable CA2214
-			ApplyOptions(options);
-#pragma warning restore CA2214
+			options.Apply(this);
 		}
 
 		[Obsolete("Use ConfigurationString instead.")]
@@ -555,12 +553,5 @@ namespace LinqToDB.Remote
 						dataContext.AddInterceptor(interceptor);
 			}
 		}
-
-		protected virtual void ApplyOptions(DataOptions options)
-		{
-			ConfigurationApplier.Apply(this, options.ConnectionOptions);
-			ConfigurationApplier.Apply(this, options.DataContextOptions);
-		}
-
 	}
 }

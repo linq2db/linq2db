@@ -83,15 +83,7 @@ namespace LinqToDB
 			Options       = options;
 			MappingSchema = default!;
 			DataProvider  = default!;
-#pragma warning disable CA2214
-			ApplyOptions(options);
-#pragma warning restore CA2214
-		}
-
-		protected virtual void ApplyOptions(DataOptions options)
-		{
-			ConfigurationApplier.Apply(this, options.ConnectionOptions);
-			ConfigurationApplier.Apply(this, options.DataContextOptions);
+			Options.Apply(this);
 		}
 
 		/// <summary>

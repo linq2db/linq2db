@@ -681,16 +681,5 @@ namespace LinqToDB.Data
 				if (options.WriteTrace != null) dataConnection.WriteTraceLineConnection = options.WriteTrace;
 			}
 		}
-
-		protected virtual void ApplyOptions(DataOptions options)
-		{
-			ConfigurationApplier.Apply(this, options.ConnectionOptions);
-			ConfigurationApplier.Apply(this, options.RetryPolicyOptions);
-			ConfigurationApplier.Apply(this, options.DataContextOptions);
-
-			var queryTraceOptions = options.Find<QueryTraceOptions>();
-			if (queryTraceOptions != null)
-				ConfigurationApplier.Apply(this, queryTraceOptions);
-		}
 	}
 }

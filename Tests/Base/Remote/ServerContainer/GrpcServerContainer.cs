@@ -52,12 +52,10 @@ namespace Tests.Remote.ServerContainer
 
 			service.SuppressSequentialAccess = suppressSequentialAccess;
 
-			/*
 			if (interceptor != null)
 			{
 				service.AddInterceptor(interceptor);
 			}
-			*/
 
 			var url = GetServiceUrl(GetPort());
 
@@ -66,8 +64,8 @@ namespace Tests.Remote.ServerContainer
 				() =>
 				{
 					service.SuppressSequentialAccess = false;
-					/*if (interceptor != null)
-						service.RemoveInterceptor();*/
+					if (interceptor != null)
+						service.RemoveInterceptor();
 				},
 				optionBuilder)
 			{ ConfigurationString = configuration };

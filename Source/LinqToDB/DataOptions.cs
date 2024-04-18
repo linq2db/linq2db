@@ -10,6 +10,7 @@ namespace LinqToDB
 	using Common.Internal;
 	using Data;
 	using Data.RetryPolicy;
+	using Remote;
 	using Interceptors;
 
 	/// <summary>
@@ -109,6 +110,37 @@ namespace LinqToDB
 			if (type == typeof(SqlOptions))         return (TSet?)(IOptionSet?)_sqlOptions;
 
 			return base.Find<TSet>();
+		}
+
+		public void Apply(DataConnection dataConnection)
+		{
+			((IApplicable<DataConnection>)ConnectionOptions).Apply(dataConnection);
+			((IApplicable<DataConnection>)RetryPolicyOptions).Apply(dataConnection);
+
+			if (_dataContextOptions is IApplicable<DataConnection> a)
+				a.Apply(dataConnection);
+
+			base.Apply(dataConnection);
+		}
+
+		public void Apply(DataContext dataContext)
+		{
+			((IApplicable<DataContext>)ConnectionOptions).Apply(dataContext);
+
+			if (_dataContextOptions is IApplicable<DataContext> a)
+				a.Apply(dataContext);
+
+			base.Apply(dataContext);
+		}
+
+		public void Apply(RemoteDataContextBase dataContext)
+		{
+			((IApplicable<RemoteDataContextBase>)ConnectionOptions).Apply(dataContext);
+
+			if (_dataContextOptions is IApplicable<RemoteDataContextBase> a)
+				a.Apply(dataContext);
+
+			base.Apply(dataContext);
 		}
 
 		int? _configurationID;

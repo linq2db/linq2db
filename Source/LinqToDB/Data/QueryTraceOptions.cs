@@ -23,7 +23,7 @@ namespace LinqToDB.Data
 		// If you add another parameter here, don't forget to update
 		// QueryTraceOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
-		: IOptionSet
+		: IOptionSet, IApplicable<DataConnection>
 	{
 		public QueryTraceOptions() : this((TraceLevel?)null)
 		{
@@ -56,6 +56,11 @@ namespace LinqToDB.Data
 		}
 
 		public static readonly QueryTraceOptions Empty = new();
+
+		void IApplicable<DataConnection>.Apply(DataConnection obj)
+		{
+			DataConnection.ConfigurationApplier.Apply(obj, this);
+		}
 
 		#region IEquatable implementation
 
