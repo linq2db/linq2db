@@ -82,9 +82,9 @@ namespace LinqToDB.DataProvider.Access
 		protected override DbConnection CreateConnection(AccessProvider provider, string connectionString)
 		{
 			var adapter = provider == AccessProvider.ODBC
-				? OdbcProviderAdapter
-				: OleDbProviderAdapter;
-			return adapter.GetInstance().CreateConnection(connectionString)
+				? (IDynamicProviderAdapter)OdbcProviderAdapter.GetInstance()
+				: OleDbProviderAdapter.GetInstance();
+			return adapter.CreateConnection(connectionString);
 		}
 	}
 }
