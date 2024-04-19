@@ -49,6 +49,11 @@ namespace LinqToDB.DataProvider.Firebird
 				&& ConvertElement(rows[row][column]) is SqlValue sqlValue && sqlValue.Value != null;
 		}
 
+		// FB 2.5 need to use small values to avoid error due to bad row size calculation
+		// resulting it being bigger than that limit (64Kb)
+		// limit is the same for newer versions, but only FB 2.5 fails
+		protected virtual int NullCharSize => 1;
+
 		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
 			if (dataType.DbType == null && (dataType.DataType == DataType.NVarChar || dataType.DataType == DataType.NChar))
@@ -84,7 +89,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 				if (typeRequired && length < 0)
 				{
-					length = 8191; // max length for CHAR/VARCHAR
+					length = NullCharSize;
 				}
 
 				if (typeRequired)
