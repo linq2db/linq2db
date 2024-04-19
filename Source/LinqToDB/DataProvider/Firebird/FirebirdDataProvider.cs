@@ -32,7 +32,9 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
 			SqlProviderFlags.IsExistsPreferableForContains     = true;
+			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= FirebirdVersion.v3;
 			SqlProviderFlags.IsApplyJoinSupported              = Version >= FirebirdVersion.v4;
+			// needs separate flags as CROSS - doesn't support, OUTER - supports conditions
 			//SqlProviderFlags.IsApplyJoinSupportsCondition      = Version >= FirebirdVersion.v4;IsSubqueryWithParentReferenceInJoinConditionSupported 
 			SqlProviderFlags.SupportsBooleanComparison         = Version >= FirebirdVersion.v3;
 

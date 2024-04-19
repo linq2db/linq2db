@@ -41,6 +41,7 @@ namespace LinqToDB.DataProvider.MySql
 			// https://jira.mariadb.org/browse/MDEV-19078
 			SqlProviderFlags.IsApplyJoinSupported              = version == MySqlVersion.MySql80;
 			SqlProviderFlags.IsApplyJoinSupportsCondition      = version == MySqlVersion.MySql80;
+			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= MySqlVersion.MySql80;
 
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
