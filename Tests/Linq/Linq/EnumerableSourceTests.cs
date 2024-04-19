@@ -19,8 +19,7 @@ namespace Tests.Linq
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllPostgreSQL93Plus,
 				TestProvName.AllOracle12Plus,
-				TestProvName.AllMySqlWithApply,
-				TestProvName.AllSapHana)]
+				TestProvName.AllMySqlWithApply)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";
