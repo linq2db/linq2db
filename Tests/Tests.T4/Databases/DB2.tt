@@ -10,6 +10,5 @@
 	GenerateDbTypes   = true;
 
 	LoadDB2Metadata(GetConnectionString("DB2"));
-
 	GenerateModel();
 #>

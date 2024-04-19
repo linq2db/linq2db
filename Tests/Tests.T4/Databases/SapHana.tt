@@ -7,6 +7,5 @@
 	NamespaceName = "SapHanaDataContext";
 
 	LoadSapHanaMetadata(GetConnectionString("SapHana.Native"), LinqToDB.ProviderName.SapHanaNative);
-
 	GenerateModel();
 #>

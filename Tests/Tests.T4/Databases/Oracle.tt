@@ -4,12 +4,10 @@
 <#@ include file="$(LinqToDBT4OracleTemplatesPath)LinqToDB.Oracle.Tools.ttinclude" once="true" #>
 <#@ include file="..\Shared.ttinclude"                                             once="true" #>
 <#
-	NamespaceName = "OracleDataContext";
-
+	NamespaceName     = "OracleDataContext";
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
 
 	LoadOracleMetadata(GetConnectionString("Oracle.11.Managed"));
-
 	GenerateModel();
 #>

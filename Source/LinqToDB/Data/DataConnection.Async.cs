@@ -544,7 +544,7 @@ namespace LinqToDB.Data
 
 		#endregion
 
-#region ExecuteReaderAsync
+		#region ExecuteReaderAsync
 
 		protected virtual async Task<DataReaderWrapper> ExecuteReaderAsync(
 			CommandBehavior   commandBehavior,
@@ -645,6 +645,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-#endregion
+		#endregion
 	}
 }

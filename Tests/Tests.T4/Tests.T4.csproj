@@ -27,11 +27,8 @@
 
 		<ProjectCapability Remove="TestContainer" />
 
-		<PackageReference Update="MySql.Data" Aliases="" />
+		<PackageReference Update="MySql.Data"     Aliases="" />
 		<PackageReference Update="MySqlConnector" Aliases="" />
-
-		<None Remove="Models\bbb.txt" />
-		<Content Include="Models\bbb.txt" />
 
 		<None    Update="Cli\Fluent.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Fluent.generated.cs" />
 		<Compile Update="Cli\Fluent.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Fluent.tt" />
@@ -183,5 +180,7 @@
 
 		<None    Update="Models\MultipleFiles.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MultipleFiles.generated.cs" />
 		<Compile Update="Models\MultipleFiles.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
+		<Compile Update="Models\aaa.cs"  DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
+		<None    Update="Models\bbb.txt" DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
 	</ItemGroup>
 </Project>

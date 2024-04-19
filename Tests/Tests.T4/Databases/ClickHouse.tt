@@ -9,6 +9,5 @@
 	EnableNullableReferenceTypes = false;
 
 	LoadClickHouseMetadata(GetConnectionString("ClickHouse.MySql"));
-
 	GenerateModel();
 #>
