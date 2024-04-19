@@ -545,7 +545,7 @@ namespace LinqToDB.Linq.Builder
 #pragma warning restore CA1508
 								{
 									sql = new SqlConditionExpression(filterSqlExpression, new SqlValue(1), new SqlValue(returnType, null));
-								}								
+								}
 								else
 								{
 									sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));

@@ -152,7 +152,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (predicate.ElementType == QueryElementType.ExprPredicate && predicate.Expr1 is SqlParameter p && p.Type.DataType != DataType.Boolean)
 			{
-				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, new SqlValue(p.Type, true), p.CanBeNull);
+				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, MappingSchema.GetSqlValue(p.Type, true), p.CanBeNull);
 			}
 
 			return base.VisitExprPredicate(predicate);

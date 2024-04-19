@@ -21,6 +21,20 @@ namespace LinqToDB.Extensions
 			return new SqlValue(columnDescriptor.GetDbDataType(true), providerValue);
 		}
 
+		public static SqlValue GetSqlValue<T>(this MappingSchema mappingSchema, DbDataType type, T originalValue)
+			where T: notnull
+		{
+			var converter = mappingSchema.GetConverter<T, DataParameter>(ConversionType.ToDatabase);
+
+			if (converter != null)
+			{
+				var p = converter(originalValue);
+				return new SqlValue(p.DbDataType, p.Value);
+			}
+
+			return new SqlValue(type, originalValue);
+		}
+
 		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? originalValue)
 		{
 			//if (originalValue is DataParameter p)
