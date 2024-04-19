@@ -10,9 +10,9 @@ string NamespaceName
 	set { Model.Namespace.Name = value; }
 }
 
-public static string BaseDataContextClass     { get { return ModelGenerator.BaseDataContextClass;          } set { ModelGenerator.BaseDataContextClass          = value; } }
-public static bool   EnforceModelNullability  { get { return ModelGenerator.EnforceModelNullability;       } set { ModelGenerator.EnforceModelNullability       = value; } }
-public static string GetDataOptionsMethod     { get { return ModelGenerator.GetDataOptionsMethod;          } set { ModelGenerator.GetDataOptionsMethod          = value; } }
+public static string BaseDataContextClass     { get { return LinqToDB.Tools.ModelGeneration.ModelGenerator.BaseDataContextClass;    } set { LinqToDB.Tools.ModelGeneration.ModelGenerator.BaseDataContextClass    = value; } }
+public static bool   EnforceModelNullability  { get { return LinqToDB.Tools.ModelGeneration.ModelGenerator.EnforceModelNullability; } set { LinqToDB.Tools.ModelGeneration.ModelGenerator.EnforceModelNullability = value; } }
+public static string GetDataOptionsMethod     { get { return LinqToDB.Tools.ModelGeneration.ModelGenerator.GetDataOptionsMethod;    } set { LinqToDB.Tools.ModelGeneration.ModelGenerator.GetDataOptionsMethod    = value; } }
 
 public string   ServerName                    { get { return ModelGenerator.ServerName;                    } set { ModelGenerator.ServerName                    = value; } }
 public string   DatabaseName                  { get { return ModelGenerator.DatabaseName;                  } set { ModelGenerator.DatabaseName                  = value; } }
@@ -55,63 +55,87 @@ public Func<IForeignKey,string> GetAssociationExtensionSingularName { get { retu
 
 public GetSchemaOptions GetSchemaOptions { get { return ModelGenerator.GetSchemaOptions; } set { ModelGenerator.GetSchemaOptions = value; } }
 
-public Func<TableSchema,ITable> LoadProviderSpecificTable { get { return ModelGenerator.LoadProviderSpecificTable; } set { ModelGenerator.LoadProviderSpecificTable = value; } }
+public Func<TableSchema,Table> LoadProviderSpecificTable { get { return ModelGenerator.LoadProviderSpecificTable; } set { ModelGenerator.LoadProviderSpecificTable = value; } }
 
-public static Func<ColumnSchema,string>                 ConvertColumnMemberType          { get { return ModelGenerator.ConvertColumnMemberType;          } set { ModelGenerator.ConvertColumnMemberType          = value; } }
-public static Func<TableSchema,ColumnSchema,string>     ConvertTableColumnMemberType     { get { return ModelGenerator.ConvertTableColumnMemberType;     } set { ModelGenerator.ConvertTableColumnMemberType     = value; } }
-public static Func<ProcedureSchema,ColumnSchema,string> ConvertProcedureColumnMemberType { get { return ModelGenerator.ConvertProcedureColumnMemberType; } set { ModelGenerator.ConvertProcedureColumnMemberType = value; } }
+public static Func<ColumnSchema,string>                 ConvertColumnMemberType          { get { return LinqToDB.Tools.ModelGeneration.ModelGenerator.ConvertColumnMemberType;          } set { LinqToDB.Tools.ModelGeneration.ModelGenerator.ConvertColumnMemberType          = value; } }
+public static Func<TableSchema,ColumnSchema,string>     ConvertTableColumnMemberType     { get { return LinqToDB.Tools.ModelGeneration.ModelGenerator.ConvertTableColumnMemberType;     } set { LinqToDB.Tools.ModelGeneration.ModelGenerator.ConvertTableColumnMemberType     = value; } }
+public static Func<ProcedureSchema,ColumnSchema,string> ConvertProcedureColumnMemberType { get { return LinqToDB.Tools.ModelGeneration.ModelGenerator.ConvertProcedureColumnMemberType; } set { LinqToDB.Tools.ModelGeneration.ModelGenerator.ConvertProcedureColumnMemberType = value; } }
 
-public static Func<string,bool>   IsValueType { get { return ModelGenerator.IsValueType; } set { ModelGenerator.IsValueType = value; } }
-public static Func<string,string> ToPlural    { get { return ModelGenerator.ToPlural;    } set { ModelGenerator.ToPlural    = value; } }
-public static Func<string,string> ToSingular  { get { return ModelGenerator.ToSingular;  } set { ModelGenerator.ToSingular  = value; } }
+public static Func<string,bool>   IsValueType { get { return LinqToDB.Tools.ModelGeneration.ModelGenerator.IsValueType; } set { LinqToDB.Tools.ModelGeneration.ModelGenerator.IsValueType = value; } }
+public static Func<string,string> ToPlural    { get { return LinqToDB.Tools.ModelGeneration.ModelGenerator.ToPlural;    } set { LinqToDB.Tools.ModelGeneration.ModelGenerator.ToPlural    = value; } }
+public static Func<string,string> ToSingular  { get { return LinqToDB.Tools.ModelGeneration.ModelGenerator.ToSingular;  } set { LinqToDB.Tools.ModelGeneration.ModelGenerator.ToSingular  = value; } }
 
-public static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema { get { return ModelGenerator.LoadDatabaseSchema; } set { ModelGenerator.LoadDatabaseSchema = value; } }
+public static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema { get { return LinqToDB.Tools.ModelGeneration.ModelGenerator.LoadDatabaseSchema; } set { LinqToDB.Tools.ModelGeneration.ModelGenerator.LoadDatabaseSchema = value; } }
 
 Action AfterLoadMetadata { get { return ModelGenerator.AfterLoadMetadata; } set { ModelGenerator.AfterLoadMetadata = value; } }
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
-	ModelGenerator.LoadServerMetadata<Table,ForeignKey,Column,Procedure>(dataConnection);
+	ModelGenerator.LoadServerMetadata<ForeignKey,Column>(dataConnection);
 }
 
 void LoadMetadata(DataConnection dataConnection)
 {
-	ModelGenerator.LoadMetadata<Table,Class,ForeignKey,Column,Procedure>(dataConnection);
+	ModelGenerator.LoadMetadata<Class,ForeignKey,Column>(dataConnection);
 }
 
-ITable     GetTable    (string name) { return ModelGenerator.GetTable    (name); }
-IProcedure GetProcedure(string name) { return ModelGenerator.GetProcedure(name); }
+Table     GetTable    (string name) { return ModelGenerator.GetTable    (name); }
+Procedure GetProcedure(string name) { return ModelGenerator.GetProcedure(name); }
 
 IColumn     GetColumn    (string tableName, string columnName) { return ModelGenerator.GetColumn(tableName, columnName); }
 IForeignKey GetFK        (string tableName, string fkName)     { return GetForeignKey(tableName, fkName);                }
 IForeignKey GetForeignKey(string tableName, string fkName)     { return ModelGenerator.GetForeignKey(tableName, fkName); }
 
-public TableContext SetTable(string tableName,
+public TableContext<Table,Procedure> SetTable(string tableName,
 	string TypeName                = null,
 	string DataContextPropertyName = null)
 {
 	return ModelGenerator.SetTable(tableName, TypeName, DataContextPropertyName);
 }
 
-Dictionary<string,ITable>     Tables     { get { return ModelGenerator.Tables;     } set { ModelGenerator.Tables     = value; } }
-Dictionary<string,IProcedure> Procedures { get { return ModelGenerator.Procedures; } set { ModelGenerator.Procedures = value; } }
+Dictionary<string,Table>     Tables     { get { return ModelGenerator.Tables;     } set { ModelGenerator.Tables     = value; } }
+Dictionary<string,Procedure> Procedures { get { return ModelGenerator.Procedures; } set { ModelGenerator.Procedures = value; } }
 
-public partial class Column : Column<Column>
+public partial class Column : Property, IColumn
 {
-	public Column() {}
-	public Column(ModelType type) : base(type) {}
+	public Column()
+	{
+	}
+
+	public Column(ModelType type)
+	{
+		ModelType   = type;
+		TypeBuilder = () => ModelType.ToTypeName();
+	}
+
+	public string ColumnName         { get; set; } // Column name in database
+	public bool   IsNullable         { get; set; }
+	public bool   IsIdentity         { get; set; }
+	public string ColumnType         { get; set; } // Type of the column in database
+	public string DataType           { get; set; }
+	public int?   Length             { get; set; }
+	public int?   Precision          { get; set; }
+	public int?   Scale              { get; set; }
+	public DbType DbType             { get; set; }
+	public string Description        { get; set; }
+	public bool   IsPrimaryKey       { get; set; }
+	public int    PrimaryKeyOrder    { get; set; }
+	public bool   SkipOnUpdate       { get; set; }
+	public bool   SkipOnInsert       { get; set; }
+	public bool   IsDuplicateOrEmpty { get; set; }
+	public bool   IsDiscriminator    { get; set; }
+	public string AliasName          { get; set; }
+
+	public string MemberName
+	{
+		get { return Name;  }
+		set { Name = value; }
+	}
+
+	public ModelType ModelType { get; set; }
+
+	public override bool EnforceNotNullable => EnableNullableReferenceTypes && EnforceModelNullability && ModelType != null && ModelType.IsReference == true && ModelType.IsNullable == false;
 }
 
-public partial class Table : Table<Table>
-{
-}
-
-public partial class ForeignKey : ForeignKey<ForeignKey>
-{
-}
-
-public partial class Procedure : Procedure<Procedure>
-{
-}
 
 #>

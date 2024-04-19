@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 
 using LinqToDB.Data;
 using LinqToDB.SchemaProvider;
@@ -107,8 +108,6 @@ namespace LinqToDB.Tools.ModelGeneration
 		public static Func<string,string> ToSingular  = s => s;
 		public static Func<string,bool>   IsValueType = IsValueTypeDefault;
 
-		public Func<TableSchema,ITable?> LoadProviderSpecificTable = _ => null;
-
 		public static Func<ColumnSchema,string>                 ConvertColumnMemberType          = (c) => c.MemberType;
 		public static Func<TableSchema,ColumnSchema,string>     ConvertTableColumnMemberType     = (_,c) => ConvertColumnMemberType(c);
 		public static Func<ProcedureSchema,ColumnSchema,string> ConvertProcedureColumnMemberType = (_,c) => ConvertColumnMemberType(c);
@@ -212,9 +211,6 @@ namespace LinqToDB.Tools.ModelGeneration
 		public bool IsParameter;
 		public bool IsProcedureColumn;
 
-		public Dictionary<string,ITable>     Tables     { get; set; } = new ();
-		public Dictionary<string,IProcedure> Procedures { get; set; } = new ();
-
 		public string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 		{
 			var normalize = IsParameter && NormalizeParameterName || IsProcedureColumn && NormalizeProcedureColumnName || (!IsParameter && !IsProcedureColumn && NormalizeNames);
@@ -299,11 +295,152 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		public SqlProvider.ISqlBuilder? SqlBuilder;
 
-		public void LoadServerMetadata<TTable,TForeignKey,TColumn,TProcedure>(DataConnection dataConnection)
-			where TTable      : Table     <TTable>,      new()
+		protected Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> keyGetter, Func<T,TR> objGetter, Func<TR,int,string> getKeyName)
+		{
+			var dic     = new Dictionary<string,TR>();
+			var current = 1;
+
+			foreach (var item in source)
+			{
+				var key = keyGetter(item);
+				var obj = objGetter(item);
+
+				if (string.IsNullOrEmpty(key) || dic.ContainsKey(key))
+					key = getKeyName(obj, current);
+
+				dic.Add(key, obj);
+
+				current++;
+			}
+
+			return dic;
+		}
+
+		public string? CheckType(Type? type, string? typeName)
+		{
+			type ??= typeof(object);
+
+			if (Model.Usings.Contains(type.Namespace ?? "") == false)
+				Model.Usings.Add(type.Namespace ?? "");
+
+			if (type.IsGenericType)
+				foreach (var argType in type.GetGenericArguments())
+					CheckType(argType, null);
+
+			return typeName;
+		}
+
+		protected string CheckColumnName(string memberName)
+		{
+			if (string.IsNullOrEmpty(memberName))
+				memberName = "Empty";
+			else
+			{
+				memberName = memberName
+					.Replace("%",      "Percent")
+					.Replace(">",      "Greater")
+					.Replace("<",      "Lower")
+					.Replace("+",      "Plus")
+					.Replace('(',      '_')
+					.Replace(')',      '_')
+					.Replace('-',      '_')
+					.Replace('|',      '_')
+					.Replace(',',      '_')
+					.Replace('"',      '_')
+					.Replace("'",      "_")
+					.Replace(".",      "_")
+					.Replace("\u00A3", "Pound");
+
+				IsProcedureColumn = true;
+				memberName        = NormalizeName(memberName, false);
+				IsProcedureColumn = false;
+			}
+			return memberName;
+		}
+
+		protected string CheckParameterName(string parameterName)
+		{
+			var invalidParameterNames = new List<string>
+			{
+				"@DataType"
+			};
+
+			var result = parameterName;
+
+			while (invalidParameterNames.Contains(result))
+				result += "_";
+
+			return result;
+		}
+
+
+		protected string SuggestNoDuplicate(IEnumerable<string> currentNames, string newName, string? prefix)
+		{
+			var names  = new HashSet<string>(currentNames);
+			var result = newName;
+
+			if (names.Contains(result))
+			{
+				if (!string.IsNullOrEmpty(prefix))
+					result = prefix + result;
+
+				if (names.Contains(result))
+				{
+					var counter = 0;
+
+					// get last 6 digits
+					var idx = result.Length;
+
+					while (idx > 0 && idx > result.Length - 6 && char.IsDigit(result[idx - 1]))
+						idx--;
+
+					var number = result[idx..];
+
+					if (!string.IsNullOrEmpty(number) && int.TryParse(number, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out counter))
+						result = result.Remove(result.Length - number.Length);
+
+					do
+					{
+						++counter;
+
+						if (!names.Contains(result + counter))
+						{
+							result += counter;
+							break;
+						}
+					}
+					while(true);
+				}
+			}
+
+			return result;
+		}
+	}
+
+	public partial class ModelGenerator<TTable,TProcedure> : ModelGenerator
+		where TTable     : class, ITable,      new()
+		where TProcedure : IProcedure<TTable>, new()
+	{
+		public ModelGenerator(
+			IModelSource    model,
+			StringBuilder   generationEnvironment,
+			Action<string?> write,
+			Action<string?> writeLine,
+			Action<string>  pushIndent,
+			Func<string>    popIndent,
+			Action<string>  error)
+			: base(model, generationEnvironment, write, writeLine, pushIndent, popIndent, error)
+		{
+		}
+
+		public Dictionary<string,TTable>     Tables     { get; set; } = new ();
+		public Dictionary<string,TProcedure> Procedures { get; set; } = new ();
+
+		public Func<TableSchema,TTable?> LoadProviderSpecificTable = _ => null;
+
+		public void LoadServerMetadata<TForeignKey,TColumn>(DataConnection dataConnection)
 			where TForeignKey : ForeignKey<TForeignKey>, new()
-			where TColumn     : Column    <TColumn>,     new()
-			where TProcedure  : Procedure <TProcedure>,  new()
+			where TColumn     : IColumn,                 new()
 		{
 			SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
 
@@ -330,7 +467,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					t,
 					key = t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
-					table = (ITable?)new TTable
+					table = (TTable?)new TTable
 					{
 						TableSchema             = t,
 						IsDefaultSchema         = t.IsDefaultSchema,
@@ -523,7 +660,7 @@ namespace LinqToDB.Tools.ModelGeneration
 									})
 							},
 						ResultException = p.ResultException,
-						SimilarTables   = p.SimilarTables == null ? new List<ITable>() :
+						SimilarTables   = p.SimilarTables == null ? [] :
 							p.SimilarTables
 								.Select(t => tables.Single(tbl => tbl.t == t).table!)
 								.ToList(),
@@ -560,90 +697,119 @@ namespace LinqToDB.Tools.ModelGeneration
 			}
 		}
 
-		Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> keyGetter, Func<T,TR> objGetter, Func<TR,int,string> getKeyName)
+		public TTable GetTable(string name)
 		{
-			var dic     = new Dictionary<string,TR>();
-			var current = 1;
+			if (Tables.TryGetValue(name, out var tbl))
+				return tbl;
 
-			foreach (var item in source)
+			WriteLine($"#error Table '{name}' not found.");
+			WriteLine("/*");
+			WriteLine("\tExisting tables:");
+			WriteLine("");
+
+			foreach (var key in Tables.Keys)
+				WriteLine($"\t{key}");
+
+			WriteLine(" */");
+
+			Error($"Table '{name}' not found.");
+
+			throw new ArgumentException($"Table '{name}' not found.");
+		}
+
+		public TProcedure GetProcedure(string name)
+		{
+			if (Procedures.TryGetValue(name, out var proc))
+				return proc;
+
+			WriteLine($"#error Procedure '{name}' not found.");
+			WriteLine("");
+			WriteLine("/*");
+			WriteLine("\tExisting procedures:");
+			WriteLine("");
+
+			foreach (var key in Procedures.Keys)
+				WriteLine($"\t{key}");
+
+			WriteLine(" */");
+
+			Error($"Procedure '{name}' not found.");
+
+			throw new ArgumentException($"Procedure '{name}' not found.");
+		}
+
+		public IColumn GetColumn(string tableName, string columnName)
+		{
+			var tbl = GetTable(tableName);
+
+			if (tbl.Columns.TryGetValue(columnName, out var col))
+				return col;
+
+			WriteLine($"#error Column '{tableName}'.'{columnName}' not found.");
+			WriteLine("");
+			WriteLine("/*");
+			WriteLine($"\tExisting '{tableName}'columns:");
+			WriteLine("");
+
+			foreach (var key in tbl.Columns.Keys)
+				WriteLine($"\t{key}");
+
+			WriteLine(" */");
+
+			Error($"Column '{tableName}'.'{columnName}' not found.");
+
+			throw new ArgumentException($"Column '{tableName}'.'{columnName}' not found.");
+		}
+
+		public IForeignKey GetFK(string tableName, string fkName)
+		{
+			return GetForeignKey(tableName, fkName);
+		}
+
+		public IForeignKey GetForeignKey(string tableName, string fkName)
+		{
+			var tbl = GetTable(tableName);
+
+			if (tbl.ForeignKeys.TryGetValue(fkName, out var fk))
+				return fk;
+
+			WriteLine($"#error FK '{tableName}'.'{fkName}' not found.");
+			WriteLine("");
+			WriteLine("/*");
+			WriteLine($"\tExisting '{tableName}'FKs:");
+			WriteLine("");
+
+			foreach (var key in tbl.ForeignKeys.Keys)
+				WriteLine($"\t{key}");
+
+			WriteLine(" */");
+
+			Error($"FK '{tableName}'.'{fkName}' not found.");
+
+			throw new ArgumentException($"FK '{tableName}'.'{fkName}' not found.");
+		}
+
+		public TableContext<TTable,TProcedure> SetTable(
+			string  tableName,
+			string? TypeName                = null,
+			string? DataContextPropertyName = null)
+		{
+			var ctx = new TableContext<TTable,TProcedure>(this, tableName);
+
+			if (TypeName != null || DataContextPropertyName != null)
 			{
-				var key = keyGetter(item);
-				var obj = objGetter(item);
+				var t = GetTable(tableName);
 
-				if (string.IsNullOrEmpty(key) || dic.ContainsKey(key))
-					key = getKeyName(obj, current);
-
-				dic.Add(key, obj);
-
-				current++;
+				if (TypeName                != null) t.TypeName                = TypeName;
+				if (DataContextPropertyName != null) t.DataContextPropertyName = DataContextPropertyName;
 			}
 
-			return dic;
+			return ctx;
 		}
-
-		public string? CheckType(Type? type, string? typeName)
-		{
-			type ??= typeof(object);
-
-			if (Model.Usings.Contains(type.Namespace ?? "") == false)
-				Model.Usings.Add(type.Namespace ?? "");
-
-			if (type.IsGenericType)
-				foreach (var argType in type.GetGenericArguments())
-					CheckType(argType, null);
-
-			return typeName;
-		}
-
-		string CheckColumnName(string memberName)
-		{
-			if (string.IsNullOrEmpty(memberName))
-				memberName = "Empty";
-			else
-			{
-				memberName = memberName
-					.Replace("%",      "Percent")
-					.Replace(">",      "Greater")
-					.Replace("<",      "Lower")
-					.Replace("+",      "Plus")
-					.Replace('(',      '_')
-					.Replace(')',      '_')
-					.Replace('-',      '_')
-					.Replace('|',      '_')
-					.Replace(',',      '_')
-					.Replace('"',      '_')
-					.Replace("'",      "_")
-					.Replace(".",      "_")
-					.Replace("\u00A3", "Pound");
-
-				IsProcedureColumn = true;
-				memberName        = NormalizeName(memberName, false);
-				IsProcedureColumn = false;
-			}
-			return memberName;
-		}
-
-		string CheckParameterName(string parameterName)
-		{
-			var invalidParameterNames = new List<string>
-			{
-				"@DataType"
-			};
-
-			var result = parameterName;
-
-			while (invalidParameterNames.Contains(result))
-				result += "_";
-
-			return result;
-		}
-
-		public void LoadMetadata<TTable,TClass,TForeignKey,TColumn,TProcedure>(DataConnection dataConnection)
-			where TTable      : Table     <TTable>,      new()
+		public void LoadMetadata<TClass,TForeignKey,TColumn>(DataConnection dataConnection)
 			where TClass      : Class     <TClass>,      new()
 			where TForeignKey : ForeignKey<TForeignKey>, new()
-			where TColumn     : Column    <TColumn>,     new()
-			where TProcedure  : Procedure <TProcedure>,  new()
+			where TColumn     : IColumn,                 new()
 		{
 			if (DataContextObject == null)
 			{
@@ -652,7 +818,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				Model.Types.Add(DataContextObject);
 			}
 
-			LoadServerMetadata<TTable,TForeignKey,TColumn,TProcedure>(dataConnection);
+			LoadServerMetadata<TForeignKey,TColumn>(dataConnection);
 
 			if (Tables.Values.SelectMany(t => t.ForeignKeys.Values).Any(t => t.AssociationType == AssociationType.OneToMany))
 				Model.Usings.Add("System.Collections.Generic");
@@ -725,157 +891,6 @@ namespace LinqToDB.Tools.ModelGeneration
 			}
 
 			AfterLoadMetadata();
-		}
-
-		string SuggestNoDuplicate(IEnumerable<string> currentNames, string newName, string? prefix)
-		{
-			var names  = new HashSet<string>(currentNames);
-			var result = newName;
-
-			if (names.Contains(result))
-			{
-				if (!string.IsNullOrEmpty(prefix))
-					result = prefix + result;
-
-				if (names.Contains(result))
-				{
-					var counter = 0;
-
-					// get last 6 digits
-					var idx = result.Length;
-
-					while (idx > 0 && idx > result.Length - 6 && char.IsDigit(result[idx - 1]))
-						idx--;
-
-					var number = result[idx..];
-
-					if (!string.IsNullOrEmpty(number) && int.TryParse(number, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out counter))
-						result = result.Remove(result.Length - number.Length);
-
-					do
-					{
-						++counter;
-
-						if (!names.Contains(result + counter))
-						{
-							result += counter;
-							break;
-						}
-					}
-					while(true);
-				}
-			}
-
-			return result;
-		}
-
-		public ITable GetTable(string name)
-		{
-			if (Tables.TryGetValue(name, out var tbl))
-				return tbl;
-
-			WriteLine($"#error Table '{name}' not found.");
-			WriteLine("/*");
-			WriteLine("\tExisting tables:");
-			WriteLine("");
-
-			foreach (var key in Tables.Keys)
-				WriteLine($"\t{key}");
-
-			WriteLine(" */");
-
-			Error($"Table '{name}' not found.");
-
-			throw new ArgumentException($"Table '{name}' not found.");
-		}
-
-		public IProcedure GetProcedure(string name)
-		{
-			if (Procedures.TryGetValue(name, out var proc))
-				return proc;
-
-			WriteLine($"#error Procedure '{name}' not found.");
-			WriteLine("");
-			WriteLine("/*");
-			WriteLine("\tExisting procedures:");
-			WriteLine("");
-
-			foreach (var key in Procedures.Keys)
-				WriteLine($"\t{key}");
-
-			WriteLine(" */");
-
-			Error($"Procedure '{name}' not found.");
-
-			throw new ArgumentException($"Procedure '{name}' not found.");
-		}
-
-		public IColumn GetColumn(string tableName, string columnName)
-		{
-			var tbl = GetTable(tableName);
-
-			if (tbl.Columns.TryGetValue(columnName, out var col))
-				return col;
-
-			WriteLine($"#error Column '{tableName}'.'{columnName}' not found.");
-			WriteLine("");
-			WriteLine("/*");
-			WriteLine($"\tExisting '{tableName}'columns:");
-			WriteLine("");
-
-			foreach (var key in tbl.Columns.Keys)
-				WriteLine($"\t{key}");
-
-			WriteLine(" */");
-
-			Error($"Column '{tableName}'.'{columnName}' not found.");
-
-			throw new ArgumentException($"Column '{tableName}'.'{columnName}' not found.");
-		}
-
-		public IForeignKey GetFK(string tableName, string fkName)
-		{
-			return GetForeignKey(tableName, fkName);
-		}
-
-		public IForeignKey GetForeignKey(string tableName, string fkName)
-		{
-			var tbl = GetTable(tableName);
-
-			if (tbl.ForeignKeys.TryGetValue(fkName, out var fk))
-				return fk;
-
-			WriteLine($"#error FK '{tableName}'.'{fkName}' not found.");
-			WriteLine("");
-			WriteLine("/*");
-			WriteLine($"\tExisting '{tableName}'FKs:");
-			WriteLine("");
-
-			foreach (var key in tbl.ForeignKeys.Keys)
-				WriteLine($"\t{key}");
-
-			WriteLine(" */");
-
-			Error($"FK '{tableName}'.'{fkName}' not found.");
-
-			throw new ArgumentException($"FK '{tableName}'.'{fkName}' not found.");
-		}
-
-		public TableContext SetTable(string tableName,
-			string? TypeName                = null,
-			string? DataContextPropertyName = null)
-		{
-			var ctx = new TableContext(this, tableName);
-
-			if (TypeName != null || DataContextPropertyName != null)
-			{
-				var t = GetTable(tableName);
-
-				if (TypeName                != null) t.TypeName                = TypeName;
-				if (DataContextPropertyName != null) t.DataContextPropertyName = DataContextPropertyName;
-			}
-
-			return ctx;
 		}
 	}
 }

@@ -2,22 +2,25 @@
 
 namespace LinqToDB.Tools.ModelGeneration
 {
-	public class TableContext
+	public class TableContext<TTable,TProcedure>
+		where TTable     : class, ITable, new()
+		where TProcedure : IProcedure<TTable>, new()
 	{
-		public ModelGenerator Transformation;
-		public string         TableName;
+		public ModelGenerator<TTable,TProcedure> Transformation;
+		public string                            TableName;
 
-		public TableContext(ModelGenerator transformation, string tableName)
+		public TableContext(ModelGenerator<TTable,TProcedure> transformation, string tableName)
 		{
 			Transformation = transformation;
 			TableName      = tableName;
 		}
 
-		public TableContext Column(string columnName,
-			string?                       MemberName  = null,
-			string?                       Type        = null,
-			bool?                         IsNullable  = null,
-			string?                       Conditional = null)
+		public TableContext<TTable,TProcedure> Column(
+			string  columnName,
+			string? MemberName  = null,
+			string? Type        = null,
+			bool?   IsNullable  = null,
+			string? Conditional = null)
 		{
 			var c = Transformation.GetColumn(TableName, columnName);
 
@@ -29,10 +32,11 @@ namespace LinqToDB.Tools.ModelGeneration
 			return this;
 		}
 
-		public TableContext FK(string fkName,
-			string?                   MemberName      = null,
-			AssociationType?          AssociationType = null,
-			bool?                     CanBeNull       = null)
+		public TableContext<TTable,TProcedure> FK(
+			string           fkName,
+			string?          MemberName      = null,
+			AssociationType? AssociationType = null,
+			bool?            CanBeNull       = null)
 		{
 			var c = Transformation.GetFK(TableName, fkName);
 

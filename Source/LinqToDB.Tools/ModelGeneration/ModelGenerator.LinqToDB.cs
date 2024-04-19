@@ -101,6 +101,81 @@ namespace LinqToDB.Tools.ModelGeneration
 			}
 		}
 
+
+		protected void MakeTypeMembersNamesUnique(IClass type, string defaultName = "Member", params string[] exceptMethods)
+		{
+			var reservedNames = new [] { type.Name };
+
+			if (exceptMethods is [_, ..])
+				reservedNames = reservedNames.Concat(exceptMethods).ToArray();
+
+			MakeMembersNamesUnique(GetAllClassMembers(type.Members, exceptMethods), defaultName, reservedNames!);
+		}
+
+		protected List<string> CreateXmlCommentFromText(string? text, string tag = "summary", string? attributes = null)
+		{
+			var comments = new List<string>();
+
+			if (!string.IsNullOrWhiteSpace(text))
+			{
+				comments.Add($"/ <{tag}{(attributes == null ? null : " " + attributes)}>");
+
+				foreach (var line in text!.Split('\n'))
+					comments.Add("/ " + line
+						.Replace("&",  "&amp;")
+						.Replace("<",  "&lt;")
+						.Replace(">",  "&gt;")
+						.Replace("\"", "&quot;")
+						.Replace("'",  "&apos;")
+						.TrimEnd());
+
+				comments.Add($"/ </{tag}>");
+			}
+
+			return comments;
+		}
+
+		protected void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultName, params string[] reservedNames)
+		{
+			Common.Utils.MakeUniqueNames(
+				members,
+				reservedNames,
+				m => m is ITable t ? (t.Schema != null && (PrefixTableMappingForDefaultSchema || !t.IsDefaultSchema) && PrefixTableMappingWithSchema ? t.Schema + "_" : null) + t.Name : m is TypeBase tb ? tb.Name : ((MemberBase)m).Name,
+				(m, newName, _) =>
+				{
+					if (m is TypeBase tb)
+						tb.Name = newName;
+					else
+						((MemberBase)m).Name = newName;
+				},
+				defaultName);
+		}
+
+		IEnumerable<IClassMember> GetAllClassMembers(IEnumerable<IClassMember> members, params string[] exceptMethods)
+		{
+			foreach (var member in members)
+			{
+				if (member is IMemberGroup mm)
+					foreach (var m in GetAllClassMembers(mm.Members, exceptMethods!))
+						yield return m;
+				// constructors don't have own type/flag
+				else if (!(member is IMethod mt && (mt.BuildType() == null || exceptMethods != null && exceptMethods.Contains(mt.Name))))
+					yield return member;
+			}
+		}
+
+		// unused: left for backward API compatibility
+		//
+		public string NormalizeStringName(string name)
+		{
+			return ToStringLiteral(name);
+		}
+	}
+
+	public partial class ModelGenerator<TTable,TProcedure>
+		where TTable     : class, ITable,      new()
+		where TProcedure : IProcedure<TTable>, new()
+	{
 		public void GenerateTypesFromMetadata<TMemberGroup,TClass,TAttribute,TMethod,TProperty,TField>()
 			where TMemberGroup : MemberGroup<TMemberGroup>, new()
 			where TClass       : Class      <TClass>,       new()
@@ -157,7 +232,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					Aliases         = new TMemberGroup { IsCompact = true, Region = "Alias members" },
 					TableExtensions = new TMemberGroup { Region = "Table Extensions" },
 					Type            = new TClass { Name = typeName + SchemaNameSuffix, IsStatic = true },
-					Tables          = new List<ITable>(),
+					Tables          = new List<TTable>(),
 					DataContext     = new TClass { Name = SchemaDataContextTypeName },
 					Procedures      = new TMemberGroup(),
 					Functions       = new TMemberGroup(),
@@ -246,8 +321,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			foreach (var t in Tables.Values.OrderBy(tbl => tbl.IsProviderSpecific).ThenBy(tbl => tbl.TypeName))
 			{
-				Action<IClass> addType = tp => Model.Types.Add(tp);
-
+				var addType         = Model.Types.Add;
 				var props           = defProps;
 				var aliases         = defAliases;
 				var tableExtensions = defTableExtensions;
@@ -261,7 +335,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					var si = schemas[t.Schema ?? ""];
 
-					addType         = tp => si.Type.Members.Add(tp);
+					addType         = si.Type.Members.Add;
 					props           = si.Props;
 					aliases         = si.Aliases;
 					tableExtensions = si.TableExtensions;
@@ -1146,75 +1220,6 @@ namespace LinqToDB.Tools.ModelGeneration
 			Model.SetTree();
 
 			AfterGenerateLinqToDBModel();
-		}
-
-		void MakeTypeMembersNamesUnique(IClass type, string defaultName = "Member", params string[] exceptMethods)
-		{
-			var reservedNames = new [] { type.Name };
-
-			if (exceptMethods is [_, ..])
-				reservedNames = reservedNames.Concat(exceptMethods).ToArray();
-
-			MakeMembersNamesUnique(GetAllClassMembers(type.Members, exceptMethods), defaultName, reservedNames!);
-		}
-
-		List<string> CreateXmlCommentFromText(string? text, string tag = "summary", string? attributes = null)
-		{
-			var comments = new List<string>();
-
-			if (!string.IsNullOrWhiteSpace(text))
-			{
-				comments.Add($"/ <{tag}{(attributes == null ? null : " " + attributes)}>");
-
-				foreach (var line in text!.Split('\n'))
-					comments.Add("/ " + line
-						.Replace("&",  "&amp;")
-						.Replace("<",  "&lt;")
-						.Replace(">",  "&gt;")
-						.Replace("\"", "&quot;")
-						.Replace("'",  "&apos;")
-						.TrimEnd());
-
-				comments.Add($"/ </{tag}>");
-			}
-
-			return comments;
-		}
-
-		void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultName, params string[] reservedNames)
-		{
-			Common.Utils.MakeUniqueNames(
-				members,
-				reservedNames,
-				m => m is ITable t ? (t.Schema != null && (PrefixTableMappingForDefaultSchema || !t.IsDefaultSchema) && PrefixTableMappingWithSchema ? t.Schema + "_" : null) + t.Name : m is TypeBase tb ? tb.Name : ((MemberBase)m).Name,
-				(m, newName, _) =>
-				{
-					if (m is TypeBase tb)
-						tb.Name = newName;
-					else
-						((MemberBase)m).Name = newName;
-				},
-				defaultName);
-		}
-
-		IEnumerable<IClassMember> GetAllClassMembers(IEnumerable<IClassMember> members, params string[] exceptMethods)
-		{
-			foreach (var member in members)
-			{
-				if (member is IMemberGroup mm)
-					foreach (var m in GetAllClassMembers(mm.Members, exceptMethods!))
-						yield return m;
-				// constructors don't have own type/flag
-				else if (!(member is IMethod mt && (mt.BuildType() == null || exceptMethods != null && exceptMethods.Contains(mt.Name))))
-					yield return member;
-			}
-		}
-
-		// unused: left for backward API compatibility
-		//
-		public string NormalizeStringName(string name)
-		{
-			return ToStringLiteral(name);
 		}
 	}
 }

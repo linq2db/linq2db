@@ -6,7 +6,7 @@ namespace LinqToDB.Tools.ModelGeneration
 {
 	public interface IClass : ITypeBase
 	{
-		string?            BaseClass        { get; }
+		string?            BaseClass        { get; set; }
 		bool               IsStatic         { get; }
 		List<string>       GenericArguments { get; }
 		List<string>       Interfaces       { get; }
@@ -14,7 +14,7 @@ namespace LinqToDB.Tools.ModelGeneration
 	}
 
 	public class Class<T> : TypeBase, IClass
-		where T : Class<T>
+		where T : IClass
 	{
 		public string?            BaseClass        { get; set; }
 		public bool               IsStatic         { get; set; }

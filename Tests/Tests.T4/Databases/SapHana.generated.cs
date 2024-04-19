@@ -23,7 +23,7 @@ using LinqToDB.Mapping;
 
 namespace SapHanaDataContext
 {
-	public partial class SystemdbDB : LinqToDB.Data.DataConnection
+	public partial class SYSTEMDBDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>                   AllTypes                   { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypesGeo>               AllTypesGeos               { get { return this.GetTable<AllTypesGeo>(); } }
@@ -48,27 +48,27 @@ namespace SapHanaDataContext
 		public ITable<TestMerge1>                TestMerge1                 { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>                TestMerge2                 { get { return this.GetTable<TestMerge2>(); } }
 
-		public SystemdbDB()
+		public SYSTEMDBDB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public SystemdbDB(string configuration)
+		public SYSTEMDBDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public SystemdbDB(DataOptions options)
+		public SYSTEMDBDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public SystemdbDB(DataOptions<SystemdbDB> options)
+		public SYSTEMDBDB(DataOptions<SYSTEMDBDB> options)
 			: base(options.Options)
 		{
 			InitDataContext();
@@ -167,15 +167,15 @@ namespace SapHanaDataContext
 	[Table(Schema="TESTDB", Name="BulkInsertUpperCaseColumns")]
 	public partial class BulkInsertUpperCaseColumn
 	{
-		[Column(),                Nullable] public int?      ID            { get; set; } // INTEGER
-		[Column("MONEYVALUE"),    Nullable] public decimal?  Moneyvalue    { get; set; } // DECIMAL(10, 4)
-		[Column("DATETIMEVALUE"), Nullable] public DateTime? Datetimevalue { get; set; } // TIMESTAMP
-		[Column("BOOLVALUE"),     Nullable] public byte?     Boolvalue     { get; set; } // TINYINT
-		[Column("GUIDVALUE"),     Nullable] public string?   Guidvalue     { get; set; } // VARCHAR(36)
-		[Column("BINARYVALUE"),   Nullable] public byte[]?   Binaryvalue   { get; set; } // VARBINARY(5000)
-		[Column("SMALLINTVALUE"), Nullable] public short?    Smallintvalue { get; set; } // SMALLINT
-		[Column("INTVALUE"),      Nullable] public int?      Intvalue      { get; set; } // INTEGER
-		[Column("BIGINTVALUE"),   Nullable] public long?     Bigintvalue   { get; set; } // BIGINT
+		[Column, Nullable] public int?      ID            { get; set; } // INTEGER
+		[Column, Nullable] public decimal?  MONEYVALUE    { get; set; } // DECIMAL(10, 4)
+		[Column, Nullable] public DateTime? DATETIMEVALUE { get; set; } // TIMESTAMP
+		[Column, Nullable] public byte?     BOOLVALUE     { get; set; } // TINYINT
+		[Column, Nullable] public string?   GUIDVALUE     { get; set; } // VARCHAR(36)
+		[Column, Nullable] public byte[]?   BINARYVALUE   { get; set; } // VARBINARY(5000)
+		[Column, Nullable] public short?    SMALLINTVALUE { get; set; } // SMALLINT
+		[Column, Nullable] public int?      INTVALUE      { get; set; } // INTEGER
+		[Column, Nullable] public long?     BIGINTVALUE   { get; set; } // BIGINT
 	}
 
 	[Table(Schema="TESTDB", Name="Child")]
@@ -418,20 +418,20 @@ namespace SapHanaDataContext
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // INTEGER
 	}
 
-	public static partial class SystemdbDBStoredProcedures
+	public static partial class SYSTEMDBDBStoredProcedures
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this SystemdbDB dataConnection)
+		public static int AddIssue792Record(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"TESTDB\".\"AddIssue792Record\"");
 		}
 
 		#endregion
 
-		#region Dropconstraintfromtable
+		#region DROPCONSTRAINTFROMTABLE
 
-		public static int Dropconstraintfromtable(this SystemdbDB dataConnection, string? tablename, string? constraintname, string? schemaname)
+		public static int DROPCONSTRAINTFROMTABLE(this SYSTEMDBDB dataConnection, string? tablename, string? constraintname, string? schemaname)
 		{
 			var parameters = new []
 			{
@@ -454,9 +454,9 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region Dropexistingfunction
+		#region DROPEXISTINGFUNCTION
 
-		public static int Dropexistingfunction(this SystemdbDB dataConnection, string? functionname, string? schemaname)
+		public static int DROPEXISTINGFUNCTION(this SYSTEMDBDB dataConnection, string? functionname, string? schemaname)
 		{
 			var parameters = new []
 			{
@@ -475,9 +475,9 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region Dropexistingprocedure
+		#region DROPEXISTINGPROCEDURE
 
-		public static int Dropexistingprocedure(this SystemdbDB dataConnection, string? procedurename, string? schemaname)
+		public static int DROPEXISTINGPROCEDURE(this SYSTEMDBDB dataConnection, string? procedurename, string? schemaname)
 		{
 			var parameters = new []
 			{
@@ -496,9 +496,9 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region Dropexistingtable
+		#region DROPEXISTINGTABLE
 
-		public static int Dropexistingtable(this SystemdbDB dataConnection, string? tablename, string? schemaname)
+		public static int DROPEXISTINGTABLE(this SYSTEMDBDB dataConnection, string? tablename, string? schemaname)
 		{
 			var parameters = new []
 			{
@@ -517,9 +517,9 @@ namespace SapHanaDataContext
 
 		#endregion
 
-		#region Dropexistingview
+		#region DROPEXISTINGVIEW
 
-		public static int Dropexistingview(this SystemdbDB dataConnection, string? viewname, string? schemaname)
+		public static int DROPEXISTINGVIEW(this SYSTEMDBDB dataConnection, string? viewname, string? schemaname)
 		{
 			var parameters = new []
 			{
@@ -540,7 +540,7 @@ namespace SapHanaDataContext
 
 		#region DuplicateColumnNames
 
-		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this SystemdbDB dataConnection)
+		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this SYSTEMDBDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -563,7 +563,7 @@ namespace SapHanaDataContext
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest(this SystemdbDB dataConnection, string? str, out string? outputstr, ref string? inputoutputstr)
+		public static int OutRefEnumTest(this SYSTEMDBDB dataConnection, string? str, out string? outputstr, ref string? inputoutputstr)
 		{
 			var parameters = new []
 			{
@@ -595,7 +595,7 @@ namespace SapHanaDataContext
 
 		#region OutRefTest
 
-		public static int OutRefTest(this SystemdbDB dataConnection, int? id, out int? outputid, ref int? inputoutputid, string? str, out string? outputstr, ref string? inputoutputstr)
+		public static int OutRefTest(this SYSTEMDBDB dataConnection, int? id, out int? outputid, ref int? inputoutputid, string? str, out string? outputstr, ref string? inputoutputstr)
 		{
 			var parameters = new []
 			{
@@ -643,7 +643,7 @@ namespace SapHanaDataContext
 
 		#region PatientSelectAll
 
-		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this SystemdbDB dataConnection)
+		public static IEnumerable<PatientSelectAllResult> PatientSelectAll(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("\"TESTDB\".\"Patient_SelectAll\"");
 		}
@@ -662,7 +662,7 @@ namespace SapHanaDataContext
 
 		#region PatientSelectByName
 
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this SystemdbDB dataConnection, string? firstname, string? lastname)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this SYSTEMDBDB dataConnection, string? firstname, string? lastname)
 		{
 			var parameters = new []
 			{
@@ -693,7 +693,7 @@ namespace SapHanaDataContext
 
 		#region PersonDelete
 
-		public static int PersonDelete(this SystemdbDB dataConnection, int? personid)
+		public static int PersonDelete(this SYSTEMDBDB dataConnection, int? personid)
 		{
 			var parameters = new []
 			{
@@ -710,7 +710,7 @@ namespace SapHanaDataContext
 
 		#region PersonInsert
 
-		public static int PersonInsert(this SystemdbDB dataConnection, string? firstname, string? lastname, string? middlename, char? gender)
+		public static int PersonInsert(this SYSTEMDBDB dataConnection, string? firstname, string? lastname, string? middlename, char? gender)
 		{
 			var parameters = new []
 			{
@@ -739,7 +739,7 @@ namespace SapHanaDataContext
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this SystemdbDB dataConnection, string? firstname, string? lastname, string? middlename, char? gender, out int? personid)
+		public static int PersonInsertOutputParameter(this SYSTEMDBDB dataConnection, string? firstname, string? lastname, string? middlename, char? gender, out int? personid)
 		{
 			var parameters = new []
 			{
@@ -777,7 +777,7 @@ namespace SapHanaDataContext
 
 		#region PersonSelectAll
 
-		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this SystemdbDB dataConnection)
+		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<PersonSelectAllResult>("\"TESTDB\".\"Person_SelectAll\"");
 		}
@@ -795,7 +795,7 @@ namespace SapHanaDataContext
 
 		#region PersonSelectByKey
 
-		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this SystemdbDB dataConnection, int? id)
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this SYSTEMDBDB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
@@ -821,7 +821,7 @@ namespace SapHanaDataContext
 
 		#region PersonSelectByName
 
-		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this SystemdbDB dataConnection, string? firstname, string? lastname)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this SYSTEMDBDB dataConnection, string? firstname, string? lastname)
 		{
 			var parameters = new []
 			{
@@ -851,7 +851,7 @@ namespace SapHanaDataContext
 
 		#region PersonSelectListByName
 
-		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this SystemdbDB dataConnection, string? firstname, string? lastname)
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this SYSTEMDBDB dataConnection, string? firstname, string? lastname)
 		{
 			var parameters = new []
 			{
@@ -881,7 +881,7 @@ namespace SapHanaDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this SystemdbDB dataConnection, int? personid, string? firstname, string? lastname, string? middlename, char? gender)
+		public static int PersonUpdate(this SYSTEMDBDB dataConnection, int? personid, string? firstname, string? lastname, string? middlename, char? gender)
 		{
 			var parameters = new []
 			{
@@ -914,7 +914,7 @@ namespace SapHanaDataContext
 
 		#region PrdGlobalEccCvMARAproc
 
-		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this SystemdbDB dataConnection)
+		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this SYSTEMDBDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -937,7 +937,7 @@ namespace SapHanaDataContext
 
 		#region SelectImplicitColumn
 
-		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this SystemdbDB dataConnection)
+		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this SYSTEMDBDB dataConnection)
 		{
 			return dataConnection.QueryProc<SelectImplicitColumnResult>("\"TESTDB\".\"SelectImplicitColumn\"");
 		}
@@ -951,7 +951,7 @@ namespace SapHanaDataContext
 
 		#region TestProcedure
 
-		public static IEnumerable<TestPROCEDUREResult> TestProcedure(this SystemdbDB dataConnection, int? i)
+		public static IEnumerable<TestPROCEDUREResult> TestProcedure(this SYSTEMDBDB dataConnection, int? i)
 		{
 			var parameters = new []
 			{

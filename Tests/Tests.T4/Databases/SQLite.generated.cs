@@ -354,7 +354,7 @@ namespace SQLiteDataContext
 	public partial class TestT4Casing
 	{
 		[Column("ALL_CAPS"),              NotNull] public int AllCaps             { get; set; } // int
-		[Column("CAPS"),                  NotNull] public int Caps                { get; set; } // int
+		[Column(),                        NotNull] public int CAPS                { get; set; } // int
 		[Column(),                        NotNull] public int PascalCase          { get; set; } // int
 		[Column("Pascal_Snake_Case"),     NotNull] public int PascalSnakeCase     { get; set; } // int
 		[Column("PascalCase_Snake_Case"), NotNull] public int PascalCaseSnakeCase { get; set; } // int

@@ -19,7 +19,7 @@ namespace LinqToDB.Tools.ModelGeneration
 	}
 
 	public class Method<T> : MemberBase, IMethod
-	where T : Method<T>
+	where T : IMethod
 	{
 		public bool                            IsAbstract        { get; set; }
 		public bool                            IsVirtual         { get; set; }

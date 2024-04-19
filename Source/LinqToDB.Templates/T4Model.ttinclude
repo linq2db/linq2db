@@ -5,16 +5,17 @@
 <#@ import namespace="System.Linq"                            #>
 <#@ import namespace="System.Collections.Generic"             #>
 <#@ import namespace="LinqToDB.Tools.ModelGeneration"         #>
+<#@ import namespace="LinqToDB.SchemaProvider"                #>
 <#+
 
-private ModelGenerator _modelGenerator;
-public  ModelGenerator  ModelGenerator
+private ModelGenerator<Table,Procedure> _modelGenerator;
+public  ModelGenerator<Table,Procedure>  ModelGenerator
 {
 	get
 	{
 		return _modelGenerator != null ?
 			_modelGenerator :
-			_modelGenerator = new ModelGenerator(new ModelSource(), GenerationEnvironment, Write, WriteLine, PushIndent, PopIndent, Error);
+			_modelGenerator = new ModelGenerator<Table,Procedure>(new ModelSource(), GenerationEnvironment, Write, WriteLine, PushIndent, PopIndent, Error);
 	}
 }
 
@@ -37,7 +38,7 @@ bool GenerateProcedureErrors { get { return ModelGenerator.GenerateProcedureErro
 /// <summary>
 /// Enables generation of nullable reference type annotations.
 /// </summary>
-static bool EnableNullableReferenceTypes  { get { return ModelGenerator.EnableNullableReferenceTypes; } set { ModelGenerator.EnableNullableReferenceTypes = value; } }
+static bool EnableNullableReferenceTypes  { get { return LinqToDB.Tools.ModelGeneration.ModelGenerator.EnableNullableReferenceTypes; } set { LinqToDB.Tools.ModelGeneration.ModelGenerator.EnableNullableReferenceTypes = value; } }
 
 public void GenerateModel()
 {
@@ -172,6 +173,65 @@ public partial class Attribute : Attribute<Attribute>
 	{
 		tt.ModelGenerator.WriteAttribute(this);
 	}
+}
+
+public partial class Table : Class, ITable
+{
+	public Table()
+	{
+		Columns     = new Dictionary<string,IColumn>();
+		ForeignKeys = new Dictionary<string,IForeignKey>();
+	}
+
+	public TableSchema TableSchema             { get; set; }
+	public string      Schema                  { get; set; }
+	public string      TableName               { get; set; }
+	public string      DataContextPropertyName { get; set; }
+	public MemberBase  DataContextProperty     { get; set; }
+	public bool        IsView                  { get; set; }
+	public bool        IsProviderSpecific      { get; set; }
+	public bool        IsDefaultSchema         { get; set; }
+	public string      Description             { get; set; }
+	public string      AliasPropertyName       { get; set; }
+	public string      AliasTypeName           { get; set; }
+	public string      TypePrefix              { get; set; }
+
+	public string TypeName
+	{
+		get { return Name;  }
+		set { Name = value; }
+	}
+
+	public Dictionary<string,IColumn>     Columns     { get; set; }
+	public Dictionary<string,IForeignKey> ForeignKeys { get; set; }
+}
+
+public partial class ForeignKey : ForeignKey<ForeignKey>
+{
+}
+
+public partial class Procedure : Method, IProcedure<Table>
+{
+	public Procedure()
+	{
+		SimilarTables  = new List<Table>();
+		ProcParameters = new List<Parameter>();
+	}
+
+	public string          Schema              { get; set; }
+	public string          ProcedureName       { get; set; }
+	public string          PackageName         { get; set; }
+	public bool            IsFunction          { get; set; }
+	public bool            IsTableFunction     { get; set; }
+	public bool            IsAggregateFunction { get; set; }
+	public bool            IsDefaultSchema     { get; set; }
+	public bool            IsLoaded            { get; set; }
+	public string          Description         { get; set; }
+
+	public Table           ResultTable         { get; set; }
+	public Exception       ResultException     { get; set; }
+	public List<Table>     SimilarTables       { get; set; }
+	public List<Parameter> ProcParameters      { get; set; }
 }
 
 // Helpers.

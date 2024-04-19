@@ -9,9 +9,9 @@ using JetBrains.Annotations;
 namespace LinqToDB.Tools.ModelGeneration
 {
 	[PublicAPI]
-	public partial class ModelGenerator
+	public abstract partial class ModelGenerator
 	{
-		public ModelGenerator(
+		protected ModelGenerator(
 			IModelSource    model,
 			StringBuilder   generationEnvironment,
 			Action<string?> write,
@@ -449,7 +449,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			}
 		}
 
-		string LenDiff(int max, string str)
+		protected string LenDiff(int max, string str)
 		{
 			var s = "";
 			while (max-- > str.Length)
