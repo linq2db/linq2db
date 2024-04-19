@@ -147,5 +147,15 @@ namespace LinqToDB.DataProvider.Firebird
 
 			return base.ConvertConversion(cast);
 		}
+
+		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		{
+			if (predicate.ElementType == QueryElementType.ExprPredicate && predicate.Expr1 is SqlParameter p && p.Type.DataType != DataType.Boolean)
+			{
+				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, new SqlValue(p.Type, true), p.CanBeNull);
+			}
+
+			return base.VisitExprPredicate(predicate);
+		}
 	}
 }
