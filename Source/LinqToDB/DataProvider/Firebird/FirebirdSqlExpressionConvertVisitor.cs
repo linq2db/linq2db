@@ -40,8 +40,6 @@ namespace LinqToDB.DataProvider.Firebird
 			return element;
 		}
 
-
-
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			ISqlExpression expr;

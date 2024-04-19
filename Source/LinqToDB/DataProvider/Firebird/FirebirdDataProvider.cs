@@ -46,7 +46,9 @@ namespace LinqToDB.DataProvider.Firebird
 			SetProviderField<DbDataReader, TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<DbDataReader, DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
 
-			_sqlOptimizer = new FirebirdSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = Version >= FirebirdVersion.v3
+				? new Firebird3SqlOptimizer(SqlProviderFlags)
+				: new FirebirdSqlOptimizer(SqlProviderFlags);
 		}
 
 		static DateTime GetDateTime(DateTime value)

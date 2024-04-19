@@ -66,7 +66,7 @@ namespace Tests.Linq
 				var actual = query.ToArray();
 
 				// TODO: emulation is not correct, but pgsql and mysql native implementation working properly
-				//if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus))
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus))
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
@@ -90,7 +90,7 @@ namespace Tests.Linq
 				var actual = query.ToArray();
 
 				// TODO: emulation is not correct, but pgsql and mysql native implementation working properly
-				//if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus))
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus))
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
