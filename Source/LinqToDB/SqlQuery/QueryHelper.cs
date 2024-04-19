@@ -1550,6 +1550,25 @@ namespace LinqToDB.SqlQuery
 			return expr;
 		}
 
+		public static ISqlExpression UnwrapCastAndNullability(ISqlExpression expr)
+		{
+			do
+			{
+				if (expr is SqlNullabilityExpression nullability)
+				{
+					expr = nullability.SqlExpression;
+				}
+				else if (expr is SqlCastExpression sqlCast)
+				{
+					expr = sqlCast.Expression;
+				}
+				else
+					break;
+			} while (true);
+
+			return expr;
+		}
+
 		public static bool SameWithoutNullablity(ISqlExpression expr1, ISqlExpression expr2)
 		{
 			if (ReferenceEquals(expr1, expr2))

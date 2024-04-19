@@ -1740,9 +1740,11 @@ namespace LinqToDB.SqlQuery
 
 				if (!subQuery.Select.Columns.All(c =>
 				    {
-					    if (c.Expression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression)
+					    var columnExpression = QueryHelper.UnwrapCastAndNullability(c.Expression);
+
+						if (columnExpression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression)
 						    return true;
-					    if (c.Expression is SqlFunction func)
+					    if (columnExpression is SqlFunction func)
 						    return !func.IsAggregate;
 					    return false;
 				    }))
