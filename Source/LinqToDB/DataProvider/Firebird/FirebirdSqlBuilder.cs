@@ -611,5 +611,67 @@ namespace LinqToDB.DataProvider.Firebird
 
 			return base.GetPhysicalTableName(table, alias, ignoreTableExpression : ignoreTableExpression, defaultDatabaseName : defaultDatabaseName, withoutSuffix : withoutSuffix);
 		}
+
+		// FB 2.5 need to use small values to avoid error due to bad row size calculation
+		// resulting it being bigger than that limit (64Kb)
+		// limit is the same for newer versions, but only FB 2.5 fails
+		protected virtual int NullCharSize    => 1;
+		protected virtual int UnknownCharSize => 8191;
+
+		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		{
+			if (dataType.DbType == null && (dataType.DataType == DataType.NVarChar || dataType.DataType == DataType.NChar))
+			{
+				object? providerValue = null;
+				var     typeRequired  = false;
+
+				switch (value)
+				{
+					case SqlValue sqlValue:
+						providerValue = sqlValue.Value;
+						break;
+					case SqlParameter param:
+					{
+						typeRequired = true;
+						var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+						providerValue = paramValue.ProviderValue;
+						break;
+					}
+				}
+
+				var length = providerValue switch
+				{
+					string strValue => Encoding.UTF8.GetByteCount(strValue),
+					char charValue => Encoding.UTF8.GetByteCount(new[] { charValue }),
+					null => NullCharSize,
+					_ => -1
+				};
+
+				if (length == 0)
+					length = 1;
+
+				typeRequired = typeRequired || length > 0;
+
+				if (typeRequired && length < 0)
+				{
+					length = UnknownCharSize;
+				}
+
+				if (typeRequired)
+					StringBuilder.Append("CAST(");
+
+				BuildExpression(value);
+
+				if (typeRequired)
+				{
+					if (dataType.DataType  == DataType.NChar)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $" AS CHAR({length}))");
+					else
+						StringBuilder.Append(CultureInfo.InvariantCulture, $" AS VARCHAR({length}))");
+				}
+			}
+			else
+				base.BuildTypedExpression(dataType, value);
+		}
 	}
 }

@@ -49,65 +49,7 @@ namespace LinqToDB.DataProvider.Firebird
 				&& ConvertElement(rows[row][column]) is SqlValue sqlValue && sqlValue.Value != null;
 		}
 
-		// FB 2.5 need to use small values to avoid error due to bad row size calculation
-		// resulting it being bigger than that limit (64Kb)
-		// limit is the same for newer versions, but only FB 2.5 fails
-		protected virtual int NullCharSize => 1;
-
-		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
-		{
-			if (dataType.DbType == null && (dataType.DataType == DataType.NVarChar || dataType.DataType == DataType.NChar))
-			{
-				object? providerValue = null;
-				var     typeRequired  = false;
-
-				switch (value)
-				{
-					case SqlValue sqlValue:
-						providerValue = sqlValue.Value;
-						break;
-					case SqlParameter param:
-					{
-						typeRequired = true;
-						var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
-						providerValue = paramValue.ProviderValue;
-						break;
-					}
-				}
-
-				var length = providerValue switch
-				{
-					string strValue => Encoding.UTF8.GetByteCount(strValue),
-					char charValue => Encoding.UTF8.GetByteCount(new[] { charValue }),
-					_ => -1
-				};
-
-				if (length == 0)
-					length = 1;
-
-				typeRequired = typeRequired || length > 0;
-
-				if (typeRequired && length < 0)
-				{
-					length = NullCharSize;
-				}
-
-				if (typeRequired)
-					StringBuilder.Append("CAST(");
-
-				BuildExpression(value);
-
-				if (typeRequired)
-				{
-					if (dataType.DataType  == DataType.NChar)
-						StringBuilder.Append(CultureInfo.InvariantCulture, $" AS CHAR({length}))");
-					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $" AS VARCHAR({length}))");
-				}
-			}
-			else
-				base.BuildTypedExpression(dataType, value);
-		}
+		
 
 		// available since FB5
 		protected override void BuildMergeOperationDeleteBySource(NullabilityContext nullability, SqlMergeOperationClause operation)

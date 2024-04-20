@@ -39,8 +39,5 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		protected override bool OffsetFirst => true;
-
-		// Quote: "max length for CHAR/VARCHAR" which is questionable but we will keep it for now
-		protected override int NullCharSize => 8191;
 	}
 }
