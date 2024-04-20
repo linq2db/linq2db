@@ -216,8 +216,8 @@ namespace LinqToDB.DataProvider.Firebird
 				var booleanType = new SqlDataType(DataType.Char, typeof(bool), length: 1, null, null, dbType: "CHAR(1)");
 				SetDataType(typeof(bool), booleanType);
 				// TODO: we should add support for single converter to parameter for structs
-				SetConvertExpression<bool , DataParameter>(value => new DataParameter(null, value ? '1' : '0') { DbDataType = booleanType .Type });
-				SetConvertExpression<bool?, DataParameter>(value => new DataParameter(null, value == null ? null : value.Value ? '1' : '0') { DbDataType = booleanType .Type }, addNullCheck: false);
+				SetConvertExpression<bool , DataParameter>(value => new DataParameter(null, value ? '1' : '0', booleanType.Type));
+				SetConvertExpression<bool?, DataParameter>(value => new DataParameter(null, value == null ? null : value.Value ? '1' : '0', booleanType.Type), addNullCheck: false);
 				SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => ConvertBooleanToSql(sb, dt, (bool)v));
 			}
 
