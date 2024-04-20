@@ -1195,7 +1195,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		bool IsAlreadyTranslated(IBuildContext? context, ProjectFlags flags, ColumnDescriptor? columnDescriptor, Expression memberExpression, out SqlCacheKey cacheKey, out Expression? translatedExpression)
+		bool IsAlreadyTranslated(IBuildContext? context, ProjectFlags flags, ColumnDescriptor? columnDescriptor, Expression memberExpression, out SqlCacheKey cacheKey, [NotNullWhen(true)] out Expression? translatedExpression)
 		{
 			var cacheFlags = flags & ~ProjectFlags.Keys;
 			cacheFlags &= ~ProjectFlags.ForExtension;
