@@ -226,21 +226,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!newExpr.IsDataParameter)
 				{
-					// Try GetConvertExpression<.., DataParameter>() first.
-					if (newExpr.ValueExpression.Type != typeof(DataParameter))
-					{
-						LambdaExpression? convertExpr = null;
-						if (buildParameterType == BuildParameterType.Default && !HasDbMapping(MappingSchema, newExpr.ValueExpression.Type, out convertExpr))
-						{
-							if (!doNotCheckCompatibility)
-								return null;
-						}
-
-						newExpr.ValueExpression = convertExpr != null ?
-							InternalExtensions.ApplyLambdaToExpression(convertExpr, newExpr.ValueExpression) :
-							ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
-					}
-					else if (columnDescriptor != null && originalAccessor is not BinaryExpression)
+					if (columnDescriptor != null && originalAccessor is not BinaryExpression)
 					{
 						newExpr.DataType = columnDescriptor.GetDbDataType(true)
 							.WithSystemType(newExpr.ValueExpression.Type);
@@ -296,7 +282,25 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						newExpr.ValueExpression = ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
+						// Try GetConvertExpression<.., DataParameter>() first.
+						//
+						if (newExpr.ValueExpression.Type != typeof(DataParameter))
+						{
+							LambdaExpression? convertExpr = null;
+							if (buildParameterType == BuildParameterType.Default && !HasDbMapping(MappingSchema, newExpr.ValueExpression.Type, out convertExpr))
+							{
+								if (!doNotCheckCompatibility)
+									return null;
+							}
+
+							newExpr.ValueExpression = convertExpr != null ?
+								InternalExtensions.ApplyLambdaToExpression(convertExpr, newExpr.ValueExpression) :
+								ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
+						}
+						else
+						{
+							newExpr.ValueExpression = ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
+						}
 					}
 				}
 
@@ -481,9 +485,8 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			// see #820
-			accessorExpression           = CorrectAccessorExpression(accessorExpression, dataContext);
-			originalAccessorExpression   = CorrectAccessorExpression(originalAccessorExpression, dataContext);
-			dbDataTypeAccessorExpression = CorrectAccessorExpression(dbDataTypeAccessorExpression, dataContext);
+			accessorExpression         = CorrectAccessorExpression(accessorExpression, dataContext);
+			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext);
 
 			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(accessorExpression, typeof(object)),
