@@ -226,7 +226,21 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!newExpr.IsDataParameter)
 				{
-					if (columnDescriptor != null && originalAccessor is not BinaryExpression)
+					// Try GetConvertExpression<.., DataParameter>() first.
+					if (newExpr.ValueExpression.Type != typeof(DataParameter))
+					{
+						LambdaExpression? convertExpr = null;
+						if (buildParameterType == BuildParameterType.Default && !HasDbMapping(MappingSchema, newExpr.ValueExpression.Type, out convertExpr))
+						{
+							if (!doNotCheckCompatibility)
+								return null;
+						}
+
+						newExpr.ValueExpression = convertExpr != null ?
+							InternalExtensions.ApplyLambdaToExpression(convertExpr, newExpr.ValueExpression) :
+							ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
+					}
+					else if (columnDescriptor != null && originalAccessor is not BinaryExpression)
 					{
 						newExpr.DataType = columnDescriptor.GetDbDataType(true)
 							.WithSystemType(newExpr.ValueExpression.Type);
@@ -282,25 +296,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						// Try GetConvertExpression<.., DataParameter>() first.
-						//
-						if (newExpr.ValueExpression.Type != typeof(DataParameter))
-						{
-							LambdaExpression? convertExpr = null;
-							if (buildParameterType == BuildParameterType.Default && !HasDbMapping(MappingSchema, newExpr.ValueExpression.Type, out convertExpr))
-							{
-								if (!doNotCheckCompatibility)
-									return null;
-							}
-
-							newExpr.ValueExpression = convertExpr != null ?
-								InternalExtensions.ApplyLambdaToExpression(convertExpr, newExpr.ValueExpression) :
-								ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
-						}
-						else
-						{
-							newExpr.ValueExpression = ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
-						}
+						newExpr.ValueExpression = ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
 					}
 				}
 
