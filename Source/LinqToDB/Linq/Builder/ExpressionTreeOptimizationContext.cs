@@ -748,9 +748,6 @@ namespace LinqToDB.Linq.Builder
 			if (ex is BinaryExpression)
 				return false;
 
-			if (MappingSchema.GetConvertExpression(ex.Type, typeof(DataParameter), false, false) != null)
-				return true;
-
 			if (ex.Type == typeof(void))
 				return true;
 
