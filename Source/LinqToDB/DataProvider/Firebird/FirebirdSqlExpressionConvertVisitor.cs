@@ -40,11 +40,27 @@ namespace LinqToDB.DataProvider.Firebird
 			return element;
 		}
 
+		protected virtual bool? GetCaseSensitiveParameter(SqlPredicate.SearchString predicate)
+		{
+			var caseSensitive = predicate.CaseSensitive.EvaluateExpression(EvaluationContext);
+
+			if (caseSensitive is char chr)
+			{
+				if (chr == '0')
+					return false;
+
+				if (chr == '1')
+					return true;
+			}
+
+			return null;
+		}
+
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			ISqlExpression expr;
 
-			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext);
+			var caseSensitive = GetCaseSensitiveParameter(predicate);
 
 			// for explicit case-sensitive search we apply "CAST({0} AS BLOB)" to searched string as COLLATE's collation is character set-dependent
 			switch (predicate.Kind)

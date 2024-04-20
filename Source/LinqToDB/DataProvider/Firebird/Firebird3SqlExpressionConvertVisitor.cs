@@ -12,6 +12,8 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
+		protected override bool? GetCaseSensitiveParameter(SqlPredicate.SearchString predicate) => predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext);
+
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
 			var isNull = cast.Expression is SqlValue sqlValue && sqlValue.Value == null;
