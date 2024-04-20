@@ -485,8 +485,9 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			// see #820
-			accessorExpression         = CorrectAccessorExpression(accessorExpression, dataContext);
-			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext);
+			accessorExpression           = CorrectAccessorExpression(accessorExpression, dataContext);
+			originalAccessorExpression   = CorrectAccessorExpression(originalAccessorExpression, dataContext);
+			dbDataTypeAccessorExpression = CorrectAccessorExpression(dbDataTypeAccessorExpression, dataContext);
 
 			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(accessorExpression, typeof(object)),
