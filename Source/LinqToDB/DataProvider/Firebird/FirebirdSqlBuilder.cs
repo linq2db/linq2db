@@ -625,16 +625,19 @@ namespace LinqToDB.DataProvider.Firebird
 				object? providerValue = null;
 				var     typeRequired  = false;
 
+				var isClientValue = false;
 				switch (value)
 				{
 					case SqlValue sqlValue:
 						providerValue = sqlValue.Value;
+						isClientValue = true;
 						break;
 					case SqlParameter param:
 					{
 						typeRequired = true;
 						var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 						providerValue = paramValue.ProviderValue;
+						isClientValue = true;
 						break;
 					}
 				}
@@ -643,7 +646,7 @@ namespace LinqToDB.DataProvider.Firebird
 				{
 					string strValue => Encoding.UTF8.GetByteCount(strValue),
 					char charValue => Encoding.UTF8.GetByteCount(new[] { charValue }),
-					null => NullCharSize,
+					null when isClientValue => NullCharSize,
 					_ => -1
 				};
 

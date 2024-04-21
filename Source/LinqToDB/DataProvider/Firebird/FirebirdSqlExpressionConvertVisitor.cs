@@ -52,6 +52,8 @@ namespace LinqToDB.DataProvider.Firebird
 				if (chr == '1')
 					return true;
 			}
+			else if (caseSensitive is bool boolValue)
+				return boolValue;
 
 			return null;
 		}
