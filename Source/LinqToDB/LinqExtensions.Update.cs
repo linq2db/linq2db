@@ -550,7 +550,7 @@ namespace LinqToDB
 							IQueryable<TSource> source,
 							Expression<Func<TSource, TTarget>> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
-							CancellationToken token = default)
+							CancellationToken token)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1083,7 +1083,7 @@ namespace LinqToDB
 		/// </remarks>
 		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<TOutput[]> UpdateWithOutputAsync<T, TOutput>(
-					   this IQueryable<T> source,
+					        IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, T>> setter,
 							Expression<Func<T, T, TOutput>> outputExpression,
 							CancellationToken token)
@@ -1334,7 +1334,7 @@ namespace LinqToDB
 		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
 					        IUpdatable<T> source,
-							CancellationToken token = default)
+							CancellationToken token)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
