@@ -277,7 +277,6 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql).QueryToArrayAsync(objectReader, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns async sequence of values, mapped using provided mapping function.
 		/// </summary>
@@ -290,7 +289,6 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql).QueryToAsyncEnumerable(objectReader);
 		}
-#endif
 
 		/// <summary>
 		/// Executes command asynchronously and returns list of values, mapped using provided mapping function.
@@ -350,7 +348,6 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values, mapped using provided mapping function.
 		/// </summary>
@@ -364,7 +361,6 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable(objectReader);
 		}
-#endif
 
 		/// <summary>
 		/// Executes command asynchronously and returns list of values, mapped using provided mapping function.
@@ -460,7 +456,6 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values, mapped using provided mapping function.
 		/// </summary>
@@ -483,7 +478,6 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable(objectReader);
 		}
-#endif
 
 		#endregion
 
@@ -1125,7 +1119,6 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values.
 		/// </summary>
@@ -1137,7 +1130,6 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql).QueryToAsyncEnumerable<T>();
 		}
-#endif
 
 		/// <summary>
 		/// Executes command asynchronously and returns list of values.
@@ -1193,7 +1185,6 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values.
 		/// </summary>
@@ -1206,7 +1197,6 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
 		}
-#endif
 
 		/// <summary>
 		/// Executes command asynchronously and returns list of values.
@@ -1262,7 +1252,6 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameter).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values.
 		/// </summary>
@@ -1275,7 +1264,6 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameter).QueryToAsyncEnumerable<T>();
 		}
-#endif
 
 		/// <summary>
 		/// Executes command asynchronously and returns list of values.
@@ -1367,7 +1355,6 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values.
 		/// </summary>
@@ -1389,7 +1376,6 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
 		}
-#endif
 
 		#endregion
 
@@ -1584,7 +1570,6 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values of specified type.
 		/// </summary>
@@ -1598,7 +1583,6 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
 		}
-#endif
 
 		/// <summary>
 		/// Executes command asynchronously and returns list of values of specified type.
@@ -1694,7 +1678,6 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values of specified type.
 		/// </summary>
@@ -1717,7 +1700,6 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
 		}
-#endif
 
 		#endregion
 

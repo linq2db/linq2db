@@ -108,7 +108,6 @@ namespace LinqToDB.Data
 				action(objectReader(Reader));
 		}
 
-#if NATIVE_ASYNC
 		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(Func<DbDataReader, T> objectReader)
 		{
 			return Impl(objectReader);
@@ -119,7 +118,6 @@ namespace LinqToDB.Data
 					yield return objectReader(Reader);
 			}
 		}
-#endif
 
 		#endregion
 
@@ -165,7 +163,6 @@ namespace LinqToDB.Data
 			await CommandInfo!.ExecuteQueryAsync(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-#if NATIVE_ASYNC
 		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>()
 		{
 			return Impl();
@@ -188,7 +185,6 @@ namespace LinqToDB.Data
 				}
 			}
 		}
-#endif
 
 		#endregion
 
@@ -228,12 +224,10 @@ namespace LinqToDB.Data
 			return QueryForEachAsync(action, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(T template)
 		{
 			return QueryToAsyncEnumerable<T>();
 		}
-#endif
 		
 		#endregion
 

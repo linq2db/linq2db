@@ -151,7 +151,8 @@ namespace Tests.Linq
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("--")));
 
-				var list = await conn.SetCommand(sql).QueryToAsyncEnumerable<string>()
+				var list = await conn.SetCommand(sql)
+					.QueryToAsyncEnumerable<string>()
 					.ToListAsync();
 
 				Assert.That(list[0], Is.EqualTo("John"));

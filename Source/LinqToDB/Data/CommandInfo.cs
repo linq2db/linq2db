@@ -254,7 +254,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and apply provided action to each record, mapped using provided mapping function.
 		/// </summary>
@@ -273,7 +272,7 @@ namespace LinqToDB.Data
 
 				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
@@ -284,7 +283,6 @@ namespace LinqToDB.Data
 				}
 			}
 		}
-#endif
 
 		#endregion
 
@@ -516,7 +514,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and apply provided action to each record.
 		/// </summary>
@@ -534,7 +531,7 @@ namespace LinqToDB.Data
 
 				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
@@ -574,7 +571,6 @@ namespace LinqToDB.Data
 				}
 			}
 		}
-#endif
 
 		#endregion
 
@@ -1412,7 +1408,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NATIVE_ASYNC
 		internal IAsyncEnumerable<T> ExecuteQueryAsync<T>(DbDataReader rd, string sql)
 		{
 			return Impl(rd, sql);
@@ -1449,7 +1444,6 @@ namespace LinqToDB.Data
 				}
 			}
 		}
-#endif
 
 		internal async Task<T> ExecuteScalarAsync<T>(DbDataReader rd, string sql, CancellationToken cancellationToken)
 		{
