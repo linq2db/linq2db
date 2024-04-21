@@ -38,7 +38,7 @@ namespace LinqToDB.Extensions
 		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? originalValue, DbDataType? columnType)
 		{
 			if (originalValue is DataParameter p)
-				return new SqlValue(p.Value == null ? columnType ?? p.DbDataType : p.DbDataType, p.Value);
+				return new SqlValue(p.Value == null ? p.GetOrSetDbDataType(columnType) : p.DbDataType, p.Value);
 
 			var underlyingType = systemType.ToNullableUnderlying();
 

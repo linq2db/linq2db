@@ -162,6 +162,8 @@ namespace LinqToDB.Data
 			set => _dbDataType = value;
 		}
 
+		internal DbDataType GetOrSetDbDataType(DbDataType? columnType) => _dbDataType ?? columnType ?? DbDataType;
+
 		public static DataParameter Char          (string? name, char           value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
 		public static DataParameter Char          (string? name, string?        value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
 		public static DataParameter VarChar       (string? name, char           value) { return new DataParameter { DataType = DataType.VarChar,        Name = name, Value = value, }; }
