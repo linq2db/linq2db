@@ -310,7 +310,7 @@ void GenerateSubQuery(string hint, string hint2)
 {
 #>
 		[Test]
-		public void SubQueryHint<#= hint #><#= hint2 #>Test([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHint<#= hint #><#= hint2 #>Test([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -329,7 +329,7 @@ void GenerateSubQuery(string hint, string hint2)
 		}
 
 		[Test]
-		public void SubQueryHint<#= hint #><#= hint2 #>Test2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHint<#= hint #><#= hint2 #>Test2([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 

@@ -13,18 +13,8 @@
 		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net45">
-				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="4.0.13" />
-			</group>
-			<group targetFramework="net461">
-				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="4.1.12" />
-			</group>
-			<group targetFramework="netstandard2.0">
-				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="7.0.6"  />
-			</group>
+			<dependency id="linq2db" version="6.0.0"  />
+			<dependency id="Npgsql"  version="8.0.2"  />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
@@ -33,15 +23,15 @@
 	<files>
 		<file src="..\Nuget\README.T4.md"                                                        target="README.md"                                                                                          />
 
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                             target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                                 target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\Npgsql.dll"                                    target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll"         target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"             target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Text.Json.dll"                          target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Channels.dll"                 target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.HashCode.dll"                    target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Extensions.Logging.Abstractions.dll" target="tools"                                                                                              />
+		<file src="..\Source\LinqToDB\bin\Release\net462\linq2db.dll"                            target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net462\Humanizer.dll"                                 target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net462\Npgsql.dll"                                    target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net462\System.Threading.Tasks.Extensions.dll"         target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net462\Microsoft.Bcl.AsyncInterfaces.dll"             target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net462\System.Text.Json.dll"                          target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net462\System.Threading.Channels.dll"                 target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net462\Microsoft.Bcl.HashCode.dll"                    target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net462\Microsoft.Extensions.Logging.Abstractions.dll" target="tools"                                                                                              />
 
 		<file src="..\NuGet\PostgreSQL\linq2db.PostgreSQL.props"                                 target="build"                                                                                              />
 

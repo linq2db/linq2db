@@ -8,7 +8,7 @@ namespace LinqToDB.Tools
 	/// Represents a user-defined operation with context to be used for Activity Service events.
 	/// </summary>
 	[PublicAPI]
-	public interface IActivity : IDisposable, IAsyncDisposableEx
+	public interface IActivity : IDisposable, IAsyncDisposable
 	{
 	}
 }

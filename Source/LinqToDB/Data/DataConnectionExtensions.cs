@@ -2640,7 +2640,6 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region BulkCopy IAsyncEnumerable async
-#if NATIVE_ASYNC
 
 		/// <summary>
 		/// Asynchronously performs bulk insert operation.
@@ -2784,7 +2783,6 @@ namespace LinqToDB.Data
 					cancellationToken));
 		}
 
-#endif
 		#endregion
 	}
 }

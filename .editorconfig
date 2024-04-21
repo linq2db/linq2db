@@ -84,13 +84,18 @@ csharp_style_expression_bodied_constructors = false:none
 csharp_style_expression_bodied_operators = false:none
 
 # Prefer property-like constructs to have an expression-body
-csharp_style_expression_bodied_properties = true:warning
-csharp_style_expression_bodied_indexers = true:warning
-csharp_style_expression_bodied_accessors = true:warning
+# to enable see https://github.com/linq2db/linq2db/pull/4433
+# csharp_style_expression_bodied_properties = true:warning
+# to enable see https://github.com/linq2db/linq2db/pull/4433
+# csharp_style_expression_bodied_indexers = true:warning
+# to enable see https://github.com/linq2db/linq2db/pull/4433
+# csharp_style_expression_bodied_accessors = true:warning
 
 # Suggest more modern language features when available
-csharp_style_pattern_matching_over_is_with_cast_check = true:warning
-csharp_style_pattern_matching_over_as_with_null_check = true:warning
+# to enable see https://github.com/linq2db/linq2db/pull/4433
+#csharp_style_pattern_matching_over_is_with_cast_check = true:warning
+# to enable see https://github.com/linq2db/linq2db/pull/4433
+#csharp_style_pattern_matching_over_as_with_null_check = true:warning
 csharp_style_inlined_variable_declaration = true:suggestion
 csharp_style_throw_expression = true:suggestion
 csharp_style_conditional_delegate_call = true:suggestion
@@ -101,9 +106,11 @@ csharp_preserve_single_line_blocks = true
 csharp_preserve_single_line_statements = true
 
 csharp_prefer_simple_using_statement = false:silent
-csharp_style_prefer_switch_expression = true:warning
+# to enable see https://github.com/linq2db/linq2db/pull/4433
+#csharp_style_prefer_switch_expression = true:warning
 
-dotnet_style_prefer_compound_assignment = true:warning
+# to enable see https://github.com/linq2db/linq2db/pull/4433
+#dotnet_style_prefer_compound_assignment = true:warning
 
 [*.{cs,vb}]
 #############
@@ -673,3 +680,5 @@ dotnet_diagnostic.MA0151.severity = none
 dotnet_diagnostic.MA0152.severity = none
 # MA0153: Do not log symbols decorated with DataClassificationAttribute directly
 dotnet_diagnostic.MA0153.severity = none
+# MA0154: Use langword in XML comment
+dotnet_diagnostic.MA0154.severity = none

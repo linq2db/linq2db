@@ -1,5 +1,5 @@
 ﻿{
-	"NET472": {
+	"NETFX": {
 		"BasedOn": "MyConnectionStrings",
 		"Providers": [
 			// to enable test provider uncomment it and configure connection string if need
@@ -18,10 +18,11 @@
 			// SQL CE
 			//"SqlCe",
 
-			// Firebird 2.5-4
-			//"Firebird",
-			//"Firebird3",
-			//"Firebird4",
+			// Firebird
+			//"Firebird.2.5",
+			//"Firebird.3",
+			//"Firebird.4",
+			//"Firebird.5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -50,11 +51,11 @@
 			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
-			//"MySql",
-			//"MySqlConnector",
-			//"MySql55",
-			//"MySql55Connector",
-			//"MariaDB",
+			//"MySql.8.0",
+			//"MySqlConnector.8.0",
+			//"MySql.5.7",
+			//"MySqlConnector.5.7",
+			//"MariaDB.11",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -120,7 +121,7 @@
 		]
 	},
 
-	"CORE31": {
+	"NET60": {
 		"BasedOn": "MyConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
@@ -140,10 +141,11 @@
 			// SQL CE
 			//"SqlCe",
 
-			// Firebird 2.5-4
-			//"Firebird",
-			//"Firebird3",
-			//"Firebird4",
+			// Firebird
+			//"Firebird.2.5",
+			//"Firebird.3",
+			//"Firebird.4",
+			//"Firebird.5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -172,11 +174,11 @@
 			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
-			//"MySql",
-			//"MySqlConnector",
-			//"MySql55",
-			//"MySql55Connector",
-			//"MariaDB",
+			//"MySql.8.0",
+			//"MySqlConnector.8.0",
+			//"MySql.5.7",
+			//"MySqlConnector.5.7",
+			//"MariaDB.11",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -234,121 +236,7 @@
 		]
 	},
 
-	"NET60": {
-		"BasedOn": "CORE31",
-		"DefaultConfiguration": "SQLite.MS",
-		"Providers": [
-			// to enable test provider uncomment it and configure connection string if need
-
-			// SQLite-based test configurations
-			"SQLite.Classic",
-			"SQLite.MS"
-			//"SQLite.Classic.MPM",
-			//"SQLite.Classic.MPU",
-			//"Northwind.SQLite",
-			//"Northwind.SQLite.MS",
-
-			// no-db test configuration
-			//"TestNoopProvider",
-
-			// SQL CE
-			//"SqlCe",
-
-			// Firebird 2.5-4
-			//"Firebird",
-			//"Firebird3",
-			//"Firebird4",
-
-			// Various versions of SQL Server
-			//"SqlServer.2005",
-			//"SqlServer.2005.MS",
-			//"SqlServer.2008",
-			//"SqlServer.2008.MS",
-			//"SqlServer.2012",
-			//"SqlServer.2012.MS",
-			//"SqlServer.2014",
-			//"SqlServer.2014.MS",
-			//"SqlServer.2016",
-			//"SqlServer.2016.MS",
-			//"SqlServer.2017",
-			//"SqlServer.2017.MS",
-			//"SqlServer.2019",
-			//"SqlServer.2019.MS",
-			//"SqlServer.2022",
-			//"SqlServer.2022.MS",
-			//"SqlServer.SA",
-			//"SqlServer.SA.MS",
-			//"SqlServer.Contained",
-			//"SqlServer.Contained.MS",
-			//"SqlServer.Northwind",
-			//"SqlServer.Northwind.MS",
-			//"SqlServer.Azure",
-			//"SqlServer.Azure.MS",
-
-			// MySQL and MariaDB
-			//"MySql",
-			//"MySqlConnector",
-			//"MySql55",
-			//"MySql55Connector",
-			//"MariaDB",
-
-			// PostgreSQL
-			//"PostgreSQL.9.2",
-			//"PostgreSQL.9.3",
-			//"PostgreSQL.9.5",
-			//"PostgreSQL.10",
-			//"PostgreSQL.11",
-			//"PostgreSQL.12",
-			//"PostgreSQL.13",
-			//"PostgreSQL.14",
-			//"PostgreSQL.15",
-			//"PostgreSQL.16",
-
-			// OleDB and ODBC MS Access providers
-			//"Access",
-			//"Access.Odbc",
-
-			// SAP/Sybase ASE
-			//"Sybase.Managed",
-
-			// DB2
-			//"DB2",
-
-			// Informix
-			//"Informix.DB2",
-
-			// Oracle 11 and 12+
-			//"Oracle.11.Managed",
-			//"Oracle.11.Devart.Direct",
-			//"Oracle.11.Devart.OCI",
-			//"Oracle.12.Managed",
-			//"Oracle.12.Devart.Direct",
-			//"Oracle.12.Devart.OCI",
-			//"Oracle.18.Managed",
-			//"Oracle.18.Devart.Direct",
-			//"Oracle.18.Devart.OCI",
-			//"Oracle.19.Managed",
-			//"Oracle.19.Devart.Direct",
-			//"Oracle.19.Devart.OCI",
-			//"Oracle.21.Managed",
-			//"Oracle.21.Devart.Direct",
-			//"Oracle.21.Devart.OCI",
-			//"Oracle.23.Managed",
-			//"Oracle.23.Devart.Direct",
-			//"Oracle.23.Devart.OCI",
-
-			// SAP HANA 2
-			//"SapHana.Odbc",
-			//"SapHana.Native",
-
-			// ClickHouse
-			//"ClickHouse.Octonica",
-			//"ClickHouse.Client",
-			//"ClickHouse.MySql",
-		]
-	},
-
-	"NET70": {
+	"NET80": {
 		"BasedOn": "NET60",
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
@@ -368,10 +256,11 @@
 			// SQL CE
 			//"SqlCe",
 
-			// Firebird 2.5-4
-			//"Firebird",
-			//"Firebird3",
-			//"Firebird4",
+			// Firebird
+			//"Firebird.2.5",
+			//"Firebird.3",
+			//"Firebird.4",
+			//"Firebird.5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -400,11 +289,11 @@
 			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
-			//"MySql",
-			//"MySqlConnector",
-			//"MySql55",
-			//"MySql55Connector",
-			//"MariaDB",
+			//"MySql.8.0",
+			//"MySqlConnector.8.0",
+			//"MySql.5.7",
+			//"MySqlConnector.5.7",
+			//"MariaDB.11",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -572,13 +461,16 @@
 				"Provider": "IBM.Data.DB2",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Firebird": {
+			"Firebird.2.5": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Firebird3": {
+			"Firebird.3": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Firebird4": {
+			"Firebird.4": {
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Firebird.5": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"Informix": {
@@ -588,24 +480,24 @@
 			"Informix.DB2": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySql": {
+			"MySql.8.0": {
 				"Provider": "MySql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySqlConnector": {
+			"MySqlConnector.8.0": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySql55": {
+			"MySql.5.7": {
 				"Provider": "MySql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySql55Connector": {
+			"MySqlConnector.5.7": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 
-			"MariaDB": {
+			"MariaDB.11": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "Server=localhost;Port=3316;SslMode=None;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
 			},

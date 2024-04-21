@@ -411,6 +411,41 @@ namespace LinqToDB
 			}
 		}
 
+		sealed class DatePartBuilderFirebird5 : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				string partStr;
+				var part = builder.GetValue<DateParts>("part");
+				switch (part)
+				{
+					case DateParts.Year        : partStr = "year";        break;
+					case DateParts.Quarter     : partStr = "quarter";     break;
+					case DateParts.Month       : partStr = "month";       break;
+					case DateParts.DayOfYear   : partStr = "yearday";     break;
+					case DateParts.Day         : partStr = "day";         break;
+					case DateParts.Week        : partStr = "week";        break;
+					case DateParts.WeekDay     : partStr = "weekday";     break;
+					case DateParts.Hour        : partStr = "hour";        break;
+					case DateParts.Minute      : partStr = "minute";      break;
+					case DateParts.Second      : partStr = "second";      break;
+					case DateParts.Millisecond : partStr = "millisecond"; break;
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
+
+				builder.AddExpression("part", partStr);
+
+				switch (part)
+				{
+					case DateParts.DayOfYear:
+					case DateParts.WeekDay:
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
+						break;
+				}
+			}
+		}
+
 		sealed class DatePartBuilderClickHouse : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
@@ -450,7 +485,10 @@ namespace LinqToDB
 		[Extension(PN.Informix,   "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderInformix))]
 		[Extension(PN.MySql,      "Extract({part} from {date})",                     ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderMySql))]
 		[Extension(PN.PostgreSQL, "Cast(Floor(Extract({part} from {date})) as int)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderPostgre))]
-		[Extension(PN.Firebird,   "Cast(Floor(Extract({part} from {date})) as int)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderFirebird))]
+		[Extension(PN.Firebird25, "Cast(Floor(Extract({part} from {date})) as int)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderFirebird))]
+		[Extension(PN.Firebird3,  "Cast(Floor(Extract({part} from {date})) as int)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderFirebird))]
+		[Extension(PN.Firebird4,  "Cast(Floor(Extract({part} from {date})) as int)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderFirebird))]
+		[Extension(PN.Firebird5,  "Cast(Floor(Extract({part} from {date})) as int)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderFirebird5))]
 		[Extension(PN.SQLite,     "Cast(StrFTime('%{part}', {date}) as int)",        ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderSqLite))]
 		[Extension(PN.Access,     "DatePart('{part}', {date})",                      ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderAccess))]
 		[Extension(PN.SapHana,    "",                                                ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderSapHana))]
@@ -522,10 +560,9 @@ namespace LinqToDB
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
-				builder.ResultExpression = builder.Add(
+				builder.ResultExpression = builder.Add<DateTime?>(
 					date,
-					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number),
-					typeof(DateTime?));
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number));
 			}
 		}
 
@@ -556,10 +593,9 @@ namespace LinqToDB
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
-				builder.ResultExpression = builder.Add(
+				builder.ResultExpression = builder.Add<DateTime?>(
 					date,
-					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Primary, number),
-					typeof(DateTime?));
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Primary, number));
 			}
 		}
 
@@ -619,10 +655,9 @@ namespace LinqToDB
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
-				builder.ResultExpression = builder.Add(
+				builder.ResultExpression = builder.Add<DateTime?>(
 					date,
-					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number),
-					typeof(DateTime?));
+					new SqlExpression(typeof(TimeSpan?), expStr, Precedence.Multiplicative, number));
 			}
 		}
 

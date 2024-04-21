@@ -98,16 +98,37 @@ namespace LinqToDB.Common
 			}
 		}
 
-		readonly ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> _expressions = new ();
+		readonly ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>>  _expressions = new ();
+		         ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>>? _toDatabaseExpressions;
+		         ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>>? _fromDatabaseExpressions;
 
-		public void Set(Type from, Type to, LambdaInfo expr)
+		readonly object _sync = new();
+
+		ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> GetForSetExpressions(ConversionType conversionType)
 		{
-			Set(_expressions, new DbDataType(from), new DbDataType(to), expr);
+			switch (conversionType)
+			{
+				case ConversionType.Common:
+					return _expressions;
+				case ConversionType.FromDatabase:
+					lock (_sync)
+						return _fromDatabaseExpressions ??= new();
+				case ConversionType.ToDatabase:
+					lock (_sync)
+						return _toDatabaseExpressions ??= new();
+				default:
+					throw new ArgumentOutOfRangeException(nameof(conversionType), conversionType, null);
+			}
 		}
 
-		public void Set(DbDataType from, DbDataType to, LambdaInfo expr)
+		public void Set(Type from, Type to, ConversionType conversionType, LambdaInfo expr)
 		{
-			Set(_expressions, from, to, expr);
+			Set(GetForSetExpressions(conversionType), new DbDataType(from), new DbDataType(to), expr);
+		}
+
+		public void Set(DbDataType from, DbDataType to, ConversionType conversionType, LambdaInfo expr)
+		{
+			Set(GetForSetExpressions(conversionType), from, to, expr);
 		}
 
 		static void Set(ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> expressions, DbDataType from, DbDataType to, LambdaInfo expr)
@@ -118,54 +139,82 @@ namespace LinqToDB.Common
 			dic[to] = expr;
 		}
 
-		public LambdaInfo? Get(DbDataType from, DbDataType to)
+		public LambdaInfo? Get(DbDataType from, DbDataType to, ConversionType conversionType)
 		{
-			return _expressions.TryGetValue(from, out var dic) && dic.TryGetValue(to, out var li) ? li : null;
+			switch (conversionType)
+			{
+				case ConversionType.FromDatabase:
+				{
+					if (_fromDatabaseExpressions != null &&
+						_fromDatabaseExpressions.TryGetValue(from, out var dic) && dic.TryGetValue(to, out var li))
+						return li;
+					break;
+				}
+				case ConversionType.ToDatabase:
+				{
+					if (_toDatabaseExpressions != null &&
+						_toDatabaseExpressions.TryGetValue(from, out var dic) && dic.TryGetValue(to, out var li))
+						return li;
+					break;
+				}
+			}
+
+			{
+				return _expressions.TryGetValue(from, out var dic) && dic.TryGetValue(to, out var li) ? li : null;
+			}
 		}
 
-		public LambdaInfo? Get(Type from, Type to)
+		public LambdaInfo? Get(Type from, Type to, ConversionType conversionType)
 		{
-			return _expressions.TryGetValue(new DbDataType(from), out var dic) && dic.TryGetValue(new DbDataType(to), out var li) ? li : null;
+			return Get(new DbDataType(from), new DbDataType(to), conversionType);
 		}
 
-		public LambdaInfo Create(MappingSchema? mappingSchema, Type from, Type to)
+		public LambdaInfo Create(MappingSchema? mappingSchema, Type from, Type to, ConversionType conversionType)
 		{
-			return Create(mappingSchema, new DbDataType(from), new DbDataType(to));
+			return Create(mappingSchema, new DbDataType(from), new DbDataType(to), conversionType);
 		}
 
-		public LambdaInfo Create(MappingSchema? mappingSchema, DbDataType from, DbDataType to)
+		public LambdaInfo Create(MappingSchema? mappingSchema, DbDataType from, DbDataType to, ConversionType conversionType)
 		{
 			var ex  = ConvertBuilder.GetConverter(mappingSchema, from.SystemType, to.SystemType);
 			var lm  = ex.Item1.CompileExpression();
 			var ret = new LambdaInfo(ex.Item1, ex.Item2, lm, ex.Item3);
 
-			Set(_expressions, from, to , ret);
+			Set(GetForSetExpressions(conversionType), from, to , ret);
 
 			return ret;
 		}
 
 		public int GetConfigurationID()
 		{
-			if (_expressions.IsEmpty)
+			if (_expressions.IsEmpty && _fromDatabaseExpressions == null && _toDatabaseExpressions == null)
 				return 0;
 
-			using var idBuilder = new IdentifierBuilder(_expressions.Count);
+			using var idBuilder = new IdentifierBuilder(_expressions.Count + (_fromDatabaseExpressions?.Count ?? 0) + (_toDatabaseExpressions?.Count ?? 0));
 
-			foreach (var (id, types) in _expressions
-				.Select (static e => (id : IdentifierBuilder.GetObjectID(e.Key), types : e.Value))
-				.OrderBy(static t => t.id))
-			{
-				idBuilder.Add(id).Add(types.Count);
+			IdentifyExpressions(idBuilder, _expressions);
 
-				foreach (var (id2, value) in types
-					.Select (static e => (id2 : IdentifierBuilder.GetObjectID(e.Key), value : e.Value))
-					.OrderBy(static t => t.id2))
-				{
-					idBuilder.Add(id2).Add(IdentifierBuilder.GetObjectID(value));
-				}
-			}
+			if (_fromDatabaseExpressions != null) IdentifyExpressions(idBuilder, _fromDatabaseExpressions);
+			if (_toDatabaseExpressions   != null) IdentifyExpressions(idBuilder, _toDatabaseExpressions);
 
 			return idBuilder.CreateID();
+
+			static void IdentifyExpressions(IdentifierBuilder identifierBuilder, ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> expressions)
+			{
+				foreach (var (id, types) in expressions
+					.Select (static e => (id : IdentifierBuilder.GetObjectID(e.Key), types : e.Value))
+					.OrderBy(static t => t.id))
+				{
+					identifierBuilder.Add(id).Add(types.Count);
+
+					foreach (var (id2, value) in types
+						.Select (static e => (id2 : IdentifierBuilder.GetObjectID(e.Key), value : e.Value))
+						.OrderBy(static t => t.id2))
+					{
+						identifierBuilder.Add(id2).Add(IdentifierBuilder.GetObjectID(value));
+					}
+				}
+			}
 		}
 	}
 }

@@ -460,7 +460,7 @@ namespace LinqToDB.Expressions
 					var parameters = mi.GetParameters();
 
 					if (parameters.Length == 0)
-						return Array<bool>.Empty;
+						return [];
 
 					var flags = new bool[parameters.Length];
 
@@ -543,8 +543,8 @@ namespace LinqToDB.Expressions
 			{
 				if (arg1.NodeType == ExpressionType.Constant && arg2.NodeType == ExpressionType.Constant)
 				{
-					var query1 = (arg1.EvaluateExpression<Sql.IQueryableContainer>()!).Query;
-					var query2 = (arg2.EvaluateExpression<Sql.IQueryableContainer>()!).Query;
+					var query1 = arg1.EvaluateExpression<Sql.IQueryableContainer>(info.DataContext)!.Query;
+					var query2 = arg2.EvaluateExpression<Sql.IQueryableContainer>(info.DataContext)!.Query;
 					return EqualsTo(query1.Expression, query2.Expression, info);
 				}
 			}

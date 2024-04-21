@@ -36,7 +36,7 @@ namespace LinqToDB.SqlQuery
 				return new Next(this);
 			}
 
-			internal Join(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak, ICollection<Join>? joins)
+			internal Join(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak, IReadOnlyCollection<Join>? joins)
 			{
 				JoinedTable = new SqlJoinedTable(joinType, table, alias, isWeak);
 

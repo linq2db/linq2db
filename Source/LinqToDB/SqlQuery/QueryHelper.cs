@@ -1419,7 +1419,7 @@ namespace LinqToDB.SqlQuery
 
 			if (result != null && lastMatchPosition < format.Length)
 			{
-				var value = StripDoubleQuotes(format.Substring(lastMatchPosition, format.Length - lastMatchPosition));
+				var value = StripDoubleQuotes(format.Substring(lastMatchPosition));
 				result = new SqlBinaryExpression(typeof(string),
 					result, "+", new SqlValue(typeof(string), value), Precedence.Additive);
 			}
@@ -1469,6 +1469,22 @@ namespace LinqToDB.SqlQuery
 		public static bool ContainsAggregationOrWindowFunctionDeep(IQueryElement expr)
 		{
 			return null != expr.Find(e => IsAggregationFunction(e) || IsWindowFunction(e));
+		}
+
+		public static bool ContainsAggregationFunctionOneLevel(IQueryElement expr)
+		{
+			var found = false;
+			expr.VisitParentFirst(expr, (_, e) =>
+			{
+				if (found)
+					return true;
+				if (e is SqlColumn)
+					return false;
+				found = IsAggregationFunction(e);
+				return !found;
+			});
+
+			return found;
 		}
 
 		public static bool ContainsAggregationOrWindowFunctionOneLevel(IQueryElement expr)

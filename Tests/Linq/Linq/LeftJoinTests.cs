@@ -48,7 +48,7 @@ namespace Tests.Linq
 					select new { aid = a.Id, bc };
 
 				var result = query.ToArray();
-				Assert.AreEqual(1, result.Length);
+				Assert.That(result, Has.Length.EqualTo(1));
 			}
 		}
 	}

@@ -20,8 +20,8 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class InsertWithOutputTests : TestBase
 	{
-		private const string FeatureInsertOutputSingle     = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
-		private const string FeatureInsertOutputMultiple   = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputSingle     = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputMultiple   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureInsertOutputWithSchema = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllSQLite}";
 		private const string FeatureInsertOutputInto       = $"{TestProvName.AllSqlServer}";
 
@@ -300,9 +300,12 @@ namespace Tests.xUpdate
 
 				var output = source.InsertWithOutput(data);
 
-				Assert.AreEqual(data.Id,       output.Id);
-				Assert.AreEqual(data.Value,    output.Value);
-				Assert.AreEqual(data.ValueStr, output.ValueStr);
+				Assert.Multiple(() =>
+				{
+					Assert.That(output.Id, Is.EqualTo(data.Id));
+					Assert.That(output.Value, Is.EqualTo(data.Value));
+					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
+				});
 			}
 		}
 
@@ -321,9 +324,12 @@ namespace Tests.xUpdate
 
 				var output = await source.InsertWithOutputAsync(data);
 
-				Assert.AreEqual(data.Id,       output.Id);
-				Assert.AreEqual(data.Value,    output.Value);
-				Assert.AreEqual(data.ValueStr, output.ValueStr);
+				Assert.Multiple(() =>
+				{
+					Assert.That(output.Id, Is.EqualTo(data.Id));
+					Assert.That(output.Value, Is.EqualTo(data.Value));
+					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
+				});
 			}
 		}
 
@@ -343,9 +349,12 @@ namespace Tests.xUpdate
 				var output = source.InsertWithOutput(dataFunc);
 				var data   = dataFunc.CompileExpression()();
 
-				Assert.AreEqual(data.Id,       output.Id);
-				Assert.AreEqual(data.Value,    output.Value);
-				Assert.AreEqual(data.ValueStr, output.ValueStr);
+				Assert.Multiple(() =>
+				{
+					Assert.That(output.Id, Is.EqualTo(data.Id));
+					Assert.That(output.Value, Is.EqualTo(data.Value));
+					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
+				});
 			}
 		}
 
@@ -365,9 +374,12 @@ namespace Tests.xUpdate
 				var output = await source.InsertWithOutputAsync(dataFunc);
 				var data = dataFunc.CompileExpression()();
 
-				Assert.AreEqual(data.Id,       output.Id);
-				Assert.AreEqual(data.Value,    output.Value);
-				Assert.AreEqual(data.ValueStr, output.ValueStr);
+				Assert.Multiple(() =>
+				{
+					Assert.That(output.Id, Is.EqualTo(data.Id));
+					Assert.That(output.Value, Is.EqualTo(data.Value));
+					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
+				});
 			}
 		}
 
@@ -388,9 +400,12 @@ namespace Tests.xUpdate
 					inserted => new { inserted.Id, inserted.Value, inserted.ValueStr });
 				var data = dataFunc.CompileExpression()();
 
-				Assert.AreEqual(data.Id,       output.Id);
-				Assert.AreEqual(data.Value,    output.Value);
-				Assert.AreEqual(data.ValueStr, output.ValueStr);
+				Assert.Multiple(() =>
+				{
+					Assert.That(output.Id, Is.EqualTo(data.Id));
+					Assert.That(output.Value, Is.EqualTo(data.Value));
+					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
+				});
 			}
 		}
 
@@ -413,9 +428,12 @@ namespace Tests.xUpdate
 					.Value(a => a.ValueStr, "SomeStr" + value)
 					.InsertWithOutput();
 
-				Assert.AreEqual(data.Id, output.Id);
-				Assert.AreEqual(data.Value, output.Value);
-				Assert.AreEqual(data.ValueStr, output.ValueStr);
+				Assert.Multiple(() =>
+				{
+					Assert.That(output.Id, Is.EqualTo(data.Id));
+					Assert.That(output.Value, Is.EqualTo(data.Value));
+					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
+				});
 			}
 		}
 
@@ -438,9 +456,12 @@ namespace Tests.xUpdate
 					.Value(a => a.ValueStr, "SomeStr" + value)
 					.InsertWithOutputAsync();
 
-				Assert.AreEqual(data.Id, output.Id);
-				Assert.AreEqual(data.Value, output.Value);
-				Assert.AreEqual(data.ValueStr, output.ValueStr);
+				Assert.Multiple(() =>
+				{
+					Assert.That(output.Id, Is.EqualTo(data.Id));
+					Assert.That(output.Value, Is.EqualTo(data.Value));
+					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
+				});
 			}
 		}
 
@@ -464,9 +485,12 @@ namespace Tests.xUpdate
 					.InsertWithOutput();
 				var data   = dataFunc.CompileExpression()();
 
-				Assert.AreEqual(data.Id, output.Id);
-				Assert.AreEqual(data.Value, output.Value);
-				Assert.AreEqual(data.ValueStr, output.ValueStr);
+				Assert.Multiple(() =>
+				{
+					Assert.That(output.Id, Is.EqualTo(data.Id));
+					Assert.That(output.Value, Is.EqualTo(data.Value));
+					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
+				});
 			}
 		}
 
@@ -490,9 +514,12 @@ namespace Tests.xUpdate
 					.InsertWithOutputAsync();
 				var data = dataFunc.CompileExpression()();
 
-				Assert.AreEqual(data.Id, output.Id);
-				Assert.AreEqual(data.Value, output.Value);
-				Assert.AreEqual(data.ValueStr, output.ValueStr);
+				Assert.Multiple(() =>
+				{
+					Assert.That(output.Id, Is.EqualTo(data.Id));
+					Assert.That(output.Value, Is.EqualTo(data.Value));
+					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
+				});
 			}
 		}
 
@@ -516,9 +543,12 @@ namespace Tests.xUpdate
 					.InsertWithOutput(inserted => new { inserted.Id, inserted.Value, inserted.ValueStr });
 				var data = dataFunc.CompileExpression()();
 
-				Assert.AreEqual(data.Id, output.Id);
-				Assert.AreEqual(data.Value, output.Value);
-				Assert.AreEqual(data.ValueStr, output.ValueStr);
+				Assert.Multiple(() =>
+				{
+					Assert.That(output.Id, Is.EqualTo(data.Id));
+					Assert.That(output.Value, Is.EqualTo(data.Value));
+					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
+				});
 			}
 		}
 
@@ -554,7 +584,7 @@ namespace Tests.xUpdate
 										}
 								);
 
-						Assert.AreEqual(1, output);
+						Assert.That(output, Is.EqualTo(1));
 
 						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 							{
@@ -604,7 +634,7 @@ namespace Tests.xUpdate
 									},
 									t.Table);
 
-						Assert.AreEqual(1, output);
+						Assert.That(output, Is.EqualTo(1));
 
 						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 							{
@@ -659,7 +689,7 @@ namespace Tests.xUpdate
 										}
 								);
 
-						Assert.AreEqual(1, output);
+						Assert.That(output, Is.EqualTo(1));
 
 						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 							{
@@ -709,7 +739,7 @@ namespace Tests.xUpdate
 									},
 									t);
 
-						Assert.AreEqual(1, output);
+						Assert.That(output, Is.EqualTo(1));
 
 						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 							{
@@ -759,7 +789,7 @@ namespace Tests.xUpdate
 								},
 								t);
 
-					Assert.AreEqual(1, output);
+					Assert.That(output, Is.EqualTo(1));
 
 					AreEqual(db.Child.Where(c => c.ChildID > idsLimit)
 						.Select(
@@ -813,7 +843,7 @@ namespace Tests.xUpdate
 								},
 								tRef);
 
-					Assert.AreEqual(1, output);
+					Assert.That(output, Is.EqualTo(1));
 
 					AreEqual(db.Child.Where(c => c.ChildID > idsLimit)
 						.Select(
@@ -866,7 +896,7 @@ namespace Tests.xUpdate
 							},
 							tRef);
 
-				Assert.AreEqual(1, output);
+				Assert.That(output, Is.EqualTo(1));
 
 				AreEqual(db.Child.Where(c => c.ChildID > idsLimit)
 					.Select(
@@ -907,19 +937,25 @@ namespace Tests.xUpdate
 			};
 
 			var rowCount = source.InsertWithOutputInto(setter, outputRef);
-			Assert.AreEqual(1, rowCount);
+			Assert.That(rowCount, Is.EqualTo(1));
 
 			var sourceData = source.ToArray();
-			Assert.AreEqual(1, sourceData.Length);
-			Assert.AreEqual(42, sourceData[0].Id);
-			Assert.AreEqual(42123, sourceData[0].Value);
-			Assert.AreEqual("SomeStr", sourceData[0].ValueStr);
+			Assert.That(sourceData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(sourceData[0].Id, Is.EqualTo(42));
+				Assert.That(sourceData[0].Value, Is.EqualTo(42123));
+				Assert.That(sourceData[0].ValueStr, Is.EqualTo("SomeStr"));
+			});
 
 			var outputData = output.ToArray();
-			Assert.AreEqual(1, outputData.Length);
-			Assert.AreEqual(42, outputData[0].Id);
-			Assert.AreEqual(42123, outputData[0].Value);
-			Assert.AreEqual("SomeStr", outputData[0].ValueStr);
+			Assert.That(outputData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(outputData[0].Id, Is.EqualTo(42));
+				Assert.That(outputData[0].Value, Is.EqualTo(42123));
+				Assert.That(outputData[0].ValueStr, Is.EqualTo("SomeStr"));
+			});
 		}
 		
 		[Test]
@@ -940,19 +976,25 @@ namespace Tests.xUpdate
 			};
 
 			var rowCount = await source.InsertWithOutputIntoAsync(setter, outputRef);
-			Assert.AreEqual(1, rowCount);
+			Assert.That(rowCount, Is.EqualTo(1));
 
 			var sourceData = source.ToArray();
-			Assert.AreEqual(1, sourceData.Length);
-			Assert.AreEqual(42, sourceData[0].Id);
-			Assert.AreEqual(42123, sourceData[0].Value);
-			Assert.AreEqual("SomeStr", sourceData[0].ValueStr);
+			Assert.That(sourceData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(sourceData[0].Id, Is.EqualTo(42));
+				Assert.That(sourceData[0].Value, Is.EqualTo(42123));
+				Assert.That(sourceData[0].ValueStr, Is.EqualTo("SomeStr"));
+			});
 
 			var outputData = output.ToArray();
-			Assert.AreEqual(1, outputData.Length);
-			Assert.AreEqual(42, outputData[0].Id);
-			Assert.AreEqual(42123, outputData[0].Value);
-			Assert.AreEqual("SomeStr", outputData[0].ValueStr);
+			Assert.That(outputData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(outputData[0].Id, Is.EqualTo(42));
+				Assert.That(outputData[0].Value, Is.EqualTo(42123));
+				Assert.That(outputData[0].ValueStr, Is.EqualTo("SomeStr"));
+			});
 		}
 
 		[Test]
@@ -978,19 +1020,25 @@ namespace Tests.xUpdate
 				Id = v.Id + 1,
 				ValueStr = "Foo" + v.ValueStr
 			});
-			Assert.AreEqual(1, rowCount);
+			Assert.That(rowCount, Is.EqualTo(1));
 
 			var sourceData = source.ToArray();
-			Assert.AreEqual(1, sourceData.Length);
-			Assert.AreEqual(42, sourceData[0].Id);
-			Assert.AreEqual(42123, sourceData[0].Value);
-			Assert.AreEqual("SomeStr", sourceData[0].ValueStr);
+			Assert.That(sourceData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(sourceData[0].Id, Is.EqualTo(42));
+				Assert.That(sourceData[0].Value, Is.EqualTo(42123));
+				Assert.That(sourceData[0].ValueStr, Is.EqualTo("SomeStr"));
+			});
 
 			var outputData = output.ToArray();
-			Assert.AreEqual(1, outputData.Length);
-			Assert.AreEqual(43, outputData[0].Id);
-			Assert.AreEqual(84246, outputData[0].Value);
-			Assert.AreEqual("FooSomeStr", outputData[0].ValueStr);
+			Assert.That(outputData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(outputData[0].Id, Is.EqualTo(43));
+				Assert.That(outputData[0].Value, Is.EqualTo(84246));
+				Assert.That(outputData[0].ValueStr, Is.EqualTo("FooSomeStr"));
+			});
 		}
 
 		[Test]
@@ -1016,19 +1064,25 @@ namespace Tests.xUpdate
 				Id = v.Id + 1,
 				ValueStr = "Foo" + v.ValueStr
 			});
-			Assert.AreEqual(1, rowCount);
+			Assert.That(rowCount, Is.EqualTo(1));
 
 			var sourceData = source.ToArray();
-			Assert.AreEqual(1, sourceData.Length);
-			Assert.AreEqual(42, sourceData[0].Id);
-			Assert.AreEqual(42123, sourceData[0].Value);
-			Assert.AreEqual("SomeStr", sourceData[0].ValueStr);
+			Assert.That(sourceData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(sourceData[0].Id, Is.EqualTo(42));
+				Assert.That(sourceData[0].Value, Is.EqualTo(42123));
+				Assert.That(sourceData[0].ValueStr, Is.EqualTo("SomeStr"));
+			});
 
 			var outputData = output.ToArray();
-			Assert.AreEqual(1, outputData.Length);
-			Assert.AreEqual(43, outputData[0].Id);
-			Assert.AreEqual(84246, outputData[0].Value);
-			Assert.AreEqual("FooSomeStr", outputData[0].ValueStr);
+			Assert.That(outputData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(outputData[0].Id, Is.EqualTo(43));
+				Assert.That(outputData[0].Value, Is.EqualTo(84246));
+				Assert.That(outputData[0].ValueStr, Is.EqualTo("FooSomeStr"));
+			});
 		}
 
 		[Test]
@@ -1066,7 +1120,7 @@ namespace Tests.xUpdate
 								}
 						);
 
-				Assert.AreEqual(1, output);
+				Assert.That(output, Is.EqualTo(1));
 
 				AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 					{
@@ -1123,7 +1177,7 @@ namespace Tests.xUpdate
 								}
 						);
 
-				Assert.AreEqual(1, output);
+				Assert.That(output, Is.EqualTo(1));
 
 				AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 					{
@@ -1169,19 +1223,25 @@ namespace Tests.xUpdate
 				.Into(targetRef)
 				.InsertWithOutputInto(outputRef);
 
-			Assert.AreEqual(1, rowCount);
+			Assert.That(rowCount, Is.EqualTo(1));
 
 			var targetData = target.ToArray();
-			Assert.AreEqual(1, targetData.Length);
-			Assert.AreEqual(3, targetData[0].Id);
-			Assert.AreEqual(30, targetData[0].Value);
-			Assert.AreEqual("Jane Doe", targetData[0].ValueStr);
+			Assert.That(targetData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(targetData[0].Id, Is.EqualTo(3));
+				Assert.That(targetData[0].Value, Is.EqualTo(30));
+				Assert.That(targetData[0].ValueStr, Is.EqualTo("Jane Doe"));
+			});
 
 			var outputData = output.ToArray();
-			Assert.AreEqual(1, outputData.Length);
-			Assert.AreEqual(3, outputData[0].Id);
-			Assert.AreEqual(30, outputData[0].Value);
-			Assert.AreEqual("Jane Doe", outputData[0].ValueStr);
+			Assert.That(outputData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(outputData[0].Id, Is.EqualTo(3));
+				Assert.That(outputData[0].Value, Is.EqualTo(30));
+				Assert.That(outputData[0].ValueStr, Is.EqualTo("Jane Doe"));
+			});
 		}
 
 		[Test]
@@ -1208,19 +1268,25 @@ namespace Tests.xUpdate
 				.Into(targetRef)
 				.InsertWithOutputIntoAsync(outputRef);
 
-			Assert.AreEqual(1, rowCount);
+			Assert.That(rowCount, Is.EqualTo(1));
 
 			var targetData = target.ToArray();
-			Assert.AreEqual(1, targetData.Length);
-			Assert.AreEqual(3, targetData[0].Id);
-			Assert.AreEqual(30, targetData[0].Value);
-			Assert.AreEqual("Jane Doe", targetData[0].ValueStr);
+			Assert.That(targetData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(targetData[0].Id, Is.EqualTo(3));
+				Assert.That(targetData[0].Value, Is.EqualTo(30));
+				Assert.That(targetData[0].ValueStr, Is.EqualTo("Jane Doe"));
+			});
 
 			var outputData = output.ToArray();
-			Assert.AreEqual(1, outputData.Length);
-			Assert.AreEqual(3, outputData[0].Id);
-			Assert.AreEqual(30, outputData[0].Value);
-			Assert.AreEqual("Jane Doe", outputData[0].ValueStr);
+			Assert.That(outputData, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(outputData[0].Id, Is.EqualTo(3));
+				Assert.That(outputData[0].Value, Is.EqualTo(30));
+				Assert.That(outputData[0].ValueStr, Is.EqualTo("Jane Doe"));
+			});
 		}
 
 		[Test]
@@ -1238,9 +1304,12 @@ namespace Tests.xUpdate
 
 				var output = source.InsertWithOutput(data);
 
-				Assert.AreEqual(data.Id,       output.Id);
-				Assert.AreEqual(data.Value,    output.Value);
-				Assert.AreEqual(data.ValueStr, output.ValueStr);
+				Assert.Multiple(() =>
+				{
+					Assert.That(output.Id, Is.EqualTo(data.Id));
+					Assert.That(output.Value, Is.EqualTo(data.Value));
+					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
+				});
 			}
 		}
 
@@ -1273,12 +1342,15 @@ namespace Tests.xUpdate
 
 			var x = table.InsertWithOutput(what);
 
-			Assert.AreEqual(what.Id      , x.Id      );
-			Assert.AreEqual(what.Co2Aend , x.Co2Aend );
-			Assert.AreEqual(what.Nest    , x.Nest    );
-			Assert.AreEqual(what.Co2Grund, x.Co2Grund);
-			Assert.AreEqual(what.Nesto   , x.Nesto   );
-			Assert.AreEqual(what.Whatsov , x.Whatsov );
+			Assert.Multiple(() =>
+			{
+				Assert.That(x.Id, Is.EqualTo(what.Id));
+				Assert.That(x.Co2Aend, Is.EqualTo(what.Co2Aend));
+				Assert.That(x.Nest, Is.EqualTo(what.Nest));
+				Assert.That(x.Co2Grund, Is.EqualTo(what.Co2Grund));
+				Assert.That(x.Nesto, Is.EqualTo(what.Nesto));
+				Assert.That(x.Whatsov, Is.EqualTo(what.Whatsov));
+			});
 		}
 	}
 }

@@ -103,7 +103,6 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestBoolean([DataSources(false)] string context)
 		{
@@ -188,33 +187,39 @@ namespace Tests.Linq
 			db.InlineParameters = false;
 			db.OnNextCommandInitialized((_, cmd) =>
 			{
-				Assert.AreEqual(supportsParameters ? 2 : 0, cmd.Parameters.Count);
+				Assert.That(cmd.Parameters, Has.Count.EqualTo(supportsParameters ? 2 : 0));
 				return cmd;
 			});
 
 			var records = table.Where(r => Equality(r.Column, data[1].Column) && Equality(r.ColumnNullable, data[1].ColumnNullable)).ToArray();
-			Assert.AreEqual(1, records.Length);
+			Assert.That(records, Has.Length.EqualTo(1));
 
 			var record = records[0];
-			Assert.AreEqual(2, record.Id);
-			Assert.AreEqual(data[1].Column, record.Column);
-			Assert.AreEqual(data[1].ColumnNullable, record.ColumnNullable);
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.Id, Is.EqualTo(2));
+				Assert.That(record.Column, Is.EqualTo(data[1].Column));
+				Assert.That(record.ColumnNullable, Is.EqualTo(data[1].ColumnNullable));
+			});
 
 			// test literal
 			db.InlineParameters = true;
 			db.OnNextCommandInitialized((_, cmd) =>
 			{
-				Assert.AreEqual(0, cmd.Parameters.Count);
+				Assert.That(cmd.Parameters, Is.Empty);
 				return cmd;
 			});
 
 			records = table.Where(r => Equality(r.Column, data[1].Column) && Equality(r.ColumnNullable, data[1].ColumnNullable)).ToArray();
-			Assert.AreEqual(1, records.Length);
+			Assert.That(records, Has.Length.EqualTo(1));
 
 			record = records[0];
-			Assert.AreEqual(2, record.Id);
-			Assert.AreEqual(data[1].Column, record.Column);
-			Assert.AreEqual(data[1].ColumnNullable, record.ColumnNullable);
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.Id, Is.EqualTo(2));
+				Assert.That(record.Column, Is.EqualTo(data[1].Column));
+				Assert.That(record.ColumnNullable, Is.EqualTo(data[1].ColumnNullable));
+			});
 			db.InlineParameters = false;
 
 			// test bulk copy
@@ -233,13 +238,16 @@ namespace Tests.Linq
 
 			db.BulkCopy(options, data);
 			var records = table.OrderBy(r => r.Id).ToArray();
-			Assert.AreEqual(2, records.Length);
-			Assert.AreEqual(data[0].Id, records[0].Id);
-			Assert.AreEqual(data[0].Column, records[0].Column);
-			Assert.AreEqual(data[0].ColumnNullable, records[0].ColumnNullable);
-			Assert.AreEqual(data[1].Id, records[1].Id);
-			Assert.AreEqual(data[1].Column, records[1].Column);
-			Assert.AreEqual(data[1].ColumnNullable, records[1].ColumnNullable);
+			Assert.That(records, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(records[0].Id, Is.EqualTo(data[0].Id));
+				Assert.That(records[0].Column, Is.EqualTo(data[0].Column));
+				Assert.That(records[0].ColumnNullable, Is.EqualTo(data[0].ColumnNullable));
+				Assert.That(records[1].Id, Is.EqualTo(data[1].Id));
+				Assert.That(records[1].Column, Is.EqualTo(data[1].Column));
+				Assert.That(records[1].ColumnNullable, Is.EqualTo(data[1].ColumnNullable));
+			});
 		}
 		#endregion
 	}

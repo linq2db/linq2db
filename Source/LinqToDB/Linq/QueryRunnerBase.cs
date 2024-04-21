@@ -44,15 +44,6 @@ namespace LinqToDB.Linq
 				DataContext.Close();
 		}
 
-#if !NATIVE_ASYNC
-		public virtual Task DisposeAsync()
-		{
-			if (DataContext.CloseAfterUse)
-				return DataContext.CloseAsync();
-
-			return TaskEx.CompletedTask;
-		}
-#else
 		public virtual ValueTask DisposeAsync()
 		{
 			if (DataContext.CloseAfterUse)
@@ -60,8 +51,6 @@ namespace LinqToDB.Linq
 
 			return default;
 		}
-#endif
-
 
 		protected virtual void SetCommand(bool forGetSqlText)
 		{

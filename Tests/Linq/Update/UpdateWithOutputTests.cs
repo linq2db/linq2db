@@ -15,12 +15,12 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class UpdateWithOutputTests : TestBase
 	{
-		private const string FeatureUpdateOutputWithOldSingle                      = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird}";
+		private const string FeatureUpdateOutputWithOldSingle                      = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5}";
 		private const string FeatureUpdateOutputWithOldSingleNoAlternateRewrite    = $"{TestProvName.AllSqlServer}";
-		private const string FeatureUpdateOutputWithOldMultiple                    = $"{TestProvName.AllSqlServer}";
-		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureUpdateOutputWithOldMultiple                    = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus}";
+		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL}";
-		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureUpdateOutputInto                               = $"{TestProvName.AllSqlServer}";
 
 		sealed class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
@@ -2977,15 +2977,15 @@ namespace Tests.xUpdate
 				.UpdateWithOutput(a => new Test3697Item() { Value = 1 }, (d, i) => i.Id)
 				.ToArray();
 
-			Assert.AreEqual(1, result.Length);
-			Assert.AreEqual(1, result[0]);
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0], Is.EqualTo(1));
 
 			result = records.InnerJoin(items, (a, b) => a.Id == b.TestId, (a, b) => b)
 				.UpdateWithOutput(a => new Test3697Item() { Value = 1 }, (d, i) => i.Id)
 				.ToArray();
 
-			Assert.AreEqual(1, result.Length);
-			Assert.AreEqual(1, result[0]);
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0], Is.EqualTo(1));
 		}
 		#endregion
 	}

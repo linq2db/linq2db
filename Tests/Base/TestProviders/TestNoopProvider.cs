@@ -253,7 +253,7 @@ namespace Tests
 			_parameters.Clear();
 		}
 
-		public    override IEnumerator GetEnumerator(                                       ) => Array<IEnumerator>.Empty.GetEnumerator();
+		public    override IEnumerator GetEnumerator(                                       ) => Array.Empty<IEnumerator>().GetEnumerator();
 		public    override void        AddRange     (Array values                           ) => throw new NotImplementedException();
 		public    override bool        Contains     (string value                           ) => throw new NotImplementedException();
 		public    override bool        Contains     (object value                           ) => throw new NotImplementedException();
@@ -277,6 +277,8 @@ namespace Tests
 		Type IDynamicProviderAdapter.ParameterType   => typeof(TestNoopDbParameter);
 		Type IDynamicProviderAdapter.CommandType     => typeof(TestNoopDbCommand  );
 		Type IDynamicProviderAdapter.TransactionType => throw new NotImplementedException();
+
+		DbConnection IDynamicProviderAdapter.CreateConnection(string connectionString) => new TestNoopConnection(connectionString);
 	}
 
 	public class TestNoopProvider : DynamicDataProviderBase<TestNoopProviderAdapter>

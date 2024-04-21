@@ -53,19 +53,19 @@ namespace LinqToDB.Metadata
 
 		MappingAttribute[] GetNoInheritMappingAttributes(Key key)
 		{
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NET462 || NETSTANDARD2_0
 			var attrs = _noInheritMappingAttributes.GetOrAdd(key, key =>
 			{
 				var res = _attributesGetter(key.SourceOwner, key.Source);
 
-				return res.Length == 0 ? Array<MappingAttribute>.Empty : res;
+				return res.Length == 0 ? [] : res;
 			});
 #else
 			var attrs = _noInheritMappingAttributes.GetOrAdd(key, static (key, attributesGetter) =>
 			{
 				var res = attributesGetter(key.SourceOwner, key.Source);
 
-				return res.Length == 0 ? Array<MappingAttribute>.Empty : res;
+				return res.Length == 0 ? [] : res;
 			}, _attributesGetter);
 #endif
 			return attrs;
@@ -132,7 +132,7 @@ namespace LinqToDB.Metadata
 				if (list != null) return list.ToArray();
 				if (attrs.Length > 0) return attrs;
 
-				return Array<MappingAttribute>.Empty;
+				return [];
 			}
 
 			return attrs;
@@ -151,7 +151,7 @@ namespace LinqToDB.Metadata
 			where T : MappingAttribute
 		{
 			// GetMappingAttributesInternal is not generic to avoid delegate allocation on each call
-			return (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, null)), _getMappingAttributesInternal) ?? Array<T>.Empty;
+			return (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, null)), _getMappingAttributesInternal) ?? [];
 		}
 
 		/// <summary>
@@ -168,7 +168,7 @@ namespace LinqToDB.Metadata
 			where T : MappingAttribute
 		{
 			// GetMappingAttributesInternal is not generic to avoid delegate allocation on each call
-			return (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, sourceOwner)), _getMappingAttributesInternal) ?? Array<T>.Empty;
+			return (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, sourceOwner)), _getMappingAttributesInternal) ?? [];
 		}
 	}
 }

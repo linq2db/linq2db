@@ -53,7 +53,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test_FromVariable([DataSources(NOT_SUPPORTED)] string context, [Values("one", null, "two")] string tag)
+		public void Test_FromVariable([DataSources(NOT_SUPPORTED)] string context, [Values("one", null, "two")] string? tag)
 		{
 			var expected = $"/* {tag} */{Environment.NewLine}";
 

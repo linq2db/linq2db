@@ -9,6 +9,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class JoinToLimitedTests : TestBase
 	{
+		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LeftJoinToTop([DataSources] string context)
 		{
@@ -31,6 +32,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LeftJoinToTopWhere([DataSources] string context)
 		{
@@ -89,6 +91,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LeftJoinLimited2([DataSources] string context)
 		{
@@ -211,6 +214,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void InnerJoinToTop([DataSources] string context)
 		{
@@ -233,6 +237,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void InnerJoinToTopWhere([DataSources] string context)
 		{
@@ -289,6 +294,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void InnerJoinLimited2([DataSources] string context)
 		{

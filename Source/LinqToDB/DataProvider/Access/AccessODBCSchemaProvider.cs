@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.Access
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			// https://github.com/dotnet/runtime/issues/35442
-			return Array<ForeignKeyInfo>.Empty;
+			return [];
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.Access
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			// https://github.com/dotnet/runtime/issues/35442
-			return Array<PrimaryKeyInfo>.Empty;
+			return [];
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)

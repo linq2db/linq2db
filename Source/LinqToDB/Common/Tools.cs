@@ -92,7 +92,7 @@ namespace LinqToDB.Common
 		public static IQueryable CreateEmptyQuery(Type elementType)
 		{
 			var method = Methods.LinqToDB.Tools.CreateEmptyQuery.MakeGenericMethod(elementType);
-			return (IQueryable)method.Invoke(null, Array<object>.Empty)!;
+			return (IQueryable)method.Invoke(null, [])!;
 		}
 
 		public static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)

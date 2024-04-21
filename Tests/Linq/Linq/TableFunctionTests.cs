@@ -201,7 +201,7 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
@@ -217,7 +217,7 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
@@ -233,7 +233,7 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
@@ -249,7 +249,7 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
@@ -277,7 +277,7 @@ namespace Tests.Linq
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
@@ -292,7 +292,7 @@ namespace Tests.Linq
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
@@ -307,7 +307,7 @@ namespace Tests.Linq
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 	}

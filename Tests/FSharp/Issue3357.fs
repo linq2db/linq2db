@@ -7,6 +7,7 @@ open Tests.FSharp.Models
 
 open LinqToDB
 open LinqToDB.Mapping
+open NUnit.Framework
 open Tests.Tools
 
 type Record2 = {
@@ -30,7 +31,7 @@ let Union1(db : IDataContext) =
 
     let result = query1.Concat(query2).ToArray()
     
-    NUnitAssert.IsTrue(result[0] = (1, "John"));
+    Assert.That(result[0], Is.EqualTo (1, "John"));
 
 let Union2(db : IDataContext) =
     let persons = db.GetTable<Person>()
@@ -48,7 +49,7 @@ let Union2(db : IDataContext) =
 
     let result = query1.Concat(query2).ToArray()
     
-    NUnitAssert.IsTrue(result[0] = {Id = 1 ; Name = "John" });
+    Assert.That(result[0], Is.EqualTo {Id = 1 ; Name = "John" });
 
 let Union3(db : IDataContext) =
     let persons = db.GetTable<Person>()
@@ -66,4 +67,4 @@ let Union3(db : IDataContext) =
 
     let result = query1.Concat(query2).ToArray()
     
-    NUnitAssert.IsTrue(result[0] = {| Id = 1 ; Name = "John" |});
+    Assert.That(result[0], Is.EqualTo {| Id = 1 ; Name = "John" |});

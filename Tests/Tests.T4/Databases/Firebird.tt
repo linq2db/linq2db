@@ -1,6 +1,6 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"      #>
 <#@ output extension=".generated.cs"                                                              #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\FirebirdSql.Data.FirebirdClient.dll" #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net462\FirebirdSql.Data.FirebirdClient.dll" #>
 <#@ include file="..\Shared.ttinclude"                                            once="true"     #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude" once="true"     #>
 <#
@@ -10,6 +10,6 @@
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
 
-	LoadFirebirdMetadata(GetConnectionString("Firebird"));
+	LoadFirebirdMetadata(GetConnectionString("Firebird.5"));
 	GenerateModel();
 #>

@@ -119,18 +119,23 @@ namespace Tests.UserTests
 			}
 		}
 
+		sealed class Issue982FirebirdDataProvider(string name, FirebirdVersion version, ISqlOptimizer sqlOptimizer) : FirebirdDataProvider(name, version)
+		{
+			public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => sqlOptimizer;
+		}
+
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
-			var oldProvider      = DataConnection.GetDataProvider(context);
+			var oldProvider      = (FirebirdDataProvider)DataConnection.GetDataProvider(context);
 
 			try
 			{
 				DataConnection.AddConfiguration(
 					context,
 					connectionString,
-					new FirebirdDataProvider(new Issue982FirebirdSqlOptimizer(oldProvider.SqlProviderFlags)));
+					new Issue982FirebirdDataProvider(oldProvider.Name, oldProvider.Version, new Issue982FirebirdSqlOptimizer(oldProvider.SqlProviderFlags)));
 
 				using (var db = GetDataContext(context))
 				{
@@ -150,7 +155,7 @@ namespace Tests.UserTests
 								};
 
 					var str = query.ToString()!;
-					Assert.True(str.Contains("2147483647"));
+					Assert.That(str, Does.Contain("2147483647"));
 					var _ = query.ToArray();
 				}
 			}

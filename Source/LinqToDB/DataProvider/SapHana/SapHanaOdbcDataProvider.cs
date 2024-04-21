@@ -27,6 +27,7 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
+			SqlProviderFlags.IsApplyJoinSupported              = true;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}
@@ -40,7 +41,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (commandType == CommandType.StoredProcedure)
 			{
-				commandText = $"{{ CALL {commandText} ({string.Join(",", (parameters ?? Array<DataParameter>.Empty).Select(x => "?"))}) }}";
+				commandText = $"{{ CALL {commandText} ({string.Join(",", (parameters ?? []).Select(x => "?"))}) }}";
 				commandType = CommandType.Text;
 			}
 

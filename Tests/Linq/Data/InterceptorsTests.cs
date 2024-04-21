@@ -47,17 +47,23 @@ namespace Tests.Data
 				});
 				db.AddInterceptor(interceptor2);
 
-				Assert.False(interceptor1.CommandInitializedTriggered);
-				Assert.False(interceptor2.CommandInitializedTriggered);
-				Assert.False(triggered1);
-				Assert.False(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				});
 
 				db.Child.ToList();
 
-				Assert.True(interceptor1.CommandInitializedTriggered);
-				Assert.True(interceptor2.CommandInitializedTriggered);
-				Assert.True(triggered1);
-				Assert.True(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.True);
+					Assert.That(triggered2, Is.True);
+				});
 
 				triggered1 = false;
 				triggered2 = false;
@@ -66,10 +72,13 @@ namespace Tests.Data
 
 				db.Person.ToList();
 
-				Assert.True(interceptor1.CommandInitializedTriggered);
-				Assert.True(interceptor2.CommandInitializedTriggered);
-				Assert.False(triggered1);
-				Assert.False(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				});
 			}
 		}
 
@@ -107,21 +116,27 @@ namespace Tests.Data
 					});
 					db.AddInterceptor(interceptor3);
 
-					Assert.False(interceptor1.CommandInitializedTriggered);
-					Assert.False(interceptor2.CommandInitializedTriggered);
-					Assert.False(interceptor3.CommandInitializedTriggered);
-					Assert.False(triggered1);
-					Assert.False(triggered2);
-					Assert.False(triggered3);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+						Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
+						Assert.That(triggered1, Is.False);
+						Assert.That(triggered2, Is.False);
+						Assert.That(triggered3, Is.False);
+					});
 
 					db.Child.ToList();
 
-					Assert.True(interceptor1.CommandInitializedTriggered);
-					Assert.True(interceptor2.CommandInitializedTriggered);
-					Assert.True(interceptor3.CommandInitializedTriggered);
-					Assert.True(triggered1);
-					Assert.True(triggered2);
-					Assert.True(triggered3);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor3.CommandInitializedTriggered, Is.True);
+						Assert.That(triggered1, Is.True);
+						Assert.That(triggered2, Is.True);
+						Assert.That(triggered3, Is.True);
+					});
 
 					triggered1 = false;
 					triggered2 = false;
@@ -132,12 +147,15 @@ namespace Tests.Data
 
 					db.Person.ToList();
 
-					Assert.True(interceptor1.CommandInitializedTriggered);
-					Assert.True(interceptor2.CommandInitializedTriggered);
-					Assert.True(interceptor3.CommandInitializedTriggered);
-					Assert.False(triggered1);
-					Assert.False(triggered2);
-					Assert.False(triggered3);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor3.CommandInitializedTriggered, Is.True);
+						Assert.That(triggered1, Is.False);
+						Assert.That(triggered2, Is.False);
+						Assert.That(triggered3, Is.False);
+					});
 
 					// test that cloned connection still preserve non-fired one-time interceptors
 					interceptor1.CommandInitializedTriggered = false;
@@ -146,12 +164,15 @@ namespace Tests.Data
 
 					clonedDb.GetTable<Child>().ToList();
 
-					Assert.True(interceptor1.CommandInitializedTriggered);
-					Assert.True(interceptor2.CommandInitializedTriggered);
-					Assert.False(interceptor3.CommandInitializedTriggered);
-					Assert.True(triggered1);
-					Assert.True(triggered2);
-					Assert.False(triggered3);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
+						Assert.That(triggered1, Is.True);
+						Assert.That(triggered2, Is.True);
+						Assert.That(triggered3, Is.False);
+					});
 
 					triggered1 = false;
 					triggered2 = false;
@@ -160,12 +181,15 @@ namespace Tests.Data
 
 					clonedDb.GetTable<Person>().ToList();
 
-					Assert.True(interceptor1.CommandInitializedTriggered);
-					Assert.True(interceptor2.CommandInitializedTriggered);
-					Assert.False(interceptor3.CommandInitializedTriggered);
-					Assert.False(triggered1);
-					Assert.False(triggered2);
-					Assert.False(triggered3);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
+						Assert.That(triggered1, Is.False);
+						Assert.That(triggered2, Is.False);
+						Assert.That(triggered3, Is.False);
+					});
 				}
 			}
 		}
@@ -206,21 +230,27 @@ namespace Tests.Data
 					});
 					db.AddInterceptor(interceptor3);
 
-					Assert.False(interceptor1.CommandInitializedTriggered);
-					Assert.False(interceptor2.CommandInitializedTriggered);
-					Assert.False(interceptor3.CommandInitializedTriggered);
-					Assert.False(triggered1);
-					Assert.False(triggered2);
-					Assert.False(triggered3);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+						Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
+						Assert.That(triggered1, Is.False);
+						Assert.That(triggered2, Is.False);
+						Assert.That(triggered3, Is.False);
+					});
 
 					_ = db.GetTable<Child>().ToList();
 
-					Assert.True(interceptor1.CommandInitializedTriggered);
-					Assert.True(interceptor2.CommandInitializedTriggered);
-					Assert.True(interceptor3.CommandInitializedTriggered);
-					Assert.True(triggered1);
-					Assert.True(triggered2);
-					Assert.True(triggered3);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor3.CommandInitializedTriggered, Is.True);
+						Assert.That(triggered1, Is.True);
+						Assert.That(triggered2, Is.True);
+						Assert.That(triggered3, Is.True);
+					});
 
 					triggered1 = false;
 					triggered2 = false;
@@ -231,12 +261,15 @@ namespace Tests.Data
 
 					_ = db.GetTable<Person>().ToList();
 
-					Assert.True(interceptor1.CommandInitializedTriggered);
-					Assert.True(interceptor2.CommandInitializedTriggered);
-					Assert.True(interceptor3.CommandInitializedTriggered);
-					Assert.False(triggered1);
-					Assert.False(triggered2);
-					Assert.False(triggered3);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor3.CommandInitializedTriggered, Is.True);
+						Assert.That(triggered1, Is.False);
+						Assert.That(triggered2, Is.False);
+						Assert.That(triggered3, Is.False);
+					});
 
 					// test that cloned connection still preserve non-fired one-time interceptors
 					interceptor1.CommandInitializedTriggered = false;
@@ -245,12 +278,15 @@ namespace Tests.Data
 
 					_ = clonedDb.GetTable<Child>().ToList();
 
-					Assert.True(interceptor1.CommandInitializedTriggered);
-					Assert.True(interceptor2.CommandInitializedTriggered);
-					Assert.False(interceptor3.CommandInitializedTriggered);
-					Assert.True(triggered1);
-					Assert.True(triggered2);
-					Assert.False(triggered3);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
+						Assert.That(triggered1, Is.True);
+						Assert.That(triggered2, Is.True);
+						Assert.That(triggered3, Is.False);
+					});
 
 					triggered1 = false;
 					triggered2 = false;
@@ -259,12 +295,15 @@ namespace Tests.Data
 
 					_ = clonedDb.GetTable<Person>().ToList();
 
-					Assert.True(interceptor1.CommandInitializedTriggered);
-					Assert.True(interceptor2.CommandInitializedTriggered);
-					Assert.False(interceptor3.CommandInitializedTriggered);
-					Assert.False(triggered1);
-					Assert.False(triggered2);
-					Assert.False(triggered3);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
+						Assert.That(triggered1, Is.False);
+						Assert.That(triggered2, Is.False);
+						Assert.That(triggered3, Is.False);
+					});
 				}
 			}
 		}
@@ -296,17 +335,23 @@ namespace Tests.Data
 					return command;
 				});
 
-				Assert.False(interceptor1.CommandInitializedTriggered);
-				Assert.False(interceptor2.CommandInitializedTriggered);
-				Assert.False(triggered1);
-				Assert.False(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				});
 
 				db.GetTable<Child>().ToList();
 
-				Assert.True(interceptor1.CommandInitializedTriggered);
-				Assert.True(interceptor2.CommandInitializedTriggered);
-				Assert.True(triggered1);
-				Assert.True(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.True);
+					Assert.That(triggered2, Is.True);
+				});
 
 				triggered1 = false;
 				triggered2 = false;
@@ -315,10 +360,13 @@ namespace Tests.Data
 
 				db.GetTable<Person>().ToList();
 
-				Assert.True(interceptor1.CommandInitializedTriggered);
-				Assert.True(interceptor2.CommandInitializedTriggered);
-				Assert.False(triggered1);
-				Assert.False(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				});
 			}
 		}
 
@@ -350,17 +398,23 @@ namespace Tests.Data
 					return command;
 				});
 
-				Assert.False(interceptor1.CommandInitializedTriggered);
-				Assert.False(interceptor2.CommandInitializedTriggered);
-				Assert.False(triggered1);
-				Assert.False(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				});
 
 				db.GetTable<Child>().ToList();
 
-				Assert.True(interceptor1.CommandInitializedTriggered);
-				Assert.True(interceptor2.CommandInitializedTriggered);
-				Assert.True(triggered1);
-				Assert.True(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.True);
+					Assert.That(triggered2, Is.True);
+				});
 
 				triggered1 = false;
 				triggered2 = false;
@@ -369,14 +423,17 @@ namespace Tests.Data
 
 				db.GetTable<Person>().ToList();
 
-				Assert.True(interceptor1.CommandInitializedTriggered);
-				Assert.True(interceptor2.CommandInitializedTriggered);
-				Assert.False(triggered1);
-				Assert.False(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				});
 			}
 		}
 
-		public void CommandInitializedOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		private void CommandInitializedOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			using (var db = new DataContext(context))
 			{
@@ -400,17 +457,23 @@ namespace Tests.Data
 				});
 				db.AddInterceptor(interceptor2);
 
-				Assert.False(interceptor1.CommandInitializedTriggered);
-				Assert.False(interceptor2.CommandInitializedTriggered);
-				Assert.False(triggered1);
-				Assert.False(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				});
 
 				db.GetTable<Child>().ToList();
 
-				Assert.True(interceptor1.CommandInitializedTriggered);
-				Assert.True(interceptor2.CommandInitializedTriggered);
-				Assert.True(triggered1);
-				Assert.True(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.True);
+					Assert.That(triggered2, Is.True);
+				});
 
 				triggered1 = false;
 				triggered2 = false;
@@ -419,10 +482,13 @@ namespace Tests.Data
 
 				db.GetTable<Person>().ToList();
 
-				Assert.True(interceptor1.CommandInitializedTriggered);
-				Assert.True(interceptor2.CommandInitializedTriggered);
-				Assert.False(triggered1);
-				Assert.False(triggered2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				});
 			}
 		}
 
@@ -437,23 +503,29 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				using (db.CreateTempTable<InterceptorsTestsTable>())
 				{
-					Assert.False(interceptor.ExecuteScalarTriggered);
-					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-					Assert.False(interceptor.ExecuteReaderTriggered);
-					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-					Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-					Assert.True(interceptor.ExecuteNonQueryTriggered);
-					Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+						Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+						Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+						Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+						Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+						Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
+						Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+					});
 				}
 			}
 		}
@@ -466,23 +538,29 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				await using(await db.CreateTempTableAsync<InterceptorsTestsTable>())
 				{
-					Assert.False(interceptor.ExecuteScalarTriggered);
-					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-					Assert.False(interceptor.ExecuteReaderTriggered);
-					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-					Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-					Assert.False(interceptor.ExecuteNonQueryTriggered);
-					Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+						Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+						Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+						Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+						Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+						Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+						Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
+					});
 				}
 			}
 		}
@@ -496,24 +574,30 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
 
-				Assert.True(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				// also true, as for sqlite we generate two queries
-				Assert.True(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.True);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					// also true, as for sqlite we generate two queries
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 			}
 		}
 
@@ -526,24 +610,30 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.True(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				// also true, as for sqlite we generate two queries
-				Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.True);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					// also true, as for sqlite we generate two queries
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
+				});
 			}
 		}
 
@@ -555,23 +645,29 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				db.Child.ToList();
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.True(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.True(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.True);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 			}
 		}
 
@@ -583,23 +679,29 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				await db.Child.ToListAsync();
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.True(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.True(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.True);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 			}
 		}
 
@@ -611,23 +713,29 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				using (db.CreateTempTable<InterceptorsTestsTable>())
 				{
-					Assert.False(interceptor.ExecuteScalarTriggered);
-					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-					Assert.False(interceptor.ExecuteReaderTriggered);
-					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-					Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-					Assert.True(interceptor.ExecuteNonQueryTriggered);
-					Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+						Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+						Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+						Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+						Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+						Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
+						Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+					});
 				}
 			}
 		}
@@ -640,23 +748,29 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				await using (await db.CreateTempTableAsync<InterceptorsTestsTable>())
 				{
-					Assert.False(interceptor.ExecuteScalarTriggered);
-					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-					Assert.False(interceptor.ExecuteReaderTriggered);
-					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-					Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-					Assert.False(interceptor.ExecuteNonQueryTriggered);
-					Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+						Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+						Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+						Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+						Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+						Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+						Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
+					});
 				}
 			}
 		}
@@ -671,24 +785,30 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
 
-				Assert.True(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				// also true, as for sqlite we generate two queries
-				Assert.True(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.True);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					// also true, as for sqlite we generate two queries
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 			}
 		}
 
@@ -702,24 +822,30 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.True(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				// also true, as for sqlite we generate two queries
-				Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.True);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					// also true, as for sqlite we generate two queries
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
+				});
 			}
 		}
 
@@ -731,23 +857,29 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				db.GetTable<Child>().ToList();
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.True(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.True(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.True);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 			}
 		}
 
@@ -759,23 +891,29 @@ namespace Tests.Data
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 
 				await db.GetTable<Child>().ToListAsync();
 
-				Assert.False(interceptor.ExecuteScalarTriggered);
-				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
-				Assert.False(interceptor.ExecuteReaderTriggered);
-				Assert.True(interceptor.ExecuteReaderAsyncTriggered);
-				Assert.True(interceptor.ExecuteAfterExecuteReaderTriggered);
-				Assert.False(interceptor.ExecuteNonQueryTriggered);
-				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.True);
+					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				});
 			}
 		}
 
@@ -793,23 +931,29 @@ namespace Tests.Data
 
 			db.Person.ToList();
 
-			Assert.True(interceptor.BeforeReaderDisposeTriggered);
-			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.True);
+				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.False);
+			});
 
 			interceptor.BeforeReaderDisposeTriggered = false;
 
 			await db.Person.ToListAsync();
 
+			Assert.Multiple(() =>
+			{
 #if NETFRAMEWORK
-			Assert.True(interceptor.BeforeReaderDisposeTriggered);
-			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.True);
+				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.False);
 #else
-			Assert.False(interceptor.BeforeReaderDisposeTriggered);
-			Assert.True(interceptor.BeforeReaderDisposeAsyncTriggered);
+				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.False);
+				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.True);
 #endif
+			});
 		}
 
-		[Test]
+			[Test]
 		public async ValueTask BeforeReaderDisposeTestOnDataContext([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			using var db = new DataContext(context);
@@ -819,20 +963,26 @@ namespace Tests.Data
 
 			db.GetTable<Person>().ToList();
 
-			Assert.True(interceptor.BeforeReaderDisposeTriggered);
-			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.True);
+				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.False);
+			});
 
 			interceptor.BeforeReaderDisposeTriggered = false;
 
 			await db.GetTable<Person>().ToListAsync();
 
+			Assert.Multiple(() =>
+			{
 #if NETFRAMEWORK
-			Assert.True(interceptor.BeforeReaderDisposeTriggered);
-			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.True);
+				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.False);
 #else
-			Assert.False(interceptor.BeforeReaderDisposeTriggered);
-			Assert.True(interceptor.BeforeReaderDisposeAsyncTriggered);
+				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.False);
+				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.True);
 #endif
+			});
 		}
 
 		#endregion
@@ -850,36 +1000,48 @@ namespace Tests.Data
 				var interceptor = new TestConnectionInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ConnectionOpenedTriggered);
-				Assert.False(interceptor.ConnectionOpeningTriggered);
-				Assert.False(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.False(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				});
 
 				db.Child.ToList();
 
-				Assert.True(interceptor.ConnectionOpenedTriggered);
-				Assert.True(interceptor.ConnectionOpeningTriggered);
-				Assert.False(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.False(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				});
 
 				interceptor.ConnectionOpenedTriggered = false;
 				interceptor.ConnectionOpeningTriggered = false;
 
 				db.Child.ToList();
 
-				Assert.False(interceptor.ConnectionOpenedTriggered);
-				Assert.False(interceptor.ConnectionOpeningTriggered);
-				Assert.False(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.False(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				});
 
 				db.Close();
 
 				db.Child.ToList();
 
-				Assert.True(interceptor.ConnectionOpenedTriggered);
-				Assert.True(interceptor.ConnectionOpeningTriggered);
-				Assert.False(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.False(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				});
 			}
 		}
 
@@ -891,36 +1053,48 @@ namespace Tests.Data
 				var interceptor = new TestConnectionInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ConnectionOpenedTriggered);
-				Assert.False(interceptor.ConnectionOpeningTriggered);
-				Assert.False(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.False(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				});
 
 				await db.Child.ToListAsync();
 
-				Assert.False(interceptor.ConnectionOpenedTriggered);
-				Assert.False(interceptor.ConnectionOpeningTriggered);
-				Assert.True(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.True(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
+				});
 
 				interceptor.ConnectionOpenedAsyncTriggered = false;
 				interceptor.ConnectionOpeningAsyncTriggered = false;
 
 				await db.Child.ToListAsync();
 
-				Assert.False(interceptor.ConnectionOpenedTriggered);
-				Assert.False(interceptor.ConnectionOpeningTriggered);
-				Assert.False(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.False(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				});
 
 				db.Close();
 
 				await db.Child.ToListAsync();
 
-				Assert.False(interceptor.ConnectionOpenedTriggered);
-				Assert.False(interceptor.ConnectionOpeningTriggered);
-				Assert.True(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.True(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
+				});
 			}
 		}
 
@@ -938,25 +1112,31 @@ namespace Tests.Data
 					// test interceptor not propagaded to cloned connection after clone
 					db.AddInterceptor(interceptor2);
 
-					Assert.False(interceptor1.ConnectionOpenedTriggered);
-					Assert.False(interceptor1.ConnectionOpeningTriggered);
-					Assert.False(interceptor1.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor1.ConnectionOpeningAsyncTriggered);
-					Assert.False(interceptor2.ConnectionOpenedTriggered);
-					Assert.False(interceptor2.ConnectionOpeningTriggered);
-					Assert.False(interceptor2.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor2.ConnectionOpeningAsyncTriggered);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.False);
+						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.False);
+						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
+					});
 
 					db.Child.ToList();
 
-					Assert.True(interceptor1.ConnectionOpenedTriggered);
-					Assert.True(interceptor1.ConnectionOpeningTriggered);
-					Assert.False(interceptor1.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor1.ConnectionOpeningAsyncTriggered);
-					Assert.True(interceptor2.ConnectionOpenedTriggered);
-					Assert.True(interceptor2.ConnectionOpeningTriggered);
-					Assert.False(interceptor2.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor2.ConnectionOpeningAsyncTriggered);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.True);
+						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.True);
+						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.True);
+						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.True);
+						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
+					});
 
 					interceptor1.ConnectionOpenedTriggered = false;
 					interceptor1.ConnectionOpeningTriggered = false;
@@ -965,14 +1145,17 @@ namespace Tests.Data
 
 					clonedDb.GetTable<Child>().ToList();
 
-					Assert.True(interceptor1.ConnectionOpenedTriggered);
-					Assert.True(interceptor1.ConnectionOpeningTriggered);
-					Assert.False(interceptor1.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor1.ConnectionOpeningAsyncTriggered);
-					Assert.False(interceptor2.ConnectionOpenedTriggered);
-					Assert.False(interceptor2.ConnectionOpeningTriggered);
-					Assert.False(interceptor2.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor2.ConnectionOpeningAsyncTriggered);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.True);
+						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.True);
+						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
+					});
 				}
 			}
 		}
@@ -993,25 +1176,31 @@ namespace Tests.Data
 					// test interceptor not propagaded to cloned connection after clone
 					db.AddInterceptor(interceptor2);
 
-					Assert.False(interceptor1.ConnectionOpenedTriggered);
-					Assert.False(interceptor1.ConnectionOpeningTriggered);
-					Assert.False(interceptor1.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor1.ConnectionOpeningAsyncTriggered);
-					Assert.False(interceptor2.ConnectionOpenedTriggered);
-					Assert.False(interceptor2.ConnectionOpeningTriggered);
-					Assert.False(interceptor2.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor2.ConnectionOpeningAsyncTriggered);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.False);
+						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.False);
+						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
+					});
 
 					db.GetTable<Child>().ToList();
 
-					Assert.True(interceptor1.ConnectionOpenedTriggered);
-					Assert.True(interceptor1.ConnectionOpeningTriggered);
-					Assert.False(interceptor1.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor1.ConnectionOpeningAsyncTriggered);
-					Assert.True(interceptor2.ConnectionOpenedTriggered);
-					Assert.True(interceptor2.ConnectionOpeningTriggered);
-					Assert.False(interceptor2.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor2.ConnectionOpeningAsyncTriggered);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.True);
+						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.True);
+						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.True);
+						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.True);
+						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
+					});
 
 					interceptor1.ConnectionOpenedTriggered = false;
 					interceptor1.ConnectionOpeningTriggered = false;
@@ -1020,14 +1209,17 @@ namespace Tests.Data
 
 					clonedDb.GetTable<Child>().ToList();
 
-					Assert.True(interceptor1.ConnectionOpenedTriggered);
-					Assert.True(interceptor1.ConnectionOpeningTriggered);
-					Assert.False(interceptor1.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor1.ConnectionOpeningAsyncTriggered);
-					Assert.False(interceptor2.ConnectionOpenedTriggered);
-					Assert.False(interceptor2.ConnectionOpeningTriggered);
-					Assert.False(interceptor2.ConnectionOpenedAsyncTriggered);
-					Assert.False(interceptor2.ConnectionOpeningAsyncTriggered);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.True);
+						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.True);
+						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
+						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
+					});
 				}
 			}
 		}
@@ -1043,30 +1235,39 @@ namespace Tests.Data
 				var interceptor = new TestConnectionInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ConnectionOpenedTriggered);
-				Assert.False(interceptor.ConnectionOpeningTriggered);
-				Assert.False(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.False(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				});
 
 				db.GetTable<Child>().ToList();
 
-				Assert.True(interceptor.ConnectionOpenedTriggered);
-				Assert.True(interceptor.ConnectionOpeningTriggered);
-				Assert.False(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.False(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				});
 
 				interceptor.ConnectionOpenedTriggered = false;
 				interceptor.ConnectionOpeningTriggered = false;
 
 				db.GetTable<Child>().ToList();
 
-				// TODO: right now enumerable queries behave like CloseAfterUse=true for data context
-				//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpenedTriggered);
-				//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpeningTriggered);
-				Assert.True(interceptor.ConnectionOpenedTriggered);
-				Assert.True(interceptor.ConnectionOpeningTriggered);
-				Assert.False(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.False(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					// TODO: right now enumerable queries behave like CloseAfterUse=true for data context
+					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpenedTriggered);
+					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpeningTriggered);
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				});
 
 				interceptor.ConnectionOpenedTriggered = false;
 				interceptor.ConnectionOpeningTriggered = false;
@@ -1075,10 +1276,13 @@ namespace Tests.Data
 
 				db.GetTable<Child>().ToList();
 
-				Assert.True(interceptor.ConnectionOpenedTriggered);
-				Assert.True(interceptor.ConnectionOpeningTriggered);
-				Assert.False(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.False(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				});
 			}
 		}
 
@@ -1093,30 +1297,39 @@ namespace Tests.Data
 				var interceptor = new TestConnectionInterceptor();
 				db.AddInterceptor(interceptor);
 
-				Assert.False(interceptor.ConnectionOpenedTriggered);
-				Assert.False(interceptor.ConnectionOpeningTriggered);
-				Assert.False(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.False(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				});
 
 				await db.GetTable<Child>().ToListAsync();
 
-				Assert.False(interceptor.ConnectionOpenedTriggered);
-				Assert.False(interceptor.ConnectionOpeningTriggered);
-				Assert.True(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.True(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
+				});
 
 				interceptor.ConnectionOpenedAsyncTriggered = false;
 				interceptor.ConnectionOpeningAsyncTriggered = false;
 
 				await db.GetTable<Child>().ToListAsync();
 
-				// TODO: right now enumerable queries behave like CloseAfterUse=true for data context
-				Assert.False(interceptor.ConnectionOpenedTriggered);
-				Assert.False(interceptor.ConnectionOpeningTriggered);
-				//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpenedAsyncTriggered);
-				//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpeningAsyncTriggered);
-				Assert.True(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.True(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					// TODO: right now enumerable queries behave like CloseAfterUse=true for data context
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpenedAsyncTriggered);
+					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpeningAsyncTriggered);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
+				});
 
 				interceptor.ConnectionOpenedAsyncTriggered = false;
 				interceptor.ConnectionOpeningAsyncTriggered = false;
@@ -1125,10 +1338,13 @@ namespace Tests.Data
 
 				await db.GetTable<Child>().ToListAsync();
 
-				Assert.False(interceptor.ConnectionOpenedTriggered);
-				Assert.False(interceptor.ConnectionOpeningTriggered);
-				Assert.True(interceptor.ConnectionOpenedAsyncTriggered);
-				Assert.True(interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
+				});
 			}
 		}
 
@@ -1151,8 +1367,8 @@ namespace Tests.Data
 
 				_ = db.Person.ToList();
 
-				Assert.AreEqual(count, interceptor1.EntityCreatedContexts.Count);
-				Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == db));
+				Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
+				Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == db), Is.True);
 				interceptor1.EntityCreatedContexts.Clear();
 
 				using (var clonedDb = (IDataContext)((IDataContext)db).Clone(true))
@@ -1160,10 +1376,13 @@ namespace Tests.Data
 					clonedDb.AddInterceptor(interceptor2);
 					_ = clonedDb.GetTable<Person>().ToList();
 
-					Assert.AreEqual(count, interceptor1.EntityCreatedContexts.Count);
-					Assert.AreEqual(count, interceptor2.EntityCreatedContexts.Count);
-					Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb));
-					Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb));
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
+						Assert.That(interceptor2.EntityCreatedContexts, Has.Count.EqualTo(count));
+					});
+					Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb), Is.True);
+					Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb), Is.True);
 				}
 			}
 		}
@@ -1180,8 +1399,8 @@ namespace Tests.Data
 
 				db.GetTable<Person>().ToList();
 
-				Assert.AreEqual(count, interceptor1.EntityCreatedContexts.Count);
-				Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == db));
+				Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
+				Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == db), Is.True);
 
 				interceptor1.EntityCreatedContexts.Clear();
 
@@ -1190,10 +1409,13 @@ namespace Tests.Data
 					clonedDb.AddInterceptor(interceptor2);
 					clonedDb.GetTable<Person>().ToList();
 
-					Assert.AreEqual(count, interceptor1.EntityCreatedContexts.Count);
-					Assert.AreEqual(count, interceptor2.EntityCreatedContexts.Count);
-					Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb));
-					Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb));
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
+						Assert.That(interceptor2.EntityCreatedContexts, Has.Count.EqualTo(count));
+					});
+					Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb), Is.True);
+					Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb), Is.True);
 				}
 			}
 		}
@@ -1216,69 +1438,99 @@ namespace Tests.Data
 
 				db.GetTable<Person>().ToList();
 
-				Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosedContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosingContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
+				});
 
 				using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
 				{
 					clonedDb.AddInterceptor(interceptor2);
 					clonedDb.GetTable<Person>().ToList();
 
-					Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
-					Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
-					Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
-					Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.OnClosedContexts, Is.Empty);
+						Assert.That(interceptor1.OnClosingContexts, Is.Empty);
+						Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
+						Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
 
-					Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
-					Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
-					Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
-					Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+						Assert.That(interceptor2.OnClosedContexts, Is.Empty);
+						Assert.That(interceptor2.OnClosingContexts, Is.Empty);
+						Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
+						Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
+					});
 				}
 
-				Assert.AreEqual(1, interceptor1.OnClosedContexts.Count);
-				Assert.True(interceptor1.OnClosedContexts.ContainsKey(cloned));
-				Assert.AreEqual(1, interceptor1.OnClosedContexts[cloned]);
-				Assert.AreEqual(1, interceptor1.OnClosingContexts.Count);
-				Assert.True(interceptor1.OnClosingContexts.ContainsKey(cloned));
-				Assert.AreEqual(1, interceptor1.OnClosingContexts[cloned]);
-				Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+				Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosedContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor1.OnClosedContexts[cloned], Is.EqualTo(1));
+					Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosingContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor1.OnClosingContexts[cloned], Is.EqualTo(1));
+					Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
 
-				Assert.AreEqual(1, interceptor2.OnClosedContexts.Count);
-				Assert.True(interceptor2.OnClosedContexts.ContainsKey(cloned));
-				Assert.AreEqual(1, interceptor2.OnClosedContexts[cloned]);
-				Assert.AreEqual(1, interceptor2.OnClosingContexts.Count);
-				Assert.True(interceptor2.OnClosingContexts.ContainsKey(cloned));
-				Assert.AreEqual(1, interceptor2.OnClosingContexts[cloned]);
-				Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+					Assert.That(interceptor2.OnClosedContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor2.OnClosedContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor2.OnClosedContexts[cloned], Is.EqualTo(1));
+					Assert.That(interceptor2.OnClosingContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor2.OnClosingContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor2.OnClosingContexts[cloned], Is.EqualTo(1));
+					Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
+				});
 			}
 
-			Assert.AreEqual(2, interceptor1.OnClosedContexts.Count);
-			Assert.True(interceptor1.OnClosedContexts.ContainsKey(main));
-			Assert.True(interceptor1.OnClosedContexts.ContainsKey(cloned));
-			Assert.AreEqual(1, interceptor1.OnClosedContexts[main]);
-			Assert.AreEqual(1, interceptor1.OnClosedContexts[cloned]);
+			Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor1.OnClosedContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor1.OnClosedContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor1.OnClosedContexts[main], Is.EqualTo(1));
+				Assert.That(interceptor1.OnClosedContexts[cloned], Is.EqualTo(1));
 
-			Assert.AreEqual(2, interceptor1.OnClosingContexts.Count);
-			Assert.True(interceptor1.OnClosingContexts.ContainsKey(main));
-			Assert.True(interceptor1.OnClosingContexts.ContainsKey(cloned));
-			Assert.AreEqual(1, interceptor1.OnClosingContexts[main]);
-			Assert.AreEqual(1, interceptor1.OnClosingContexts[cloned]);
+				Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(2));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor1.OnClosingContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor1.OnClosingContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor1.OnClosingContexts[main], Is.EqualTo(1));
+				Assert.That(interceptor1.OnClosingContexts[cloned], Is.EqualTo(1));
 
-			Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
-			Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+				Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
+				Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
 
-			Assert.AreEqual(1, interceptor2.OnClosedContexts.Count);
-			Assert.True(interceptor2.OnClosedContexts.ContainsKey(cloned));
-			Assert.AreEqual(1, interceptor2.OnClosedContexts[cloned]);
-			Assert.AreEqual(1, interceptor2.OnClosingContexts.Count);
-			Assert.True(interceptor2.OnClosingContexts.ContainsKey(cloned));
-			Assert.AreEqual(1, interceptor2.OnClosingContexts[cloned]);
-			Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
-			Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+				Assert.That(interceptor2.OnClosedContexts, Has.Count.EqualTo(1));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor2.OnClosedContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor2.OnClosedContexts[cloned], Is.EqualTo(1));
+				Assert.That(interceptor2.OnClosingContexts, Has.Count.EqualTo(1));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor2.OnClosingContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor2.OnClosingContexts[cloned], Is.EqualTo(1));
+				Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
+				Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
+			});
 		}
 
 		[Test]
@@ -1296,85 +1548,127 @@ namespace Tests.Data
 
 				_ = db.GetTable<Person>().ToList();
 
-				Assert.AreEqual(1, interceptor1.OnClosedContexts.Count);
-				Assert.True(interceptor1.OnClosedContexts.Keys.Single() is DataConnection);
-				Assert.True(interceptor1.OnClosedContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(1, interceptor1.OnClosingContexts.Count);
-				Assert.True(interceptor1.OnClosingContexts.Keys.Single() is DataConnection);
-				Assert.True(interceptor1.OnClosingContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+				Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosedContexts.Keys.Single() is DataConnection, Is.True);
+					Assert.That(interceptor1.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosingContexts.Keys.Single() is DataConnection, Is.True);
+					Assert.That(interceptor1.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
+				});
 
 				using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
 				{
 					clonedDb.AddInterceptor(interceptor2);
 					_ = clonedDb.GetTable<Person>().ToList();
 
-					Assert.AreEqual(2, interceptor1.OnClosedContexts.Count);
-					Assert.True(interceptor1.OnClosedContexts.Keys.All(_ => _ is DataConnection));
-					Assert.True(interceptor1.OnClosedContexts.Values.All(_ => _ == 1));
-					Assert.AreEqual(2, interceptor1.OnClosingContexts.Count);
-					Assert.True(interceptor1.OnClosingContexts.Keys.All(_ => _ is DataConnection));
-					Assert.True(interceptor1.OnClosingContexts.Values.All(_ => _ == 1));
-					Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
-					Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+					Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(2));
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.OnClosedContexts.Keys.All(_ => _ is DataConnection), Is.True);
+						Assert.That(interceptor1.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+						Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(2));
+					});
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.OnClosingContexts.Keys.All(_ => _ is DataConnection), Is.True);
+						Assert.That(interceptor1.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+						Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
+						Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
 
-					Assert.AreEqual(1, interceptor2.OnClosedContexts.Count);
-					Assert.True(interceptor2.OnClosedContexts.Keys.Single() is DataConnection);
-					Assert.True(interceptor2.OnClosedContexts.Values.All(_ => _ == 1));
-					Assert.AreEqual(1, interceptor2.OnClosingContexts.Count);
-					Assert.True(interceptor2.OnClosingContexts.Keys.Single() is DataConnection);
-					Assert.True(interceptor2.OnClosingContexts.Values.All(_ => _ == 1));
-					Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
-					Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+						Assert.That(interceptor2.OnClosedContexts, Has.Count.EqualTo(1));
+					});
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor2.OnClosedContexts.Keys.Single() is DataConnection, Is.True);
+						Assert.That(interceptor2.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+						Assert.That(interceptor2.OnClosingContexts, Has.Count.EqualTo(1));
+					});
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor2.OnClosingContexts.Keys.Single() is DataConnection, Is.True);
+						Assert.That(interceptor2.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+						Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
+						Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
+					});
 				}
 
-				Assert.AreEqual(3, interceptor1.OnClosedContexts.Count);
-				Assert.AreEqual(2, interceptor1.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor1.OnClosedContexts.ContainsKey(cloned));
-				Assert.True(interceptor1.OnClosedContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(3, interceptor1.OnClosingContexts.Count);
-				Assert.AreEqual(2, interceptor1.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor1.OnClosingContexts.ContainsKey(cloned));
-				Assert.True(interceptor1.OnClosingContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+				Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+					Assert.That(interceptor1.OnClosedContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor1.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(3));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+					Assert.That(interceptor1.OnClosingContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor1.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
 
-				Assert.AreEqual(2, interceptor2.OnClosedContexts.Count);
-				Assert.AreEqual(1, interceptor2.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor2.OnClosedContexts.ContainsKey(cloned));
-				Assert.True(interceptor2.OnClosedContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(2, interceptor2.OnClosingContexts.Count);
-				Assert.AreEqual(1, interceptor2.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor2.OnClosingContexts.ContainsKey(cloned));
-				Assert.True(interceptor2.OnClosingContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+					Assert.That(interceptor2.OnClosedContexts, Has.Count.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor2.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+					Assert.That(interceptor2.OnClosedContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor2.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor2.OnClosingContexts, Has.Count.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor2.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+					Assert.That(interceptor2.OnClosingContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor2.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
+				});
 			}
 
-			Assert.AreEqual(4, interceptor1.OnClosedContexts.Count);
-			Assert.AreEqual(2, interceptor1.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
-			Assert.True(interceptor1.OnClosedContexts.ContainsKey(cloned));
-			Assert.True(interceptor1.OnClosedContexts.ContainsKey(main));
-			Assert.True(interceptor1.OnClosedContexts.Values.All(_ => _ == 1));
-			Assert.AreEqual(4, interceptor1.OnClosingContexts.Count);
-			Assert.AreEqual(2, interceptor1.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
-			Assert.True(interceptor1.OnClosingContexts.ContainsKey(cloned));
-			Assert.True(interceptor1.OnClosingContexts.ContainsKey(main));
-			Assert.True(interceptor1.OnClosingContexts.Values.All(_ => _ == 1));
-			Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
-			Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+			Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor1.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+				Assert.That(interceptor1.OnClosedContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor1.OnClosedContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor1.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+				Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(4));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor1.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+				Assert.That(interceptor1.OnClosingContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor1.OnClosingContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor1.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+				Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
+				Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
 
-			Assert.AreEqual(2, interceptor2.OnClosedContexts.Count);
-			Assert.AreEqual(1, interceptor2.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
-			Assert.True(interceptor2.OnClosedContexts.ContainsKey(cloned));
-			Assert.True(interceptor2.OnClosedContexts.Values.All(_ => _ == 1));
-			Assert.AreEqual(2, interceptor2.OnClosingContexts.Count);
-			Assert.AreEqual(1, interceptor2.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
-			Assert.True(interceptor2.OnClosingContexts.ContainsKey(cloned));
-			Assert.True(interceptor2.OnClosingContexts.Values.All(_ => _ == 1));
-			Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
-			Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+				Assert.That(interceptor2.OnClosedContexts, Has.Count.EqualTo(2));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor2.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+				Assert.That(interceptor2.OnClosedContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor2.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+				Assert.That(interceptor2.OnClosingContexts, Has.Count.EqualTo(2));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor2.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+				Assert.That(interceptor2.OnClosingContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor2.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+				Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
+				Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
+			});
 		}
 
 		[Test]
@@ -1392,69 +1686,105 @@ namespace Tests.Data
 
 				await db.GetTable<Person>().ToListAsync();
 
-				Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosedContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosingContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
+				});
 
 				await using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
 				{
 					clonedDb.AddInterceptor(interceptor2);
 					await clonedDb.GetTable<Person>().ToListAsync();
 
-					Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
-					Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
-					Assert.AreEqual(0, interceptor1.OnClosedAsyncContexts.Count);
-					Assert.AreEqual(0, interceptor1.OnClosingAsyncContexts.Count);
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.OnClosedContexts, Is.Empty);
+						Assert.That(interceptor1.OnClosingContexts, Is.Empty);
+						Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
+						Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
 
-					Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
-					Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
-					Assert.AreEqual(0, interceptor2.OnClosedAsyncContexts.Count);
-					Assert.AreEqual(0, interceptor2.OnClosingAsyncContexts.Count);
+						Assert.That(interceptor2.OnClosedContexts, Is.Empty);
+						Assert.That(interceptor2.OnClosingContexts, Is.Empty);
+						Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
+						Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
+					});
 				}
 
-				Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
-				Assert.AreEqual(1, interceptor1.OnClosedAsyncContexts.Count);
-				Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned));
-				Assert.AreEqual(1, interceptor1.OnClosedAsyncContexts[cloned]);
-				Assert.AreEqual(1, interceptor1.OnClosingAsyncContexts.Count);
-				Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned));
-				Assert.AreEqual(1, interceptor1.OnClosingAsyncContexts[cloned]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosedContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosingContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor1.OnClosedAsyncContexts[cloned], Is.EqualTo(1));
+					Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor1.OnClosingAsyncContexts[cloned], Is.EqualTo(1));
 
-				Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
-				Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
-				Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts.Count);
-				Assert.True(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned));
-				Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts[cloned]);
-				Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts.Count);
-				Assert.True(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned));
-				Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts[cloned]);
+					Assert.That(interceptor2.OnClosedContexts, Is.Empty);
+					Assert.That(interceptor2.OnClosingContexts, Is.Empty);
+					Assert.That(interceptor2.OnClosedAsyncContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor2.OnClosedAsyncContexts[cloned], Is.EqualTo(1));
+					Assert.That(interceptor2.OnClosingAsyncContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor2.OnClosingAsyncContexts[cloned], Is.EqualTo(1));
+				});
 			}
 
-			Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
-			Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor1.OnClosedContexts, Is.Empty);
+				Assert.That(interceptor1.OnClosingContexts, Is.Empty);
 
-			Assert.AreEqual(2, interceptor1.OnClosedAsyncContexts.Count);
-			Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(main));
-			Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned));
-			Assert.AreEqual(1, interceptor1.OnClosedAsyncContexts[main]);
-			Assert.AreEqual(1, interceptor1.OnClosedAsyncContexts[cloned]);
+				Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(2));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor1.OnClosedAsyncContexts[main], Is.EqualTo(1));
+				Assert.That(interceptor1.OnClosedAsyncContexts[cloned], Is.EqualTo(1));
 
-			Assert.AreEqual(2, interceptor1.OnClosingAsyncContexts.Count);
-			Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(main));
-			Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned));
-			Assert.AreEqual(1, interceptor1.OnClosingAsyncContexts[main]);
-			Assert.AreEqual(1, interceptor1.OnClosingAsyncContexts[cloned]);
+				Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(2));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor1.OnClosingAsyncContexts[main], Is.EqualTo(1));
+				Assert.That(interceptor1.OnClosingAsyncContexts[cloned], Is.EqualTo(1));
 
-			Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
-			Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
-			Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts.Count);
-			Assert.True(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned));
-			Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts[cloned]);
-			Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts.Count);
-			Assert.True(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned));
-			Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts[cloned]);
+				Assert.That(interceptor2.OnClosedContexts, Is.Empty);
+				Assert.That(interceptor2.OnClosingContexts, Is.Empty);
+				Assert.That(interceptor2.OnClosedAsyncContexts, Has.Count.EqualTo(1));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor2.OnClosedAsyncContexts[cloned], Is.EqualTo(1));
+				Assert.That(interceptor2.OnClosingAsyncContexts, Has.Count.EqualTo(1));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor2.OnClosingAsyncContexts[cloned], Is.EqualTo(1));
+			});
 		}
 
 		[Test]
@@ -1472,14 +1802,23 @@ namespace Tests.Data
 
 				await db.GetTable<Person>().ToListAsync();
 
-				Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
-				Assert.AreEqual(1, interceptor1.OnClosedAsyncContexts.Count);
-				Assert.True(interceptor1.OnClosedAsyncContexts.Keys.Single() is DataConnection);
-				Assert.True(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(1, interceptor1.OnClosingAsyncContexts.Count);
-				Assert.True(interceptor1.OnClosingAsyncContexts.Keys.Single() is DataConnection);
-				Assert.True(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosedContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosingContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosedAsyncContexts.Keys.Single() is DataConnection, Is.True);
+					Assert.That(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosingAsyncContexts.Keys.Single() is DataConnection, Is.True);
+					Assert.That(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
+				});
 
 
 				await using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
@@ -1487,71 +1826,116 @@ namespace Tests.Data
 					clonedDb.AddInterceptor(interceptor2);
 					await clonedDb.GetTable<Person>().ToListAsync();
 
-					Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
-					Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
-					Assert.AreEqual(2, interceptor1.OnClosedAsyncContexts.Count);
-					Assert.True(interceptor1.OnClosedAsyncContexts.Keys.All(_ => _ is DataConnection));
-					Assert.True(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1));
-					Assert.AreEqual(2, interceptor1.OnClosingAsyncContexts.Count);
-					Assert.True(interceptor1.OnClosingAsyncContexts.Keys.All(_ => _ is DataConnection));
-					Assert.True(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.OnClosedContexts, Is.Empty);
+						Assert.That(interceptor1.OnClosingContexts, Is.Empty);
+						Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(2));
+					});
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.OnClosedAsyncContexts.Keys.All(_ => _ is DataConnection), Is.True);
+						Assert.That(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
+						Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(2));
+					});
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor1.OnClosingAsyncContexts.Keys.All(_ => _ is DataConnection), Is.True);
+						Assert.That(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
 
-					Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
-					Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
-					Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts.Count);
-					Assert.True(interceptor2.OnClosedAsyncContexts.Keys.Single() is DataConnection);
-					Assert.True(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1));
-					Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts.Count);
-					Assert.True(interceptor2.OnClosingAsyncContexts.Keys.Single() is DataConnection);
-					Assert.True(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+						Assert.That(interceptor2.OnClosedContexts, Is.Empty);
+						Assert.That(interceptor2.OnClosingContexts, Is.Empty);
+						Assert.That(interceptor2.OnClosedAsyncContexts, Has.Count.EqualTo(1));
+					});
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor2.OnClosedAsyncContexts.Keys.Single() is DataConnection, Is.True);
+						Assert.That(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
+						Assert.That(interceptor2.OnClosingAsyncContexts, Has.Count.EqualTo(1));
+					});
+					Assert.Multiple(() =>
+					{
+						Assert.That(interceptor2.OnClosingAsyncContexts.Keys.Single() is DataConnection, Is.True);
+						Assert.That(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
+					});
 				}
 
-				Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
-				Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
-				Assert.AreEqual(3, interceptor1.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(2, interceptor1.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned));
-				Assert.True(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(3, interceptor1.OnClosingAsyncContexts.Count);
-				Assert.AreEqual(2, interceptor1.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned));
-				Assert.True(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosedContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosingContexts, Is.Empty);
+					Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(3));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+					Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(3));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor1.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+					Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
 
-				Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
-				Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
-				Assert.AreEqual(2, interceptor2.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned));
-				Assert.True(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(2, interceptor2.OnClosingAsyncContexts.Count);
-				Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned));
-				Assert.True(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+					Assert.That(interceptor2.OnClosedContexts, Is.Empty);
+					Assert.That(interceptor2.OnClosingContexts, Is.Empty);
+					Assert.That(interceptor2.OnClosedAsyncContexts, Has.Count.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor2.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+					Assert.That(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor2.OnClosingAsyncContexts, Has.Count.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor2.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+					Assert.That(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
+					Assert.That(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
+				});
 			}
 
-			Assert.AreEqual(0, interceptor1.OnClosedContexts.Count);
-			Assert.AreEqual(0, interceptor1.OnClosingContexts.Count);
-			Assert.AreEqual(4, interceptor1.OnClosedAsyncContexts.Count);
-			Assert.AreEqual(2, interceptor1.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection));
-			Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned));
-			Assert.True(interceptor1.OnClosedAsyncContexts.ContainsKey(main));
-			Assert.True(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1));
-			Assert.AreEqual(4, interceptor1.OnClosingAsyncContexts.Count);
-			Assert.AreEqual(2, interceptor1.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection));
-			Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned));
-			Assert.True(interceptor1.OnClosingAsyncContexts.ContainsKey(main));
-			Assert.True(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor1.OnClosedContexts, Is.Empty);
+				Assert.That(interceptor1.OnClosingContexts, Is.Empty);
+				Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(4));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor1.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+				Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
+				Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(4));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor1.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+				Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
 
-			Assert.AreEqual(0, interceptor2.OnClosedContexts.Count);
-			Assert.AreEqual(0, interceptor2.OnClosingContexts.Count);
-			Assert.AreEqual(2, interceptor2.OnClosedAsyncContexts.Count);
-			Assert.AreEqual(1, interceptor2.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection));
-			Assert.True(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned));
-			Assert.True(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1));
-			Assert.AreEqual(2, interceptor2.OnClosingAsyncContexts.Count);
-			Assert.AreEqual(1, interceptor2.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection));
-			Assert.True(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned));
-			Assert.True(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+				Assert.That(interceptor2.OnClosedContexts, Is.Empty);
+				Assert.That(interceptor2.OnClosingContexts, Is.Empty);
+				Assert.That(interceptor2.OnClosedAsyncContexts, Has.Count.EqualTo(2));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor2.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+				Assert.That(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
+				Assert.That(interceptor2.OnClosingAsyncContexts, Has.Count.EqualTo(2));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor2.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+				Assert.That(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
+				Assert.That(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
+			});
 		}
 
 		[Test]
@@ -1566,61 +1950,100 @@ namespace Tests.Data
 
 				db.GetTable<Person>().ToList();
 
-				Assert.AreEqual(0, interceptor.OnClosedContexts.Count);
-				Assert.AreEqual(0, interceptor.OnClosingContexts.Count);
-				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosedContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingContexts, Is.Empty);
+					Assert.That(interceptor.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingAsyncContexts, Is.Empty);
+				});
 
 				db.Close();
 
-				Assert.AreEqual(1, interceptor.OnClosedContexts.Count);
-				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
-				Assert.AreEqual(1, interceptor.OnClosedContexts[main]);
-				Assert.AreEqual(1, interceptor.OnClosingContexts.Count);
-				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
-				Assert.AreEqual(1, interceptor.OnClosingContexts[main]);
-				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+				Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosedContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosedContexts[main], Is.EqualTo(1));
+					Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosingContexts[main], Is.EqualTo(1));
+					Assert.That(interceptor.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingAsyncContexts, Is.Empty);
+				});
 
 				db.GetTable<Person>().ToList();
 
-				Assert.AreEqual(1, interceptor.OnClosedContexts.Count);
-				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
-				Assert.AreEqual(1, interceptor.OnClosedContexts[main]);
-				Assert.AreEqual(1, interceptor.OnClosingContexts.Count);
-				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
-				Assert.AreEqual(1, interceptor.OnClosingContexts[main]);
-				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+				Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosedContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosedContexts[main], Is.EqualTo(1));
+					Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosingContexts[main], Is.EqualTo(1));
+					Assert.That(interceptor.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingAsyncContexts, Is.Empty);
+				});
 
 				await db.CloseAsync();
 
-				Assert.AreEqual(1, interceptor.OnClosedContexts.Count);
-				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
-				Assert.AreEqual(1, interceptor.OnClosedContexts[main]);
-				Assert.AreEqual(1, interceptor.OnClosingContexts.Count);
-				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
-				Assert.AreEqual(1, interceptor.OnClosingContexts[main]);
-				Assert.AreEqual(1, interceptor.OnClosedAsyncContexts.Count);
-				Assert.True(interceptor.OnClosedAsyncContexts.ContainsKey(main));
-				Assert.AreEqual(1, interceptor.OnClosedAsyncContexts[main]);
-				Assert.AreEqual(1, interceptor.OnClosingAsyncContexts.Count);
-				Assert.True(interceptor.OnClosingAsyncContexts.ContainsKey(main));
-				Assert.AreEqual(1, interceptor.OnClosingAsyncContexts[main]);
+				Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosedContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosedContexts[main], Is.EqualTo(1));
+					Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosingContexts[main], Is.EqualTo(1));
+					Assert.That(interceptor.OnClosedAsyncContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosedAsyncContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosedAsyncContexts[main], Is.EqualTo(1));
+					Assert.That(interceptor.OnClosingAsyncContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingAsyncContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosingAsyncContexts[main], Is.EqualTo(1));
+				});
 			}
 
-			Assert.AreEqual(1, interceptor.OnClosedContexts.Count);
-			Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
-			Assert.AreEqual(2, interceptor.OnClosedContexts[main]);
-			Assert.AreEqual(1, interceptor.OnClosingContexts.Count);
-			Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
-			Assert.AreEqual(2, interceptor.OnClosingContexts[main]);
-			Assert.AreEqual(1, interceptor.OnClosedAsyncContexts.Count);
-			Assert.True(interceptor.OnClosedAsyncContexts.ContainsKey(main));
-			Assert.AreEqual(1, interceptor.OnClosedAsyncContexts[main]);
-			Assert.AreEqual(1, interceptor.OnClosingAsyncContexts.Count);
-			Assert.True(interceptor.OnClosingAsyncContexts.ContainsKey(main));
-			Assert.AreEqual(1, interceptor.OnClosingAsyncContexts[main]);
+			Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.OnClosedContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosedContexts[main], Is.EqualTo(2));
+				Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(1));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.OnClosingContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosingContexts[main], Is.EqualTo(2));
+				Assert.That(interceptor.OnClosedAsyncContexts, Has.Count.EqualTo(1));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.OnClosedAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosedAsyncContexts[main], Is.EqualTo(1));
+				Assert.That(interceptor.OnClosingAsyncContexts, Has.Count.EqualTo(1));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.OnClosingAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosingAsyncContexts[main], Is.EqualTo(1));
+			});
 		}
 
 		[Test]
@@ -1635,80 +2058,266 @@ namespace Tests.Data
 
 				db.GetTable<Person>().ToList();
 
-				Assert.AreEqual(1, interceptor.OnClosedContexts.Count);
-				Assert.True(interceptor.OnClosedContexts.Keys.All(_ => _ is DataConnection));
-				Assert.True(interceptor.OnClosedContexts.Values.All(_ => _  == 1));
-				Assert.AreEqual(1, interceptor.OnClosingContexts.Count);
-				Assert.True(interceptor.OnClosingContexts.Keys.All(_ => _ is DataConnection));
-				Assert.True(interceptor.OnClosingContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+				Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosedContexts.Keys.All(_ => _ is DataConnection), Is.True);
+					Assert.That(interceptor.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingContexts.Keys.All(_ => _ is DataConnection), Is.True);
+					Assert.That(interceptor.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingAsyncContexts, Is.Empty);
+				});
 
 				db.Close();
 
-				Assert.AreEqual(2, interceptor.OnClosedContexts.Count);
-				Assert.AreEqual(1, interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
-				Assert.True(interceptor.OnClosedContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(2, interceptor.OnClosingContexts.Count);
-				Assert.AreEqual(1, interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
-				Assert.True(interceptor.OnClosingContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+				Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+					Assert.That(interceptor.OnClosedContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+					Assert.That(interceptor.OnClosingContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingAsyncContexts, Is.Empty);
+				});
 
 				db.GetTable<Person>().ToList();
 
-				Assert.AreEqual(3, interceptor.OnClosedContexts.Count);
-				Assert.AreEqual(2, interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
-				Assert.True(interceptor.OnClosedContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(3, interceptor.OnClosingContexts.Count);
-				Assert.AreEqual(2, interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
-				Assert.True(interceptor.OnClosingContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(0, interceptor.OnClosedAsyncContexts.Count);
-				Assert.AreEqual(0, interceptor.OnClosingAsyncContexts.Count);
+				Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+					Assert.That(interceptor.OnClosedContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(3));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+					Assert.That(interceptor.OnClosingContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingAsyncContexts, Is.Empty);
+				});
 
 				await db.CloseAsync();
 
-				Assert.AreEqual(3, interceptor.OnClosedContexts.Count);
-				Assert.AreEqual(2, interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
-				Assert.True(interceptor.OnClosedContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(3, interceptor.OnClosingContexts.Count);
-				Assert.AreEqual(2, interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
-				Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
-				Assert.True(interceptor.OnClosingContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(1, interceptor.OnClosedAsyncContexts.Count);
-				Assert.True(interceptor.OnClosedAsyncContexts.ContainsKey(main));
-				Assert.True(interceptor.OnClosedAsyncContexts.Values.All(_ => _ == 1));
-				Assert.AreEqual(1, interceptor.OnClosingAsyncContexts.Count);
-				Assert.True(interceptor.OnClosingAsyncContexts.ContainsKey(main));
-				Assert.True(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+				Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+					Assert.That(interceptor.OnClosedContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(3));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+					Assert.That(interceptor.OnClosingContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosedAsyncContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosedAsyncContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosingAsyncContexts, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.OnClosingAsyncContexts.ContainsKey(main), Is.True);
+					Assert.That(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
+				});
 			}
 
-			Assert.AreEqual(3, interceptor.OnClosedContexts.Count);
-			Assert.AreEqual(2, interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection));
-			Assert.True(interceptor.OnClosedContexts.ContainsKey(main));
-			Assert.AreEqual(2, interceptor.OnClosedContexts[main]);
-			Assert.True(interceptor.OnClosedContexts.Where(_ => _.Key is DataConnection).All(_ => _.Value == 1));
-			Assert.AreEqual(3, interceptor.OnClosingContexts.Count);
-			Assert.AreEqual(2, interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection));
-			Assert.True(interceptor.OnClosingContexts.ContainsKey(main));
-			Assert.AreEqual(2, interceptor.OnClosingContexts[main]);
-			Assert.True(interceptor.OnClosingContexts.Where(_ => _.Key is DataConnection).All(_ => _.Value == 1));
-			Assert.AreEqual(1, interceptor.OnClosedAsyncContexts.Count);
-			Assert.True(interceptor.OnClosedAsyncContexts.ContainsKey(main));
-			Assert.True(interceptor.OnClosedAsyncContexts.Values.All(_ => _ == 1));
-			Assert.AreEqual(1, interceptor.OnClosingAsyncContexts.Count);
-			Assert.True(interceptor.OnClosingAsyncContexts.ContainsKey(main));
-			Assert.True(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1));
+			Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+				Assert.That(interceptor.OnClosedContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosedContexts[main], Is.EqualTo(2));
+				Assert.That(interceptor.OnClosedContexts.Where(_ => _.Key is DataConnection).All(_ => _.Value == 1), Is.True);
+				Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(3));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
+				Assert.That(interceptor.OnClosingContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosingContexts[main], Is.EqualTo(2));
+				Assert.That(interceptor.OnClosingContexts.Where(_ => _.Key is DataConnection).All(_ => _.Value == 1), Is.True);
+				Assert.That(interceptor.OnClosedAsyncContexts, Has.Count.EqualTo(1));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.OnClosedAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
+				Assert.That(interceptor.OnClosingAsyncContexts, Has.Count.EqualTo(1));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.OnClosingAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
+			});
 		}
 
-#endregion
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4457")]
+		public async Task Test_Connection_Release_EagerLoad_AutoConnection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		{
+			var closeInterceptor = new TestDataContextInterceptor();
+			var openInterceptor = new TestConnectionInterceptor();
 
-#endregion
+			IDataContext main;
+			using (var db = main = new DataContext(context))
+			{
+				((DataContext)db).KeepConnectionAlive = false;
+				db.CloseAfterUse = closeAfterUse;
+				db.AddInterceptor(closeInterceptor);
+				db.AddInterceptor(openInterceptor);
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.Zero);
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).ToList();
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.Not.Zero);
+					Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+				});
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).ToList();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).ToListAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).ToListAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefault();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefault();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefaultAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefaultAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.CloseAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+			}
+
+			Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+			int GetOpenedCount() => openInterceptor.ConnectionOpenedCount + openInterceptor.ConnectionOpenedAsyncCount;
+			int GetClosedCount() => closeInterceptor.OnClosedContexts.Concat(closeInterceptor.OnClosedAsyncContexts).Where(c => c.Key is DataConnection).Sum(c => c.Value);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4457")]
+		public async Task Test_Connection_Release_EagerLoad_PersistentConnection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		{
+			var closeInterceptor = new TestDataContextInterceptor();
+			var openInterceptor = new TestConnectionInterceptor();
+
+			IDataContext main;
+			using (var db = main = new DataContext(context))
+			{
+				((DataContext)db).KeepConnectionAlive = true;
+				db.CloseAfterUse = closeAfterUse;
+				db.AddInterceptor(closeInterceptor);
+				db.AddInterceptor(openInterceptor);
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.Zero);
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).ToList();
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).ToList();
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).ToListAsync();
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).ToListAsync();
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefault();
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefault();
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefaultAsync();
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefaultAsync();
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				});
+
+				await db.CloseAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+			}
+
+			Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+			int GetOpenedCount() => openInterceptor.ConnectionOpenedCount + openInterceptor.ConnectionOpenedAsyncCount;
+			int GetClosedCount() => closeInterceptor.OnClosedContexts.Concat(closeInterceptor.OnClosedAsyncContexts).Where(c => c.Key is DataConnection).Sum(c => c.Value);
+		}
+
+		#endregion
+
+		#endregion
 
 		private sealed class TestCommandInterceptor : CommandInterceptor
 		{
@@ -1793,27 +2402,36 @@ namespace Tests.Data
 			public bool ConnectionOpeningTriggered      { get; set; }
 			public bool ConnectionOpeningAsyncTriggered { get; set; }
 
+			public int ConnectionOpenedCount       { get; set; }
+			public int ConnectionOpenedAsyncCount  { get; set; }
+			public int ConnectionOpeningCount      { get; set; }
+			public int ConnectionOpeningAsyncCount { get; set; }
+
 			public override void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
 			{
 				ConnectionOpenedTriggered = true;
+				ConnectionOpenedCount++;
 				base.ConnectionOpened(eventData, connection);
 			}
 
 			public override Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 			{
 				ConnectionOpenedAsyncTriggered = true;
+				ConnectionOpenedAsyncCount++;
 				return base.ConnectionOpenedAsync(eventData, connection, cancellationToken);
 			}
 
 			public override void ConnectionOpening(ConnectionEventData eventData, DbConnection connection)
 			{
 				ConnectionOpeningTriggered = true;
+				ConnectionOpeningCount++;
 				base.ConnectionOpening(eventData, connection);
 			}
 
 			public override Task ConnectionOpeningAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 			{
 				ConnectionOpeningAsyncTriggered = true;
+				ConnectionOpeningAsyncCount++;
 				return base.ConnectionOpeningAsync(eventData, connection, cancellationToken);
 			}
 		}

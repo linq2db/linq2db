@@ -59,7 +59,7 @@ public class TestsInitialization
 		CopySQLiteRuntime();
 		RegisterSqlCEFactory();
 
-#if NET472 && !AZURE
+#if NETFRAMEWORK && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
@@ -95,7 +95,7 @@ public class TestsInitialization
 	// https://github.com/dotnet/efcore/issues/19396
 	private void CopySQLiteRuntime()
 	{
-#if NET472
+#if NETFRAMEWORK
 		const string runtimeFile = "e_sqlite3.dll";
 		var destPath             = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, runtimeFile);
 		var sourcePath           = System.IO.Path.Combine(
@@ -111,7 +111,7 @@ public class TestsInitialization
 
 	private void RegisterSqlCEFactory()
 	{
-#if !NET472
+#if !NETFRAMEWORK
 		try
 		{
 			// default install pathes. Hardcoded for now as hardly anyone will need other location in near future

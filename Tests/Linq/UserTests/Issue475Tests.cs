@@ -24,7 +24,7 @@ namespace Tests.UserTests
 				var item2 = zz.Take(1).Single();
 
 
-				Assert.AreEqual(item1.EmployeeID, item2.EmployeeID);
+				Assert.That(item2.EmployeeID, Is.EqualTo(item1.EmployeeID));
 			}
 		}
 	}

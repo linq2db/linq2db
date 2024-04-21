@@ -15,18 +15,10 @@ namespace LinqToDB.DataProvider.Firebird
 	sealed class FirebirdSchemaProvider : SchemaProviderBase
 	{
 		private readonly FirebirdDataProvider _provider;
-		private int _majorVersion;
 
 		public FirebirdSchemaProvider(FirebirdDataProvider provider)
 		{
 			_provider = provider;
-		}
-
-		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
-		{
-			_majorVersion = int.Parse(dataConnection.Execute<string>("SELECT rdb$get_context('SYSTEM', 'ENGINE_VERSION') from rdb$database").Split('.')[0], CultureInfo.InvariantCulture);
-
-			return base.GetSchema(dataConnection, options);
 		}
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
@@ -45,7 +37,7 @@ namespace LinqToDB.DataProvider.Firebird
 				let catalog = t.Field<string>("TABLE_CATALOG")
 				let schema  = t.Field<string>("OWNER_NAME")
 				let name    = t.Field<string>("TABLE_NAME")
-				select new TableInfo
+				select new TableInfo()
 				{
 					TableID         = catalog + '.' + t.Field<string>("TABLE_SCHEMA") + '.' + name,
 					CatalogName     = catalog,
@@ -66,7 +58,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return
 			(
 				from pk in pks.AsEnumerable()
-				select new PrimaryKeyInfo
+				select new PrimaryKeyInfo()
 				{
 					TableID        = pk.Field<string>("TABLE_CATALOG") + "." + pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
 					PrimaryKeyName = pk.Field<string>("PK_NAME")!,
@@ -86,7 +78,7 @@ namespace LinqToDB.DataProvider.Firebird
 				let type      = c.Field<string>("COLUMN_DATA_TYPE")
 				let dt        = GetDataType(type, null, options)
 				let precision = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"])
-				select new ColumnInfo
+				select new ColumnInfo()
 				{
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
 					Name         = c.Field<string>("COLUMN_NAME")!,
@@ -112,7 +104,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return
 			(
 				from c in cols.AsEnumerable()
-				select new ForeignKeyInfo
+				select new ForeignKeyInfo()
 				{
 					Name         = c.Field<string>("CONSTRAINT_NAME")!,
 					ThisTableID  = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
@@ -127,7 +119,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			string sql;
-			if (_majorVersion >= 3)
+			if (_provider.Version > FirebirdVersion.v25)
 			{
 				sql = @"
 SELECT * FROM (
@@ -202,7 +194,7 @@ SELECT * FROM (
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			string sql;
-			if (_majorVersion >= 3)
+			if (_provider.Version > FirebirdVersion.v25)
 			{
 				sql = @"SELECT
 	p.RDB$PACKAGE_NAME                                   AS PackageName,

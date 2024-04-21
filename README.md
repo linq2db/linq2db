@@ -64,6 +64,7 @@ Unmantained projects:
 You can simply pass connection string into `DataConnection` or `DataContext` constructor using [`DataOptions`](https://linq2db.github.io/api/LinqToDB.DataOptions.html) class.
 
 Minimal configuration example:
+
 ```cs
 var db = new DataConnection(
   new DataOptions()

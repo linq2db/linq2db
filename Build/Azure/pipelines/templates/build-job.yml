@@ -12,8 +12,8 @@ jobs:
 
   # mitigate https://status.dev.azure.com/_event/182998791
   - task: NuGetToolInstaller@1
-
-  # .NET 7 SDK already installed https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md#net-core-tools
+  
+  # .NET 6 and 8 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
 
   - task: PowerShell@2
     inputs:
@@ -22,18 +22,19 @@ jobs:
       arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(assemblyVersion)
     displayName: Update assembly version
 
-  - task: MSBuild@1
+
+  - task: DotNetCoreCLI@2
     inputs:
-      solution: 'Examples/Examples.sln'
-      configuration: 'Debug'
-      msbuildArguments: '/t:Restore;Rebuild -m'
+      command: 'build'
+      projects: 'Examples/Examples.sln'
+      arguments: '--configuration Debug'
     displayName: Build Examples (verify)
 
-  - task: MSBuild@1
+  - task: DotNetCoreCLI@2
     inputs:
-      solution: '$(solution)'
-      configuration: '$(build_configuration)'
-      msbuildArguments: '/t:Restore;Rebuild -m /p:ContinuousIntegrationBuild=true'
+      command: 'build'
+      projects: '$(solution)'
+      arguments: '-property:ContinuousIntegrationBuild=true --configuration $(build_configuration)'
     displayName: Build Solution
 
   - task: CmdLine@2
@@ -41,51 +42,47 @@ jobs:
       script: |
         dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration)
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net7.0 -c $(build_configuration)
+        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration)
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net472 -c $(build_configuration) -a x64 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net472\publishx64
+        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x64 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\publishx64
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net6.0\publishx86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net7.0 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net7.0\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net8.0\publishx86
         if %errorlevel% neq 0 exit
         mkdir testing
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net472 testing\net472
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm) testing\netfx
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net6.0\publish testing\net60
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net7.0\publish testing\net70
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net8.0\publish testing\net80
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net472\publishx64 testing\net472x64
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\publishx64 testing\netfxx64
         if %errorlevel% neq 0 exit
-        xcopy /i /s testing\net472\runtimes testing\net472x64\runtimes
+        xcopy /i /s testing\netfx\runtimes testing\netfxx64\runtimes
         if %errorlevel% neq 0 exit
-        xcopy /i /s /y testing\net472\x64 testing\net472x64\x64
+        xcopy /i /s /y testing\netfx\x64 testing\netfxx64\x64
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net6.0\publishx86 testing\net60x86
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net7.0\publishx86 testing\net70x86
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net8.0\publishx86 testing\net80x86
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\net472
-        if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\netcore31
+        copy Tests\DataProviders.json testing\netfx
         if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\net60
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\net70
-        if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\netcore31x86
+        copy Tests\DataProviders.json testing\net80
         if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\net60x86
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\net70x86
+        copy Tests\DataProviders.json testing\net80x86
         if %errorlevel% neq 0 exit
-        xcopy /i Build\$(build_configuration)\net472 testing\configs\net472
+        xcopy /i Build\$(build_configuration)\netfx testing\configs\netfx
         if %errorlevel% neq 0 exit
         xcopy /i Build\$(build_configuration)\net60 testing\configs\net60
         if %errorlevel% neq 0 exit
-        xcopy /i Build\$(build_configuration)\net70 testing\configs\net70
+        xcopy /i Build\$(build_configuration)\net80 testing\configs\net80
         if %errorlevel% neq 0 exit
         xcopy /i Build\$(build_configuration)\scripts testing\scripts
         if %errorlevel% neq 0 exit
@@ -144,7 +141,7 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
-      artifact: '$(netfx472_tests)'
+      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/$(netfx_tfm)'
+      artifact: '$(netfx_tests)'
     displayName: Publish nuget artifacts part 1
     condition: and(succeeded(), ${{ parameters.for_nuget }})

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-#if NET472
+#if NETFRAMEWORK
 using System.ServiceModel;
 #endif
 
@@ -72,8 +72,11 @@ namespace Tests.Linq
 		{
 			var value = ConvertTo<TypeValue>.From(1);
 
-			Assert.AreEqual(TypeValue.Value1, value);
-			Assert.AreEqual(10,               (int)value);
+			Assert.Multiple(() =>
+			{
+				Assert.That(value, Is.EqualTo(TypeValue.Value1));
+				Assert.That((int)value, Is.EqualTo(10));
+			});
 		}
 
 		[Test]
@@ -194,8 +197,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1);
-				Assert.AreEqual(1, e.ParentID);
-				Assert.AreEqual(1, e.Value.Value1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(e.ParentID, Is.EqualTo(1));
+					Assert.That(e.Value.Value1, Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -205,8 +211,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1 && p.Value.Value1 == 1);
-				Assert.AreEqual(1, e.ParentID);
-				Assert.AreEqual(1, e.Value.Value1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(e.ParentID, Is.EqualTo(1));
+					Assert.That(e.Value.Value1, Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -226,7 +235,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ChildObject>().First(c => c.Parent!.Value.Value1 == 1);
-				Assert.AreEqual(1, e.ParentID);
+				Assert.That(e.ParentID, Is.EqualTo(1));
 			}
 		}
 
@@ -378,7 +387,7 @@ namespace Tests.Linq
 				IQueryable<IDocument> query = db.GetTable<Document>();
 				var idsQuery = query.Select(s => s.Id);
 				var str = idsQuery.ToString(); // Exception
-				Assert.IsNotNull(str);
+				Assert.That(str, Is.Not.Null);
 			}
 		}
 
@@ -412,7 +421,7 @@ namespace Tests.Linq
 			{
 				var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Count();
 
-				Assert.AreEqual(1, results);
+				Assert.That(results, Is.EqualTo(1));
 			}
 		}
 
@@ -423,8 +432,8 @@ namespace Tests.Linq
 			{
 				var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Select(_ => new { _.ChildID }).ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(32, results[0].ChildID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].ChildID, Is.EqualTo(32));
 			}
 		}
 
@@ -455,17 +464,16 @@ namespace Tests.Linq
 				{
 #if NETFRAMEWORK
 					var fe = Assert.Throws<FaultException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
-					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
 #else
 					var fe = Assert.Throws<Grpc.Core.RpcException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
-					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
 #endif
+					Assert.That(fe.Message.ToLowerInvariant(), Does.Contain("firstname"));
 				}
 				else
 				{
 					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					// field name casing depends on database
-					Assert.AreEqual("firstname", ex.ColumnName!.ToLowerInvariant());
+					Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("firstname"));
 				}
 			}
 		}
@@ -478,7 +486,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
-				Assert.AreEqual("lastname", ex.ColumnName!.ToLowerInvariant());
+				Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("lastname"));
 			}
 		}
 
@@ -540,23 +548,29 @@ namespace Tests.Linq
 
 				var data = table.OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(2        , data.Length);
-				Assert.AreEqual(1        , data[0].Id);
-				Assert.AreEqual("One"    , data[0].Value);
-				Assert.AreEqual("OneBase", data[0].BaseValue );
-				Assert.AreEqual(2        , data[1].Id);
-				Assert.AreEqual("Two"    , data[1].Value);
-				Assert.AreEqual("TwoBase", data[1].BaseValue);
+				Assert.That(data, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(1));
+					Assert.That(data[0].Value, Is.EqualTo("One"));
+					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(data[1].Id, Is.EqualTo(2));
+					Assert.That(data[1].Value, Is.EqualTo("Two"));
+					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
-				Assert.AreEqual(2        , proj.Length);
-				Assert.AreEqual(1        , proj[0].Id);
-				Assert.AreEqual("One"    , proj[0].Value);
-				Assert.AreEqual("OneBase", proj[0].BaseValue );
-				Assert.AreEqual(2        , proj[1].Id);
-				Assert.AreEqual("Two"    , proj[1].Value);
-				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+				Assert.That(proj, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(proj[0].Id, Is.EqualTo(1));
+					Assert.That(proj[0].Value, Is.EqualTo("One"));
+					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(proj[1].Id, Is.EqualTo(2));
+					Assert.That(proj[1].Value, Is.EqualTo("Two"));
+					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 			}
 		}
 
@@ -579,23 +593,29 @@ namespace Tests.Linq
 
 				var data = table.OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(2        , data.Length);
-				Assert.AreEqual(1        , data[0].Id);
-				Assert.AreEqual("One"    , data[0].Value);
-				Assert.AreEqual("OneBase", data[0].BaseValue );
-				Assert.AreEqual(2        , data[1].Id);
-				Assert.AreEqual("Two"    , data[1].Value);
-				Assert.AreEqual("TwoBase", data[1].BaseValue);
+				Assert.That(data, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(1));
+					Assert.That(data[0].Value, Is.EqualTo("One"));
+					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(data[1].Id, Is.EqualTo(2));
+					Assert.That(data[1].Value, Is.EqualTo("Two"));
+					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
-				Assert.AreEqual(2        , proj.Length);
-				Assert.AreEqual(1        , proj[0].Id);
-				Assert.AreEqual("One"    , proj[0].Value);
-				Assert.AreEqual("OneBase", proj[0].BaseValue );
-				Assert.AreEqual(2        , proj[1].Id);
-				Assert.AreEqual("Two"    , proj[1].Value);
-				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+				Assert.That(proj, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(proj[0].Id, Is.EqualTo(1));
+					Assert.That(proj[0].Value, Is.EqualTo("One"));
+					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(proj[1].Id, Is.EqualTo(2));
+					Assert.That(proj[1].Value, Is.EqualTo("Two"));
+					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 			}
 		}
 
@@ -617,23 +637,29 @@ namespace Tests.Linq
 
 				var data = table.OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(2        , data.Length);
-				Assert.AreEqual(1        , data[0].Id);
-				Assert.AreEqual("One"    , data[0].Value);
-				Assert.AreEqual("OneBase", data[0].BaseValue );
-				Assert.AreEqual(2        , data[1].Id);
-				Assert.AreEqual("Two"    , data[1].Value);
-				Assert.AreEqual("TwoBase", data[1].BaseValue);
+				Assert.That(data, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(1));
+					Assert.That(data[0].Value, Is.EqualTo("One"));
+					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(data[1].Id, Is.EqualTo(2));
+					Assert.That(data[1].Value, Is.EqualTo("Two"));
+					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
-				Assert.AreEqual(2        , proj.Length);
-				Assert.AreEqual(1        , proj[0].Id);
-				Assert.AreEqual("One"    , proj[0].Value);
-				Assert.AreEqual("OneBase", proj[0].BaseValue );
-				Assert.AreEqual(2        , proj[1].Id);
-				Assert.AreEqual("Two"    , proj[1].Value);
-				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+				Assert.That(proj, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(proj[0].Id, Is.EqualTo(1));
+					Assert.That(proj[0].Value, Is.EqualTo("One"));
+					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(proj[1].Id, Is.EqualTo(2));
+					Assert.That(proj[1].Value, Is.EqualTo("Two"));
+					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 			}
 		}
 
@@ -698,8 +724,8 @@ namespace Tests.Linq
 			db.GetTable<NewModel1>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel1));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 
 		[Test]
@@ -709,8 +735,8 @@ namespace Tests.Linq
 			db.GetTable<NewModel2>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel2));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 
 		[Test]
@@ -720,8 +746,8 @@ namespace Tests.Linq
 			db.GetTable<NewModel3>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel3));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 
 		[Test]
@@ -731,8 +757,8 @@ namespace Tests.Linq
 			db.GetTable<NewModel4>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel4));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 
 		[Test]
@@ -742,8 +768,8 @@ namespace Tests.Linq
 			db.GetTable<NewModel5>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel5));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 		#endregion
 	}

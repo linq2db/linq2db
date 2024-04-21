@@ -1546,7 +1546,7 @@ namespace LinqToDB.SqlProvider
 				}
 				else
 				{
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
+#if NET6_0_OR_GREATER
 					StringBuilder.Append(field.StringBuilder);
 #else
 					StringBuilder.Append(field.StringBuilder.ToString());
@@ -1843,7 +1843,7 @@ namespace LinqToDB.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(InlineComma);
 				var field = valuesTable.Fields[i];
-				if (IsSqlValuesTableValueTypeRequired(valuesTable, Array<ISqlExpression[]>.Empty, -1, i))
+				if (IsSqlValuesTableValueTypeRequired(valuesTable, [], -1, i))
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
 				else
 					BuildExpression(new SqlValue(field.Type, null));
@@ -3671,21 +3671,11 @@ namespace LinqToDB.SqlProvider
 					if (t1.IndexOf('(') < 0)
 						sb.Append(CultureInfo.InvariantCulture, $"({parameter.Size})");
 				}
-#if NET45
-#pragma warning disable RS0030 // API missing from DbParameter in NET 4.5
-				else if (((IDbDataParameter)parameter).Precision > 0)
-				{
-					if (t1.IndexOf('(') < 0)
-						sb.Append(CultureInfo.InvariantCulture, $"({((IDbDataParameter)parameter).Precision}{InlineComma}{((IDbDataParameter)parameter).Scale})");
-				}
-#pragma warning restore RS0030 // API missing from DbParameter in NET 4.5
-#else
 				else if (parameter.Precision > 0)
 				{
 					if (t1.IndexOf('(') < 0)
 						sb.Append(CultureInfo.InvariantCulture, $"({parameter.Precision}{InlineComma}{parameter.Scale})");
 				}
-#endif
 				else
 				{
 					switch (parameter.DbType)

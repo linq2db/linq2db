@@ -121,102 +121,99 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void Where4([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent
-						.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()),
-					db.Parent
-						.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()));
-		}
+		//public void Where4([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			   Parent
+		//				.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()),
+		//			db.Parent
+		//				.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()));
+		//}
 
 		//[Test]
-		public void Where5([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent
-						.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()),
-					db.Parent
-						.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()));
-		}
+		//public void Where5([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			   Parent
+		//				.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()),
+		//			db.Parent
+		//				.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()));
+		//}
 
 		//[Test]
-		public void Where6([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent
-						.Select(p => p.Children. Where(c => c.ParentID > 1))
-						.Where (t => t.Any()),
-					db.Parent
-						.Select(p => p.Children. Where(c => c.ParentID > 1))
-						.Where (t => t.Any()));
-		}
+		//public void Where6([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			   Parent
+		//				.Select(p => p.Children. Where(c => c.ParentID > 1))
+		//				.Where (t => t.Any()),
+		//			db.Parent
+		//				.Select(p => p.Children. Where(c => c.ParentID > 1))
+		//				.Where (t => t.Any()));
+		//}
 
 		[Test]
 		public void Any1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Any(p => p.children1.Any()),
+				Assert.That(
 					db.Parent
 						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Any(p => p.children1.Any()));
+						.Any(p => p.children1.Any()), Is.EqualTo(Parent
+						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
+						.Any(p => p.children1.Any())));
 		}
 
 		[Test]
 		public void Any2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => p.Children.Where(c => c.ParentID > 1))
-						.Any(p => p.Any()),
+				Assert.That(
 					db.Parent
 						.Select(p => p.Children.Where(c => c.ParentID > 1))
-						.Any(p => p.Any()));
+						.Any(p => p.Any()), Is.EqualTo(Parent
+						.Select(p => p.Children.Where(c => c.ParentID > 1))
+						.Any(p => p.Any())));
 		}
 
 		[Test]
 		public void Any3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Where(p => p.children1.Any())
-						.Any(),
+				Assert.That(
 					db.Parent
 						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
 						.Where(p => p.children1.Any())
-						.Any());
+						.Any(), Is.EqualTo(Parent
+						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
+						.Where(p => p.children1.Any())
+						.Any()));
 		}
 
 		//[Test]
-		public void Any4([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Where(p => p.children1.Any())
-						.Any(),
-					db.Parent
-						.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Where(p => p.children1.Any())
-						.Any());
-		}
+		//public void Any4([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		Assert.That(
+		//			db.Parent
+		//				.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
+		//				.Where(p => p.children1.Any())
+		//				.Any(), Is.EqualTo(Parent
+		//				.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
+		//				.Where(p => p.children1.Any())
+		//				.Any()));
+		//}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
+		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -251,8 +248,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void LetTest3([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest3([DataSources(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -267,8 +265,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
+		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -297,8 +296,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
+		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -327,8 +327,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
+		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -357,8 +358,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
+		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -400,8 +402,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
+		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -444,8 +447,9 @@ namespace Tests.Linq
 		}
 
 		// PostgreSQL92 Uses 3 queries and we join results in wrong order. See LetTest71 with explicit sort
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -478,8 +482,9 @@ namespace Tests.Linq
 					).Where(t => t.ParentID > 0).Take(5000));
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access, TestProvName.AllClickHouse)] string context)
+		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -512,6 +517,7 @@ namespace Tests.Linq
 					).Where(t => t.ParentID > 0).Take(5000));
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -542,6 +548,7 @@ namespace Tests.Linq
 					});
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest9([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -566,21 +573,11 @@ namespace Tests.Linq
 					).Take(10));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void LetTest10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					(
-						from p in Parent
-						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-						select new
-						{
-							First = ch1.FirstOrDefault()
-						}
-					).Any()
-					,
+				Assert.That(
 					(
 						from p in db.Parent
 						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
@@ -588,9 +585,18 @@ namespace Tests.Linq
 						{
 							First = ch1.FirstOrDefault()
 						}
-					).Any());
+					).Any(), Is.EqualTo((
+						from p in Parent
+						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
+						select new
+						{
+							First = ch1.FirstOrDefault()
+						}
+					).Any()
+				));
 		}
 
+		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest11([DataSources] string context)
 		{
@@ -689,7 +695,7 @@ namespace Tests.Linq
 							 || (ulong )EnumByte.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -735,7 +741,7 @@ namespace Tests.Linq
 							 || (ulong )EnumSByte.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -781,7 +787,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt16.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -827,7 +833,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt16.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -873,7 +879,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt32.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -919,7 +925,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt32.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -965,7 +971,7 @@ namespace Tests.Linq
 							 || (ulong )EnumInt64.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
@@ -1011,7 +1017,7 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt64.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 

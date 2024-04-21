@@ -1,5 +1,5 @@
 ﻿using System.Globalization;
-#if NETFRAMEWORK || NETCOREAPP3_1 || NETSTANDARD2_0 || NETSTANDARD2_1
+#if NETFRAMEWORK || NETSTANDARD2_0
 using System.Text;
 #endif
 

@@ -1,13 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-#if !NATIVE_ASYNC
-using TASK  = System.Threading.Tasks.Task;
-using TASKB = System.Threading.Tasks.Task<bool>;
-#else
-using TASK  = System.Threading.Tasks.ValueTask;
-using TASKB = System.Threading.Tasks.ValueTask<bool>;
-#endif
 
 namespace LinqToDB.Async
 {
@@ -24,14 +17,14 @@ namespace LinqToDB.Async
 
 		T IAsyncEnumerator<T>.Current => _enumerator!.Current;
 
-		async TASK IAsyncDisposable.DisposeAsync()
+		async ValueTask IAsyncDisposable.DisposeAsync()
 		{
 			await _enumerator!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			if (_disposable != null)
 				await _disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		async TASKB IAsyncEnumerator<T>.MoveNextAsync()
+		async ValueTask<bool> IAsyncEnumerator<T>.MoveNextAsync()
 		{
 			if (_enumerator == null)
 			{

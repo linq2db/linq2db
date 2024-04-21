@@ -33,7 +33,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestHierarchyId([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-#if !NET472
+#if !NETFRAMEWORK
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 #endif
@@ -77,7 +77,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGeography([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-#if !NET472
+#if !NETFRAMEWORK
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 #endif
@@ -97,7 +97,7 @@ namespace Tests.DataProvider
 						v5  = t.geographyDataType.M,
 						//v6  = t.geographyDataType.HasZ,
 						//v7  = t.geographyDataType.HasM,
-#if NET472
+#if NETFRAMEWORK
 						v8 = SqlGeography.GeomFromGml(t.geographyDataType.AsGml(), 4326),
 						v9  = t.geographyDataType.AsGml(),
 #endif
@@ -333,14 +333,17 @@ namespace Tests.DataProvider
 			{
 				var records = t.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(2, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.True(records[0].HomeLocation!.IsNull);
-				Assert.AreEqual(2, records[1].Id);
-				// missing API
-#if NET472
-				Assert.True(Issue1836.Data[1].HomeLocation!.STEquals(records[1].HomeLocation).IsTrue);
+				Assert.That(records, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(records[0].Id, Is.EqualTo(1));
+					Assert.That(records[0].HomeLocation!.IsNull, Is.True);
+					Assert.That(records[1].Id, Is.EqualTo(2));
+					// missing API
+#if NETFRAMEWORK
+					Assert.That(Issue1836.Data[1].HomeLocation!.STEquals(records[1].HomeLocation).IsTrue, Is.True);
 #endif
+				});
 			}
 		}
 
@@ -472,12 +475,15 @@ namespace Tests.DataProvider
 				using var db = GetDataContext(context, ms);
 
 				db.AddInterceptor(interceptor);
-				
+
 				db.InlineParameters = true;
 
 				var data = new LiteralsTestTable<TValue>[] { new() { Value = value } }.AsQueryable(db).ToArray();
-				Assert.AreEqual(expected, data[0].Value);
-				Assert.AreEqual(0, interceptor.Parameters.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Value, Is.EqualTo(expected));
+					Assert.That(interceptor.Parameters, Is.Empty);
+				});
 
 				db.InlineParameters = false;
 
@@ -485,8 +491,11 @@ namespace Tests.DataProvider
 					   from y in new LiteralsTestTable<TValue>[] { new() { Value = value } }
 					   select y).ToArray();
 
-				Assert.AreEqual(expected, data[0].Value);
-				Assert.AreEqual(1, interceptor.Parameters.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Value, Is.EqualTo(expected));
+					Assert.That(interceptor.Parameters, Has.Length.EqualTo(1));
+				});
 			}
 		}
 	}

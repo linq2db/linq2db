@@ -1,0 +1,141 @@
+﻿#nullable enable
+abstract LinqToDB.Configuration.ElementCollectionBase<T>.GetElementKey(T! element) -> object!
+abstract LinqToDB.DataProvider.BulkCopyReader.MoveNextAsync() -> System.Threading.Tasks.ValueTask<bool>
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.AssemblyName = "IBM.Data.DB2" -> string!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.AssemblyNameOld = null -> string?
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.ClientNamespace = "IBM.Data.DB2" -> string!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.ClientNamespaceOld = null -> string?
+const LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.AssemblyName = "Sap.Data.Hana.v4.5" -> string!
+LinqToDB.Async.IAsyncDbConnection.BeginTransactionAsync(System.Data.IsolationLevel isolationLevel, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<LinqToDB.Async.IAsyncDbTransaction!>
+LinqToDB.Async.IAsyncDbConnection.BeginTransactionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<LinqToDB.Async.IAsyncDbTransaction!>
+LinqToDB.Async.IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(System.Linq.Expressions.Expression! expression, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IAsyncEnumerable<TResult>!>!
+LinqToDB.Configuration.DataProviderElement
+LinqToDB.Configuration.DataProviderElement.DataProviderElement() -> void
+LinqToDB.Configuration.DataProviderElement.Default.get -> bool
+LinqToDB.Configuration.DataProviderElement.Name.get -> string!
+LinqToDB.Configuration.DataProviderElement.TypeName.get -> string!
+LinqToDB.Configuration.DataProviderElementCollection
+LinqToDB.Configuration.DataProviderElementCollection.DataProviderElementCollection() -> void
+LinqToDB.Configuration.ElementBase
+LinqToDB.Configuration.ElementBase.Attributes.get -> System.Collections.Specialized.NameValueCollection!
+LinqToDB.Configuration.ElementBase.ElementBase() -> void
+LinqToDB.Configuration.ElementCollectionBase<T>
+LinqToDB.Configuration.ElementCollectionBase<T>.ElementCollectionBase() -> void
+LinqToDB.Configuration.ElementCollectionBase<T>.this[int index].get -> T!
+LinqToDB.Configuration.ElementCollectionBase<T>.this[string! name].get -> T!
+LinqToDB.Configuration.LinqToDBSection
+LinqToDB.Configuration.LinqToDBSection.DataProviders.get -> LinqToDB.Configuration.DataProviderElementCollection!
+LinqToDB.Configuration.LinqToDBSection.DefaultConfiguration.get -> string!
+LinqToDB.Configuration.LinqToDBSection.DefaultDataProvider.get -> string!
+LinqToDB.Configuration.LinqToDBSection.LinqToDBSection() -> void
+LinqToDB.Data.DataConnection.DisposeAsync() -> System.Threading.Tasks.ValueTask
+LinqToDB.Data.DataConnectionTransaction.DisposeAsync() -> System.Threading.Tasks.ValueTask
+LinqToDB.Data.DataReaderAsync.DisposeAsync() -> System.Threading.Tasks.ValueTask
+LinqToDB.DataExtensions.SqlFormattableComparerAttribute
+LinqToDB.DataExtensions.SqlFormattableComparerAttribute.SqlFormattableComparerAttribute() -> void
+LinqToDB.DataProvider.BasicBulkCopy.MultipleRowsCopy1Async<T>(LinqToDB.DataProvider.MultipleRowsHelper! helper, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+LinqToDB.DataProvider.BasicBulkCopy.MultipleRowsCopy1Async<T>(LinqToDB.ITable<T>! table, LinqToDB.DataOptions! options, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+LinqToDB.DataProvider.BasicBulkCopy.MultipleRowsCopy2Async<T>(LinqToDB.DataProvider.MultipleRowsHelper! helper, System.Collections.Generic.IAsyncEnumerable<T>! source, string! from, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+LinqToDB.DataProvider.BasicBulkCopy.MultipleRowsCopy2Async<T>(LinqToDB.ITable<T>! table, LinqToDB.DataOptions! options, System.Collections.Generic.IAsyncEnumerable<T>! source, string! from, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+LinqToDB.DataProvider.BasicBulkCopy.MultipleRowsCopy3Async<T>(LinqToDB.DataProvider.MultipleRowsHelper! helper, LinqToDB.Data.BulkCopyOptions! options, System.Collections.Generic.IAsyncEnumerable<T>! source, string! from, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+LinqToDB.DataProvider.BulkCopyReader<T>.BulkCopyReader(LinqToDB.Data.DataConnection! dataConnection, System.Collections.Generic.List<LinqToDB.Mapping.ColumnDescriptor!>! columns, System.Collections.Generic.IAsyncEnumerable<T>! collection, System.Threading.CancellationToken cancellationToken) -> void
+LinqToDB.DataProvider.BulkCopyReader<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+LinqToDB.DataProvider.ClickHouse.ClickHouseProviderAdapter.OctonicaWrappers.ClickHouseColumnWriter.DisposeAsync() -> System.Threading.Tasks.ValueTask
+LinqToDB.DataProvider.IDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+LinqToDB.DataProvider.PostgreSQL.NpgsqlProviderAdapter.NpgsqlBinaryImporter.CompleteAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<ulong>
+LinqToDB.DataProvider.PostgreSQL.NpgsqlProviderAdapter.NpgsqlBinaryImporter.DisposeAsync() -> System.Threading.Tasks.ValueTask
+LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.Ordinality<T>
+LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.Ordinality<T>.Index -> long
+LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.Ordinality<T>.Ordinality() -> void
+LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.Ordinality<T>.Value -> T
+LinqToDB.IExtensionsAdapter.AsAsyncEnumerable<TSource>(System.Linq.IQueryable<TSource>! source) -> System.Collections.Generic.IAsyncEnumerable<TSource>!
+LinqToDB.Metadata.SystemDataLinqAttributeReader
+LinqToDB.Metadata.SystemDataLinqAttributeReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.SystemDataLinqAttributeReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.SystemDataLinqAttributeReader.GetDynamicColumns(System.Type! type) -> System.Reflection.MemberInfo![]!
+LinqToDB.Metadata.SystemDataLinqAttributeReader.GetObjectID() -> string!
+LinqToDB.Metadata.SystemDataLinqAttributeReader.SystemDataLinqAttributeReader() -> void
+LinqToDB.Remote.DataService<T>
+LinqToDB.Remote.DataService<T>.DataService() -> void
+LinqToDB.Remote.DataService<T>.DataService(LinqToDB.DataOptions! options, LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
+LinqToDB.Remote.DataService<T>.GetService(System.Type! serviceType) -> object?
+LinqToDB.SqlQuery.AliasesContext.GetAliased() -> System.Collections.Generic.IReadOnlyCollection<LinqToDB.SqlQuery.IQueryElement!>!
+override LinqToDB.Configuration.DataProviderElementCollection.GetElementKey(LinqToDB.Configuration.DataProviderElement! element) -> object!
+override LinqToDB.Configuration.ElementBase.OnDeserializeUnrecognizedAttribute(string! name, string! value) -> bool
+override LinqToDB.Configuration.ElementBase.Properties.get -> System.Configuration.ConfigurationPropertyCollection!
+override LinqToDB.Configuration.ElementCollectionBase<T>.CreateNewElement() -> System.Configuration.ConfigurationElement!
+override LinqToDB.Configuration.LinqToDBSection.Properties.get -> System.Configuration.ConfigurationPropertyCollection!
+override LinqToDB.DataExtensions.SqlFormattableComparerAttribute.ExpressionsEqual<TContext>(TContext context, System.Linq.Expressions.Expression! expr1, System.Linq.Expressions.Expression! expr2, System.Func<TContext, System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!, bool>! comparer) -> bool
+override LinqToDB.DataExtensions.SqlFormattableComparerAttribute.PrepareForCache(System.Linq.Expressions.Expression! expression) -> System.Linq.Expressions.Expression!
+override LinqToDB.DataProvider.Access.AccessODBCDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.Access.AccessOleDbDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.Access.AccessOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Access.AccessOptions!>!
+override LinqToDB.DataProvider.BulkCopyReader.ReadAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+override LinqToDB.DataProvider.BulkCopyReader<T>.Dispose(bool disposing) -> void
+override LinqToDB.DataProvider.BulkCopyReader<T>.MoveNextAsync() -> System.Threading.Tasks.ValueTask<bool>
+override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.ClickHouse.ClickHouseOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!>!
+override LinqToDB.DataProvider.DB2.DB2DataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.DB2.DB2Options.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.DB2.DB2Options!>!
+override LinqToDB.DataProvider.Firebird.FirebirdDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.Firebird.FirebirdOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Firebird.FirebirdOptions!>!
+override LinqToDB.DataProvider.Informix.InformixDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.Informix.InformixOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Informix.InformixOptions!>!
+override LinqToDB.DataProvider.MySql.MySqlDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.MySql.MySqlOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.MySql.MySqlOptions!>!
+override LinqToDB.DataProvider.Oracle.OracleDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.Oracle.OracleOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Oracle.OracleOptions!>!
+override LinqToDB.DataProvider.PostgreSQL.PostgreSQLDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions!>!
+override LinqToDB.DataProvider.SapHana.SapHanaDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.SapHana.SapHanaOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SapHana.SapHanaOptions!>!
+override LinqToDB.DataProvider.SqlCe.SqlCeDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.SqlCe.SqlCeOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SqlCe.SqlCeOptions!>!
+override LinqToDB.DataProvider.SQLite.SQLiteDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.SQLite.SQLiteOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SQLite.SQLiteOptions!>!
+override LinqToDB.DataProvider.SqlServer.SqlServerDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.SqlServer.SqlServerOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SqlServer.SqlServerOptions!>!
+override LinqToDB.DataProvider.Sybase.SybaseDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+override LinqToDB.DataProvider.Sybase.SybaseOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Sybase.SybaseOptions!>!
+override LinqToDB.Mapping.MappingAttribute.Equals(object? obj) -> bool
+override LinqToDB.Mapping.MappingAttribute.GetHashCode() -> int
+override sealed LinqToDB.Configuration.ElementCollectionBase<T>.GetElementKey(System.Configuration.ConfigurationElement! element) -> object!
+static LinqToDB.AsyncExtensions.AsAsyncEnumerable<TSource>(this System.Linq.IQueryable<TSource>! source) -> System.Collections.Generic.IAsyncEnumerable<TSource>!
+static LinqToDB.Common.EnumerableHelper.Batch<T>(System.Collections.Generic.IAsyncEnumerable<T>! source, int batchSize) -> System.Collections.Generic.IAsyncEnumerable<System.Collections.Generic.IAsyncEnumerable<T>!>!
+static LinqToDB.Common.RawSqlString.implicit operator LinqToDB.Common.RawSqlString(System.FormattableString! fs) -> LinqToDB.Common.RawSqlString
+static LinqToDB.Configuration.LinqToDBSection.Instance.get -> LinqToDB.Configuration.LinqToDBSection?
+static LinqToDB.Data.DataConnectionExtensions.BulkCopyAsync<T>(this LinqToDB.Data.DataConnection! dataConnection, int maxBatchSize, System.Collections.Generic.IAsyncEnumerable<T!>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+static LinqToDB.Data.DataConnectionExtensions.BulkCopyAsync<T>(this LinqToDB.Data.DataConnection! dataConnection, LinqToDB.Data.BulkCopyOptions! options, System.Collections.Generic.IAsyncEnumerable<T!>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+static LinqToDB.Data.DataConnectionExtensions.BulkCopyAsync<T>(this LinqToDB.Data.DataConnection! dataConnection, System.Collections.Generic.IAsyncEnumerable<T!>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+static LinqToDB.Data.DataConnectionExtensions.BulkCopyAsync<T>(this LinqToDB.ITable<T>! table, int maxBatchSize, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+static LinqToDB.Data.DataConnectionExtensions.BulkCopyAsync<T>(this LinqToDB.ITable<T>! table, LinqToDB.Data.BulkCopyOptions! options, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+static LinqToDB.Data.DataConnectionExtensions.BulkCopyAsync<T>(this LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+static LinqToDB.DataExtensions.FromSql<TEntity>(this LinqToDB.IDataContext! dataContext, System.FormattableString! sql) -> System.Linq.IQueryable<TEntity>!
+static LinqToDB.DataExtensions.FromSqlScalar<TEntity>(this LinqToDB.IDataContext! dataContext, System.FormattableString! sql) -> System.Linq.IQueryable<TEntity>!
+static LinqToDB.DataOptionsExtensions.UseAse(this LinqToDB.DataOptions! options, string! connectionString, bool useNativeProvider, System.Func<LinqToDB.DataProvider.Sybase.SybaseOptions!, LinqToDB.DataProvider.Sybase.SybaseOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! options, string! connectionString, bool useDB2Provider, System.Func<LinqToDB.DataProvider.Informix.InformixOptions!, LinqToDB.DataProvider.Informix.InformixOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+static LinqToDB.DataProvider.BasicBulkCopy.MultipleRowsCopyHelperAsync<T>(LinqToDB.DataProvider.MultipleRowsHelper! helper, System.Collections.Generic.IAsyncEnumerable<T>! source, string? from, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!>! prepFunction, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!, object!, string?>! addFunction, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!>! finishFunction, System.Threading.CancellationToken cancellationToken, int maxParameters, int maxSqlLength) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+static LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.GenerateSeries(this LinqToDB.IDataContext! dc, int start, int stop) -> System.Linq.IQueryable<int>!
+static LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.GenerateSeries(this LinqToDB.IDataContext! dc, int start, int stop, int step) -> System.Linq.IQueryable<int>!
+static LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.GenerateSeries(this LinqToDB.IDataContext! dc, System.DateTime start, System.DateTime stop, System.TimeSpan step) -> System.Linq.IQueryable<System.DateTime>!
+static LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.GenerateSubscripts<T>(this LinqToDB.IDataContext! dc, T[]! array, int dimension) -> System.Linq.IQueryable<int>!
+static LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.GenerateSubscripts<T>(this LinqToDB.IDataContext! dc, T[]! array, int dimension, bool reverse) -> System.Linq.IQueryable<int>!
+static LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.Unnest<T>(this LinqToDB.IDataContext! dc, T[]! array) -> System.Linq.IQueryable<T>!
+static LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.UnnestWithOrdinality<T>(this LinqToDB.IDataContext! dc, T[]! array) -> System.Linq.IQueryable<LinqToDB.DataProvider.PostgreSQL.PostgreSQLExtensions.Ordinality<T>!>!
+static LinqToDB.DataProvider.SqlServer.SqlFn.OpenJson(this LinqToDB.IDataContext! dc, string? json) -> System.Linq.IQueryable<LinqToDB.DataProvider.SqlServer.SqlFn.JsonData!>!
+static LinqToDB.DataProvider.SqlServer.SqlFn.OpenJson(this LinqToDB.IDataContext! dc, string? json, string! path) -> System.Linq.IQueryable<LinqToDB.DataProvider.SqlServer.SqlFn.JsonData!>!
+static LinqToDB.LinqExtensions.MergeWithOutputAsync<TTarget, TSource, TOutput>(this LinqToDB.Linq.IMergeable<TTarget, TSource>! merge, System.Linq.Expressions.Expression<System.Func<string!, TTarget, TTarget, TOutput>!>! outputExpression) -> System.Collections.Generic.IAsyncEnumerable<TOutput>!
+static LinqToDB.LinqExtensions.MergeWithOutputAsync<TTarget, TSource, TOutput>(this LinqToDB.Linq.IMergeable<TTarget, TSource>! merge, System.Linq.Expressions.Expression<System.Func<string!, TTarget, TTarget, TSource, TOutput>!>! outputExpression) -> System.Collections.Generic.IAsyncEnumerable<TOutput>!
+static LinqToDB.Sql.Expr<T>(System.FormattableString! sql) -> T
+virtual LinqToDB.Async.AsyncDbConnection.BeginTransactionAsync(System.Data.IsolationLevel isolationLevel, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<LinqToDB.Async.IAsyncDbTransaction!>
+virtual LinqToDB.Async.AsyncDbConnection.BeginTransactionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<LinqToDB.Async.IAsyncDbTransaction!>
+virtual LinqToDB.Async.AsyncDbConnection.DisposeAsync() -> System.Threading.Tasks.ValueTask
+virtual LinqToDB.Async.AsyncDbTransaction.DisposeAsync() -> System.Threading.Tasks.ValueTask
+virtual LinqToDB.DataContext.DisposeAsync(bool disposing) -> System.Threading.Tasks.ValueTask
+virtual LinqToDB.DataProvider.BasicBulkCopy.BulkCopyAsync<T>(LinqToDB.Data.BulkCopyType bulkCopyType, LinqToDB.ITable<T>! table, LinqToDB.DataOptions! options, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+virtual LinqToDB.DataProvider.BasicBulkCopy.MultipleRowsCopyAsync<T>(LinqToDB.ITable<T>! table, LinqToDB.DataOptions! options, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+virtual LinqToDB.DataProvider.BasicBulkCopy.ProviderSpecificCopyAsync<T>(LinqToDB.ITable<T>! table, LinqToDB.DataOptions! options, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+virtual LinqToDB.DataProvider.BasicBulkCopy.RowByRowCopyAsync<T>(LinqToDB.ITable<T>! table, LinqToDB.DataOptions! dataOptions, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+virtual LinqToDB.DataProvider.DataProviderBase.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+virtual LinqToDB.Remote.RemoteDataContextBase.DisposeAsync() -> System.Threading.Tasks.ValueTask
+virtual LinqToDB.TempTable<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask

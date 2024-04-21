@@ -89,8 +89,7 @@ namespace LinqToDB.Linq.Builder
 
 				conditionExpr = builder.ConvertExpression(conditionExpr);
 
-				var join  = new SqlFromClause.Join(joinType, innerContext.SelectQuery, null, false,
-					Array<SqlFromClause.Join>.Empty);
+				var join  = new SqlFromClause.Join(joinType, innerContext.SelectQuery, null, false, []);
 
 				outerContext.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 

@@ -502,7 +502,7 @@ namespace LinqToDB
 						memberInfo = ((MethodCallExpression) expression).Method;
 						break;
 					default:
-						return Array<ExtensionAttribute>.Empty;
+						return [];
 				}
 
 				var attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo, forFirstConfiguration: true);
@@ -575,7 +575,7 @@ namespace LinqToDB
 								var memberExpr = (MemberExpression)current;
 
 								memberInfo = memberExpr.Member;
-								arguments  = Array<Expression>.Empty;
+								arguments  = [];
 								next       = memberExpr.Expression;
 
 								break;
@@ -691,7 +691,7 @@ namespace LinqToDB
 										foreach (var pair
 											in TypeHelper.EnumTypeRemapping(elementType, argElementType, templateGenericArguments))
 										{
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+#if NET6_0_OR_GREATER
 											descriptorMapping.TryAdd(pair.Item1, descriptor);
 #else
 											if (!descriptorMapping.ContainsKey(pair.Item1))

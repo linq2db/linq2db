@@ -75,7 +75,7 @@ namespace LinqToDB
 
 				return new SqlExpression(expression.Type, name!, SqlQuery.Precedence.Primary)
 				{
-					CanBeNull = GetCanBeNull(Array<ISqlExpression>.Empty)
+					CanBeNull = GetCanBeNull([])
 				};
 			}
 

@@ -17,12 +17,12 @@ namespace LinqToDB.SqlProvider
 	{
 		public ValueToSqlConverter()
 		{
-			BaseConverters = Array<ValueToSqlConverter>.Empty;
+			BaseConverters = [];
 		}
 
 		public ValueToSqlConverter(params ValueToSqlConverter[]? converters)
 		{
-			BaseConverters = converters ?? Array<ValueToSqlConverter>.Empty;
+			BaseConverters = converters ?? [];
 		}
 
 		public bool CanConvert(Type type)

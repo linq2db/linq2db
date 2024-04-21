@@ -1247,7 +1247,7 @@ namespace LinqToDB.SqlQuery
 						mappedUniqueKeys.Add(exprs);
 					}
 					else
-						mappedUniqueKeys.Add(Array<ISqlExpression>.Empty);
+						mappedUniqueKeys.Add([]);
 				}
 				uniqueKeys = mappedUniqueKeys;
 			}

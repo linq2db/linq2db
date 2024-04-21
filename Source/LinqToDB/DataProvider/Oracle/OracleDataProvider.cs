@@ -361,7 +361,6 @@ namespace LinqToDB.DataProvider.Oracle
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -377,7 +376,6 @@ namespace LinqToDB.DataProvider.Oracle
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

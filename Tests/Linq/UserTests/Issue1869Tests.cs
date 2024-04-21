@@ -155,7 +155,7 @@ namespace Tests.UserTests
 
 				var result = query3.ToArray();
 
-				Assert.AreEqual(3, query3.GetSelectQuery().Select.Columns.Count);
+				Assert.That(query3.GetSelectQuery().Select.Columns, Has.Count.EqualTo(3));
 			}
 		}
 

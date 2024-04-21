@@ -172,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 					await query.GetForEachAsync(db, expr, ps, preambles,
 						r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-					return count > 0 ? obj : Array<T>.Empty.First();
+					return count > 0 ? obj : Array.Empty<T>().First();
 				};
 			}
 
@@ -187,7 +187,7 @@ namespace LinqToDB.Linq.Builder
 
 					await query.GetForEachAsync(db, expr, ps, preambles, r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
+					return count > 0 ? obj : Array.Empty<T>().FirstOrDefault();
 				};
 			}
 
@@ -237,7 +237,7 @@ namespace LinqToDB.Linq.Builder
 
 			static object SequenceException()
 			{
-				return Array<object>.Empty.First();
+				return Array.Empty<object>().First();
 			}
 
 			bool _isJoinCreated;

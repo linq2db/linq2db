@@ -24,13 +24,13 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.True(db.LastQuery!.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
+				Assert.That(db.LastQuery!, Does.Contain("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -60,41 +60,44 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				Assert.True(db.LastQuery!.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK)"));
+				Assert.That(db.LastQuery!, Does.Contain("MERGE INTO [TestMerge1] WITH(HOLDLOCK)"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
 				AssertRowCount(4, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
-				Assert.AreEqual(InitialTargetData[0].Id, result[0].Id);
-				Assert.AreEqual(InitialTargetData[0].Field1 + InitialTargetData[0].Field2, result[0].Field1);
-				Assert.AreEqual(InitialTargetData[0].Field2, result[0].Field2);
-				Assert.IsNull(result[0].Field3);
-				Assert.IsNull(result[0].Field4);
-				Assert.IsNull(result[0].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Id, Is.EqualTo(InitialTargetData[0].Id));
+					Assert.That(result[0].Field1, Is.EqualTo(InitialTargetData[0].Field1 + InitialTargetData[0].Field2));
+					Assert.That(result[0].Field2, Is.EqualTo(InitialTargetData[0].Field2));
+					Assert.That(result[0].Field3, Is.Null);
+					Assert.That(result[0].Field4, Is.Null);
+					Assert.That(result[0].Field5, Is.Null);
 
-				Assert.AreEqual(InitialTargetData[1].Id, result[1].Id);
-				Assert.AreEqual(InitialTargetData[1].Field1 + InitialTargetData[1].Field2, result[1].Field1);
-				Assert.AreEqual(InitialTargetData[1].Field2, result[1].Field2);
-				Assert.IsNull(result[1].Field3);
-				Assert.IsNull(result[1].Field4);
-				Assert.IsNull(result[1].Field5);
+					Assert.That(result[1].Id, Is.EqualTo(InitialTargetData[1].Id));
+					Assert.That(result[1].Field1, Is.EqualTo(InitialTargetData[1].Field1 + InitialTargetData[1].Field2));
+					Assert.That(result[1].Field2, Is.EqualTo(InitialTargetData[1].Field2));
+					Assert.That(result[1].Field3, Is.Null);
+					Assert.That(result[1].Field4, Is.Null);
+					Assert.That(result[1].Field5, Is.Null);
 
-				Assert.AreEqual(InitialTargetData[2].Id, result[2].Id);
-				Assert.AreEqual(InitialTargetData[2].Field1 + InitialTargetData[2].Field2, result[2].Field1);
-				Assert.AreEqual(InitialTargetData[2].Field2, result[2].Field2);
-				Assert.IsNull(result[2].Field3);
-				Assert.AreEqual(203, result[2].Field4);
-				Assert.IsNull(result[2].Field5);
+					Assert.That(result[2].Id, Is.EqualTo(InitialTargetData[2].Id));
+					Assert.That(result[2].Field1, Is.EqualTo(InitialTargetData[2].Field1 + InitialTargetData[2].Field2));
+					Assert.That(result[2].Field2, Is.EqualTo(InitialTargetData[2].Field2));
+					Assert.That(result[2].Field3, Is.Null);
+					Assert.That(result[2].Field4, Is.EqualTo(203));
+					Assert.That(result[2].Field5, Is.Null);
 
-				Assert.AreEqual(InitialTargetData[3].Id, result[3].Id);
-				Assert.AreEqual(InitialTargetData[3].Field1 + InitialTargetData[3].Field2, result[3].Field1);
-				Assert.AreEqual(InitialTargetData[3].Field2, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.IsNull(result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+					Assert.That(result[3].Id, Is.EqualTo(InitialTargetData[3].Id));
+					Assert.That(result[3].Field1, Is.EqualTo(InitialTargetData[3].Field1 + InitialTargetData[3].Field2));
+					Assert.That(result[3].Field2, Is.EqualTo(InitialTargetData[3].Field2));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.Null);
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
@@ -117,24 +120,27 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				Assert.True(db.LastQuery!.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
+				Assert.That(db.LastQuery!, Does.Contain("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 
-				Assert.AreEqual(InitialTargetData[3].Id, result[3].Id);
-				Assert.AreEqual(InitialTargetData[3].Field1, result[3].Field1);
-				Assert.AreEqual(InitialTargetData[3].Field2, result[3].Field2);
-				Assert.AreEqual(321, result[3].Field3);
-				Assert.AreEqual(InitialTargetData[3].Field4, result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].Id, Is.EqualTo(InitialTargetData[3].Id));
+					Assert.That(result[3].Field1, Is.EqualTo(InitialTargetData[3].Field1));
+					Assert.That(result[3].Field2, Is.EqualTo(InitialTargetData[3].Field2));
+					Assert.That(result[3].Field3, Is.EqualTo(321));
+					Assert.That(result[3].Field4, Is.EqualTo(InitialTargetData[3].Field4));
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
@@ -153,13 +159,13 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.True(db.LastQuery!.Contains("MERGE /*+ append */ INTO \"TestMerge1\" Target"));
+				Assert.That(db.LastQuery!, Does.Contain("MERGE /*+ append */ INTO \"TestMerge1\" Target"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -186,13 +192,13 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.True(db.LastQuery!.Contains("MERGE {+ AVOID_STMT_CACHE } INTO TestMerge1 Target"));
+				Assert.That(db.LastQuery!, Does.Contain("MERGE {+ AVOID_STMT_CACHE } INTO TestMerge1 Target"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);

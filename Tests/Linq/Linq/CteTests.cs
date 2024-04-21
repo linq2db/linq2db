@@ -420,7 +420,7 @@ namespace Tests.Linq
 					join c2 in cte1_ on p.ParentID equals c2.ParentID
 					select p;
 
-				Assert.AreEqual(expected.Count(), query.Count());
+				Assert.That(query.Count(), Is.EqualTo(expected.Count()));
 			}
 		}
 
@@ -456,7 +456,7 @@ namespace Tests.Linq
 
 				var actual = query.AsEnumerable().Select(c => c.Count).First();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
@@ -487,7 +487,6 @@ namespace Tests.Linq
 			public int ParentID { get; set; }
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestNoColumns([CteContextSource(true, ProviderName.DB2)] string context)
 		{
@@ -499,17 +498,17 @@ namespace Tests.Linq
 				var cte1 = db.GetTable<Child>().AsCte("CTE1_");
 				var cnt1 = cte1.Count();
 
-				Assert.AreEqual(expected, cnt1);
+				Assert.That(cnt1, Is.EqualTo(expected));
 
 				var query = db.GetTable<Child>().Select(c => new { C = new { c.ChildID }});
 				var cte2 = query.AsCte("CTE1_");
 				var cnt2 = cte2.Count();
 
-				Assert.AreEqual(expected, cnt2);
+				Assert.That(cnt2, Is.EqualTo(expected));
 
 				var any  = cte2.Any();
 
-				Assert.IsTrue(any);
+				Assert.That(any, Is.True);
 			}
 		}
 
@@ -576,7 +575,7 @@ namespace Tests.Linq
 					select c;
 
 				var recordsAffected = toDelete.Delete();
-				Assert.AreEqual(5, recordsAffected);
+				Assert.That(recordsAffected, Is.EqualTo(5));
 			}
 		}
 
@@ -775,7 +774,7 @@ namespace Tests.Linq
 
 				var count = query.Count();
 
-				Assert.Greater(count, 0);
+				Assert.That(count, Is.GreaterThan(0));
 			}
 		}
 
@@ -790,7 +789,7 @@ namespace Tests.Linq
 				var hierarchy = GetHierarchyDown(tree, db);
 				var expected = EnumerateDown(hierarchyData, 0, null);
 
-				Assert.AreEqual(expected.Count(), hierarchy.Count());
+				Assert.That(hierarchy.Count(), Is.EqualTo(expected.Count()));
 			}
 		}
 
@@ -911,7 +910,7 @@ namespace Tests.Linq
 					join c in cteQuery on p.ParentID equals c.Child!.ParentID
 					select new {p, c};
 
-				Assert.AreEqual(expected.ToList().OrderBy(_ => _.p.ParentID).ThenBy(_ => _.c.Child?.ChildID), result.OrderBy(_ => _.p.ParentID).ThenBy(_ => _.c.Child?.ChildID));
+				Assert.That(result.OrderBy(_ => _.p.ParentID).ThenBy(_ => _.c.Child?.ChildID), Is.EqualTo(expected.ToList().OrderBy(_ => _.p.ParentID).ThenBy(_ => _.c.Child?.ChildID)));
 			}
 		}
 
@@ -1127,7 +1126,7 @@ namespace Tests.Linq
 				var result = from item in wipCte.AllowedNcCode() where item.NcCodeBo == ncCodeBo select item;
 				var sql = ((IExpressionQuery)result).SqlText;
 
-				Assert.True(sql.Replace("\"", "").Replace("`", "").Replace("[", "").Replace("]", "").ToLowerInvariant().Contains("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
+				Assert.That(sql.Replace("\"", "").Replace("`", "").Replace("[", "").Replace("]", "").ToLowerInvariant(), Does.Contain("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
 			}
 		}
 
@@ -1450,10 +1449,13 @@ namespace Tests.Linq
 				}).OrderBy(r => r.EnumValue)
 				.ToList();
 
-			Assert.That(result.Count, Is.EqualTo(3));
-			Assert.That(result[0].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
-			Assert.That(result[1].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
-			Assert.That(result[2].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NonResident));
+			Assert.That(result, Has.Count.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
+				Assert.That(result[1].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
+				Assert.That(result[2].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NonResident));
+			});
 		}
 	}
 }

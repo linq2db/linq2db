@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 			Index = index;
 		}
 
-		public SqlInfo(ISqlExpression sql, SelectQuery? query = null, int index = -1): this(Array<MemberInfo>.Empty, sql, query, index)
+		public SqlInfo(ISqlExpression sql, SelectQuery? query = null, int index = -1): this([], sql, query, index)
 		{
 		}
 

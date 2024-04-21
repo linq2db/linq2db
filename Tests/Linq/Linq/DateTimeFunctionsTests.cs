@@ -77,7 +77,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(Sql.GetDate()) };
-				Assert.AreEqual(DateTime.Now.Year, q.ToList().First().Now.Year);
+				Assert.That(q.ToList().First().Now.Year, Is.EqualTo(DateTime.Now.Year));
 			}
 		}
 
@@ -88,7 +88,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestamp };
-				Assert.AreEqual(DateTime.Now.Year, q.ToList().First().Now.Year);
+				Assert.That(q.ToList().First().Now.Year, Is.EqualTo(DateTime.Now.Year));
 			}
 		}
 
@@ -96,8 +96,11 @@ namespace Tests.Linq
 		public void CurrentTimestampUtcClientSide()
 		{
 			var delta = Sql.CurrentTimestampUtc - DateTime.UtcNow;
-			Assert.IsTrue(delta.Between(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(1)));
-			Assert.AreEqual(DateTimeKind.Utc, Sql.CurrentTimestampUtc.Kind);
+			Assert.Multiple(() =>
+			{
+				Assert.That(delta.Between(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(1)), Is.True);
+				Assert.That(Sql.CurrentTimestampUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
+			});
 		}
 
 		[Test]
@@ -113,16 +116,16 @@ namespace Tests.Linq
 
 				var now   = DateTime.UtcNow;
 				var delta = now - dbUtcNow;
-				Assert.IsTrue(
-					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)),
+				Assert.That(
+					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)), Is.True,
 					$"{now}, {dbUtcNow}, {delta}");
 
 				// we don't set kind and rely on provider's behavior
 				// Most providers return Unspecified, but at least it shouldn't be Local
 				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient))
-					Assert.AreEqual(DateTimeKind.Utc, dbUtcNow.Kind);
+					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Utc));
 				else
-					Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
+					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Unspecified));
 			}
 		}
 
@@ -138,8 +141,8 @@ namespace Tests.Linq
 
 				var now   = DateTimeOffset.Now;
 				var delta = now - dbTzNow;
-				Assert.IsTrue(
-					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)),
+				Assert.That(
+					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)), Is.True,
 					$"{now}, {dbTzNow}, {delta}");
 			}
 		}
@@ -155,14 +158,14 @@ namespace Tests.Linq
 				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
 
 				var delta = dbUtcNow - DateTime.UtcNow;
-				Assert.IsTrue(delta.Between(TimeSpan.FromSeconds(-5), TimeSpan.FromSeconds(5)));
+				Assert.That(delta.Between(TimeSpan.FromSeconds(-5), TimeSpan.FromSeconds(5)), Is.True);
 
 				// we don't set kind and rely on provider's behavior
 				// Most providers return Unspecified, but at least it shouldn't be Local
 				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient))
-					Assert.AreEqual(DateTimeKind.Utc, dbUtcNow.Kind);
+					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Utc));
 				else
-					Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
+					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Unspecified));
 			}
 		}
 
@@ -189,7 +192,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select new { DateTime.Now };
-				Assert.AreEqual(DateTime.Now.Year, q.ToList().First().Now.Year);
+				Assert.That(q.ToList().First().Now.Year, Is.EqualTo(DateTime.Now.Year));
 			}
 		}
 
@@ -574,7 +577,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay1([DataSources(TestProvName.AllMySqlServer57Plus)] string context)
+		public void TimeOfDay1([DataSources(TestProvName.AllMySqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -583,7 +586,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay2([IncludeDataSources(TestProvName.AllMySqlServer57Plus, TestProvName.AllClickHouse)] string context)
+		public void TimeOfDay2([IncludeDataSources(TestProvName.AllMySqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -772,7 +775,7 @@ namespace Tests.Linq
 				{
 					var result = db.Types
 						.Count(t => t.ID == 5000 && t.DateTimeValue.AddDays(t.SmallIntValue) > new DateTime(2018, 01, 02));
-					Assert.AreEqual(1, result);
+					Assert.That(result, Is.EqualTo(1));
 				}
 				finally
 				{
@@ -793,7 +796,7 @@ namespace Tests.Linq
 					var result = db.Types
 						.Count(t => t.ID == 5000 && Sql.AsSql(t.DateTimeValue.AddDays(t.SmallIntValue)) < new DateTime(2018, 01, 02));
 
-					Assert.AreEqual(1, result);
+					Assert.That(result, Is.EqualTo(1));
 				}
 				finally
 				{
@@ -847,10 +850,10 @@ namespace Tests.Linq
 			}
 		}
 
-		public static DateTime Truncate(DateTime date, long resolution)
-	    {
-	        return new DateTime(date.Ticks - (date.Ticks % resolution), date.Kind);
-	    }
+		private static DateTime Truncate(DateTime date, long resolution)
+		{
+			return new DateTime(date.Ticks - (date.Ticks % resolution), date.Kind);
+		}
 
 		[Test]
 		public void AddDynamicFromColumn(
@@ -1115,7 +1118,7 @@ namespace Tests.Linq
 				{
 					var result = db.Types
 						.Count(t => t.ID == 5000 && t.DateTimeValue.AddDays(t.SmallIntValue + part1 - part2) > new DateTime(2018, 01, 02));
-					Assert.AreEqual(1, result);
+					Assert.That(result, Is.EqualTo(1));
 				}
 				finally
 				{
@@ -1139,7 +1142,7 @@ namespace Tests.Linq
 					var result = db.Types
 						.Count(t => t.ID == 5000 && Sql.AsSql(t.DateTimeValue.AddDays(t.SmallIntValue + part1 - part2)) < new DateTime(2018, 01, 02));
 
-					Assert.AreEqual(1, result);
+					Assert.That(result, Is.EqualTo(1));
 				}
 				finally
 				{

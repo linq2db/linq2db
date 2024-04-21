@@ -6,11 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
-#if NET45
-// net45 is goner, so it is easier to suppress than fix
-#pragma warning disable MA0076 // Do not use implicit culture-sensitive ToString in interpolated strings
-#endif
-
 namespace LinqToDB.DataProvider.SQLite
 {
 	public interface ISQLiteExtensions
@@ -43,7 +38,7 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 		/// <summary>
-		/// Performs full-text search query against against speficied table and returns search results.
+		/// Performs full-text search query against specified table and returns search results.
 		/// Example: "table('search query')".
 		/// </summary>
 		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>

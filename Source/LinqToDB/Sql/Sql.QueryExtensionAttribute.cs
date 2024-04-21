@@ -121,7 +121,7 @@ namespace LinqToDB
 				{
 					case ExpressionType.MemberAccess : memberInfo = ((MemberExpression)    expression).Member; break;
 					case ExpressionType.Call         : memberInfo = ((MethodCallExpression)expression).Method; break;
-					default                          : return Array<QueryExtensionAttribute>.Empty;
+					default                          : return [];
 				}
 
 				return mapping.GetAttributes<QueryExtensionAttribute>(memberInfo.ReflectedType!, memberInfo, forFirstConfiguration: true);

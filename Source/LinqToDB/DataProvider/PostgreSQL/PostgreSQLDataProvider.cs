@@ -145,7 +145,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			mapType("tstzmultirange"          , NpgsqlProviderAdapter.NpgsqlDbType.TimestampTzMultirange);
 			mapType("datemultirange"          , NpgsqlProviderAdapter.NpgsqlDbType.DateMultirange);
 
-
 			if (Adapter.NpgsqlTimeSpanType != null) SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, Adapter.GetIntervalReaderMethod!    , dataReaderType: Adapter.DataReaderType);
 			if (Adapter.NpgsqlDateTimeType != null) SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, Adapter.GetTimeStampReaderMethod!   , dataReaderType: Adapter.DataReaderType);
 			if (Adapter.NpgsqlDateType     != null) SetProviderField(Adapter.NpgsqlDateType    , Adapter.NpgsqlDateType    , Adapter.GetDateReaderMethod!        , dataReaderType: Adapter.DataReaderType);
@@ -223,7 +222,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal object? NormalizeTimeStamp(PostgreSQLOptions options, object? value, DbDataType dataType)
+		internal object? NormalizeTimeStamp(PostgreSQLOptions options, object? value, DbDataType dataType, NpgsqlProviderAdapter.NpgsqlDbType? npgsqlType)
 		{
 			if (options.NormalizeTimestampData)
 			{
@@ -234,13 +233,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				else if (value is DateTime dt)
 				{
 					// timestamptz should have UTC Kind
-					if ((dataType.DataType == DataType.DateTimeOffset || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ))
+					if (dataType.DataType == DataType.DateTimeOffset || npgsqlType == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ)
 					{
 						if (dt.Kind != DateTimeKind.Utc)
 							value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
 					}
 					// timestamp should have non-UTC Kind (Unspecified used by default by npgsql)
-					else if (dataType.DataType == DataType.DateTime2 || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp)
+					else if (dataType.DataType == DataType.DateTime2 || npgsqlType == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp)
 					{
 						if (dt.Kind == DateTimeKind.Utc)
 							value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
@@ -259,7 +258,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 			else
 			{
-				value = NormalizeTimeStamp(dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default), value, dataType);
+				value = NormalizeTimeStamp(dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default), value, dataType, GetNativeType(dataType.DbType));
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
@@ -367,7 +366,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -380,7 +378,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 
