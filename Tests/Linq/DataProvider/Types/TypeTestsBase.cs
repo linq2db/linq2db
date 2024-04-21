@@ -217,5 +217,5 @@ namespace Tests.DataProvider
 			if (!skipNullable)
 				Assert.That(record.ColumnNullable, Is.EqualTo(getExpectedNullableValue != null ? getExpectedNullableValue(nullableValue) : nullableValue));
 		}
-			}
-		}
+	}
+}
