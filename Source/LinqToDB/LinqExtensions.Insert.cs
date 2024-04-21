@@ -509,7 +509,7 @@ namespace LinqToDB
 		/// </remarks>
 		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<TTarget[]> InsertWithOutputAsync<TSource, TTarget>(
-							this IQueryable<TSource> source,
+							IQueryable<TSource> source,
 							ITable<TTarget> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							CancellationToken token)
@@ -638,7 +638,7 @@ namespace LinqToDB
 		/// </remarks>
 		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<TOutput[]> InsertWithOutputAsync<TSource, TTarget, TOutput>(
-							this IQueryable<TSource> source,
+							IQueryable<TSource> source,
 							ITable<TTarget> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							Expression<Func<TTarget, TOutput>> outputExpression,

@@ -65,6 +65,42 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		public static IAsyncEnumerable<UpdateOutput<TTarget>> UpdateWithOutputAsync<TSource, TTarget>(
+							this IQueryable<TSource> source,
+							ITable<TTarget> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter)
+			where TTarget : class
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<UpdateOutput<TTarget>>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(UpdateWithOutput, source, target, setter),
+					currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter)))
+				.AsAsyncEnumerable();
+		}
+
+		/// <summary>
+		/// Executes update-from-source operation against target table.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="target">Target table.</param>
+		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
 		/// <remarks>
@@ -74,11 +110,12 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource,TTarget>(
-			                this IQueryable<TSource>          source,
-			                ITable<TTarget>                   target,
-			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
-			                CancellationToken                 token = default)
+		[Obsolete("Will be removed in l2db 7.0")]
+		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource, TTarget>(
+							IQueryable<TSource> source,
+							ITable<TTarget> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
+							CancellationToken token)
 			where TTarget : class
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -213,7 +250,7 @@ namespace LinqToDB
 		/// </remarks>
 		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<TOutput[]> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
-							this IQueryable<TSource> source,
+							IQueryable<TSource> source,
 							ITable<TTarget> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression,
@@ -462,6 +499,43 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		public static IAsyncEnumerable<UpdateOutput<TTarget>> UpdateWithOutputAsync<TSource, TTarget>(
+							this IQueryable<TSource> source,
+							Expression<Func<TSource, TTarget>> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<UpdateOutput<TTarget>>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(UpdateWithOutput, source, target, setter),
+					currentSource.Expression,
+					Expression.Quote(target),
+					Expression.Quote(setter)))
+				.AsAsyncEnumerable();
+		}
+
+		/// <summary>
+		/// Executes update-from-source operation against target table.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="target">Target table.</param>
+		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
 		/// <remarks>
@@ -471,11 +545,12 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource,TTarget>(
-			                this IQueryable<TSource>          source,
-			                Expression<Func<TSource,TTarget>> target,
-			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
-							CancellationToken                 token = default)
+		[Obsolete("Will be removed in l2db 7.0")]
+		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource, TTarget>(
+							IQueryable<TSource> source,
+							Expression<Func<TSource, TTarget>> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
+							CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -609,7 +684,7 @@ namespace LinqToDB
 		/// </remarks>
 		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<TOutput[]> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
-							this IQueryable<TSource> source,
+							IQueryable<TSource> source,
 							Expression<Func<TSource, TTarget>> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression,
@@ -847,6 +922,37 @@ namespace LinqToDB
 		/// <typeparam name="T">Updated table record type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		public static IAsyncEnumerable<UpdateOutput<T>> UpdateWithOutputAsync<T>(
+					   this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, T>> setter)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<UpdateOutput<T>>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(UpdateWithOutput, source, setter),
+					currentSource.Expression, Expression.Quote(setter)))
+				.AsAsyncEnumerable();
+		}
+
+		/// <summary>
+		/// Executes update operation using source query as record filter.
+		/// </summary>
+		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
 		/// <remarks>
@@ -856,10 +962,11 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
+		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
-			           this IQueryable<T>         source,
-			[InstantHandle] Expression<Func<T,T>> setter,
-			                CancellationToken     token = default)
+					        IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, T>> setter,
+							CancellationToken token)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -1186,6 +1293,35 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Updated table record type.</typeparam>
 		/// <param name="source">Source data query.</param>
+		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		public static IAsyncEnumerable<UpdateOutput<T>> UpdateWithOutputAsync<T>(
+					   this IUpdatable<T> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var query = ((Updatable<T>)source).Query;
+			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
+
+			return currentSource.Provider.CreateQuery<UpdateOutput<T>>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(UpdateWithOutput, source),
+					currentSource.Expression))
+				.AsAsyncEnumerable();
+		}
+
+		/// <summary>
+		/// Executes update operation using source query as record filter.
+		/// </summary>
+		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <param name="source">Source data query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Deleted and inserted values for every record updated.</returns>
 		/// <remarks>
@@ -1195,9 +1331,10 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
+		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
-			           this IUpdatable<T>         source,
-			                CancellationToken     token = default)
+					        IUpdatable<T> source,
+							CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -1309,7 +1446,7 @@ namespace LinqToDB
 		/// </remarks>
 		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<TOutput[]> UpdateWithOutputAsync<T, TOutput>(
-					   this IUpdatable<T> source,
+					        IUpdatable<T> source,
 							Expression<Func<T, T, TOutput>> outputExpression,
 							CancellationToken token)
 		{

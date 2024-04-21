@@ -94,7 +94,7 @@ namespace LinqToDB
 		/// </remarks>
 		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<TSource[]> DeleteWithOutputAsync<TSource>(
-			this IQueryable<TSource> source,
+			IQueryable<TSource> source,
 			CancellationToken token)
 		{
 			return DeleteWithOutputAsync(source)
@@ -198,7 +198,7 @@ namespace LinqToDB
 		/// </remarks>
 		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<TOutput[]> DeleteWithOutputAsync<TSource, TOutput>(
-			this IQueryable<TSource> source,
+			IQueryable<TSource> source,
 			Expression<Func<TSource, TOutput>> outputExpression,
 			CancellationToken token)
 		{
