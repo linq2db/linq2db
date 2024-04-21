@@ -153,7 +153,8 @@ namespace Tests.xUpdate
 					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
 					.UpdateWithOutputAsync(
 						target,
-						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, });
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, })
+					.ToArrayAsync();
 
 				AreEqual(
 					expected,
@@ -185,7 +186,8 @@ namespace Tests.xUpdate
 					.Where(_ => _.s.Id == 3)
 					.UpdateWithOutputAsync(
 						target,
-						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, });
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, })
+					.ToArrayAsync();
 
 				AreEqual(
 					expected,
@@ -939,7 +941,8 @@ namespace Tests.xUpdate
 					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
 					.UpdateWithOutputAsync(
 						s => s.t,
-						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, });
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, })
+					.ToArrayAsync();
 
 				AreEqual(
 					expected,
@@ -971,7 +974,8 @@ namespace Tests.xUpdate
 					.Where(_ => _.s.Id == 3)
 					.UpdateWithOutputAsync(
 						s => s.t,
-						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, });
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, })
+					.ToArrayAsync();
 
 				AreEqual(
 					expected,
@@ -1722,7 +1726,8 @@ namespace Tests.xUpdate
 
 				var output = await source
 					.Where(s => s.Id > 3)
-					.UpdateWithOutputAsync(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", });
+					.UpdateWithOutputAsync(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
+					.ToArrayAsync();
 
 				AreEqual(
 					expected,
@@ -1749,7 +1754,8 @@ namespace Tests.xUpdate
 
 				var output = await source
 					.Where(s => s.Id == 3)
-					.UpdateWithOutputAsync(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", });
+					.UpdateWithOutputAsync(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
+					.ToArrayAsync();
 
 				AreEqual(
 					expected,
@@ -2293,7 +2299,8 @@ namespace Tests.xUpdate
 					.AsUpdatable()
 					.Set(s => s.Value, s => s.Value + 1)
 					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
-					.UpdateWithOutputAsync();
+					.UpdateWithOutputAsync()
+					.ToArrayAsync();
 
 				AreEqual(
 					expected,
@@ -2323,7 +2330,8 @@ namespace Tests.xUpdate
 					.AsUpdatable()
 					.Set(s => s.Value, s => s.Value + 1)
 					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
-					.UpdateWithOutputAsync();
+					.UpdateWithOutputAsync()
+					.ToArrayAsync();
 
 				AreEqual(
 					expected,
