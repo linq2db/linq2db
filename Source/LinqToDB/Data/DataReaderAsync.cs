@@ -177,7 +177,7 @@ namespace LinqToDB.Data
 
 				ReadNumber++;
 
-				await foreach (var element in CommandInfo!.ExecuteQueryAsync<T>(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber)
+				await foreach (var element in CommandInfo!.ExecuteQueryAsync<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"))
 						.WithCancellation(cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{
