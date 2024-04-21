@@ -18,6 +18,8 @@ namespace Tests.xUpdate
 			{
 				var table = GetTarget(db);
 
+				table.ClearCache();
+
 				var source = new[]
 				{
 					new TestMapping1()

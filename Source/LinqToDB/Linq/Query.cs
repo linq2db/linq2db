@@ -102,17 +102,10 @@ namespace LinqToDB.Linq
 
 		public Expression? GetExpression() => Expression;
 
-		/// <summary>
-		/// Replaces closure references by constants
-		/// </summary>
-		protected void PrepareForCaching()
+
+		protected Expression ReplaceParametrized(Expression expression, List<Expression> newParametrized)
 		{
-			if (Expression == null || _parametrized == null)
-				return;
-
-			var newParametrized = _parametrized.ToList();
-
-			var result = Expression.Transform((parametrized: _parametrized, newParametrized), static (ctx, e) =>
+			var result = expression.Transform((parametrized: _parametrized!, newParametrized), static (ctx, e) =>
 			{
 				var idx = ctx.parametrized.IndexOf(e);
 				if (idx >= 0)
@@ -141,8 +134,41 @@ namespace LinqToDB.Linq
 				return new TransformInfo(e);
 			});
 
-			_parametrized  = newParametrized;
-			Expression     = result;
+			return result;
+		}
+
+		/// <summary>
+		/// Replaces closure references by constants
+		/// </summary>
+		protected void PrepareForCaching()
+		{
+			List<Expression>? newParametrized = null;
+
+			if (Expression != null && _parametrized != null)
+			{
+				newParametrized = _parametrized.ToList();
+
+				var result = ReplaceParametrized(Expression, newParametrized);
+				Expression    = result;
+			}
+
+			/*if (_dynamicAccessors != null && _parametrized != null)
+			{
+				newParametrized ??= _parametrized.ToList();
+
+				for (var i = 0; i < _dynamicAccessors.Count; i++)
+				{
+					var (used, mappingSchema, accessorFunc) = _dynamicAccessors[i];
+					var newUsed = ReplaceParametrized(used, newParametrized);
+					if (!ReferenceEquals(newUsed, used))
+					{
+						_dynamicAccessors[i] = (newUsed, mappingSchema, accessorFunc);
+					}
+				}
+			}*/
+
+			if (newParametrized != null)
+				_parametrized = newParametrized;
 		}
 
 		internal void ClearDynamicQueryableInfo()

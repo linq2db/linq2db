@@ -19,7 +19,8 @@ namespace LinqToDB.Expressions
 			List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>?                    dynamicAccessors,
 			bool                                                                                                                                 compareConstantValues = false)
 		{
-			var result = EqualsTo(expr1, expr2, PrepareEqualsInfo(dataContext, parametrizedExpressions, compareConstantValues));
+			var equalsInfo = PrepareEqualsInfo(dataContext, parametrizedExpressions, compareConstantValues);
+			var result     = EqualsTo(expr1, expr2, equalsInfo);
 
 			if (result && parametersDuplicates != null)
 			{
@@ -39,7 +40,7 @@ namespace LinqToDB.Expressions
 				foreach (var (used, mappingSchema, accessorFunc) in dynamicAccessors)
 				{
 					var current = accessorFunc(dataContext, mappingSchema);
-					result = ExpressionEqualityComparer.Instance.Equals(used, current);
+					result = EqualsTo(used, current, equalsInfo);
 					if (!result)
 						break;
 				}
@@ -75,8 +76,6 @@ namespace LinqToDB.Expressions
 			public readonly List<Expression>?                                         ParametrizedExpressions;
 			public readonly bool                                                      CompareConstantValues;
 
-			public HashSet<Expression>? Visited;
-
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public bool IsParametrized(Expression expr)
 			{
@@ -85,7 +84,6 @@ namespace LinqToDB.Expressions
 
 			public void Reset()
 			{
-				Visited?.Clear();
 			}
 		}
 
