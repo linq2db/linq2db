@@ -1420,7 +1420,7 @@ namespace LinqToDB.Linq.Builder
 			var value = EvaluateExpression(expr);
 
 			// TODO: MappingSchema.GetSqlValue should use DbDataType
-			sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
+			sqlValue = MappingSchema.GetSqlValue(expr.Type, value, columnDescriptor?.GetDbDataType(true));
 
 			_constants.Add(key, sqlValue);
 			
@@ -2586,7 +2586,8 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						sqlvalue = MappingSchema.GetSqlValue(type, mapValue);
+						// TODO: pass column type to type mapValue=null cases?
+						sqlvalue = MappingSchema.GetSqlValue(type, mapValue, null);
 					}
 
 					if (left.NodeType == ExpressionType.Convert)
@@ -2990,7 +2991,7 @@ namespace LinqToDB.Linq.Builder
 										new SqlPredicate.ExprExpr(
 											getSql(getSqlContext, m.DiscriminatorName),
 											SqlPredicate.Operator.NotEqual,
-											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code),
+											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
 											DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
 									)
 								);
@@ -3008,7 +3009,7 @@ namespace LinqToDB.Linq.Builder
 											new SqlPredicate.ExprExpr(
 												getSql(getSqlContext, m.DiscriminatorName),
 												SqlPredicate.Operator.Equal,
-												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code),
+												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
 												DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
 										)
 									);
@@ -3024,7 +3025,7 @@ namespace LinqToDB.Linq.Builder
 				case 1 :
 				{
 					var discriminatorSql = getSql(getSqlContext, mapping[0].DiscriminatorName);
-					var sqlValue = MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code);
+					var sqlValue = MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code, mapping[0].Discriminator.GetDbDataType(true));
 
 					return CorrectNullability(
 						new SqlPredicate.ExprExpr(
@@ -3044,7 +3045,7 @@ namespace LinqToDB.Linq.Builder
 								new SqlPredicate.ExprExpr(
 									getSql(getSqlContext, m.DiscriminatorName),
 									SqlPredicate.Operator.Equal,
-									MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code),
+									MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
 									DataOptions.LinqOptions.CompareNullsAsValues ? true : null));
 						}
 

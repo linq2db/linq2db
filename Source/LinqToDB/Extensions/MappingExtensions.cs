@@ -35,10 +35,10 @@ namespace LinqToDB.Extensions
 			return new SqlValue(type, originalValue);
 		}
 
-		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? originalValue)
+		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? originalValue, DbDataType? columnType)
 		{
 			if (originalValue is DataParameter p)
-				return new SqlValue(p.DbDataType, p.Value);
+				return new SqlValue(p.Value == null ? columnType ?? p.DbDataType : p.DbDataType, p.Value);
 
 			var underlyingType = systemType.ToNullableUnderlying();
 
@@ -62,7 +62,9 @@ namespace LinqToDB.Extensions
 			if (systemType == typeof(object) && originalValue != null)
 				systemType = originalValue.GetType();
 
-			return new SqlValue(systemType, originalValue);
+			var valueDbType = originalValue == null ? columnType ?? new DbDataType(systemType.GetType()) : new DbDataType(systemType.GetType());
+
+			return new SqlValue(valueDbType, originalValue);
 		}
 
 		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, DbDataType? dataType, DataOptions options, object? value)

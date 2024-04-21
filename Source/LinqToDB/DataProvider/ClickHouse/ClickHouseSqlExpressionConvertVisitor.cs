@@ -399,6 +399,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 				}
 			}
 
+			// don't uncomment - exception works as nice guard against typing issues
+			//if (toType.DataType == DataType.Variant)
+			//	return expression;
+
 			throw new LinqToDBException($"Missing conversion function definition to type '{toType}'");
 		}
 

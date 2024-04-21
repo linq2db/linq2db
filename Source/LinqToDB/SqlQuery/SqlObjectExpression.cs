@@ -34,7 +34,7 @@ namespace LinqToDB.SqlQuery
 			else
 				throw new InvalidOperationException();
 
-			return MappingSchema.GetSqlValue(p.ValueType, value);
+			return MappingSchema.GetSqlValue(p.ValueType, value, null);
 		}
 
 		public Type? SystemType => null;
