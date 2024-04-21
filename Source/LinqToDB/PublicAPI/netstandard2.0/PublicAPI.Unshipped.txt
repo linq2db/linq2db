@@ -1,1 +1,58 @@
 ﻿#nullable enable
+LinqToDB.Data.CommandInfo.QueryToAsyncEnumerable<T>() -> System.Collections.Generic.IAsyncEnumerable<T>!
+LinqToDB.Data.CommandInfo.QueryToAsyncEnumerable<T>(System.Func<System.Data.Common.DbDataReader!, T>! objectReader) -> System.Collections.Generic.IAsyncEnumerable<T>!
+LinqToDB.Data.DataReaderAsync.QueryToAsyncEnumerable<T>() -> System.Collections.Generic.IAsyncEnumerable<T>!
+LinqToDB.Data.DataReaderAsync.QueryToAsyncEnumerable<T>(System.Func<System.Data.Common.DbDataReader!, T>! objectReader) -> System.Collections.Generic.IAsyncEnumerable<T>!
+LinqToDB.Data.DataReaderAsync.QueryToAsyncEnumerable<T>(T template) -> System.Collections.Generic.IAsyncEnumerable<T>!
+LinqToDB.Sql.SqlExtensionParam.ParamNumber.get -> int
+LinqToDB.SqlQuery.SqlColumn.ColumnNumber.get -> int
+override LinqToDB.SqlQuery.SelectQuery.ToString() -> string!
+override LinqToDB.SqlQuery.SqlBinaryExpression.ToString() -> string!
+override LinqToDB.SqlQuery.SqlCondition.ToString() -> string!
+override LinqToDB.SqlQuery.SqlDataType.ToString() -> string!
+override LinqToDB.SqlQuery.SqlExpression.ToString() -> string!
+override LinqToDB.SqlQuery.SqlFromClause.ToString() -> string!
+override LinqToDB.SqlQuery.SqlFunction.ToString() -> string!
+override LinqToDB.SqlQuery.SqlGroupByClause.ToString() -> string!
+override LinqToDB.SqlQuery.SqlGroupingSet.ToString() -> string!
+override LinqToDB.SqlQuery.SqlInsertClause.ToString() -> string!
+override LinqToDB.SqlQuery.SqlJoinedTable.ToString() -> string!
+override LinqToDB.SqlQuery.SqlObjectExpression.ToString() -> string!
+override LinqToDB.SqlQuery.SqlOrderByClause.ToString() -> string!
+override LinqToDB.SqlQuery.SqlOrderByItem.ToString() -> string!
+override LinqToDB.SqlQuery.SqlOutputClause.ToString() -> string!
+override LinqToDB.SqlQuery.SqlParameter.ToString() -> string!
+override LinqToDB.SqlQuery.SqlPredicate.ToString() -> string!
+override LinqToDB.SqlQuery.SqlSearchCondition.ToString() -> string!
+override LinqToDB.SqlQuery.SqlSelectClause.ToString() -> string!
+override LinqToDB.SqlQuery.SqlSetExpression.ToString() -> string!
+override LinqToDB.SqlQuery.SqlSetOperator.ToString() -> string!
+override LinqToDB.SqlQuery.SqlTableSource.ToString() -> string!
+override LinqToDB.SqlQuery.SqlUpdateClause.ToString() -> string!
+override LinqToDB.SqlQuery.SqlValue.ToString() -> string!
+override LinqToDB.SqlQuery.SqlWhereClause.ToString() -> string!
+static LinqToDB.Data.DataConnectionExtensions.QueryToAsyncEnumerable<T>(this LinqToDB.Data.DataConnection! connection, string! sql) -> System.Collections.Generic.IAsyncEnumerable<T>!
+static LinqToDB.Data.DataConnectionExtensions.QueryToAsyncEnumerable<T>(this LinqToDB.Data.DataConnection! connection, string! sql, LinqToDB.Data.DataParameter! parameter) -> System.Collections.Generic.IAsyncEnumerable<T>!
+static LinqToDB.Data.DataConnectionExtensions.QueryToAsyncEnumerable<T>(this LinqToDB.Data.DataConnection! connection, string! sql, object? parameters) -> System.Collections.Generic.IAsyncEnumerable<T>!
+static LinqToDB.Data.DataConnectionExtensions.QueryToAsyncEnumerable<T>(this LinqToDB.Data.DataConnection! connection, string! sql, params LinqToDB.Data.DataParameter![]! parameters) -> System.Collections.Generic.IAsyncEnumerable<T>!
+static LinqToDB.Data.DataConnectionExtensions.QueryToAsyncEnumerable<T>(this LinqToDB.Data.DataConnection! connection, System.Func<System.Data.Common.DbDataReader!, T>! objectReader, string! sql) -> System.Collections.Generic.IAsyncEnumerable<T>!
+static LinqToDB.Data.DataConnectionExtensions.QueryToAsyncEnumerable<T>(this LinqToDB.Data.DataConnection! connection, System.Func<System.Data.Common.DbDataReader!, T>! objectReader, string! sql, object? parameters) -> System.Collections.Generic.IAsyncEnumerable<T>!
+static LinqToDB.Data.DataConnectionExtensions.QueryToAsyncEnumerable<T>(this LinqToDB.Data.DataConnection! connection, System.Func<System.Data.Common.DbDataReader!, T>! objectReader, string! sql, params LinqToDB.Data.DataParameter![]! parameters) -> System.Collections.Generic.IAsyncEnumerable<T>!
+static LinqToDB.Data.DataConnectionExtensions.QueryToAsyncEnumerable<T>(this LinqToDB.Data.DataConnection! connection, T template, string! sql, object? parameters) -> System.Collections.Generic.IAsyncEnumerable<T>!
+static LinqToDB.Data.DataConnectionExtensions.QueryToAsyncEnumerable<T>(this LinqToDB.Data.DataConnection! connection, T template, string! sql, params LinqToDB.Data.DataParameter![]! parameters) -> System.Collections.Generic.IAsyncEnumerable<T>!
+static LinqToDB.LinqExtensions.DeleteWithOutputAsync<TSource, TOutput>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TOutput>!>! outputExpression) -> System.Collections.Generic.IAsyncEnumerable<TOutput>!
+static LinqToDB.LinqExtensions.DeleteWithOutputAsync<TSource, TOutput>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TOutput>!>! outputExpression, System.Threading.CancellationToken token) -> System.Threading.Tasks.Task<TOutput[]!>!
+static LinqToDB.LinqExtensions.DeleteWithOutputAsync<TSource>(this System.Linq.IQueryable<TSource>! source) -> System.Collections.Generic.IAsyncEnumerable<TSource>!
+static LinqToDB.LinqExtensions.DeleteWithOutputAsync<TSource>(this System.Linq.IQueryable<TSource>! source, System.Threading.CancellationToken token) -> System.Threading.Tasks.Task<TSource[]!>!
+static LinqToDB.LinqExtensions.InsertWithOutputAsync<TSource, TTarget, TOutput>(this System.Linq.IQueryable<TSource>! source, LinqToDB.ITable<TTarget>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! setter, System.Linq.Expressions.Expression<System.Func<TTarget, TOutput>!>! outputExpression) -> System.Collections.Generic.IAsyncEnumerable<TOutput>!
+static LinqToDB.LinqExtensions.InsertWithOutputAsync<TSource, TTarget, TOutput>(this System.Linq.IQueryable<TSource>! source, LinqToDB.ITable<TTarget>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! setter, System.Linq.Expressions.Expression<System.Func<TTarget, TOutput>!>! outputExpression, System.Threading.CancellationToken token) -> System.Threading.Tasks.Task<TOutput[]!>!
+static LinqToDB.LinqExtensions.InsertWithOutputAsync<TSource, TTarget>(this System.Linq.IQueryable<TSource>! source, LinqToDB.ITable<TTarget>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! setter) -> System.Collections.Generic.IAsyncEnumerable<TTarget>!
+static LinqToDB.LinqExtensions.InsertWithOutputAsync<TSource, TTarget>(this System.Linq.IQueryable<TSource>! source, LinqToDB.ITable<TTarget>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! setter, System.Threading.CancellationToken token) -> System.Threading.Tasks.Task<TTarget[]!>!
+static LinqToDB.LinqExtensions.UpdateWithOutputAsync<T, TOutput>(this LinqToDB.Linq.IUpdatable<T>! source, System.Linq.Expressions.Expression<System.Func<T, T, TOutput>!>! outputExpression) -> System.Collections.Generic.IAsyncEnumerable<TOutput>!
+static LinqToDB.LinqExtensions.UpdateWithOutputAsync<T, TOutput>(this LinqToDB.Linq.IUpdatable<T>! source, System.Linq.Expressions.Expression<System.Func<T, T, TOutput>!>! outputExpression, System.Threading.CancellationToken token) -> System.Threading.Tasks.Task<TOutput[]!>!
+static LinqToDB.LinqExtensions.UpdateWithOutputAsync<T, TOutput>(this System.Linq.IQueryable<T>! source, System.Linq.Expressions.Expression<System.Func<T, T>!>! setter, System.Linq.Expressions.Expression<System.Func<T, T, TOutput>!>! outputExpression) -> System.Collections.Generic.IAsyncEnumerable<TOutput>!
+static LinqToDB.LinqExtensions.UpdateWithOutputAsync<T, TOutput>(this System.Linq.IQueryable<T>! source, System.Linq.Expressions.Expression<System.Func<T, T>!>! setter, System.Linq.Expressions.Expression<System.Func<T, T, TOutput>!>! outputExpression, System.Threading.CancellationToken token) -> System.Threading.Tasks.Task<TOutput[]!>!
+static LinqToDB.LinqExtensions.UpdateWithOutputAsync<TSource, TTarget, TOutput>(this System.Linq.IQueryable<TSource>! source, LinqToDB.ITable<TTarget!>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget!>!>! setter, System.Linq.Expressions.Expression<System.Func<TSource, TTarget!, TTarget!, TOutput>!>! outputExpression) -> System.Collections.Generic.IAsyncEnumerable<TOutput>!
+static LinqToDB.LinqExtensions.UpdateWithOutputAsync<TSource, TTarget, TOutput>(this System.Linq.IQueryable<TSource>! source, LinqToDB.ITable<TTarget!>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget!>!>! setter, System.Linq.Expressions.Expression<System.Func<TSource, TTarget!, TTarget!, TOutput>!>! outputExpression, System.Threading.CancellationToken token) -> System.Threading.Tasks.Task<TOutput[]!>!
+static LinqToDB.LinqExtensions.UpdateWithOutputAsync<TSource, TTarget, TOutput>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! setter, System.Linq.Expressions.Expression<System.Func<TSource, TTarget, TTarget, TOutput>!>! outputExpression) -> System.Collections.Generic.IAsyncEnumerable<TOutput>!
+static LinqToDB.LinqExtensions.UpdateWithOutputAsync<TSource, TTarget, TOutput>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! setter, System.Linq.Expressions.Expression<System.Func<TSource, TTarget, TTarget, TOutput>!>! outputExpression, System.Threading.CancellationToken token) -> System.Threading.Tasks.Task<TOutput[]!>!
