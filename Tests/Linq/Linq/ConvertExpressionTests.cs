@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
@@ -12,7 +13,7 @@ namespace Tests.Linq
 	public class ConvertExpressionTests : TestBase
 	{
 		[Test]
-		public void Select1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Select1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -25,7 +26,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Select2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -40,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select3([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Select3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -55,7 +56,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select4([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Select4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -212,7 +213,8 @@ namespace Tests.Linq
 		//}
 
 		[Test]
-		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllMySql57, ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.")]
+		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -230,7 +232,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest2([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllMySql57, ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.")]
+		public void LetTest2([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -642,7 +645,7 @@ namespace Tests.Linq
 		enum EnumUInt64 : ulong  { TestValue = 4 }
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -688,7 +691,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeSByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeSByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -734,7 +737,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -780,7 +783,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeUInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeUInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -826,7 +829,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -872,7 +875,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeUInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeUInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -918,7 +921,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -964,7 +967,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeUInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeUInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
