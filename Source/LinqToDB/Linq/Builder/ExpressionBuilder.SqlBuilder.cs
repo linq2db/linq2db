@@ -171,7 +171,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_gettingSubquery == 0)
 				{
-					if (!SequenceHelper.IsSupportedSubqueryForModifier(context, buildResult.BuildContext, out errorMessage))
+					if (!SequenceHelper.IsSupportedSubquery(context, buildResult.BuildContext, out errorMessage))
 						return null;
 				}
 			}

@@ -880,7 +880,7 @@ namespace LinqToDB.Linq.Builder
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
-		public static bool IsSupportedSubqueryForModifier(IBuildContext parent, IBuildContext context, out string? errorMessage)
+		public static bool IsSupportedSubquery(IBuildContext parent, IBuildContext context, out string? errorMessage)
 		{
 			errorMessage = null;
 

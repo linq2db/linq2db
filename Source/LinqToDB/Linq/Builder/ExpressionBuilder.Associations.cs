@@ -217,9 +217,6 @@ namespace LinqToDB.Linq.Builder
 
 				var sequence = BuildSequence(buildInfo);
 
-				if (!SequenceHelper.IsSupportedSubqueryForModifier(rootContext.BuildContext, sequence, out var errorMessage))
-					return new SqlErrorExpression(null, expression, errorMessage, expression.Type, true);
-
 				sequence.SetAlias(associationDescriptor.GenerateAlias());
 
 				if (forContext != null)
@@ -232,6 +229,12 @@ namespace LinqToDB.Linq.Builder
 					var root = MakeExpression(rootContext.BuildContext, associationExpression, flags.AssociationRootFlag());
 					_isOuterAssociations ??= new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 					_isOuterAssociations.Add(root);
+				}
+
+				if (!flags.IsTest())
+				{
+					if (!SequenceHelper.IsSupportedSubquery(rootContext.BuildContext, sequence, out var errorMessage))
+						return new SqlErrorExpression(null, expression, errorMessage, expression.Type, true);
 				}
 			}
 			else
