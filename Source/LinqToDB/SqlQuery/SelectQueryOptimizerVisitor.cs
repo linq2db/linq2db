@@ -2322,13 +2322,6 @@ namespace LinqToDB.SqlQuery
 										continue;
 								}
 
-								if (!_providerFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)
-								{
-									// for Oracle we cannot move to subquery
-									if (tsQuery.Select.HasModifier)
-										continue;
-								}
-
 								var isValid = true;
 
 								foreach (var testedColumn in tsQuery.Select.Columns)

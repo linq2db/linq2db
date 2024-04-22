@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 using LinqToDB.Linq.Builder;
 using LinqToDB.SqlProvider;
@@ -106,6 +107,20 @@ namespace LinqToDB.SqlQuery.Visitors
 				{
 					errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
 					return false;
+				}
+
+				if (!_providerFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)
+				{
+					var current = QueryHelper.EnumerateAccessibleSources(selectQuery).ToList();
+
+					foreach (var innerJoin in QueryHelper.EnumerateJoins(selectQuery))
+					{
+						if (QueryHelper.IsDependsOnOuterSources(innerJoin.Condition, currentSources: current))
+						{
+							errorMessage = ErrorHelper.Error_Join_ParentReference_Condition;
+							return false;
+						}
+					}
 				}
 			}
 			else
