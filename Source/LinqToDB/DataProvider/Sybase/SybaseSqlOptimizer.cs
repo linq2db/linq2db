@@ -58,5 +58,12 @@ namespace LinqToDB.DataProvider.Sybase
 
 			return statement;
 		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			statement = CorrectMultiTableQueries(statement);
+
+			return base.TransformStatement(statement, dataOptions, mappingSchema);
+		}
 	}
 }
