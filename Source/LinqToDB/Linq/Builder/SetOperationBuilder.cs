@@ -584,6 +584,18 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			static bool ExtractValue(SqlPlaceholderExpression placeholder, [NotNullWhen(true)] out SqlValue? sqlValue)
+			{
+				if (placeholder.Sql is SqlColumn column && QueryHelper.UnwrapNullablity(column.Expression) is SqlValue sqlValue1)
+				{
+					sqlValue = sqlValue1;
+					return true;
+				}
+
+				sqlValue = null;
+				return false;
+			}
+
 			void InitializeProjections()
 			{
 				var ref1 = new ContextRefExpression(ElementType, _sequence1);
@@ -620,11 +632,7 @@ namespace LinqToDB.Linq.Builder
 					var placeholderPath = new SqlPathExpression(path, placeholder.Type);
 					var alias           = GenerateColumnAlias(placeholderPath);
 
-					var placeholder1 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence1, placeholder);
-					placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
-					placeholder1 = placeholder1.WithPath(placeholderPath).WithAlias(alias);
-
-					var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
+					var placeholder1 = placeholder;
 
 					var (placeholder2, _) = placeholders2.FirstOrDefault(p2 => PathComparer.Instance.Equals(p2.path, path));
 					if (placeholder2 == null)
@@ -634,9 +642,23 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						placeholder2 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence2, placeholder2);
+						if (ExtractValue(placeholder1, out var sqlValue1) && !ExtractValue(placeholder2, out _))
+							sqlValue1.ValueType = QueryHelper.GetDbDataType(placeholder2.Sql, MappingSchema);
+						else
+						{
+							if (ExtractValue(placeholder2, out var sqlValue2) && !ExtractValue(placeholder1, out _))
+								sqlValue2.ValueType = QueryHelper.GetDbDataType(placeholder1.Sql, MappingSchema);
+						}
+
+						placeholder2 = Builder.UpdateNesting(_sequence2, placeholder2);
 						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
 					}
+
+					placeholder1 = Builder.UpdateNesting(_sequence1, placeholder1);
+					placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
+					placeholder1 = placeholder1.WithPath(placeholderPath).WithAlias(alias);
+
+					var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
 
 					placeholder2 = placeholder2.WithPath(placeholderPath).WithAlias(alias);
 					var column2 = Builder.MakeColumn(SelectQuery, placeholder2.WithAlias(alias), true);
