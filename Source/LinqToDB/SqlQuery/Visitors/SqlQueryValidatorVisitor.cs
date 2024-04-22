@@ -40,7 +40,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			_errorMessage        = default!;
 		}
 
-		public void SetInvlaid(string errorMessage)
+		public void SetInvalid(string errorMessage)
 		{
 			_isValid      = false;
 			_errorMessage = errorMessage;
@@ -161,11 +161,11 @@ namespace LinqToDB.SqlQuery.Visitors
 				{
 					if (_providerFlags.DoesNotSupportCorrelatedSubquery)
 					{
-						SetInvlaid(ErrorHelper.Error_Correlated_Subqueries);
+						SetInvalid(ErrorHelper.Error_Correlated_Subqueries);
 					}
 					else
 					{
-						SetInvlaid(ErrorHelper.Error_OUTER_Joins);
+						SetInvalid(ErrorHelper.Error_OUTER_Joins);
 					}
 					return element;
 				}
@@ -177,7 +177,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				{
 					if (element.Condition.IsTrue() || element.Condition.IsFalse())
 					{
-						SetInvlaid(ErrorHelper.Error_Join_Without_Condition);
+						SetInvalid(ErrorHelper.Error_Join_Without_Condition);
 						return element;
 					}
 				}
@@ -200,7 +200,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				{
 					if (SequenceHelper.HasDependencyWithOuter(sq))
 					{
-						SetInvlaid(ErrorHelper.Error_Correlated_Subqueries);
+						SetInvalid(ErrorHelper.Error_Correlated_Subqueries);
 						return element;
 					}
 				}
@@ -218,7 +218,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				string? errorMessage;
 				if (!IsValidSubQuery(selectQuery, out errorMessage))
 				{
-					SetInvlaid(errorMessage);
+					SetInvalid(errorMessage);
 					return selectQuery;
 				}
 			}

@@ -274,6 +274,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (SequenceHelper.HasError(translated))
 				{
+					if (translated is SqlErrorExpression { IsCritical: true })
+						return translated;
 					return expression;
 				}
 

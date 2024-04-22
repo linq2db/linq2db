@@ -4442,8 +4442,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var newCorrected = MakeExpression(rootContext.BuildContext, corrected, flags);
 
-						if (newCorrected is SqlErrorExpression)
+						if (newCorrected is SqlErrorExpression sqlError)
+						{
+							if (sqlError.IsCritical)
+								return sqlError;
 							newCorrected = corrected;
+						}
 
 						if (newCorrected is SqlPlaceholderExpression placeholder)
 						{
@@ -4458,6 +4462,12 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var root = MakeExpression(currentContext, memberExpression.Expression, flags.RootFlag());
+
+				// Association may cause such situation
+				if (root is SqlErrorExpression rootError)
+				{
+					return rootError.WithType(path.Type);
+				}
 
 				if (root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
 				{
@@ -4497,6 +4507,8 @@ namespace LinqToDB.Linq.Builder
 					if (root is ContextRefExpression contextRef)
 					{
 						expression = TryCreateAssociation(newPath, contextRef, currentContext, flags);
+						if (expression is SqlErrorExpression)
+							return expression;
 					}
 				}
 

@@ -10,23 +10,24 @@ namespace LinqToDB.Expressions
 
 	public class SqlErrorExpression : Expression
 	{
-		public SqlErrorExpression(object? buildContext, Expression? expression, string? message, Type resultType)
+		public SqlErrorExpression(object? buildContext, Expression? expression, string? message, Type resultType, bool isCritical)
 		{
 			BuildContext = buildContext;
 			Expression   = expression;
 			Message      = message;
 			ResultType   = resultType;
+			IsCritical   = isCritical;
 		}
 
-		public SqlErrorExpression(object? buildContext, Expression expression) : this(buildContext, expression, null, expression.Type)
+		public SqlErrorExpression(object? buildContext, Expression expression) : this(buildContext, expression, null, expression.Type, false)
 		{
 		}
 
-		public SqlErrorExpression(string message, Type resultType) : this(null, null, message, resultType)
+		public SqlErrorExpression(string message, Type resultType) : this(null, null, message, resultType, false)
 		{
 		}
 
-		public SqlErrorExpression(Expression? expression, string? message, Type resultType) : this(null, expression, message, resultType)
+		public SqlErrorExpression(Expression? expression, string? message, Type resultType) : this(null, expression, message, resultType, false)
 		{
 		}
 
@@ -34,6 +35,7 @@ namespace LinqToDB.Expressions
 		public Expression? Expression   { get; }
 		public Type        ResultType   { get; }
 		public string?     Message      { get; }
+		public bool        IsCritical   { get; }
 
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override Type           Type      => ResultType;
@@ -48,7 +50,7 @@ namespace LinqToDB.Expressions
 		{
 			if (ResultType == type)
 				return this;
-			return new SqlErrorExpression(BuildContext, Expression, Message, type);
+			return new SqlErrorExpression(BuildContext, Expression, Message, type, IsCritical);
 		}
 
 		public Exception CreateException()
@@ -67,7 +69,7 @@ namespace LinqToDB.Expressions
 		{
 			if (expression is SqlErrorExpression error)
 				return error.WithType(resultType);
-			return new SqlErrorExpression(null, expression, null, resultType);
+			return new SqlErrorExpression(null, expression, null, resultType, false);
 		}
 
 		public static Exception CreateException(string message)

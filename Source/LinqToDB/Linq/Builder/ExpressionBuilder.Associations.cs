@@ -217,6 +217,9 @@ namespace LinqToDB.Linq.Builder
 
 				var sequence = BuildSequence(buildInfo);
 
+				if (!SequenceHelper.IsSupportedSubqueryForModifier(rootContext.BuildContext, sequence, out var errorMessage))
+					return new SqlErrorExpression(null, expression, errorMessage, expression.Type, true);
+
 				sequence.SetAlias(associationDescriptor.GenerateAlias());
 
 				if (forContext != null)

@@ -449,7 +449,8 @@ AS RETURN
 
 		public class SomeTableType
 		{
-			public int Value { get; set; }
+			public int LargeNumberEntityId { get; set; }
+			public int Value               { get; set; }
 		}
 
 		[Table("FewNumberEntity")]
@@ -482,11 +483,13 @@ WHERE
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")]
 		public void AssociationFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<FewNumberEntity>())
 			using (db.CreateLocalTable<LargeNumberEntity>())
+			using (db.CreateLocalTable<SomeTableType>("SomeTable"))
 			{
 				var tasksQuery = db.GetTable<LargeNumberEntity>();
 
