@@ -93,7 +93,8 @@ namespace LinqToDB.SqlProvider
 
 		public static void UndoNestedJoins(IQueryElement statement)
 		{
-			statement.Visit(static e =>
+			var correct = false;
+			statement.Visit(e =>
 			{
 				if (e is SqlTableSource source)
 				{
@@ -117,14 +118,18 @@ namespace LinqToDB.SqlProvider
 							join.Table.Joins.Clear();
 							if (join.Table.HasUniqueKeys)
 								join.Table.UniqueKeys.Clear();
+
+							correct = true;
 						}
 					}
 				}
 			});
 
-			// is it expensive to run if no undo done?
-			var corrector = new SqlQueryColumnNestingCorrector();
-			corrector.CorrectColumnNesting(statement);
+			if (correct)
+			{
+				var corrector = new SqlQueryColumnNestingCorrector();
+				corrector.CorrectColumnNesting(statement);
+			}
 		}
 
 		#region Helpers
