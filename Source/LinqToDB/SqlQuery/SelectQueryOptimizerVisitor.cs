@@ -48,10 +48,10 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public IQueryElement Optimize(
-			IQueryElement          root,         
+			IQueryElement          root,
 			IQueryElement          rootElement,
-			SqlProviderFlags       providerFlags, 
-			bool                   removeWeakJoins, 
+			SqlProviderFlags       providerFlags,
+			bool                   removeWeakJoins,
 			DataOptions            dataOptions,
 			MappingSchema          mappingSchema,
 			EvaluationContext      evaluationContext,
@@ -102,6 +102,10 @@ namespace LinqToDB.SqlQuery
 
 					// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
 					JoinsOptimizer.UnnestJoins(_root);
+
+					// convert remaining nested joins to subqueries
+					if (!_providerFlags.IsNestedJoinsSupported)
+						JoinsOptimizer.UndoNestedJoins(_root);
 				}
 			}
 
@@ -1686,12 +1690,6 @@ namespace LinqToDB.SqlQuery
 			if (!subQuery.GroupBy.IsEmpty)
 				return false;
 
-			if (!_providerFlags.IsNestedJoinsSupported && subQuery.From.Tables[0].Joins.Count > 0)
-			{
-				// For AssociationTests.GroupBy2, left_join_on_sub_query_with_two_inner_joins_results_in_incorrect_SQL and TestIssue2832 for ClickHouse
-				return false;
-			}
-
 			var moveConditionToQuery = joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply;
 
 			if (joinTable.JoinType != JoinType.Inner)
@@ -1739,15 +1737,15 @@ namespace LinqToDB.SqlQuery
 				}
 
 				if (!subQuery.Select.Columns.All(c =>
-				    {
-					    var columnExpression = QueryHelper.UnwrapCastAndNullability(c.Expression);
+					{
+						var columnExpression = QueryHelper.UnwrapCastAndNullability(c.Expression);
 
 						if (columnExpression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression)
-						    return true;
-					    if (columnExpression is SqlFunction func)
-						    return !func.IsAggregate;
-					    return false;
-				    }))
+							return true;
+						if (columnExpression is SqlFunction func)
+							return !func.IsAggregate;
+						return false;
+					}))
 				{
 					return false;
 				}
