@@ -79,6 +79,11 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter1(
 			[DataSources(
@@ -98,6 +103,11 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter2(
 			[DataSources(
@@ -117,6 +127,11 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter3(
 			[DataSources(
@@ -147,6 +162,11 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter5(
 			[DataSources(
