@@ -1181,10 +1181,6 @@ namespace LinqToDB.SqlQuery
 			// Actual modification starts from this point
 			//
 
-#pragma warning disable CA1508 // Avoid dead conditional code : analyzer bug
-			parentQuery.QueryName ??= subQuery.QueryName;
-#pragma warning restore CA1508 // Avoid dead conditional code
-
 			if (subQuery.HasSetOperators)
 			{
 				var newIndexes =
@@ -1209,6 +1205,10 @@ namespace LinqToDB.SqlQuery
 				parentQuery.SetOperators.InsertRange(0, subQuery.SetOperators);
 				subQuery.SetOperators.Clear();
 			}
+
+#pragma warning disable CA1508 // Avoid dead conditional code : analyzer bug
+			parentQuery.QueryName ??= subQuery.QueryName;
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 			if (!subQuery.GroupBy.IsEmpty)
 			{
