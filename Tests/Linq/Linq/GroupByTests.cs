@@ -2622,7 +2622,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3761Test1([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
+		public void Issue3761Test1([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();

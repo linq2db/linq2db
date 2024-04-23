@@ -8,13 +8,6 @@ REM use pull to get latest layers (run will use cached layers)
 docker pull datagrip/sybase:16.0
 docker run -d --name sybase -e SYBASE_DB=TestDataCore -p 5000:5000 datagrip/sybase:16.0
 
-REM add trace flag to server startup procedure
-docker cp sybase-fix.sh sybase:/opt/sybase/ASE-16_0/install/RUN_MYSYBASE
-docker exec sybase chmod +x /opt/sybase/ASE-16_0/install/RUN_MYSYBASE
-
-REM restart container to take effect
-docker restart sybase
-
 call wait sybase "SYBASE INITIALIZED"
 
 REM enable utf8
