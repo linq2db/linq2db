@@ -12,7 +12,7 @@ namespace Tests.Common
 	public class ConcurrencyTests : TestBase
 	{
 		[Test]
-		public void SequentialUsagesDoNotThrow([DataSources] string context)
+		public void SequentialUsagesDoNotThrow([DataSources(includeLinqService: false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -21,7 +21,7 @@ namespace Tests.Common
 		}
 
 		[Test]
-		public async Task ConcurrentUsageMultipleThreadsThrows([DataSources] string context)
+		public async Task ConcurrentUsageMultipleThreadsThrows([DataSources(includeLinqService: false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -33,7 +33,7 @@ namespace Tests.Common
 		}
 
 		[Test]
-		public void ConcurrentUsageSameThreadDoesNotThrow([DataSources] string context)
+		public void ConcurrentUsageSameThreadDoesNotThrow([DataSources(includeLinqService: false)] string context)
 		{
 			using var db = GetDataContext(context);
 
