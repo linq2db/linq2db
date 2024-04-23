@@ -229,13 +229,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					var contextRefExpression = new ContextRefExpression(lambda.Parameters[0].Type, context);
 
-					/*var aggregationRoot = GetRootContext(context, contextRefExpression, true);
-
-				if (aggregationRoot is null)
-				{
-					throw new LinqException("Could not retrieve aggregation context.");
-				}*/
-
 					var body = lambda.GetBody(contextRefExpression);
 
 					return ConvertToSqlExpr(context, body, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
@@ -261,10 +254,36 @@ namespace LinqToDB.Linq.Builder
 						return result;
 					}
 				}
+				else
+				{
+					var converted = ConvertToSqlExpr(context, expression, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
 
-				var converted = ConvertToSqlExpr(context, expression, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
+					if (converted is SqlPlaceholderExpression)
+					{
+						return converted;
+					}
 
-				return converted;
+					// Weird case, see Stuff2 test
+					if (!CanBeCompiled(expression, false))
+					{
+						var buildResult = TryBuildSequence(new BuildInfo(context, expression, new SelectQuery()));
+						if (buildResult.BuildContext != null)
+						{
+							unwrapped = new ContextRefExpression(buildResult.BuildContext.ElementType, buildResult.BuildContext);
+							var result = ConvertToSqlExpr(buildResult.BuildContext, unwrapped,
+								flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
+
+							if (result is SqlPlaceholderExpression { SelectQuery: not null } placeholder)
+							{
+								_ = ToColumns(placeholder.SelectQuery, placeholder);
+
+								return CreatePlaceholder(context, placeholder.SelectQuery, unwrapped);
+							}
+						}
+					}
+				}
+
+				return expression;
 			}
 			finally
 			{

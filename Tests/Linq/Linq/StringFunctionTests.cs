@@ -195,7 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Stuff2()
+		public void Stuff2Fail()
 		{
 			var expression = Enumerable.Empty<string>();
 			Assert.Throws<NotImplementedException>(() => Sql.Stuff(expression, 1, 1, "")); // ServerSideOnly
