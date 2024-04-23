@@ -42,31 +42,25 @@ steps:
 - task: CmdLine@2
   inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\configs\netfx\$(config).json $(System.DefaultWorkingDirectory)\netfx\UserDataProviders.json'
-  displayName: Copy test config
+  displayName: Copy .NET FW x86 test config
   condition: and(variables.title, eq(variables.netfx, 'true'), eq(variables.x86, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\configs\netfx\$(config).json $(System.DefaultWorkingDirectory)\netfxx64\UserDataProviders.json'
-  displayName: Copy test config
-  condition: and(variables.title, eq(variables.netfx, 'true'), ne(variables.x86, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\netfx\DataProviders.json $(System.DefaultWorkingDirectory)\netfxx64\DataProviders.json'
-  displayName: Copy test config
+  displayName: Copy .NET FW x64 test config
   condition: and(variables.title, eq(variables.netfx, 'true'), ne(variables.x86, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\configs\net60\$(config).json $(System.DefaultWorkingDirectory)\net60\UserDataProviders.json'
-  displayName: Copy test config
+  displayName: Copy .NET 6 x64 test config
   condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\configs\net60\$(config).json $(System.DefaultWorkingDirectory)\net60x86\UserDataProviders.json'
-  displayName: Copy test config
+  displayName: Copy .NET 6 x86 test config
   condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), succeeded())
 
 - task: CmdLine@2

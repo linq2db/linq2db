@@ -70,6 +70,8 @@ jobs:
         if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\netfx
         if %errorlevel% neq 0 exit
+        copy Tests\DataProviders.json testing\netfxx64
+        if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\net60
         if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\net80
