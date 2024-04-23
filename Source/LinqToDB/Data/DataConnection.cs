@@ -764,6 +764,18 @@ namespace LinqToDB.Data
 		internal DbCommand GetOrCreateCommand() => _command ??= CreateCommand();
 
 		/// <summary>
+		/// Tracks currency status to report invalid usage of dataconnection.
+		/// </summary>
+		private ConcurrencyDetector _concurrencyDetector = new();
+
+		/// <summary>
+		/// Open concurrency token for the current <see cref="DbCommand"/>
+		/// </summary>
+#pragma warning disable CA2213 // Disposable fields should be disposed : disposed using Close[Async] call from Dispose[Async]
+		private IDisposable? _concurrencyToken;
+#pragma warning restore CA2213 // Disposable fields should be disposed
+
+		/// <summary>
 		/// Contains text of last command, sent to database using current connection.
 		/// </summary>
 		public string? LastQuery { get; private set; }
@@ -776,6 +788,7 @@ namespace LinqToDB.Data
 				sql             = sqlProvider.ApplyQueryHints(sql, queryHints);
 			}
 
+			_concurrencyToken = _concurrencyDetector.EnterCriticalSection();
 			_command = DataProvider.InitCommand(this, GetOrCreateCommand(), commandType, sql, parameters, withParameters);
 		}
 
@@ -842,6 +855,12 @@ namespace LinqToDB.Data
 			{
 				DataProvider.DisposeCommand(_command);
 				_command = null;
+
+				if (_concurrencyToken == null)
+					throw new InvalidOperationException("`_concurrencyToken` was not managed properly");
+
+				_concurrencyToken.Dispose();
+				_concurrencyToken = null;
 			}
 		}
 
@@ -1099,9 +1118,10 @@ namespace LinqToDB.Data
 				using (ActivityService.Start(ActivityID.CommandInterceptorAfterExecuteReader))
 					_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
 
-			var wrapper = new DataReaderWrapper(this, rd, _command!);
+			var wrapper = new DataReaderWrapper(this, rd, _command!, _concurrencyToken!);
 
-			_command = null;
+			_command          = null;
+			_concurrencyToken = null;
 
 			return wrapper;
 		}
