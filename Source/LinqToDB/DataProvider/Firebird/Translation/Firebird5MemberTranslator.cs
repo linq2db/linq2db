@@ -184,7 +184,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateDateFunctionsTranslator()
+		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
 		}

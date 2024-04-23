@@ -4401,14 +4401,18 @@ namespace LinqToDB.Linq.Builder
 
 			var key = new SqlCacheKey(path, null, null, null, flags);
 
-			if (shouldCache && _expressionCache.TryGetValue(key, out var expression) && expression.Type == path.Type && expression is not SqlErrorExpression)
+
+			Expression? expression;
+
+			if (shouldCache && _expressionCache.TryGetValue(key, out expression) && expression.Type == path.Type && expression is not SqlErrorExpression)
 			{
-#if DEBUG
-				DebugCacheHit(currentContext, path, expression, flags);
-#else
 				if (!ExpressionEqualityComparer.Instance.Equals(path, expression))
-					return expression;
+				{
+#if DEBUG
+					DebugCacheHit(currentContext, path, expression, flags);
 #endif
+					return expression;
+				}
 			}
 
 			var doNotProcess = false;

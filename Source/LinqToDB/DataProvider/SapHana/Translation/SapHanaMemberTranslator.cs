@@ -216,14 +216,40 @@ namespace LinqToDB.DataProvider.SapHana.Translation
 			}
 		}
 
+		protected class SapHanaMathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var dbType = factory.GetDbDataType(xValue);
+
+				return factory.Function(dbType, "GREATEST", xValue, yValue);
+			}
+
+			protected override ISqlExpression? TranslateMinMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var dbType = factory.GetDbDataType(xValue);
+
+				return factory.Function(dbType, "LEAST", xValue, yValue);
+			}
+		}
+
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
 		}
 
-		protected override IMemberTranslator CreateDateFunctionsTranslator()
+		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SapHanaMathMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

@@ -18,7 +18,12 @@ namespace LinqToDB.Linq.Translation
 			return new SqlTypesTranslationDefault();
 		}
 
-		protected abstract IMemberTranslator CreateDateFunctionsTranslator();
+		protected abstract IMemberTranslator CreateDateMemberTranslator();
+
+		protected virtual IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new MathMemberTranslatorBase();
+		}
 
 		protected ProviderMemberTranslatorDefault()
 		{
@@ -40,7 +45,8 @@ namespace LinqToDB.Linq.Translation
 		void InitDefaultTranslators()
 		{
 			CombinedMemberTranslator.Add(CreateSqlTypesTranslator());
-			CombinedMemberTranslator.Add(CreateDateFunctionsTranslator());
+			CombinedMemberTranslator.Add(CreateDateMemberTranslator());
+			CombinedMemberTranslator.Add(CreateMathMemberTranslator());
 		}
 
 		protected SqlPlaceholderExpression? TranslateNoRequiredObjectExpression(ITranslationContext translationContext, Expression? objExpression, TranslationFlags translationFlags)

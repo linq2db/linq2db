@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			return new SqlTypes2005Translation();
 		}
 
-		protected override IMemberTranslator CreateDateFunctionsTranslator()
+		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator2005();
 		}

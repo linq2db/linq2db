@@ -22,8 +22,9 @@ namespace LinqToDB.Linq.Builder
 					_translationContext = translationContext;
 				}
 
-				public DbDataType GetDbDataType(ISqlExpression expression) => _translationContext.GetDbDataType(expression);
-				public DbDataType GetDbDataType(Type           type)       => _translationContext.MappingSchema.GetDbDataType(type);
+				public DataOptions DataOptions                              => _translationContext.DataOptions;
+				public DbDataType  GetDbDataType(ISqlExpression expression) => _translationContext.GetDbDataType(expression);
+				public DbDataType  GetDbDataType(Type           type)       => _translationContext.MappingSchema.GetDbDataType(type);
 			}
 
 			public void Init(ExpressionBuilder builder, IBuildContext? currentContext, ColumnDescriptor? currentColumnDescriptor, string? currentAlias)

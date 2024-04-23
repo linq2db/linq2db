@@ -202,7 +202,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 			return new SqlTypesTranslation();
 		}
 
-		protected override IMemberTranslator CreateDateFunctionsTranslator()
+		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
 		}
