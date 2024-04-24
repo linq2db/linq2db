@@ -11,5 +11,8 @@
 		public const string Error_Skip_in_Subquery               = "Provider does not support Skip value in subquery.";
 		public const string Error_OrderBy_in_Subquery            = "Provider does not support ORDER BY in subquery.";
 		public const string Error_OrderBy_in_Derived             = "Provider does not support ORDER BY in derived tabley.";
+
+		// Oracle
+		public const string Error_ColumnSubqueryShouldNotContainParentIsNotNull = "Column expression should not contain Parent's IS NOT NULL condition";
 	}
 }

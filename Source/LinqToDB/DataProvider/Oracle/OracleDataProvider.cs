@@ -41,6 +41,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsRowNumberWithoutOrderBySupported                    = false;
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported          = false;
+			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = true;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
 			                                         RowFeature.Update   | RowFeature.Overlaps;

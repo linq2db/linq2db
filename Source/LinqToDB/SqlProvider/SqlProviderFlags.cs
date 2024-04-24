@@ -375,6 +375,15 @@ namespace LinqToDB.SqlProvider
 		public bool IsColumnSubqueryWithParentReferenceSupported { get; set; } = true;
 
 		/// <summary>
+		/// Workaround over Oracle's bug with subquery in column list which contains parent table column with IS NOT NULL condition.
+		/// </summary>
+		/// <remarks>
+		/// See Issue3557Case1 test.
+		/// </remarks>
+		[DataMember(Order = 71), DefaultValue(false)]
+		public bool IsColumnSubqueryShouldNotContainParentIsNotNull { get; set; } = false;
+
+		/// <summary>
 		/// Provider supports INNER JOIN with condition inside Recursive CTE, currently not supported only by DB2
 		/// </summary>
 		[DataMember(Order = 46), DefaultValue(true)]
@@ -546,6 +555,7 @@ namespace LinqToDB.SqlProvider
 				^ IsRowNumberWithoutOrderBySupported                   .GetHashCode()
 				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
 				^ IsColumnSubqueryWithParentReferenceSupported         .GetHashCode()
+				^ IsColumnSubqueryShouldNotContainParentIsNotNull      .GetHashCode()
 				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
 				^ IsOuterJoinSupportsInnerJoin                         .GetHashCode()
 				^ IsMultiTablesSupportsJoins                           .GetHashCode()
@@ -605,6 +615,7 @@ namespace LinqToDB.SqlProvider
 				&& IsRowNumberWithoutOrderBySupported                    == other.IsRowNumberWithoutOrderBySupported
 				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
 				&& IsColumnSubqueryWithParentReferenceSupported          == other.IsColumnSubqueryWithParentReferenceSupported
+				&& IsColumnSubqueryShouldNotContainParentIsNotNull       == other.IsColumnSubqueryShouldNotContainParentIsNotNull
 				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported
 				&& IsOuterJoinSupportsInnerJoin                          == other.IsOuterJoinSupportsInnerJoin
 				&& IsMultiTablesSupportsJoins                            == other.IsMultiTablesSupportsJoins

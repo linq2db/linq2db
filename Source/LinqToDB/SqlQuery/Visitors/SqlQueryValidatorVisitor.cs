@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using LinqToDB.Linq.Builder;
@@ -122,6 +123,15 @@ namespace LinqToDB.SqlQuery.Visitors
 						}
 					}
 				}
+
+				if (_providerFlags.IsColumnSubqueryShouldNotContainParentIsNotNull)
+				{
+					if (HasIsNotNullParentReference(selectQuery))
+					{
+						errorMessage = ErrorHelper.Error_ColumnSubqueryShouldNotContainParentIsNotNull;
+						return false;
+					}
+				}
 			}
 			else
 			{
@@ -143,6 +153,58 @@ namespace LinqToDB.SqlQuery.Visitors
 
 			errorMessage = null;
 			return true;
+		}
+
+		static bool HasIsNotNullParentReference(SelectQuery selectQuery)
+		{
+			var visitor = new ValidateThatQueryHasNoIsNotNullParentReferenceVisitor();
+
+			visitor.Visit(selectQuery);
+
+			return visitor.ContainsNotNullExpr;
+		}
+
+		class ValidateThatQueryHasNoIsNotNullParentReferenceVisitor : SqlQueryVisitor
+		{
+			public Stack<ISqlTableSource> _currentSources = new Stack<ISqlTableSource>();
+
+			public ValidateThatQueryHasNoIsNotNullParentReferenceVisitor() : base(VisitMode.ReadOnly, null)
+			{
+			}
+
+			public bool ContainsNotNullExpr {get; private set; }
+
+			protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+			{
+				_currentSources.Push(element.Source);
+
+				base.VisitSqlTableSource(element);
+
+				_currentSources.Pop();
+
+				return element;
+			}
+
+			public override IQueryElement? Visit(IQueryElement? element)
+			{
+				if (ContainsNotNullExpr)
+					return element;
+
+				return base.Visit(element);
+			}
+
+			protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+			{
+				if (predicate.IsNot)
+				{
+					if (QueryHelper.IsDependsOnOuterSources(predicate, currentSources : _currentSources))
+					{
+						ContainsNotNullExpr = true;
+					}
+				}
+
+				return base.VisitIsNullPredicate(predicate);
+			}
 		}
 
 		protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
