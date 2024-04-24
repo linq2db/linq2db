@@ -44,13 +44,13 @@ jobs:
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration)
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x86 -o Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\publishx86
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x64 -o Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\publishx64
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 -o Tests\Linq\bin\$(build_configuration)\net6.0\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net6.0\publishx86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration) -a x86 -o Tests\Linq\bin\$(build_configuration)\net8.0\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net8.0\publishx86
         if %errorlevel% neq 0 exit
         mkdir testing
         if %errorlevel% neq 0 exit
