@@ -66,7 +66,7 @@ jobs:
         rem if %errorlevel% neq 0 exit
         rem xcopy /i /s /y testing\netfx\x86 testing\netfxx86\x86
         rem if %errorlevel% neq 0 exit
-        xcopy /i /s testing\netfx\runtimes testing\netfxx64\runtimes
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\runtimes testing\netfxx64\runtimes
         if %errorlevel% neq 0 exit
         rem xcopy /i /s /y testing\netfx\x64 testing\netfxx64\x64
         rem if %errorlevel% neq 0 exit
