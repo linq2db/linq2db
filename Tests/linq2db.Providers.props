@@ -56,15 +56,17 @@
 
 	<!--some magic to not include x64 reference to IBM.Data.DB2.Core in x86 builds, as it fails x86 tests-->
 	<Choose>
-		<When Condition="$(X86) == ''">
-			<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
+		<When Condition="$(X86) == 'SET' AND '$(TargetFramework)' == 'net462' ">
+			<ItemGroup>
 				<!--PackageReference + Reference beelongs to same nuget-->
 				<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
 				<Reference Include="IBM.Data.DB2">
 					<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
 				</Reference>
 			</ItemGroup>
-			<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
+		</When>
+		<When Condition="$(X86) == '' AND '$(TargetFramework)' != 'net462' ">
+			<ItemGroup>
 				<PackageReference Include="Net.IBM.Data.Db2" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 				<PackageReference Include="Net.IBM.Data.Db2-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
 				<PackageReference Include="Net.IBM.Data.Db2-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
