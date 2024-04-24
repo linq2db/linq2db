@@ -62,14 +62,14 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\publishx64 testing\netfxx64
         if %errorlevel% neq 0 exit
-        rem xcopy /i /s testing\netfx\runtimes testing\netfxx86\runtimes
-        rem if %errorlevel% neq 0 exit
-        rem xcopy /i /s /y testing\netfx\x86 testing\netfxx86\x86
-        rem if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\runtimes testing\netfxx64\runtimes
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\runtimes\win-x86 testing\netfx\runtimes\win-x86
         if %errorlevel% neq 0 exit
-        rem xcopy /i /s /y testing\netfx\x64 testing\netfxx64\x64
-        rem if %errorlevel% neq 0 exit
+        xcopy /i /s /y Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\x86 testing\netfx\x86
+        if %errorlevel% neq 0 exit
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\runtimes\win-x64 testing\netfxx64\runtimes\win-x64
+        if %errorlevel% neq 0 exit
+        xcopy /i /s /y Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\x64 testing\netfxx64\x64
+        if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net6.0\publishx86 testing\net60x86
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net8.0\publishx86 testing\net80x86
