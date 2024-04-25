@@ -42,6 +42,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported          = false;
 			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = true;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported   = version >= OracleVersion.v12;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
 			                                         RowFeature.Update   | RowFeature.Overlaps;
@@ -101,6 +102,11 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
 			return new OracleMemberTranslator();
+		}
+
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new IdentifierServiceSimple(Version <= OracleVersion.v11 ? 30 : 128);
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)

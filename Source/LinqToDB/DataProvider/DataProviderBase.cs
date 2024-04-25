@@ -509,11 +509,13 @@ namespace LinqToDB.DataProvider
 
 		public virtual IQueryParametersNormalizer GetQueryParameterNormalizer() => new UniqueParametersNormalizer();
 
-		protected abstract IMemberTranslator CreateMemberTranslator();
+		protected abstract IMemberTranslator  CreateMemberTranslator();
+		protected virtual  IIdentifierService CreateIdentifierService() => new IdentifierServiceSimple(32);
 
 		protected virtual void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
 			serviceProvider.AddService(CreateMemberTranslator());
+			serviceProvider.AddService(CreateIdentifierService());
 		}
 
 		SimpleServiceProvider? _serviceProvider;

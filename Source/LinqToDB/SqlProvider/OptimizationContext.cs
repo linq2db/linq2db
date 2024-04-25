@@ -41,7 +41,6 @@ namespace LinqToDB.SqlProvider
 			DataOptions                      dataOptions,
 			SqlProviderFlags?                sqlProviderFlags,
 			MappingSchema                    mappingSchema,
-			AliasesContext                   aliases,
 			SqlExpressionOptimizerVisitor    optimizerVisitor,
 			SqlExpressionConvertVisitor      convertVisitor,
 			bool                             isParameterOrderDepended,
@@ -52,7 +51,6 @@ namespace LinqToDB.SqlProvider
 			DataOptions                    = dataOptions;
 			SqlProviderFlags               = sqlProviderFlags;
 			MappingSchema                  = mappingSchema;
-			Aliases                        = aliases ?? throw new ArgumentNullException(nameof(aliases));
 			OptimizerVisitor               = optimizerVisitor;
 			ConvertVisitor                 = convertVisitor;
 			IsParameterOrderDependent      = isParameterOrderDepended;
@@ -63,7 +61,6 @@ namespace LinqToDB.SqlProvider
 		public EvaluationContext EvaluationContext              { get; }
 		public bool              IsParameterOrderDependent      { get; }
 		public bool              IsAlreadyOptimizedAndConverted { get; }
-		public AliasesContext    Aliases                        { get; }
 
 		public bool HasParameters() => _actualParameters?.Count > 0;
 
