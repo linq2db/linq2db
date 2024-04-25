@@ -113,7 +113,7 @@ namespace LinqToDB.DataProvider
 				if (!_identifierService.IsFit(identifierKind, identifier, out var sizeDecrement) && sizeDecrement != null)
 				{
 					//TODO: It is quick solution
-					var decrement = sizeDecrement.Value + 2;
+					var decrement = sizeDecrement.Value + 4;
 
 					var size = identifier.Length - decrement;
 					if (size < 0)

@@ -427,6 +427,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider does not support CROSS/OUTER/LATERAL joins.")]
 		public void Coalesce4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -756,7 +757,11 @@ namespace Tests.Linq
 					var en = new LinqDataTypes2() { ID = 1000, BoolValue = false };
 					db.Insert(en);
 
-					var e  = new LinqDataTypes()  { ID = 1000, BoolValue = false };
+					DateTime defaultDate = default;
+					if (db.MappingSchema.GetDefaultValue(typeof(DateTime)) is DateTime dateTime)
+						defaultDate = dateTime;
+
+					var e = new LinqDataTypes() { ID = 1000, BoolValue = false, DateTimeValue = defaultDate };
 
 					var e2 = db.Types.First(_ => _.ID == 1000);
 

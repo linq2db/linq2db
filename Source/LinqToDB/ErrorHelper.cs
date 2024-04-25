@@ -13,6 +13,10 @@
 		public const string Error_OrderBy_in_Derived             = "Provider does not support ORDER BY in derived tabley.";
 
 		// Oracle
-		public const string Error_ColumnSubqueryShouldNotContainParentIsNotNull = "Column expression should not contain Parent's IS NOT NULL condition";
+		public const string Error_ColumnSubqueryShouldNotContainParentIsNotNull = "Column expression should not contain Parent's IS NOT NULL condition.";
+
+		// Sybase
+		public const string Error_JoinToDerivedTableWithTakeInvalid = "Provider has issue with JOIN to limited recordset.";
+
 	}
 }

@@ -197,7 +197,7 @@ namespace LinqToDB.Linq.Translation
 			var factory = translationContext.ExpressionFactory;
 
 			var sqlExpression = argumentPlaceholder.Sql;
-			var argumentType           = factory.GetDbDataType(sqlExpression);
+			var argumentType  = factory.GetDbDataType(sqlExpression);
 
 			ISqlExpression? defaultValueExpression;
 

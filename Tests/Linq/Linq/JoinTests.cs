@@ -2966,8 +2966,9 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1455Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
+			using (new GuardGrouping(false)) // For Sybase, which do not support Window functions
 			using (var db = GetDataContext(context))
-			using (var queryLastUpd = db.CreateLocalTable<Alert>())
+			using (db.CreateLocalTable<Alert>())
 			using (db.CreateLocalTable<AuditAlert>())
 			using (db.CreateLocalTable<Trade>())
 			using (db.CreateLocalTable<Nomin>())

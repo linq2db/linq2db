@@ -258,7 +258,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var converted = ConvertToSqlExpr(context, expression, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
 
-					if (converted is SqlPlaceholderExpression)
+					if (converted is SqlPlaceholderExpression or SqlErrorExpression)
 					{
 						return converted;
 					}
@@ -752,6 +752,12 @@ namespace LinqToDB.Linq.Builder
 
 					var leftExpr  = ConvertToSqlExpr(context, left,  flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
 					var rightExpr = ConvertToSqlExpr(context, right, flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
+
+					if (leftExpr is SqlErrorExpression errorLeft)
+						return errorLeft.WithType(e.Type);
+
+					if (rightExpr is SqlErrorExpression errorRight)
+						return errorRight.WithType(e.Type);
 
 					if (leftExpr is not SqlPlaceholderExpression || rightExpr is not SqlPlaceholderExpression)
 						return e;

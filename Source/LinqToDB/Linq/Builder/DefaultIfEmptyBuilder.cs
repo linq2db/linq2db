@@ -111,6 +111,12 @@ namespace LinqToDB.Linq.Builder
 				var resultSelectContext =
 					new SelectContext(buildInfo.Parent, bodyValue, subqueryContext, buildInfo.IsSubQuery);
 
+				if (!buildInfo.IsSubQuery)
+				{
+					if (!SequenceHelper.IsSupportedSubquery(resultSelectContext, resultSelectContext, out var errorMessage))
+						return BuildSequenceResult.Error(methodCall, errorMessage);
+				}
+
 				return BuildSequenceResult.FromContext(new SubQueryContext(resultSelectContext));
 			}
 			else
