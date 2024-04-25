@@ -1,13 +1,10 @@
-﻿#if NETFRAMEWORK
-using System.Data.Linq.Mapping;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Common;
 
 using NUnit.Framework;
 
-using ColumnAttribute = System.Data.Linq.Mapping.ColumnAttribute;
-using TableAttribute = System.Data.Linq.Mapping.TableAttribute;
+using ColumnAttribute = System.ComponentModel.DataAnnotations.Schema.ColumnAttribute;
+using TableAttribute = System.ComponentModel.DataAnnotations.Schema.TableAttribute;
 
 namespace Tests.Linq
 {
@@ -15,19 +12,12 @@ namespace Tests.Linq
 
 	using Model;
 
-	[Table(Name = "Person")]
-	public class L2SPersons
+	[Table("Person")]
+	public class L2DAPersons
 	{
 		private int _personID;
 
-		[Column(
-			Storage       = "_personID",
-			Name          = "PersonID",
-			DbType        = "integer(32,0)",
-			IsPrimaryKey  = true,
-			IsDbGenerated = true,
-			AutoSync      = AutoSync.Never,
-			CanBeNull     = false)]
+		[Column("PersonID", TypeName = "integer(32,0)")]
 		public int PersonID
 		{
 			get { return _personID;  }
@@ -47,13 +37,13 @@ namespace Tests.Linq
 	}
 
 	[TestFixture]
-	public class L2SAttributeTests : TestBase
+	public class L2DAAttributeTests : TestBase
 	{
 		[Test]
 		public void IsDbGeneratedTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var ms = new LinqToDB.Mapping.MappingSchema();
-			ms.AddMetadataReader(new SystemDataLinqAttributeReader());
+			ms.AddMetadataReader(new SystemComponentModelDataAnnotationsSchemaAttributeReader());
 
 			ResetPersonIdentity(context);
 
@@ -61,16 +51,15 @@ namespace Tests.Linq
 			{
 				db.BeginTransaction();
 
-				var id = db.InsertWithIdentity(new L2SPersons
+				var id = db.InsertWithIdentity(new L2DAPersons
 				{
 					FirstName = "Test",
 					LastName  = "Test",
 					Gender    = "M"
 				});
 
-				db.GetTable<L2SPersons>().Delete(p => p.PersonID == ConvertTo<int>.From(id));
+				db.GetTable<L2DAPersons>().Delete(p => p.PersonID == ConvertTo<int>.From(id));
 			}
 		}
 	}
 }
-#endif

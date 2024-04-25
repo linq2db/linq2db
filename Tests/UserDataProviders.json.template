@@ -355,7 +355,7 @@
 	// If we have setup script for database in "Data\Setup Scripts" folder, connection string is already set
 	"MyConnectionStrings": {
 		"BasedOn": "CommonConnectionStrings",
-		"DefaultConfiguration": "SQLite.Classic",
+		"DefaultConfiguration": "SQLite.MS",
 		// you can specify folder to save test sql baselines
 		"BaselinesPath": "",
 		"Connections": {

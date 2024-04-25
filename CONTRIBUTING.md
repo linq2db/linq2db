@@ -136,7 +136,7 @@ The `[User]DataProviders.json` is a regular JSON file:
 
         // default provider, used as a source of reference data
         // LINQ to DB uses SQLite for it and you hardly need to change it
-        "DefaultConfiguration" : "SQLite.Classic",
+        "DefaultConfiguration" : "SQLite.MS",
 
         // (optional) contains full or relative (from test assembly location) path to test baselines directory.
         // When path is set and specified directory exists - enables baselines generation for tests.

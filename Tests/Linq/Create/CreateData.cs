@@ -248,7 +248,6 @@ public class a_CreateData : TestBase
 	{
 		switch (context)
 		{
-			case TestProvName.Default                                    : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
 			case string when context.IsAnyOf(TestProvName.AllFirebird)   : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
 			case string when context.IsAnyOf(TestProvName.AllPostgreSQL) : RunScript(context,          "\nGO\n",  "PostgreSQL");                  break;
 			case string when context.IsAnyOf(TestProvName.AllMySql)      : RunScript(context,          "\nGO\n",  "MySql");                       break;

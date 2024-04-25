@@ -458,8 +458,8 @@ namespace Tests.Linq
 					join t in db.Types on c.ParentID equals t.ID
 					select c).Count(), Is.EqualTo((from p in Parent
 					from g in p.GrandChildren
-					join c in db.Child on g.ChildID equals c.ChildID
-					join t in db.Types on c.ParentID equals t.ID
+					join c in Child on g.ChildID equals c.ChildID
+					join t in Types on c.ParentID equals t.ID
 					select c).Count()));
 		}
 
