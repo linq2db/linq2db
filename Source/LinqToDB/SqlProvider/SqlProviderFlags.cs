@@ -375,12 +375,21 @@ namespace LinqToDB.SqlProvider
 		public bool IsColumnSubqueryWithParentReferenceSupported { get; set; } = true;
 
 		/// <summary>
+		/// Provider supports column subqueries which references outer scope when nesting is more than 1
+		/// </summary>
+		/// <remarks>
+		/// Used only for Oracle 11. liq2db emulates Take(n) via 'ROWNUM' and it cause additional nesting.
+		/// </remarks>
+		[DataMember(Order = 71), DefaultValue(true)]
+		public bool IsColumnSubqueryWithParentReferenceAndTakeSupported { get; set; } = true;
+
+		/// <summary>
 		/// Workaround over Oracle's bug with subquery in column list which contains parent table column with IS NOT NULL condition.
 		/// </summary>
 		/// <remarks>
 		/// See Issue3557Case1 test.
 		/// </remarks>
-		[DataMember(Order = 71), DefaultValue(false)]
+		[DataMember(Order = 72), DefaultValue(false)]
 		public bool IsColumnSubqueryShouldNotContainParentIsNotNull { get; set; } = false;
 
 		/// <summary>
@@ -555,6 +564,7 @@ namespace LinqToDB.SqlProvider
 				^ IsRowNumberWithoutOrderBySupported                   .GetHashCode()
 				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
 				^ IsColumnSubqueryWithParentReferenceSupported         .GetHashCode()
+				^ IsColumnSubqueryWithParentReferenceAndTakeSupported  .GetHashCode()
 				^ IsColumnSubqueryShouldNotContainParentIsNotNull      .GetHashCode()
 				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
 				^ IsOuterJoinSupportsInnerJoin                         .GetHashCode()
@@ -615,6 +625,7 @@ namespace LinqToDB.SqlProvider
 				&& IsRowNumberWithoutOrderBySupported                    == other.IsRowNumberWithoutOrderBySupported
 				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
 				&& IsColumnSubqueryWithParentReferenceSupported          == other.IsColumnSubqueryWithParentReferenceSupported
+				&& IsColumnSubqueryWithParentReferenceAndTakeSupported   == other.IsColumnSubqueryWithParentReferenceAndTakeSupported
 				&& IsColumnSubqueryShouldNotContainParentIsNotNull       == other.IsColumnSubqueryShouldNotContainParentIsNotNull
 				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported
 				&& IsOuterJoinSupportsInnerJoin                          == other.IsOuterJoinSupportsInnerJoin

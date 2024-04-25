@@ -2,11 +2,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-using LinqToDB.Linq.Builder;
-using LinqToDB.SqlProvider;
-
 namespace LinqToDB.SqlQuery.Visitors
 {
+	using Linq.Builder;
+	using SqlProvider;
+
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
 	{
 		SelectQuery?     _parentQuery;
@@ -132,6 +132,19 @@ namespace LinqToDB.SqlQuery.Visitors
 						return false;
 					}
 				}
+
+				var shouldCheckNesting = _columnSubqueryLevel            > 0     && !_providerFlags.IsColumnSubqueryWithParentReferenceSupported
+				                         || selectQuery.Select.TakeValue != null && !_providerFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported;
+
+				if (shouldCheckNesting)
+				{
+					if (SequenceHelper.HasDependencyWithOuter(selectQuery))
+					{
+						errorMessage = ErrorHelper.Error_Correlated_Subqueries;
+						return false;
+					}
+				}
+
 			}
 			else
 			{
@@ -271,18 +284,6 @@ namespace LinqToDB.SqlQuery.Visitors
 
 		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
-			if (_columnSubqueryLevel > 0 && !_providerFlags.IsColumnSubqueryWithParentReferenceSupported)
-			{
-				if (element.Source is SelectQuery sq)
-				{
-					if (SequenceHelper.HasDependencyWithOuter(sq))
-					{
-						SetInvalid(ErrorHelper.Error_Correlated_Subqueries);
-						return element;
-					}
-				}
-			}
-
 			base.VisitSqlTableSource(element);
 
 			return element;
