@@ -74,13 +74,41 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if NETFRAMEWORK
 		[Test]
-		public void TestGeography([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestGeographyMicrosoft([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-#if !NETFRAMEWORK
+			using (new SerializeAssemblyQualifiedName(true))
+			using (var conn = GetDataContext(context))
+			{
+				conn.InlineParameters = true;
+
+				conn.GetTable<AllTypes2>()
+					.Select(t => new
+					{
+						v1  = t.geographyDataType!.STSrid,
+						v2  = t.geographyDataType.Lat,
+						v3  = t.geographyDataType.Long,
+						v4  = t.geographyDataType.Z,
+						v5  = t.geographyDataType.M,
+						//v6  = t.geographyDataType.HasZ,
+						//v7  = t.geographyDataType.HasM,
+						v8 = SqlGeography.GeomFromGml(t.geographyDataType.AsGml(), 4326),
+						v9  = t.geographyDataType.AsGml(),
+						v10 = t.geographyDataType.ToString(),
+						v11 = SqlGeography.Parse("LINESTRING(-122.360 47.656, -122.343 47.656)"),
+						v12 = SqlGeography.Point(1, 1, 4326),
+						v13 = SqlGeography.STGeomFromText(new SqlChars("LINESTRING(-122.360 47.656, -122.343 47.656)"), 4326),
+					})
+					.ToList();
+			}
+		}
+#else
+		[Test]
+		public void TestGeographyDotMorten([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
 			if (IsMsProvider(context))
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
-#endif
 
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var conn = GetDataContext(context))
@@ -97,10 +125,8 @@ namespace Tests.DataProvider
 						v5  = t.geographyDataType.M,
 						//v6  = t.geographyDataType.HasZ,
 						//v7  = t.geographyDataType.HasM,
-#if NETFRAMEWORK
-						v8 = SqlGeography.GeomFromGml(t.geographyDataType.AsGml(), 4326),
-						v9  = t.geographyDataType.AsGml(),
-#endif
+						//v8 = SqlGeography.GeomFromGml(t.geographyDataType.AsGml(), 4326),
+						//v9  = t.geographyDataType.AsGml(),
 						v10 = t.geographyDataType.ToString(),
 						v11 = SqlGeography.Parse("LINESTRING(-122.360 47.656, -122.343 47.656)"),
 						v12 = SqlGeography.Point(1, 1, 4326),
@@ -109,6 +135,7 @@ namespace Tests.DataProvider
 					.ToList();
 			}
 		}
+#endif
 
 		[Table]
 		public class SqlTypes
@@ -449,7 +476,50 @@ namespace Tests.DataProvider
 				}
 			}
 
+			void Test<TValue>(DataType dataType, int precision, TValue value, TValue expected)
+			{
+				var ms = new MappingSchema();
+
+				new FluentMappingBuilder(ms)
+					.Entity<LiteralsTestTable<TValue>>()
+						.Property(e => e.Value)
+							.HasDataType(dataType)
+							.HasPrecision(precision)
+					.Build();
+
+				using var db = GetDataContext(context, ms);
+
+				db.AddInterceptor(interceptor);
+
+				db.InlineParameters = true;
+
+				var data = new LiteralsTestTable<TValue>[] { new() { Value = value } }.AsQueryable(db).ToArray();
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Value, Is.EqualTo(expected));
+					Assert.That(interceptor.Parameters, Is.Empty);
+				});
+
+				db.InlineParameters = false;
+
+				data = (from x in db.FromSqlScalar<int>($"select 1 as one")
+					   from y in new LiteralsTestTable<TValue>[] { new() { Value = value } }
+					   select y).ToArray();
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Value, Is.EqualTo(expected));
+					Assert.That(interceptor.Parameters, Has.Length.EqualTo(1));
+				});
+			}
+		}
+
 #if NET6_0_OR_GREATER
+		[Test]
+		public void TestLiteralsAndParameters_DateOnly([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var interceptor = new SaveCommandInterceptor();
+
 			// DateOnly
 			Test<DateOnly>(DataType.Text     , -1, TestData.DateOnly, TestData.DateOnly);
 			Test<DateOnly>(DataType.NText    , -1, TestData.DateOnly, TestData.DateOnly);
@@ -459,7 +529,6 @@ namespace Tests.DataProvider
 			Test<DateOnly>(DataType.NVarChar , -1, TestData.DateOnly, TestData.DateOnly);
 			Test<DateOnly>(DataType.Date     , -1, TestData.DateOnly, TestData.DateOnly);
 			Test<DateOnly>(DataType.Undefined, -1, TestData.DateOnly, TestData.DateOnly);
-#endif
 
 			void Test<TValue>(DataType dataType, int precision, TValue value, TValue expected)
 			{
@@ -498,5 +567,6 @@ namespace Tests.DataProvider
 				});
 			}
 		}
+#endif
 	}
 }
