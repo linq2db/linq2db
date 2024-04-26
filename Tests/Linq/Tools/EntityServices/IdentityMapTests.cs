@@ -114,5 +114,33 @@ namespace Tests.Tools.EntityServices
 
 			Assert.AreSame(result1[0], result2[0]);
 		}
+
+		[Test]
+		public async Task CompiledQueryCustomTestAsync()
+		{
+			await using var db  = new TestDataCustomConnection();
+			using       var map = new IdentityMap(db);
+
+			var query = CompiledQuery.Compile<TestDataCustomConnection,CancellationToken,Task<List<Person>>>(static (db, ct) => db.Person.Where(p => p.ID == 1).ToListAsync(ct));
+
+			var result1 = await query(db, default);
+			var result2 = await query(db, default);
+
+			Assert.AreSame(result1[0], result2[0]);
+		}
+
+		[Test]
+		public void CompiledQueryCustomTest()
+		{
+			using var db  = new TestDataCustomConnection();
+			using var map = new IdentityMap(db);
+
+			var query = db.Person.Where(p => p.ID == 1);
+
+			var result1 = query.ToList();
+			var result2 = query.ToList();
+
+			Assert.AreSame(result1[0], result2[0]);
+		}
 	}
 }
