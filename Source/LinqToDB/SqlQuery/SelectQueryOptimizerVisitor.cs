@@ -1584,7 +1584,10 @@ namespace LinqToDB.SqlQuery
 					return false;
 
 				if (!parentQuery.Select.Where.IsEmpty)
-					return false;
+				{
+					if (subQuery.Select.TakeValue != null || subQuery.Select.SkipValue != null)
+						return false;
+				}
 
 				if (parentQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 				{
