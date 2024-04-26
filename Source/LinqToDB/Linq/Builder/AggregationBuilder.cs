@@ -638,7 +638,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (definition == null)
 				{
-					sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = true };
+					var canBeNull = aggregationType != AggregationType.Count;
+					sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = canBeNull };
 				}
 
 				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);
