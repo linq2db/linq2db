@@ -704,12 +704,22 @@ namespace Tests.Data
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope or doesn't support DDL in distributed transactions");
 			}
 
-			using var scope = withScope ? new TransactionScope() : null;
-			using var db = GetDataContext(context);
-			using (db.CreateLocalTable(Category.Data))
-			using (db.CreateLocalTable(Product.Data))
+			// netfx providers bug leads to different baselines
+			var nolog = context.IsAnyOf(TestProvName.AllAccess) ? new DisableLogging() : null;
+
+			try
 			{
+				using var scope = withScope ? new TransactionScope() : null;
+				using var db = GetDataContext(context);
+				using var tc = db.CreateLocalTable(Category.Data);
+				using var tp = db.CreateLocalTable(Product.Data);
+				nolog?.Dispose();
+				nolog = null;
 				var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
+			}
+			finally
+			{
+				nolog?.Dispose();
 			}
 		}
 		#endregion

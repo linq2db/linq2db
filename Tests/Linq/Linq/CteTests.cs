@@ -658,9 +658,9 @@ namespace Tests.Linq
 
 		sealed class RecursiveCTE
 		{
-			public int? ParentID;
-			public int? ChildID;
-			public int? GrandChildID;
+			public int? ParentID     { get; set; }
+			public int? ChildID      { get; set; }
+			public int? GrandChildID { get; set; }
 		}
 
 		[Test]
@@ -673,8 +673,8 @@ namespace Tests.Linq
 							from gc1 in db.GrandChild
 							select new RecursiveCTE
 							{
-								ChildID = gc1.ChildID,
-								ParentID = gc1.GrandChildID,
+								ChildID      = gc1.ChildID,
+								ParentID     = gc1.GrandChildID,
 								GrandChildID = gc1.GrandChildID,
 							}
 						)
@@ -686,8 +686,8 @@ namespace Tests.Linq
 							where ct.GrandChildID <= 10
 							select new RecursiveCTE
 							{
-								ChildID = ct.ChildID,
-								ParentID = ct.ParentID,
+								ChildID      = ct.ChildID,
+								ParentID     = ct.ParentID,
 								GrandChildID = ct.ChildID + 1
 							}
 						)
