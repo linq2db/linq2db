@@ -2,7 +2,7 @@
 	"NETFX" :
 	{
 		"BasedOn"              : "User.Providers",
-		"DefaultConfiguration" : "SQLite.Default",
+		"DefaultConfiguration" : "SQLite.MS",
 		"Providers"            :
 		[
 			"- Access.Odbc",
