@@ -709,13 +709,17 @@ namespace Tests.Data
 
 			try
 			{
-			using var scope = withScope ? new TransactionScope() : null;
-			using var db = GetDataContext(context);
+				using var scope = withScope ? new TransactionScope() : null;
+				using var db = GetDataContext(context);
 				using var tc = db.CreateLocalTable(Category.Data);
 				using var tp = db.CreateLocalTable(Product.Data);
 				nolog?.Dispose();
 				nolog = null;
 				var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
+			}
+			finally
+			{
+				nolog?.Dispose();
 			}
 		}
 		#endregion
