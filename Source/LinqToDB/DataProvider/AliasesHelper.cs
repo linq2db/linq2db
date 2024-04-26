@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider
 					element.Fields,
 					null,
 					(n, a) => IsValidAlias(n),
-					f => TruncateIdentifier(IdentifierKind.Alias, f.Name),
+					f => TruncateIdentifier(IdentifierKind.Alias, f.PhysicalName),
 					(f, n, a) =>
 					{
 						f.PhysicalName = n;
@@ -198,7 +198,19 @@ namespace LinqToDB.DataProvider
 				if (element.Body != null)
 				{
 					for (var i = 0; i < element.Fields.Count; i++)
-						element.Body.Select.Columns[i].Alias = element.Fields[i].Name;
+					{
+						var field = element.Fields[i];
+
+						element.Body.Select.Columns[i].Alias = field.PhysicalName;
+
+						if (element.Body.HasSetOperators)
+						{
+							foreach (var setOperator in element.Body.SetOperators)
+							{
+								setOperator.SelectQuery.Select.Columns[i].Alias = field.PhysicalName;
+							}
+						}
+					}
 
 					_newAliases.RegisterAliased(element.Body);
 				}
