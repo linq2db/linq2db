@@ -96,7 +96,6 @@ namespace Tests.xUpdate
 
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
-			[Column(IsColumn = false, Configuration = TestProvName.MySql55)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
@@ -527,10 +526,13 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (provider.IsAnyOf(TestProvName.AllMySqlServer57Plus) && expected.Value.Millisecond > 500)
-					expected = expected.Value.AddSeconds(1);
-
-				if (provider.IsAnyOf(TestProvName.AllSybase))
+				if (provider.IsAnyOf(TestProvName.AllMySql))
+				{
+					if (expected.Value.Ticks % 10 >= 5)
+						expected = expected.Value.AddTicks(10);
+					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
+				}
+				else if (provider.IsAnyOf(TestProvName.AllSybase))
 				{
 					switch (expected.Value.Millisecond % 10)
 					{
@@ -550,8 +552,7 @@ namespace Tests.xUpdate
 					}
 				}
 
-				if (   provider.IsAnyOf(TestProvName.AllMySql)
-					|| provider.IsAnyOf(TestProvName.AllOracle)
+				if (   provider.IsAnyOf(TestProvName.AllOracle)
 					|| provider.IsAnyOf(ProviderName.AccessOdbc))
 					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
 			}
@@ -583,7 +584,6 @@ namespace Tests.xUpdate
 			if (   provider.IsAnyOf(TestProvName.AllSqlServer2005)
 				|| provider.IsAnyOf(TestProvName.AllOracle)
 				|| provider.IsAnyOf(TestProvName.AllSQLite)
-				|| provider.IsAnyOf(TestProvName.AllMySql55)
 				|| provider.IsAnyOf(TestProvName.AllFirebird)
 				|| provider == ProviderName.SqlCe)
 				return;
@@ -622,20 +622,20 @@ namespace Tests.xUpdate
 					case string when provider.IsAnyOf(TestProvName.AllInformix):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
-					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL):
+					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMariaDB):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
-					case string when provider.IsAnyOf(ProviderName.DB2, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMariaDB):
+					case string when provider.IsAnyOf(ProviderName.DB2, TestProvName.AllAccess, TestProvName.AllSapHana):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
 						break;
-					case string when provider.IsAnyOf(TestProvName.AllMySqlServer57Plus):
-						var msecs = expected.Value.Milliseconds;
-
-						if (msecs > 500)
+					case string when provider.IsAnyOf(TestProvName.AllMySqlServer):
+						// TIME doesn't support fractional seconds and value is rounded
+						//
+						// round
+						if ((expected.Value.Ticks / 1_000_000) % 10 >= 5)
 							expected = expected.Value.Add(TimeSpan.FromSeconds(1));
-
-						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
-
+						// trim fraction
+						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10_000_000) * 10_000_000);
 						break;
 				}
 			}

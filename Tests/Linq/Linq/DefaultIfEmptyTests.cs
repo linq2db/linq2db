@@ -2,6 +2,9 @@
 
 using FluentAssertions;
 
+using LinqToDB;
+using LinqToDB.Linq;
+
 using NUnit.Framework;
 
 using Tests.Model;
@@ -11,6 +14,7 @@ namespace Tests.Linq
 	public class DefaultIfEmptyTests : TestBase
 	{
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider has issue with JOIN to limited recordset.")]
 		public void WithoutDefault([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -24,6 +28,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider has issue with JOIN to limited recordset.")]
 		public void WithDefault([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);

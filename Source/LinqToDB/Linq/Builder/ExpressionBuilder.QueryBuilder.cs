@@ -164,6 +164,8 @@ namespace LinqToDB.Linq.Builder
 				postProcessed = FinalizeConstructors(context, correctedEager, false);
 			}
 
+			SequenceHelper.EnsureNoErrors(postProcessed);
+
 			var withColumns = ToColumns(context, postProcessed);
 			return withColumns;
 		}

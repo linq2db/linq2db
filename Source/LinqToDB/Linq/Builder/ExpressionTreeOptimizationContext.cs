@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 			if (compareConstantValues)
 			{
 				if (_equalsToContextTrue == null)
-					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, parametrized, null, compareConstantValues: compareConstantValues);
+					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, parametrized, compareConstantValues : compareConstantValues);
 				else
 					_equalsToContextTrue.Reset();
 				return _equalsToContextTrue;
@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				if (_equalsToContextFalse == null)
-					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, parametrized, null, compareConstantValues: compareConstantValues);
+					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, parametrized, compareConstantValues : compareConstantValues);
 				else
 					_equalsToContextFalse.Reset();
 				return _equalsToContextFalse;
@@ -601,12 +601,6 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMember(MemberExpression node)
 			{
-				if (node.Expression != null && typeof(IDataContext).IsSameOrParentOf(node.Expression.Type) && typeof(IQueryable<>).IsSameOrParentOf(node.Type))
-				{
-					CanBeCompiledFlag = false;
-					return node;
-				}
-
 				var save = _inMethod;
 				_inMethod = true;
 
@@ -753,9 +747,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (ex is BinaryExpression)
 				return false;
-
-			if (MappingSchema.GetConvertExpression(ex.Type, typeof(DataParameter), false, false) != null)
-				return true;
 
 			if (ex.Type == typeof(void))
 				return true;

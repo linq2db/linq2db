@@ -24,8 +24,11 @@
 		<PackageReference Include="Oracle.ManagedDataAccess" />
 		<PackageReference Include="Microsoft.SqlServer.Types" />
 
-		<Reference Include="IBM.Data.Informix">
-			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
+		<Reference Include="IBM.Data.Informix" Condition=" $(PlatformTarget) != 'x86' ">
+			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\IBM\SQLI x64\IBM.Data.Informix.dll</HintPath>
+		</Reference>
+		<Reference Include="IBM.Data.Informix" Condition=" $(PlatformTarget) == 'x86' ">
+			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\IBM\SQLI x86\IBM.Data.Informix.dll</HintPath>
 		</Reference>
 		<Reference Include="Oracle.DataAccess">
 			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
@@ -56,7 +59,7 @@
 
 	<!--some magic to not include x64 reference to IBM.Data.DB2.Core in x86 builds, as it fails x86 tests-->
 	<Choose>
-		<When Condition="$(X86) == ''">
+		<When Condition=" $(DB2STUB) != 'True' ">
 			<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
 				<!--PackageReference + Reference beelongs to same nuget-->
 				<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />

@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			return new SqlTypesTranslation();
 		}
 
-		protected override IMemberTranslator CreateDateFunctionsTranslator()
+		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
 		}
@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
+			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID", factory.Value(1));
 
 			return timePart;
 		}

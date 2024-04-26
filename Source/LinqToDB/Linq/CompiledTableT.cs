@@ -38,7 +38,7 @@ namespace LinqToDB.Linq
 
 					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
 					var exposed = ExpressionBuilder.ExposeExpression(key.expression, ctx.dataContext,
-						optimizationContext, optimizeConditions : false, compactBinary : true);
+						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true);
 
 					var query               = new Query<T>(ctx.dataContext, exposed);
 
@@ -47,7 +47,7 @@ namespace LinqToDB.Linq
 					query = new ExpressionBuilder(query, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
 						.Build<T>();
 
-					query.ClearMemberQueryableInfo();
+					query.ClearDynamicQueryableInfo();
 					return query;
 				})!;
 

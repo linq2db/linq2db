@@ -237,10 +237,6 @@ namespace LinqToDB.Linq
 			foreach (var sql in query.Queries)
 			{
 				sql.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, sql.Statement, query.DataOptions);
-
-				SqlStatement.PrepareQueryAndAliases(sql.Statement, null, out var aliasesContext);
-
-				sql.Aliases = aliasesContext;
 			}
 		}
 

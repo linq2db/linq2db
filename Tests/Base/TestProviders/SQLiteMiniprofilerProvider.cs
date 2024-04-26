@@ -17,7 +17,7 @@ namespace Tests
 		private readonly bool _mapped;
 
 		public SQLiteMiniprofilerProvider(bool mapped)
-			: base(ProviderName.SQLiteClassic)
+			: base(ProviderName.SQLiteClassic, SQLiteProvider.System)
 		{
 			_mapped = mapped;
 		}

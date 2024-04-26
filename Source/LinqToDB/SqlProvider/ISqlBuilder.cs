@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 
-using LinqToDB.Common;
-
 namespace LinqToDB.SqlProvider
 {
 	using Mapping;
 	using SqlQuery;
+	using Common;
 
 	public interface ISqlBuilder
 	{
-		int              CommandCount                  (SqlStatement statement);
-		void             BuildSql                      (int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int startIndent = 0);
+		int  CommandCount(SqlStatement statement);
+		void BuildSql(int              commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, int startIndent = 0);
 		/// <summary>
 		/// Writes database object name into provided <see cref="StringBuilder"/> instance.
 		/// </summary>

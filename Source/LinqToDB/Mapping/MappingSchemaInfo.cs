@@ -226,6 +226,10 @@ namespace LinqToDB.Mapping
 
 			_dataTypes[type] = dataType;
 
+			var nullableType = type.MakeNullable();
+			if (nullableType != type)
+				_dataTypes[nullableType] = new SqlDataType(dataType.Type.WithSystemType(dataType.Type.SystemType.MakeNullable()));
+
 			ResetID();
 		}
 

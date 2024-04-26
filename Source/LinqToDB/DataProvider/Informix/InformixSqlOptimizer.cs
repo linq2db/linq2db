@@ -66,8 +66,6 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
-			CheckAliases(statement, int.MaxValue);
-
 			statement.VisitAll(SetQueryParameter);
 
 			// TODO: test if it works and enable support with type-cast like it is done for Firebird

@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
@@ -10,7 +11,8 @@ namespace LinqToDB.Expressions
 	public static class ExpressionInstances
 	{
 		public static readonly Expression NullIDataContext = Expression.Constant(null, typeof(IDataContext));
-		public static readonly Expression HashMultiplier = Expression.Constant(-1521134295);
+		public static readonly Expression HashMultiplier   = Expression.Constant(-1521134295);
+		public static readonly Expression EmptyTypes       = Expression.Constant(Type.EmptyTypes);
 		
 		public static readonly ConstantExpression True        = Expression.Constant(true);
 		public static readonly ConstantExpression False       = Expression.Constant(false);

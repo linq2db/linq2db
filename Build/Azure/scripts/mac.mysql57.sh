@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#docker pull mysql:5.5
-docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mysql:5.5
+#docker pull mysql:5.7
+docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mysql:5.7
 docker ps -a
 
 retries=0

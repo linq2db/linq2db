@@ -274,6 +274,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (SequenceHelper.HasError(translated))
 				{
+					if (translated is SqlErrorExpression { IsCritical: true })
+						return translated;
 					return expression;
 				}
 
@@ -880,7 +882,10 @@ namespace LinqToDB.Linq.Builder
 					return TranslateExpression(node);
 				}
 
-				var test    = Visit(node.Test);
+				var saveDescriptor = _columnDescriptor;
+				_columnDescriptor  = null;
+				var test           = Visit(node.Test);
+				_columnDescriptor  = saveDescriptor;
 
 				var ifTrue  = Visit(node.IfTrue);
 				var ifFalse = Visit(node.IfFalse);

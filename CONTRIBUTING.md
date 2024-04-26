@@ -140,7 +140,7 @@ The `[User]DataProviders.json` is a regular JSON file:
 
         // default provider, used as a source of reference data
         // LINQ to DB uses SQLite for it and you hardly need to change it
-        "DefaultConfiguration" : "SQLite.Classic",
+        "DefaultConfiguration" : "SQLite.MS",
 
         // (optional) contains full or relative (from test assembly location) path to test baselines directory.
         // When path is set and specified directory exists - enables baselines generation for tests.
@@ -166,10 +166,10 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SqlServer.2005",
             "SqlServer.Azure",
             "DB2",
-            "Firebird",
+            "Firebird.5",
             "Informix",
-            "MySql",
-            "MariaDB",
+            "MySql.8.0",
+            "MariaDB.11",
             "Oracle.Native",
             "Oracle.Managed",
             "PostgreSQL",
@@ -200,9 +200,9 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SqlServer.2008",
             "SqlServer.2005",
             "SqlServer.Azure",
-            "Firebird",
-            "MySql",
-            "MariaDB",
+            "Firebird.5",
+            "MySql.8.0",
+            "MariaDB.11",
             "PostgreSQL",
             "SqlServer.Northwind",
             "TestNoopProvider"
@@ -222,9 +222,9 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SqlServer.2008",
             "SqlServer.2005",
             "SqlServer.Azure",
-            "Firebird",
-            "MySql",
-            "MariaDB",
+            "Firebird.5",
+            "MySql.8.0",
+            "MariaDB.11",
             "PostgreSQL",
             "SqlServer.Northwind",
             "TestNoopProvider"

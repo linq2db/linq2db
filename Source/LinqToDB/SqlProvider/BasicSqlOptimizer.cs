@@ -1404,51 +1404,6 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
-		#region Helpers
-
-		static string? SetAlias(string? alias, int maxLen)
-		{
-			if (alias == null)
-				return null;
-
-			alias = alias.TrimStart('_');
-
-			var cs      = alias.ToCharArray();
-			var replace = false;
-
-			for (var i = 0; i < cs.Length; i++)
-			{
-				var c = cs[i];
-
-				if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_')
-					continue;
-
-				cs[i] = ' ';
-				replace = true;
-			}
-
-			if (replace)
-				alias = new string(cs).Replace(" ", "");
-
-			return alias.Length == 0 || alias.Length > maxLen ? null : alias;
-		}
-
-		protected void CheckAliases(SqlStatement statement, int maxLen)
-		{
-			statement.Visit(maxLen, static (maxLen, e) =>
-			{
-				switch (e.ElementType)
-				{
-					case QueryElementType.SqlField     : ((SqlField)      e).Alias = SetAlias(((SqlField)      e).Alias, maxLen); break;
-					case QueryElementType.SqlTable     : ((SqlTable)      e).Alias = SetAlias(((SqlTable)      e).Alias, maxLen); break;
-					case QueryElementType.Column       : ((SqlColumn)     e).Alias = SetAlias(((SqlColumn)     e).Alias, maxLen); break;
-					case QueryElementType.TableSource  : ((SqlTableSource)e).Alias = SetAlias(((SqlTableSource)e).Alias, maxLen); break;
-				}
-			});
-		}
-
-		#endregion
-
 		public virtual bool IsParameterDependedQuery(SelectQuery query)
 		{
 			var takeValue = query.Select.TakeValue;

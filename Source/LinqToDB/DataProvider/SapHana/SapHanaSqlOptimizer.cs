@@ -26,7 +26,47 @@ namespace LinqToDB.DataProvider.SapHana
 				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions, mappingSchema); break;
 			}
 
+			RemoveParametersFromLateralJoin(statement);
+
 			return statement;
+		}
+
+
+		static void RemoveParametersFromLateralJoin(SqlStatement statement)
+		{
+			new LateralJoinParametersCorrector().Visit(statement);
+		}
+
+
+		class LateralJoinParametersCorrector : QueryElementVisitor
+		{
+			bool _isLateralJoin;
+
+			public LateralJoinParametersCorrector() : base(VisitMode.Modify)
+			{
+			}
+
+			protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+			{
+				var saveIsLateralJoin = _isLateralJoin;
+				_isLateralJoin = _isLateralJoin || element.JoinType == JoinType.CrossApply || element.JoinType == JoinType.OuterApply;
+
+				base.VisitSqlJoinedTable(element);
+
+				_isLateralJoin = saveIsLateralJoin;
+
+				return element;
+			}
+
+			protected override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
+			{
+				if (_isLateralJoin)
+				{
+					sqlParameter.IsQueryParameter = false;
+				}
+
+				return sqlParameter;
+			}
 		}
 
 	}

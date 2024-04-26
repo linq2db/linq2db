@@ -25,7 +25,7 @@ namespace Tests.Linq
 
 		#region MATCH
 		[Test]
-		public void MatchPredicate([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
+		public void MatchPredicate([IncludeDataSources(true, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -46,7 +46,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MatchPredicateOneColumn([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
+		public void MatchPredicateOneColumn([IncludeDataSources(true, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -65,7 +65,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MatchPredicateWithModifier([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context, [Values] MySqlExtensions.MatchModifier modifier)
+		public void MatchPredicateWithModifier([IncludeDataSources(true, TestProvName.AllMySql)] string context, [Values] MySqlExtensions.MatchModifier modifier)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -88,7 +88,7 @@ namespace Tests.Linq
 
 		#region MATCH
 		[Test]
-		public void MatchRelevancePredicate([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
+		public void MatchRelevancePredicate([IncludeDataSources(true, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -108,7 +108,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MatchRelevancePredicateOneColumn([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
+		public void MatchRelevancePredicateOneColumn([IncludeDataSources(true, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -128,7 +128,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MatchRelevancePredicateWithModifier([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context, [Values] MySqlExtensions.MatchModifier modifier)
+		public void MatchRelevancePredicateWithModifier([IncludeDataSources(true, TestProvName.AllMySql)] string context, [Values] MySqlExtensions.MatchModifier modifier)
 		{
 			using (var db = GetDataContext(context))
 			{

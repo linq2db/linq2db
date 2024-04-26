@@ -30,30 +30,7 @@ namespace LinqToDB.DataProvider
 		public override Type    DataReaderType        => Adapter.DataReaderType;
 		public override bool    TransactionsSupported => Adapter.TransactionType != null;
 
-		Func<string, DbConnection>? _createConnection;
-
-		protected override DbConnection CreateConnectionInternal(string connectionString)
-		{
-			if (_createConnection == null)
-			{
-				var l = CreateConnectionExpression(Adapter.ConnectionType);
-				_createConnection = l.CompileExpression();
-			}
-
-			return _createConnection(connectionString);
-		}
-
-		private static Expression<Func<string, DbConnection>> CreateConnectionExpression(Type connectionType)
-		{
-			var p = Expression.Parameter(typeof(string));
-			var l = Expression.Lambda<Func<string, DbConnection>>(
-				Expression.Convert(Expression.New(
-					connectionType.GetConstructor(new[] { typeof(string) })
-						?? throw new InvalidOperationException($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)"),
-					p), typeof(DbConnection)),
-				p);
-			return l;
-		}
+		protected override DbConnection CreateConnectionInternal(string connectionString) => Adapter.CreateConnection(connectionString);
 
 		#region DataReader ReaderExpressions Helpers
 

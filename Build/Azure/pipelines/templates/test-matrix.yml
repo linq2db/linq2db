@@ -296,10 +296,10 @@ jobs:
 # MySql/MariaDB
         - name: MySQL
           title: MySQL 8 (both providers)
-          config_linux: mysql
-          config_macos: mysql
-          script_linux_global: mysql.sh
-          script_macos_global: mac.mysql.sh
+          config_linux: mysql80
+          config_macos: mysql80
+          script_linux_global: mysql80.sh
+          script_macos_global: mac.mysql80.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -313,12 +313,12 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
             enabled: false
 
-        - name: MySQL55
-          title: MySQL 5.5 (both providers)
-          config_linux: mysql55
-          config_macos: mysql55
-          script_linux_global: mysql55.sh
-          script_macos_global: mac.mysql55.sh
+        - name: MySQL57
+          title: MySQL 5.7 (both providers)
+          config_linux: mysql57
+          config_macos: mysql57
+          script_linux_global: mysql57.sh
+          script_macos_global: mac.mysql57.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -333,12 +333,11 @@ jobs:
             enabled: false
 
         - name: MariaDB
-          title: MariaDB
-          config_win: mariadb
-          config_linux: mariadb
-          config_macos: mariadb
-          script_linux_global: mariadb.sh
-          script_macos_global: mac.mariadb.sh
+          title: MariaDB 11
+          config_linux: mariadb11
+          config_macos: mariadb11
+          script_linux_global: mariadb11.sh
+          script_macos_global: mac.mariadb11.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -918,6 +917,25 @@ jobs:
           config_macos: firebird4
           script_linux_global: firebird4.sh
           script_macos_global: firebird4.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net60: true
+          enable_fw_net80: true
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
+            enabled: false
+
+        - name: Firebird5
+          title: Firebird 5.0
+          config_linux: firebird5
+          config_macos: firebird5
+          script_linux_global: firebird5.sh
+          script_macos_global: firebird5.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true

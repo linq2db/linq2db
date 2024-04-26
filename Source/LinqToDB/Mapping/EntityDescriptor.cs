@@ -152,7 +152,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal bool HasComplexColumns { get; private set; }
 
-		public LambdaExpression? QueryFilterFunc { get; private set; }
+		public LambdaExpression? QueryFilterLambda { get; private set; }
+		public Delegate?         QueryFilterFunc   { get; private set; }
 
 		bool HasInheritanceMapping()
 		{
@@ -193,7 +194,8 @@ namespace LinqToDB.Mapping
 
 			if (qf != null)
 			{
-				QueryFilterFunc = qf.FilterFunc;
+				QueryFilterLambda = qf.FilterLambda;
+				QueryFilterFunc   = qf.FilterFunc;
 			}
 
 			InitializeDynamicColumnsAccessors(hasInheritanceMapping);

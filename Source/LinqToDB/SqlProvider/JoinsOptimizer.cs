@@ -91,6 +91,47 @@ namespace LinqToDB.SqlProvider
 			});
 		}
 
+		public static void UndoNestedJoins(IQueryElement statement)
+		{
+			var correct = false;
+			statement.Visit(e =>
+			{
+				if (e is SqlTableSource source)
+				{
+					for (var i = 0; i < source.Joins.Count; i++)
+					{
+						var join = source.Joins[i];
+
+						if (join.Table.Joins.Count > 0)
+						{
+							var subQueryTableSource = new SqlTableSource(
+								join.Table.Source,
+								join.Table.Alias,
+								join.Table.Joins,
+								join.Table.HasUniqueKeys ? join.Table.UniqueKeys : null);
+
+							var subQuery = new SelectQuery();
+							subQuery.From.Tables.Add(subQueryTableSource);
+
+							join.Table.Source = subQuery;
+							join.Table.Alias = null;
+							join.Table.Joins.Clear();
+							if (join.Table.HasUniqueKeys)
+								join.Table.UniqueKeys.Clear();
+
+							correct = true;
+						}
+					}
+				}
+			});
+
+			if (correct)
+			{
+				var corrector = new SqlQueryColumnNestingCorrector();
+				corrector.CorrectColumnNesting(statement);
+			}
+		}
+
 		#region Helpers
 		bool CanRemoveLeftJoin(SqlStatement statement, SqlJoinedTable join, EvaluationContext evaluationContext)
 		{

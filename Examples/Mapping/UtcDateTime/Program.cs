@@ -4,6 +4,7 @@ using System.Diagnostics;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 
 namespace UtcDateTime
@@ -11,7 +12,7 @@ namespace UtcDateTime
 	internal class Program
 	{
 		static readonly DataOptions _options = new DataOptions()
-			.UseSQLiteMicrosoft("Data Source=db.sqlite")
+			.UseSQLite("Data Source=db.sqlite", SQLiteProvider.Microsoft)
 			.UseTracing(TraceLevel.Info, info => Console.WriteLine(info.SqlText));
 
 		// Use specific MappingSchema for DateTime conversion or set MappingSchema.Default.

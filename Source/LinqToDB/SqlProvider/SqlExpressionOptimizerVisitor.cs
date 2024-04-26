@@ -105,7 +105,7 @@ namespace LinqToDB.SqlProvider
 				var newCaseExpression = new SqlCaseExpression(QueryHelper.GetDbDataType(element.TrueValue, _mappingSchema),
 					new SqlCaseExpression.CaseItem[]
 					{
-						new(element.Condition, element.TrueValue), 
+						new(element.Condition, element.TrueValue),
 						new(falseConditional.Condition, falseConditional.TrueValue),
 					}, falseConditional.FalseValue);
 

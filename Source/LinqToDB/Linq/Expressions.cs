@@ -1087,30 +1087,6 @@ namespace LinqToDB.Linq
 			{ M(() => Math.Log          (0,0)),  N(() => L<double,double,double>((double m,double n) => Sql.Log    (n, m)!.Value )) },
 			{ M(() => Math.Log10          (0)),  N(() => L<double,double>       ((double p)          => Sql.Log10  (p)!   .Value )) },
 
-			{ M(() => Math.Max((byte)   0, (byte)   0)), N(() => L<byte,   byte,   byte>   ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((decimal)0, (decimal)0)), N(() => L<decimal,decimal,decimal>((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((double) 0, (double) 0)), N(() => L<double, double, double> ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((short)  0, (short)  0)), N(() => L<short,  short,  short>  ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((int)    0, (int)    0)), N(() => L<int,    int,    int>    ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((long)   0, (long)   0)), N(() => L<long,   long,   long>   ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((sbyte)  0, (sbyte)  0)), N(() => L<sbyte,  sbyte,  sbyte>  ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((float)  0, (float)  0)), N(() => L<float,  float,  float>  ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((ushort) 0, (ushort) 0)), N(() => L<ushort, ushort, ushort> ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((uint)   0, (uint)   0)), N(() => L<uint,   uint,   uint>   ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((ulong)  0, (ulong)  0)), N(() => L<ulong,  ulong,  ulong>  ((v1,v2) => v1 > v2 ? v1 : v2)) },
-
-			{ M(() => Math.Min((byte)   0, (byte)   0)), N(() => L<byte,   byte,   byte>   ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((decimal)0, (decimal)0)), N(() => L<decimal,decimal,decimal>((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((double) 0, (double) 0)), N(() => L<double, double, double> ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((short)  0, (short)  0)), N(() => L<short,  short,  short>  ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((int)    0, (int)    0)), N(() => L<int,    int,    int>    ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((long)   0, (long)   0)), N(() => L<long,   long,   long>   ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((sbyte)  0, (sbyte)  0)), N(() => L<sbyte,  sbyte,  sbyte>  ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((float)  0, (float)  0)), N(() => L<float,  float,  float>  ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((ushort) 0, (ushort) 0)), N(() => L<ushort, ushort, ushort> ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((uint)   0, (uint)   0)), N(() => L<uint,   uint,   uint>   ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((ulong)  0, (ulong)  0)), N(() => L<ulong,  ulong,  ulong>  ((v1,v2) => v1 < v2 ? v1 : v2)) },
-
 			{ M(() => Math.Pow        (0,0) ), N(() => L<double,double,double>    ((double x,double y) => Sql.Power(x, y)!.Value )) },
 
 			{ M(() => Sql.Round       (0m)  ), N(() => L<decimal?,decimal?>       ((decimal? d)          => Sql.Round(d, 0))) },
@@ -1614,6 +1590,7 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.SQLite        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Access        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
 		[Sql.Extension(ProviderName.MySql         , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrailingRTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Sybase        , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
 		public static string? TrimRight(string? str, [SqlQueryDependent] params char[] trimChars)
 		{
 			return str?.TrimEnd(trimChars);
@@ -1633,9 +1610,9 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.SQLite        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.MySql         , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Access        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-
 		[Sql.Extension(ProviderName.SqlServer     , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SqlCe         , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Sybase        , "LTRIM({0})"                , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		public static string? TrimLeft(string? str, [SqlQueryDependent] params char[] trimChars)
 		{
 			return str?.TrimStart(trimChars);

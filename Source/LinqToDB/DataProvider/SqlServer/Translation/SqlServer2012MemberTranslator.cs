@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateDateFunctionsTranslator()
+		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new SqlServer2012DateFunctionsTranslator();
 		}

@@ -19,8 +19,6 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
-			CheckAliases(statement, int.MaxValue);
-
 			statement = base.Finalize(mappingSchema, statement, dataOptions);
 
 			return statement;

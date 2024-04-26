@@ -234,31 +234,18 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			AddScalarType(typeof(SqlChars),     SqlChars.   Null, true);
 			AddScalarType(typeof(SqlBinary),    SqlBinary.  Null, true, DataType.VarBinary);
-			AddScalarType(typeof(SqlBinary?),   SqlBinary.  Null, true, DataType.VarBinary);
 			AddScalarType(typeof(SqlBoolean),   SqlBoolean. Null, true, DataType.Boolean);
-			AddScalarType(typeof(SqlBoolean?),  SqlBoolean. Null, true, DataType.Boolean);
 			AddScalarType(typeof(SqlByte),      SqlByte.    Null, true, DataType.Byte);
-			AddScalarType(typeof(SqlByte?),     SqlByte.    Null, true, DataType.Byte);
 			AddScalarType(typeof(SqlDateTime),  SqlDateTime.Null, true, DataType.DateTime);
-			AddScalarType(typeof(SqlDateTime?), SqlDateTime.Null, true, DataType.DateTime);
 			AddScalarType(typeof(SqlDecimal),   SqlDecimal. Null, true, DataType.Decimal);
-			AddScalarType(typeof(SqlDecimal?),  SqlDecimal. Null, true, DataType.Decimal);
 			AddScalarType(typeof(SqlDouble),    SqlDouble.  Null, true, DataType.Double);
-			AddScalarType(typeof(SqlDouble?),   SqlDouble.  Null, true, DataType.Double);
 			AddScalarType(typeof(SqlGuid),      SqlGuid.    Null, true, DataType.Guid);
-			AddScalarType(typeof(SqlGuid?),     SqlGuid.    Null, true, DataType.Guid);
 			AddScalarType(typeof(SqlInt16),     SqlInt16.   Null, true, DataType.Int16);
-			AddScalarType(typeof(SqlInt16?),    SqlInt16.   Null, true, DataType.Int16);
 			AddScalarType(typeof(SqlInt32),     SqlInt32.   Null, true, DataType.Int32);
-			AddScalarType(typeof(SqlInt32?),    SqlInt32.   Null, true, DataType.Int32);
 			AddScalarType(typeof(SqlInt64),     SqlInt64.   Null, true, DataType.Int64);
-			AddScalarType(typeof(SqlInt64?),    SqlInt64.   Null, true, DataType.Int64);
 			AddScalarType(typeof(SqlMoney),     SqlMoney.   Null, true, DataType.Money);
-			AddScalarType(typeof(SqlMoney?),    SqlMoney.   Null, true, DataType.Money);
 			AddScalarType(typeof(SqlSingle),    SqlSingle.  Null, true, DataType.Single);
-			AddScalarType(typeof(SqlSingle?),   SqlSingle.  Null, true, DataType.Single);
 			AddScalarType(typeof(SqlString),    SqlString.  Null, true, DataType.NVarChar);
-			AddScalarType(typeof(SqlString?),   SqlString.  Null, true, DataType.NVarChar);
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
 			AddScalarType(typeof(DateTime),  DataType.DateTime2);
@@ -600,7 +587,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
 				AddScalarType(typeof(DateTime) , DataType.DateTime);
-				AddScalarType(typeof(DateTime?), DataType.DateTime);
 
 				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , false, false));
 				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, false, false));

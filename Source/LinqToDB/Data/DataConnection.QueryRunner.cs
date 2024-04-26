@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
 	using Common.Internal;
+	using DataProvider;
 	using Linq;
 	using SqlQuery;
 	using SqlProvider;
 	using Tools;
+	using Infrastructure;
 
 	public partial class DataConnection
 	{
@@ -235,13 +235,6 @@ namespace LinqToDB.Data
 
 					var commands = new CommandWithParameters[cc];
 
-					var aliases = query.Aliases;
-					if (aliases == null || !ReferenceEquals(query.Statement, statement))
-					{
-						// correct aliases if needed
-						SqlStatement.PrepareQueryAndAliases(statement, query.Aliases, out aliases);
-					}
-
 					var optimizeAndConvertAll = !continuousRun && !statement.IsParameterDependent;
 					// We can optimize and convert all queries at once, because they are not parameter dependent.
 
@@ -254,7 +247,6 @@ namespace LinqToDB.Data
 					var optimizationContext = new OptimizationContext(evaluationContext, options,
 						dataConnection.DataProvider.SqlProviderFlags,
 						dataConnection.MappingSchema,
-						aliases,
 						optimizeVisitor,
 						convertVisitor,
 						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
@@ -266,13 +258,18 @@ namespace LinqToDB.Data
 						var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 						statement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
 					}
-					
+
+					// correct aliases if needed
+					AliasesHelper.PrepareQueryAndAliases(dataConnection.DataProvider.ServiceProvider.GetRequiredService<IIdentifierService>(), statement, query.Aliases, out var aliases);
+
+					query.Aliases = aliases;
+
 					for (var i = 0; i < cc; i++)
 					{
 						sb.Value.Length = 0;
 
 						using (ActivityService.Start(ActivityID.BuildSql))
-							sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, startIndent);
+							sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, aliases, startIndent);
 
 						commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
 						optimizationContext.ClearParameters();

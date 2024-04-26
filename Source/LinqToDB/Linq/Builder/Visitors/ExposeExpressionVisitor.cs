@@ -23,6 +23,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 		IDataContext                      _dataContext         = default!;
 		ExpressionTreeOptimizationContext _optimizationContext = default!;
+		object?[]?                        _parameterValues;
 		bool                              _includeConvert;
 		bool                              _optimizeConditions;
 		bool                              _compactBinary;
@@ -34,6 +35,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 		public Expression ExposeExpression(IDataContext dataContext,
 			ExpressionTreeOptimizationContext           optimizationContext,
+			object?[]?                                  parameterValues,
 			Expression                                  expression,
 			bool                                        includeConvert,
 			bool                                        optimizeConditions,
@@ -42,6 +44,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 			_dataContext         = dataContext;
 			_includeConvert      = includeConvert;
 			_optimizationContext = optimizationContext;
+			_parameterValues     = parameterValues;
 			_optimizeConditions  = optimizeConditions;
 			_compactBinary       = compactBinary;
 
@@ -290,6 +293,11 @@ namespace LinqToDB.Linq.Builder.Visitors
 					{
 						return Expression.Constant(DataContext, e.Type);
 					}
+
+					if (e == ExpressionBuilder.ParametersParam && _parameterValues != null)
+					{
+						return Expression.Constant(_parameterValues, e.Type);
+					}
 				}
 
 				return e;
@@ -404,6 +412,35 @@ namespace LinqToDB.Linq.Builder.Visitors
 					var converted = ConvertMemberExpression(node, MappingSchema, node.Expression!, l);
 					converted = Visit(converted);
 					return AliasCall(converted, alias);
+				}
+			}
+
+			if (node.Expression != null)
+			{
+				if (typeof(IQueryable).IsSameOrParentOf(node.Type) && typeof(IDataContext).IsSameOrParentOf(node.Expression.Type))
+				{
+					// Handling case when CompiledQuery replaced DataContext with ParameterValues access.
+
+					var unwrapped = node.Expression.UnwrapConvert();
+					if (unwrapped.NodeType == ExpressionType.ArrayIndex)
+					{
+						var arrayIndex = (BinaryExpression)unwrapped;
+						if (arrayIndex.Left == ExpressionBuilder.ParametersParam && _parameterValues != null)
+						{
+							var evaluated = EvaluateExpression(node);
+							if (evaluated is IQueryable query)
+								return Visit(query.Expression);
+						}
+					}
+					else
+					{
+						if (node.Expression.UnwrapConvert() is SqlQueryRootExpression)
+						{
+							var evaluated = EvaluateExpression(node);
+							if (evaluated is IQueryable query)
+								return Visit(query.Expression);
+						}
+					}
 				}
 			}
 
@@ -774,7 +811,6 @@ namespace LinqToDB.Linq.Builder.Visitors
 		class IsCompilableVisitor : ExpressionVisitorBase
 		{
 			bool _canBeCompiled;
-
 			bool _inMethod;
 
 			Stack<ReadOnlyCollection<ParameterExpression>>? _allowedParameters;

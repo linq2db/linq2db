@@ -40,13 +40,29 @@ namespace LinqToDB.DataProvider.Firebird
 			return element;
 		}
 
+		protected virtual bool? GetCaseSensitiveParameter(SqlPredicate.SearchString predicate)
+		{
+			var caseSensitive = predicate.CaseSensitive.EvaluateExpression(EvaluationContext);
 
+			if (caseSensitive is char chr)
+			{
+				if (chr == '0')
+					return false;
+
+				if (chr == '1')
+					return true;
+			}
+			else if (caseSensitive is bool boolValue)
+				return boolValue;
+
+			return null;
+		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			ISqlExpression expr;
 
-			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext);
+			var caseSensitive = GetCaseSensitiveParameter(predicate);
 
 			// for explicit case-sensitive search we apply "CAST({0} AS BLOB)" to searched string as COLLATE's collation is character set-dependent
 			switch (predicate.Kind)
@@ -148,6 +164,16 @@ namespace LinqToDB.DataProvider.Firebird
 			cast = FloorBeforeConvert(cast);
 
 			return base.ConvertConversion(cast);
+		}
+
+		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		{
+			if (predicate.ElementType == QueryElementType.ExprPredicate && predicate.Expr1 is SqlParameter p && p.Type.DataType != DataType.Boolean)
+			{
+				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, MappingSchema.GetSqlValue(p.Type, true), p.CanBeNull);
+			}
+
+			return base.VisitExprPredicate(predicate);
 		}
 	}
 }

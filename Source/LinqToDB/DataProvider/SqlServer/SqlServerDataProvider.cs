@@ -151,11 +151,14 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			if (Version == SqlServerVersion.v2005)
-				return new SqlServer2005MemberTranslator();
+			if (Version >= SqlServerVersion.v2022)
+				return new SqlServer2022MemberTranslator();
 
 			if (Version >= SqlServerVersion.v2012)
 				return new SqlServer2012MemberTranslator();
+
+			if (Version == SqlServerVersion.v2005)
+				return new SqlServer2005MemberTranslator();
 
 			return new SqlServerMemberTranslator();
 		}

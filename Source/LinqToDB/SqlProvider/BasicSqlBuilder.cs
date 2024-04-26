@@ -50,6 +50,7 @@ namespace LinqToDB.SqlProvider
 			NullabilityContext = parentBuilder.NullabilityContext;
 		}
 
+		public AliasesContext      AliasesContext      { get; protected set; } = null!;
 		public OptimizationContext OptimizationContext { get; protected set; } = null!;
 		public MappingSchema       MappingSchema       { get;                }
 		public StringBuilder       StringBuilder       { get; set;           } = null!;
@@ -161,8 +162,9 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int startIndent = 0)
+		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, int startIndent = 0)
 		{
+			AliasesContext = aliases;
 			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, !DataOptions.SqlOptions.GenerateFinalAliases && CanSkipRootAliases(statement));
 		}
 
@@ -407,7 +409,7 @@ namespace LinqToDB.SqlProvider
 			{ ParentStatement = deleteStatement, With = deleteStatement.GetWithClause() };
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, OptimizationContext, Indent);
+			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, OptimizationContext, AliasesContext, Indent);
 			MergeSqlBuilderData(sqlBuilder);
 
 			--Indent;
@@ -4167,7 +4169,7 @@ namespace LinqToDB.SqlProvider
 
 		string GetAlias(string desiredAlias, string defaultAlias)
 		{
-			_aliases ??= OptimizationContext.Aliases.GetUsedTableAliases();
+			_aliases ??= AliasesContext.GetUsedTableAliases();
 
 			var alias = desiredAlias;
 

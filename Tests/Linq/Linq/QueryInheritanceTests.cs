@@ -37,13 +37,13 @@ namespace Tests.Linq
 					dataOptions : dataContext.Options,
 					sqlProviderFlags : dataContext.SqlProviderFlags,
 					mappingSchema : dataContext.MappingSchema,
-					aliases : new AliasesContext(),
 					optimizerVisitor : sqlOptimizer.CreateOptimizerVisitor(false),
 					convertVisitor : sqlOptimizer.CreateConvertVisitor(false),
 					isParameterOrderDepended : false,
 					isAlreadyOptimizedAndConverted : false,
 					parametersNormalizerFactory : connection.DataProvider.GetQueryParameterNormalizer
-				)
+				),
+				aliases: new AliasesContext()
 			);
 
 			return connection.Query<T>(sb.ToString());

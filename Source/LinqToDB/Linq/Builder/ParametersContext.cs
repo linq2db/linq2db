@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -49,11 +50,32 @@ namespace LinqToDB.Linq.Builder
 
 		internal List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? _parametersDuplicateCheck;
 
+		internal Dictionary<Expression, (Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>? _dynamicAccessors;
+
 		internal void RegisterDuplicateParameter(Expression expression, Func<Expression, IDataContext?, object?[]?, object?> mainAccessor, Func<Expression, IDataContext?, object?[]?, object?> substitutedAccessor)
 		{
 			_parametersDuplicateCheck ??= new();
 
 			_parametersDuplicateCheck.Add((mainAccessor, substitutedAccessor));
+		}
+
+		/// <summary>
+		/// Used for comparing query in cache to resolve whether generated expressions are equal.
+		/// </summary>
+		/// <param name="forExpression">Expression which is used as key to do not generate duplicate comparers.</param>
+		/// <param name="dataContext">DataContext which is used to execute <paramref name="accessorFunc"/>.</param>
+		/// <param name="accessorFunc">Function, which will used for retrieving current expression during cache comparison.</param>
+		/// <returns>Result of execution of accessorFunc</returns>
+		public Expression RegisterDynamicExpressionAccessor(Expression forExpression, IDataContext dataContext, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)
+		{
+			var result = accessorFunc(dataContext, mappingSchema);
+
+			_dynamicAccessors ??= new(ExpressionEqualityComparer.Instance);
+
+			if (!_dynamicAccessors.ContainsKey(forExpression))
+				_dynamicAccessors.Add(forExpression, (result, mappingSchema, accessorFunc));
+
+			return result;
 		}
 
 		internal void AddCurrentSqlParameter(ParameterAccessor parameterAccessor)
@@ -149,90 +171,6 @@ namespace LinqToDB.Linq.Builder
 			AddCurrentSqlParameter(newAccessor);
 
 			return newAccessor;
-		}
-
-		public ParameterAccessor BuildParameterFromArgument(MethodCallExpression methodCall, int argumentIndex, ColumnDescriptor? columnDescriptor,
-			BuildParameterType buildParameterType = BuildParameterType.Default)
-		{
-			var valueAccessor = GenerateArgumentAccessor(methodCall, argumentIndex, columnDescriptor);
-
-			var dataType = new DbDataType(valueAccessor.Type);
-			var newExpr  = new ValueTypeExpression
-			{
-				DataType             = dataType,
-				DbDataTypeExpression = Expression.Constant(dataType),
-				ValueExpression      = valueAccessor
-			};
-
-			var p = PrepareConvertersAndCreateParameter(newExpr, valueAccessor, null, columnDescriptor, false,
-				buildParameterType);
-#pragma warning disable CS8604 // TODO:WAITFIX
-			AddCurrentSqlParameter(p);
-#pragma warning restore CS8604
-
-			return p;
-		}
-
-		Expression? GetActualMethodAccessor(MethodCallExpression methodCall)
-		{
-			Expression? current = methodCall;
-			if (_expressionAccessors.TryGetValue(current, out var methodAccessor))
-				return methodAccessor;
-
-			// Looking in known accessors for method with only changed first parameter.
-			// Typical case when we have transformed Queryable method chain.
-			foreach (var accessorPair in _expressionAccessors)
-			{
-				if (accessorPair.Key.NodeType != ExpressionType.Call)
-					continue;
-
-				var mc = (MethodCallExpression)accessorPair.Key;
-				if (mc.Method != methodCall.Method)
-					continue;
-
-				var isEqual = true;
-				for (int i = 1; i < mc.Arguments.Count; i++)
-				{
-					isEqual = (mc.Arguments[i].Equals(methodCall.Arguments[i]));
-					if (!isEqual)
-						break;
-				}
-				if (isEqual)
-				{
-					return accessorPair.Value;
-				}
-			}
-
-			return null;
-		}
-
-		Expression GenerateArgumentAccessor(MethodCallExpression methodCall, int argumentIndex, ColumnDescriptor? columnDescriptor)
-		{
-			var arg = methodCall.Arguments[argumentIndex];
-			var methodAccessor = GetActualMethodAccessor(methodCall);
-			if (methodAccessor == null)
-			{
-				// compiled query case
-				//
-				if (null == arg.Find(ExpressionBuilder.ParametersParam))
-					throw new InvalidOperationException($"Method '{methodCall}' does not have accessor.");
-				return arg;
-			}
-
-			var prop = Expression.Property(methodAccessor, ReflectionHelper.MethodCall.Arguments);
-			var valueAccessorExpr = Expression.Call(prop, ReflectionHelper.IndexExpressor<Expression>.Item,
-				ExpressionInstances.Int32Array(argumentIndex));
-
-			var expectedType = columnDescriptor?.MemberType ?? arg.Type;
-
-			var evaluatedExpr = Expression.Call(null,
-				Methods.LinqToDB.EvaluateExpression,
-				valueAccessorExpr);
-
-			var valueAccessor = (Expression)evaluatedExpr;
-			valueAccessor = Expression.Convert(valueAccessor, expectedType);
-
-			return valueAccessor;
 		}
 
 		static bool HasDbMapping(MappingSchema mappingSchema, Type testedType, out LambdaExpression? convertExpr)
@@ -547,8 +485,9 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			// see #820
-			accessorExpression         = CorrectAccessorExpression(accessorExpression, dataContext);
-			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext);
+			accessorExpression           = CorrectAccessorExpression(accessorExpression, dataContext);
+			originalAccessorExpression   = CorrectAccessorExpression(originalAccessorExpression, dataContext);
+			dbDataTypeAccessorExpression = CorrectAccessorExpression(dbDataTypeAccessorExpression, dataContext);
 
 			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(accessorExpression, typeof(object)),
@@ -648,6 +587,8 @@ namespace LinqToDB.Linq.Builder
 
 		public List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? GetParameterDuplicates() 
 			=> _parametersDuplicateCheck;
+
+		public List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>? GetDynamicAccessors() => _dynamicAccessors?.Values.ToList();
 
 		public bool CanBeConstant(Expression expr)
 		{

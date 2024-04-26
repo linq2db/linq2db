@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using LinqToDB.Expressions;
+	using Expressions;
 
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
@@ -19,30 +21,39 @@ namespace LinqToDB.DataProvider.SQLite
 		public const string MicrosoftDataSQLiteClientNamespace = "Microsoft.Data.Sqlite";
 
 		private SQLiteProviderAdapter(
-			Type    connectionType,
-			Type    dataReaderType,
-			Type    parameterType,
-			Type    commandType,
-			Type    transactionType,
-			bool    supportsDateOnly,
-			Action? clearAllPulls)
+			Type                       connectionType,
+			Type                       dataReaderType,
+			Type                       parameterType,
+			Type                       commandType,
+			Type                       transactionType,
+			Func<string, DbConnection> connectionFactory,
+			bool                       supportsDateOnly,
+			Action?                    clearAllPulls)
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			TransactionType    = transactionType;
+			_connectionFactory = connectionFactory;
 
 			SupportsDateOnly      = supportsDateOnly;
 
-			ClearAllPools = clearAllPulls;
+			ClearAllPools      = clearAllPulls;
 		}
+
+#region IDynamicProviderAdapter
 
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
+
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
 
 		// Classic driver does not store dates correctly
 		internal bool SupportsDateOnly { get; }
@@ -63,26 +74,42 @@ namespace LinqToDB.DataProvider.SQLite
 
 			var version = assembly.GetName().Version;
 
+			var typeMapper = new TypeMapper();
+			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			{
+				typeMapper.RegisterTypeWrapper<SqliteConnection>(connectionType);
+			}
+			else
+			{
+				typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
+			}
+			typeMapper.FinalizeMappings();
+
 			Action? clearAllPools = null;
+
 			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
 			{
 				if (version >= ClearPoolsMinVersionMDS)
 				{
-					var typeMapper = new TypeMapper();
-					typeMapper.RegisterTypeWrapper<SqliteConnection>(connectionType);
-					typeMapper.FinalizeMappings();
 					clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SqliteConnection.ClearAllPools()));
 				}
 			}
 			else if (version >= ClearPoolsMinVersionSDS)
 			{
-				var typeMapper = new TypeMapper();
-				typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
-				typeMapper.FinalizeMappings();
 				clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SQLiteConnection.ClearAllPools()));
 			}
 
 			var supportsDateOnly   = clientNamespace == MicrosoftDataSQLiteClientNamespace && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
+
+			Func<string, DbConnection> connectionFactory;
+			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			{
+				connectionFactory = typeMapper.BuildTypedFactory<string, SqliteConnection, DbConnection>((string connectionString) => new SqliteConnection(connectionString));
+			}
+			else
+			{
+				connectionFactory = typeMapper.BuildTypedFactory<string, SQLiteConnection, DbConnection>((string connectionString) => new SQLiteConnection(connectionString));
+			}
 
 			return new SQLiteProviderAdapter(
 				connectionType,
@@ -90,6 +117,7 @@ namespace LinqToDB.DataProvider.SQLite
 				parameterType,
 				commandType,
 				transactionType,
+				connectionFactory,
 				supportsDateOnly,
 				clearAllPools);
 		}
@@ -97,10 +125,10 @@ namespace LinqToDB.DataProvider.SQLite
 		private static readonly Version ClearPoolsMinVersionMDS       = new (6, 0, 0);
 		private static readonly Version ClearPoolsMinVersionSDS       = new (1, 0, 55);
 		private static readonly Version MinDateOnlyAssemblyVersionMDS = new (6, 0, 0);
-
-		public static SQLiteProviderAdapter GetInstance(string name)
+		
+		public static SQLiteProviderAdapter GetInstance(SQLiteProvider provider)
 		{
-			if (name == ProviderName.SQLiteClassic)
+			if (provider == SQLiteProvider.System)
 			{
 				if (_systemDataSQLite == null)
 				{
@@ -130,14 +158,19 @@ namespace LinqToDB.DataProvider.SQLite
 		[Wrapper]
 		private sealed class SqliteConnection
 		{
+			public SqliteConnection(string connectionString) => throw new NotImplementedException();
+
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
 		[Wrapper]
 		private sealed class SQLiteConnection
 		{
+			public SQLiteConnection(string connectionString) => throw new NotImplementedException();
+
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
+
 		#endregion
 	}
 }

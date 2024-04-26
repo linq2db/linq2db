@@ -426,7 +426,7 @@ namespace LinqToDB
 									else
 									{
 										paramExpr          = null;
-										ctx.WriteableValue = (true, expression);
+										ctx.WriteableValue = (true, converted);
 									}
 								}
 							}

@@ -84,7 +84,7 @@ namespace LinqToDB.SqlQuery
 
 		public static SqlFunction CreateCount(Type type, ISqlTableSource table)
 		{
-			return new SqlFunction(type, "Count", true, true, SqlQuery.Precedence.Primary,
+			return new SqlFunction(type, "COUNT", true, true, SqlQuery.Precedence.Primary,
 				ParametersNullabilityType.NotNullable, null, new SqlExpression("*", new SqlValue(table.SourceID)));
 		}
 

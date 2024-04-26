@@ -17,13 +17,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSqlExpressionConvertVisitor(allowModify);
 		}
 
-		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
-		{
-			CheckAliases(statement, 30);
-
-			return base.Finalize(mappingSchema, statement, dataOptions);
-		}
-
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			switch (statement.QueryType)

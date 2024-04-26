@@ -455,6 +455,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
 				TestProvName.AllAccess)]
 			string context)
 		{

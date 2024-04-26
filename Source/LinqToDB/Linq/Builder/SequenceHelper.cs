@@ -880,7 +880,7 @@ namespace LinqToDB.Linq.Builder
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
-		public static bool IsSupportedSubqueryForModifier(IBuildContext parent, IBuildContext context, out string? errorMessage)
+		public static bool IsSupportedSubquery(IBuildContext parent, IBuildContext context, out string? errorMessage)
 		{
 			errorMessage = null;
 
@@ -899,8 +899,7 @@ namespace LinqToDB.Linq.Builder
 
 				 cloningContext.UpdateContextParents();
 
-				var expr = clonedContext.MakeExpression(
-					new ContextRefExpression(clonedContext.ElementType, clonedContext), ProjectFlags.SQL);
+				var expr = parent.Builder.MakeExpression(clonedContext, new ContextRefExpression(clonedContext.ElementType, clonedContext), ProjectFlags.SQL);
 
 				expr = parent.Builder.ToColumns(clonedParentContext, expr);
 
@@ -936,28 +935,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					return false;
 				}
-			}
-
-			return true;
-		}
-
-		/// <summary>
-		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/>
-		/// </summary>
-		/// <param name="context"></param>
-		/// <returns></returns>
-		public static bool IsSupportedSubqueryNesting(IBuildContext context)
-		{
-			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
-			{
-				if (context.Builder.DataContext.SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)
-					return true;
-
-				if (!QueryHelper.IsDependsOnOuterSources(context.SelectQuery))
-					return true;
-
-				if (HasDependencyWithOuter(context.SelectQuery))
-					return false;
 			}
 
 			return true;

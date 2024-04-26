@@ -17,13 +17,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSqlExpressionConvertVisitor(allowModify);
 		}
 
-		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
-		{
-			CheckAliases(statement, int.MaxValue);
-
-			return base.Finalize(mappingSchema, statement, dataOptions);
-		}
-
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			return statement.QueryType switch

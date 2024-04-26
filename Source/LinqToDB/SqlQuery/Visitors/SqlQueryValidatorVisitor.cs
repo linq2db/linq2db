@@ -1,10 +1,12 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-using LinqToDB.Linq.Builder;
-using LinqToDB.SqlProvider;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery.Visitors
 {
+	using Linq.Builder;
+	using SqlProvider;
+
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
 	{
 		SelectQuery?     _parentQuery;
@@ -40,7 +42,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			_errorMessage        = default!;
 		}
 
-		public void SetInvlaid(string errorMessage)
+		public void SetInvalid(string errorMessage)
 		{
 			_isValid      = false;
 			_errorMessage = errorMessage;
@@ -79,8 +81,35 @@ namespace LinqToDB.SqlQuery.Visitors
 
 		public bool IsValidSubQuery(SelectQuery selectQuery, [NotNullWhen(false)] out string? errorMessage)
 		{
+			bool? isDependedOnOuterSources = null;
+
+			bool IsDependsOnOuterSources()
+			{
+				isDependedOnOuterSources ??= QueryHelper.IsDependsOnOuterSources(selectQuery);
+
+				return isDependedOnOuterSources.Value;
+			}
+
+			if (!_providerFlags.IsCorrelatedSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
+			{
+				if (IsDependsOnOuterSources())
+				{
+					errorMessage = ErrorHelper.Error_Take_in_Correlated_Subquery;
+					return false;
+				}
+			}
+
 			if (_columnSubqueryLevel != null)
 			{
+				if (_providerFlags.DoesNotSupportCorrelatedSubquery)
+				{
+					if (IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_Correlated_Subqueries;
+						return false;
+					}
+				}
+
 				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
 				{
 					errorMessage = ErrorHelper.Error_Take_in_Subquery;
@@ -93,20 +122,47 @@ namespace LinqToDB.SqlQuery.Visitors
 					return false;
 				}
 
-				if (_providerFlags.DoesNotSupportCorrelatedSubquery)
+				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty)
 				{
-					if (QueryHelper.IsDependsOnOuterSources(selectQuery))
+					errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
+					return false;
+				}
+
+				if (!_providerFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)
+				{
+					var current = QueryHelper.EnumerateAccessibleSources(selectQuery).ToList();
+
+					foreach (var innerJoin in QueryHelper.EnumerateJoins(selectQuery))
+					{
+						if (QueryHelper.IsDependsOnOuterSources(innerJoin.Condition, currentSources: current))
+						{
+							errorMessage = ErrorHelper.Error_Join_ParentReference_Condition;
+							return false;
+						}
+					}
+				}
+
+				if (_providerFlags.IsColumnSubqueryShouldNotContainParentIsNotNull)
+				{
+					if (HasIsNotNullParentReference(selectQuery))
+					{
+						errorMessage = ErrorHelper.Error_ColumnSubqueryShouldNotContainParentIsNotNull;
+						return false;
+					}
+				}
+
+				var shouldCheckNesting = _columnSubqueryLevel            > 0     && !_providerFlags.IsColumnSubqueryWithParentReferenceSupported
+				                         || selectQuery.Select.TakeValue != null && !_providerFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported;
+
+				if (shouldCheckNesting)
+				{
+					if (IsDependsOnOuterSources())
 					{
 						errorMessage = ErrorHelper.Error_Correlated_Subqueries;
 						return false;
 					}
 				}
 
-				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty)
-				{
-					errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
-					return false;
-				}
 			}
 			else
 			{
@@ -117,17 +173,60 @@ namespace LinqToDB.SqlQuery.Visitors
 				}
 			}
 
-			if (!_providerFlags.IsCorrelatedSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
-			{
-				if (QueryHelper.IsDependsOnOuterSources(selectQuery))
-				{
-					errorMessage = ErrorHelper.Error_Take_in_Correlated_Subquery;
-					return false;
-				}
-			}
-
 			errorMessage = null;
 			return true;
+		}
+
+		static bool HasIsNotNullParentReference(SelectQuery selectQuery)
+		{
+			var visitor = new ValidateThatQueryHasNoIsNotNullParentReferenceVisitor();
+
+			visitor.Visit(selectQuery);
+
+			return visitor.ContainsNotNullExpr;
+		}
+
+		class ValidateThatQueryHasNoIsNotNullParentReferenceVisitor : SqlQueryVisitor
+		{
+			public Stack<ISqlTableSource> _currentSources = new Stack<ISqlTableSource>();
+
+			public ValidateThatQueryHasNoIsNotNullParentReferenceVisitor() : base(VisitMode.ReadOnly, null)
+			{
+			}
+
+			public bool ContainsNotNullExpr {get; private set; }
+
+			protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+			{
+				_currentSources.Push(element.Source);
+
+				base.VisitSqlTableSource(element);
+
+				_currentSources.Pop();
+
+				return element;
+			}
+
+			public override IQueryElement? Visit(IQueryElement? element)
+			{
+				if (ContainsNotNullExpr)
+					return element;
+
+				return base.Visit(element);
+			}
+
+			protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+			{
+				if (predicate.IsNot)
+				{
+					if (QueryHelper.IsDependsOnOuterSources(predicate, currentSources : _currentSources))
+					{
+						ContainsNotNullExpr = true;
+					}
+				}
+
+				return base.VisitIsNullPredicate(predicate);
+			}
 		}
 
 		protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
@@ -161,11 +260,11 @@ namespace LinqToDB.SqlQuery.Visitors
 				{
 					if (_providerFlags.DoesNotSupportCorrelatedSubquery)
 					{
-						SetInvlaid(ErrorHelper.Error_Correlated_Subqueries);
+						SetInvalid(ErrorHelper.Error_Correlated_Subqueries);
 					}
 					else
 					{
-						SetInvlaid(ErrorHelper.Error_OUTER_Joins);
+						SetInvalid(ErrorHelper.Error_OUTER_Joins);
 					}
 					return element;
 				}
@@ -177,10 +276,16 @@ namespace LinqToDB.SqlQuery.Visitors
 				{
 					if (element.Condition.IsTrue() || element.Condition.IsFalse())
 					{
-						SetInvlaid(ErrorHelper.Error_Join_Without_Condition);
+						SetInvalid(ErrorHelper.Error_Join_Without_Condition);
 						return element;
 					}
 				}
+			}
+
+			if (_providerFlags.IsJoinDerivedTableWithTakeInvalid && element.Table.Source is SelectQuery { Select.TakeValue: not null })
+			{
+				SetInvalid(ErrorHelper.Error_JoinToDerivedTableWithTakeInvalid);
+				return element;
 			}
 
 			//_joinQuery = element.Table.Source as SelectQuery;
@@ -194,18 +299,6 @@ namespace LinqToDB.SqlQuery.Visitors
 
 		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
-			if (_columnSubqueryLevel > 0 && !_providerFlags.IsColumnSubqueryWithParentReferenceSupported)
-			{
-				if (element.Source is SelectQuery sq)
-				{
-					if (SequenceHelper.HasDependencyWithOuter(sq))
-					{
-						SetInvlaid(ErrorHelper.Error_Correlated_Subqueries);
-						return element;
-					}
-				}
-			}
-
 			base.VisitSqlTableSource(element);
 
 			return element;
@@ -218,7 +311,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				string? errorMessage;
 				if (!IsValidSubQuery(selectQuery, out errorMessage))
 				{
-					SetInvlaid(errorMessage);
+					SetInvalid(errorMessage);
 					return selectQuery;
 				}
 			}

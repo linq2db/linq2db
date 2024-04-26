@@ -78,6 +78,7 @@ namespace Tests.Linq
 
 			public bool BoolValue { get; set; }
 
+			[NotColumn(Configuration = ProviderName.Sybase)]
 			[Nullable]
 			public bool? BoolValueNullable { get; set; }
 

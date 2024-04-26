@@ -65,7 +65,7 @@ namespace Tests.Linq
 		{
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
-			builder.Entity<MasterClass>().HasQueryFilter((e, dc) => !((DcParams)((MyDataContext)dc).Params).IsSoftDeleteFilterEnabled || !e.IsDeleted);
+			builder.Entity<MasterClass>().HasQueryFilter((q, dc) => q.Where(e => !((DcParams)((MyDataContext)dc).Params).IsSoftDeleteFilterEnabled || !e.IsDeleted));
 
 			builder.Build();
 
@@ -133,8 +133,8 @@ namespace Tests.Linq
 
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
-			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
 
 			builder.Build();
 
@@ -193,6 +193,7 @@ namespace Tests.Linq
 
 				var query =
 					from m in db.GetTable<MasterClass>()
+					from d in db.GetTable<MasterClass>().Where(d => d.Id == m.Id) // for ensuring that we do not cache two dynamic filters comparators. See ParametersContext.RegisterDynamicExpressionAccessor
 					select m;
 
 				((DcParams)db.Params).IsSoftDeleteFilterEnabled = filtered;
@@ -218,8 +219,8 @@ namespace Tests.Linq
 
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
-			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
 
 			builder.Build();
 
@@ -246,8 +247,8 @@ namespace Tests.Linq
 			Expression<Func<ISoftDelete, MyDataContext, bool>> softDeleteCheck = (e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted;
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
-			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((e, dc) => softDeleteCheck.Compile()(e, dc));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((e, dc) => softDeleteCheck.Compile()(e, dc));
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => softDeleteCheck.Compile()(e, dc)));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => softDeleteCheck.Compile()(e, dc)));
 
 			builder.Build();
 
@@ -274,7 +275,6 @@ namespace Tests.Linq
 			return query;
 		}
 
-		/*
 		static IQueryable<T> FilterDeletedCondition<T>(IQueryable<T> query, MyDataContext dc)
 		where T: ISoftDelete
 		{
@@ -309,8 +309,6 @@ namespace Tests.Linq
 				CheckFiltersForQuery(db, query);
 			}
 		}
-
-		*/
 
 	}
 }

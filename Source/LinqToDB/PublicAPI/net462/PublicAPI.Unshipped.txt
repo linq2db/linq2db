@@ -4,3 +4,5 @@ LinqToDB.Data.DataReaderWrapper.DisposeAsync() -> System.Threading.Tasks.ValueTa
 *REMOVED*override LinqToDB.DataExtensions.SqlFormattableComparerAttribute.PrepareForCache(System.Linq.Expressions.Expression! expression) -> System.Linq.Expressions.Expression!
 *REMOVED*LinqToDB.DataExtensions.SqlFormattableComparerAttribute.SqlFormattableComparerAttribute() -> void
 *REMOVED*LinqToDB.DataExtensions.SqlFormattableComparerAttribute
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseInformix(this LinqToDB.DataOptions! options, string! connectionString, bool useDB2Provider, System.Func<LinqToDB.DataProvider.Informix.InformixOptions!, LinqToDB.DataProvider.Informix.InformixOptions!>? optionSetter = null) -> LinqToDB.DataOptions!
+*REMOVED*static LinqToDB.DataOptionsExtensions.UseAse(this LinqToDB.DataOptions! options, string! connectionString, bool useNativeProvider, System.Func<LinqToDB.DataProvider.Sybase.SybaseOptions!, LinqToDB.DataProvider.Sybase.SybaseOptions!>? optionSetter = null) -> LinqToDB.DataOptions!

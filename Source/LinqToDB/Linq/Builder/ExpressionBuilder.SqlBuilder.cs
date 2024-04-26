@@ -171,7 +171,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_gettingSubquery == 0)
 				{
-					if (!SequenceHelper.IsSupportedSubqueryForModifier(context, buildResult.BuildContext, out errorMessage))
+					if (!SequenceHelper.IsSupportedSubquery(context, buildResult.BuildContext, out errorMessage))
 						return null;
 				}
 			}
@@ -188,7 +188,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, expression, includeConvert : true, optimizeConditions : false, compactBinary : false);
+			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, ParameterValues, expression, includeConvert : true, optimizeConditions : false, compactBinary : false);
 
 			return result;
 		}
@@ -229,13 +229,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					var contextRefExpression = new ContextRefExpression(lambda.Parameters[0].Type, context);
 
-					/*var aggregationRoot = GetRootContext(context, contextRefExpression, true);
-
-				if (aggregationRoot is null)
-				{
-					throw new LinqException("Could not retrieve aggregation context.");
-				}*/
-
 					var body = lambda.GetBody(contextRefExpression);
 
 					return ConvertToSqlExpr(context, body, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
@@ -261,10 +254,36 @@ namespace LinqToDB.Linq.Builder
 						return result;
 					}
 				}
+				else
+				{
+					var converted = ConvertToSqlExpr(context, expression, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
 
-				var converted = ConvertToSqlExpr(context, expression, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
+					if (converted is SqlPlaceholderExpression or SqlErrorExpression)
+					{
+						return converted;
+					}
 
-				return converted;
+					// Weird case, see Stuff2 test
+					if (!CanBeCompiled(expression, false))
+					{
+						var buildResult = TryBuildSequence(new BuildInfo(context, expression, new SelectQuery()));
+						if (buildResult.BuildContext != null)
+						{
+							unwrapped = new ContextRefExpression(buildResult.BuildContext.ElementType, buildResult.BuildContext);
+							var result = ConvertToSqlExpr(buildResult.BuildContext, unwrapped,
+								flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
+
+							if (result is SqlPlaceholderExpression { SelectQuery: not null } placeholder)
+							{
+								_ = ToColumns(placeholder.SelectQuery, placeholder);
+
+								return CreatePlaceholder(context, placeholder.SelectQuery, unwrapped);
+							}
+						}
+					}
+				}
+
+				return expression;
 			}
 			finally
 			{
@@ -734,6 +753,12 @@ namespace LinqToDB.Linq.Builder
 					var leftExpr  = ConvertToSqlExpr(context, left,  flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
 					var rightExpr = ConvertToSqlExpr(context, right, flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
 
+					if (leftExpr is SqlErrorExpression errorLeft)
+						return errorLeft.WithType(e.Type);
+
+					if (rightExpr is SqlErrorExpression errorRight)
+						return errorRight.WithType(e.Type);
+
 					if (leftExpr is not SqlPlaceholderExpression || rightExpr is not SqlPlaceholderExpression)
 						return e;
 
@@ -1195,7 +1220,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		bool IsAlreadyTranslated(IBuildContext? context, ProjectFlags flags, ColumnDescriptor? columnDescriptor, Expression memberExpression, out SqlCacheKey cacheKey, out Expression? translatedExpression)
+		bool IsAlreadyTranslated(IBuildContext? context, ProjectFlags flags, ColumnDescriptor? columnDescriptor, Expression memberExpression, out SqlCacheKey cacheKey, [NotNullWhen(true)] out Expression? translatedExpression)
 		{
 			var cacheFlags = flags & ~ProjectFlags.Keys;
 			cacheFlags &= ~ProjectFlags.ForExtension;
@@ -1420,7 +1445,7 @@ namespace LinqToDB.Linq.Builder
 			var value = EvaluateExpression(expr);
 
 			// TODO: MappingSchema.GetSqlValue should use DbDataType
-			sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
+			sqlValue = MappingSchema.GetSqlValue(expr.Type, value, columnDescriptor?.GetDbDataType(true));
 
 			_constants.Add(key, sqlValue);
 			
@@ -2586,7 +2611,8 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						sqlvalue = MappingSchema.GetSqlValue(type, mapValue);
+						// TODO: pass column type to type mapValue=null cases?
+						sqlvalue = MappingSchema.GetSqlValue(type, mapValue, null);
 					}
 
 					if (left.NodeType == ExpressionType.Convert)
@@ -2990,7 +3016,7 @@ namespace LinqToDB.Linq.Builder
 										new SqlPredicate.ExprExpr(
 											getSql(getSqlContext, m.DiscriminatorName),
 											SqlPredicate.Operator.NotEqual,
-											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code),
+											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
 											DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
 									)
 								);
@@ -3008,7 +3034,7 @@ namespace LinqToDB.Linq.Builder
 											new SqlPredicate.ExprExpr(
 												getSql(getSqlContext, m.DiscriminatorName),
 												SqlPredicate.Operator.Equal,
-												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code),
+												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
 												DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
 										)
 									);
@@ -3024,7 +3050,7 @@ namespace LinqToDB.Linq.Builder
 				case 1 :
 				{
 					var discriminatorSql = getSql(getSqlContext, mapping[0].DiscriminatorName);
-					var sqlValue = MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code);
+					var sqlValue = MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code, mapping[0].Discriminator.GetDbDataType(true));
 
 					return CorrectNullability(
 						new SqlPredicate.ExprExpr(
@@ -3044,7 +3070,7 @@ namespace LinqToDB.Linq.Builder
 								new SqlPredicate.ExprExpr(
 									getSql(getSqlContext, m.DiscriminatorName),
 									SqlPredicate.Operator.Equal,
-									MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code),
+									MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
 									DataOptions.LinqOptions.CompareNullsAsValues ? true : null));
 						}
 
@@ -4381,14 +4407,18 @@ namespace LinqToDB.Linq.Builder
 
 			var key = new SqlCacheKey(path, null, null, null, flags);
 
-			if (shouldCache && _expressionCache.TryGetValue(key, out var expression) && expression.Type == path.Type && expression is not SqlErrorExpression)
+
+			Expression? expression;
+
+			if (shouldCache && _expressionCache.TryGetValue(key, out expression) && expression.Type == path.Type && expression is not SqlErrorExpression)
 			{
-#if DEBUG
-				DebugCacheHit(currentContext, path, expression, flags);
-#else
 				if (!ExpressionEqualityComparer.Instance.Equals(path, expression))
-					return expression;
+				{
+#if DEBUG
+					DebugCacheHit(currentContext, path, expression, flags);
 #endif
+					return expression;
+				}
 			}
 
 			var doNotProcess = false;
@@ -4441,8 +4471,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var newCorrected = MakeExpression(rootContext.BuildContext, corrected, flags);
 
-						if (newCorrected is SqlErrorExpression)
+						if (newCorrected is SqlErrorExpression sqlError)
+						{
+							if (sqlError.IsCritical)
+								return sqlError;
 							newCorrected = corrected;
+						}
 
 						if (newCorrected is SqlPlaceholderExpression placeholder)
 						{
@@ -4457,6 +4491,12 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var root = MakeExpression(currentContext, memberExpression.Expression, flags.RootFlag());
+
+				// Association may cause such situation
+				if (root is SqlErrorExpression rootError)
+				{
+					return rootError.WithType(path.Type);
+				}
 
 				if (root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
 				{
@@ -4496,6 +4536,8 @@ namespace LinqToDB.Linq.Builder
 					if (root is ContextRefExpression contextRef)
 					{
 						expression = TryCreateAssociation(newPath, contextRef, currentContext, flags);
+						if (expression is SqlErrorExpression)
+							return expression;
 					}
 				}
 

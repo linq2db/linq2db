@@ -49,59 +49,42 @@ namespace LinqToDB.DataProvider.Firebird
 				&& ConvertElement(rows[row][column]) is SqlValue sqlValue && sqlValue.Value != null;
 		}
 
-		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		
+
+		// available since FB5
+		protected override void BuildMergeOperationDeleteBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
-			if (dataType.DbType == null && (dataType.DataType == DataType.NVarChar || dataType.DataType == DataType.NChar))
+			StringBuilder
+				.AppendLine()
+				.Append("WHEN NOT MATCHED BY SOURCE");
+
+			if (operation.Where != null)
 			{
-				object? providerValue = null;
-				var     typeRequired  = false;
-
-				switch (value)
-				{
-					case SqlValue sqlValue:
-						providerValue = sqlValue.Value;
-						break;
-					case SqlParameter param:
-					{
-						typeRequired = true;
-						var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
-						providerValue = paramValue.ProviderValue;
-						break;
-					}
-				}
-
-				var length = providerValue switch
-				{
-					string strValue => Encoding.UTF8.GetByteCount(strValue),
-					char charValue => Encoding.UTF8.GetByteCount(new[] { charValue }),
-					_ => -1
-				};
-
-				if (length == 0)
-					length = 1;
-
-				typeRequired = typeRequired || length > 0;
-
-				if (typeRequired && length < 0)
-				{
-					length = 8191; // max length for CHAR/VARCHAR
-				}
-
-				if (typeRequired)
-					StringBuilder.Append("CAST(");
-
-				BuildExpression(value);
-
-				if (typeRequired)
-				{
-					if (dataType.DataType  == DataType.NChar)
-						StringBuilder.Append(CultureInfo.InvariantCulture, $" AS CHAR({length}))");
-					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $" AS VARCHAR({length}))");
-				}
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
-			else
-				base.BuildTypedExpression(dataType, value);
+
+			StringBuilder.AppendLine(" THEN DELETE");
+		}
+
+		// available since FB5
+		protected override void BuildMergeOperationUpdateBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
+		{
+			StringBuilder
+				.AppendLine()
+				.Append("WHEN NOT MATCHED BY SOURCE");
+
+			if (operation.Where != null)
+			{
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+			}
+
+			StringBuilder.AppendLine(" THEN UPDATE");
+
+			var update = new SqlUpdateClause();
+			update.Items.AddRange(operation.Items);
+			BuildUpdateSet(null, update);
 		}
 	}
 }

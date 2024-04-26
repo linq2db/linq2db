@@ -545,7 +545,7 @@ namespace LinqToDB.Linq.Builder
 #pragma warning restore CA1508
 								{
 									sql = new SqlConditionExpression(filterSqlExpression, new SqlValue(1), new SqlValue(returnType, null));
-								}								
+								}
 								else
 								{
 									sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
@@ -638,7 +638,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (definition == null)
 				{
-					sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = true };
+					var canBeNull = aggregationType != AggregationType.Count;
+					sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = canBeNull };
 				}
 
 				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);

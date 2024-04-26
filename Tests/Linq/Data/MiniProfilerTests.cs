@@ -135,15 +135,23 @@ namespace Tests.Data
 					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE ntextDataType = @p", new DataParameter("@p", "111", DataType.NText)), Is.EqualTo(2));
 				});
 				Assert.That(trace, Does.Contain("DECLARE @p LongVarWChar(3)"));
+			}
+		}
 
-				// TODO: reenable, when issue with OleDb transactions under .net core fixed
 #if NETFRAMEWORK
+		[Test]
+		public void TestAccessOleDbSchema([IncludeDataSources(ProviderName.Access)] string context, [Values] ConnectionType type)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
+			{
+				// TODO: reenable for .net, when issue with OleDb transactions under .net core fixed
 				// assert custom schema table access
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				Assert.That(schema.Tables.Any(t => t.ForeignKeys.Count > 0), Is.EqualTo(!unmapped));
-#endif
 			}
 		}
+#endif
 
 		[Test]
 		public void TestAccessODBC([IncludeDataSources(ProviderName.AccessOdbc)] string context, [Values] ConnectionType type)
@@ -190,7 +198,17 @@ namespace Tests.Data
 		public void TestFirebird([IncludeDataSources(TestProvName.AllFirebird)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new FirebirdDataProvider(), context, type, "FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient"))
+
+			Type providerType;
+
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				providerType = db.DataProvider.GetType();
+			}
+
+			var provider = (FirebirdDataProvider)Activator.CreateInstance(providerType)!;
+
+			using (var db = CreateDataConnection(provider, context, type, "FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -213,7 +231,7 @@ namespace Tests.Data
 				FirebirdTools.ClearAllPools();
 
 				// test provider-specific types
-				if (context == TestProvName.Firebird4)
+				if (context == TestProvName.AllFirebird4Plus)
 				{
 					var fbDecFloat = new FbDecFloat(BigInteger.Parse("12345"), 5);
 					var fbDecFloat1 = db.Execute<FbDecFloat>("SELECT CAST(@p as decfloat) from rdb$database", new DataParameter("@p", fbDecFloat, DataType.DecFloat));
@@ -307,20 +325,21 @@ namespace Tests.Data
 			public object? Value { get; set; }
 		}
 
-		sealed class TestMySqlDataProvider : MySqlDataProvider
-		{
-			public TestMySqlDataProvider(string providerName)
-				: base(providerName)
-			{
-			}
-		}
-
 		// tests support of data reader methods by Mapper.Map (using MySql.Data provider only)
 		[Test]
 		public void TestMapperMap([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
+			Type providerType;
+
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				providerType = db.DataProvider.GetType();
+			}
+
+			var provider = (MySqlDataProvider)Activator.CreateInstance(providerType)!;
+
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlOfficial), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(provider, context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
 			{
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
@@ -342,8 +361,8 @@ namespace Tests.Data
 		sealed class LinqMySqlDataProvider : MySqlDataProvider
 		{
 			private readonly Func<string, DbConnection> _connectionFactory;
-			public LinqMySqlDataProvider(Func<string, DbConnection> connectionFactory)
-				: base(ProviderName.MySqlOfficial)
+			public LinqMySqlDataProvider(MySqlVersion version, Func<string, DbConnection> connectionFactory)
+				: base(ProviderName.MySql, version, MySqlProvider.MySqlData)
 			{
 				_connectionFactory = connectionFactory;
 			}
@@ -360,13 +379,18 @@ namespace Tests.Data
 		public void TestLinqService([IncludeDataSources(true, TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
 			var provider = GetProviderName(context, out var isLinq);
+			MySqlVersion version;
+			using (var db = (DataConnection)GetDataContext(provider))
+			{
+				version = ((MySqlDataProvider)db.DataProvider).Version;
+			}
 
 			const string testContext = "test-linq-service-reader";
 
 			// hacks to make remote context to work new custom dataprovider instance
 			var cs = DataConnection.GetConnectionString(provider);
 			DataConnection.AddOrSetConfiguration(testContext, cs + ";AllowZeroDateTime=true", testContext);
-			DataConnection.AddDataProvider(testContext,  new LinqMySqlDataProvider(cs =>
+			DataConnection.AddDataProvider(testContext, new LinqMySqlDataProvider(version, cs =>
 			{
 				var cn = new MySqlDataMySqlConnection(cs);
 
@@ -412,9 +436,18 @@ namespace Tests.Data
 		[Test]
 		public void TestMySqlData([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
+			Type providerType;
+
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				providerType = db.DataProvider.GetType();
+			}
+
+			var provider = (MySqlDataProvider)Activator.CreateInstance(providerType)!;
+
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlOfficial), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(provider, context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -486,9 +519,18 @@ namespace Tests.Data
 		[Test]
 		public async Task TestMySqlConnector([IncludeDataSources(TestProvName.AllMySqlConnector)] string context, [Values] ConnectionType type)
 		{
+			Type providerType;
+
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				providerType = db.DataProvider.GetType();
+			}
+
+			var provider = (MySqlDataProvider)Activator.CreateInstance(providerType)!;
+
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var connectionTypeName = "MySqlConnector.MySqlConnection, MySqlConnector";
-			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlConnector), context, type, connectionTypeName, ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(provider, context, type, connectionTypeName, ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -563,7 +605,7 @@ namespace Tests.Data
 		[Test]
 		public void TestSystemSqlite([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] ConnectionType type)
 		{
-			using (var db = CreateDataConnection(SQLiteTools.GetDataProvider(ProviderName.SQLiteClassic), context, type, "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"))
+			using (var db = CreateDataConnection(SQLiteTools.GetDataProvider(SQLiteProvider.System), context, type, "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"))
 			{
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -573,7 +615,7 @@ namespace Tests.Data
 		[Test]
 		public void TestMicrosoftSqlite([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values] ConnectionType type)
 		{
-			using (var db = CreateDataConnection(SQLiteTools.GetDataProvider(ProviderName.SQLiteMS), context, type, "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite"))
+			using (var db = CreateDataConnection(SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), context, type, "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite"))
 			{
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -643,7 +685,7 @@ namespace Tests.Data
 				{
 					cn.Open();
 
-					Assert.That(cn.eServerType, Is.EqualTo(DB2ProviderAdapter.DB2ServerTypes.DB2_UW));
+					Assert.That(DB2ProviderAdapter.Instance.ConnectionWrapper(cn).eServerType, Is.EqualTo(DB2ProviderAdapter.DB2ServerTypes.DB2_UW));
 				}
 			}
 		}
@@ -1150,7 +1192,7 @@ namespace Tests.Data
 		public void TestSybaseNative([IncludeDataSources(ProviderName.Sybase)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(ProviderName.Sybase), context, type, DbProviderFactories.GetFactory("Sybase.Data.AseClient").GetType().Assembly.GetType("Sybase.Data.AseClient.AseConnection")!))
+			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(SybaseProvider.Unmanaged), context, type, DbProviderFactories.GetFactory("Sybase.Data.AseClient").GetType().Assembly.GetType("Sybase.Data.AseClient.AseConnection")!))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1208,7 +1250,7 @@ namespace Tests.Data
 		public void TestSybaseManaged([IncludeDataSources(ProviderName.SybaseManaged)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(ProviderName.SybaseManaged), context, type, "AdoNetCore.AseClient.AseConnection, AdoNetCore.AseClient"))
+			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(SybaseProvider.DataAction), context, type, "AdoNetCore.AseClient.AseConnection, AdoNetCore.AseClient"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1233,7 +1275,7 @@ namespace Tests.Data
 		public void TestInformixIFX([IncludeDataSources(ProviderName.Informix)] string context, [Values] ConnectionType type)
 		{
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
-			var provider  = new TestInformixDataProvider(ProviderName.Informix);
+			var provider  = new TestInformixDataProvider(ProviderName.Informix, InformixProvider.Informix);
 			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"))
 			{
 				var trace = string.Empty;
@@ -1318,8 +1360,8 @@ namespace Tests.Data
 
 		sealed class TestInformixDataProvider : InformixDataProvider
 		{
-			public TestInformixDataProvider(string providerName)
-				: base(providerName)
+			public TestInformixDataProvider(string providerName, InformixProvider provider)
+				: base(providerName, provider)
 			{
 			}
 		}
@@ -1328,7 +1370,7 @@ namespace Tests.Data
 		public void TestInformixDB2([IncludeDataSources(ProviderName.InformixDB2)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			var provider = new TestInformixDataProvider(ProviderName.InformixDB2);
+			var provider = new TestInformixDataProvider(ProviderName.InformixDB2, InformixProvider.DB2);
 			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
 			{
 				var trace = string.Empty;
@@ -1795,13 +1837,15 @@ namespace Tests.Data
 				{
 					cn.Open();
 
-					Assert.That(cn.PostgreSqlVersion.Major, Is.EqualTo(serverVersion / 10000));
+					var version = ((PostgreSQLDataProvider)db.DataProvider).Adapter.ConnectionWrapper(cn).PostgreSqlVersion;
+
+					Assert.That(version.Major, Is.EqualTo(serverVersion / 10000));
 
 					// machine-readable version number... sure
-					if (cn.PostgreSqlVersion.Major == 9)
-						Assert.That(cn.PostgreSqlVersion.Minor, Is.EqualTo((serverVersion / 100) % 100));
+					if (version.Major == 9)
+						Assert.That(version.Minor, Is.EqualTo((serverVersion / 100) % 100));
 					else
-						Assert.That(cn.PostgreSqlVersion.Minor, Is.EqualTo(serverVersion % 100));
+						Assert.That(version.Minor, Is.EqualTo(serverVersion % 100));
 
 				}
 

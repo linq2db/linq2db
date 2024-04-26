@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -70,13 +69,6 @@ namespace LinqToDB.Linq.Builder
 
 				var sequence = sequenceResult.BuildContext;
 
-				if (buildInfo.IsSubQuery)
-				{
-					// At lease Oracle and MySql cannot handle such subquery
-					if (!SequenceHelper.IsSupportedSubqueryNesting(sequence))
-						return BuildSequenceResult.Error(methodCall);
-				}
-
 				defaultValue ??= Expression.Default(methodCall.Method.GetGenericArguments()[0]);
 
 				var defaultValueContext = new SelectContext(buildInfo.Parent,
@@ -118,6 +110,12 @@ namespace LinqToDB.Linq.Builder
 
 				var resultSelectContext =
 					new SelectContext(buildInfo.Parent, bodyValue, subqueryContext, buildInfo.IsSubQuery);
+
+				if (!buildInfo.IsSubQuery)
+				{
+					if (!SequenceHelper.IsSupportedSubquery(resultSelectContext, resultSelectContext, out var errorMessage))
+						return BuildSequenceResult.Error(methodCall, errorMessage);
+				}
 
 				return BuildSequenceResult.FromContext(new SubQueryContext(resultSelectContext));
 			}

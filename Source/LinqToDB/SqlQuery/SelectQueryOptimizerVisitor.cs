@@ -48,10 +48,10 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public IQueryElement Optimize(
-			IQueryElement          root,         
+			IQueryElement          root,
 			IQueryElement          rootElement,
-			SqlProviderFlags       providerFlags, 
-			bool                   removeWeakJoins, 
+			SqlProviderFlags       providerFlags,
+			bool                   removeWeakJoins,
 			DataOptions            dataOptions,
 			MappingSchema          mappingSchema,
 			EvaluationContext      evaluationContext,
@@ -102,6 +102,10 @@ namespace LinqToDB.SqlQuery
 
 					// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
 					JoinsOptimizer.UnnestJoins(_root);
+
+					// convert remaining nested joins to subqueries
+					if (!_providerFlags.IsNestedJoinsSupported)
+						JoinsOptimizer.UndoNestedJoins(_root);
 				}
 			}
 
@@ -1177,10 +1181,6 @@ namespace LinqToDB.SqlQuery
 			// Actual modification starts from this point
 			//
 
-#pragma warning disable CA1508 // Avoid dead conditional code : analyzer bug
-			parentQuery.QueryName ??= subQuery.QueryName;
-#pragma warning restore CA1508 // Avoid dead conditional code
-
 			if (subQuery.HasSetOperators)
 			{
 				var newIndexes =
@@ -1205,6 +1205,10 @@ namespace LinqToDB.SqlQuery
 				parentQuery.SetOperators.InsertRange(0, subQuery.SetOperators);
 				subQuery.SetOperators.Clear();
 			}
+
+#pragma warning disable CA1508 // Avoid dead conditional code : analyzer bug
+			parentQuery.QueryName ??= subQuery.QueryName;
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 			if (!subQuery.GroupBy.IsEmpty)
 			{
@@ -1580,7 +1584,10 @@ namespace LinqToDB.SqlQuery
 					return false;
 
 				if (!parentQuery.Select.Where.IsEmpty)
-					return false;
+				{
+					if (subQuery.Select.TakeValue != null || subQuery.Select.SkipValue != null)
+						return false;
+				}
 
 				if (parentQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 				{
@@ -1686,12 +1693,6 @@ namespace LinqToDB.SqlQuery
 			if (!subQuery.GroupBy.IsEmpty)
 				return false;
 
-			if (!_providerFlags.IsNestedJoinsSupported && subQuery.From.Tables[0].Joins.Count > 0)
-			{
-				// For AssociationTests.GroupBy2, left_join_on_sub_query_with_two_inner_joins_results_in_incorrect_SQL and TestIssue2832 for ClickHouse
-				return false;
-			}
-
 			var moveConditionToQuery = joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply;
 
 			if (joinTable.JoinType != JoinType.Inner)
@@ -1739,13 +1740,15 @@ namespace LinqToDB.SqlQuery
 				}
 
 				if (!subQuery.Select.Columns.All(c =>
-				    {
-					    if (c.Expression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression)
-						    return true;
-					    if (c.Expression is SqlFunction func)
-						    return !func.IsAggregate;
-					    return false;
-				    }))
+					{
+						var columnExpression = QueryHelper.UnwrapCastAndNullability(c.Expression);
+
+						if (columnExpression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression)
+							return true;
+						if (columnExpression is SqlFunction func)
+							return !func.IsAggregate;
+						return false;
+					}))
 				{
 					return false;
 				}
@@ -2319,13 +2322,6 @@ namespace LinqToDB.SqlQuery
 								if (_providerFlags.DoesNotSupportCorrelatedSubquery)
 								{
 									if (QueryHelper.IsDependsOnOuterSources(join))
-										continue;
-								}
-
-								if (!_providerFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)
-								{
-									// for Oracle we cannot move to subquery
-									if (tsQuery.Select.HasModifier)
 										continue;
 								}
 

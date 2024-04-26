@@ -131,6 +131,11 @@ namespace LinqToDB.Linq.Translation
 			return result;
 		}
 
+		public static ISqlExpression Condition(this ISqlExpressionFactory factory, ISqlPredicate condition, ISqlExpression trueExpression, ISqlExpression falseExpression)
+		{
+			return new SqlConditionExpression(condition, trueExpression, falseExpression);
+		}
+
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
 			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Additive);
@@ -188,5 +193,28 @@ namespace LinqToDB.Linq.Translation
 			return new SqlDataType(dbDataType);
 		}
 
+		#region Preicates
+
+		public static ISqlPredicate Greater(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Greater, expr2, factory.DataOptions.LinqOptions.CompareNullsAsValues ? false : null);
+		}
+
+		public static ISqlPredicate GreaterOrEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.GreaterOrEqual, expr2, factory.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+		}
+
+		public static ISqlPredicate Less(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Less, expr2, factory.DataOptions.LinqOptions.CompareNullsAsValues ? false : null);
+		}
+
+		public static ISqlPredicate LessOrEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, factory.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+		}
+
+		#endregion
 	}
 }

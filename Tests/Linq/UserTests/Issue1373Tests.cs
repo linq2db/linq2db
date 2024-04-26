@@ -23,7 +23,7 @@ namespace Tests.UserTests
 
 			public override string ToString()
 			{
-				return Field1 ?? "";
+				return Field1;
 			}
 		}
 

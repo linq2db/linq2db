@@ -5,7 +5,16 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.SQLite;
+using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.DataProvider.DB2;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.SapHana;
+using LinqToDB.DataProvider.Sybase;
 using LinqToDB.Mapping;
 
 using Microsoft.Data.SqlClient;
@@ -378,6 +387,79 @@ namespace Tests.Infrastructure
 			{
 				MappingSchema.EntityDescriptorCreatedCallback = null;
 			}
+		}
+
+		private static void OverloadsNotTest()
+		{
+			// this is compile-time "test" to ensure configuration overloads with default parameters
+			// doesn't conflict with each other when default parameters not specified
+
+			var connectionString = "fake";
+
+			new DataOptions()
+
+				.UseSqlCe()
+				.UseSqlCe(connectionString)
+
+				.UseFirebird()
+				.UseFirebird(connectionString)
+
+				.UsePostgreSQL()
+				.UsePostgreSQL(o => o)
+				.UsePostgreSQL(connectionString)
+				.UsePostgreSQL(connectionString, o => o)
+
+				.UseDB2()
+				.UseDB2(o => o)
+				.UseDB2(connectionString)
+				.UseDB2(connectionString, o => o)
+
+				.UseSqlServer()
+				.UseSqlServer(o => o)
+				.UseSqlServer(connectionString)
+				.UseSqlServer(connectionString, o => o)
+
+				.UseMySql()
+				.UseMySql(o => o)
+				.UseMySql(connectionString)
+				.UseMySql(connectionString, o => o)
+
+				.UseOracle()
+				.UseOracle(o => o)
+				.UseOracle(connectionString)
+				.UseOracle(connectionString, o => o)
+
+				.UseSQLite()
+				.UseSQLite(o => o)
+				.UseSQLite(connectionString)
+				.UseSQLite(connectionString, o => o)
+
+				.UseAccess()
+				.UseAccess(o => o)
+				.UseAccess(connectionString)
+				.UseAccess(connectionString, o => o)
+
+				.UseInformix()
+				.UseInformix(o => o)
+				.UseInformix(connectionString)
+				.UseInformix(connectionString, o => o)
+
+				.UseSapHana()
+				.UseSapHana(o => o)
+				.UseSapHana(connectionString)
+				.UseSapHana(connectionString, o => o)
+
+				.UseAse()
+				.UseAse(o => o)
+				.UseAse(connectionString)
+				.UseAse(connectionString, o => o)
+
+				.UseClickHouse()
+				.UseClickHouse(o => o)
+				.UseClickHouse(connectionString)
+				.UseClickHouse(connectionString, o => o)
+
+				;
 		}
 	}
 }

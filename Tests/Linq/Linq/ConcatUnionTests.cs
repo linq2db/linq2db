@@ -1471,6 +1471,9 @@ namespace Tests.Linq
 
 			var res = first.Concat(second).Concat(third).ToList();
 
+			// order is not guaranted by DB
+			res = res.OrderBy(r => r.Id).ToList();
+
 			res.Should().HaveCount(5);
 			res[0].Id.Should().Be(1);
 			res[0].Name.Should().Be("John");

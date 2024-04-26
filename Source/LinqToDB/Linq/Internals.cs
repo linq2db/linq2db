@@ -67,7 +67,7 @@ namespace LinqToDB.Linq
 		/// <returns>Fully exposed expression which used by LINQ Translator.</returns>
 		public static Expression ExposeQueryExpression(IDataContext dataContext, Expression expression)
 		{
-			return Builder.ExpressionBuilder.ExposeExpression(expression, dataContext, new Builder.ExpressionTreeOptimizationContext(dataContext), false, false);
+			return Builder.ExpressionBuilder.ExposeExpression(expression, dataContext, new Builder.ExpressionTreeOptimizationContext(dataContext), null, false, false);
 		}
 
 	}

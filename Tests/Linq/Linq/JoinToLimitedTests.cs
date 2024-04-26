@@ -247,6 +247,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider has issue with JOIN to limited recordset.")]
 		public void InnerJoinLimited([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -266,6 +267,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider has issue with JOIN to limited recordset.")]
 		public void InnerJoinLimitedWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
