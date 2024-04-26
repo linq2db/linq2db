@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
 		<Configurations>Debug;Release;Azure</Configurations>
-		<DefineConstants Condition="$(X86) != ''">$(DefineConstants);X86</DefineConstants>
+		<DefineConstants Condition=" $(DB2STUB) == 'True' ">$(DefineConstants);DB2STUBS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">

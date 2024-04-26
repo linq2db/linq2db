@@ -5,7 +5,6 @@ namespace Tests
 	public static class TestProvName
 	{
 		#region SQLite
-		public const string Default                           = "SQLite.Default";
 		public const string NorthwindSQLite                   = "Northwind.SQLite";
 		public const string NorthwindSQLiteMS                 = "Northwind.SQLite.MS";
 		public const string AllSQLiteNorthwind                = $"{NorthwindSQLite},{NorthwindSQLiteMS}";
