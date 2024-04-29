@@ -2638,9 +2638,18 @@ namespace LinqToDB.SqlQuery
 						if (sqlExpr is SqlColumn column && column.Parent == _forQuery)
 							return sqlExpr;
 
-						var withoutNullabilityCheck = QueryHelper.UnwrapNullablity(sqlExpr);
-						var newColumn               = _forQuery.Select.AddColumn(withoutNullabilityCheck);
-						return newColumn;
+						var withoutNullabilityCheck = sqlExpr;
+
+						var nullabilityExpression = sqlExpr as SqlNullabilityExpression;
+						if (nullabilityExpression != null)
+							withoutNullabilityCheck = nullabilityExpression.SqlExpression;
+
+						var newExpr = (ISqlExpression)_forQuery.Select.AddColumn(withoutNullabilityCheck);
+
+						if (nullabilityExpression != null)
+							newExpr = SqlNullabilityExpression.ApplyNullability(newExpr, nullabilityExpression.CanBeNull);
+
+						return newExpr;
 					}
 
 					return element;

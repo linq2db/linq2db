@@ -2273,9 +2273,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (lOriginal is SqlColumn colLeft)
 							lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, NullabilityContext.GetContext(colLeft.Parent));
+						else if (lOriginal is SqlField)
+							lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, NullabilityContext.NonQuery);
 
 						if (rOriginal is SqlColumn colRight)
 							rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, NullabilityContext.GetContext(colRight.Parent));
+						else if (rOriginal is SqlField)
+							rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, NullabilityContext.NonQuery);
 
 						lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, nullability);
 						rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, nullability);
