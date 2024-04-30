@@ -808,7 +808,7 @@ namespace LinqToDB.Data
 
 		Task<T> ReadSingleAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return new ReaderAsyncEnumerable<T>(this, rd).FirstOrDefaultAsync(cancellationToken: cancellationToken);
+			return new ReaderAsyncEnumerable<T>(this, rd).SingleAsync(cancellationToken: cancellationToken);
 		}
 
 		async Task<T> ReadMultipleResultSetsAsync<T>(DbDataReader rd, CancellationToken cancellationToken)

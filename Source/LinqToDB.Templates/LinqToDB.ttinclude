@@ -17,13 +17,6 @@ Action AfterGenerateLinqToDBModel  = () => {};
 public Func<Table,MemberBase> GenerateProviderSpecificTable = _ => null;
 public Func<Parameter, bool>  GenerateProcedureDbType       = _ => false;
 
-// TODO: v6: rename
-static bool GenerateLinqToDBConnectionOptionsConstructors
-{
-	get { return GenerateDataOptionsConstructors;  }
-	set { GenerateDataOptionsConstructors = value; }
-}
-
 static bool GenerateDataOptionsConstructors = true;
 bool   GenerateObsoleteAttributeForAliases  = false;
 bool   GenerateFindExtensions               = true;
