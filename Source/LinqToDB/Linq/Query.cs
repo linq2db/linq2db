@@ -149,7 +149,7 @@ namespace LinqToDB.Linq
 				newParametrized = _parametrized.ToList();
 
 				var result = ReplaceParametrized(Expression, newParametrized);
-				Expression    = result;
+				Expression = result;
 			}
 
 			/*if (_dynamicAccessors != null && _parametrized != null)
@@ -721,20 +721,17 @@ namespace LinqToDB.Linq
 	sealed class ParameterAccessor
 	{
 		public ParameterAccessor(
-			Expression                                           expression,
 			Func<Expression,IDataContext?,object?[]?,object?>    valueAccessor,
 			Func<Expression,IDataContext?,object?[]?,object?>    originalAccessor,
 			Func<Expression,IDataContext?,object?[]?,DbDataType> dbDataTypeAccessor,
 			SqlParameter                                         sqlParameter)
 		{
-			Expression         = expression;
 			ValueAccessor      = valueAccessor;
 			OriginalAccessor   = originalAccessor;
 			DbDataTypeAccessor = dbDataTypeAccessor;
 			SqlParameter       = sqlParameter;
 		}
 
-		public          Expression                                            Expression;
 		public readonly Func<Expression,IDataContext?,object?[]?,object?>     ValueAccessor;
 		public readonly Func<Expression,IDataContext?,object?[]?,object?>     OriginalAccessor;
 		public readonly Func<Expression,IDataContext?,object?[]?,DbDataType>  DbDataTypeAccessor;

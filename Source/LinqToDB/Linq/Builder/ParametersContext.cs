@@ -507,9 +507,7 @@ namespace LinqToDB.Linq.Builder
 				? new DbDataType(accessorExpression.Type)
 				: dataTypeAccessor(parametersExpression, dataContext, null);
 
-			return new ParameterAccessor
-				(
-					expression,
+			return new ParameterAccessor(
 					mapper.CompileExpression(),
 					original.CompileExpression(),
 					dataTypeAccessor,
