@@ -652,7 +652,7 @@ namespace LinqToDB.Data
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsList<int>(null!)).GetGenericMethodDefinition();
 
 		static readonly MethodInfo _readSingletMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingle<int>(null!)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadFirstOrDefault<string>(null!)).GetGenericMethodDefinition();
 
 		T[] ReadAsArray<T>(DataReaderWrapper rd)
 		{
@@ -664,7 +664,7 @@ namespace LinqToDB.Data
 			return ReadEnumerator<T>(rd, null, false).ToList();
 		}
 
-		T? ReadSingle<T>(DataReaderWrapper rd)
+		T? ReadFirstOrDefault<T>(DataReaderWrapper rd)
 		{
 			return ReadEnumerator<T>(rd, null, false).FirstOrDefault();
 		}
@@ -719,7 +719,7 @@ namespace LinqToDB.Data
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsListAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		static readonly MethodInfo _readSingletAsyncMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingleAsync<int>(null!, default)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadFirstOrDefaultAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		sealed class ReaderAsyncEnumerable<T> : IAsyncEnumerable<T>
 		{
@@ -806,9 +806,9 @@ namespace LinqToDB.Data
 			return new ReaderAsyncEnumerable<T>(this, rd).ToListAsync(cancellationToken: cancellationToken);
 		}
 
-		Task<T> ReadSingleAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		Task<T?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return new ReaderAsyncEnumerable<T>(this, rd).SingleAsync(cancellationToken: cancellationToken);
+			return new ReaderAsyncEnumerable<T>(this, rd).FirstOrDefaultAsync(cancellationToken: cancellationToken);
 		}
 
 		async Task<T> ReadMultipleResultSetsAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
