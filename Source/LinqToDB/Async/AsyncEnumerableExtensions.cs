@@ -85,7 +85,7 @@ namespace LinqToDB.Async
 		///     A task that represents the asynchronous operation.
 		///     The task result contains a <see cref="List{T}" /> that contains elements from the input sequence.
 		/// </returns>
-		public static async Task<T> FirstOrDefaultAsync<T>(
+		public static async Task<T?> FirstOrDefaultAsync<T>(
 			this IAsyncEnumerable<T> source,
 			CancellationToken        cancellationToken = default)
 		{
@@ -96,7 +96,7 @@ namespace LinqToDB.Async
 			{
 				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					return enumerator.Current;
-				return default!;
+				return default;
 			}
 		}
 
@@ -138,7 +138,7 @@ namespace LinqToDB.Async
 		/// <exception cref="ArgumentNullException"><paramref name="source" /> is <see langword="null" />.</exception>
 		/// <exception cref="InvalidOperationException"><paramref name="source" /> contains more than one element.</exception>
 		/// <exception cref="OperationCanceledException">If the <see cref="CancellationToken" /> is canceled.</exception>
-		public static async Task<TSource> SingleOrDefaultAsync<TSource>(
+		public static async Task<TSource?> SingleOrDefaultAsync<TSource>(
 			this IAsyncEnumerable<TSource> source,
 			CancellationToken              cancellationToken = default)
 		{
@@ -154,7 +154,7 @@ namespace LinqToDB.Async
 						throw new InvalidOperationException("The input sequence contains more than one element.");
 					return first;
 				}
-				return default!;
+				return default;
 			}
 		}
 

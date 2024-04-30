@@ -3,7 +3,7 @@
 namespace LinqToDB.Common
 {
 	// see: https://stackoverflow.com/a/33490834/10646316
-	public static class DecimalHelper
+	internal static class DecimalHelper
 	{
 		public static int GetScale(decimal value)
 		{
