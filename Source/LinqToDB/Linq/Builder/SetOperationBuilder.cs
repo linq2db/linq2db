@@ -1208,6 +1208,7 @@ namespace LinqToDB.Linq.Builder
 
 				except.Where.ConcatSearchCondition(sc);
 
+				sequence.SelectQuery.Select.Columns.Clear();
 				sequence.SelectQuery.SetOperators.Clear();
 
 				SubQuery.Parent = null;
