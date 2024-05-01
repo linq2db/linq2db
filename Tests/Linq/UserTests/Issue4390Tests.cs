@@ -1,12 +1,12 @@
 ﻿using System.Linq;
-using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using System.Linq.Dynamic.Core;
-using System.Linq.Dynamic.Core.CustomTypeProviders;
-using System.Collections.Generic;
+
 using System;
+
+using FluentAssertions;
 
 namespace Tests.UserTests
 {
@@ -59,7 +59,9 @@ namespace Tests.UserTests
 									}
 								};
 
-				var l = qry.Where(x => x.MlogCombined1 != null).Count();
+				var count = qry.Where(x => x.MlogCombined1 != null).Count();
+
+				count.Should().Be(1);
 			}
 		}
 	}
