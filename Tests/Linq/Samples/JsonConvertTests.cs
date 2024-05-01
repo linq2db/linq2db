@@ -136,7 +136,7 @@ namespace Tests.Samples
 				var entity = pathList[0];
 				var field  = pathList[1];
 
-				var fieldSql = builder.ConvertExpressionToSql(field);
+				var fieldSql = builder.ConvertExpressionToSql(field)!;
 				builder.AddParameter("field", fieldSql);
 
 				var propPathStr = "$";
@@ -171,10 +171,13 @@ namespace Tests.Samples
 				var objects = table.Where(t => Json.Value(t.Data!.Property1) == "Pr1")
 					.ToArray();
 
-				Assert.That(!db.LastQuery!.Contains("IS NULL"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.LastQuery!, Does.Not.Contain("IS NULL"));
 
-				Assert.AreEqual(1, objects.Length);
-				Assert.AreEqual("Pr1", objects[0].Data!.Property1);
+					Assert.That(objects, Has.Length.EqualTo(1));
+				});
+				Assert.That(objects[0].Data!.Property1, Is.EqualTo("Pr1"));
 			}
 		}
 	}

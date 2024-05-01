@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS8604 // TODO:WAITFIX
+using System;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Data.SqlTypes;
@@ -6,7 +7,6 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 using JetBrains.Annotations;
 
@@ -23,6 +23,7 @@ namespace LinqToDB.Linq
 {
 	using Common;
 	using Extensions;
+	using LinqToDB.SqlQuery;
 	using LinqToDB.Common.Internal;
 	using DataProvider.Firebird;
 	using LinqToDB.Expressions;
@@ -285,7 +286,9 @@ namespace LinqToDB.Linq
 				mi = objectType.GetMemberEx(mi) ?? mi;
 			}
 
-			return ConvertMemberInternal(mappingSchema, objectType, mi);
+			var result = ConvertMemberInternal(mappingSchema, objectType, mi);
+
+			return result;
 		}
 
 		static LambdaExpression? ConvertMemberInternal(MappingSchema mappingSchema, Type? objectType, MemberInfo mi)
@@ -316,8 +319,8 @@ namespace LinqToDB.Linq
 
 				if (isTypeGeneric || isMethodGeneric)
 				{
-					var typeGenericArgs   = isTypeGeneric   ? mm.DeclaringType.GetGenericArguments() : Array<Type>.Empty;
-					var methodGenericArgs = isMethodGeneric ? mm.GetGenericArguments()                 : Array<Type>.Empty;
+					var typeGenericArgs   = isTypeGeneric   ? mm.DeclaringType.GetGenericArguments() : [];
+					var methodGenericArgs = isMethodGeneric ? mm.GetGenericArguments()               : [];
 
 					args = typeGenericArgs.SequenceEqual(methodGenericArgs) ?
 						typeGenericArgs : typeGenericArgs.Concat(methodGenericArgs).ToArray();
@@ -502,47 +505,6 @@ namespace LinqToDB.Linq
 			void SetInfo();
 		}
 
-		sealed class GetValueOrDefaultExpressionInfo<T1> : IExpressionInfo, ISetInfo
-			where T1 : struct
-		{
-#pragma warning disable CS0649 // Field is never assigned to...
-			static T1? _member;
-			static T1  _default;
-#pragma warning restore CS0649 // Field is never assigned to...
-
-			public LambdaExpression GetExpression(MappingSchema mappingSchema)
-			{
-				var p            = Expression.Parameter(typeof(T1?), "p");
-				var defaultValue = mappingSchema.GetDefaultValue(typeof(T1));
-
-				if (!_default.Equals(defaultValue))
-					return Expression.Lambda<Func<T1?, T1>>(Expression.Coalesce(p, Expression.Constant(defaultValue)), p);
-				else
-					// use non-constant value (field) to allow parameter optimization
-					// but only when default value not overriden by user in mapping schema
-					return (Expression<Func<T1?, T1>>)((T1? p) => p ?? _default);
-			}
-
-			public void SetInfo()
-			{
-				Members[""][M(() => _member.GetValueOrDefault() )] = this; // N(() => L<T1?,T1>((T1? obj) => obj ?? default(T1)));
-			}
-		}
-
-		sealed class GetValueOrDefaultInfoProvider<T> : IGenericInfoProvider
-		{
-			public void SetInfo(MappingSchema mappingSchema)
-			{
-				if (!typeof(T).IsNullableType())
-				{
-					var gtype    = typeof(GetValueOrDefaultExpressionInfo<>).MakeGenericType(typeof(T));
-					var provider = (ISetInfo)Activator.CreateInstance(gtype)!;
-
-					provider.SetInfo();
-				}
-			}
-		}
-
 		#region Mapping
 
 		private static          Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>? _members;
@@ -555,44 +517,6 @@ namespace LinqToDB.Linq
 
 		static readonly Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> _commonMembers = new()
 		{
-			#region ToString
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ MT<bool   >(() => ((bool)   true).ToString()), N(() => L<bool,    string>((bool    p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<byte   >(() => ((byte)    0)  .ToString()), N(() => L<byte,    string>((byte    p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<char   >(() => ((char)   '0') .ToString()), N(() => L<char,    string>((char    p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<decimal>(() => ((decimal) 0)  .ToString()), N(() => L<decimal, string>((decimal p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<double >(() => ((double)  0)  .ToString()), N(() => L<double,  string>((double  p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<short  >(() => ((short)   0)  .ToString()), N(() => L<short,   string>((short   p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<int    >(() => ((int)     0)  .ToString()), N(() => L<int,     string>((int     p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<long   >(() => ((long)    0)  .ToString()), N(() => L<long,    string>((long    p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<sbyte  >(() => ((sbyte)   0)  .ToString()), N(() => L<sbyte,   string>((sbyte   p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<float  >(() => ((float)   0)  .ToString()), N(() => L<float,   string>((float   p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<ushort >(() => ((ushort)  0)  .ToString()), N(() => L<ushort,  string>((ushort  p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<uint   >(() => ((uint)    0)  .ToString()), N(() => L<uint,    string>((uint    p0) => Sql.ConvertTo<string>.From(p0) )) },
-			{ MT<ulong  >(() => ((ulong)   0)  .ToString()), N(() => L<ulong,   string>((ulong   p0) => Sql.ConvertTo<string>.From(p0) )) },
-
-			{ MT<bool?   >(() => ((bool?)  true).ToString()!), N(() => L<bool?,    string?>((bool?   p0) => p0!.Value.ToString() )) },
-			{ MT<byte?   >(() => ((byte?)    0) .ToString()!), N(() => L<byte?,    string>((byte?    p0) => p0!.Value.ToString() )) },
-			{ MT<char?   >(() => ((char?)   '0').ToString()!), N(() => L<char?,    string>((char?    p0) => p0!.Value.ToString() )) },
-			{ MT<decimal?>(() => ((decimal?) 0) .ToString()!), N(() => L<decimal?, string>((decimal? p0) => p0!.Value.ToString() )) },
-			{ MT<double? >(() => ((double?)  0) .ToString()!), N(() => L<double?,  string>((double?  p0) => p0!.Value.ToString() )) },
-			{ MT<short?  >(() => ((short?)   0) .ToString()!), N(() => L<short?,   string>((short?   p0) => p0!.Value.ToString() )) },
-			{ MT<int?    >(() => ((int?)     0) .ToString()!), N(() => L<int?,     string>((int?     p0) => p0!.Value.ToString() )) },
-			{ MT<long?   >(() => ((long?)    0) .ToString()!), N(() => L<long?,    string>((long?    p0) => p0!.Value.ToString() )) },
-			{ MT<sbyte?  >(() => ((sbyte?)   0) .ToString()!), N(() => L<sbyte?,   string>((sbyte?   p0) => p0!.Value.ToString() )) },
-			{ MT<float?  >(() => ((float?)   0) .ToString()!), N(() => L<float?,   string>((float?   p0) => p0!.Value.ToString() )) },
-			{ MT<ushort? >(() => ((ushort?)  0) .ToString()!), N(() => L<ushort?,  string>((ushort?  p0) => p0!.Value.ToString() )) },
-			{ MT<uint?   >(() => ((uint?)    0) .ToString()!), N(() => L<uint?,    string>((uint?    p0) => p0!.Value.ToString() )) },
-			{ MT<ulong?  >(() => ((ulong?)   0) .ToString()!), N(() => L<ulong?,   string>((ulong?   p0) => p0!.Value.ToString() )) },
-
-
-			// handle all other as default
-#pragma warning disable MA0107 // object.ToString is bad, m'kay?
-			{ MT<object>(() => ((object)0).ToString()!), N(() => L<object, string>((object   p0) => Sql.ConvertTo<string>.From(p0) )) },
-#pragma warning restore MA0107 // object.ToString is bad, m'kay?
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			#endregion
-
 			#region string
 
 			{ M(() => "".Length               ), N(() => L<string,int>                     ((string obj)                              => Sql.Length(obj)!.Value)) },
@@ -605,10 +529,14 @@ namespace LinqToDB.Linq
 			{ M(() => "".IndexOf    (' ',0)   ), N(() => L<string,char,int,int>            ((string obj,char   p0,int  p1)            =>                                          (Sql.CharIndex(p0, obj,               p1 + 1)!.Value) - 1)) },
 			{ M(() => "".IndexOf    (' ',0,0) ), N(() => L<string,char,int,int,int>        ((string obj,char   p0,int  p1,int p2)     =>                                          (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)     ?? 0) - 1)) },
 			{ M(() => "".LastIndexOf("")      ), N(() => L<string,string,int>              ((string obj,string p0)                    => p0.Length == 0 ? obj.Length - 1 : (Sql.CharIndex(p0, obj)!                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj))!                              .Value) - p0.Length + 1)) },
+#pragma warning disable CA1514 // CA1514: Avoid redundant length argument
 			{ M(() => "".LastIndexOf("",0)    ), N(() => L<string,string,int,int>          ((string obj,string p0,int  p1)            => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, obj,                    p1 + 1)!.Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, obj.Length - p1)))!.Value) - p0.Length + 1)) },
+#pragma warning restore CA1514 // CA1514: Avoid redundant length argument
 			{ M(() => "".LastIndexOf("",0,0)  ), N(() => L<string,string,int,int,int>      ((string obj,string p0,int  p1,int p2)     => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1)!.Value) == 0 ? -1 :    p1 + p2 - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, p2)))!             .Value) - p0.Length + 1)) },
 			{ M(() => "".LastIndexOf(' ')     ), N(() => L<string,char,int>                ((string obj,char   p0)                    => (Sql.CharIndex(p0, obj)!                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj))!                               .Value))) },
+#pragma warning disable CA1514 // CA1514: Avoid redundant length argument
 			{ M(() => "".LastIndexOf(' ',0)   ), N(() => L<string,char,int,int>            ((string obj,char   p0,int  p1)            => (Sql.CharIndex(p0, obj, p1 + 1)!                   .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, obj.Length - p1)))!.Value))) },
+#pragma warning restore CA1514 // CA1514: Avoid redundant length argument
 			{ M(() => "".LastIndexOf(' ',0,0) ), N(() => L<string,char,int,int,int>        ((string obj,char   p0,int  p1,int p2)     => (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1)!.Value) == 0 ? -1 : p1 + p2    - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, p2)))!             .Value))) },
 			{ M(() => "".Insert     (0,"")    ), N(() => L<string?,int,string?,string?>    ((string? obj,int  p0,string? p1)          => obj!.Length == p0 ? obj + p1 : Sql.Stuff(obj, p0 + 1, 0, p1))) },
 			{ M(() => "".Remove     (0)       ), N(() => L<string?,int,string?>            ((string? obj,int  p0)                     => Sql.Left     (obj, p0))) },
@@ -621,9 +549,11 @@ namespace LinqToDB.Linq
 			{ M(() => "".Replace    (' ',' ') ), N(() => L<string?,char,char,string?>      ((string? obj,char   p0,char   p1)         => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Trim     (obj))) },
 
-#if NETSTANDARD2_1PLUS
-			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimRight(obj))) },
-			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimLeft (obj))) },
+#if NET6_0_OR_GREATER
+			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimRight(obj)))     },
+			{ M(() => "".TrimEnd    (' ')     ), N(() => L<string,char,string?>            ((string obj,char ch)                      =>     TrimRight(obj, ch))) },
+			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimLeft (obj)))     },
+			{ M(() => "".TrimStart  (' ')     ), N(() => L<string,char,string?>            ((string obj,char ch)                      =>     TrimLeft (obj, ch))) },
 #endif
 			{ M(() => "".TrimEnd    ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimRight(obj, ch))) },
 			{ M(() => "".TrimStart  ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimLeft (obj, ch))) },
@@ -674,6 +604,7 @@ namespace LinqToDB.Linq
 
 			#endregion
 
+			/*
 			#region DateOnly
 #if NET6_0_OR_GREATER
 
@@ -692,45 +623,26 @@ namespace LinqToDB.Linq
 
 #endif
 			#endregion
+			*/
 
-			#region DateTime
+			/*#region DateTime
 
-			{ M(() => Sql.GetDate()                  ), N(() => L<DateTime>                (()                        => Sql.CurrentTimestamp2)) },
-			{ M(() => DateTime.Now                   ), N(() => L<DateTime>                (()                        => Sql.CurrentTimestamp2)) },
-
-			{ M(() => DateTime.Now.Year              ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Year,        obj)!.Value     )) },
-			{ M(() => DateTime.Now.Month             ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Month,       obj)!.Value     )) },
-			{ M(() => DateTime.Now.DayOfYear         ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.DayOfYear,   obj)!.Value     )) },
-			{ M(() => DateTime.Now.Day               ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Day,         obj)!.Value     )) },
-			{ M(() => DateTime.Now.DayOfWeek         ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.WeekDay,     obj)!.Value - 1 )) },
-			{ M(() => DateTime.Now.Hour              ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Hour,        obj)!.Value     )) },
-			{ M(() => DateTime.Now.Minute            ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Minute,      obj)!.Value     )) },
-			{ M(() => DateTime.Now.Second            ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Second,      obj)!.Value     )) },
-			{ M(() => DateTime.Now.Millisecond       ), N(() => L<DateTime,int>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Millisecond, obj)!.Value     )) },
-			{ M(() => DateTime.Now.Date              ), N(() => L<DateTime,DateTime>       ((DateTime obj)            => Sql.Convert2(Sql.Types.Date,                obj)        )) },
-			{ M(() => DateTime.Now.TimeOfDay         ), N(() => L<DateTime,TimeSpan>       ((DateTime obj)            => Sql.DateToTime(Sql.Convert2(Sql.Types.Time, obj))!.Value)) },
-			{ M(() => DateTime.Now.AddYears       (0)), N(() => L<DateTime,int,DateTime>   ((DateTime obj,int p0)     => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value  )) },
-			{ M(() => DateTime.Now.AddMonths      (0)), N(() => L<DateTime,int,DateTime>   ((DateTime obj,int p0)     => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value  )) },
-			{ M(() => DateTime.Now.AddDays        (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Day,         p0, obj)!.Value  )) },
-			{ M(() => DateTime.Now.AddHours       (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Hour,        p0, obj)!.Value  )) },
-			{ M(() => DateTime.Now.AddMinutes     (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Minute,      p0, obj)!.Value  )) },
-			{ M(() => DateTime.Now.AddSeconds     (0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Second,      p0, obj)!.Value  )) },
-			{ M(() => DateTime.Now.AddMilliseconds(0)), N(() => L<DateTime,double,DateTime>((DateTime obj,double p0)  => Sql.DateAdd(Sql.DateParts.Millisecond, p0, obj)!.Value  )) },
 			{ M(() => new DateTime(0, 0, 0)          ), N(() => L<int,int,int,DateTime>((int y,int m,int d) => Sql.MakeDateTime(y, m, d)!.Value                       )) },
 
 			{ M(() => Sql.MakeDateTime(0, 0, 0)          ), N(() => L<int?,int?,int?,DateTime?>               ((int? y,int? m,int? d)                       => (DateTime?)Sql.Convert(Sql.Types.Date, Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2)))) },
-			{ M(() => new DateTime    (0, 0, 0, 0, 0, 0) ), N(() => L<int,int,int,int,int,int,DateTime>       ((int  y,int  m,int  d,int  h,int  mm,int s)  => Sql.MakeDateTime(y, m, d, h, mm, s)!.Value )) },
+			//{ M(() => new DateTime    (0, 0, 0, 0, 0, 0) ), N(() => L<int,int,int,int,int,int,DateTime>       ((int  y,int  m,int  d,int  h,int  mm,int s)  => Sql.MakeDateTime(y, m, d, h, mm, s)!.Value )) },
 			{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((int? y,int? m,int? d,int? h,int? mm,int? s) => (DateTime?)Sql.Convert(Sql.Types.DateTime2,
 				Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2) + " " +
 				Sql.ZeroPad(h, 2) + ":" + Sql.ZeroPad(mm, 2) + ":" + Sql.ZeroPad(s, 2)))) },
 
-			#endregion
+			#endregion*/
 
 			#region DateTimeOffset
 
 			// Disabled for now. See #2512 (https://github.com/linq2db/linq2db/issues/2512)
 			// { M(() => DateTimeOffset.Now                   ), N(() => L<DateTimeOffset>                      (()                              => Sql.CurrentTzTimestamp                                 )) },
 
+			/*
 			{ M(() => DateTimeOffset.Now.Year              ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Year,        obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.Month             ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Month,       obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.DayOfYear         ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.DayOfYear,   obj)!.Value    )) },
@@ -740,8 +652,8 @@ namespace LinqToDB.Linq
 			{ M(() => DateTimeOffset.Now.Minute            ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Minute,      obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.Second            ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Second,      obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.Millisecond       ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Millisecond, obj)!.Value    )) },
-			{ M(() => DateTimeOffset.Now.Date              ), N(() => L<DateTimeOffset,DateTime>             ((DateTimeOffset obj)            => Sql.Convert2(Sql.Types.Date,                obj)           )) },
-			{ M(() => DateTimeOffset.Now.TimeOfDay         ), N(() => L<DateTimeOffset,TimeSpan>             ((DateTimeOffset obj)            => Sql.DateToTime(Sql.Convert2(Sql.Types.Time, obj))!.Value   )) },
+			{ M(() => DateTimeOffset.Now.Date              ), N(() => L<DateTimeOffset,DateTime>             ((DateTimeOffset obj)            => Sql.Convert(Sql.Types.Date,                obj)           )) },
+			{ M(() => DateTimeOffset.Now.TimeOfDay         ), N(() => L<DateTimeOffset,TimeSpan>             ((DateTimeOffset obj)            => Sql.DateToTime(Sql.Convert(Sql.Types.Time, obj))!.Value   )) },
 			{ M(() => DateTimeOffset.Now.AddYears       (0)), N(() => L<DateTimeOffset,int,DateTimeOffset>   ((DateTimeOffset obj,int p0)     => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value )) },
 			{ M(() => DateTimeOffset.Now.AddMonths      (0)), N(() => L<DateTimeOffset,int,DateTimeOffset>   ((DateTimeOffset obj,int p0)     => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value )) },
 			{ M(() => DateTimeOffset.Now.AddDays        (0)), N(() => L<DateTimeOffset,double,DateTimeOffset>((DateTimeOffset obj,double p0)  => Sql.DateAdd(Sql.DateParts.Day,         p0, obj)!.Value )) },
@@ -750,6 +662,7 @@ namespace LinqToDB.Linq
 			{ M(() => DateTimeOffset.Now.AddSeconds     (0)), N(() => L<DateTimeOffset,double,DateTimeOffset>((DateTimeOffset obj,double p0)  => Sql.DateAdd(Sql.DateParts.Second,      p0, obj)!.Value )) },
 			{ M(() => DateTimeOffset.Now.AddMilliseconds(0)), N(() => L<DateTimeOffset,double,DateTimeOffset>((DateTimeOffset obj,double p0)  => Sql.DateAdd(Sql.DateParts.Millisecond, p0, obj)!.Value )) },
 
+			*/
 			#endregion
 
 			#region Parse
@@ -803,29 +716,6 @@ namespace LinqToDB.Linq
 			#endregion
 
 			#region Convert
-
-			#region ToBoolean
-
-			{ M(() => Convert.ToBoolean((bool)true  )), N(() => L<bool,    bool>((bool     p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((byte)0     )), N(() => L<byte,    bool>((byte     p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((char)   '0')), N(() => L<char,    bool>((char     p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean(DateTime.Now)), N(() => L<DateTime,bool>((DateTime p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((decimal) 0 )), N(() => L<decimal, bool>((decimal  p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((double)  0 )), N(() => L<double,  bool>((double   p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((short)   0 )), N(() => L<short,   bool>((short    p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((int)     0 )), N(() => L<int,     bool>((int      p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((long)    0 )), N(() => L<long,    bool>((long     p0) => Sql.ConvertTo<bool>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToBoolean((object)  0 )), N(() => L<object,  bool>((object   p0) => Sql.ConvertTo<bool>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToBoolean((sbyte)   0 )), N(() => L<sbyte,   bool>((sbyte    p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((float)   0 )), N(() => L<float,   bool>((float    p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((string) "0")), N(() => L<string,  bool>((string   p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((ushort)  0 )), N(() => L<ushort,  bool>((ushort   p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((uint)    0 )), N(() => L<uint,    bool>((uint     p0) => Sql.ConvertTo<bool>.From(p0))) },
-			{ M(() => Convert.ToBoolean((ulong)   0 )), N(() => L<ulong,   bool>((ulong    p0) => Sql.ConvertTo<bool>.From(p0))) },
-
-			#endregion
 
 			#region ToByte
 
@@ -1197,30 +1087,6 @@ namespace LinqToDB.Linq
 			{ M(() => Math.Log          (0,0)),  N(() => L<double,double,double>((double m,double n) => Sql.Log    (n, m)!.Value )) },
 			{ M(() => Math.Log10          (0)),  N(() => L<double,double>       ((double p)          => Sql.Log10  (p)!   .Value )) },
 
-			{ M(() => Math.Max((byte)   0, (byte)   0)), N(() => L<byte,   byte,   byte>   ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((decimal)0, (decimal)0)), N(() => L<decimal,decimal,decimal>((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((double) 0, (double) 0)), N(() => L<double, double, double> ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((short)  0, (short)  0)), N(() => L<short,  short,  short>  ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((int)    0, (int)    0)), N(() => L<int,    int,    int>    ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((long)   0, (long)   0)), N(() => L<long,   long,   long>   ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((sbyte)  0, (sbyte)  0)), N(() => L<sbyte,  sbyte,  sbyte>  ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((float)  0, (float)  0)), N(() => L<float,  float,  float>  ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((ushort) 0, (ushort) 0)), N(() => L<ushort, ushort, ushort> ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((uint)   0, (uint)   0)), N(() => L<uint,   uint,   uint>   ((v1,v2) => v1 > v2 ? v1 : v2)) },
-			{ M(() => Math.Max((ulong)  0, (ulong)  0)), N(() => L<ulong,  ulong,  ulong>  ((v1,v2) => v1 > v2 ? v1 : v2)) },
-
-			{ M(() => Math.Min((byte)   0, (byte)   0)), N(() => L<byte,   byte,   byte>   ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((decimal)0, (decimal)0)), N(() => L<decimal,decimal,decimal>((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((double) 0, (double) 0)), N(() => L<double, double, double> ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((short)  0, (short)  0)), N(() => L<short,  short,  short>  ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((int)    0, (int)    0)), N(() => L<int,    int,    int>    ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((long)   0, (long)   0)), N(() => L<long,   long,   long>   ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((sbyte)  0, (sbyte)  0)), N(() => L<sbyte,  sbyte,  sbyte>  ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((float)  0, (float)  0)), N(() => L<float,  float,  float>  ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((ushort) 0, (ushort) 0)), N(() => L<ushort, ushort, ushort> ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((uint)   0, (uint)   0)), N(() => L<uint,   uint,   uint>   ((v1,v2) => v1 < v2 ? v1 : v2)) },
-			{ M(() => Math.Min((ulong)  0, (ulong)  0)), N(() => L<ulong,  ulong,  ulong>  ((v1,v2) => v1 < v2 ? v1 : v2)) },
-
 			{ M(() => Math.Pow        (0,0) ), N(() => L<double,double,double>    ((double x,double y) => Sql.Power(x, y)!.Value )) },
 
 			{ M(() => Sql.Round       (0m)  ), N(() => L<decimal?,decimal?>       ((decimal? d)          => Sql.Round(d, 0))) },
@@ -1284,8 +1150,6 @@ namespace LinqToDB.Linq
 
 		static Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> LoadMembers()
 		{
-			SetGenericInfoProvider(typeof(GetValueOrDefaultInfoProvider<>));
-
 			var members = new Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>>
 			{
 				{ "", _commonMembers },
@@ -1296,28 +1160,12 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char,string>       ((string p0,int? p1,char p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char,string>       ((string p0,int? p1,char p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 					{ M(() => Sql.Trim    ("")       ), N(() => L<string,string?>                ((string p0)                   => Sql.TrimLeft(Sql.TrimRight(p0)))) },
-					{ M(() => Sql.MakeDateTime(0,0,0)), N(() => L<int?,int?,int?,DateTime?>((int? y,int? m,int? d)  => DateAdd(Sql.DateParts.Month, (y!.Value - 1900) * 12 + m!.Value - 1, d!.Value - 1))) },
+					//{ M(() => Sql.MakeDateTime(0,0,0)), N(() => L<int?,int?,int?,DateTime?>((int? y,int? m,int? d)  => DateAdd(Sql.DateParts.Month, (y!.Value - 1900) * 12 + m!.Value - 1, d!.Value - 1))) },
 					{ M(() => Sql.Cosh(0)            ), N(() => L<double?,double?>               ( v    => (Sql.Exp(v) + Sql.Exp(-v)) / 2)) },
 					{ M(() => Sql.Log(0m, 0)         ), N(() => L<decimal?,decimal?,decimal?>    ((m,n) => Sql.Log(n) / Sql.Log(m))) },
 					{ M(() => Sql.Log(0.0,0)         ), N(() => L<double?,double?,double?>       ((m,n) => Sql.Log(n) / Sql.Log(m))) },
 					{ M(() => Sql.Sinh(0)            ), N(() => L<double?,double?>               ( v    => (Sql.Exp(v) - Sql.Exp(-v)) / 2)) },
 					{ M(() => Sql.Tanh(0)            ), N(() => L<double?,double?>               ( v    => (Sql.Exp(v) - Sql.Exp(-v)) / (Sql.Exp(v) + Sql.Exp(-v)))) },
-				}},
-
-				#endregion
-
-				#region SqlServer2005
-
-				{ ProviderName.SqlServer2005, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
-					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.Types.DateTime2,
-						Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2) + " " +
-						Sql.ZeroPad(h, 2) + ":" + Sql.ZeroPad(mm, 2) + ":" + Sql.ZeroPad(s, 2), 120))) },
-					{
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-						M(() => DateTime.Parse("")),
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-						N(() => L<string,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) ))
-					},
 				}},
 
 				#endregion
@@ -1370,7 +1218,7 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) =>     AltStuff (p0,  p1, p2, p3)))             },
 					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>       ((int? p0)                 => Sql.PadRight (" ", p0, ' ')))                },
 
-					{ M(() => Sql.MakeDateTime(0,0,0)), N(() => L<int?,int?,int?,DateTime?>((y,m,d) => Mdy(m, d, y))) },
+					//{ M(() => Sql.MakeDateTime(0,0,0)), N(() => L<int?,int?,int?,DateTime?>((y,m,d) => Mdy(m, d, y))) },
 
 					{ M(() => Sql.Cot (0)         ), N(() => L<double?,double?>      ( v            => Sql.Cos(v) / Sql.Sin(v) ))        },
 					{ M(() => Sql.Cosh(0)         ), N(() => L<double?,double?>      ( v            => (Sql.Exp(v) + Sql.Exp(-v)) / 2 )) },
@@ -1409,11 +1257,11 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>       ((int? p0)                 => Sql.PadRight(" ", p0, ' '))) },
 
 					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(
-						Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p),  7,  2) + Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p),  5, 2) + Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 3, 2) + Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 1, 2) + "-" +
-						Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 11,  2) + Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p),  9, 2) + "-" +
-						Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 15,  2) + Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 13, 2) + "-" +
-						Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 17,  4) + "-" +
-						Sql.Substring(Sql.Convert2(Sql.Types.Char(36), p), 21, 12)))) },
+						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  7,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  5, 2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 3, 2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 1, 2) + "-" +
+						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 11,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  9, 2) + "-" +
+						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 15,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 13, 2) + "-" +
+						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 17,  4) + "-" +
+						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 21, 12)))) },
 
 					{ M(() => Sql.Cot  (0)),   N(() => L<double?,double?>(v => Sql.Cos(v) / Sql.Sin(v) )) },
 					{ M(() => Sql.Log10(0.0)), N(() => L<double?,double?>(v => Sql.Log(10, v)          )) },
@@ -1492,26 +1340,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 
-#if NET6_0_OR_GREATER
-					{ M(() => Sql.MakeDateOnly(0, 0, 0)), N(() => L<int?,int?,int?,DateOnly?>((y,m,d) => Sql.Convert(Sql.Types.DateOnly,
-						Sql.ZeroPad(y, 4) + "-" +
-						Sql.ZeroPad(m, 2) + "-" +
-						Sql.ZeroPad(d, 2)))) },
-#endif
-
-					{ M(() => Sql.MakeDateTime(0, 0, 0)), N(() => L<int?,int?,int?,DateTime?>((y,m,d) => Sql.Convert(Sql.Types.Date,
-						Sql.ZeroPad(y, 4) + "-" +
-						Sql.ZeroPad(m, 2) + "-" +
-						Sql.ZeroPad(d, 2)))) },
-
-					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0)), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,i,s) => Sql.Convert(Sql.Types.DateTime2,
-						Sql.ZeroPad(y, 4) + "-" +
-						Sql.ZeroPad(m, 2) + "-" +
-						Sql.ZeroPad(d, 2) + " " +
-						Sql.ZeroPad(h, 2) + ":" +
-						Sql.ZeroPad(i, 2) + ":" +
-						Sql.ZeroPad(s, 2)))) },
-
 					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>((Guid p) => Sql.Lower(
 						Sql.Substring(Hex(p),  7,  2) + Sql.Substring(Hex(p),  5, 2) + Sql.Substring(Hex(p), 3, 2) + Sql.Substring(Hex(p), 1, 2) + "-" +
 						Sql.Substring(Hex(p), 11,  2) + Sql.Substring(Hex(p),  9, 2) + "-" +
@@ -1567,9 +1395,9 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
-					{ M(() => Sql.MakeDateTime(0,0,0)), N(() => L<int?,int?,int?,DateTime?>         ((y,m,d)       => MakeDateTime2(y, m, d)))                                   },
 
 					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(Sql.Substring(p.ToString(), 2, 36)))) },
+//					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(Sql.Substring((string)(object)(p), 2, 36)))) },
 
 					{ M(() => Sql.Ceiling((decimal)0)), N(() => L<decimal?,decimal?>(p => -Sql.Floor(-p) )) },
 					{ M(() => Sql.Ceiling((double) 0)), N(() => L<double?, double?> (p => -Sql.Floor(-p) )) },
@@ -1749,17 +1577,21 @@ namespace LinqToDB.Linq
 		// Missing support for trimChars: Access, SqlCe, SybaseASE
 		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
-		[Sql.Expression(ProviderName.Firebird    , "TRIM(TRAILING FROM {0})"    , ServerSideOnly = false, PreferServerSide = false)]
-		[Sql.Extension(ProviderName.ClickHouse   , "trim(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SqlServer2022, "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.DB2          , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Informix     , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Oracle       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.PostgreSQL   , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SapHana      , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SQLite       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Function("RTrim", 0,                                         IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		public static string? TrimRight(string? str, params char[] trimChars)
+		[Sql.Extension(ProviderName.Firebird      , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrailingRTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.ClickHouse    , "trim(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlServer     , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
+		[Sql.Extension(ProviderName.SqlCe         , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
+		[Sql.Extension(ProviderName.SqlServer2022 , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.DB2           , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Informix      , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Oracle        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.PostgreSQL    , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SapHana       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SQLite        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Access        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
+		[Sql.Extension(ProviderName.MySql         , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrailingRTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Sybase        , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
+		public static string? TrimRight(string? str, [SqlQueryDependent] params char[] trimChars)
 		{
 			return str?.TrimEnd(trimChars);
 		}
@@ -1767,17 +1599,21 @@ namespace LinqToDB.Linq
 		// Missing support for trimChars: Access, SqlCe, SybaseASE
 		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
-		[Sql.Expression(ProviderName.Firebird    , "TRIM(LEADING FROM {0})"    , ServerSideOnly = false, PreferServerSide = false)]
-		[Sql.Extension(ProviderName.ClickHouse   , "trim(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SqlServer2022, "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.DB2          , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Informix     , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Oracle       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.PostgreSQL   , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SapHana      , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SQLite       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Function("LTrim", 0, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		public static string? TrimLeft(string? str, params char[] trimChars)
+		[Sql.Expression(ProviderName.Firebird     , "TRIM(LEADING FROM {0})"    , ServerSideOnly = false, PreferServerSide = false)]
+		[Sql.Extension(ProviderName.ClickHouse    , "trim(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlServer2022 , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.DB2           , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Informix      , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Oracle        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.PostgreSQL    , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SapHana       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SQLite        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.MySql         , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Access        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlServer     , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlCe         , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Sybase        , "LTRIM({0})"                , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		public static string? TrimLeft(string? str, [SqlQueryDependent] params char[] trimChars)
 		{
 			return str?.TrimStart(trimChars);
 		}
@@ -1792,7 +1628,7 @@ namespace LinqToDB.Linq
 				{
 					builder.ResultExpression = new SqlQuery.SqlFunction(
 						typeof(string),
-						"LTRIM",
+						(string)"LTRIM",
 						stringExpression);
 					return;
 				}
@@ -1803,6 +1639,40 @@ namespace LinqToDB.Linq
 					SqlQuery.Precedence.Primary,
 					stringExpression,
 					new SqlQuery.SqlExpression(typeof(string), "{0}", new SqlQuery.SqlValue(new string(chars))));
+			}
+		}
+
+		sealed class TrailingRTrimCharactersBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var stringExpression = builder.GetExpression("str");
+				var chars            = builder.GetValue<char[]>("trimChars");
+				if (chars == null || chars.Length == 0)
+				{
+					builder.ResultExpression = new SqlQuery.SqlExpression(
+						typeof(string),
+						"TRIM(TRAILING FROM {0})",
+						stringExpression);
+					return;
+				}
+
+#pragma warning disable CS8600 // TODO:WAITFIX
+				ISqlExpression result = stringExpression;
+#pragma warning restore CS8600
+
+				//TODO: Not accurate, we have to find way
+				foreach (var c in chars)
+				{
+					result = new SqlExpression(
+						typeof(string),
+						builder.Expression,
+						Precedence.Primary,
+						result,
+						new SqlValue(c.ToString()));
+				}
+
+				builder.ResultExpression = result;
 			}
 		}
 
@@ -1826,7 +1696,27 @@ namespace LinqToDB.Linq
 					builder.Expression,
 					SqlQuery.Precedence.Primary,
 					stringExpression,
-					new SqlQuery.SqlExpression(typeof(string), "{0}", new SqlQuery.SqlValue(new string(chars))));
+					new SqlQuery.SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlQuery.SqlValue(new string(chars))));
+			}
+		}
+
+		sealed class RTrimCharactersBuilderNoTrimCharacters : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var stringExpression = builder.GetExpression("str");
+				var chars            = builder.GetValue<char[]>("trimChars");
+				if (chars == null || chars.Length == 0)
+				{
+					builder.ResultExpression = new SqlQuery.SqlFunction(
+						typeof(string),
+						"RTRIM",
+						stringExpression);
+				}
+				else
+				{
+					builder.IsConvertible = false;
+				}
 			}
 		}
 
@@ -1834,7 +1724,18 @@ namespace LinqToDB.Linq
 
 		#region Provider specific functions
 
-		[Sql.Function(IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		class ConvertToCaseCompareToBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var str   = builder.GetExpression("str");
+				var value = builder.GetExpression("value");
+
+				builder.ResultExpression = new SqlCompareToExpression(str, value);
+			}
+		}
+
+		[Sql.Extension(builderType: typeof(ConvertToCaseCompareToBuilder))]
 		public static int? ConvertToCaseCompareTo(string? str, string? value)
 		{
 			return str == null || value == null ? (int?)null : str.CompareTo(value);
@@ -1899,25 +1800,6 @@ namespace LinqToDB.Linq
 
 		// SqlServer
 		//
-		sealed class DateAddBuilder : Sql.IExtensionCallBuilder
-		{
-			public void Build(Sql.ISqExtensionBuilder builder)
-			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var partStr = Sql.DatePartBuilder.DatePartToStr(part);
-				var number  = builder.GetExpression("number");
-				var days    = builder.GetExpression("days");
-
-				builder.ResultExpression = new SqlQuery.SqlFunction(typeof(DateTime?), builder.Expression,
-					new SqlQuery.SqlExpression(partStr, SqlQuery.Precedence.Primary), number, days);
-			}
-		}
-
-		[Sql.Extension("DateAdd", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilder))]
-		public static DateTime? DateAdd(Sql.DateParts part, int? number, int? days)
-		{
-			return days == null ? null : Sql.DateAdd(part, number, new DateTime(1900, 1, days.Value + 1));
-		}
 
 		// MSSQL
 		//
@@ -1929,13 +1811,6 @@ namespace LinqToDB.Linq
 
 		// Access
 		//
-		[Sql.Function(ProviderName.Access, "DateSerial", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		public static DateTime? MakeDateTime2(int? year, int? month, int? day)
-		{
-			return year == null || month == null || day == null?
-				(DateTime?)null :
-				new DateTime(year.Value, month.Value, day.Value);
-		}
 
 		// Access
 		//
@@ -1950,7 +1825,27 @@ namespace LinqToDB.Linq
 		//
 		[CLSCompliant(false)]
 		[Sql.Function("Round", 0, 1)]
-		public static T AccessRound<T>(T value, int? precision) { return value; }
+		public static double? AccessRound(double? value, int? precision)
+		{
+			if (value is null)
+				return null;
+			if (precision is null)
+				return value;
+
+			return (double?)Math.Round((decimal)value.Value, precision.Value);
+		}
+
+		[CLSCompliant(false)]
+		[Sql.Function("Round", 0, 1)]
+		public static decimal? AccessRound(decimal? value, int? precision)
+		{
+			if (value is null)
+				return null;
+			if (precision is null)
+				return value;
+
+			return Math.Round((decimal)value.Value, precision.Value);
+		}
 
 		// Firebird
 		//

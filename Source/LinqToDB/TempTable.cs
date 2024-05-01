@@ -7,7 +7,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -166,13 +165,13 @@ namespace LinqToDB
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		public TempTable(IDataContext db,
-			IQueryable<T>      items,
-			string?            tableName    = default,
-			string?            databaseName = default,
-			string?            schemaName   = default,
-			Action<ITable<T>>? action       = default,
-			string?            serverName   = default,
-			TableOptions       tableOptions = default)
+			IQueryable<T>             items,
+			string?                   tableName    = default,
+			string?                   databaseName = default,
+			string?                   schemaName   = default,
+			Action<ITable<T>>?        action       = default,
+			string?                   serverName   = default,
+			TableOptions              tableOptions = default)
 			: this(db, null, items, tableName, databaseName, schemaName, action, serverName, tableOptions)
 		{
 		}
@@ -272,12 +271,12 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		public static Task<TempTable<T>> CreateAsync(IDataContext db,
-			string?           tableName         = default,
-			string?           databaseName      = default,
-			string?           schemaName        = default,
-			string?           serverName        = default,
-			TableOptions      tableOptions      = default,
-			CancellationToken cancellationToken = default)
+			string?                                               tableName         = default,
+			string?                                               databaseName      = default,
+			string?                                               schemaName        = default,
+			string?                                               serverName        = default,
+			TableOptions                                          tableOptions      = default,
+			CancellationToken                                     cancellationToken = default)
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 
@@ -750,17 +749,10 @@ namespace LinqToDB
 			_table.DropTable(throwExceptionIfNotExists: false);
 		}
 
-#if NATIVE_ASYNC
 		public virtual ValueTask DisposeAsync()
 		{
 			return new ValueTask(_table.DropTableAsync(throwExceptionIfNotExists: false));
 		}
-#else
-		public virtual Task DisposeAsync()
-		{
-			return _table.DropTableAsync(throwExceptionIfNotExists: false);
-		}
-#endif
 	}
 
 	public static partial class DataExtensions

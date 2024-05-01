@@ -13,8 +13,8 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class DeleteWithOutputTests : TestBase
 	{
-		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
-		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureDeleteOutputInto     = $"{TestProvName.AllSqlServer}";
 
 		[Table]
@@ -180,6 +180,7 @@ namespace Tests.xUpdate
 						{
 							Id       = Sql.AsSql(deleted.Id       + 1),
 							ValueStr = Sql.AsSql(deleted.ValueStr + 1),
+							Bool = deleted.ValueStr != null
 						})
 					.ToArray();
 
@@ -189,6 +190,7 @@ namespace Tests.xUpdate
 						{
 							Id       = t.Id       + 1,
 							ValueStr = t.ValueStr + 1,
+							Bool     = t.ValueStr != null
 						}),
 					output);
 			}

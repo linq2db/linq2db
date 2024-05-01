@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	sealed class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
@@ -14,121 +13,57 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
-			return statement.QueryType switch
-			{
-				QueryType.Update => PrepareUpdateStatement((SqlUpdateStatement)statement),
-				_ => statement,
-			};
+			return new SybaseSqlExpressionConvertVisitor(allowModify);
 		}
 
-		private static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
-
-		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
-
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			func = ConvertFunctionParameters(func, false);
+			if (statement.QueryType == QueryType.Update)
+				return CorrectSybaseUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema);
 
-			switch (func.Name)
+			return base.FinalizeUpdate(statement, dataOptions, mappingSchema);
+		}
+
+		SqlUpdateStatement CorrectSybaseUpdate(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			if (statement.SelectQuery.Select.TakeValue != null)
+				throw new LinqToDBException("The Sybase ASE does not support the UPDATE statement with the TOP clause.");
+
+			if (statement.SelectQuery.Select.SkipValue != null)
+				throw new LinqToDBException("The Sybase ASE does not support the UPDATE statement with the SKIP clause.");
+
+			CorrectUpdateSetters(statement);
+
+			var isInCompatible = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery).Any(t =>
 			{
-				case PseudoFunctions.REPLACE: return new SqlFunction(func.SystemType, "Str_Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				if (t != statement.SelectQuery && t is SelectQuery)
+					return true;
+				if (t is SqlTable table && !ReferenceEquals(table, statement.Update.Table) && QueryHelper.IsEqualTables(table, statement.Update.Table))
+					return true;
+				return false;
+			});
 
-				case "CharIndex":
-				{
-					if (func.Parameters.Length == 3)
-						return Add<int>(
-							new SqlFunction(func.SystemType, "CharIndex",
-								func.Parameters[0],
-								new SqlFunction(typeof(string), "Substring",
-									func.Parameters[1],
-									func.Parameters[2],
-									new SqlFunction(typeof(int), "Len", func.Parameters[1]))),
-							Sub(func.Parameters[2], 1));
-					break;
-				}
-
-				case "Stuff":
-				{
-					if (func.Parameters[3] is SqlValue value)
-					{
-						if (value.Value is string @string && string.IsNullOrEmpty(@string))
-							return new SqlFunction(
-								func.SystemType,
-								func.Name,
-								false,
-								func.Precedence,
-								func.Parameters[0],
-								func.Parameters[1],
-								func.Parameters[1],
-								new SqlValue(value.ValueType, null));
-					}
-
-					break;
-				}
-
-				case PseudoFunctions.CONVERT:
-				{
-					var ftype = func.SystemType.ToUnderlying();
-					if (ftype == typeof(string))
-					{
-						var stype = func.Parameters[2].SystemType!.ToUnderlying();
-
-						if (stype == typeof(DateTime)
-#if NET6_0_OR_GREATER
-							|| stype == typeof(DateOnly)
-#endif
-							)
-						{
-							return new SqlFunction(func.SystemType, "convert", false, true, func.Parameters[0], func.Parameters[2], new SqlValue(23))
-							{
-								CanBeNull = func.CanBeNull
-							};
-						}
-					}
-
-					break;
-				}
+			if (isInCompatible)
+			{
+				statement = GetAlternativeUpdate(statement, dataOptions, mappingSchema);
 			}
-
-			return base.ConvertFunction(func);
-		}
-
-		static SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
-		{
-			var tableToUpdate = statement.Update.Table;
-
-			if (tableToUpdate == null)
-				return statement;
-
-			if (statement.SelectQuery.From.Tables.Count > 0)
+			else
 			{
-				if (tableToUpdate == statement.SelectQuery.From.Tables[0].Source)
-					return statement;
-
-				var sourceTable = statement.SelectQuery.From.Tables[0];
-
-				for (int i = 0; i < sourceTable.Joins.Count; i++)
-				{
-					var join = sourceTable.Joins[i];
-					if (join.Table.Source == tableToUpdate)
-					{
-						var sources = new HashSet<ISqlTableSource>() { tableToUpdate };
-						if (sourceTable.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOn(j, sources)))
-							break;
-						statement.SelectQuery.From.Tables.Insert(0, join.Table);
-						statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
-							.Add(new SqlCondition(false, join.Condition));
-
-						sourceTable.Joins.RemoveAt(i);
-
-						break;
-					}
-				}
+				var hasTableInQuery = QueryHelper.HasTableInQuery(statement.SelectQuery, statement.Update.Table!);
+				if (hasTableInQuery && !RemoveUpdateTableIfPossible(statement.SelectQuery, statement.Update.Table!, out _))
+					statement = GetAlternativeUpdate(statement, dataOptions, mappingSchema);
 			}
 
 			return statement;
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			statement = CorrectMultiTableQueries(statement);
+
+			return base.TransformStatement(statement, dataOptions, mappingSchema);
 		}
 	}
 }

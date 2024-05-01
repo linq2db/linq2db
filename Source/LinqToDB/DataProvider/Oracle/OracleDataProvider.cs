@@ -13,6 +13,8 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
 
 	sealed class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleProvider.Native,  OracleVersion.v11) {} }
 	sealed class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative   , OracleProvider.Native,  OracleVersion.v12) {} }
@@ -29,13 +31,18 @@ namespace LinqToDB.DataProvider.Oracle
 			Provider = provider;
 			Version  = version;
 
-			SqlProviderFlags.IsIdentityParameterRequired       = true;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.ReadCommitted;
-			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
+			SqlProviderFlags.IsIdentityParameterRequired                           = true;
+			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported                            = true;
+			SqlProviderFlags.IsDistinctOrderBySupported                            = false;
+			SqlProviderFlags.IsUpdateFromSupported                                 = false;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel                       = IsolationLevel.ReadCommitted;
+			SqlProviderFlags.IsNamingQueryBlockSupported                           = true;
+			SqlProviderFlags.IsRowNumberWithoutOrderBySupported                    = false;
+			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported          = false;
+			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = true;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported   = version >= OracleVersion.v12;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
 			                                         RowFeature.Update   | RowFeature.Overlaps;
@@ -91,6 +98,16 @@ namespace LinqToDB.DataProvider.Oracle
 			TableOptions.IsTransactionTemporaryData |
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new OracleMemberTranslator();
+		}
+
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new IdentifierServiceSimple(Version <= OracleVersion.v11 ? 30 : 128);
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
@@ -361,7 +378,6 @@ namespace LinqToDB.DataProvider.Oracle
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -377,7 +393,6 @@ namespace LinqToDB.DataProvider.Oracle
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

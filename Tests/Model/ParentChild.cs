@@ -89,7 +89,7 @@ namespace Tests.Model
 		static Expression<Func<Parent,GrandChild, bool>> GrandChildrenPredicate =>
 			(t, m) => m.ChildID > 22;
 
-		[ExpressionMethod("GrandChildren2Impl")]
+		[ExpressionMethod(nameof(GrandChildren2Impl))]
 		public IEnumerable<GrandChild> GrandChildren2 { get; set; } = null!;
 
 		static Expression<Func<Parent,ITestDataContext,IEnumerable<GrandChild>>> GrandChildren2Impl()
@@ -101,7 +101,7 @@ namespace Tests.Model
 				p.Children.SelectMany(c => c.GrandChildren);
 		}
 
-		[ExpressionMethod("GrandChildrenByIDImpl")]
+		[ExpressionMethod(nameof(GrandChildrenByIDImpl))]
 		public IEnumerable<GrandChild> GrandChildrenByID(int id)
 		{
 			throw new NotImplementedException();
@@ -333,8 +333,8 @@ namespace Tests.Model
 	[Table("Parent")]
 	public class Parent1 : IEquatable<Parent1>, IComparable
 	{
-		[PrimaryKey] public int  ParentID;
-		[Column]     public int? Value1;
+		[PrimaryKey] public int  ParentID { get; set; }
+		[Column]     public int? Value1   { get; set; }
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public List<Child> Children = null!;
@@ -594,7 +594,80 @@ namespace Tests.Model
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			var methodInfo = typeof(Functions).GetMethod("GetParentByID", new [] {typeof(int?)})!;
+			return _ctx.TableFromExpression(() => GetParentByID(id));
+		}
+
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		public ITable<T> WithTabLock<T>()
+			where T : class
+		{
+			return _ctx.TableFromExpression(() => WithTabLock<T>());
+		}
+
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		static ITable<T> WithTabLock1<T>()
+			where T : notnull
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		public static ITable<T> WithTabLock1<T>(IDataContext ctx)
+			where T : class
+		{
+			return ctx.TableFromExpression(() => WithTabLock1<T>(ctx));
+		}
+	}
+
+	public static class FunctionsExtensions
+	{
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		static ITable<T> WithTabLock<T>()
+			where T : notnull
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		public static ITable<T> WithTabLock<T>(this IDataContext ctx)
+			where T : class
+		{
+			return ctx.TableFromExpression(() => ctx.WithTabLock<T>());
+		}
+	}
+
+	public static class FunctionsExtesnionsOld
+	{
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		static ITable<T> WithTabLockOld<T>()
+			where T : notnull
+		{
+			throw new InvalidOperationException();
+		}
+
+		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => WithTabLockOld<int>()).GetGenericMethodDefinition();
+
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		public static ITable<T> WithTabLockOld<T>(this IDataContext ctx)
+			where T : class
+		{
+			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
+		}
+	}
+
+	public class FunctionsOld
+	{
+		private readonly IDataContext _ctx;
+
+		public FunctionsOld(IDataContext ctx)
+		{
+			_ctx = ctx;
+		}
+
+		[Sql.TableFunction(Name="GetParentByID")]
+		public ITable<Parent> GetParentByID(int? id)
+		{
+			var methodInfo = typeof(FunctionsOld).GetMethod("GetParentByID", new [] {typeof(int?)})!;
 
 			return _ctx.GetTable<Parent>(this, methodInfo, id);
 		}
@@ -603,7 +676,7 @@ namespace Tests.Model
 		public ITable<T> WithTabLock<T>()
 			where T : class
 		{
-			var methodInfo = typeof(Functions).GetMethod("WithTabLock")!.MakeGenericMethod(typeof(T));
+			var methodInfo = typeof(FunctionsOld).GetMethod("WithTabLock")!.MakeGenericMethod(typeof(T));
 
 			return _ctx.GetTable<T>(this, methodInfo);
 		}
@@ -625,22 +698,4 @@ namespace Tests.Model
 		}
 	}
 
-	public static class Functions1
-	{
-		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
-		static ITable<T> WithTabLock<T>()
-			where T : notnull
-		{
-			throw new InvalidOperationException();
-		}
-
-		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => WithTabLock<int>()).GetGenericMethodDefinition();
-
-		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
-		public static ITable<T> WithTabLock<T>(this IDataContext ctx)
-			where T : class
-		{
-			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
-		}
-	}
 }

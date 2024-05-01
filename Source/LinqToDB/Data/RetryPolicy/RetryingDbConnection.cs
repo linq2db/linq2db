@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,11 +31,7 @@ namespace LinqToDB.Data.RetryPolicy
 		#endregion
 
 		#region IAsyncDisposable
-#if NATIVE_ASYNC
 		ValueTask IAsyncDisposable.DisposeAsync() => _connection.DisposeAsync();
-#else
-		Task IAsyncDisposable.DisposeAsync() => _connection.DisposeAsync();
-#endif
 		#endregion
 
 		#region IAsyncDbConnection
@@ -52,13 +47,8 @@ namespace LinqToDB.Data.RetryPolicy
 
 		IAsyncDbTransaction IAsyncDbConnection.BeginTransaction() => _connection.BeginTransaction();
 		IAsyncDbTransaction IAsyncDbConnection.BeginTransaction(IsolationLevel isolationLevel) => _connection.BeginTransaction(isolationLevel);
-#if NATIVE_ASYNC
 		ValueTask<IAsyncDbTransaction> IAsyncDbConnection.BeginTransactionAsync(CancellationToken cancellationToken) => _connection.BeginTransactionAsync(cancellationToken);
 		ValueTask<IAsyncDbTransaction> IAsyncDbConnection.BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken) => _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
-#else
-		Task<IAsyncDbTransaction> IAsyncDbConnection.BeginTransactionAsync(CancellationToken cancellationToken) => _connection.BeginTransactionAsync(cancellationToken);
-		Task<IAsyncDbTransaction> IAsyncDbConnection.BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken) => _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
-#endif
 
 		DbCommand IAsyncDbConnection.CreateCommand() => new RetryingDbCommand(_connection.CreateCommand(), _policy);
 
@@ -67,8 +57,6 @@ namespace LinqToDB.Data.RetryPolicy
 
 		void IAsyncDbConnection.Open() => _policy.Execute(_connection.Open);
 		Task IAsyncDbConnection.OpenAsync(CancellationToken cancellationToken) => _policy.ExecuteAsync(_connection.OpenAsync, cancellationToken);
-
-		DbConnection? IAsyncDbConnection.TryClone() => _connection.TryClone();
 #endregion
 	}
 }

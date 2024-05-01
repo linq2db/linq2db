@@ -13,8 +13,8 @@
 		<tags>linq linq2db MySql LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<dependency id="linq2db"        version="5.0.0" />
-			<dependency id="MySqlConnector" version="2.2.7" />
+			<dependency id="linq2db"        version="6.0.0" />
+			<dependency id="MySqlConnector" version="2.3.7" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
@@ -23,14 +23,14 @@
 	<files>
 		<file src="..\Nuget\README.T4.md"                                                  target="README.md"                                                                                                />
 
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                       target="tools"                                                                                                    />
-		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                           target="tools"                                                                                                    />
-		<file src="..\Tests\Linq\bin\Azure\net472\MySqlConnector.dll"                      target="tools"                                                                                                    />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Memory.dll"                       target="tools"                                                                                                    />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Buffers.dll"                      target="tools"                                                                                                    />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll"   target="tools"                                                                                                    />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Diagnostics.DiagnosticSource.dll" target="tools"                                                                                                    />
-		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"       target="tools"                                                                                                    />
+		<file src="..\Source\LinqToDB\bin\Release\net462\linq2db.dll"                      target="tools"                                                                                                    />
+		<file src="..\Tests\Linq\bin\Azure\net462\Humanizer.dll"                           target="tools"                                                                                                    />
+		<file src="..\Tests\Linq\bin\Azure\net462\MySqlConnector.dll"                      target="tools"                                                                                                    />
+		<file src="..\Tests\Linq\bin\Azure\net462\System.Memory.dll"                       target="tools"                                                                                                    />
+		<file src="..\Tests\Linq\bin\Azure\net462\System.Buffers.dll"                      target="tools"                                                                                                    />
+		<file src="..\Tests\Linq\bin\Azure\net462\System.Threading.Tasks.Extensions.dll"   target="tools"                                                                                                    />
+		<file src="..\Tests\Linq\bin\Azure\net462\System.Diagnostics.DiagnosticSource.dll" target="tools"                                                                                                    />
+		<file src="..\Tests\Linq\bin\Azure\net462\Microsoft.Bcl.AsyncInterfaces.dll"       target="tools"                                                                                                    />
 
 		<file src="..\NuGet\MySqlConnector\linq2db.MySqlConnector.props"                   target="build"                                                                                                    />
 

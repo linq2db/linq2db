@@ -89,7 +89,7 @@ namespace LinqToDB.Linq
 
 				// Update.
 				//
-				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
+				var keys = (sqlTable.GetKeys(true) ?? Enumerable.Empty<ISqlExpression>()).Cast<SqlField>().ToList();
 				var fields = sqlTable.Fields
 					.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update))
 					.Except(keys);
@@ -248,7 +248,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public static void MakeAlternativeInsertOrUpdate(Query query)
+		public static void  MakeAlternativeInsertOrUpdate(Query query)
 		{
 			var firstStatement  = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
 			var cloned          = firstStatement.Clone();
@@ -269,8 +269,10 @@ namespace LinqToDB.Linq
 
 			var keys = firstStatement.Update.Keys;
 
+			var wsc = firstStatement.SelectQuery.Where.EnsureConjunction();
+
 			foreach (var key in keys)
-				firstStatement.SelectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression!);
+				wsc.AddEqual(key.Column, key.Expression!, false);
 
 			// TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)

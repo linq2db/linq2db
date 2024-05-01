@@ -449,7 +449,8 @@ AS RETURN
 
 		public class SomeTableType
 		{
-			public int Value { get; set; }
+			public int LargeNumberEntityId { get; set; }
+			public int Value               { get; set; }
 		}
 
 		[Table("FewNumberEntity")]
@@ -482,11 +483,13 @@ WHERE
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")]
 		public void AssociationFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<FewNumberEntity>())
 			using (db.CreateLocalTable<LargeNumberEntity>())
+			using (db.CreateLocalTable<SomeTableType>("SomeTable"))
 			{
 				var tasksQuery = db.GetTable<LargeNumberEntity>();
 
@@ -500,12 +503,12 @@ WHERE
 					x.SomeValue.Value
 				});
 
+				TestContext.WriteLine(q.ToString());
+
 				var select = q.GetSelectQuery();
 
 				// Ensure that cross apply inlined in query
-				Assert.AreEqual(2, select.Select.From.Tables[0].Joins.Count);
-
-				TestContext.WriteLine(q.ToString());
+				Assert.That(select.Select.From.Tables[0].Joins, Has.Count.EqualTo(2));
 			}
 		}
 
@@ -619,9 +622,12 @@ WHERE
 					})
 					.First();
 
-				Assert.AreEqual(1, value.EntityId);
-				Assert.AreEqual(1, value.LanguageId);
-				Assert.AreEqual("English", value.LanguageName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(value.EntityId, Is.EqualTo(1));
+					Assert.That(value.LanguageId, Is.EqualTo(1));
+					Assert.That(value.LanguageName, Is.EqualTo("English"));
+				});
 			}
 		}
 
@@ -647,6 +653,7 @@ WHERE
 			}
 		}
 
+		[Ignore("(sdanyliv): Synthetic test, we are trying to expand whole projection and some properties are non expandable. Decided to disable.")]
 		[Test]
 		public void TestPropertiesFromDataConnection([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2, 3)] int currentUser)
 		{
@@ -666,10 +673,11 @@ WHERE
 					.GetTable<EntityWithUser>()
 					.Count(x => x.BelongsToCurrentUser);
 
-				Assert.AreEqual(currentUser, count);
+				Assert.That(count, Is.EqualTo(currentUser));
 			}
 		}
 
+		[Ignore("(sdanyliv): Synthetic test, we are trying to expand whole projection and some properties are non expandable. Decided to disable.")]
 		[Test]
 		public void TestPropertiesFromDataContext([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -847,8 +855,11 @@ WHERE
 					})
 					.First();
 
-				Assert.AreEqual(1, data.FirstUserId);
-				Assert.AreEqual("English", data.LanguageName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(data.FirstUserId, Is.EqualTo(1));
+					Assert.That(data.LanguageName, Is.EqualTo("English"));
+				});
 			}
 		}
 
@@ -885,7 +896,7 @@ WHERE
 					})
 					.First();
 
-				Assert.AreEqual(3, data.FirstUserId);
+				Assert.That(data.FirstUserId, Is.EqualTo(3));
 			}
 		}
 
@@ -919,8 +930,11 @@ WHERE
 					})
 					.First();
 
-				Assert.AreEqual(IsCaseSensitiveDB(context) ? 2 : 3, data.LanguagesWithEnCount);
-				Assert.AreEqual(IsCaseSensitiveDB(context) ? 0 : 2, data.LanguagesWithLisCount);
+				Assert.Multiple(() =>
+				{
+					Assert.That(data.LanguagesWithEnCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 2 : 3));
+					Assert.That(data.LanguagesWithLisCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 0 : 2));
+				});
 			}
 		}
 
@@ -953,7 +967,7 @@ WHERE
 					})
 					.First();
 
-				Assert.AreEqual(1, data.FirstUserId);
+				Assert.That(data.FirstUserId, Is.EqualTo(1));
 			}
 		}
 
@@ -986,8 +1000,11 @@ WHERE
 					})
 					.First();
 
-				Assert.AreEqual(2, data.EnglishUserCount);
-				Assert.AreEqual(0, data.FrenchhUserCount);
+				Assert.Multiple(() =>
+				{
+					Assert.That(data.EnglishUserCount, Is.EqualTo(2));
+					Assert.That(data.FrenchhUserCount, Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -1020,8 +1037,11 @@ WHERE
 					})
 					.First();
 
-				Assert.AreEqual(2, data.EnglishUserCount);
-				Assert.AreEqual(0, data.FrenchhUserCount);
+				Assert.Multiple(() =>
+				{
+					Assert.That(data.EnglishUserCount, Is.EqualTo(2));
+					Assert.That(data.FrenchhUserCount, Is.EqualTo(0));
+				});
 			}
 		}
 

@@ -13,7 +13,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if NETFRAMEWORK || NETCOREAPP3_1 || NETSTANDARD2_0 || NETSTANDARD2_1
+#if NETFRAMEWORK || NETSTANDARD2_0
 using System.Text;
 #endif
 
@@ -245,18 +245,10 @@ namespace LinqToDB.Data
 
 			InitCommand();
 
-#if !NATIVE_ASYNC
-			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
-#else
 			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 			{
-#if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 					while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						action(objectReader(rd.DataReader!));
 			}
@@ -442,18 +434,10 @@ namespace LinqToDB.Data
 
 			InitCommand();
 
-#if !NATIVE_ASYNC
-			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
-#else
 			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 			{
-#if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 				{
 					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
@@ -614,18 +598,10 @@ namespace LinqToDB.Data
 
 			T result;
 
-#if !NATIVE_ASYNC
-			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
-#else
 			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 			{
-#if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 			{
 					result = await ReadMultipleResultSetsAsync<T>(rd.DataReader!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -676,7 +652,7 @@ namespace LinqToDB.Data
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsList<int>(null!)).GetGenericMethodDefinition();
 
 		static readonly MethodInfo _readSingletMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingle<int>(null!)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadFirstOrDefault<string>(null!)).GetGenericMethodDefinition();
 
 		T[] ReadAsArray<T>(DataReaderWrapper rd)
 		{
@@ -688,7 +664,7 @@ namespace LinqToDB.Data
 			return ReadEnumerator<T>(rd, null, false).ToList();
 		}
 
-		T? ReadSingle<T>(DataReaderWrapper rd)
+		T? ReadFirstOrDefault<T>(DataReaderWrapper rd)
 		{
 			return ReadEnumerator<T>(rd, null, false).FirstOrDefault();
 		}
@@ -743,7 +719,7 @@ namespace LinqToDB.Data
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsListAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		static readonly MethodInfo _readSingletAsyncMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingleAsync<int>(null!, default)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadFirstOrDefaultAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		sealed class ReaderAsyncEnumerable<T> : IAsyncEnumerable<T>
 		{
@@ -786,19 +762,11 @@ namespace LinqToDB.Data
 			{
 			}
 
-#if !NATIVE_ASYNC
-			public Task DisposeAsync() => TaskEx.CompletedTask;
-#else
 			public ValueTask DisposeAsync() => default;
-#endif
 
 			public T Current { get; private set; } = default!;
 
-#if !NATIVE_ASYNC
-			public async Task<bool> MoveNextAsync()
-#else
 			public async ValueTask<bool> MoveNextAsync()
-#endif
 			{
 				if (_isFinished)
 					return false;
@@ -838,7 +806,7 @@ namespace LinqToDB.Data
 			return new ReaderAsyncEnumerable<T>(this, rd).ToListAsync(cancellationToken: cancellationToken);
 		}
 
-		Task<T> ReadSingleAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		Task<T?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
 			return new ReaderAsyncEnumerable<T>(this, rd).FirstOrDefaultAsync(cancellationToken: cancellationToken);
 		}
@@ -1150,18 +1118,10 @@ namespace LinqToDB.Data
 
 				T result = default!;
 
-#if !NATIVE_ASYNC
-				using (DataConnection.DataProvider.ExecuteScope(DataConnection))
-#else
 				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 				{
-#if NETSTANDARD2_1PLUS
 					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 					{
 						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
@@ -1395,15 +1355,8 @@ namespace LinqToDB.Data
 
 				if (parameter.Direction != null) p.Direction =       parameter.Direction.Value;
 				if (parameter.Size      != null) p.Size      =       parameter.Size     .Value;
-#if NET45
-#pragma warning disable RS0030 // API missing from DbParameter in NET 4.5
-				if (parameter.Precision != null) ((IDbDataParameter)p).Precision = (byte)parameter.Precision.Value;
-				if (parameter.Scale     != null) ((IDbDataParameter)p).Scale     = (byte)parameter.Scale    .Value;
-#pragma warning restore RS0030 // API missing from DbParameter in NET 4.5
-#else
 				if (parameter.Precision != null) p.Precision = (byte)parameter.Precision.Value;
 				if (parameter.Scale     != null) p.Scale     = (byte)parameter.Scale    .Value;
-#endif
 
 				// we don't normalize parameter names here as they are passed from user code and it is user's responsibility
 				// to pass correct names. And we cannot add normalization as it will be breaking change for existing users
@@ -1637,11 +1590,11 @@ namespace LinqToDB.Data
 					//
 					return CreateDynamicObjectReader<T>(context.dataConnection, context.dataReader,
 						(dc, dr, type, idx, dataReaderExpr) =>
-							new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+							new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, (bool?)null).Reduce(dc, dr));
 				}
 
 				return CreateObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr, conv) =>
-					new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr).Reduce(dc, dr));
+					new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr, (bool?)null).Reduce(dc, dr));
 			});
 
 			return (Func<DbDataReader,T>)func;
@@ -1659,12 +1612,12 @@ namespace LinqToDB.Data
 				// dynamic case
 				//
 				func = CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
+				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, true).Reduce(dc, slowMode: true));
 			}
 			else
 			{
 				func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr, conv) =>
-				new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr).Reduce(dc, slowMode: true));
+				new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr, true).Reduce(dc, slowMode: true));
 			}
 
 			_objectReaders.Set(key, func,

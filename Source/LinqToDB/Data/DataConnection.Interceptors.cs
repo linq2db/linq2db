@@ -3,13 +3,15 @@
 namespace LinqToDB.Data
 {
 	using Interceptors;
+	using Interceptors.Internal;
 
 	public partial class DataConnection :
 		IInterceptable<ICommandInterceptor>,
 		IInterceptable<IConnectionInterceptor>,
 		IInterceptable<IDataContextInterceptor>,
 		IInterceptable<IEntityServiceInterceptor>,
-		IInterceptable<IUnwrapDataObjectInterceptor>
+		IInterceptable<IUnwrapDataObjectInterceptor>,
+		IInterceptable<IEntityBindingInterceptor>
 	{
 		ICommandInterceptor? _commandInterceptor;
 		ICommandInterceptor? IInterceptable<ICommandInterceptor>.Interceptor
@@ -48,6 +50,13 @@ namespace LinqToDB.Data
 			set => _unwrapDataObjectInterceptor = value;
 		}
 
+		IEntityBindingInterceptor? _entityBindingInterceptor;
+		IEntityBindingInterceptor? IInterceptable<IEntityBindingInterceptor>.Interceptor
+		{
+			get => _entityBindingInterceptor;
+			set => _entityBindingInterceptor = value;
+		}
+
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
@@ -63,6 +72,7 @@ namespace LinqToDB.Data
 			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
 			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
 			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
+			((IInterceptable<IEntityBindingInterceptor>)   this).RemoveInterceptor(interceptor);
 
 			OnRemoveInterceptor?.Invoke(interceptor);
 		}

@@ -16,6 +16,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
 
 	sealed class SqlServerDataProvider2005SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2005SystemDataSqlClient   () : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient)    {} }
 	sealed class SqlServerDataProvider2008SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2008SystemDataSqlClient   () : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient)    {} }
@@ -52,15 +54,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			Version  = version;
 			Provider = provider;
 
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsCountDistinctSupported          = true;
-			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
-			SqlProviderFlags.OutputDeleteUseSpecialTable       = true;
-			SqlProviderFlags.OutputInsertUseSpecialTable       = true;
-			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
-			SqlProviderFlags.IsApplyJoinSupported              = true;
-			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsDistinctOrderBySupported         = false;
+			SqlProviderFlags.AcceptsOuterExpressionInAggregate  = false;
+			SqlProviderFlags.OutputDeleteUseSpecialTable        = true;
+			SqlProviderFlags.OutputInsertUseSpecialTable        = true;
+			SqlProviderFlags.OutputUpdateUseSpecialTables       = true;
+			SqlProviderFlags.IsApplyJoinSupported               = true;
+			SqlProviderFlags.TakeHintsSupported                 = TakeHints.Percent | TakeHints.WithTies;
+			SqlProviderFlags.IsCommonTableExpressionsSupported  = true;
+			SqlProviderFlags.IsRowNumberWithoutOrderBySupported = false;
+			SqlProviderFlags.IsSubQueryTakeSupported            = version > SqlServerVersion.v2005;
+			SqlProviderFlags.IsCTESupportsOrdering              = false;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
@@ -81,7 +85,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			// missing:
 			// GetSqlBytes
-			// GetSqlChars
+			SetProviderField<SqlChars   , SqlChars   >(SqlTypes.GetSqlCharsReaderMethod   , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<SqlBinary  , SqlBinary  >(SqlTypes.GetSqlBinaryReaderMethod  , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<SqlBoolean , SqlBoolean >(SqlTypes.GetSqlBooleanReaderMethod , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<SqlByte    , SqlByte    >(SqlTypes.GetSqlByteReaderMethod    , dataReaderType: Adapter.DataReaderType);
@@ -144,6 +148,20 @@ namespace LinqToDB.DataProvider.SqlServer
 			TableOptions.IsGlobalTemporaryData      |
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			if (Version >= SqlServerVersion.v2022)
+				return new SqlServer2022MemberTranslator();
+
+			if (Version >= SqlServerVersion.v2012)
+				return new SqlServer2012MemberTranslator();
+
+			if (Version == SqlServerVersion.v2005)
+				return new SqlServer2005MemberTranslator();
+
+			return new SqlServerMemberTranslator();
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
@@ -296,7 +314,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						&& (value is DataTable
 						|| value is DbDataReader
 							|| value is IEnumerable<DbDataRecord>
-							|| value.GetType().IsEnumerableTType(Adapter.SqlDataRecordType)))
+							|| value.GetType().IsEnumerableType(Adapter.SqlDataRecordType)))
 					{
 						dataType = dataType.WithDataType(DataType.Structured);
 					}
@@ -495,7 +513,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -510,7 +527,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				source,
 				cancellationToken);
 		}
-#endif
+
 		#endregion
 	}
 }

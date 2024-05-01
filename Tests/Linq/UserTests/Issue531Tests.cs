@@ -93,7 +93,7 @@ namespace Tests.UserTests
 
 				var res2 = zz.ToList();
 
-				Assert.That(res2.Count, Is.EqualTo(2));
+				Assert.That(res2, Has.Count.EqualTo(2));
 			}
 		}
 	}

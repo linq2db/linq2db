@@ -35,15 +35,13 @@ namespace LinqToDB
 				return Type == other.Type && ID == other.ID;
 			}
 
-
 			public override int GetHashCode()
 			{
 				return (int)Type | (ID.GetHashCode() >> 3);
 			}
 
-			public ISqlExpression ToSql(Expression expression)
+			public ISqlExpression ToSql(object value)
 			{
-				var value = expression.EvaluateExpression();
 				return new SqlValue(typeof(SqlID), value);
 			}
 
@@ -57,7 +55,9 @@ namespace LinqToDB
 				var type = value.Substring(0, idx);
 				var id   = value.Substring(idx + 1);
 
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 				return new ((SqlIDType)Enum.Parse(typeof(SqlIDType), type), id);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 			}
 		}
 

@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
+	using Common;
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
@@ -76,9 +77,9 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Int32         :
 				case DataType.UInt16        :
@@ -89,8 +90,10 @@ namespace LinqToDB.DataProvider.SapHana
 					return;
 				case DataType.DateTime2     :
 				case DataType.DateTime      :
-				case DataType.Time:
 					StringBuilder.Append("Timestamp");
+					return;
+				case DataType.Time:
+					StringBuilder.Append("Time");
 					return;
 				case DataType.SmallDateTime :
 					StringBuilder.Append("SecondDate");
@@ -110,9 +113,9 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.NVarChar:
 				case DataType.VarChar:
 				case DataType.VarBinary:
-					if (type.Type.Length == null || type.Type.Length > 5000 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 5000 || type.Length < 1)
 					{
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}(5000)");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}(5000)");
 
 						return;
 					}
@@ -177,6 +180,29 @@ namespace LinqToDB.DataProvider.SapHana
 			StringBuilder.Append("PRIMARY KEY (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
 			StringBuilder.Append(')');
+		}
+
+		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
+		{
+			switch (join.JoinType)
+			{
+				case JoinType.CrossApply:
+					// join with function implies lateral keyword
+					if (join.Table.SqlTableType == SqlTableType.Function)
+						StringBuilder.Append("INNER JOIN ");
+					else
+						StringBuilder.Append("INNER JOIN LATERAL ");
+					return true;
+				case JoinType.OuterApply:
+					// join with function implies lateral keyword
+					if (join.Table.SqlTableType == SqlTableType.Function)
+						StringBuilder.Append("LEFT JOIN ");
+					else
+						StringBuilder.Append("LEFT JOIN LATERAL ");
+					return true;
+			}
+
+			return base.BuildJoinType(join, condition);
 		}
 
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)

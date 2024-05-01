@@ -16,7 +16,7 @@ namespace Tests.Linq
 		[Test]
 		public void Join6([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataConnection(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var actual =
 					from g in db.GrandChild
@@ -37,9 +37,12 @@ namespace Tests.Linq
 		{
 			using (var db = new TestDataConnection())
 			{
-				Assert.IsNotNull(db.OracleXmlTable<Person>(() => "<xml/>"));
-				Assert.IsNotNull(db.OracleXmlTable<Person>("<xml/>"));
-				Assert.IsNotNull(db.OracleXmlTable(new[] { new Person() }));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.OracleXmlTable<Person>(() => "<xml/>"), Is.Not.Null);
+					Assert.That(db.OracleXmlTable<Person>("<xml/>"), Is.Not.Null);
+					Assert.That(db.OracleXmlTable(new[] { new Person() }), Is.Not.Null);
+				});
 			}
 		}
 	}

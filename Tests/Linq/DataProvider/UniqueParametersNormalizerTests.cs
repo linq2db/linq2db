@@ -11,12 +11,11 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlProvider;
 using LinqToDB.Tools;
-
-using Microsoft.FSharp.Core;
 
 using NUnit.Framework;
 
@@ -35,7 +34,7 @@ namespace Tests.DataProvider
 			foreach (var str in uniqueStrings)
 			{
 				var normalizedStr = normalizer.Normalize(str);
-				Assert.AreEqual(str, normalizedStr);
+				Assert.That(normalizedStr, Is.EqualTo(str));
 			}
 		}
 
@@ -56,7 +55,7 @@ namespace Tests.DataProvider
 			for (int i = 0; i < duplicatedStrings.Length; i++)
 			{
 				var normalizedStr = normalizer.Normalize(duplicatedStrings[i]);
-				Assert.AreEqual(expectedStrings[i], normalizedStr);
+				Assert.That(normalizedStr, Is.EqualTo(expectedStrings[i]));
 			}
 		}
 
@@ -83,7 +82,7 @@ namespace Tests.DataProvider
 			for (int i = 0; i < uniqueLongStrings.Length; i++)
 			{
 				var normalizedStr = normalizer.Normalize(uniqueLongStrings[i]);
-				Assert.AreEqual(expectedStrings[i], normalizedStr);
+				Assert.That(normalizedStr, Is.EqualTo(expectedStrings[i]));
 			}
 		}
 
@@ -128,7 +127,7 @@ namespace Tests.DataProvider
 			for (int i = 0; i < duplicatedLongStrings.Length; i++)
 			{
 				var normalizedStr = normalizer.Normalize(duplicatedLongStrings[i]);
-				Assert.AreEqual(expectedStrings[i], normalizedStr);
+				Assert.That(normalizedStr, Is.EqualTo(expectedStrings[i]));
 			}
 		}
 
@@ -147,7 +146,7 @@ namespace Tests.DataProvider
 			for (int i = 0; i < 22; i++)
 			{
 				var normalizedStr = normalizer.Normalize(inputString);
-				Assert.AreEqual(expectedStrings[i], normalizedStr);
+				Assert.That(normalizedStr, Is.EqualTo(expectedStrings[i]));
 			}
 
 			// Expect an InvalidOperationException when sending "abcd" an additional time
@@ -183,7 +182,7 @@ namespace Tests.DataProvider
 		{
 			var normalizer = new UniqueParametersNormalizer();
 			var normalizedStr = normalizer.Normalize(input);
-			Assert.AreEqual(expected, normalizedStr);
+			Assert.That(normalizedStr, Is.EqualTo(expected));
 		}
 
 		//Test normalizing a string that does not fit on the stack
@@ -194,14 +193,14 @@ namespace Tests.DataProvider
 			var normalizer = new TestNormalizer(int.MaxValue);
 			var actual = normalizer.Normalize(input);
 			var expected = new string('a', 600) + new string('b', 600);
-			Assert.AreEqual(expected, actual);
+			Assert.That(actual, Is.EqualTo(expected));
 		}
 
 		[TestCase("")]
 		[TestCase(null)]
 		public void DefaultName(string? input)
 		{
-			Assert.AreEqual("p", new UniqueParametersNormalizer().Normalize(input));
+			Assert.That(new UniqueParametersNormalizer().Normalize(input), Is.EqualTo("p"));
 		}
 
 		//Test with invalid properties; results are undefined, but just ensure there is no infinite loop or stack overflow
@@ -298,7 +297,7 @@ namespace Tests.DataProvider
 			_ = await query2.ToListAsync();
 			var sql2 = lastSql;
 
-			Assert.AreEqual(sql1, sql2);
+			Assert.That(sql2, Is.EqualTo(sql1));
 
 			IQueryable<int> GenerateQuery(string search) =>
 				(
@@ -365,7 +364,7 @@ namespace Tests.DataProvider
 			public DbConnection CreateConnection(string connectionString) => _baseProvider.CreateConnection(connectionString);
 			public ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions) => _baseProvider.CreateSqlBuilder(mappingSchema, dataOptions);
 			public void DisposeCommand(DbCommand command) => _baseProvider.DisposeCommand(command);
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			public ValueTask DisposeCommandAsync(DbCommand command) => _baseProvider.DisposeCommandAsync(command);
 #endif
 			public IExecutionScope? ExecuteScope(DataConnection dataConnection) => _baseProvider.ExecuteScope(dataConnection);
@@ -379,6 +378,8 @@ namespace Tests.DataProvider
 			public void InitContext(IDataContext dataContext) => _baseProvider.InitContext(dataContext);
 			public bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx) => _baseProvider.IsDBNullAllowed(options, reader, idx);
 			public void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value) => _baseProvider.SetParameter(dataConnection, parameter, name, dataType, value);
+
+			public IServiceProvider ServiceProvider => _baseProvider.ServiceProvider;
 		}
 
 		public class Table1

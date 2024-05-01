@@ -112,10 +112,20 @@ namespace LinqToDB.DataProvider.Oracle
 				return o => ValueConverter(converters, o);
 			}
 
-			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Sql.ExpressionAttribute.ConvertFunc<TContext> converter)
 			{
 				var exp = methodCall.Arguments[1];
-				var arg = converter(context, exp, null);
+
+				if (exp is LambdaExpression lambda && lambda.Parameters.Count == 0)
+					exp = lambda.Body;
+
+				var converted = converter(context, exp, null, null);
+
+				if (converted is not SqlPlaceholderExpression placeholder)
+					throw SqlErrorExpression.EnsureError(null, converted).CreateException();
+
+				var arg = placeholder.Sql;
+
 				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType, options.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (arg is SqlParameter p)
@@ -125,10 +135,13 @@ namespace LinqToDB.DataProvider.Oracle
 					// TODO: ValueConverter contract nullability violations
 					if (exp is ConstantExpression constExpr)
 					{
-						if (constExpr.Value is Func<string>)
-							p.ValueConverter = static l => ((Func<string>)l!)();
-						else
-							p.ValueConverter = GetXmlConverter(options, mappingSchema, table)!;
+						if (constExpr.Value is not string)
+						{
+							if (constExpr.Value is Func<string>)
+								p.ValueConverter = static l => ((Func<string>)l!)();
+							else
+								p.ValueConverter = GetXmlConverter(options, mappingSchema, table)!;
+						}
 					}
 					else if (exp is LambdaExpression)
 					{

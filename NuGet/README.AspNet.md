@@ -98,7 +98,7 @@ public class Startup
                 //will configure the AppDataConnection to use
                 //sqite with the provided connection string
                 //there are methods for each supported database
-                .UseSQLite(Configuration.GetConnectionString("Default"))
+                .UseSQLite(Configuration.GetConnectionString("Default"), SQLiteProvider.Microsoft)
                 //default logging will log everything using the ILoggerFactory configured in the provider
                 .UseDefaultLogging(provider));
         //...
@@ -112,7 +112,7 @@ public class Startup
 > [!TIP]  
 > Use `AddLinqToDBContext<TContext, TContextImplementation>` if you would like to resolve an interface or base class instead of the concrete class in your controllers
 
-By default this will configure the service provider to create a new `AppDataConnection` for each HTTP Request, and will dispose of it once the request is finished. This can be configured with the last parameter to `AddLinqToDBContext(... ServiceLifetime lifetime)`, more information about lifetimes [here](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-3.1#service-lifetimes)
+By default this will configure the service provider to create a new `AppDataConnection` for each HTTP Request, and will dispose of it once the request is finished. This can be configured with the last parameter to `AddLinqToDBContext(... ServiceLifetime lifetime)`, more information about lifetimes [here](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection#service-lifetimes)
 
 ### Simple Entity Configuration
 

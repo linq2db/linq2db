@@ -150,7 +150,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -161,7 +160,7 @@ namespace Tests.UserTests
 			var carriersA = new[] { new WmsLoadCarrierDTO { Id = TestData.Guid2, TypeID = typeId } };
 			var carriersB = new[] { new WmsLoadCarrierDTO { Id = TestData.Guid3, TypeID = typeId } };
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable<WmsResourceTypeDTO>(resources))
 			using (db.CreateLocalTable<WmsLoadCarrierDTO>(carriersA))
 			using (db.CreateLocalTable<WmsLoadCarrierDTO>("WMS_ResourceA", carriersB))

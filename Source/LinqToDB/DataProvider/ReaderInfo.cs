@@ -42,7 +42,6 @@ namespace LinqToDB.DataProvider
 			set { _dataReaderType = value; CalcHashCode(); }
 		}
 
-
 		void CalcHashCode()
 		{
 			unchecked

@@ -13,6 +13,8 @@ namespace LinqToDB.DataProvider.SapHana
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{
@@ -26,12 +28,21 @@ namespace LinqToDB.DataProvider.SapHana
 			//instead of replace with left join, in which case returns incorrect data
 			SqlProviderFlags.IsSubQueryColumnSupported         = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsSubQueryTakeSupported           = false;
+			SqlProviderFlags.IsSubQueryTakeSupported           = true;
+			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
+			SqlProviderFlags.AcceptsOuterExpressionInAggregate = true;
+			SqlProviderFlags.IsSubQueryColumnSupported         = true;
+			SqlProviderFlags.IsApplyJoinSupported              = true;
+			SqlProviderFlags.IsApplyJoinSupportsCondition      = true;
 
 			_sqlOptimizer = new SapHanaNativeSqlOptimizer(SqlProviderFlags);
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new SapHanaMemberTranslator();
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -162,7 +173,6 @@ namespace LinqToDB.DataProvider.SapHana
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -175,7 +185,6 @@ namespace LinqToDB.DataProvider.SapHana
 				source,
 				cancellationToken);
 		}
-#endif
 
 		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{

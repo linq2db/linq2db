@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	public class SqlMultiInsertStatement : SqlStatement
 	{
-		public SqlTableLikeSource               Source     { get; }
-		public List<SqlConditionalInsertClause> Inserts    { get; }
+		public SqlTableLikeSource               Source     { get; private  set; }
+		public List<SqlConditionalInsertClause> Inserts    { get; private  set; }
 		public MultiInsertType                  InsertType { get; internal set; }
 
 		public SqlMultiInsertStatement(SqlTableLikeSource source)
@@ -26,28 +25,24 @@ namespace LinqToDB.SqlQuery
 		public void Add(SqlSearchCondition? when, SqlInsertClause insert)
 			=> Inserts.Add(new SqlConditionalInsertClause(insert, when));
 
+		public void Modify(SqlTableLikeSource source)
+		{
+			Source  = source;
+		}
+
 		public override QueryType          QueryType   => QueryType.MultiInsert;
 		public override QueryElementType   ElementType => QueryElementType.MultiInsertStatement;
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			sb.AppendLine(InsertType == MultiInsertType.First ? "INSERT FIRST " : "INSERT ALL ");
+			writer.AppendLine(InsertType == MultiInsertType.First ? "INSERT FIRST " : "INSERT ALL ");
 
 			foreach (var insert in Inserts)
-				((IQueryElement)insert).ToString(sb, dic);
+				writer.AppendElement(insert);
 
-			Source.ToString(sb, dic);
-			return sb;
-		}
+			writer.AppendElement(Source);
 
-		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Source.Walk(options, context, func);
-
-			foreach (var insert in Inserts)
-				((ISqlExpressionWalkable)insert).Walk(options, context, func);
-
-			return base.Walk(options, context, func);
+			return writer;
 		}
 
 		public override bool IsParameterDependent
@@ -62,8 +57,10 @@ namespace LinqToDB.SqlQuery
 			set => throw new InvalidOperationException();
 		}
 
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
+			noAlias = false;
+
 			if (Source == table)
 				return Source;
 
@@ -76,7 +73,5 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
-			=> Source.WalkQueries(context, func);
 	}
 }

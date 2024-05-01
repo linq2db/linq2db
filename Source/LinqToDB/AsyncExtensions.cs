@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
 	using Linq;
-#if !NATIVE_ASYNC
-	using Async;
-#endif
 
 	/// <summary>
 	/// Provides helper methods for asynchronous operations.
@@ -103,13 +98,6 @@ namespace LinqToDB
 				_query = query ?? throw new ArgumentNullException(nameof(query));
 			}
 
-#if !NATIVE_ASYNC
-			IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
-			{
-				return new AsyncEnumeratorImpl<T>(_query.GetEnumerator(), cancellationToken);
-			}
-		}
-#else
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 			async IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -122,7 +110,6 @@ namespace LinqToDB
 				}
 			}
 		}
-#endif
 #endregion
 
 		#region ForEachAsync
@@ -374,17 +361,5 @@ namespace LinqToDB
 		}
 
 		#endregion
-
-#if NATIVE_ASYNC
-		internal static ConfiguredAsyncDisposable ConfigureForUsing(this IAsyncDisposable asyncDisposable)
-		{
-			return asyncDisposable.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-		}
-#else
-		internal static IAsyncDisposable ConfigureForUsing(this IAsyncDisposable asyncDisposable)
-		{
-			return asyncDisposable;
-		}
-#endif
 	}
 }

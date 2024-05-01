@@ -27,7 +27,7 @@ namespace Tests.Linq
 		[Test]
 		public void left_join_on_sub_query_with_two_inner_joins_results_in_incorrect_SQL([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable<A>())
 			using (db.CreateLocalTable<B>())
 			using (db.CreateLocalTable<C>())
@@ -48,7 +48,7 @@ namespace Tests.Linq
 					select new { aid = a.Id, bc };
 
 				var result = query.ToArray();
-				Assert.AreEqual(1, result.Length);
+				Assert.That(result, Has.Length.EqualTo(1));
 			}
 		}
 	}

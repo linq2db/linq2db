@@ -111,22 +111,22 @@ namespace Tests.Linq
 				.ThenLoad(c => c.SubItem)
 				.ToArray();
 
-			Assert.That(result.Length, Is.EqualTo(10));
+			Assert.That(result, Has.Length.EqualTo(10));
 
 			foreach (var item in result)
 			{
 				var subEntities = item.SomeEntities.ToArray();
 				if (item.Id % 3 == 0)
-					Assert.That(subEntities.Length, Is.EqualTo(2));
+					Assert.That(subEntities, Has.Length.EqualTo(2));
 				else
-					Assert.That(subEntities.Length, Is.EqualTo(0));
+					Assert.That(subEntities, Is.Empty);
 
 				Assert.That(subEntities.Any(s => s.SubItem == null), Is.False);
 			}
 		}
 
 		[Test]
-		public void AssociationSelect([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void AssociationSelect([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(SampleClass1.Seed()))

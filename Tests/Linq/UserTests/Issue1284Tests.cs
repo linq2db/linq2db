@@ -59,7 +59,7 @@ namespace Tests.UserTests
 				var expected = query
 					.First();
 
-				Assert.AreEqual(expected, item);
+				Assert.That(item, Is.EqualTo(expected));
 			}
 		}
 
@@ -82,7 +82,7 @@ namespace Tests.UserTests
 				var expected = query
 					.First();
 
-				Assert.AreEqual(expected, item);
+				Assert.That(item, Is.EqualTo(expected));
 			}
 		}
 
@@ -110,7 +110,7 @@ namespace Tests.UserTests
 				var item = cte.FirstOrDefault();
 				var expected = query.FirstOrDefault();
 
-				Assert.AreEqual(expected, item);
+				Assert.That(item, Is.EqualTo(expected));
 			}
 		}
 	}

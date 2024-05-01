@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
+	using LinqToDB.Mapping;
 	using LinqToDB.SqlProvider;
 	using SqlQuery;
 
@@ -45,7 +45,7 @@ namespace LinqToDB
 				set => base.Name = value;
 			}
 
-			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, ExpressionAttribute.ConvertFunc<TContext> converter)
 			{
 				table.SqlTableType = SqlTableType.Expression;
 				var expressionStr  = table.Expression = Expression ?? methodCall.Method.Name!;
@@ -56,8 +56,8 @@ namespace LinqToDB
 					throw new LinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");
 
 				// Add two fake expressions, TableName and Alias
-				knownExpressions.Insert(0, null);
-				knownExpressions.Insert(0, null);
+				knownExpressions.Insert(0, (null, null));
+				knownExpressions.Insert(0, (null, null));
 
 				if (Schema != null || Database != null || Server != null || Package != null)
 					table.TableName = new SqlObjectName(
@@ -67,7 +67,11 @@ namespace LinqToDB
 						Server  : Server   ?? table.TableName.Server,
 						Package : Package  ?? table.TableName.Package);
 
-				table.TableArguments = ExpressionAttribute.PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter).Skip(2).ToArray();
+#pragma warning disable CS8619 // TODO:WAITFIX
+				table.TableArguments = ExpressionAttribute.PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter, out var error)
+#pragma warning restore CS8619
+					.Skip(2)
+					.ToArray();
 			}
 		}
 	}

@@ -56,8 +56,8 @@ jobs:
   - task: DownloadPipelineArtifact@2
     displayName: Download test files (for t4 nugets)
     inputs:
-      artifactName: '$(netfx472_tests)'
-      targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
+      artifactName: '$(netfx_tests)'
+      targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/$(netfx_tfm)'
 
   - task: PowerShell@2
     inputs:

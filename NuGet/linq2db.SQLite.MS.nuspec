@@ -13,13 +13,25 @@
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net451">
-				<dependency id="linq2db"                version="5.0.0" />
-				<dependency id="Microsoft.Data.Sqlite"  version="1.1.1" />
+			<group targetFramework="net462">
+				<dependency id="linq2db"                version="6.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="6.0.29" />
 			</group>
 			<group targetFramework="netstandard2.0">
-				<dependency id="linq2db"                version="5.0.0"  />
-				<dependency id="Microsoft.Data.Sqlite"  version="7.0.11" />
+				<dependency id="linq2db"                version="6.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="6.0.29" />
+			</group>
+			<group targetFramework="net6.0">
+				<dependency id="linq2db"                version="6.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="6.0.29" />
+			</group>
+			<group targetFramework="net7.0">
+				<dependency id="linq2db"                version="6.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="7.0.18" />
+			</group>
+			<group targetFramework="net8.0">
+				<dependency id="linq2db"                version="6.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="8.0.4"  />
 			</group>
 		</dependencies>
 		<contentFiles>
@@ -29,12 +41,12 @@
 	<files>
 		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
 
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Data.SQLite.dll"            target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\x86\SQLite.Interop.dll"            target="tools\x86"                                                                                          />
-		<file src="..\Tests\Linq\bin\Azure\net472\x64\SQLite.Interop.dll"            target="tools\x64"                                                                                          />
-		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                                                                              />
+		<file src="..\Source\LinqToDB\bin\Release\net462\linq2db.dll"                target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net462\Humanizer.dll"                     target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net462\System.Data.SQLite.dll"            target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net462\x86\SQLite.Interop.dll"            target="tools\x86"                                                                                          />
+		<file src="..\Tests\Linq\bin\Azure\net462\x64\SQLite.Interop.dll"            target="tools\x64"                                                                                          />
+		<file src="..\Tests\Linq\bin\Azure\net462\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                                                                              />
 
 		<file src="..\NuGet\SQLite\linq2db.SQLite.props"                             target="build\linq2db.SQLite.MS.props"                                                                      />
 

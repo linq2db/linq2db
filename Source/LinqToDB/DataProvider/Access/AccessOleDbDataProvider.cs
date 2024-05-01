@@ -14,25 +14,37 @@ namespace LinqToDB.DataProvider.Access
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
 
 	public class AccessOleDbDataProvider : DynamicDataProviderBase<OleDbProviderAdapter>
 	{
 		public AccessOleDbDataProvider() : base(ProviderName.Access, MappingSchemaInstance, OleDbProviderAdapter.GetInstance())
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter           = false;
-			SqlProviderFlags.IsSkipSupported                  = false;
-			SqlProviderFlags.IsCountSubQuerySupported         = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported        = false;
-			SqlProviderFlags.TakeHintsSupported               = TakeHints.Percent;
-			SqlProviderFlags.IsCrossJoinSupported             = false;
-			SqlProviderFlags.IsInnerJoinAsCrossSupported      = false;
-			SqlProviderFlags.IsDistinctOrderBySupported       = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
-			SqlProviderFlags.IsParameterOrderDependent        = true;
-			SqlProviderFlags.IsUpdateFromSupported            = false;
-			SqlProviderFlags.DefaultMultiQueryIsolationLevel  = IsolationLevel.Unspecified;
+			SqlProviderFlags.AcceptsTakeAsParameter                       = false;
+			SqlProviderFlags.IsSkipSupported                              = false;
+			SqlProviderFlags.IsCountSubQuerySupported                     = true;
+			SqlProviderFlags.IsInsertOrUpdateSupported                    = false;
+			SqlProviderFlags.IsSubQuerySkipSupported                      = false;
+			SqlProviderFlags.IsSupportsJoinWithoutCondition               = false;
+			SqlProviderFlags.TakeHintsSupported                           = TakeHints.Percent;
+			SqlProviderFlags.IsCrossJoinSupported                         = false;
+			SqlProviderFlags.IsInnerJoinAsCrossSupported                  = false;
+			SqlProviderFlags.IsDistinctOrderBySupported                   = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported             = false;
+			SqlProviderFlags.IsParameterOrderDependent                    = true;
+			SqlProviderFlags.IsUpdateFromSupported                        = false;
+			SqlProviderFlags.IsWindowFunctionsSupported                   = false;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel              = IsolationLevel.Unspecified;
+			SqlProviderFlags.IsOuterJoinSupportsInnerJoin                 = false;
+			SqlProviderFlags.IsMultiTablesSupportsJoins                   = false;
+			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability     = true;
 
-			SetCharField            ("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
+			SqlProviderFlags.IsCountDistinctSupported                     = false;
+			SqlProviderFlags.IsAggregationDistinctSupported               = false;
+
+			SetCharField("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("DBTYPE_WCHAR", DataTools.GetCharExpression);
 
 			SetProviderField<DbDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
@@ -41,6 +53,11 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new AccessMemberTranslator();
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
@@ -134,7 +151,6 @@ namespace LinqToDB.DataProvider.Access
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -147,7 +163,6 @@ namespace LinqToDB.DataProvider.Access
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

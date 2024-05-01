@@ -11,6 +11,8 @@ namespace LinqToDB.DataProvider.DB2
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
 
 	sealed class DB2LUWDataProvider : DB2DataProvider { public DB2LUWDataProvider() : base(ProviderName.DB2LUW, DB2Version.LUW) {} }
 	sealed class DB2zOSDataProvider : DB2DataProvider { public DB2zOSDataProvider() : base(ProviderName.DB2zOS, DB2Version.zOS) {} }
@@ -22,11 +24,14 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			Version = version;
 
-			SqlProviderFlags.AcceptsTakeAsParameter            = false;
-			SqlProviderFlags.AcceptsTakeAsParameterIfSkip      = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.AcceptsTakeAsParameter                       = false;
+			SqlProviderFlags.AcceptsTakeAsParameterIfSkip                 = true;
+			SqlProviderFlags.IsDistinctOrderBySupported                   = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported            = true;
+			SqlProviderFlags.IsUpdateFromSupported                        = false;
+			SqlProviderFlags.IsCrossJoinSupported                         = false;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
+			SqlProviderFlags.IsRecursiveCTEJoinWithConditionSupported     = false;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Update |
 			                                         RowFeature.UpdateLiteral | RowFeature.Overlaps | RowFeature.Between;
@@ -83,6 +88,11 @@ namespace LinqToDB.DataProvider.DB2
 			TableOptions.IsLocalTemporaryData       |
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new DB2MemberTranslator();
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
@@ -222,7 +232,6 @@ namespace LinqToDB.DataProvider.DB2
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -237,7 +246,6 @@ namespace LinqToDB.DataProvider.DB2
 				source,
 				cancellationToken);
 		}
-#endif
 
 #endregion
 

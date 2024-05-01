@@ -22,6 +22,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Linq.Translation;
 
 	public abstract class DataProviderBase : IDataProvider
 	{
@@ -43,6 +44,9 @@ namespace LinqToDB.DataProvider
 				IsSkipSupportedIfTake                = false,
 				TakeHintsSupported                   = null,
 				IsSubQueryTakeSupported              = true,
+				IsCorrelatedSubQueryTakeSupported    = true,
+				IsSupportsJoinWithoutCondition       = true,
+				IsSubQuerySkipSupported              = true,
 				IsSubQueryColumnSupported            = true,
 				IsSubQueryOrderBySupported           = false,
 				IsCountSubQuerySupported             = true,
@@ -63,11 +67,14 @@ namespace LinqToDB.DataProvider
 				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
-				IsCountDistinctSupported             = false,
+				IsCountDistinctSupported             = true,
+				IsAggregationDistinctSupported       = true,
 				AcceptsOuterExpressionInAggregate    = true,
 				IsUpdateFromSupported                = true,
 				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,
 				RowConstructorSupport                = RowFeature.None,
+				IsWindowFunctionsSupported           = true,
+				IsDerivedTableOrderBySupported       = true,
 			};
 
 			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));
@@ -155,7 +162,7 @@ namespace LinqToDB.DataProvider
 			command.Dispose();
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 		public virtual ValueTask DisposeCommandAsync(DbCommand command)
 		{
 			ClearCommandParameters(command);
@@ -216,6 +223,11 @@ namespace LinqToDB.DataProvider
 		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
+		}
+
+		protected void SetProviderField<TP, T>(Type providerFieldType, Expression<Func<TP, int, T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = providerFieldType }] = expr;
 		}
 
 		protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr)
@@ -486,17 +498,50 @@ namespace LinqToDB.DataProvider
 			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			where T: notnull
 		{
 			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
-#endif
 
 		#endregion
 
 		public virtual IQueryParametersNormalizer GetQueryParameterNormalizer() => new UniqueParametersNormalizer();
+
+		protected abstract IMemberTranslator  CreateMemberTranslator();
+		protected virtual  IIdentifierService CreateIdentifierService() => new IdentifierServiceSimple(128);
+
+		protected virtual void InitServiceProvider(SimpleServiceProvider serviceProvider)
+		{
+			serviceProvider.AddService(CreateMemberTranslator());
+			serviceProvider.AddService(CreateIdentifierService());
+		}
+
+		SimpleServiceProvider? _serviceProvider;
+		readonly object        _guard = new();
+
+		public IServiceProvider ServiceProvider
+		{
+			get
+			{
+				if (_serviceProvider == null)
+				{
+					lock (_guard)
+					{
+						if (_serviceProvider == null)
+						{
+							var serviceProvider = new SimpleServiceProvider();
+							InitServiceProvider(serviceProvider);
+							_serviceProvider = serviceProvider;
+						}
+					}
+				}
+
+				return _serviceProvider;
+			}
+		}
+
+
 	}
 }

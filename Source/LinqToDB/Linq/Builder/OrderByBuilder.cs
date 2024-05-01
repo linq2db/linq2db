@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -16,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 			if (!methodCall.IsQueryable(MethodNames))
 				return false;
 
-			var body = ((LambdaExpression)methodCall.Arguments[1].Unwrap()).Body.Unwrap();
+			var body = methodCall.Arguments[1].UnwrapLambda().Body.Unwrap();
 
 			if (body.NodeType == ExpressionType.MemberInit)
 			{
@@ -35,9 +37,15 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequenceArgument = methodCall.Arguments[0];
+			var sequenceResult   = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument));
+
+			if (sequenceResult.BuildContext == null)
+				return sequenceResult;
+
+			var sequence = sequenceResult.BuildContext;
 
 			var wrapped = false;
 
@@ -49,36 +57,56 @@ namespace LinqToDB.Linq.Builder
 
 			var isContinuousOrder = !sequence.SelectQuery.OrderBy.IsEmpty && methodCall.Method.Name.StartsWith("Then");
 			var lambda  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			SqlInfo[] sql;
 
+			var byIndex = false;
+
+			List<SqlPlaceholderExpression> placeholders;
 			while (true)
 			{
-				var sparent = sequence.Parent;
-				var order   = new ExpressionContext(buildInfo.Parent, sequence, lambda);
-				var body    = lambda.Body.Unwrap();
-				    sql     = builder.ConvertExpressions(order, body, ConvertFlags.Key, null);
+				Expression sqlExpr;
 
-				builder.ReplaceParent(order, sparent);
+				var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
+
+				if (body is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && mc.Method.Name == nameof(Sql.OrderIndex))
+				{
+					sqlExpr = builder.ConvertToSqlExpr(sequence, mc.Arguments[0], ProjectFlags.SQL);
+					byIndex = true;
+				}
+				else
+				{
+					sqlExpr = builder.ConvertToSqlExpr(sequence, body, ProjectFlags.SQL);
+					byIndex = false;
+				}
+
+				if (!SequenceHelper.IsSqlReady(sqlExpr))
+				{
+					if (sqlExpr is SqlErrorExpression errorExpr)
+						return BuildSequenceResult.Error(methodCall, errorExpr.Message);
+					return BuildSequenceResult.Error(methodCall);
+				}
+
+				placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
 
 				// Do not create subquery for ThenByExtensions
+				//
 				if (wrapped || isContinuousOrder)
 					break;
 
 				// handle situation when order by uses complex field
-
+				//
 				var isComplex = false;
 
-				foreach (var sqlInfo in sql)
+				foreach (var placeholder in placeholders)
 				{
 					// immutable expressions will be removed later
 					//
-					var isImmutable = QueryHelper.IsConstant(sqlInfo.Sql);
+					var isImmutable = QueryHelper.IsConstant(placeholder.Sql);
 					if (isImmutable)
 						continue;
 
 					// possible we have to extend this list
 					//
-					isComplex = null != sqlInfo.Sql.Find(QueryElementType.SqlQuery);
+					isComplex = null != placeholder.Sql.Find(e => e.ElementType == QueryElementType.SqlQuery || e.ElementType == QueryElementType.SqlFunction);
 					if (isComplex)
 						break;
 				}
@@ -93,18 +121,35 @@ namespace LinqToDB.Linq.Builder
 			if (!isContinuousOrder && !builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 
-			foreach (var expr in sql)
+			foreach (var placeholder in placeholders)
 			{
-				// we do not need sorting by immutable values, like "Some", Func("Some"), "Some1" + "Some2". It does nothing for ordering
-				// IT: Actually it does. See ORDER BY ordinal position.
-				//
-				if (!builder.DataOptions.SqlOptions.EnableConstantExpressionInOrderBy && QueryHelper.IsConstant(expr.Sql))
-					continue;
+				var orderSql = placeholder.Sql;
 
-				sequence.SelectQuery.OrderBy.Expr(expr.Sql, methodCall.Method.Name.EndsWith("Descending"));
+				var isPositioned = byIndex;
+
+				if (QueryHelper.IsConstant(placeholder.Sql))
+				{
+					if (builder.DataOptions.SqlOptions.EnableConstantExpressionInOrderBy && orderSql is SqlValue { Value: int position })
+					{
+						// Dangerous way to set oder ordinal position. Used for legacy software support.
+
+						if (position <= 0)
+							return BuildSequenceResult.Error(sequenceArgument, $"Invalid Index '{position.ToString(CultureInfo.InvariantCulture)}' for positioned OrderBy. Should be in range 1..N.");
+
+						orderSql     = new SqlExpression(typeof(int), position.ToString(CultureInfo.InvariantCulture));
+						isPositioned = false;
+					}
+					else
+					{
+						// we do not need sorting by immutable values, like "Some", Func("Some"), "Some1" + "Some2". It does nothing for ordering
+						continue;
+					}
+				}
+				
+				sequence.SelectQuery.OrderBy.Expr(orderSql, methodCall.Method.Name.EndsWith("Descending"), isPositioned);
 			}
 
-			return sequence;
+			return BuildSequenceResult.FromContext(sequence);
 		}
 	}
 }

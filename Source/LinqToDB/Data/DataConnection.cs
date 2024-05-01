@@ -7,7 +7,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB.Data
@@ -20,7 +19,7 @@ namespace LinqToDB.Data
 	using Mapping;
 	using RetryPolicy;
 	using Tools;
-
+	using Infrastructure;
 
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines.
@@ -28,7 +27,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : IDataContext, ICloneable
+	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>
 	{
 		#region .ctor
 
@@ -442,6 +441,9 @@ namespace LinqToDB.Data
 		/// Database configuration name (connection string name).
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
+
+		public IServiceProvider ServiceProvider => DataProvider.ServiceProvider;
+
 		/// <summary>
 		/// Database provider implementation for specific database engine.
 		/// </summary>
@@ -707,7 +709,6 @@ namespace LinqToDB.Data
 
 				throw;
 			}
-
 
 			return _connection;
 		}
@@ -1450,52 +1451,6 @@ namespace LinqToDB.Data
 
 		#endregion
 
-		#region ICloneable Members
-
-		DataConnection(string? configurationString, IDataProvider dataProvider, string? connectionString, DbConnection? connection, MappingSchema mappingSchema, DataOptions options)
-		{
-			ConfigurationString = configurationString;
-			DataProvider        = dataProvider;
-			ConnectionString    = connectionString;
-			_connection         = connection != null ? AsyncFactory.Create(connection) : null;
-			MappingSchema       = mappingSchema;
-			Options             = options;
-		}
-
-		// TODO: v6: get rid of Clone as we shouldn't need to clone connection with new parser anymore
-		/// <summary>
-		/// Clones current connection.
-		/// </summary>
-		/// <returns>Cloned connection.</returns>
-		public object Clone()
-		{
-			CheckAndThrowOnDisposed();
-
-			var connection = _connection?.TryClone() ?? _connectionFactory?.Invoke(Options);
-
-			// https://github.com/linq2db/linq2db/issues/1486
-			// when there is no ConnectionString and provider doesn't support connection cloning
-			// try to get ConnectionString from _connection
-			// will not work for providers that remove security information from connection string
-			var connectionString = ConnectionString ?? (connection == null ? _connection?.ConnectionString : null);
-
-			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema, Options)
-				{
-					RetryPolicy               = RetryPolicy,
-					CommandTimeout            = CommandTimeout,
-					InlineParameters          = InlineParameters,
-					ThrowOnDisposed           = ThrowOnDisposed,
-					OnTraceConnection         = OnTraceConnection,
-					_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
-					_commandInterceptor       = _commandInterceptor.CloneAggregated(),
-					_connectionInterceptor    = _connectionInterceptor.CloneAggregated(),
-					_dataContextInterceptor   = _dataContextInterceptor.CloneAggregated(),
-					_entityServiceInterceptor = _entityServiceInterceptor.CloneAggregated(),
-				};
-		}
-
-		#endregion
-
 		#region System.IDisposable Members
 
 		protected bool  Disposed        { get; private set; }
@@ -1523,5 +1478,7 @@ namespace LinqToDB.Data
 		{
 			return DataProvider.GetCommandBehavior(commandBehavior);
 		}
+
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance => DataProvider.ServiceProvider;
 	}
 }

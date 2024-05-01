@@ -226,7 +226,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoin9([DataSources(TestProvName.AllAccess)] string context)
+		public void InnerJoin9([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -283,14 +283,20 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.AreEqual(1, list.Count);
-				Assert.AreEqual(1, list[0].p.ParentID);
-				Assert.AreEqual(1, list[0].lj.Count());
+				Assert.That(list, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0].p.ParentID, Is.EqualTo(1));
+					Assert.That(list[0].lj.Count(), Is.EqualTo(1));
+				});
 
 				var ch = list[0].lj.ToList();
 
-				Assert.AreEqual( 1, ch[0].ParentID);
-				Assert.AreEqual(11, ch[0].ChildID);
+				Assert.Multiple(() =>
+				{
+					Assert.That(ch[0].ParentID, Is.EqualTo(1));
+					Assert.That(ch[0].ChildID, Is.EqualTo(11));
+				});
 			}
 		}
 
@@ -323,9 +329,12 @@ namespace Tests.Linq
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,              list2.Count);
-				Assert.AreEqual(list1[0].p.ParentID,      list2[0].p.ParentID);
-				Assert.AreEqual(list1[0].lj1.lj1.Count(), list2[0].lj1.lj1.Count());
+				Assert.That(list2, Has.Count.EqualTo(list1.Count));
+				Assert.Multiple(() =>
+				{
+					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
+					Assert.That(list2[0].lj1.lj1.Count(), Is.EqualTo(list1[0].lj1.lj1.Count()));
+				});
 			}
 		}
 
@@ -354,9 +363,12 @@ namespace Tests.Linq
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,          list2.Count);
-				Assert.AreEqual(list1[0].p.ParentID,  list2[0].p.ParentID);
-				Assert.AreEqual(list1[0].lj1.Count(), list2[0].lj1.Count());
+				Assert.That(list2, Has.Count.EqualTo(list1.Count));
+				Assert.Multiple(() =>
+				{
+					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
+					Assert.That(list2[0].lj1.Count(), Is.EqualTo(list1[0].lj1.Count()));
+				});
 			}
 		}
 
@@ -405,13 +417,13 @@ namespace Tests.Linq
 					select new { p1 = lj1, p2 = lj1.OrderByDescending(e => e.ChildID).First() }
 				).ToList();
 
-				Assert.AreEqual(expected.Count, result.Count);
+				Assert.That(result, Has.Count.EqualTo(expected.Count));
 				AreEqual(expected[0].p1, result[0].p1);
 			}
 		}
 
 		[Test]
-		public void GroupJoin52([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupJoin52([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -473,7 +485,7 @@ namespace Tests.Linq
 
 				var list1 = q1.ToList();
 				var ch1   = list1[0].lj.ToList();
-
+ 
 				var q2 =
 					from p in db.Parent
 						join c in db.Child on p.ParentID + n equals c.ParentID into lj
@@ -482,14 +494,20 @@ namespace Tests.Linq
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,         list2.Count);
-				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
-				Assert.AreEqual(list1[0].lj.Count(), list2[0].lj.Count());
+				Assert.That(list2, Has.Count.EqualTo(list1.Count));
+				Assert.Multiple(() =>
+				{
+					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
+					Assert.That(list2[0].lj.Count(), Is.EqualTo(list1[0].lj.Count()));
+				});
 
 				var ch2 = list2[0].lj.OrderBy(_ => _.ChildID).ToList();
 
-				Assert.AreEqual(ch1[0].ParentID, ch2[0].ParentID);
-				Assert.AreEqual(ch1[0].ChildID,  ch2[0].ChildID);
+				Assert.Multiple(() =>
+				{
+					Assert.That(ch2[0].ParentID, Is.EqualTo(ch1[0].ParentID));
+					Assert.That(ch2[0].ChildID, Is.EqualTo(ch1[0].ChildID));
+				});
 			}
 		}
 
@@ -517,14 +535,20 @@ namespace Tests.Linq
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,         list2.Count);
-				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
-				Assert.AreEqual(list1[0].j.Count(),  list2[0].j.Count());
+				Assert.That(list2, Has.Count.EqualTo(list1.Count));
+				Assert.Multiple(() =>
+				{
+					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
+					Assert.That(list2[0].j.Count(), Is.EqualTo(list1[0].j.Count()));
+				});
 
 				var ch2 = list2[0].j.OrderBy(_ => _.ChildID).ThenBy(_ => _.ParentID).ToList();
 
-				Assert.AreEqual(ch1[0].ParentID, ch2[0].ParentID);
-				Assert.AreEqual(ch1[0].ChildID,  ch2[0].ChildID);
+				Assert.Multiple(() =>
+				{
+					Assert.That(ch2[0].ParentID, Is.EqualTo(ch1[0].ParentID));
+					Assert.That(ch2[0].ChildID, Is.EqualTo(ch1[0].ChildID));
+				});
 			}
 		}
 
@@ -762,7 +786,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoin4([DataSources] string context)
+		public void LeftJoin4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -819,7 +843,7 @@ namespace Tests.Linq
 
 				var _ = q.ToList();
 
-				Assert.AreEqual(0, CountedChild.Count);
+				Assert.That(CountedChild.Count, Is.EqualTo(0));
 			}
 		}
 
@@ -891,16 +915,23 @@ namespace Tests.Linq
 		[Test]
 		public void ReferenceJoin1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from c in    Child join g in    GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID },
-					from c in db.Child join g in db.GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID });
+			using var db = GetDataContext(context);
+
+			var query = from c in db.Child
+				join g in db.GrandChild on c equals g.Child
+				select new { c.ParentID, g.GrandChildID };
+
+			var xx = query.ToList();
+
+			AreEqual(
+				from c in    Child join g in    GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID },
+				from c in db.Child join g in db.GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID });
 		}
 
 		[Test]
 		public void ReferenceJoin2([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 				AreEqual(
 					from g in    GrandChild
 						join c in    Child on g.Child equals c
@@ -995,8 +1026,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Explicit]
-		public void StackOverflow([IncludeDataSources(
-			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)]
+		public void StackOverflow([IncludeDataSources(TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1015,12 +1045,13 @@ namespace Tests.Linq
 				}
 
 				var list = q.ToList();
-				Assert.IsNotEmpty(list);
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
+		[ActiveIssue("HanaException : feature not supported: field or table alias is not allowed as an input of table functions", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context)
+		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1032,6 +1063,26 @@ namespace Tests.Linq
 				var _ = q.ToList();
 			}
 		}
+
+		// MySQL doesn't support user-defined table functions
+		// system-defined JSON_TABLE function could be used with LATERAL, but it is not an easy task to define it...
+		[ActiveIssue("Implement JSON_TABLE-like functions support")]
+		[Test]
+		public void ApplyJoin_MySql([IncludeDataSources(TestProvName.AllMySqlWithApply)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from ch in db.Child
+					from p in JsonTable()
+					select p;
+
+				var _ = q.ToList();
+			}
+		}
+
+		[Sql.TableExpression("JSON_TABLE('[ {\"ParentID\": 1}, {\"Value1\": 2} ]', '$[*]' COLUMNS( ParentID INT PATH '$.ParentID', Value1 INT PATH '$.Value1')")]
+		private static ITable<Parent> JsonTable() => throw new NotImplementedException();
 
 		[Test]
 		public void BltIssue257([DataSources] string context)
@@ -1103,10 +1154,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubQueryCount([DataSources(
-				TestProvName.AllClickHouse,
-				TestProvName.AllAccess,
-				ProviderName.SqlCe)]
+		public void JoinSubQueryCount([DataSources(TestProvName.AllClickHouse)]
 			string context)
 		{
 			var n = 1;
@@ -1128,7 +1176,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubQuerySum([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void JoinSubQuerySum([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1369,10 +1417,11 @@ namespace Tests.Linq
 				var expected = Parent.SqlJoinInternal(Parent, joinType, (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1, (p1, p2) => p2);
 
 				var actual = db.Parent.Join(db.Parent, joinType, (p1, p2) => p1.ParentID == p2.ParentID && p1.Value1 == p2.Value1,
-					(p1, p2) => p2);
+					(p1, p2) => p2)
+					.ToList();
 
 				AreEqual(expected.ToList().OrderBy(r => r!.ParentID).ThenBy(r => r!.Value1),
-					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
+					actual.OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
 			}
 		}
 
@@ -1430,7 +1479,7 @@ namespace Tests.Linq
 					&& Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
 					.Single();
 
-				Assert.True(areEqual);
+				Assert.That(areEqual, Is.True);
 			}
 		}
 
@@ -1453,7 +1502,7 @@ namespace Tests.Linq
 					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
 					.Single();
 
-				Assert.False(areEqual);
+				Assert.That(areEqual, Is.False);
 			}
 		}
 
@@ -1476,7 +1525,7 @@ namespace Tests.Linq
 					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
 					.Single();
 
-				Assert.False(areEqual);
+				Assert.That(areEqual, Is.False);
 			}
 		}
 
@@ -1500,7 +1549,7 @@ namespace Tests.Linq
 					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
 					.Single();
 
-				Assert.False(areEqual);
+				Assert.That(areEqual, Is.False);
 			}
 		}
 
@@ -1523,7 +1572,7 @@ namespace Tests.Linq
 					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
 					.Single();
 
-				Assert.True(areEqual);
+				Assert.That(areEqual, Is.True);
 			}
 		}
 
@@ -1603,9 +1652,10 @@ namespace Tests.Linq
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 				var id2 = Parent.Skip(1).First().ParentID;
@@ -1646,10 +1696,12 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutConditions([DataSources(
+			TestProvName.AllClickHouse,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1692,10 +1744,12 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(
+			TestProvName.AllClickHouse,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1740,9 +1794,10 @@ namespace Tests.Linq
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 				var id2 = Parent.Skip(1).First().ParentID;
@@ -1787,9 +1842,10 @@ namespace Tests.Linq
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 
@@ -1833,9 +1889,10 @@ namespace Tests.Linq
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var actual =
 					from left in (
@@ -1872,9 +1929,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(TestProvName.AllSQLite)] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 				var id2 = Parent.Skip(1).First().ParentID;
@@ -1914,7 +1971,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithoutConditions([DataSources(TestProvName.AllSQLite)] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithoutConditions([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1955,7 +2012,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(TestProvName.AllSQLite)] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1994,7 +2051,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithConditions([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithConditions([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2038,7 +2095,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlRightJoinWithInnerJoinOnRightWithoutConditions([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var id1 = Parent.First().ParentID;
 
@@ -2077,7 +2134,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2199,11 +2256,14 @@ namespace Tests.Linq
 
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2222,11 +2282,14 @@ namespace Tests.Linq
 
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2245,11 +2308,14 @@ namespace Tests.Linq
 
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2268,11 +2334,14 @@ namespace Tests.Linq
 
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2290,11 +2359,14 @@ namespace Tests.Linq
 
 				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2312,11 +2384,14 @@ namespace Tests.Linq
 
 				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2335,11 +2410,14 @@ namespace Tests.Linq
 
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2358,11 +2436,14 @@ namespace Tests.Linq
 
 				var results = t.ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2381,11 +2462,14 @@ namespace Tests.Linq
 
 				var results = t.ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2403,11 +2487,14 @@ namespace Tests.Linq
 
 				var results = q.ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2425,11 +2512,14 @@ namespace Tests.Linq
 
 				var results = q.ToArray();
 
-				Assert.AreEqual(2, results.Length);
-				Assert.AreEqual(4, results[0].fact.Id);
-				Assert.AreEqual("Tag4", results[0].leftTag.Name);
-				Assert.AreEqual(5, results[1].fact.Id);
-				Assert.IsNull(results[1].leftTag);
+				Assert.That(results, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].fact.Id, Is.EqualTo(4));
+					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
+					Assert.That(results[1].fact.Id, Is.EqualTo(5));
+					Assert.That(results[1].leftTag, Is.Null);
+				});
 			}
 		}
 
@@ -2453,10 +2543,13 @@ namespace Tests.Linq
 
 				var results = t.ToArray();
 
-				Assert.AreEqual(3, results.Length);
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
-				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+				Assert.That(results, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -2480,10 +2573,13 @@ namespace Tests.Linq
 
 				var results = t.ToArray();
 
-				Assert.AreEqual(3, results.Length);
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
-				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+				Assert.That(results, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -2506,10 +2602,13 @@ namespace Tests.Linq
 
 				var results = q.ToArray();
 
-				Assert.AreEqual(3, results.Length);
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
-				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+				Assert.That(results, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -2532,10 +2631,13 @@ namespace Tests.Linq
 
 				var results = q.ToArray();
 
-				Assert.AreEqual(3, results.Length);
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null));
-				Assert.AreEqual(1, results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"));
-				Assert.AreEqual(1, results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"));
+				Assert.That(results, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
+					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -2591,14 +2693,20 @@ namespace Tests.Linq
 							 };
 
 				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
-				Assert.IsNotNull(r);
-				Assert.AreEqual(1, r.MinQuantity);
-				Assert.AreEqual(2, r.MaxQuantity);
+				Assert.That(r, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r.MinQuantity, Is.EqualTo(1));
+					Assert.That(r.MaxQuantity, Is.EqualTo(2));
+				});
 
 				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
-				Assert.IsNotNull(r2);
-				Assert.AreEqual(3, r2.MinQuantity);
-				Assert.AreEqual(4, r2.MaxQuantity);
+				Assert.That(r2, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r2.MinQuantity, Is.EqualTo(3));
+					Assert.That(r2.MaxQuantity, Is.EqualTo(4));
+				});
 			}
 		}
 
@@ -2627,14 +2735,20 @@ namespace Tests.Linq
 							 };
 
 				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
-				Assert.IsNotNull(r);
-				Assert.AreEqual(1, r.MinQuantity);
-				Assert.AreEqual(2, r.MaxQuantity);
+				Assert.That(r, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r.MinQuantity, Is.EqualTo(1));
+					Assert.That(r.MaxQuantity, Is.EqualTo(2));
+				});
 
 				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
-				Assert.IsNotNull(r2);
-				Assert.AreEqual(3, r2.MinQuantity);
-				Assert.AreEqual(4, r2.MaxQuantity);
+				Assert.That(r2, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r2.MinQuantity, Is.EqualTo(3));
+					Assert.That(r2.MaxQuantity, Is.EqualTo(4));
+				});
 			}
 		}
 
@@ -2663,14 +2777,20 @@ namespace Tests.Linq
 							 };
 
 				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
-				Assert.IsNotNull(r);
-				Assert.AreEqual(1, r.MinQuantity);
-				Assert.AreEqual(2, r.MaxQuantity);
+				Assert.That(r, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r.MinQuantity, Is.EqualTo(1));
+					Assert.That(r.MaxQuantity, Is.EqualTo(2));
+				});
 
 				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
-				Assert.IsNotNull(r2);
-				Assert.AreEqual(3, r2.MinQuantity);
-				Assert.AreEqual(4, r2.MaxQuantity);
+				Assert.That(r2, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r2.MinQuantity, Is.EqualTo(3));
+					Assert.That(r2.MaxQuantity, Is.EqualTo(4));
+				});
 			}
 		}
 
@@ -2683,7 +2803,7 @@ namespace Tests.Linq
 			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false)]
 			public StMain Main { get; set; } = null!;
 
-			public static StVersion[] Data = Array<StVersion>.Empty;
+			public static StVersion[] Data = [];
 		}
 
 		[Table("rlStatesTypesAndUserGroups")]
@@ -2692,7 +2812,7 @@ namespace Tests.Linq
 			[Column("inIdState"), PrimaryKey(1)] public int InIdState { get; set; }
 			[Column("inIdType"),  PrimaryKey(2)] public int InIdType { get; set; }
 
-			public static RlStatesTypesAndUserGroup[] Data = Array<RlStatesTypesAndUserGroup>.Empty;
+			public static RlStatesTypesAndUserGroup[] Data = [];
 		}
 
 		[Table("stMain")]
@@ -2701,7 +2821,7 @@ namespace Tests.Linq
 			[Column("inId"), PrimaryKey]  public int InId { get; set; }
 			[Column("inIdType")]          public int InIdType { get; set; }
 
-			public static StMain[] Data = Array<StMain>.Empty;
+			public static StMain[] Data = [];
 		}
 
 		[Test]
@@ -2748,9 +2868,12 @@ namespace Tests.Linq
 		#region issue 1455
 		public class Alert
 		{
-			public string?   AlertKey     { get; set; }
-			public string?   AlertCode    { get; set; }
-			public DateTime? CreationDate { get { return DateTime.Today; } }
+			[Column(CanBeNull = false)]
+			public string    AlertKey     { get; set; } = null!;
+			[Column(CanBeNull = false)]
+			public string    AlertCode    { get; set; } = null!;
+			[Column(CanBeNull = false)]
+			public DateTime CreationDate { get { return DateTime.Today; } }
 		}
 		public class AuditAlert : Alert
 		{
@@ -2784,6 +2907,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1455Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			using (var queryLastUpd = db.CreateLocalTable<Alert>())
 			using (db.CreateLocalTable<AuditAlert>())
@@ -2842,8 +2966,9 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1455Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
+			using (new GuardGrouping(false)) // For Sybase, which do not support Window functions
 			using (var db = GetDataContext(context))
-			using (var queryLastUpd = db.CreateLocalTable<Alert>())
+			using (db.CreateLocalTable<Alert>())
 			using (db.CreateLocalTable<AuditAlert>())
 			using (db.CreateLocalTable<Trade>())
 			using (db.CreateLocalTable<Nomin>())
@@ -2921,7 +3046,7 @@ namespace Tests.Linq
 					.Where(q => q.LeftCount == null || q.RightCount == null)
 					.Count();
 
-				Assert.AreNotEqual(0, count);
+				Assert.That(count, Is.Not.EqualTo(0));
 			}
 		}
 

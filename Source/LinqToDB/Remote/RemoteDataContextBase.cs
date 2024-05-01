@@ -6,10 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
-
-using LinqToDB.Tools;
 
 namespace LinqToDB.Remote
 {
@@ -19,16 +16,23 @@ namespace LinqToDB.Remote
 	using DataProvider;
 	using Expressions;
 	using Extensions;
-	using Interceptors;
+	using Infrastructure;
+	using Linq.Translation;
+	using Tools;
+
+	using Data;
+
 	using Mapping;
 	using SqlProvider;
 
 	[PublicAPI]
-	public abstract partial class RemoteDataContextBase : IDataContext
+	public abstract partial class RemoteDataContextBase : IDataContext, IInfrastructure<IServiceProvider>
 	{
 		protected RemoteDataContextBase(DataOptions options)
 		{
 			Options = options;
+
+			options.Apply(this);
 		}
 
 		[Obsolete("Use ConfigurationString instead.")]
@@ -38,12 +42,42 @@ namespace LinqToDB.Remote
 			set => ConfigurationString = value;
 		}
 
-		public string? ConfigurationString { get; set; }
+		public string?          ConfigurationString { get; set; }
+
+		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)
+		{
+			serviceProvider.AddService(GetConfigurationInfo().MemberTranslator);
+		}
+
+		SimpleServiceProvider? _serviceProvider;
+		readonly object        _guard = new();
+
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance
+		{
+			get
+			{
+				if (_serviceProvider == null)
+				{
+					lock (_guard)
+					{
+						if (_serviceProvider == null)
+						{
+							var serviceProvider = new SimpleServiceProvider();
+							InitServiceProvider(serviceProvider);
+							_serviceProvider = serviceProvider;
+						}
+					}
+				}
+
+				return _serviceProvider;
+			}
+		}
 
 		sealed class ConfigurationInfo
 		{
-			public LinqServiceInfo LinqServiceInfo = null!;
-			public MappingSchema   MappingSchema   = null!;
+			public LinqServiceInfo   LinqServiceInfo  = null!;
+			public MappingSchema     MappingSchema    = null!;
+			public IMemberTranslator MemberTranslator = null!;
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
@@ -69,6 +103,32 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		sealed class RemoteMemberTranslator : IMemberTranslator
+		{
+			static readonly MemoryCache<Type, IMemberTranslator> _cache = new (new ());
+
+			public IMemberTranslator ProviderTranslator { get; }
+
+			public static IMemberTranslator GetOrCreate(Type methodCallTranslatorType)
+			{
+				return _cache.GetOrCreate(
+					methodCallTranslatorType,
+					static entry =>
+					{
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return new RemoteMemberTranslator((IMemberTranslator)Activator.CreateInstance(entry.Key)!);
+					});
+			}
+
+			RemoteMemberTranslator(IMemberTranslator providerTranslator)
+			{
+				ProviderTranslator = providerTranslator;
+			}
+
+			public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags) 
+				=> ProviderTranslator.Translate(translationContext, memberExpression, translationFlags);
+		}
+
 		ConfigurationInfo? _configurationInfo;
 
 		ConfigurationInfo GetConfigurationInfo()
@@ -79,14 +139,19 @@ namespace LinqToDB.Remote
 
 				try
 				{
-					var info = client.GetInfo(ConfigurationString);
-					var type = Type.GetType(info.MappingSchemaType)!;
-					var ms   = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
+					var info           = client.GetInfo(ConfigurationString);
+
+					var type           = Type.GetType(info.MappingSchemaType)!;
+					var ms             = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
+
+					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
+					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
 					_configurationInfo = new ConfigurationInfo
 					{
 						LinqServiceInfo = info,
 						MappingSchema   = ms,
+						MemberTranslator = translator,
 					};
 				}
 				finally
@@ -108,13 +173,18 @@ namespace LinqToDB.Remote
 				{
 					var info = await client.GetInfoAsync(ConfigurationString, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 					var type = Type.GetType(info.MappingSchemaType)!;
 					var ms   = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
+
+					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
+					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
 					_configurationInfo = new ConfigurationInfo
 					{
 						LinqServiceInfo = info,
 						MappingSchema = ms,
+						MemberTranslator = translator,
 					};
 				}
 				finally
@@ -127,7 +197,6 @@ namespace LinqToDB.Remote
 		}
 
 		protected abstract ILinqService GetClient();
-		protected abstract IDataContext Clone    ();
 		protected abstract string       ContextIDPrefix { get; }
 
 		string?            _contextName;
@@ -170,9 +239,8 @@ namespace LinqToDB.Remote
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }
 
-
 		private List<string>? _queryHints;
-		public  List<string>   QueryHints => _queryHints ??= new();
+		public  List<string>  QueryHints => _queryHints ??= new();
 
 		private List<string>? _nextQueryHints;
 		public  List<string>   NextQueryHints => _nextQueryHints ??= new();
@@ -274,7 +342,7 @@ namespace LinqToDB.Remote
 				{
 					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
 
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NET462 || NETSTANDARD2_0
 					_createSqlProvider = _sqlBuilders.GetOrAdd(
 						key,
 						key =>
@@ -308,7 +376,7 @@ namespace LinqToDB.Remote
 								}))
 							.CompileExpression();
 					}
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NET462 || NETSTANDARD2_0
 					);
 #else
 					, (MappingSchema, GetSqlOptimizer(Options)));
@@ -414,18 +482,6 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		IDataContext IDataContext.Clone(bool forNestedQuery)
-		{
-			ThrowOnDisposed();
-
-			var ctx = (RemoteDataContextBase)Clone();
-
-			ctx._dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor;
-			ctx._entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor es ? (AggregatedEntityServiceInterceptor)es.Clone() : _entityServiceInterceptor;
-
-			return ctx;
-		}
-
 		protected bool Disposed { get; private set; }
 
 		protected void ThrowOnDisposed()
@@ -467,21 +523,34 @@ namespace LinqToDB.Remote
 			((IDataContext)this).Close();
 		}
 
-#if !NATIVE_ASYNC
-		public virtual Task DisposeAsync()
-		{
-			Disposed = true;
-
-			return ((IDataContext)this).CloseAsync();
-		}
-#else
 		public virtual ValueTask DisposeAsync()
 		{
 			Disposed = true;
 
 			return new ValueTask(((IDataContext)this).CloseAsync());
 		}
-#endif
+
+		internal static class ConfigurationApplier
+		{
+			public static void Apply(RemoteDataContextBase dataContext, ConnectionOptions options)
+			{
+				if (options.MappingSchema != null)
+				{
+					dataContext.MappingSchema = options.MappingSchema;
+				}
+				else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
+				{
+					dataContext.MappingSchema = new(dataContext.MappingSchema);
+				}
+			}
+
+			public static void Apply(RemoteDataContextBase dataContext, DataContextOptions options)
+			{
+				if (options.Interceptors != null)
+					foreach (var interceptor in options.Interceptors)
+						dataContext.AddInterceptor(interceptor);
+			}
+		}
 
 	}
 }

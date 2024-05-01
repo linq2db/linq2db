@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -11,7 +9,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlInsertStatement(SelectQuery selectQuery) : base(selectQuery)
+		public SqlInsertStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}
 
@@ -37,26 +35,20 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			((IQueryElement?)_insert)?.ToString(sb, dic);
-			return sb;
+			return writer
+				.AppendElement(_insert)
+				.AppendLine()
+				.AppendElement(SelectQuery)
+				.AppendElement(Output);
 		}
 
-		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
-			With?.Walk(options, context, func);
-			((ISqlExpressionWalkable?)_insert)?.Walk(options, context, func);
-			((ISqlExpressionWalkable?)Output)?.Walk(options, context, func);
+			noAlias = false;
 
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
-
-			return base.Walk(options, context, func);
-		}
-
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
-		{
-			if (_insert?.Into == table)
+			if (ReferenceEquals(_insert?.Into, table))
 				return table;
 
 			return SelectQuery!.GetTableSource(table);

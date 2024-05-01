@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -161,7 +160,7 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
 					query.Expression, Expression.Constant(obj)));
 
-			return items.AsAsyncEnumerable().FirstOrDefaultAsync(token);
+			return items.AsAsyncEnumerable().SingleAsync(token);
 		}
 
 		/// <summary>
@@ -403,7 +402,6 @@ namespace LinqToDB
 			return ((IQueryProviderAsync)query).ExecuteAsync<int>(expr, token);
 		}
 
-
 		#region Many records
 
 		/// <summary>
@@ -420,7 +418,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL</item>
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
@@ -461,7 +459,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL</item>
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
@@ -505,7 +503,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL</item>
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
@@ -553,7 +551,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL</item>
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
@@ -774,7 +772,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL</item>
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
@@ -807,7 +805,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL</item>
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>

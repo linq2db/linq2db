@@ -36,6 +36,7 @@ namespace LinqToDB.DataProvider.Informix
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
+			Func<string, DbConnection> connectionFactory,
 
 			MappingSchema mappingSchema,
 
@@ -51,13 +52,14 @@ namespace LinqToDB.DataProvider.Informix
 			Func<TimeSpan, object>? timeSpanFactory,
 			BulkCopyAdapter? bulkCopy)
 		{
-			IsIDSProvider   = bulkCopy != null;
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			TransactionType    = transactionType;
+			_connectionFactory = connectionFactory;
 
+			IsIDSProvider = bulkCopy != null;
 			MappingSchema = mappingSchema;
 
 			BlobType     = ifxBlobType;
@@ -110,13 +112,22 @@ namespace LinqToDB.DataProvider.Informix
 			GetBigIntReaderMethod   = null;
 
 			ProviderTypesNamespace  = db2Adapter.ProviderTypesNamespace;
+
+			_connectionFactory = db2Adapter.CreateConnection;
 		}
+
+#region IDynamicProviderAdapter
 
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
+
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
 
 		public MappingSchema MappingSchema { get; }
 
@@ -139,8 +150,8 @@ namespace LinqToDB.DataProvider.Informix
 
 		public Func<TimeSpan, object>? TimeSpanFactory { get; }
 
-		public BulkCopyAdapter?                    InformixBulkCopy { get; }
-		public DB2ProviderAdapter.BulkCopyAdapter? DB2BulkCopy      { get; }
+		internal BulkCopyAdapter?                    InformixBulkCopy { get; }
+		internal DB2ProviderAdapter.BulkCopyAdapter? DB2BulkCopy      { get; }
 
 		public string? GetDecimalReaderMethod  { get; }
 		public string  GetDateTimeReaderMethod { get; }
@@ -150,7 +161,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public string ProviderTypesNamespace   { get; }
 
-		public class BulkCopyAdapter
+		internal class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, IfxBulkCopyOptions, IfxBulkCopy> bulkCopyCreator,
@@ -164,9 +175,9 @@ namespace LinqToDB.DataProvider.Informix
 			public Func<int, string, IfxBulkCopyColumnMapping>         CreateColumnMapping { get; }
 		}
 
-		public static InformixProviderAdapter GetInstance(string name)
+		public static InformixProviderAdapter GetInstance(InformixProvider provider)
 		{
-			if (name == ProviderName.Informix)
+			if (provider == InformixProvider.Informix)
 			{
 				if (_ifxAdapter == null)
 				{
@@ -248,6 +259,8 @@ namespace LinqToDB.DataProvider.Informix
 			else
 				typeMapper.FinalizeMappings();
 
+			var connectionFactory = typeMapper.BuildTypedFactory<string, IfxConnection, DbConnection>((string connectionString) => new IfxConnection(connectionString));
+
 			var paramMapper   = typeMapper.Type<IfxParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.IfxType);
 
@@ -261,6 +274,7 @@ namespace LinqToDB.DataProvider.Informix
 				parameterType,
 				commandType,
 				transactionType,
+				connectionFactory,
 				mappingSchema,
 				blobType,
 				clobType,
@@ -373,13 +387,14 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		[Wrapper]
-		public class IfxConnection
+		internal sealed class IfxConnection
 		{
+			public IfxConnection(string connectionString) => throw new NotImplementedException();
 		}
 
 		#region BulkCopy
 		[Wrapper]
-		public class IfxBulkCopy : TypeWrapper, IDisposable
+		internal class IfxBulkCopy : TypeWrapper, IDisposable
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]

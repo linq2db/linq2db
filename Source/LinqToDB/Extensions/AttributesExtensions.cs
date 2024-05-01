@@ -34,7 +34,7 @@ namespace LinqToDB.Extensions
 				if (typeof(T).IsAssignableFrom(attr.GetType()))
 					(results ??= new()).Add((T)attr);
 
-			return results == null ? Array<T>.Empty : results.ToArray();
+			return results == null ? [] : results.ToArray();
 		}
 
 		static Attribute[] GetNoInheritAttributes(ICustomAttributeProvider source)
@@ -45,7 +45,7 @@ namespace LinqToDB.Extensions
 				var res = source.GetCustomAttributes(typeof(Attribute), inherit: false);
 #pragma warning restore RS0030 // Do not used banned APIs
 				// API returns object[] for old frameworks and typed array for new
-				return res.Length == 0 ? Array<Attribute>.Empty : res is Attribute[] attrRes ? attrRes : res.Cast<Attribute>().ToArray();
+				return res.Length == 0 ? [] : res is Attribute[] attrRes ? attrRes : res.Cast<Attribute>().ToArray();
 			});
 			return attrs;
 		}
@@ -66,15 +66,15 @@ namespace LinqToDB.Extensions
 				{
 					// internally it returns Attribute[] already
 					if (attrs is Attribute[] arr)
-						return arr.Length == 0 ? Array<Attribute>.Empty : arr;
+						return arr.Length == 0 ? [] : arr;
 
 					arr = attrs.ToArray();
-					return arr.Length == 0 ? Array<Attribute>.Empty : arr;
+					return arr.Length == 0 ? [] : arr;
 				}
 
 				var res = source.GetCustomAttributes(typeof(Attribute), inherit: true);
 				// API returns object[] for old frameworks and typed array for new
-				return res.Length == 0 ? Array<Attribute>.Empty : res is Attribute[] attrRes ? attrRes : res.Cast<Attribute>().ToArray();
+				return res.Length == 0 ? [] : res is Attribute[] attrRes ? attrRes : res.Cast<Attribute>().ToArray();
 			});
 			return attrs;
 #pragma warning restore RS0030 // Do not used banned APIs

@@ -1,9 +1,10 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+
 	sealed class HasUniqueKeyBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -11,21 +12,23 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("HasUniqueKey");
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			if (buildResult.BuildContext == null)
+				return buildResult;
+			var sequence = buildResult.BuildContext;
 
-			var keySelector = (LambdaExpression) methodCall.Arguments[1].Unwrap();
-			var keyContext  = new SelectContext(buildInfo.Parent, keySelector, sequence);
-			var keySql      = builder.ConvertExpressions(keyContext, keySelector.Body.Unwrap(), ConvertFlags.All, null);
+			var keySelector = methodCall.Arguments[1].UnwrapLambda();
 
-			var uniqueKeys  = keySql
-				.Select(info => sequence.SelectQuery.Select.Columns[sequence.SelectQuery.Select.Add(info.Sql)])
-				.ToArray();
+			var keyExpr = SequenceHelper.PrepareBody(keySelector, sequence);
+			var keySql  = builder.BuildSqlExpression(sequence, keyExpr, ProjectFlags.SQL);
 
-			sequence.SelectQuery.UniqueKeys.Add(uniqueKeys);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(keySql);
 
-			return new SubQueryContext(sequence);
+			sequence.SelectQuery.UniqueKeys.Add(placeholders.Select(p => p.Sql).ToArray());
+
+			return BuildSequenceResult.FromContext(new SubQueryContext(sequence));
 		}
 	}
 }

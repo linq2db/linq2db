@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -35,7 +34,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<UpdateOutput<TTarget>> UpdateWithOutput<TSource,TTarget>(
@@ -71,7 +70,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource,TTarget>(
@@ -112,7 +111,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
@@ -159,7 +158,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
@@ -397,7 +396,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<UpdateOutput<TTarget>> UpdateWithOutput<TSource,TTarget>(
@@ -434,7 +433,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource,TTarget>(
@@ -476,7 +475,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
@@ -522,7 +521,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
@@ -755,7 +754,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<UpdateOutput<T>> UpdateWithOutput<T>(
@@ -786,7 +785,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
@@ -822,7 +821,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
@@ -862,7 +861,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
@@ -1066,7 +1065,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		[LinqTunnel, Pure]
@@ -1095,7 +1094,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
@@ -1129,7 +1128,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
@@ -1167,7 +1166,7 @@ namespace LinqToDB
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>

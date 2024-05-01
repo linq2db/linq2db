@@ -177,7 +177,7 @@ namespace LinqToDB.DataModel
 			{
 				var resultParametersCount = storedProcedure.Parameters.Count(p => p.Parameter.Direction != CodeParameterDirection.In) + (storedProcedure.Return != null ? 1 : 0);
 				// bindings of parameter values to output parameters of method after procedure call
-				parameterRebinds          = resultParametersCount > 0 ? new CodeAssignmentStatement[resultParametersCount] : Array<CodeAssignmentStatement>.Empty;
+				parameterRebinds          = resultParametersCount > 0 ? new CodeAssignmentStatement[resultParametersCount] : [];
 				var rebindIndex           = 0;
 				if (resultParametersCount > 0)
 					rebindedParametersIndexes = new(resultParametersCount);
@@ -368,10 +368,10 @@ namespace LinqToDB.DataModel
 								context.AST.Return(
 									context.AST.New(
 										returnElementType!,
-										Array<ICodeExpression>.Empty,
+										[],
 										initializers)));
 
-					queryProcTypeArgs = Array<IType>.Empty;
+					queryProcTypeArgs = [];
 				}
 				else
 				{
@@ -484,7 +484,7 @@ namespace LinqToDB.DataModel
 					}
 
 					// TODO: return type update
-					body.Append(context.AST.Return(context.AST.New(resultClassBuilder.Type.Type, Array<ICodeExpression>.Empty, initializers)));
+					body.Append(context.AST.Return(context.AST.New(resultClassBuilder.Type.Type, [], initializers)));
 
 					returnType = resultClassBuilder.Type.Type;
 				}

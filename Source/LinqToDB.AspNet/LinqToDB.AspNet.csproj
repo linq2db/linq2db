@@ -7,11 +7,9 @@
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.AspNet.xml</DocumentationFile>
 
-		<!--published targets-->
-		<TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
-		<!--add test-only targets separately for better visibility-->
-		<TargetFrameworks>$(TargetFrameworks);net472;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
-		<IsAotCompatible Condition="$(TargetFramework) == 'net7.0'">true</IsAotCompatible>
+		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0</TargetFrameworks>
+
+		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0'">true</IsAotCompatible>
 		<PolySharpIncludeRuntimeSupportedAttributes>true</PolySharpIncludeRuntimeSupportedAttributes>
 	</PropertyGroup>
 
@@ -22,4 +20,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
 </Project>

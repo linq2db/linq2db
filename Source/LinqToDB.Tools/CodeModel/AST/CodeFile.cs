@@ -19,8 +19,8 @@ namespace LinqToDB.CodeModel
 			: base(items)
 		{
 			FileName = fileName;
-			_header  = new (header  ?? Array<CodeComment>.Empty);
-			_imports = new (imports ?? Array<CodeImport> .Empty);
+			_header  = new (header  ?? []);
+			_imports = new (imports ?? []);
 		}
 
 		public CodeFile(string fileName)

@@ -16,16 +16,24 @@ namespace LinqToDB.DataProvider.Sybase
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
+	using LinqToDB.Linq.Translation;
 
-	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
-	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
+
+	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase,        SybaseProvider.Unmanaged ) {} }
+	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged, SybaseProvider.DataAction) {} }
 
 	public abstract class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
 		#region Init
 
-		protected SybaseDataProvider(string name)
-			: base(name, MappingSchemaInstance.Get(name), SybaseProviderAdapter.GetInstance(name))
+		protected SybaseDataProvider(string name, SybaseProvider provider)
+			: this(name, SybaseProviderAdapter.GetInstance(provider == SybaseProvider.AutoDetect ? provider = SybaseProviderDetector.DetectProvider() : provider))
+		{
+		}
+
+		protected SybaseDataProvider(string name, SybaseProviderAdapter adapter)
+			: base(name, MappingSchemaInstance.Get(name), adapter)
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
@@ -35,6 +43,12 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.IsCrossJoinSupported             = false;
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
+			SqlProviderFlags.IsWindowFunctionsSupported       = false;
+			SqlProviderFlags.IsDerivedTableOrderBySupported   = false;
+
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
+			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported            = false;
+			SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid            = true;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -85,6 +99,11 @@ namespace LinqToDB.DataProvider.Sybase
 			TableOptions.IsGlobalTemporaryData      |
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new SybaseMemberTranslator();
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
@@ -246,7 +265,6 @@ namespace LinqToDB.DataProvider.Sybase
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -261,7 +279,6 @@ namespace LinqToDB.DataProvider.Sybase
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

@@ -14,7 +14,7 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// </summary>
@@ -273,7 +273,7 @@ namespace LinqToDB.Data
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
 					await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			await DisposeCommandAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 #else
 			DisposeCommand();
@@ -305,11 +305,7 @@ namespace LinqToDB.Data
 		/// Disposes connection asynchronously.
 		/// </summary>
 		/// <returns>Asynchronous operation completion task.</returns>
-#if NATIVE_ASYNC
 		public async ValueTask DisposeAsync()
-#else
-		public async Task DisposeAsync()
-#endif
 		{
 			Disposed = true;
 			await CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -395,11 +391,7 @@ namespace LinqToDB.Data
 		internal async Task<int> ExecuteNonQueryDataAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
-#if NATIVE_ASYNC
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-#else
-				using (DataProvider.ExecuteScope(this))
-#endif
 					return await ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
@@ -418,11 +410,7 @@ namespace LinqToDB.Data
 			try
 			{
 				int ret;
-#if NATIVE_ASYNC
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-#else
-				using (DataProvider.ExecuteScope(this))
-#endif
 					ret = await ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
@@ -481,11 +469,7 @@ namespace LinqToDB.Data
 		internal async Task<object?> ExecuteScalarDataAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
-#if NATIVE_ASYNC
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-#else
-				using (DataProvider.ExecuteScope(this))
-#endif
 					return await ExecuteScalarAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
@@ -504,11 +488,7 @@ namespace LinqToDB.Data
 			try
 			{
 				object? ret;
-#if NATIVE_ASYNC
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-#else
-				using (DataProvider.ExecuteScope(this))
-#endif
 					ret = await ExecuteScalarAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
@@ -581,11 +561,7 @@ namespace LinqToDB.Data
 			CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
-#if NATIVE_ASYNC
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-#else
-				using (DataProvider.ExecuteScope(this))
-#endif
 					return await ExecuteReaderAsync(commandBehavior, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
@@ -606,11 +582,7 @@ namespace LinqToDB.Data
 			{
 				DataReaderWrapper ret;
 
-#if NATIVE_ASYNC
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-#else
-				using (DataProvider.ExecuteScope(this))
-#endif
 					ret = await ExecuteReaderAsync(commandBehavior, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 

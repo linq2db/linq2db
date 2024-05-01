@@ -12,6 +12,8 @@ nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Grpc.nuspec -OutputDirectory ..\Buil
 if %errorlevel% neq 0 exit
 nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Wcf.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
 if %errorlevel% neq 0 exit
+nuget.exe Pack ..\BuiltNuGet\linq2db.FSharp.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+if %errorlevel% neq 0 exit
 ) ELSE (
 REM Azure Artifacts doesn't support snupkg yet/still
 REM https://developercommunity.visualstudio.com/idea/657354/add-snupkg-support-to-azure-devops-artifacts.html
@@ -25,13 +27,13 @@ nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Grpc.nuspec -OutputDirectory ..\Buil
 if %errorlevel% neq 0 exit
 nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Wcf.nuspec -OutputDirectory ..\BuiltNuGet\built
 if %errorlevel% neq 0 exit
+nuget.exe Pack ..\BuiltNuGet\linq2db.FSharp.nuspec -OutputDirectory ..\BuiltNuGet\built
+if %errorlevel% neq 0 exit
 )
 
 nuget.exe Pack ..\BuiltNuGet\linq2db.cli.nuspec -OutputDirectory ..\BuiltNuGet\built
 if %errorlevel% neq 0 exit
 
-REM disable new T4 nugets publishing, prepare for their obsoletion and removal
-REM goto eof:
 nuget.exe Pack ..\BuiltNuGet\linq2db.Access.nuspec -OutputDirectory ..\BuiltNuGet\built
 if %errorlevel% neq 0 exit
 nuget.exe Pack ..\BuiltNuGet\linq2db.DB2.nuspec -OutputDirectory ..\BuiltNuGet\built

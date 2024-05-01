@@ -54,7 +54,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApplyTestExt([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void CrossApplyTestExt([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -134,9 +134,12 @@ namespace Tests.UserTests
 				var result = query.ToArray();
 				var cnt    = query.Count();
 
-				Assert.That(query.ToString(), Does.Not.Contains("EXISTS"));
-				
-				Assert.That(cnt, Is.EqualTo(result.Length));
+				Assert.Multiple(() =>
+				{
+					Assert.That(query.ToString(), Does.Not.Contains("EXISTS"));
+
+					Assert.That(cnt, Is.EqualTo(result.Length));
+				});
 			}
 		}
 

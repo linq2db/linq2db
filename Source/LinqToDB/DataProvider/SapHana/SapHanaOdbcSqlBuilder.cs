@@ -4,7 +4,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.SapHana
 {
 	using Mapping;
-	using SqlQuery;
+	using Common;
 	using SqlProvider;
 
 	sealed class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
@@ -32,9 +32,9 @@ namespace LinqToDB.DataProvider.SapHana
 			};
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Money:
 					StringBuilder.Append("Decimal(19, 4)");

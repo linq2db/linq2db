@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -163,20 +165,7 @@ namespace Tests
 
 		public static bool ProviderNeedsTimeFix(this IDataContext db, string context)
 		{
-			if (context.IsAnyOf(TestProvName.AllMySql55))
-			{
-				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
-				// them from expected data too
-				var version = db.GetTable<LinqDataTypes>().Select(_ => MySqlVersion()).First();
-				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
-				if (match.Success)
-				{
-					var versionParts = match.Value.Split('.').Select(int.Parse).ToArray();
-
-					return (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604);
-				}
-			}
-			else if (context.IsAnyOf(ProviderName.AccessOdbc))
+			if (context.IsAnyOf(ProviderName.AccessOdbc))
 			{
 				// ODBC driver strips milliseconds from values on both save and load
 				return true;
@@ -260,7 +249,7 @@ namespace Tests
 		{
 			var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
 
-			using (new DisableLogging())
+			//using (new DisableLogging())
 			{
 				if (db is DataConnection dc)
 				{
@@ -302,6 +291,7 @@ namespace Tests
 			};
 		}
 
+		[return: NotNullIfNotNull(nameof(s))]
 		public static string? Clean(this string? s)
 		{
 			return s?
@@ -310,6 +300,56 @@ namespace Tests
 				.Replace("\r", "")
 				.Replace("\n", "")
 				;
+		}
+
+		internal static string GetConfigName()
+		{
+#if NET6_0
+			return "NET60";
+#elif NET8_0
+			return "NET80";
+#elif NETFRAMEWORK
+			return "NETFX";
+#else
+#error Unknown framework
+#endif
+		}
+
+		public static void Log(Exception ex)
+		{
+			Log($"Exception: {ex.Message}");
+			Log(ex.StackTrace);
+		}
+
+		public static void Log(string? message)
+		{
+			var path = Path.GetTempPath();
+			File.AppendAllText(path + "linq2db.Tests." + GetConfigName() + ".log", (message ?? "") + Environment.NewLine);
+		}
+
+		public static string GetTableName(string context, [System.Runtime.CompilerServices.CallerMemberName] string? methodName = null)
+		{
+			var tableName  = "xxPerson";
+
+			if (context.IsAnyOf(TestProvName.AllFirebird))
+			{
+				tableName += "_f";
+
+				if (context.IsRemote())
+					tableName += "l";
+
+				tableName += "_" + methodName;
+			}
+
+			if (context.IsAnyOf(TestProvName.AllOracle))
+			{
+				tableName += "_o";
+
+				if (context.IsRemote())
+					tableName += "l";
+			}
+
+			return tableName;
 		}
 	}
 }

@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Async;
 
 namespace LinqToDB.Common
 {
+	using LinqToDB.Async;
+
 	public static class EnumerableHelper
 	{
-#if NATIVE_ASYNC
 		internal static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)
 		{
 			var result = SafeAwaiter.Run(enumerator.MoveNextAsync);
@@ -28,7 +28,6 @@ namespace LinqToDB.Common
 				yield return item;
 			}
 		}
-#endif
 
 		/// <summary>
 		/// Split enumerable source into batches of specified size.
@@ -117,7 +116,6 @@ namespace LinqToDB.Common
 			}
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Split enumerable source into batches of specified size.
 		/// Limitation: each batch should be enumerated only once or exception will be generated.
@@ -209,6 +207,5 @@ namespace LinqToDB.Common
 				}
 			}
 		}
-#endif
 	}
 }

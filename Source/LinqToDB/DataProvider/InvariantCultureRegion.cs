@@ -29,7 +29,6 @@ namespace LinqToDB
 			_parentRegion?.Dispose();
 		}
 
-#if NATIVE_ASYNC
 		ValueTask IAsyncDisposable.DisposeAsync()
 		{
 			if (_original != null)
@@ -37,6 +36,5 @@ namespace LinqToDB
 
 			return _parentRegion?.DisposeAsync() ?? default;
 		}
-#endif
 	}
 }

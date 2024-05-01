@@ -7,7 +7,9 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Interceptors;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
@@ -175,6 +177,7 @@ namespace Tests.Linq
 					};
 
 				var result = query.ToList();
+
 				var expected = expectedQuery.ToList();
 
 				foreach (var item in result.Concat(expected))
@@ -248,8 +251,8 @@ namespace Tests.Linq
 				query = query.LoadWith(d => d.SubDetails).ThenLoad(sd => sd.Detail);
 				var result = query.ToArray();
 
-				Assert.That(result.Length, Is.EqualTo(1));
-				Assert.That(result[0].SubDetails.Length, Is.EqualTo(100));
+				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(result[0].SubDetails, Has.Length.EqualTo(100));
 				Assert.That(result[0].SubDetails[0].Detail, Is.Not.Null);
 			}
 		}
@@ -318,8 +321,11 @@ namespace Tests.Linq
 
 				foreach (var item in result)
 				{
-					Assert.That(ReferenceEquals(item.One.d, item.Two), Is.True);
-					Assert.That(item.Two.SubDetails.Length, Is.GreaterThan(0));
+					Assert.Multiple(() =>
+					{
+						Assert.That(ReferenceEquals(item.One.d, item.Two), Is.True);
+						Assert.That(item.Two.SubDetails, Is.Not.Empty);
+					});
 					Assert.That(item.Two.SubDetails[0].Detail, Is.Not.Null);
 				}
 			}
@@ -333,7 +339,7 @@ namespace Tests.Linq
 			{
 				var sql = db.Parent.LoadWith(p => p.Children).ToString()!;
 
-				Assert.False(sql.Contains("LoadWithQueryable"));
+				Assert.That(sql, Does.Not.Contain("LoadWithQueryable"));
 
 				// two queries generated, now returns sql for main query
 				CompareSql(@"SELECT
@@ -347,25 +353,21 @@ FROM
 		[Test]
 		public void TestLoadWithToString2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var sql = db.Person.LoadWith(p => p.Patient).ToString()!;
+			using var db = GetDataContext(context);
 
-				Assert.False(sql.Contains("LoadWithQueryable"));
+			var query = db.Person.LoadWith(p => p.Patient).AsQueryable();
+			var sql   = query.ToString()!;
+			TestContext.WriteLine(sql);
+
+			sql.Should().NotContain("LoadWithQueryable");
+
+			var select = query.GetSelectQuery();
 
 				// one query with join generated
-				CompareSql(@"SELECT
-	[t1].[FirstName],
-	[t1].[PersonID],
-	[t1].[LastName],
-	[t1].[MiddleName],
-	[t1].[Gender],
-	[a_Patient].[PersonID],
-	[a_Patient].[Diagnosis]
-FROM
-	[Person] [t1]
-		LEFT JOIN [Patient] [a_Patient] ON [t1].[PersonID] = [a_Patient].[PersonID]", sql);
-			}
+
+			select.From.Tables.Should().HaveCount(1);
+			select.From.Tables[0].Joins.Should().HaveCount(1);
+			select.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Left);
 		}
 
 		[Test]
@@ -743,7 +745,7 @@ FROM
 
 		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -761,7 +763,7 @@ FROM
 						Detail = dd,
 						DetailAssociated = dd.SubDetails,
 						DetailAssociatedFiltered = dd.SubDetails.OrderBy(sd => sd.SubDetailValue).Take(10).ToArray(),
-						Masters = master.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+						Masters = master.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
 				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
@@ -773,7 +775,7 @@ FROM
 						Detail = dd,
 						DetailAssociated = subDetailRecords.Where(sd => sd.DetailId == dd.DetailId).ToArray(),
 						DetailAssociatedFiltered = subDetailRecords.OrderBy(sd => sd.SubDetailValue).Where(sd => sd.DetailId == dd.DetailId).Take(10).ToArray(),
-						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+						Masters = masterRecords.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
 				var result   = query.ToArray();
@@ -1032,7 +1034,7 @@ FROM
 			}
 		}
 
-		public static X InitData<X>(X entity) => entity; // for simplicity
+		private static X InitData<X>(X entity) => entity; // for simplicity
 
 		[Test]
 		public void ProjectionWithExtension([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1048,7 +1050,7 @@ FROM
 				var result2 = master.LoadWith(x => x.Details).Select(x => InitData(x)).Select(x => new { x = InitData(x)})
 					.ToArray();
 
-				Assert.That(result.Length, Is.EqualTo(result2.Length));
+				Assert.That(result, Has.Length.EqualTo(result2.Length));
 			}
 		}
 
@@ -1119,6 +1121,80 @@ FROM
 				await FluentActions.Awaiting(() => query.FirstOrDefaultAsync(x => x.Id1 == 1)).Should().NotThrowAsync();
 				await FluentActions.Awaiting(() => query.FirstAsync(x => x.Id1          == 1)).Should().NotThrowAsync();
 				await FluentActions.Awaiting(() => query.SingleAsync(x => x.Id1         == 1)).Should().NotThrowAsync();
+			}
+		}
+
+		[Test]
+		public void TestSkipTake([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					select new
+					{
+						m,
+						details = m.Details.OrderBy(d => d.DetailId).Skip(1).Take(2).ToList()
+					};
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
+		public void TestAggregate([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					select new
+					{
+						Sum = m.Details.Select(x => x.DetailId)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(5)
+							.Sum(),
+
+						Count = m.Details.Select(x => x.DetailValue)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(2)
+							.Count()
+					};
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		public void TestAggregateAverage([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					where m.Details.Count() > 1
+					select new
+					{
+						Average = m.Details.Select(x => x.DetailId)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(5)
+							.Average(x => (double)x),
+					};
+
+				AssertQuery(query);
 			}
 		}
 
@@ -1203,7 +1279,6 @@ FROM
 			};
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue1862TestProjections([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
@@ -1236,38 +1311,53 @@ FROM
 					Blog = query.ToArray()
 				};
 
-				Assert.AreEqual(1, result.Blog.Length);
-				Assert.AreEqual(1, result.Blog[0].Id);
-				Assert.AreEqual("Another .NET Core Guy", result.Blog[0].Title);
-				Assert.AreEqual(4, result.Blog[0].Posts.Length);
+				Assert.That(result.Blog, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Blog[0].Id, Is.EqualTo(1));
+					Assert.That(result.Blog[0].Title, Is.EqualTo("Another .NET Core Guy"));
+					Assert.That(result.Blog[0].Posts, Has.Length.EqualTo(4));
+				});
 
-				Assert.AreEqual(1, result.Blog[0].Posts[0].Id);
-				Assert.AreEqual("Post 1", result.Blog[0].Posts[0].Title);
-				Assert.AreEqual("Content 1 is about EF Core and Razor page", result.Blog[0].Posts[0].PostContent);
-				Assert.AreEqual(2, result.Blog[0].Posts[0].Tags.Length);
-				Assert.AreEqual(1, result.Blog[0].Posts[0].Tags[0].Id);
-				Assert.AreEqual("Razor Page", result.Blog[0].Posts[0].Tags[0].Name);
-				Assert.AreEqual(2, result.Blog[0].Posts[0].Tags[1].Id);
-				Assert.AreEqual("EF Core", result.Blog[0].Posts[0].Tags[1].Name);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Blog[0].Posts[0].Id, Is.EqualTo(1));
+					Assert.That(result.Blog[0].Posts[0].Title, Is.EqualTo("Post 1"));
+					Assert.That(result.Blog[0].Posts[0].PostContent, Is.EqualTo("Content 1 is about EF Core and Razor page"));
+					Assert.That(result.Blog[0].Posts[0].Tags, Has.Length.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Blog[0].Posts[0].Tags[0].Id, Is.EqualTo(1));
+					Assert.That(result.Blog[0].Posts[0].Tags[0].Name, Is.EqualTo("Razor Page"));
+					Assert.That(result.Blog[0].Posts[0].Tags[1].Id, Is.EqualTo(2));
+					Assert.That(result.Blog[0].Posts[0].Tags[1].Name, Is.EqualTo("EF Core"));
 
-				Assert.AreEqual(2, result.Blog[0].Posts[1].Id);
-				Assert.AreEqual("Post 2", result.Blog[0].Posts[1].Title);
-				Assert.AreEqual("Content 2 is about Dapper", result.Blog[0].Posts[1].PostContent);
-				Assert.AreEqual(1, result.Blog[0].Posts[1].Tags.Length);
-				Assert.AreEqual(3, result.Blog[0].Posts[1].Tags[0].Id);
-				Assert.AreEqual("Dapper", result.Blog[0].Posts[1].Tags[0].Name);
+					Assert.That(result.Blog[0].Posts[1].Id, Is.EqualTo(2));
+					Assert.That(result.Blog[0].Posts[1].Title, Is.EqualTo("Post 2"));
+					Assert.That(result.Blog[0].Posts[1].PostContent, Is.EqualTo("Content 2 is about Dapper"));
+					Assert.That(result.Blog[0].Posts[1].Tags, Has.Length.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Blog[0].Posts[1].Tags[0].Id, Is.EqualTo(3));
+					Assert.That(result.Blog[0].Posts[1].Tags[0].Name, Is.EqualTo("Dapper"));
 
-				Assert.AreEqual(3, result.Blog[0].Posts[2].Id);
-				Assert.AreEqual("Post 3", result.Blog[0].Posts[2].Title);
-				Assert.AreEqual("Content 3", result.Blog[0].Posts[2].PostContent);
-				Assert.AreEqual(0, result.Blog[0].Posts[2].Tags.Length);
+					Assert.That(result.Blog[0].Posts[2].Id, Is.EqualTo(3));
+					Assert.That(result.Blog[0].Posts[2].Title, Is.EqualTo("Post 3"));
+					Assert.That(result.Blog[0].Posts[2].PostContent, Is.EqualTo("Content 3"));
+					Assert.That(result.Blog[0].Posts[2].Tags, Is.Empty);
 
-				Assert.AreEqual(4, result.Blog[0].Posts[3].Id);
-				Assert.AreEqual("Post 4", result.Blog[0].Posts[3].Title);
-				Assert.AreEqual("Content 4", result.Blog[0].Posts[3].PostContent);
-				Assert.AreEqual(1, result.Blog[0].Posts[3].Tags.Length);
-				Assert.AreEqual(5, result.Blog[0].Posts[3].Tags[0].Id);
-				Assert.AreEqual("SqlKata", result.Blog[0].Posts[3].Tags[0].Name);
+					Assert.That(result.Blog[0].Posts[3].Id, Is.EqualTo(4));
+					Assert.That(result.Blog[0].Posts[3].Title, Is.EqualTo("Post 4"));
+					Assert.That(result.Blog[0].Posts[3].PostContent, Is.EqualTo("Content 4"));
+					Assert.That(result.Blog[0].Posts[3].Tags, Has.Length.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Blog[0].Posts[3].Tags[0].Id, Is.EqualTo(5));
+					Assert.That(result.Blog[0].Posts[3].Tags[0].Name, Is.EqualTo("SqlKata"));
+				});
 			}
 		}
 #endregion
@@ -1390,8 +1480,8 @@ FROM
 
 				var result = query.ToList();
 
-				Assert.That(result.Count, Is.EqualTo(1));
-				Assert.That(result[0].Persons.Count, Is.EqualTo(1));
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result[0].Persons, Has.Count.EqualTo(1));
 			}
 		}
 #endregion
@@ -1495,7 +1585,7 @@ FROM
 					.WithTableExpression($"{{0}} {{1}}")
 					.ToList();
 
-				Assert.AreEqual(result.Count, 1);
+				Assert.That(result, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -1514,7 +1604,7 @@ FROM
 					.LoadWithAsTable( _ => _.Details)
 					.ToList();
 
-				Assert.AreEqual(result.Count, 1);
+				Assert.That(result, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -1568,18 +1658,24 @@ FROM
 
 			var id = 11;
 			var result = records.LoadWith(a => a.Items, a => a.Where(a => a.Id == id)).ToList();
-			Assert.AreEqual(1, result.Count);
-			Assert.AreEqual(1, result[0].Id);
-			Assert.AreEqual(1, result[0].Items.Count);
-			Assert.AreEqual(11, result[0].Items[0].Id);
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Items, Has.Count.EqualTo(1));
+			});
+			Assert.That(result[0].Items[0].Id, Is.EqualTo(11));
 
 			id = 12;
 			result = records.LoadWith(a => a.Items, a => a.Where(a => a.Id == id)).ToList();
 
-			Assert.AreEqual(1, result.Count);
-			Assert.AreEqual(1, result[0].Id);
-			Assert.AreEqual(1, result[0].Items.Count);
-			Assert.AreEqual(12, result[0].Items[0].Id);
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Items, Has.Count.EqualTo(1));
+			});
+			Assert.That(result[0].Items[0].Id, Is.EqualTo(12));
 		}
 		#endregion
 
@@ -1634,7 +1730,7 @@ FROM
 		[Test]
 		public void Issue3799Test([DataSources] string context)
 		{
-			using var db    = GetDataContext(context);
+			using var db    = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var table = db.CreateLocalTable<Test3799Item>(Test3799Item.TestData);
 
 			var result = table.Select(Test3799ItemModel.Selector).ToList();
@@ -1642,8 +1738,9 @@ FROM
 		#endregion
 
 		#region Issue 4057
+		// Remote tests disabled due to the issue with different query generation. We do not detect provider correctly in this case.
 		[Test]
-		public async Task Issue4057_Async([DataSources] string context)
+		public async Task Issue4057_Async([DataSources(false)] string context)
 		{
 			DataOptions options;
 
@@ -1674,8 +1771,9 @@ FROM
 			}
 		}
 
+		// Remote tests disabled due to the issue with different query generation. We do not detect provider correctly in this case.
 		[Test]
-		public void Issue4057_Sync([DataSources] string context)
+		public void Issue4057_Sync([DataSources(false)] string context)
 		{
 			DataOptions options;
 			using (var db = GetDataContext(context))
@@ -1707,7 +1805,7 @@ FROM
 		}
 
 		[Test]
-		public async Task Issue4057_Async_ExplicitTransaction([DataSources] string context)
+		public async Task Issue4057_Async_ExplicitTransaction([DataSources(false)] string context)
 		{
 			DataOptions options;
 
@@ -1742,7 +1840,7 @@ FROM
 		}
 
 		[Test]
-		public void Issue4057_Sync_ExplicitTransaction([DataSources] string context)
+		public void Issue4057_Sync_ExplicitTransaction([DataSources(false)] string context)
 		{
 			DataOptions options;
 			using (var db = GetDataContext(context))

@@ -126,7 +126,6 @@ namespace Tests.Linq
 			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void EntityFilterTests([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -162,7 +161,7 @@ namespace Tests.Linq
 			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
 			var resultNotFiltered1 = query.ToArray();
 
-			Assert.That(resultFiltered1.Length, Is.LessThan(resultNotFiltered1.Length));
+			Assert.That(resultFiltered1, Has.Length.LessThan(resultNotFiltered1.Length));
 
 			var currentMissCount = Query<T>.CacheMissCount;
 
@@ -174,7 +173,7 @@ namespace Tests.Linq
 			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
 			var resultNotFiltered2 = query.ToArray();
 
-			Assert.That(resultFiltered2.Length, Is.LessThan(resultNotFiltered2.Length));
+			Assert.That(resultFiltered2, Has.Length.LessThan(resultNotFiltered2.Length));
 
 			AreEqualWithComparer(resultFiltered1,    resultFiltered2);
 			AreEqualWithComparer(resultNotFiltered1, resultNotFiltered2);
@@ -182,7 +181,6 @@ namespace Tests.Linq
 			Assert.That(currentMissCount, Is.EqualTo(Query<T>.CacheMissCount), () => "Caching is wrong.");
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void EntityFilterTestsCache([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2, 3)] int iteration, [Values] bool filtered)
 		{
@@ -195,6 +193,7 @@ namespace Tests.Linq
 
 				var query =
 					from m in db.GetTable<MasterClass>()
+					from d in db.GetTable<MasterClass>().Where(d => d.Id == m.Id) // for ensuring that we do not cache two dynamic filters comparators. See ParametersContext.RegisterDynamicExpressionAccessor
 					select m;
 
 				((DcParams)db.Params).IsSoftDeleteFilterEnabled = filtered;
@@ -213,7 +212,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void AssociationToFilteredEntity([IncludeDataSources(false, ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
 		{
@@ -241,7 +239,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void AssociationToFilteredEntityFunc([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -286,7 +283,6 @@ namespace Tests.Linq
 			return query;
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void AssociationToFilteredEntityMethod([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

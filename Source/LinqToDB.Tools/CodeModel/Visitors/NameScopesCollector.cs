@@ -41,7 +41,7 @@ namespace LinqToDB.CodeModel
 			_typesNamespaces  = new (_languageProvider.IdentifierEqualityComparer);
 			_visitedTypes     = new HashSet<IType>(_languageProvider.TypeEqualityComparerWithoutNRT);
 
-			SetNewScope(Array<CodeIdentifier>.Empty);
+			SetNewScope([]);
 		}
 
 		/// <summary>
@@ -178,7 +178,7 @@ namespace LinqToDB.CodeModel
 				|| type.Kind == TypeKind.OpenGeneric)
 				&& type.Parent == null)
 			{
-				var ns = type.Namespace ?? Array<CodeIdentifier>.Empty;
+				var ns = type.Namespace ?? [];
 
 				if (!_typesNamespaces.TryGetValue(type.Name!, out var namespaces))
 					_typesNamespaces.Add(type.Name!, namespaces = new HashSet<IEnumerable<CodeIdentifier>>(_languageProvider.FullNameEqualityComparer));
