@@ -16,7 +16,7 @@ namespace Tests.Linq
 		[Test]
 		public void Join6([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataConnection(context))
 			{
 				var actual =
 					from g in db.GrandChild

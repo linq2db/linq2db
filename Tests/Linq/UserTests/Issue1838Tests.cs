@@ -38,7 +38,7 @@ namespace Tests.UserTests
 				SettlementTotalOnIssue = 3
 			}};
 
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			using ( db.CreateLocalTable<Invoice>(invoices))
 			using ( db.CreateLocalTable<InvoiceLineItem>())
 			using ( db.CreateLocalTable<InvoiceReferenceNumber>())

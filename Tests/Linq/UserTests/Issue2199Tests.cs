@@ -41,7 +41,7 @@ namespace Tests.UserTests
 		[Test]
 		public void LeftJoinTests([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Manufacturer>())
 			using (db.CreateLocalTable<Country>())
 			{
@@ -69,7 +69,7 @@ namespace Tests.UserTests
 		[Test]
 		public void LeftJoinTests2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Manufacturer>())
 			using (db.CreateLocalTable<Country>())
 			{

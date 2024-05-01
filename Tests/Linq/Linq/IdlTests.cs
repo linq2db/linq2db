@@ -279,7 +279,7 @@ namespace Tests.Linq
 		public void TestForGroupBy([IdlProviders] string context)
 		{
 			using var guard = new GuardGrouping(false);
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 
 				/* no error in first call */

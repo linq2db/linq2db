@@ -362,7 +362,7 @@ namespace Tests.Linq
 		{
 			var arr = Child.Take(2).ToArray();
 
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    GrandChild where arr.Contains(p.Child) select p,
 					from p in db.GrandChild where arr.Contains(p.Child) select p);
