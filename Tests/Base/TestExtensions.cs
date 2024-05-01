@@ -6,7 +6,7 @@ namespace Tests
 	{
 		public static DataOptions OmitUnsupportedCompareNulls(this DataOptions options, string context)
 		{
-			return options.WithOptions(options.LinqOptions.WithCompareNullsAsValues(!context.Contains(ProviderName.ClickHouse)));
+			return options.WithOptions(options.LinqOptions.WithCompareNullsAsValues(/*!context.IsAnyOf(TestProvName.AllClickHouse)*/true));
 		}
 	}
 }
