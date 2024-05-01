@@ -466,7 +466,7 @@ namespace Tests.Linq
 		[Test]
 		public void Test5([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q3 =
 					from p in db.Parent
@@ -481,7 +481,7 @@ namespace Tests.Linq
 		[Test]
 		public void Test6([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q3 =
 					from p in db.Parent
@@ -497,7 +497,7 @@ namespace Tests.Linq
 		[Test]
 		public void Test7([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in db.Parent
 					from g in p.GrandChildren
@@ -517,7 +517,7 @@ namespace Tests.Linq
 		[Test]
 		public void Test8([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q2 =
 					from p in
@@ -538,7 +538,7 @@ namespace Tests.Linq
 		[Test]
 		public void Test81([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q2 =
 					from p in
@@ -559,7 +559,7 @@ namespace Tests.Linq
 		[Test]
 		public void Test9([DataSources(ProviderName.Access)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q1 = db.Types.Where(_ => _.ID > 1).Where(_ => _.ID > 2);
 
@@ -590,7 +590,7 @@ namespace Tests.Linq
 		[Test]
 		public void Test91([DataSources(ProviderName.Access)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q2 =
 					from p in db.Parent

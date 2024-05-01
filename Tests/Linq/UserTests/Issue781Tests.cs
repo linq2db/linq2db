@@ -43,7 +43,7 @@ namespace Tests.UserTests
 					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.LongCount();
 
-				var expected = db.GetTable<Person>()
+				var expected = Person
 					.GroupBy(_ => Patient == null ? null : "test" + _.Patient!.Diagnosis)
 					.LongCount();
 
@@ -134,7 +134,7 @@ namespace Tests.UserTests
 					.Select(_ => _.Key)
 					.LongCount();
 
-				var expected = db.GetTable<Person>()
+				var expected = Person
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
 					.Select(_ => _.Key)
 					.LongCount();

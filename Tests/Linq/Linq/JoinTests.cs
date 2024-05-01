@@ -931,14 +931,15 @@ namespace Tests.Linq
 		[Test]
 		public void ReferenceJoin2([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
-				AreEqual(
-					from g in    GrandChild
-						join c in    Child on g.Child equals c
-					select new { c.ParentID, g.GrandChildID },
-					from g in db.GrandChild
-						join c in db.Child on g.Child equals c
-					select new { c.ParentID, g.GrandChildID });
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from g in    GrandChild
+					join c in    Child on g.Child equals c
+				select new { c.ParentID, g.GrandChildID },
+				from g in db.GrandChild
+					join c in db.Child on g.Child equals c
+				select new { c.ParentID, g.GrandChildID });
 		}
 
 		[Test]
@@ -1655,7 +1656,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var id1 = Parent.First().ParentID;
 				var id2 = Parent.Skip(1).First().ParentID;
@@ -1797,7 +1798,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var id1 = Parent.First().ParentID;
 				var id2 = Parent.Skip(1).First().ParentID;
@@ -1931,7 +1932,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var id1 = Parent.First().ParentID;
 				var id2 = Parent.Skip(1).First().ParentID;

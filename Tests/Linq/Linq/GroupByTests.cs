@@ -55,7 +55,7 @@ namespace Tests.Linq
 		{
 			using (new PreloadGroups(false))
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from ch in db.GrandChild
@@ -123,7 +123,7 @@ namespace Tests.Linq
 		public void Simple6([DataSources] string context)
 		{
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID);
 				var list = q.ToList();
@@ -195,7 +195,7 @@ namespace Tests.Linq
 		public void Simple11([DataSources] string context)
 		{
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q1 = GrandChild
 					.GroupBy(ch => new { ParentID = ch.ParentID + 1, ch.ChildID }, ch => ch.ChildID);
