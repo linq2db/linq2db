@@ -44,7 +44,7 @@ namespace Tests.UserTests
 					.LongCount();
 
 				var expected = Person
-					.GroupBy(_ => Patient == null ? null : "test" + _.Patient!.Diagnosis)
+					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient!.Diagnosis)
 					.LongCount();
 
 				Assert.Multiple(() =>
