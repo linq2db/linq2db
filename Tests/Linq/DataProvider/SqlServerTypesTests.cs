@@ -472,7 +472,7 @@ namespace Tests.DataProvider
 				using var db = GetDataContext(context, ms);
 
 				db.AddInterceptor(interceptor);
-				
+
 				db.InlineParameters = true;
 
 				var data = new LiteralsTestTable<TValue>[] { new() { Value = value } }.AsQueryable(db).ToArray();

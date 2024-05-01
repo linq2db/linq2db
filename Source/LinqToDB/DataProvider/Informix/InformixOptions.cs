@@ -20,6 +20,8 @@ namespace LinqToDB.DataProvider.Informix
 	(
 		BulkCopyType BulkCopyType                       = BulkCopyType.ProviderSpecific,
 		bool         ExplicitFractionalSecondsSeparator = true
+		// If you add another parameter here, don't forget to update
+		// InformixOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<InformixOptions>(BulkCopyType)
 	{

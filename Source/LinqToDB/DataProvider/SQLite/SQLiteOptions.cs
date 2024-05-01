@@ -21,6 +21,8 @@ namespace LinqToDB.DataProvider.SQLite
 	(
 		BulkCopyType BulkCopyType      = BulkCopyType.MultipleRows,
 		bool         AlwaysCheckDbNull = true
+		// If you add another parameter here, don't forget to update
+		// SQLiteOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<SQLiteOptions>(BulkCopyType)
 	{

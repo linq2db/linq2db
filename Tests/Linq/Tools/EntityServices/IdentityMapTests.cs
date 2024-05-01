@@ -1,6 +1,13 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+using LinqToDB;
 
 using NUnit.Framework;
+
+using Tests.Linq;
 
 namespace Tests.Tools.EntityServices
 {
@@ -92,6 +99,20 @@ namespace Tests.Tools.EntityServices
 			{
 				Assert.Throws<LinqToDBConvertException>(() => map.GetEntity<Person>(new { ID1 = 1 }));
 			}
+		}
+
+		[Test]
+		public async Task CompiledQueryTest()
+		{
+			await using var db  = new TestDataConnection();
+			using       var map = new IdentityMap(db);
+
+			var query = CompiledQuery.Compile<TestDataConnection,CancellationToken,Task<List<Person>>>(static (db, ct) => db.Person.Where(p => p.ID == 1).ToListAsync(ct));
+
+			var result1 = await query(db, default);
+			var result2 = await query(db, default);
+
+			Assert.AreSame(result1[0], result2[0]);
 		}
 	}
 }

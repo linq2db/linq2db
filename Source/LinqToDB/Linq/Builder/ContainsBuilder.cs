@@ -8,8 +8,8 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class ContainsBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames      = { "Contains"      };
-		private static readonly string[] MethodNamesAsync = { "ContainsAsync" };
+		private static readonly string[] MethodNames      = ["Contains"];
+		private static readonly string[] MethodNamesAsync = ["ContainsAsync"];
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 					if (Parent != null)
 						query = Parent.SelectQuery;
 
-					return new[] { new SqlInfo(sql, query) };
+					return [new SqlInfo(sql, query)];
 				}
 
 				throw new InvalidOperationException();

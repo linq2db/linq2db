@@ -199,7 +199,8 @@ namespace LinqToDB.Data
 					return new PreparedQuery((CommandWithParameters[])query.Context, query.Statement, dataConnection.GetNextCommandHints(!forGetSqlText));
 				}
 
-				var sql = query.Statement;
+				var sql     = query.Statement;
+				var options = query.DataOptions ?? dataConnection.Options;
 
 				// custom query handling
 				var preprocessContext = new EvaluationContext(parameterValues);
@@ -211,8 +212,8 @@ namespace LinqToDB.Data
 					sql.IsParameterDependent = true;
 				}
 
-				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
-				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (dataConnection.Options);
+				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
+				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (options);
 
 				var cc = sqlBuilder.CommandCount(sql);
 				using var sb = Pools.StringBuilder.Allocate();

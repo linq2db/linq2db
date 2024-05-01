@@ -21,22 +21,10 @@ namespace Tests
 
 			_context = GetTestContextName(test);
 
-#if NET472
-			var target = "net472";
-#elif NETCOREAPP3_1
-			var target = "core31";
-#elif NET6_0
-			var target = "net60";
-#elif NET7_0
-			var target = "net70";
-#else
-#error "Build Target must be specified here."
-#endif
-
 			if (_context == null)
 				return;
 
-			var fixturePath = Path.Combine(baselinesPath, target, _context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
+			var fixturePath = Path.Combine(baselinesPath, _context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
 			Directory.CreateDirectory(fixturePath);
 
 			var fileName = $"{NormalizeFileName(test.FullName)}.sql";
@@ -106,7 +94,19 @@ namespace Tests
 
 			var fullPath = Path.Combine(fixturePath, fileName);
 
-			File.WriteAllText(fullPath, baseline, Encoding.UTF8);
+			// split baselines in 5-line batches to simplify diff review on GH
+			var lines = baseline.Split(new char[] {'\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+			using var fs = File.Create(fullPath);
+			using var sw = new StreamWriter(fs, Encoding.UTF8);
+
+			for (var i = 0; i < lines.Length; i++)
+			{
+				sw.WriteLine(lines[i]);
+
+				if (i % 5 == 4)
+					sw.WriteLine();
+			}
 		}
 	}
 }

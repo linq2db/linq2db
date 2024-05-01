@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.Tools.Activity
@@ -92,7 +93,7 @@ namespace LinqToDB.Tools.Activity
 						.Append(a._name);
 
 					if (a._count > 1)
-						sb.Append($" ({a._count})");
+						sb.Append(CultureInfo.InvariantCulture, $" ({a._count})");
 
 					sb.AppendLine();
 

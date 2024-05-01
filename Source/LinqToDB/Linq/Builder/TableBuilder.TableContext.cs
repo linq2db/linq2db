@@ -226,7 +226,7 @@ namespace LinqToDB.Linq.Builder
 
 			ParameterExpression? _variable;
 
-			Expression BuildTableExpression(bool buildBlock, Type objectType, Tuple<int, SqlField?>[] index)
+			Expression BuildTableExpression(bool buildBlock, Type objectType, (int, SqlField?)[] index)
 			{
 				if (buildBlock && _variable != null)
 					return _variable;
@@ -275,7 +275,7 @@ namespace LinqToDB.Linq.Builder
 					expr = Expression.Convert(
 							Expression.Call(
 								_onEntityCreatedMethodInfo,
-								ExpressionConstants.DataContextParam,
+								ExpressionBuilder.DataContextParam,
 								expr,
 								Expression.Constant(SqlTable.TableOptions),
 								Expression.Constant(SqlTable.TableName.Name,     typeof(string)),
@@ -323,7 +323,7 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Block(new[] { variable }, expressions);
 			}
 
-			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index)
+			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, (int, SqlField?)[] index)
 			{
 				var members = new List<(ColumnDescriptor column, MemberInfo storage, ConvertFromDataReaderExpression expr)>();
 
@@ -564,7 +564,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index, RecordType recordType)
+			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, (int, SqlField?)[] index, RecordType recordType)
 			{
 				var columns = new List<ColumnInfo>();
 				foreach (var idx in index)
@@ -597,7 +597,7 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 			}
 
-			Tuple<int, SqlField?>[] BuildIndex(Tuple<int, SqlField?>[] index, Type objectType)
+			(int, SqlField?)[] BuildIndex((int, SqlField?)[] index, Type objectType)
 			{
 				var names = new Dictionary<string,int>();
 				var n     = 0;
@@ -616,7 +616,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var result = new Tuple<int, SqlField?>[q.Count];
+				var result = new (int, SqlField?)[q.Count];
 
 				var idx = 0;
 				foreach (var r in q.OrderBy(static r => r.sort))
@@ -677,10 +677,10 @@ namespace LinqToDB.Linq.Builder
 					info = matchedFields.ToArray();
 				}
 
-				var index = new Tuple<int, SqlField?>[info.Length];
+				var index = new (int, SqlField?)[info.Length];
 
 				for (var i = 0; i < info.Length; i++)
-					index[i] = Tuple.Create(ConvertToParentIndex(info[i].Index, this), QueryHelper.GetUnderlyingField(info[i].Sql));
+					index[i] = (ConvertToParentIndex(info[i].Index, this), QueryHelper.GetUnderlyingField(info[i].Sql));
 
 				if (ObjectType != tableType || InheritanceMapping.Count == 0)
 					return BuildTableExpression(!Builder.IsBlockDisable, tableType, index);
