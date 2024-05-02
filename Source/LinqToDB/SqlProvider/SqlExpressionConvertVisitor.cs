@@ -908,6 +908,19 @@ namespace LinqToDB.SqlProvider
 				subQuery.Where.EnsureConjunction();
 			}
 
+			if (subQuery.Select.HasModifier || !subQuery.GroupBy.IsEmpty || subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			{
+				var newQuery = new SelectQuery();
+				newQuery.From.Tables.Add(new SqlTableSource(subQuery, null));
+
+				foreach (var column in subQuery.Select.Columns)
+				{
+					newQuery.Select.AddNew(column);
+				}
+				
+				subQuery = newQuery;
+			}
+
 			var predicates = new List<ISqlPredicate>(testExpressions.Length);
 
 			var sc = new SqlSearchCondition(false);
