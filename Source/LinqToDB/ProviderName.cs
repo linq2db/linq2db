@@ -96,7 +96,7 @@ namespace LinqToDB
 		public const string SqlServer2019 = "SqlServer.2019";
 		/// <summary>
 		/// Microsoft SQL Server 2022 provider.
-		/// Used as configuration name for SQL Server 2019 mapping schema <see cref="SqlServerMappingSchema.SqlServer2022MappingSchema"/>.
+		/// Used as configuration name for SQL Server 2022 mapping schema <see cref="SqlServerMappingSchema.SqlServer2022MappingSchema"/>.
 		/// </summary>
 		public const string SqlServer2022 = "SqlServer.2022";
 		/// <summary>
