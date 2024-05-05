@@ -36,8 +36,12 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override bool ShouldBuildWhere(SelectQuery selectQuery, out SqlSearchCondition condition)
 		{
-			condition = ConvertElement(selectQuery.Where.SearchCondition);
-			return !condition.IsTrue();
+			condition = PrepareSearchCondition(selectQuery.Where.SearchCondition);
+
+			if (condition.IsTrue())
+				return false;
+
+			return true;
 		}
 
 		protected override string? LimitFormat(SelectQuery selectQuery)
