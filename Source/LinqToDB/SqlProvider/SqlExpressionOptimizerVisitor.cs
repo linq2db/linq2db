@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -973,6 +974,45 @@ namespace LinqToDB.SqlProvider
 				var firstPredicate = predicate.SubQuery.Where.SearchCondition.Predicates[0];
 				if (firstPredicate is SqlPredicate.FalsePredicate)
 					return firstPredicate;
+			}
+
+			return predicate;
+		}
+
+		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var newElement = base.VisitInListPredicate(predicate);
+
+			if (!ReferenceEquals(newElement, predicate))
+				return Visit(newElement);
+
+			if (_evaluationContext.ParameterValues == null)
+			{
+				return predicate;
+			}
+
+			if (predicate.Values is [SqlParameter valuesParam] && _evaluationContext.ParameterValues!.TryGetValue(valuesParam, out var parameterValue))
+			{
+				switch (parameterValue.ProviderValue)
+				{
+					case null:
+						return SqlPredicate.MakeBool(predicate.IsNot);
+
+					// Be careful that string is IEnumerable, we don't want to handle x.In(string) here
+					case string:
+						break;
+					case IEnumerable items:
+					{
+						if (predicate.Expr1 is not ISqlTableSource)
+						{
+							bool noValues = !items.Cast<object?>().Any();
+							if (noValues)
+								return SqlPredicate.MakeBool(predicate.IsNot);
+						}
+
+						break;
+					}
+				}
 			}
 
 			return predicate;
