@@ -14,6 +14,7 @@ namespace LinqToDB.SqlQuery
 	using Visitors;
 	using DataProvider;
 	using System.Globalization;
+	using Extensions;
 
 	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
@@ -638,6 +639,36 @@ namespace LinqToDB.SqlQuery
 			_correcting = null;
 		}
 
+		bool IsRemovableJoin(SqlJoinedTable join)
+		{
+			if (join.IsWeak)
+				return true;
+
+			if (join.JoinType == JoinType.Left)
+			{
+				if (join.Condition.IsFalse())
+					return true;
+			}
+
+			if (join.JoinType is JoinType.Left or JoinType.OuterApply)
+			{
+
+				if ((join.Cardinality & SourceCardinality.One) != 0)
+					return true;
+
+				if (join.Table.Source is SelectQuery joinQuery)
+				{
+					if (joinQuery.Where.SearchCondition.IsFalse())
+						return true;
+
+					if (IsLimitedToOneRecord(joinQuery))
+						return true;
+				}
+			}
+
+			return false;
+		}
+
 		internal bool ResolveWeakJoins(SelectQuery selectQuery)
 		{
 			if (!_removeWeakJoins)
@@ -651,7 +682,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var join = table.Joins[i];
 
-					if (join.IsWeak)
+					if (IsRemovableJoin(join))
 					{
 						var sources = QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
 						var ignore  = new[] { join };
@@ -679,6 +710,44 @@ namespace LinqToDB.SqlQuery
 						isModified = true;
 					}
 				}
+
+				for (var i = table.Joins.Count - 1; i >= 0; i--)
+				{
+					var join = table.Joins[i];
+
+					if (join.Table.Source is SelectQuery subQuery && (join.JoinType is JoinType.Left or JoinType.OuterApply))
+					{
+						var canRemoveEmptyJoin = false;
+
+						if (join.JoinType == JoinType.Left && join.Condition.IsFalse())
+							canRemoveEmptyJoin = true;
+						else if (join.JoinType == JoinType.OuterApply && subQuery.Where.SearchCondition.IsFalse())
+							canRemoveEmptyJoin = true;
+
+						if (canRemoveEmptyJoin)
+						{
+							// we can substitute all values by null
+
+							foreach (var column in subQuery.Select.Columns)
+							{
+								var nullValue = column.Expression as SqlValue;
+								if (nullValue is not { Value: null })
+								{
+									var dbType = QueryHelper.GetDbDataType(column.Expression, _mappingSchema);
+									var type   = dbType.SystemType;
+									if (!type.IsNullableType())
+										type = type.AsNullable();
+									nullValue = new SqlValue(dbType.WithSystemType(type), null);
+								}
+
+								NotifyReplaced(nullValue, column);
+							}
+
+							table.Joins.RemoveAt(i);
+							isModified = true;
+						}
+					}
+				}
 			}
 
 			return isModified;
@@ -686,7 +755,10 @@ namespace LinqToDB.SqlQuery
 
 		static bool IsLimitedToOneRecord(SelectQuery query)
 		{
-			if (query.Select.TakeValue is SqlValue value && Equals(value.Value, 1))
+			if (query.Select.TakeValue is SqlValue { Value: 1 })
+				return true;
+
+			if (query.GroupBy.IsEmpty && query.Select.Columns.Count > 0 && query.Select.Columns.All(c => QueryHelper.ContainsAggregationFunction(c.Expression)))
 				return true;
 
 			if (query.From.Tables.Count == 1 && query.From.Tables[0].Source is SelectQuery subQuery)
@@ -1692,6 +1764,17 @@ namespace LinqToDB.SqlQuery
 
 			if (!subQuery.GroupBy.IsEmpty)
 				return false;
+
+			// Rare case when LEFT join is empty. We move search condition up. See TestDefaultExpression_22 test.
+			if (joinTable.JoinType == JoinType.Left && subQuery.Where.SearchCondition.IsFalse())
+			{
+				subQuery.Where.SearchCondition.Predicates.Clear();
+				joinTable.Condition.Predicates.Clear();
+				joinTable.Condition.Predicates.Add(SqlPredicate.False);
+
+				// Continue in next loop
+				return true;
+			}
 
 			var moveConditionToQuery = joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply;
 
