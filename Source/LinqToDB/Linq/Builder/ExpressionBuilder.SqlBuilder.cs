@@ -4815,6 +4815,29 @@ namespace LinqToDB.Linq.Builder
 					alias = me.Member.Name;
 			}
 
+			/*
+
+			// Left here for simplifying debugging
+
+			var findStr = "Ref(TableContext[ID:1](13)(T: 14)::ElementTest).Id";
+			if (sqlPlaceholder.Path.ToString().Contains(findStr))
+			{
+				var found = _columnCache.Keys.FirstOrDefault(c => c.Expression?.ToString().Contains(findStr) == true);
+				if (found.Expression != null)
+				{
+					if (_columnCache.TryGetValue(found, out var current))
+					{
+						var fh = ExpressionEqualityComparer.Instance.GetHashCode(found.Expression);
+						var kh = ExpressionEqualityComparer.Instance.GetHashCode(key.Expression);
+
+						var foundHash = ColumnCacheKey.ColumnCacheKeyComparer.GetHashCode(found);
+						var KeyHash   = ColumnCacheKey.ColumnCacheKeyComparer.GetHashCode(key);
+					}
+				}
+			}
+
+			*/
+
 			var sql    = sqlPlaceholder.Sql;
 			var idx    = sqlPlaceholder.SelectQuery.Select.AddNew(sql);
 			var column = sqlPlaceholder.SelectQuery.Select.Columns[idx];
