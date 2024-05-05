@@ -51,18 +51,19 @@ namespace LinqToDB.Linq.Builder
 
 		static IEnumerable<Expression> EnumGroupingSets(Expression expression)
 		{
-			switch (expression.NodeType)
+			if (expression is NewExpression newExpression)
 			{
-				case ExpressionType.New:
-					{
-						var newExpression = (NewExpression)expression;
-
-						foreach (var arg in newExpression.Arguments)
-						{
-							yield return arg;
-						}
-						break;
-					}
+				foreach (var arg in newExpression.Arguments)
+				{
+					yield return arg;
+				}
+			}
+			else if (expression is SqlGenericConstructorExpression generic)
+			{
+				foreach (var arg in generic.Assignments)
+				{
+					yield return arg.Expression;
+				}
 			}
 		}
 
@@ -151,10 +152,10 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var key                 = new KeyContext(groupingSubquery, keySelector, keySequence, buildInfo.IsSubQuery);
-			var keyRef              = new ContextRefExpression(keySelector.Parameters[0].Type, key);
+			var keyRef              = new ContextRefExpression(key.Body.Type, key);
 			var currentPlaceholders = new List<SqlPlaceholderExpression>();
 
-			if (!AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, key.Body, groupingKind, buildInfo.GetFlags(), out var errorExpression))
+			if (!AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, keyRef, groupingKind, buildInfo.GetFlags(), out var errorExpression))
 			{
 				return BuildSequenceResult.Error(errorExpression);
 			}
@@ -212,8 +213,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (groupingKind == GroupingType.GroupBySets)
 			{
-				var hasSets = false;
-				foreach (var groupingSet in EnumGroupingSets(path))
+				var hasSets  = false;
+				var expanded = builder.MakeExpression(onSequence, path, ProjectFlags.ExtractProjection);
+				foreach (var groupingSet in EnumGroupingSets(expanded))
 				{
 					hasSets = true;
 					var setExpr = builder.BuildSqlExpression(onSequence, groupingSet,
@@ -348,6 +350,12 @@ namespace LinqToDB.Linq.Builder
 
 				var result = base.MakeExpression(path, newFlags);
 
+				if (!ExpressionEqualityComparer.Instance.Equals(result, path))
+				{
+					// project deeper
+					result = Builder.MakeExpression(this, result, newFlags);
+				}
+
 				if (newFlags.IsSql() || newFlags.IsExpression() || newFlags.IsExtractProjection())
 				{
 					if (newFlags.IsExtractProjection())
@@ -357,15 +365,18 @@ namespace LinqToDB.Linq.Builder
 
 					if (!newFlags.IsTest())
 					{
-						if (GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType != GroupingType.GroupBySets)
+						if (GroupByContext != null)
 						{
-							// appending missing keys
-							AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery,
-								result);
-						}
+							if (GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType != GroupingType.GroupBySets)
+							{
+								// appending missing keys
+								AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery,
+									result);
+							}
 
-						// we return SQL nested as GroupByContext.SubQuery
-						result = Builder.UpdateNesting(GroupByContext.SubQuery, result);
+							// we return SQL nested as GroupByContext.SubQuery
+							result = Builder.UpdateNesting(GroupByContext.SubQuery, result);
+						}
 					}
 				}
 
