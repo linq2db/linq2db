@@ -1327,6 +1327,14 @@ namespace LinqToDB.SqlQuery
 				NotifyReplaced(column.Expression, column);
 			}
 
+			if (parentQuery.Select.Columns.Count == 0 && subQuery.Select.IsDistinct)
+			{
+				foreach (var column in subQuery.Select.Columns)
+				{
+					parentQuery.Select.AddNew(column.Expression);
+				}
+			}
+
 			// First table processing
 			if (subQuery.From.Tables.Count > 0)
 			{
@@ -1622,13 +1630,13 @@ namespace LinqToDB.SqlQuery
 					// Columns in parent query should match
 					//
 
-					if (!subQuery.Select.Columns.All(sc =>
-						    parentQuery.Select.Columns.Any(pc => ReferenceEquals(QueryHelper.UnwrapNullablity(pc.Expression), sc))))
+					if (!(parentQuery.Select.Columns.Count == 0 || subQuery.Select.Columns.All(sc =>
+						    parentQuery.Select.Columns.Any(pc => ReferenceEquals(QueryHelper.UnwrapNullablity(pc.Expression), sc)))))
 					{
 						return false;
 					}
 
-					if (parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
+					if (parentQuery.Select.Columns.Count > 0 && parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
 					{
 						return false;
 					}
@@ -2517,6 +2525,38 @@ namespace LinqToDB.SqlQuery
 			_isInRecursiveCte = saveIsInRecursiveCte;
 
 			return newElement;
+		}
+
+		protected override IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
+		{
+			var result = base.VisitFuncLikePredicate(element);
+
+			if (!ReferenceEquals(result, element))
+				return Visit(element);
+
+			if (element.Function is { Name: "EXISTS", Parameters: [SelectQuery sq] })
+			{
+				// We can safely optimize out Distinct
+				if (sq.Select.IsDistinct)
+				{
+					sq.Select.IsDistinct = false;
+				}
+
+				if (sq.GroupBy.IsEmpty)
+				{
+					// non aggregation columns can be removed
+					for (int i = sq.Select.Columns.Count - 1; i >= 0; i--)
+					{
+						var colum = sq.Select.Columns[i];
+						if (!QueryHelper.ContainsAggregationFunction(colum.Expression))
+						{
+							sq.Select.Columns.RemoveAt(i);
+						}
+					}
+				}
+			}
+
+			return element;
 		}
 
 		#region Helpers
