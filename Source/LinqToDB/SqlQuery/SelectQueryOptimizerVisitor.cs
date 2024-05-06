@@ -1189,9 +1189,7 @@ namespace LinqToDB.SqlQuery
 
 		bool IsColumnExpressionAllowedToMoveUp(SelectQuery parentQuery, NullabilityContext nullability, SqlColumn column, ISqlExpression columnExpression, bool ignoreWhere)
 		{
-			if (columnExpression.ElementType == QueryElementType.Column ||
-			    columnExpression.ElementType == QueryElementType.SqlRawSqlTable ||
-			    columnExpression.ElementType == QueryElementType.SqlField)
+			if (columnExpression.ElementType is QueryElementType.Column or QueryElementType.SqlRawSqlTable or QueryElementType.SqlField or QueryElementType.SqlValue or QueryElementType.SqlParameter)
 			{
 				return true;
 			}
@@ -1474,7 +1472,7 @@ namespace LinqToDB.SqlQuery
 						var expr = QueryHelper.UnwrapNullablity(sc.Expression);
 
 						// not allowed to move complex expressions for grouping
-						if (expr.ElementType != QueryElementType.SqlField && expr.ElementType != QueryElementType.Column)
+						if (expr.ElementType is not (QueryElementType.SqlField or QueryElementType.Column or QueryElementType.SqlValue or QueryElementType.SqlParameter))
 						{
 							return false;
 						}
@@ -2699,7 +2697,7 @@ namespace LinqToDB.SqlQuery
 
 			protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 			{
-				using var scope = DoNotAllowScope(true);
+				using var scope = DoNotAllowScope(predicate.Expr1.ElementType == QueryElementType.SqlObjectExpression);
 				return base.VisitInListPredicate(predicate);
 			}
 
