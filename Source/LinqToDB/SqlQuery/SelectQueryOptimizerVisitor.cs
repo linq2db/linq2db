@@ -2657,6 +2657,12 @@ namespace LinqToDB.SqlQuery
 				return result;
 			}
 
+			protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+			{
+				using var scope = DoNotAllowScope(true);
+				return base.VisitInListPredicate(predicate);
+			}
+
 			readonly struct DoNotAllowScopeStruct : IDisposable
 			{
 				readonly MovingComplexityVisitor _visitor;
