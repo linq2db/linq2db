@@ -121,21 +121,30 @@ namespace LinqToDB.Linq.Builder
 					//
 					var updatedPlaceholder = placeholder.WithPath(placeholder.TrackingPath);
 
-					updatedPlaceholder = (SqlPlaceholderExpression)subQueryContext.Builder.UpdateNesting(subQueryContext, updatedPlaceholder);
+					updatedPlaceholder = subQueryContext.Builder.UpdateNesting(subQueryContext, updatedPlaceholder);
 
-					var field = RegisterFieldMapping(fields, updatedPlaceholder.Index!.Value, () =>
+					var nullabilityContext = NullabilityContext.GetContext(subQueryContext.SelectQuery);
+
+					var placeholderIndex = updatedPlaceholder.Index!.Value;
+					var field = RegisterFieldMapping(fields, placeholderIndex, () =>
 					{
 						var alias = GenerateColumnAlias(updatedPlaceholder.Path) ?? GenerateColumnAlias(updatedPlaceholder.Sql);
 						var dataType = QueryHelper.GetDbDataType(updatedPlaceholder.Sql, subQueryContext.MappingSchema);
 
 						SqlField newField;
+						var      isNullable = updatedPlaceholder.Sql.CanBeNullable(nullabilityContext);
+
 						if (recursiveMap != null && recursiveMap.TryGetValue(placeholder.TrackingPath, out var recursiveField))
 						{
 							newField = (SqlField)recursiveField.Sql;
+							if (isNullable != newField.CanBeNull)
+							{
+								newField = new SqlField(newField.Type, newField.Name, isNullable);
+							}
 						}
 						else
 						{
-							newField = new SqlField(dataType, alias, updatedPlaceholder.Sql.CanBeNullable(NullabilityContext.NonQuery));
+							newField = new SqlField(dataType, alias, isNullable);
 						}
 
 						newField.Table = parentTable;
