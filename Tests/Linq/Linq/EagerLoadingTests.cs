@@ -1730,7 +1730,7 @@ FROM
 		[Test]
 		public void Issue3799Test([DataSources] string context)
 		{
-			using var db    = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
+			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<Test3799Item>(Test3799Item.TestData);
 
 			var result = table.Select(Test3799ItemModel.Selector).ToList();

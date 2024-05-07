@@ -1031,6 +1031,20 @@ namespace LinqToDB
 					}
 				}
 
+				// TODO: Really not precise nullability calculation. In the future move to window functions to MemberTranslator
+				var canBeNull = mainExtension.CanBeNull;
+				if (canBeNull == null)
+				{
+					foreach (var c in ordered)
+					{
+						if (c.Extension != null && c.Extension.CanBeNull != null)
+						{
+							canBeNull = c.Extension.CanBeNull;
+							break;
+						}
+					}
+				}
+
 				//TODO: Precedence calculation
 				var res = BuildSqlExpression(query, mainExtension, mainExtension.SystemType,
 					mainExtension.Precedence,
@@ -1038,7 +1052,7 @@ namespace LinqToDB
 					(isPure       ? SqlFlags.IsPure           : SqlFlags.None) |
 					(isPredicate  ? SqlFlags.IsPredicate      : SqlFlags.None) |
 					(isWindowFunc ? SqlFlags.IsWindowFunction : SqlFlags.None),
-					mainExtension.CanBeNull, IsNullable);
+					canBeNull, IsNullable);
 
 				return res;
 			}

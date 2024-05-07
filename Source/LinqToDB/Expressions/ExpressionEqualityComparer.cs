@@ -15,8 +15,13 @@ using System.Reflection;
 // ReSharper disable LoopCanBeConvertedToQuery
 namespace LinqToDB.Expressions
 {
+	using Common;
+
 	using Extensions;
+
 	using Linq;
+
+	using LinqToDB.Reflection;
 
 	/// <summary>
 	///     This API supports the linq2db infrastructure and is not intended to be used
@@ -138,7 +143,7 @@ namespace LinqToDB.Expressions
 					{
 						var memberExpression = (MemberExpression)obj;
 
-						hashCode += (hashCode * 397) ^ memberExpression.Member.GetHashCode();
+						hashCode += (hashCode * 397) ^ MemberInfoEqualityComparer.Default.GetHashCode(memberExpression.Member);
 						hashCode += (hashCode * 397) ^ GetHashCode(memberExpression.Expression);
 
 						break;
@@ -581,7 +586,7 @@ namespace LinqToDB.Expressions
 			}
 
 			bool CompareMemberAccess(MemberExpression a, MemberExpression b)
-				=> Equals(a.Member, b.Member)
+				=> MemberInfoEqualityComparer.Default.Equals(a.Member, b.Member)
 				   && Compare(a.Expression, b.Expression);
 
 			bool CompareMethodCall(MethodCallExpression a, MethodCallExpression b)

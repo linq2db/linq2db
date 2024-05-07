@@ -1065,7 +1065,7 @@ namespace LinqToDB.Linq.Builder
 					var unary     = (UnaryExpression)expression;
 					var testExpr  = MakeIsPredicateExpression(context, Expression.TypeIs(unary.Operand, unary.Type));
 					var trueCase  = Expression.Convert(unary.Operand, unary.Type);
-					var falseCase = Expression.Default(unary.Type);
+					var falseCase = new DefaultValueExpression(MappingSchema, unary.Type);
 
 					var cond = Expression.Condition(testExpr, trueCase, falseCase);
 
@@ -2273,9 +2273,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (lOriginal is SqlColumn colLeft)
 							lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, NullabilityContext.GetContext(colLeft.Parent));
+						else if (lOriginal is SqlField)
+							lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, NullabilityContext.NonQuery);
 
 						if (rOriginal is SqlColumn colRight)
 							rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, NullabilityContext.GetContext(colRight.Parent));
+						else if (rOriginal is SqlField)
+							rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, NullabilityContext.NonQuery);
 
 						lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, nullability);
 						rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, nullability);
@@ -3335,6 +3339,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			static bool? IsNull(Expression sqlExpr)
 			{
+				if (sqlExpr.IsNullValue())
+					return true;
+
 				if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					return null;
 
@@ -3836,7 +3843,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (body.IsNullValue())
 						{
-							return Expression.Default(member.GetMemberType());
+							return new DefaultValueExpression(MappingSchema, member.GetMemberType());
 						}
 
 						if (body is SqlGenericConstructorExpression genericConstructor)
@@ -3988,7 +3995,7 @@ namespace LinqToDB.Linq.Builder
 					if (strict)
 						return CreateSqlError(null, nextPath![0]);
 
-					return Expression.Default(nextPath![0].Type);
+					return new DefaultValueExpression(MappingSchema, nextPath![0].Type);
 				}
 
 				case ExpressionType.MemberInit:
@@ -4089,7 +4096,7 @@ namespace LinqToDB.Linq.Builder
 					if (strict)
 						return CreateSqlError(null, nextPath![0]);
 
-					return Expression.Default(nextPath![0].Type);
+					return new DefaultValueExpression(MappingSchema, nextPath![0].Type);
 
 				}
 				case ExpressionType.Conditional:
@@ -4120,9 +4127,10 @@ namespace LinqToDB.Linq.Builder
 					if (trueExpr.Type != falseExpr.Type)
 					{
 						if (trueExpr.IsNullValue())
-							trueExpr = Expression.Default(falseExpr.Type);
+							trueExpr = new DefaultValueExpression(MappingSchema, falseExpr.Type);
 						else if (falseExpr.IsNullValue())
-							falseExpr = Expression.Default(trueExpr.Type);					}
+							falseExpr = new DefaultValueExpression(MappingSchema, trueExpr.Type);
+					}
 
 					var newExpr = (Expression)Expression.Condition(cond.Test, trueExpr, falseExpr);
 
@@ -4144,7 +4152,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						*/
 
-						return Expression.Default(expr.Type);
+						return new DefaultValueExpression(MappingSchema, expr.Type);
 					}
 
 					break;
@@ -4162,7 +4170,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					*/
 
-					return Expression.Default(expr.Type);
+					return new DefaultValueExpression(MappingSchema, expr.Type);
 				}
 
 				/*
@@ -4230,10 +4238,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (constExpr.Value is true)
 							return truePath;
-						return Expression.Default(truePath.Type);
+						return new DefaultValueExpression(MappingSchema, truePath.Type);
 					}
 
-					var falsePath = Expression.Default(truePath.Type);
+					var falsePath = new DefaultValueExpression(MappingSchema, truePath.Type);
 
 					var conditional = Expression.Condition(isPredicate, truePath, falsePath);
 
@@ -4466,7 +4474,6 @@ namespace LinqToDB.Linq.Builder
 					var corrected = ExecuteMake(rootContext.BuildContext, path, flags);
 
 					if (!ExpressionEqualityComparer.Instance.Equals(corrected, path) &&
-						corrected is not DefaultExpression &&
 						corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
 					{
 						var newCorrected = MakeExpression(rootContext.BuildContext, corrected, flags);
@@ -4642,7 +4649,7 @@ namespace LinqToDB.Linq.Builder
 				var unary     = (UnaryExpression)path;
 				var testExpr  = MakeIsPredicateExpression(currentContext, Expression.TypeIs(unary.Operand, unary.Type));
 				var trueCase  = Expression.Convert(unary.Operand, unary.Type);
-				var falseCase = Expression.Default(unary.Type);
+				var falseCase = new DefaultValueExpression(MappingSchema, unary.Type);
 
 				if (testExpr is ConstantExpression constExpr)
 				{
@@ -4807,6 +4814,29 @@ namespace LinqToDB.Linq.Builder
 				else if (sqlPlaceholder.Path is MemberExpression me)
 					alias = me.Member.Name;
 			}
+
+			/*
+
+			// Left here for simplifying debugging
+
+			var findStr = "Ref(TableContext[ID:1](13)(T: 14)::ElementTest).Id";
+			if (sqlPlaceholder.Path.ToString().Contains(findStr))
+			{
+				var found = _columnCache.Keys.FirstOrDefault(c => c.Expression?.ToString().Contains(findStr) == true);
+				if (found.Expression != null)
+				{
+					if (_columnCache.TryGetValue(found, out var current))
+					{
+						var fh = ExpressionEqualityComparer.Instance.GetHashCode(found.Expression);
+						var kh = ExpressionEqualityComparer.Instance.GetHashCode(key.Expression);
+
+						var foundHash = ColumnCacheKey.ColumnCacheKeyComparer.GetHashCode(found);
+						var KeyHash   = ColumnCacheKey.ColumnCacheKeyComparer.GetHashCode(key);
+					}
+				}
+			}
+
+			*/
 
 			var sql    = sqlPlaceholder.Sql;
 			var idx    = sqlPlaceholder.SelectQuery.Select.AddNew(sql);

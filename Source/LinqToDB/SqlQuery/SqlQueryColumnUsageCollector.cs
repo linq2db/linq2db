@@ -127,14 +127,30 @@ namespace LinqToDB.SqlQuery
 			}
 			else
 			{
-				foreach (var c in selectQuery.Select.Columns)
+				if (!selectQuery.GroupBy.IsEmpty)
 				{
-					if (!_usedColumns.Contains(c))
+					if (selectQuery.Select.Columns.Count == 1)
+						RegisterColumn(selectQuery.Select.Columns[0]);
+				}
+				else
+				{
+					if (!selectQuery.GroupBy.IsEmpty)
 					{
-						if (!selectQuery.GroupBy.IsEmpty && selectQuery.Select.Columns.Count == 1 || QueryHelper.ContainsAggregationOrWindowFunction(c.Expression))
-							RegisterColumn(c);
+						if (selectQuery.Select.Columns.Count == 1)
+							RegisterColumn(selectQuery.Select.Columns[0]);
 					}
-				}				
+					else
+					{
+						foreach (var column in selectQuery.Select.Columns)
+						{
+							if (QueryHelper.ContainsAggregationOrWindowFunction(column.Expression))
+							{
+								RegisterColumn(column);
+								break;
+							}
+						}
+					}
+				}
 			}
 
 			if (selectQuery.HasSetOperators)

@@ -528,9 +528,10 @@ namespace LinqToDB.Linq.Builder
 			ContextRefExpression        targetRef,
 			Expression                  fieldExpression,
 			Expression                  valueExpression,
-			List<SetExpressionEnvelope> envelopes)
+			List<SetExpressionEnvelope> envelopes,
+			bool                        forceParameters)
 		{
-			ParseSet(targetRef.BuildContext.Builder, targetRef.BuildContext, targetRef, fieldExpression, valueExpression, envelopes, true);
+			ParseSet(targetRef.BuildContext.Builder, targetRef.BuildContext, targetRef, fieldExpression, valueExpression, envelopes, forceParameters);
 		}
 
 		internal static void ParseSetter(

@@ -240,15 +240,6 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		static void ClearParameters(Query query)
-		{
-#if !DEBUG
-			foreach (var q in query.Queries)
-				foreach (var sqlParameter in q.ParameterAccessors)
-					sqlParameter.Expression = null!;
-#endif
-		}
-
 		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn, ISqlExpression sqlExpr)
 		{
 			var parameterValues = new SqlParameterValues();
@@ -699,8 +690,6 @@ namespace LinqToDB.Linq
 		{
 			var executeQuery = GetExecuteQuery<T>(query, ExecuteQuery);
 
-			ClearParameters(query);
-
 			var mapper   = new Mapper<T>(expression);
 
 			query.GetResultEnumerable = (db, expr, ps, preambles) =>
@@ -783,8 +772,6 @@ namespace LinqToDB.Linq
 
 			if (query.Queries.Count != 1)
 				throw new InvalidOperationException();
-
-			ClearParameters(query);
 
 			var l      = WrapMapper(expression);
 			var mapper = new Mapper<object>(l);
@@ -885,8 +872,6 @@ namespace LinqToDB.Linq
 			if (query.Queries.Count != 1)
 				throw new InvalidOperationException();
 
-			ClearParameters(query);
-
 			query.GetElement      = (db, expr, ps, preambles) => ScalarQuery(query, db, expr, ps, preambles);
 			query.GetElementAsync = (db, expr, ps, preambles, token) => ScalarQueryAsync(query, db, expr, ps, preambles, token);
 		}
@@ -925,8 +910,6 @@ namespace LinqToDB.Linq
 			if (query.Queries.Count != 1)
 				throw new InvalidOperationException();
 
-			ClearParameters(query);
-
 			query.GetElement      = (db, expr, ps, preambles) => NonQueryQuery(query, db, expr, ps, preambles);
 			query.GetElementAsync = (db, expr, ps, preambles, token) => NonQueryQueryAsync(query, db, expr, ps, preambles, token);
 		}
@@ -964,8 +947,6 @@ namespace LinqToDB.Linq
 
 			if (query.Queries.Count != 2)
 				throw new InvalidOperationException();
-
-			ClearParameters(query);
 
 			query.GetElement      = (db, expr, ps, preambles)        => NonQueryQuery2(query, db, expr, ps, preambles);
 			query.GetElementAsync = (db, expr, ps, preambles, token) => NonQueryQuery2Async(query, db, expr, ps, preambles, token);
@@ -1020,8 +1001,6 @@ namespace LinqToDB.Linq
 
 			if (query.Queries.Count != 2)
 				throw new InvalidOperationException();
-
-			ClearParameters(query);
 
 			query.GetElement      = (db, expr, ps, preambles)        => QueryQuery2(query, db, expr, ps, preambles);
 			query.GetElementAsync = (db, expr, ps, preambles, token) => QueryQuery2Async(query, db, expr, ps, preambles, token);

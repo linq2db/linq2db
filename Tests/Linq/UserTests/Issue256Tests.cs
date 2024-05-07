@@ -19,7 +19,6 @@ namespace Tests.UserTests
 	/// Tests executed against all providers, because they could also uncover memory leaks in providers.
 	/// </summary>
 	[TestFixture]
-	[Category(TestCategory.Explicit)]
 	public class Issue256Tests : TestBase
 	{
 		static readonly DateTime _date = TestData.DateTime;
@@ -34,13 +33,6 @@ namespace Tests.UserTests
 			[Column]                             public Guid     GuidValue;
 			[Column]                             public Binary?  BinaryValue;
 			[Column]                             public short    SmallIntValue;
-		}
-
-		[AttributeUsage(AttributeTargets.Parameter)]
-		sealed class Issue256TestSourceAttribute : IncludeDataSourcesAttribute
-		{
-			// tests are provider-agnostic
-			public Issue256TestSourceAttribute() : base(TestProvName.AllSQLite, TestProvName.AllClickHouse) {}
 		}
 
 		static Action<ITestDataContext,byte[],int>[] TestActions => new Action<ITestDataContext,byte[],int>[]
@@ -63,19 +55,19 @@ namespace Tests.UserTests
 			NonLinqDelete,
 		};
 
-		[Test, Explicit("Demonstrates memory leak when fails")]
+		[Test(Description = "Demonstrates memory leak when fails")]
 		public void SimpleTest(
-			[Issue256TestSource] string context,
-			[ValueSource(nameof(TestActions))] Action<ITestDataContext,byte[],int> action)
+			[IncludeDataSources(TestProvName.AllSQLite)] string                              context,
+			[ValueSource(nameof(TestActions))]           Action<ITestDataContext,byte[],int> action)
 		{
 			using var _ = new DisableBaseline("test name conflicts");
 			Test(context, action, 1);
 		}
 
-		[Test, Explicit("Demonstrates memory leak when fails")]
+		[Test(Description = "Demonstrates memory leak when fails")]
 		public void RetryTest(
-			[Issue256TestSource] string context,
-			[ValueSource(nameof(TestActions))] Action<ITestDataContext,byte[],int> action)
+			[IncludeDataSources(TestProvName.AllSQLite)] string                              context,
+			[ValueSource(nameof(TestActions))]           Action<ITestDataContext,byte[],int> action)
 		{
 			using var _ = new DisableBaseline("test name conflicts");
 			Test(context, action, 3);

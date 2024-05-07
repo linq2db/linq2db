@@ -160,7 +160,7 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
 					query.Expression, Expression.Constant(obj)));
 
-			return items.AsAsyncEnumerable().FirstOrDefaultAsync(token);
+			return items.AsAsyncEnumerable().SingleAsync(token);
 		}
 
 		/// <summary>

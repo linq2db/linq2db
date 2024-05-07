@@ -202,7 +202,6 @@ namespace Tests.Linq
 			FSharp.Issue3357.Union3(db);
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3699")]
 		[Test]
 		public void Issue3699_Test([DataSources] string context)
 		{
@@ -210,7 +209,6 @@ namespace Tests.Linq
 			FSharp.SelectTest.Issue3699Test(db);
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3743")]
 		[Test]
 		public void Issue3743Test1([DataSources] string context)
 		{

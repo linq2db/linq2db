@@ -461,12 +461,14 @@ namespace LinqToDB.Linq.Builder
 				var extractExp = SequenceHelper.PrepareBody(extract, insertContext.Into);
 				var updateExpr = update;
 
+				var forceParameters = true;
 				if (updateExpr is LambdaExpression updateLambda)
 				{
-					updateExpr = SequenceHelper.PrepareBody(updateLambda, sequence);
+					updateExpr      = SequenceHelper.PrepareBody(updateLambda, sequence);
+					forceParameters = false;
 				}
 
-				UpdateBuilder.ParseSet(contextRef, extractExp, updateExpr, insertContext.SetExpressions);
+				UpdateBuilder.ParseSet(contextRef, extractExp, updateExpr, insertContext.SetExpressions, forceParameters);
 				insertContext.LastBuildInfo = buildInfo;
 
 				return BuildSequenceResult.FromContext(insertContext);

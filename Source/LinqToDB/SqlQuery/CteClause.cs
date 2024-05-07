@@ -80,13 +80,5 @@ namespace LinqToDB.SqlQuery
 				.Append("\")")
 				;
 		}
-
-		public void UpdateIndex(int index, SqlField field)
-		{
-			if (index >= Fields.Count)
-				throw new InvalidOperationException();
-
-			Fields[index] = field;
-		}
 	}
 }

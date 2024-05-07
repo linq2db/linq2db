@@ -229,7 +229,7 @@ namespace Tests.Linq
 		{
 			var dt = DateTime.Now;
 
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.Parent
@@ -835,7 +835,7 @@ namespace Tests.Linq
 		[Test]
 		public void SelectNullPropagationTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				AreEqual(
 					from p in Parent
@@ -933,7 +933,7 @@ namespace Tests.Linq
 		[Test]
 		public void SelectReverseNullPropagationTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				AreEqual(
 					from p in Parent

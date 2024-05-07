@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		#region Wrap Parameters
-		private static SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
+		static SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
 		{
 			// for some reason Firebird doesn't use parameter type information (not supported?) is some places, so
 			// we need to wrap parameter into CAST() to add type information explicitly
@@ -89,7 +89,12 @@ namespace LinqToDB.DataProvider.Firebird
 
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
-			statement = (SqlStatement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.All);
+			statement = (SqlStatement)visitor.WrapParameters(statement,
+				WrapParametersVisitor.WrapFlags.InSelect         |
+				WrapParametersVisitor.WrapFlags.InUpdateSet      |
+				WrapParametersVisitor.WrapFlags.InInsertOrUpdate |
+				WrapParametersVisitor.WrapFlags.InOutput         |
+				WrapParametersVisitor.WrapFlags.InMerge);
 
 			return statement;
 		}

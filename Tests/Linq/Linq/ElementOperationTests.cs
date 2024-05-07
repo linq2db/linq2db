@@ -166,14 +166,15 @@ namespace Tests.Linq
 		[Test]
 		public void NestedFirstOrDefault5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
-				AreEqual(
-					from p in GrandChild 
-					where p.ChildID > 0
-					select p.Child!.Parent!.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
-					from p in db.GrandChild
-					where p.ChildID > 0
-					select p.Child!.Parent!.Children.OrderBy(c => c.ChildID).FirstOrDefault());
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from p in GrandChild
+				where p.ChildID > 0
+				select p.Child!.Parent!.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
+				from p in db.GrandChild
+				where p.ChildID > 0
+				select p.Child!.Parent!.Children.OrderBy(c => c.ChildID).FirstOrDefault());
 		}
 
 		[Test]
