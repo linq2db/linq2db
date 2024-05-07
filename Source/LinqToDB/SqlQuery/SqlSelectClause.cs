@@ -237,8 +237,6 @@ namespace LinqToDB.SqlQuery
 
 		public bool HasModifier => IsDistinct || SkipValue != null || TakeValue != null;
 
-		public bool HasSomeModifiers(bool ignoreSkip, bool ignoreTake) => IsDistinct || (!ignoreSkip && SkipValue != null) || (!ignoreTake && TakeValue != null);
-
 		#endregion
 
 		#region Distinct
