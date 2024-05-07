@@ -58,6 +58,42 @@ namespace LinqToDB.DataProvider.Firebird
 				base.BuildSelectClause(selectQuery);
 		}
 
+		protected override void BuildSkipFirst(SelectQuery selectQuery)
+		{
+			if (Statement.QueryType is not QueryType.Update and not QueryType.Delete)
+			{
+				base.BuildSkipFirst(selectQuery);
+			}
+		}
+
+		protected override void BuildOffsetLimit(SelectQuery selectQuery)
+		{
+			if (Statement.QueryType is QueryType.Update or QueryType.Delete)
+			{
+				SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+
+				if (takeExpr != null)
+				{
+					AppendIndent();
+
+					if (skipExpr != null)
+					{
+						StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "ROWS {0} + 1 TO {0} + {1}", WithStringBuilderBuildExpression(skipExpr), WithStringBuilderBuildExpression(takeExpr));
+					}
+					else
+					{
+						StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "ROWS {0}", WithStringBuilderBuildExpression(takeExpr));
+					}
+
+					StringBuilder.AppendLine();
+				}
+			}
+			else
+			{
+				base.BuildOffsetLimit(selectQuery);
+			}
+		}
+
 		protected override bool   SkipFirst                     => false;
 		protected override string SkipFormat                    => "SKIP {0}";
 		protected override bool   IsRecursiveCteKeywordRequired => true;

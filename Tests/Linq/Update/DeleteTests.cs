@@ -248,16 +248,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteTakeNotOrdered(
 			[DataSources(
-				TestProvName.AllAccess,
-				TestProvName.AllClickHouse,
-				ProviderName.DB2,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSQLite,
-				TestProvName.AllFirebird,
-				TestProvName.AllInformix,
-				TestProvName.AllMySql,
-				ProviderName.SqlCe,
-				TestProvName.AllSapHana)]
+				ProviderName.SQLiteMS
+			)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -267,7 +259,7 @@ namespace Tests.xUpdate
 					db.Parent.Delete(c => c.ParentID >= 1000);
 
 					for (var i = 0; i < 10; i++)
-						db.Insert(new Parent { ParentID = 1000 + i });
+						db.Insert(new Parent { ParentID = 1000 + i, Value1 = 1000 + i });
 
 					var rowsAffected = db.Parent
 						.Where(p => p.ParentID >= 1000)
@@ -284,7 +276,11 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteTakeOrdered([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the TOP + ORDER BY clause.")]
+		public void DeleteTakeOrdered([DataSources(
+				ProviderName.SQLiteMS,
+				TestProvName.AllOracle
+			)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -294,7 +290,7 @@ namespace Tests.xUpdate
 					{
 						db.Parent.Delete(c => c.ParentID >= 1000);
 						for (var i = 0; i < 10; i++)
-							db.Insert(new Parent { ParentID = 1000 + i });
+							db.Insert(new Parent { ParentID = 1000 + i, Value1 = 1000 + i });
 					}
 
 					var entities =
@@ -308,6 +304,8 @@ namespace Tests.xUpdate
 						.Delete();
 
 					Assert.That(rowsAffected, Is.EqualTo(5));
+					var data = db.Parent.Where(p => p.ParentID >= 1000).OrderBy(p => p.ParentID).Select(r => r.Value1!.Value).ToArray();
+					Assert.That(data, Is.EqualTo(new int[] { 1000, 1001, 1002, 1003, 1004 }));
 				}
 				finally
 				{
@@ -317,7 +315,12 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteSkipTake([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the TOP + ORDER BY clause.")]
+		public void DeleteSkipTakeOrdered([DataSources(
+			ProviderName.SQLiteMS,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle
+			)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -327,7 +330,7 @@ namespace Tests.xUpdate
 					{
 						db.Parent.Delete(c => c.ParentID >= 1000);
 						for (var i = 0; i < 10; i++)
-							db.Insert(new Parent { ParentID = 1000 + i });
+							db.Insert(new Parent { ParentID = 1000 + i, Value1 = 1000 + i });
 					}
 
 					var entities =
@@ -337,16 +340,91 @@ namespace Tests.xUpdate
 						select x;
 
 					var rowsAffected = entities
-						.Skip(1)
+						.Skip(2)
 						.Take(5)
 						.Delete();
 
-					Assert.Multiple(() =>
-					{
-						Assert.That(rowsAffected, Is.EqualTo(5));
+					Assert.That(rowsAffected, Is.EqualTo(5));
+					var data = db.Parent.Where(p => p.ParentID >= 1000).OrderBy(p => p.ParentID).Select(r => r.Value1!.Value).ToArray();
+					Assert.That(data, Is.EqualTo(new int[] { 1000, 1001, 1002, 1008, 1009 }));
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
 
-						Assert.That(db.Parent.Where(p => p.ParentID == 1000 + 9).Single().Value1, Is.Not.EqualTo(1));
-					});
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the SKIP clause.")]
+		public void DeleteSkipTakeNotOrdered([DataSources(
+			ProviderName.SQLiteMS,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle
+			)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					using (new DisableLogging())
+					{
+						db.Parent.Delete(c => c.ParentID >= 1000);
+						for (var i = 0; i < 10; i++)
+							db.Insert(new Parent { ParentID = 1000 + i, Value1 = 1000 + i });
+					}
+
+					var entities =
+						from x in db.Parent
+						where x.ParentID > 1000
+						select x;
+
+					var rowsAffected = entities
+						.Skip(6)
+						.Take(5)
+						.Delete();
+
+					Assert.That(rowsAffected, Is.EqualTo(3));
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
+
+		[Test]
+		public void DeleteOrdered([DataSources(
+			TestProvName.AllDB2,
+			TestProvName.AllSQLite,
+			TestProvName.AllOracle,
+			TestProvName.AllSqlServer,
+			TestProvName.AllSybase
+			)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					using (new DisableLogging())
+					{
+						db.Parent.Delete(c => c.ParentID >= 1000);
+						for (var i = 0; i < 10; i++)
+							db.Insert(new Parent { ParentID = 1000 + i, Value1 = 1000 + i });
+					}
+
+					var entities =
+						from x in db.Parent
+						where x.ParentID > 1000
+						orderby x.ParentID descending
+						select x;
+
+					var rowsAffected = entities
+						.Delete();
+
+					Assert.That(rowsAffected, Is.EqualTo(9));
+					var data = db.Parent.Where(p => p.ParentID >= 1000).OrderBy(p => p.ParentID).Select(r => r.Value1!.Value).ToArray();
+					Assert.That(data, Is.EqualTo(new int[] { 1000 }));
 				}
 				finally
 				{

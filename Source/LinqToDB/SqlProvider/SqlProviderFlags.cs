@@ -519,6 +519,33 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 70)]
 		public bool IsDerivedTableOrderBySupported { get; set; }
 
+		/// <summary>
+		/// Provider supports TAKE limit for UPDATE query.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
+		/// </summary>
+		[DataMember(Order = 74)]
+		public bool IsUpdateTakeSupported { get; set; }
+
+		/// <summary>
+		/// Provider supports SKIP+TAKE limit for UPDATE query.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
+		/// </summary>
+		[DataMember(Order = 75)]
+		public bool IsUpdateSkipTakeSupported { get; set; }
+
+		/// <summary>
+		/// Provider supports TAKE limit for DELETE query.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
+		/// </summary>
+		[DataMember(Order = 76)]
+		public bool IsDeleteTakeSupported { get; set; }
+
+		/// <summary>
+		/// Provider supports SKIP+TAKE limit for DELETE query.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
+		/// </summary>
+		[DataMember(Order = 77)]
+		public bool IsDeleteSkipTakeSupported { get; set; }
 
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
@@ -582,6 +609,10 @@ namespace LinqToDB.SqlProvider
 				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
 				^ SupportsBooleanComparison                            .GetHashCode()
 				^ IsDerivedTableOrderBySupported                       .GetHashCode()
+				^ IsUpdateTakeSupported                                .GetHashCode()
+				^ IsUpdateSkipTakeSupported                            .GetHashCode()
+				^ IsDeleteTakeSupported                                .GetHashCode()
+				^ IsDeleteSkipTakeSupported                            .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -644,6 +675,10 @@ namespace LinqToDB.SqlProvider
 				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
 				&& SupportsBooleanComparison                             == other.SupportsBooleanComparison
 				&& IsDerivedTableOrderBySupported                        == other.IsDerivedTableOrderBySupported
+				&& IsUpdateTakeSupported                                 == other.IsUpdateTakeSupported
+				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported
+				&& IsDeleteTakeSupported                                 == other.IsDeleteTakeSupported
+				&& IsDeleteSkipTakeSupported                             == other.IsDeleteSkipTakeSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

@@ -937,16 +937,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP clause.")]
-		public void UpdateTop(
-			[DataSources(
-				TestProvName.AllAccess,
-				ProviderName.DB2,
-				TestProvName.AllClickHouse,
-				TestProvName.AllInformix,
-				ProviderName.SqlCe,
-				TestProvName.AllSapHana)]
-			string context)
+		public void UpdateTop([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -954,7 +945,7 @@ namespace Tests.xUpdate
 				using (new DisableLogging())
 				{
 					for (var i = 0; i < 10; i++)
-						db.Insert(new Parent { ParentID = 1000 + i });
+						db.Insert(new Parent { ParentID = 1000 + i, Value1 = 1000 + i });
 				}
 
 				var rowsAffected = db.Parent
@@ -968,16 +959,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateTakeOrdered(
-			[DataSources(
-				TestProvName.AllAccess,
-				ProviderName.DB2,
-				TestProvName.AllClickHouse,
-				TestProvName.AllInformix,
-				ProviderName.SqlCe,
-				TestProvName.AllSapHana,
-				TestProvName.AllSybase)]
-			string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP + ORDER BY clause.")]
+		public void TestUpdateTakeOrdered([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -985,7 +968,7 @@ namespace Tests.xUpdate
 				using (new DisableLogging())
 				{
 					for (var i = 0; i < 10; i++)
-						db.Insert(new Parent { ParentID = 1000 + i });
+						db.Insert(new Parent { ParentID = 1000 + i, Value1 = 1000 + i });
 				}
 
 				var entities =
@@ -999,19 +982,20 @@ namespace Tests.xUpdate
 					.Update(x => new Parent { Value1 = 1 });
 
 				Assert.That(rowsAffected, Is.EqualTo(5));
+				var data = db.Parent.Where(p => p.ParentID >= 1000).OrderBy(p => p.ParentID).Select(r => r.Value1!.Value).ToArray();
+				Assert.That(data, Is.EqualTo(new int[] { 1000, 1001, 1002, 1003, 1004, 1, 1, 1, 1, 1 }));
 			}
 		}
 
-		[Test]
-		public void TestUpdateSkipTake(
+		[Test(Description = "Mainly to test ORDER BY generation for ORACLE 23c+")]
+		public void TestUpdateOrdered(
 			[DataSources(
-				TestProvName.AllAccess,
-				TestProvName.AllClickHouse,
-				ProviderName.DB2,
-				TestProvName.AllInformix,
-				ProviderName.SqlCe,
-				TestProvName.AllSapHana,
-				TestProvName.AllSybase)]
+				TestProvName.AllDB2,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle21Minus,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase
+			)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1020,7 +1004,7 @@ namespace Tests.xUpdate
 				using (new DisableLogging())
 				{
 					for (var i = 0; i < 10; i++)
-						db.Insert(new Parent { ParentID = 1000 + i });
+						db.Insert(new Parent { ParentID = 1000 + i, Value1 = 1000 + i });
 				}
 
 				var entities =
@@ -1030,30 +1014,20 @@ namespace Tests.xUpdate
 					select x;
 
 				var rowsAffected = entities
-					.Skip(1)
-					.Take(5)
 					.Update(x => new Parent { Value1 = 1 });
 
-				Assert.Multiple(() =>
-				{
-					Assert.That(rowsAffected, Is.EqualTo(5));
-
-					Assert.That(db.Parent.Where(p => p.ParentID == 1000 + 9).Single().Value1, Is.Not.EqualTo(1));
-				});
+				Assert.That(rowsAffected, Is.EqualTo(9));
+				var data = db.Parent.Where(p => p.ParentID >= 1000).OrderBy(p => p.ParentID).Select(r => r.Value1!.Value).ToArray();
+				Assert.That(data, Is.EqualTo(new int[] { 1000, 1, 1, 1, 1, 1, 1, 1, 1, 1 }));
 			}
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP clause.")]
-		public void TestUpdateTakeNotOrdered(
+		public void TestUpdateSkipTakeNotOrdered(
 			[DataSources(
-				TestProvName.AllAccess,
-				TestProvName.AllClickHouse,
-				ProviderName.DB2,
-				TestProvName.AllInformix,
-				TestProvName.AllFirebird,
-				ProviderName.SqlCe,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSybase,
+				TestProvName.AllSqlServer2012Plus // needs fake order by for FETCH
+			)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1062,7 +1036,67 @@ namespace Tests.xUpdate
 				using (new DisableLogging())
 				{
 					for (var i = 0; i < 10; i++)
-						db.Insert(new Parent { ParentID = 1000 + i });
+						db.Insert(new Parent { ParentID = 1000 + i, Value1 = 1000 + i });
+				}
+
+				var entities =
+					from x in db.Parent
+					where x.ParentID > 1000
+					select x;
+
+				var rowsAffected = entities
+					.Skip(6)
+					.Take(5)
+					.Update(x => new Parent { Value1 = 1 });
+
+				Assert.That(rowsAffected, Is.EqualTo(3));
+			}
+		}
+
+		[Test]
+		public void TestUpdateSkipTakeOrdered(
+			[DataSources(
+				TestProvName.AllSybase
+			)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
+			{
+				using (new DisableLogging())
+				{
+					for (var i = 0; i < 10; i++)
+						db.Insert(new Parent { ParentID = 1000 + i, Value1 = 1000 + i });
+				}
+
+				var entities =
+					from x in db.Parent
+					where x.ParentID > 1000
+					orderby x.ParentID descending
+					select x;
+
+				var rowsAffected = entities
+					.Skip(2)
+					.Take(5)
+					.Update(x => new Parent { Value1 = 1 });
+
+				Assert.That(rowsAffected, Is.EqualTo(5));
+
+				var data = db.Parent.Where(p => p.ParentID >= 1000).OrderBy(p => p.ParentID).Select(r => r.Value1!.Value).ToArray();
+				Assert.That(data, Is.EqualTo(new int[] { 1000, 1001, 1002, 1, 1, 1, 1, 1, 1008, 1009 }));
+			}
+		}
+
+		[Test]
+		public void TestUpdateTakeNotOrdered([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
+			{
+				using (new DisableLogging())
+				{
+					for (var i = 0; i < 10; i++)
+						db.Insert(new Parent { ParentID = 1000 + i, Value1 = 1000 + i });
 				}
 
 				var entities =
@@ -1641,7 +1675,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-
 		sealed class TextData
 		{
 			[Column]
@@ -1653,7 +1686,6 @@ namespace Tests.xUpdate
 			[Column(Length = int.MaxValue)]
 			public string? Items2 { get; set; }
 		}
-
 
 		[Test]
 		public void TestSetValueExpr(

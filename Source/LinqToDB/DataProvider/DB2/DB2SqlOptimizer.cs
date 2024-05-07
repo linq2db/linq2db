@@ -16,9 +16,9 @@ namespace LinqToDB.DataProvider.DB2
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			// DB2 LUW 9/10 supports only FETCH, v11 adds OFFSET, but for that we need to introduce versions into DB2 provider first
-			statement = SeparateDistinctFromPagination(statement, q => q.Select.SkipValue != null);
-			statement = ReplaceDistinctOrderByWithRowNumber(statement, q => q.Select.SkipValue != null);
-			statement = ReplaceTakeSkipWithRowNumber(SqlProviderFlags, statement, static (SqlProviderFlags, query) => query.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(query.Select.TakeValue, query.Select.SkipValue), true);
+			//statement = SeparateDistinctFromPagination(statement, q => q.Select.SkipValue != null);
+			//statement = ReplaceDistinctOrderByWithRowNumber(statement, q => q.Select.SkipValue != null);
+			//statement = ReplaceTakeSkipWithRowNumber(SqlProviderFlags, statement, static (SqlProviderFlags, query) => query.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(query.Select.TakeValue, query.Select.SkipValue), true);
 
 			// This is mutable part
 			return statement.QueryType switch
