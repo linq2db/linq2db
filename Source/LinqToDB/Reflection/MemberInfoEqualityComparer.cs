@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Reflection
 {
 	public class MemberInfoEqualityComparer : IEqualityComparer<MemberInfo>
 	{
@@ -30,6 +30,11 @@ namespace LinqToDB.Common
 				return false;
 			}
 
+			if (x is VirtualPropertyInfoBase xv)
+			{
+				return xv.Equals(y);
+			}
+
 			return x.MetadataToken == y.MetadataToken && x.Module.Equals(y.Module);
 		}
 
@@ -37,7 +42,11 @@ namespace LinqToDB.Common
 		{
 			unchecked
 			{
-				return (obj.MetadataToken * 397) ^ obj.Module.GetHashCode();
+				// We do not support obj.MetadataToken and obj.Module
+				if (obj is VirtualPropertyInfoBase)
+					return obj.GetHashCode();
+
+				return obj.MetadataToken * 397 ^ obj.Module.GetHashCode();
 			}
 		}
 	}

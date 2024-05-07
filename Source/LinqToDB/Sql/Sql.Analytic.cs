@@ -1023,7 +1023,7 @@ namespace LinqToDB
 
 		#endregion
 
-		[Sql.Extension("ROW_NUMBER()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("ROW_NUMBER()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, CanBeNull = false)]
 		public static IAnalyticFunctionWithoutWindow<long> RowNumber(this Sql.ISqlExtension? ext)
 		{
 			throw new LinqException($"'{nameof(RowNumber)}' is server-side method.");

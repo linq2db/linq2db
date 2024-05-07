@@ -539,15 +539,6 @@ namespace LinqToDB.Linq.Builder
 								return node;
 						}
 					}
-					else if (node.NodeType != ExpressionType.ArrayIndex && node.NodeType != ExpressionType.Assign)
-					{
-						var left  = Visit(node.Left)!;
-						var right = Visit(node.Right)!;
-
-						var updatedNode = node.Update(left, node.Conversion, right);
-						if (!ExpressionEqualityComparer.Instance.Equals(updatedNode, node))
-							return Visit(updatedNode);
-					}
 				}
 
 				var newNode = TranslateExpression(node, useSql: true);

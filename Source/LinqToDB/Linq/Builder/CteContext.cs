@@ -101,7 +101,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (!_recursiveMap.TryGetValue(path, out var newPlaceholder))
 				{
-					var field = new SqlField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field", true);
+					// For recursive CTE we cannot calculate nullability correctly, so based on path.Type
+					var field = new SqlField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field", path.Type.IsNullableType());
 
 					newPlaceholder = ExpressionBuilder.CreatePlaceholder((SelectQuery?)null, field, path, trackingPath: path);
 					_recursiveMap[path] = newPlaceholder;

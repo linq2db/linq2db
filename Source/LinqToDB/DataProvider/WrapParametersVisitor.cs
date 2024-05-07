@@ -1,7 +1,5 @@
 ﻿using System;
 
-using LinqToDB.Common;
-
 namespace LinqToDB.DataProvider
 {
 	using SqlQuery;
@@ -12,19 +10,21 @@ namespace LinqToDB.DataProvider
 		bool      _needCast;
 		bool      _inModifier;
 		bool      _inInsert;
+		bool      _inInsertOrUpdate;
 		WrapFlags _wrapFlags;
 
 		[Flags]
 		public enum WrapFlags
 		{
-			None          = 0,
-			InSelect      = 1 << 0,
-			InUpdateSet   = 1 << 1,
-			InInsertValue = 1 << 2,
-			InOutput      = 1 << 3,
-			InMerge       = 1 << 4,
+			None             = 0,
+			InSelect         = 1 << 0,
+			InUpdateSet      = 1 << 1,
+			InInsertValue    = 1 << 2,
+			InInsertOrUpdate = 1 << 4,
+			InOutput         = 1 << 5,
+			InMerge          = 1 << 6,
 
-			All = InSelect | InUpdateSet | InInsertValue | InOutput | InMerge
+			All = InSelect | InUpdateSet | InInsertValue | InInsertOrUpdate | InOutput | InMerge
 		}
 	
 		public WrapParametersVisitor(VisitMode visitMode) : base(visitMode, null)
@@ -60,11 +60,6 @@ namespace LinqToDB.DataProvider
 		NeedCastScope NeedCast(bool needCast)
 		{
 			return new NeedCastScope(this, needCast);
-		}
-
-		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
-		{
-			return base.VisitExprExprPredicate(predicate);
 		}
 
 		protected override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
@@ -103,19 +98,37 @@ namespace LinqToDB.DataProvider
 
 		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
-			/*if (element.Expression is SqlParameter param)
-			{
-				param.NeedsCast = false;
-			}*/
-
 			using var scope = NeedCast(false);
 			return base.VisitSqlCastExpression(element);
 		}
 
 		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
-			using var scope = NeedCast(_wrapFlags.HasFlag(_inInsert ? WrapFlags.InInsertValue : WrapFlags.InUpdateSet));
-			return base.VisitSqlSetExpression(element);
+			var saveNeedCast = _needCast;
+
+			if (!_needCast)
+			{
+				if (_inInsertOrUpdate)
+				{
+					if (_wrapFlags.HasFlag(WrapFlags.InInsertOrUpdate))
+						_needCast = true;
+				}
+				else if (_inInsert)
+				{
+					if (_wrapFlags.HasFlag(WrapFlags.InInsertValue))
+						_needCast = true;
+				}
+				else if (_wrapFlags.HasFlag(WrapFlags.InUpdateSet))
+				{
+					_needCast = true;
+				}
+			}
+
+			var result = base.VisitSqlSetExpression(element);
+
+			_needCast = saveNeedCast;
+
+			return result;
 		}
 
 		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
@@ -157,6 +170,16 @@ namespace LinqToDB.DataProvider
 		{
 			using var scope = NeedCast(_wrapFlags.HasFlag(WrapFlags.InMerge));
 			return base.VisitSqlMergeOperationClause(element);
+		}
+
+		protected override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+		{
+			var saveInInsertOrUpdate = _inInsertOrUpdate;
+			_inInsertOrUpdate = true;
+			var result = base.VisitSqlInsertOrUpdateStatement(element);
+			_inInsertOrUpdate = saveInInsertOrUpdate;
+
+			return result;
 		}
 	}
 }
