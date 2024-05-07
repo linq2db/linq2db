@@ -5,13 +5,13 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
+	using Reflection;
 
 	/// <inheritdoc />
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
 	/// </summary>
-	public class SpecialPropertyInfo : PropertyInfo, IEquatable<SpecialPropertyInfo>
+	public class SpecialPropertyInfo : VirtualPropertyInfoBase, IEquatable<SpecialPropertyInfo>
 	{
 		private static readonly MethodInfo _dummyGetter = typeof(SpecialPropertyInfo).GetMethod(nameof(DummyGetter), BindingFlags.Instance | BindingFlags.NonPublic)!;
 		private static readonly MethodInfo _dummySetter = typeof(SpecialPropertyInfo).GetMethod(nameof(DummySetter), BindingFlags.Instance | BindingFlags.NonPublic)!;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -876,31 +877,46 @@ namespace LinqToDB.SqlProvider
 
 			var expr = predicate;
 
-			if (expr.WithNull == null && (expr.Operator == SqlPredicate.Operator.Equal || expr.Operator == SqlPredicate.Operator.NotEqual))
+			if ((expr.Operator == SqlPredicate.Operator.Equal || expr.Operator == SqlPredicate.Operator.NotEqual))
 			{
-				if (expr.Expr2 is ISqlPredicate expr2Predicate)
+				if (expr.WithNull == null)
 				{
-					var boolValue1 = QueryHelper.GetBoolValue(expr.Expr1, _evaluationContext);
-					if (boolValue1 != null)
+					if (expr.Expr2 is ISqlPredicate expr2Predicate)
 					{
-						var isNot = boolValue1.Value != (expr.Operator == SqlPredicate.Operator.Equal);
-						var transformed = expr2Predicate.MakeNot(isNot);
+						var boolValue1 = QueryHelper.GetBoolValue(expr.Expr1, _evaluationContext);
+						if (boolValue1 != null)
+						{
+							var isNot       = boolValue1.Value != (expr.Operator == SqlPredicate.Operator.Equal);
+							var transformed = expr2Predicate.MakeNot(isNot);
 
-						return transformed;
+							return transformed;
+						}
+					}
+
+					if (expr.Expr1 is ISqlPredicate expr1Predicate)
+					{
+						var boolValue2 = QueryHelper.GetBoolValue(expr.Expr2, _evaluationContext);
+						if (boolValue2 != null)
+						{
+							var isNot       = boolValue2.Value != (expr.Operator == SqlPredicate.Operator.Equal);
+							var transformed = expr1Predicate.MakeNot(isNot);
+							return transformed;
+						}
 					}
 				}
 
-				if (expr.Expr1 is ISqlPredicate expr1Predicate)
+				if (QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlValue { Value: null })
 				{
-					var boolValue2 = QueryHelper.GetBoolValue(expr.Expr2, _evaluationContext);
-					if (boolValue2 != null)
-					{
-						var isNot = boolValue2.Value != (expr.Operator == SqlPredicate.Operator.Equal);
-						var transformed = expr1Predicate.MakeNot(isNot);
-						return transformed;
-					}
+					return Visit(new SqlPredicate.IsNull(predicate.Expr2, expr.Operator == SqlPredicate.Operator.NotEqual));
 				}
+
+				if (QueryHelper.UnwrapNullablity(predicate.Expr2) is SqlValue { Value: null })
+				{
+					return Visit(new SqlPredicate.IsNull(predicate.Expr1, expr.Operator == SqlPredicate.Operator.NotEqual));
+				}
+
 			}
+
 
 			switch (expr.Operator)
 			{
@@ -973,6 +989,45 @@ namespace LinqToDB.SqlProvider
 				var firstPredicate = predicate.SubQuery.Where.SearchCondition.Predicates[0];
 				if (firstPredicate is SqlPredicate.FalsePredicate)
 					return firstPredicate;
+			}
+
+			return predicate;
+		}
+
+		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var newElement = base.VisitInListPredicate(predicate);
+
+			if (!ReferenceEquals(newElement, predicate))
+				return Visit(newElement);
+
+			if (_evaluationContext.ParameterValues == null)
+			{
+				return predicate;
+			}
+
+			if (predicate.Values is [SqlParameter valuesParam] && _evaluationContext.ParameterValues!.TryGetValue(valuesParam, out var parameterValue))
+			{
+				switch (parameterValue.ProviderValue)
+				{
+					case null:
+						return SqlPredicate.MakeBool(predicate.IsNot);
+
+					// Be careful that string is IEnumerable, we don't want to handle x.In(string) here
+					case string:
+						break;
+					case IEnumerable items:
+					{
+						if (predicate.Expr1 is not ISqlTableSource)
+						{
+							bool noValues = !items.Cast<object?>().Any();
+							if (noValues)
+								return SqlPredicate.MakeBool(predicate.IsNot);
+						}
+
+						break;
+					}
+				}
 			}
 
 			return predicate;

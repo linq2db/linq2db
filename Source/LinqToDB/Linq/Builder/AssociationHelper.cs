@@ -6,11 +6,10 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
-	using Mapping;
 	using Reflection;
+	using Mapping;
 
 	static class AssociationHelper
 	{
