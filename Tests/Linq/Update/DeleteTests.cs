@@ -249,6 +249,10 @@ namespace Tests.xUpdate
 		public void DeleteTakeNotOrdered(
 			[DataSources(
 			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
+			TestProvName.AllInformix,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllSapHana,
 			ProviderName.SqlCe,
 			ProviderName.SQLiteMS
 			)]
@@ -281,8 +285,12 @@ namespace Tests.xUpdate
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the TOP + ORDER BY clause.")]
 		public void DeleteTakeOrdered([DataSources(
 			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
+			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			ProviderName.SQLiteMS,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllSapHana,
 			TestProvName.AllOracle
 			)] string context)
 		{
@@ -322,9 +330,13 @@ namespace Tests.xUpdate
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the TOP + ORDER BY clause.")]
 		public void DeleteSkipTakeOrdered([DataSources(
 			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
+			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			ProviderName.SQLiteMS,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllSapHana,
 			TestProvName.AllOracle
 			)] string context)
 		{
@@ -365,9 +377,13 @@ namespace Tests.xUpdate
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the SKIP clause.")]
 		public void DeleteSkipTakeNotOrdered([DataSources(
 			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
+			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			ProviderName.SQLiteMS,
 			TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllSapHana,
 			TestProvName.AllOracle
 			)] string context)
 		{
@@ -404,10 +420,14 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteOrdered([DataSources(
 			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
 			TestProvName.AllDB2,
+			TestProvName.AllInformix,
 			TestProvName.AllSQLite,
 			TestProvName.AllOracle,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllSapHana,
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase
 			)] string context)

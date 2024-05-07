@@ -960,7 +960,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP + ORDER BY clause.")]
-		public void TestUpdateTakeOrdered([DataSources] string context)
+		public void TestUpdateTakeOrdered([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -991,9 +991,13 @@ namespace Tests.xUpdate
 		public void TestUpdateOrdered(
 			[DataSources(
 			ProviderName.SqlCe,
+			TestProvName.AllInformix,
+			TestProvName.AllClickHouse,
 			TestProvName.AllDB2,
 			TestProvName.AllSQLite,
 			TestProvName.AllOracle21Minus,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllSapHana,
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase
 			)]
@@ -1026,9 +1030,10 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateSkipTakeNotOrdered(
 			[DataSources(
-				TestProvName.AllAccess,
-				TestProvName.AllSybase,
-				TestProvName.AllSqlServer2012Plus // needs fake order by for FETCH
+			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSybase,
+			TestProvName.AllSqlServer2012Plus // needs fake order by for FETCH
 			)]
 			string context)
 		{
@@ -1059,6 +1064,7 @@ namespace Tests.xUpdate
 		public void TestUpdateSkipTakeOrdered(
 			[DataSources(
 			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase
 			)]
 			string context)
@@ -1091,7 +1097,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess)] string context)
+		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
