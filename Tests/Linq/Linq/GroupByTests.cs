@@ -2962,6 +2962,43 @@ namespace Tests.Linq
 				select new { pmp });
 		}
 
+		[Test]
+		public void GroupByConstants([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var constants =
+				from c in db.Child
+				select new { ChildId = 1, ParentId = 2 };
+
+			var query =
+				from c in constants
+				group c by new { c.ChildId, c.ParentId }
+				into g
+				select new { g.Key, Count = g.Count() };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByConstantsEmpty([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var constants =
+				from c in db.Child.Where(c => false)
+				select new { ChildId = 1, ParentId = 2 };
+
+			var query =
+				from c in constants
+				group c by new { c.ChildId, c.ParentId }
+				into g
+				select new { g.Key, Count = g.Count() };
+
+			AssertQuery(query);
+		}
+
+
 		#region issue 4256
 		[Test]
 		public void TestIssue4256AnonymousClass([DataSources] string context)

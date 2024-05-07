@@ -259,6 +259,12 @@ namespace LinqToDB.Linq.Builder
 		{
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(groupByExpression);
 
+			// it is a case whe we do not group elements
+			if (placeholders.Count == 1 && QueryHelper.IsConstantFast(placeholders[0].Sql))
+			{
+				return;
+			}
+
 			foreach (var p in placeholders)
 			{
 				if (currentPlaceholders.Find(cp => ExpressionEqualityComparer.Instance.Equals(cp.Path, p.Path)) == null)

@@ -600,11 +600,8 @@ namespace LinqToDB.SqlQuery
 					var groupByItem = selectQuery.GroupBy.Items[i];
 					if (QueryHelper.IsConstantFast(groupByItem))
 					{
-						if (!selectQuery.Select.Columns.Any(c => ReferenceEquals(c.Expression, groupByItem)))
-						{
-							selectQuery.GroupBy.Items.RemoveAt(i);
-							isModified = true;
-						}
+						selectQuery.GroupBy.Items.RemoveAt(i);
+						isModified = true;
 					}
 				}
 			}
@@ -1481,6 +1478,8 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
+			List<SqlColumn>? groupingConstants = null;
+
 			foreach (var column in subQuery.Select.Columns)
 			{
 				if (QueryHelper.ContainsWindowFunction(column.Expression))
@@ -1517,15 +1516,22 @@ namespace LinqToDB.SqlQuery
 
 				if (QueryHelper.IsConstantFast(column.Expression))
 				{
-					// check that column has at least one reference 
-					//
 					if (parentQuery.GroupBy.HasElement(column))
 					{
-						if (parentQuery.Select.Columns.Count == 0 || parentQuery.Select.HasElement(column))
-						{
-							return false;
-						}
+						groupingConstants ??= new List<SqlColumn>();
+						groupingConstants.Add(column);
 					}
+				}
+			}
+
+			if (groupingConstants != null)
+			{
+				// All constants in grouping will be optimized to query which produce different query. Optimization will be done in 'OptimizeGroupBy'.
+				// See 'GroupByConstantsEmpty' test. It will fail if this check is not performed.
+				// 
+				if (!parentQuery.GroupBy.EnumItems().Except(groupingConstants, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default).Any())
+				{
+					return false;
 				}
 			}
 
