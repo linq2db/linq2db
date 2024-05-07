@@ -1656,7 +1656,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			// Do not optimize t.Field IN (SELECT x FROM o)
-			if (parentQuery == _inSubquery && (subQuery.Select.HasModifier || !subQuery.GroupBy.IsEmpty || subQuery.HasSetOperators))
+			if (parentQuery == _inSubquery && (subQuery.Select.HasModifier || subQuery.HasSetOperators))
 			{
 				return false;
 			}

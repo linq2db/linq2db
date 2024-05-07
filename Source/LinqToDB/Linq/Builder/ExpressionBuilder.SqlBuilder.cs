@@ -1065,7 +1065,7 @@ namespace LinqToDB.Linq.Builder
 					var unary     = (UnaryExpression)expression;
 					var testExpr  = MakeIsPredicateExpression(context, Expression.TypeIs(unary.Operand, unary.Type));
 					var trueCase  = Expression.Convert(unary.Operand, unary.Type);
-					var falseCase = Expression.Default(unary.Type);
+					var falseCase = new DefaultValueExpression(MappingSchema, unary.Type);
 
 					var cond = Expression.Condition(testExpr, trueCase, falseCase);
 
@@ -3339,6 +3339,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			static bool? IsNull(Expression sqlExpr)
 			{
+				if (sqlExpr.IsNullValue())
+					return true;
+
 				if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					return null;
 
@@ -3840,7 +3843,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (body.IsNullValue())
 						{
-							return Expression.Default(member.GetMemberType());
+							return new DefaultValueExpression(MappingSchema, member.GetMemberType());
 						}
 
 						if (body is SqlGenericConstructorExpression genericConstructor)
@@ -3992,7 +3995,7 @@ namespace LinqToDB.Linq.Builder
 					if (strict)
 						return CreateSqlError(null, nextPath![0]);
 
-					return Expression.Default(nextPath![0].Type);
+					return new DefaultValueExpression(MappingSchema, nextPath![0].Type);
 				}
 
 				case ExpressionType.MemberInit:
@@ -4093,7 +4096,7 @@ namespace LinqToDB.Linq.Builder
 					if (strict)
 						return CreateSqlError(null, nextPath![0]);
 
-					return Expression.Default(nextPath![0].Type);
+					return new DefaultValueExpression(MappingSchema, nextPath![0].Type);
 
 				}
 				case ExpressionType.Conditional:
@@ -4124,9 +4127,10 @@ namespace LinqToDB.Linq.Builder
 					if (trueExpr.Type != falseExpr.Type)
 					{
 						if (trueExpr.IsNullValue())
-							trueExpr = Expression.Default(falseExpr.Type);
+							trueExpr = new DefaultValueExpression(MappingSchema, falseExpr.Type);
 						else if (falseExpr.IsNullValue())
-							falseExpr = Expression.Default(trueExpr.Type);					}
+							falseExpr = new DefaultValueExpression(MappingSchema, trueExpr.Type);
+					}
 
 					var newExpr = (Expression)Expression.Condition(cond.Test, trueExpr, falseExpr);
 
@@ -4148,7 +4152,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						*/
 
-						return Expression.Default(expr.Type);
+						return new DefaultValueExpression(MappingSchema, expr.Type);
 					}
 
 					break;
@@ -4166,7 +4170,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					*/
 
-					return Expression.Default(expr.Type);
+					return new DefaultValueExpression(MappingSchema, expr.Type);
 				}
 
 				/*
@@ -4234,10 +4238,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (constExpr.Value is true)
 							return truePath;
-						return Expression.Default(truePath.Type);
+						return new DefaultValueExpression(MappingSchema, truePath.Type);
 					}
 
-					var falsePath = Expression.Default(truePath.Type);
+					var falsePath = new DefaultValueExpression(MappingSchema, truePath.Type);
 
 					var conditional = Expression.Condition(isPredicate, truePath, falsePath);
 
@@ -4470,7 +4474,6 @@ namespace LinqToDB.Linq.Builder
 					var corrected = ExecuteMake(rootContext.BuildContext, path, flags);
 
 					if (!ExpressionEqualityComparer.Instance.Equals(corrected, path) &&
-						corrected is not DefaultExpression &&
 						corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
 					{
 						var newCorrected = MakeExpression(rootContext.BuildContext, corrected, flags);
@@ -4646,7 +4649,7 @@ namespace LinqToDB.Linq.Builder
 				var unary     = (UnaryExpression)path;
 				var testExpr  = MakeIsPredicateExpression(currentContext, Expression.TypeIs(unary.Operand, unary.Type));
 				var trueCase  = Expression.Convert(unary.Operand, unary.Type);
-				var falseCase = Expression.Default(unary.Type);
+				var falseCase = new DefaultValueExpression(MappingSchema, unary.Type);
 
 				if (testExpr is ConstantExpression constExpr)
 				{
