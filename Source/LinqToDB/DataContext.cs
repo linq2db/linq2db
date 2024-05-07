@@ -670,6 +670,6 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets service provider, used for data connection instance.
 		/// </summary>
-		IServiceProvider IInfrastructure<IServiceProvider>.Instance => DataProvider.ServiceProvider;
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
 	}
 }

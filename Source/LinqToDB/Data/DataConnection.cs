@@ -444,8 +444,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
 
-		public IServiceProvider ServiceProvider => DataProvider.ServiceProvider;
-
 		/// <summary>
 		/// Database provider implementation for specific database engine.
 		/// </summary>
@@ -1481,6 +1479,6 @@ namespace LinqToDB.Data
 			return DataProvider.GetCommandBehavior(commandBehavior);
 		}
 
-		IServiceProvider IInfrastructure<IServiceProvider>.Instance => DataProvider.ServiceProvider;
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
 	}
 }
