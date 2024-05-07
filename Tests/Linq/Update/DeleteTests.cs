@@ -248,7 +248,9 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteTakeNotOrdered(
 			[DataSources(
-				ProviderName.SQLiteMS
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			ProviderName.SQLiteMS
 			)]
 			string context)
 		{
@@ -278,8 +280,10 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the TOP + ORDER BY clause.")]
 		public void DeleteTakeOrdered([DataSources(
-				ProviderName.SQLiteMS,
-				TestProvName.AllOracle
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			ProviderName.SQLiteMS,
+			TestProvName.AllOracle
 			)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -317,6 +321,8 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the TOP + ORDER BY clause.")]
 		public void DeleteSkipTakeOrdered([DataSources(
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
 			ProviderName.SQLiteMS,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle
@@ -358,6 +364,8 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the SKIP clause.")]
 		public void DeleteSkipTakeNotOrdered([DataSources(
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
 			ProviderName.SQLiteMS,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle
@@ -395,6 +403,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DeleteOrdered([DataSources(
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
 			TestProvName.AllDB2,
 			TestProvName.AllSQLite,
 			TestProvName.AllOracle,

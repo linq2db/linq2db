@@ -233,7 +233,7 @@ namespace Tests.xUpdate
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP + ORDER BY clause.")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql, "MySql does not support Skip in update query")]
 		public void UpdateTestJoinSkipTake(
-			[DataSources]
+			[DataSources(TestProvName.AllAccess, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();

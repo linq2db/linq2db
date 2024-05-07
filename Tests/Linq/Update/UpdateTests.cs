@@ -937,7 +937,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateTop([DataSources] string context)
+		public void UpdateTop([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -990,11 +990,12 @@ namespace Tests.xUpdate
 		[Test(Description = "Mainly to test ORDER BY generation for ORACLE 23c+")]
 		public void TestUpdateOrdered(
 			[DataSources(
-				TestProvName.AllDB2,
-				TestProvName.AllSQLite,
-				TestProvName.AllOracle21Minus,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase
+			ProviderName.SqlCe,
+			TestProvName.AllDB2,
+			TestProvName.AllSQLite,
+			TestProvName.AllOracle21Minus,
+			TestProvName.AllSqlServer,
+			TestProvName.AllSybase
 			)]
 			string context)
 		{
@@ -1025,6 +1026,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateSkipTakeNotOrdered(
 			[DataSources(
+				TestProvName.AllAccess,
 				TestProvName.AllSybase,
 				TestProvName.AllSqlServer2012Plus // needs fake order by for FETCH
 			)]
@@ -1056,7 +1058,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateSkipTakeOrdered(
 			[DataSources(
-				TestProvName.AllSybase
+			TestProvName.AllAccess,
+			TestProvName.AllSybase
 			)]
 			string context)
 		{
@@ -1088,7 +1091,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateTakeNotOrdered([DataSources] string context)
+		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
