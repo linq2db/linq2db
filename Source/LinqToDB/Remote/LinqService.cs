@@ -391,7 +391,7 @@ namespace LinqToDB.Remote
 
 				if (fieldType.IsEnum || fieldType.IsNullable() && fieldType.ToNullableUnderlying().IsEnum)
 				{
-					var stringConverter = db.MappingSchema.GetConverter(new DbDataType(typeof(string)), new DbDataType(fieldType), false);
+					var stringConverter = db.MappingSchema.GetConverter(new DbDataType(typeof(string)), new DbDataType(fieldType), false, ConversionType.Common);
 					if (stringConverter != null)
 						fieldType = typeof(string);
 					else

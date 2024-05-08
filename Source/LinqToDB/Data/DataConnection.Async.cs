@@ -349,7 +349,7 @@ namespace LinqToDB.Data
 						TraceLevel    = TraceLevel.Info,
 						CommandText   = sql,
 						StartTime     = now,
-						ExecutionTime = sw!.Elapsed
+						ExecutionTime = sw?.Elapsed
 					});
 				}
 

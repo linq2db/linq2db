@@ -32,7 +32,9 @@ namespace LinqToDB.Linq.Builder
 			List<LoadWithInfo[]>? loadWith,
 			out bool isLeft)
 		{
-			Expression dataContextExpr = ExpressionConstants.DataContextParam;
+
+			Expression dataContextExpr = ExpressionBuilder.DataContextParam;
+
 			if (dataContextExpr.Type != builder.DataContext.GetType())
 			{
 				dataContextExpr = Expression.Convert(dataContextExpr, builder.DataContext.GetType());

@@ -21,7 +21,7 @@
 		<PackageVersion Include="System.ComponentModel.Annotations"                     Version="5.0.0"         />
 		<!--Source of NullabilityInfoContext for runtimes before .net 6-->
 		<PackageVersion Include="Nullability.Source"                                    Version="2.3.0"         />
-		<PackageVersion Include="PolySharp"                                             Version="1.13.2"        />
+		<PackageVersion Include="PolySharp"                                             Version="1.14.1"        />
 		<!--build support-->
 		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.139"       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="8.0.0-preview.23364.2" />
@@ -116,17 +116,17 @@
 		<PackageVersion Include="System.Text.Json"                                      Version="7.0.3"         />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net8.0' ">
 		<PackageVersion Include="System.Data.Odbc"                                      Version="7.0.0"         />
 		<PackageVersion Include="System.Data.OleDb"                                     Version="7.0.0"         />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="7.0.0"         />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
-		<PackageVersion Include="Npgsql"                                                Version="8.0.0-rc.2"    />
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net8.0' ">
+		<PackageVersion Include="Npgsql"                                                Version="8.0.2"    />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net7.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net7.0' AND '$(TargetFramework)' != 'net8.0' ">
 		<PackageVersion Include="Npgsql"                                                Version="7.0.6"         />
 	</ItemGroup>
 

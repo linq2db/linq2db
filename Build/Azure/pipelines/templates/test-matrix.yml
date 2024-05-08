@@ -198,7 +198,7 @@ jobs:
         - name: Access_ACE_1
           title: Access ACE (OLEDB/ODBC) x86
           config_win: access.ace
-          script_win_global: access.ace.cmd
+          psscript_win_global: access.ace.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -217,7 +217,7 @@ jobs:
         - name: Access_ACE_2
           title: Access ACE (OLEDB/ODBC) x86
           config_win: access.ace
-          script_win_global: access.ace.cmd
+          psscript_win_global: access.ace.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -236,7 +236,7 @@ jobs:
         - name: Access_ACE_x64
           title: Access ACE (ODBC-only) x64 # x64 OLEDB crashes randomly https://github.com/dotnet/runtime/issues/46187
           config_win: access.ace.x64
-          script_win_global: access.ace.x64.cmd
+          psscript_win_global: access.ace.x64.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false

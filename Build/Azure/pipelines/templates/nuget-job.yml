@@ -68,14 +68,14 @@ jobs:
 
   - task: CmdLine@2
     inputs:
-      script: $(Build.SourcesDirectory)/NuGet/Pack.bat
+      script: $(Build.SourcesDirectory)/NuGet/Pack.cmd
       workingDirectory: $(Build.SourcesDirectory)/BuiltNuGet
     displayName: Build nugets for Azure Artifacts
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], variables['release_branch']))
 
   - task: CmdLine@2
     inputs:
-      script: $(Build.SourcesDirectory)/NuGet/Pack.bat snupkg
+      script: $(Build.SourcesDirectory)/NuGet/Pack.cmd snupkg
       workingDirectory: $(Build.SourcesDirectory)/BuiltNuGet
     displayName: Build nugets for Nuget.org
     condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))

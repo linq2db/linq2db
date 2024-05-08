@@ -19,8 +19,8 @@ namespace LinqToDB.Expressions
 	/// </summary>
 	public sealed class TypeMapper
 	{
-		private static readonly Type[] _wrapperContructorParameters1 = new[] { typeof(object) };
-		private static readonly Type[] _wrapperContructorParameters2 = new[] { typeof(object), typeof(Delegate[]) };
+		private static readonly Type[] _wrapperConstructorParameters1 = [typeof(object)];
+		private static readonly Type[] _wrapperConstructorParameters2 = [typeof(object), typeof(Delegate[])];
 
 		// [type name] = originalType
 		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>();
@@ -205,11 +205,11 @@ namespace LinqToDB.Expressions
 				var eventsHandler = BuildWrapperEvents (wrapperType);
 
 				// pre-register factory, so we don't need to use concurrent dictionary to access factory later
-				var types = delegates != null ? _wrapperContructorParameters2 : _wrapperContructorParameters1;
+				var types = delegates != null ? _wrapperConstructorParameters2 : _wrapperConstructorParameters1;
 				var ctor = wrapperType.GetConstructor(types);
 
 				if (ctor == null)
-					throw new LinqToDBException($"Cannot find contructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
+					throw new LinqToDBException($"Cannot find constructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
 
 				var pInstance = Expression.Parameter(typeof(object));
 
