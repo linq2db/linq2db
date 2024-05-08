@@ -1938,8 +1938,7 @@ namespace LinqToDB.SqlQuery
 				{
 					if (selectQuery.From.Tables.Count == 1)
 					{
-						if (!selectQuery.Where.IsEmpty
-						    || !selectQuery.GroupBy.IsEmpty
+						if (!selectQuery.GroupBy.IsEmpty
 						    || !selectQuery.Having.IsEmpty
 						    || !selectQuery.OrderBy.IsEmpty)
 						{
