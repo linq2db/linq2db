@@ -1503,7 +1503,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (CanBeCompiled(expression, false))
 			{
-				var param = _parametersContext.BuildParameter(context, expression, null);
+				var param = _parametersContext.BuildParameter(context, expression, null, buildParameterType: ParametersContext.BuildParameterType.Bool);
 				if (param != null)
 				{
 					return new SqlPredicate.Expr(param.SqlParameter);
