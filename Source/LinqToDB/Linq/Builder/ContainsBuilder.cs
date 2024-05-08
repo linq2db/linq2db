@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 			var sequence = new SubQueryContext(buildResult.BuildContext);
 
 			var containsContext = new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence);
-			var placeholder     = containsContext.CreatePlaceholder(ProjectFlags.SQL);
+			var placeholder     = containsContext.TryCreatePlaceholder();
 			if (placeholder == null)
 				return BuildSequenceResult.Error(methodCall, ErrorHelper.Error_Correlated_Subqueries);
 
@@ -118,15 +118,9 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (_cachedPlaceholder != null)
-					return _cachedPlaceholder;
-
-				var placeholder = CreatePlaceholder(flags.SqlFlag());
+				var placeholder = TryCreatePlaceholder();
 				if (placeholder == null)
 					return path;
-
-				if (!flags.IsTest())
-					_cachedPlaceholder = placeholder;
 
 				return placeholder;
 			}
@@ -137,6 +131,16 @@ namespace LinqToDB.Linq.Builder
 				if (_cachedPlaceholder != null)
 					result._cachedPlaceholder = context.CloneExpression(_cachedPlaceholder);
 				return result;
+			}
+
+			public SqlPlaceholderExpression? TryCreatePlaceholder()
+			{
+				if (_cachedPlaceholder != null)
+					return _cachedPlaceholder;
+
+				_cachedPlaceholder = CreatePlaceholder(ProjectFlags.SQL);
+
+				return _cachedPlaceholder;
 			}
 
 			public SqlPlaceholderExpression? CreatePlaceholder(ProjectFlags flags)
