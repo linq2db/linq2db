@@ -78,12 +78,13 @@ namespace LinqToDB
 		/// Creates database context object that uses a <see cref="DataOptions"/> to configure the connection.
 		/// </summary>
 		/// <param name="options">Options, setup ahead of time.</param>
-#pragma warning disable CS8618
 		public DataContext(DataOptions options)
 		{
-			(Options = options).Apply(this);
+			Options       = options;
+			MappingSchema = default!;
+			DataProvider  = default!;
+			Options.Apply(this);
 		}
-#pragma warning restore CS8618
 
 		/// <summary>
 		/// Current DataContext options
@@ -669,6 +670,6 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets service provider, used for data connection instance.
 		/// </summary>
-		IServiceProvider IInfrastructure<IServiceProvider>.Instance => DataProvider.ServiceProvider;
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
 	}
 }

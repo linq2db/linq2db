@@ -35,13 +35,6 @@ namespace LinqToDB.SqlQuery.Visitors
 			Stack?.Clear();
 		}
 
-		// TODO: debug, remove
-		protected override bool ShouldReplace(IQueryElement element)
-		{
-			var result = base.ShouldReplace(element);
-			return result;
-		}
-
 		public override IQueryElement ConvertElement(IQueryElement element)
 		{
 			var newElement = _convertFunc(this, element);

@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS8604 // TODO:WAITFIX
-using System;
+﻿using System;
 
 namespace LinqToDB
 {
@@ -40,7 +39,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x));
+				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x)!);
 				builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.Between(args[0], false, args[1], args[2]));
 			}
 		}
@@ -49,7 +48,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x));
+				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x)!);
 				builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.Between(args[0], true, args[1], args[2]));
 			}
 		}

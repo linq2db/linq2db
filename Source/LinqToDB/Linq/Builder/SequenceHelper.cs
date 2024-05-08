@@ -573,9 +573,7 @@ namespace LinqToDB.Linq.Builder
 					return newExpr;
 				}
 
-#pragma warning disable CS8825 // TODO:WAITFIX
-				return RemapToNewPath(builder, placeholder.TrackingPath, toPath, flags);
-#pragma warning restore CS8825
+				return RemapToNewPath(builder, placeholder.TrackingPath, toPath, flags)!;
 			}
 
 			if (expression is BinaryExpression binary && toPath.Type != binary.Type)

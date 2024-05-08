@@ -11,7 +11,7 @@ namespace Tests
 			var allProviders =
 				from p in providers
 				from sp in p.Split(',')
-				from n in new[] { sp, sp + ".LinqService" }
+				from n in new[] { sp, sp + TestBase.LinqServiceSuffix }
 				select n;
 
 			Providers = new HashSet<string>(allProviders);

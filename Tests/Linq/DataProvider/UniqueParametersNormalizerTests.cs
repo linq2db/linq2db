@@ -11,11 +11,10 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.Linq.Translation;
+using LinqToDB.Infrastructure;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlProvider;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
 
@@ -339,7 +338,7 @@ namespace Tests.DataProvider
 		/// <summary>
 		/// Wraps another <see cref="IDataProvider"/> instance, overriding only the <see cref="IDataProvider.GetQueryParameterNormalizer"/> function.
 		/// </summary>
-		private class WrapperProvider : IDataProvider
+		private class WrapperProvider : IDataProvider, IInfrastructure<IServiceProvider>
 		{
 			private readonly IDataProvider _baseProvider;
 			private readonly Func<IQueryParametersNormalizer, IQueryParametersNormalizer> _normalizerFactory;
@@ -379,7 +378,7 @@ namespace Tests.DataProvider
 			public bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx) => _baseProvider.IsDBNullAllowed(options, reader, idx);
 			public void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value) => _baseProvider.SetParameter(dataConnection, parameter, name, dataType, value);
 
-			public IServiceProvider ServiceProvider => _baseProvider.ServiceProvider;
+			public IServiceProvider Instance => ((IInfrastructure<IServiceProvider>)_baseProvider).Instance;
 		}
 
 		public class Table1

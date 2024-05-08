@@ -487,7 +487,7 @@ namespace LinqToDB.Linq.Builder
 					Register(mc.Object);
 				}
 
-				var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependedAttributes(mc.Method);
+				var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(mc.Method);
 				for (var index = 0; index < mc.Arguments.Count; index++)
 				{
 					if (dependentParameters != null && dependentParameters[index] != null)

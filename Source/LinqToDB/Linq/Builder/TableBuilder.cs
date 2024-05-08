@@ -8,6 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
+	using Interceptors;
 
 	sealed partial class TableBuilder : ISequenceBuilder
 	{
@@ -140,6 +141,8 @@ namespace LinqToDB.Linq.Builder
 						sequenceExpr = filtered.Expression;
 					}
 
+					if (dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+						sequenceExpr = (LambdaExpression)interceptor.ProcessExpression(sequenceExpr, new QueryExpressionArgs(dc, sequenceExpr, QueryExpressionArgs.ExpressionKind.QueryFilter));
 					// Optimize conditions and compact binary expressions
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					sequenceExpr = ExpressionBuilder.ExposeExpression(sequenceExpr, dc, optimizationContext, null, optimizeConditions : true, compactBinary : true);

@@ -181,7 +181,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 				}
 			}
 
-			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependedAttributes(node.Method);
+			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(node.Method);
 
 			if (dependentParameters != null)
 			{

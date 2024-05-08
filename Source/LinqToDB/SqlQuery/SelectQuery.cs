@@ -300,20 +300,6 @@ namespace LinqToDB.SqlQuery
 
 		public string SqlText => this.ToDebugString(this);
 
-		internal void EnsureFindTables()
-		{
-			this.Visit(this, static (query, e) =>
-			{
-				if (e is SqlField f)
-				{
-					var ts = query.GetTableSource(f.Table!);
-
-					if (ts == null && f != f.Table!.All)
-						throw new SqlException("Table '{0}' not found.", f.Table);
-				}
-			});
-		}
-
 		#endregion
 
 		public void Cleanup()

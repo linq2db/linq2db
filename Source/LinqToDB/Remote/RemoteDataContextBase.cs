@@ -17,6 +17,7 @@ namespace LinqToDB.Remote
 	using Expressions;
 	using Extensions;
 	using Infrastructure;
+	using Interceptors;
 	using Linq.Translation;
 	using Tools;
 
@@ -26,7 +27,8 @@ namespace LinqToDB.Remote
 	using SqlProvider;
 
 	[PublicAPI]
-	public abstract partial class RemoteDataContextBase : IDataContext, IInfrastructure<IServiceProvider>
+	public abstract partial class RemoteDataContextBase : IDataContext, 
+		IInfrastructure<IServiceProvider>
 	{
 		protected RemoteDataContextBase(DataOptions options)
 		{
@@ -492,26 +494,26 @@ namespace LinqToDB.Remote
 
 		void IDataContext.Close()
 		{
-			if (_dataContextInterceptor != null)
+			if (((IInterceptable<IDataContextInterceptor>)this).Interceptor != null)
 			{
 				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosing))
-					_dataContextInterceptor.OnClosing(new(this));
+					((IInterceptable<IDataContextInterceptor>)this).Interceptor.OnClosing(new(this));
 
 				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosed))
-					_dataContextInterceptor.OnClosed (new(this));
+					((IInterceptable<IDataContextInterceptor>)this).Interceptor.OnClosed (new(this));
 			}
 		}
 
 		async Task IDataContext.CloseAsync()
 		{
-			if (_dataContextInterceptor != null)
+			if (((IInterceptable<IDataContextInterceptor>)this).Interceptor != null)
 			{
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
-					await _dataContextInterceptor.OnClosingAsync(new (this))
+					await ((IInterceptable<IDataContextInterceptor>)this).Interceptor.OnClosingAsync(new (this))
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
-					await _dataContextInterceptor.OnClosedAsync (new (this))
+					await ((IInterceptable<IDataContextInterceptor>)this).Interceptor.OnClosedAsync (new (this))
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
@@ -551,6 +553,5 @@ namespace LinqToDB.Remote
 						dataContext.AddInterceptor(interceptor);
 			}
 		}
-
 	}
 }

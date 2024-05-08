@@ -67,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 
 				var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
 
-				if (body is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && mc.Method.Name == nameof(Sql.OrderIndex))
+				if (body is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && mc.Method.Name == nameof(Sql.Ordinal))
 				{
 					sqlExpr = builder.ConvertToSqlExpr(sequence, mc.Arguments[0], ProjectFlags.SQL);
 					byIndex = true;

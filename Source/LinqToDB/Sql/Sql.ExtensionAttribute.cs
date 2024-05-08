@@ -462,9 +462,7 @@ namespace LinqToDB
 
 				public ISqlExpression? ConvertToSqlExpression(int precedence)
 				{
-#pragma warning disable CS8604 // TODO:WAITFIX
-					var converted = BuildSqlExpression(Query, Extension, Extension.SystemType, precedence,
-#pragma warning restore CS8604
+					var converted = BuildSqlExpression(Query, Extension, Extension.SystemType!, precedence,
 						(Extension.IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 						(Extension.IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
 						(Extension.IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |
@@ -931,10 +929,8 @@ namespace LinqToDB
 
 				var expr = ResolveExpressionValues(null, root.Expr, valueProvider, out var error);
 
-#pragma warning disable CA1508
 				if (valueProviderError != null)
 					return valueProviderError;
-#pragma warning restore CA1508
 
 				if (error != null)
 					return error;
@@ -955,7 +951,7 @@ namespace LinqToDB
 					return expression;
 
 				if (chain.Count == 0)
-					throw new InvalidOperationException("No sequence found for expression '{expression}'");
+					throw new InvalidOperationException($"No sequence found for expression '{expression}'");
 
 				var ordered = chain
 					.Select(static (c, i) => Tuple.Create(c, i))
@@ -970,7 +966,7 @@ namespace LinqToDB
 				{
 					var replaced = chain.Where(static c => c.Expression != null).ToArray();
 					if (replaced.Length == 0)
-						throw new InvalidOperationException($"Can not find root sequence for expression '{expression}'");
+						throw new InvalidOperationException($"Cannot find root sequence for expression '{expression}'");
 					else if (replaced.Length > 1)
 						throw new InvalidOperationException($"Multiple root sequences found for expression '{expression}'");
 
