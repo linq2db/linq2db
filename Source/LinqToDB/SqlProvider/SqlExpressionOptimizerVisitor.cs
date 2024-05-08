@@ -816,6 +816,26 @@ namespace LinqToDB.SqlProvider
 				return SqlPredicate.MakeBool((value == null) != predicate.IsNot);
 			}
 
+			if (QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlBinaryExpression binaryExpression)
+			{
+				ISqlPredicate? result = null;
+
+				if (binaryExpression.Operation is "+" or "-" or "*" or "/" or "%" or "&")
+				{
+					if (binaryExpression.Expr1.CanBeNullable(_nullabilityContext) && !binaryExpression.Expr2.CanBeNullable(_nullabilityContext))
+					{
+						result = new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(binaryExpression.Expr1, true), predicate.IsNot);
+					}
+					else if (binaryExpression.Expr2.CanBeNullable(_nullabilityContext) && !binaryExpression.Expr1.CanBeNullable(_nullabilityContext))
+					{
+						result = new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(binaryExpression.Expr2, true), predicate.IsNot);
+					}
+				}
+
+				if (result != null)
+					return Visit(result);
+			}
+
 			return predicate;
 		}
 
@@ -1342,16 +1362,28 @@ namespace LinqToDB.SqlProvider
 			if (processed != null)
 				return processed;
 
+			var left  = QueryHelper.UnwrapNullablity(exprExpr.Expr1);
+			var right = QueryHelper.UnwrapNullablity(exprExpr.Expr2);
 
-			if (!_nullabilityContext.IsEmpty                   &&
+			if (!exprExpr.Expr1.CanBeNullable(_nullabilityContext) && left.Equals(right))
+			{
+				if (exprExpr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.GreaterOrEqual or SqlPredicate.Operator.LessOrEqual or SqlPredicate.Operator.NotGreater or SqlPredicate.Operator.NotLess)
+				{
+					return SqlPredicate.True;
+				}
+
+				if (exprExpr.Operator is SqlPredicate.Operator.NotEqual or SqlPredicate.Operator.Greater or SqlPredicate.Operator.Less)
+				{
+					return SqlPredicate.False;
+				}
+			}
+
+			if (!_nullabilityContext.IsEmpty                       &&
 			    !exprExpr.Expr1.CanBeNullable(_nullabilityContext) &&
 			    !exprExpr.Expr2.CanBeNullable(_nullabilityContext) &&
 			    exprExpr.Expr1.SystemType.IsSignedType()           &&
 			    exprExpr.Expr2.SystemType.IsSignedType())
 			{
-				var left  = QueryHelper.UnwrapNullablity(exprExpr.Expr1);
-				var right = QueryHelper.UnwrapNullablity(exprExpr.Expr2);
-
 				var unwrapped = (left, exprExpr.Operator, right);
 
 				var newExpr = unwrapped switch

@@ -108,7 +108,7 @@ namespace LinqToDB.SqlQuery
 				if (!c.Condition.Equals(o.Condition))
 					return false;
 
-				if (!comparer(c.ResultExpression, o.ResultExpression)) 
+				if (!c.ResultExpression.Equals(o.ResultExpression, comparer)) 
 					return false;
 			}
 

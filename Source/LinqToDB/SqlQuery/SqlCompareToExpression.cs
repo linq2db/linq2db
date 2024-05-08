@@ -34,7 +34,7 @@ namespace LinqToDB.SqlQuery
 			if (other is not SqlCompareToExpression compareTo)
 				return false;
 
-			return Expression1.Equals(compareTo.Expression1) && Expression2.Equals(compareTo.Expression2);
+			return Expression1.Equals(compareTo.Expression1, comparer) && Expression2.Equals(compareTo.Expression2, comparer);
 		}
 
 		public override bool CanBeNullable(NullabilityContext nullability)

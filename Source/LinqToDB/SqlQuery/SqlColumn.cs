@@ -186,19 +186,7 @@ namespace LinqToDB.SqlQuery
 				return false;
 
 			return
-				Expression.Equals(
-					otherColumn.Expression,
-					(ex1, ex2) =>
-					{
-//							var c = ex1 as Column;
-//							if (c != null && c.Parent != Parent)
-//								return false;
-//							c = ex2 as Column;
-//							if (c != null && c.Parent != Parent)
-//								return false;
-						return comparer(ex1, ex2);
-					})
-				&&
+				Expression.Equals(otherColumn.Expression, comparer) &&
 				comparer(this, other);
 		}
 

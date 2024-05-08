@@ -43,7 +43,7 @@ namespace LinqToDB.SqlQuery
 			if (other is not SqlInlinedToSqlExpression otherInlined)
 				return false;
 
-			return comparer(Parameter, otherInlined.Parameter);
+			return Parameter.Equals(otherInlined.Parameter, comparer);
 		}
 
 	}

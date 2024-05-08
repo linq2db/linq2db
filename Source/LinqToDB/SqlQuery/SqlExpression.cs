@@ -97,7 +97,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
-			if (this == other)
+			if (ReferenceEquals(this, other))
 				return true;
 
 			if (!(other is SqlExpression expr) || SystemType != expr.SystemType || Expr != expr.Expr || Parameters.Length != expr.Parameters.Length)

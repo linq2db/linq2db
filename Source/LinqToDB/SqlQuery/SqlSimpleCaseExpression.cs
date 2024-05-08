@@ -100,7 +100,7 @@ namespace LinqToDB.SqlQuery
 			if (ElseExpression == null && caseOther.ElseExpression != null)
 				return false;
 
-			if (ElseExpression != null && caseOther.ElseExpression != null && !comparer(ElseExpression, caseOther.ElseExpression))
+			if (ElseExpression != null && caseOther.ElseExpression != null && !ElseExpression.Equals(caseOther.ElseExpression, comparer))
 				return false;
 
 			if (Cases.Count != caseOther.Cases.Count) 
@@ -114,7 +114,7 @@ namespace LinqToDB.SqlQuery
 				if (!c.MatchValue.Equals(o.MatchValue))
 					return false;
 
-				if (!comparer(c.ResultExpression, o.ResultExpression)) 
+				if (!c.ResultExpression.Equals(o.ResultExpression, comparer)) 
 					return false;
 			}
 

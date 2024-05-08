@@ -2016,6 +2016,9 @@ namespace LinqToDB.Linq.Builder
 			var leftExpr         = ConvertToSqlExpr(context, left,  keysFlag, columnDescriptor : columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, keysFlag, columnDescriptor : columnDescriptor);
 
+
+			var compareNullsAsValues = CompareNullsAsValues;
+
 			//SQLRow case when needs to add Single
 			//
 			if (leftExpr is SqlPlaceholderExpression { Sql: SqlRowExpression } && rightExpr is not SqlPlaceholderExpression)
@@ -2245,7 +2248,7 @@ namespace LinqToDB.Linq.Builder
 						if (trueValue.ElementType  == QueryElementType.SqlValue &&
 						    falseValue.ElementType == QueryElementType.SqlValue)
 						{
-							var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues
+							var withNullValue = compareNullsAsValues
 								? withNull
 								: (bool?)null;
 							predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
@@ -2267,8 +2270,6 @@ namespace LinqToDB.Linq.Builder
 
 				if (predicate == null)
 				{
-					var compareNullsAsValues = CompareNullsAsValues;
-
 					if (compareNullsAsValues)
 					{
 						if (lOriginal is SqlColumn colLeft)

@@ -46,7 +46,7 @@ namespace LinqToDB.SqlQuery
 			if (!(other is SqlCastExpression otherCast))
 				return false;
 
-			return ToType.Equals(otherCast.ToType) && comparer(Expression, otherCast.Expression);
+			return ToType.Equals(otherCast.ToType) && Expression.Equals(otherCast.Expression, comparer);
 		}
 
 		public override bool CanBeNullable(NullabilityContext nullability)
