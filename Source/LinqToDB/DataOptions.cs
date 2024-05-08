@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using JetBrains.Annotations;
 
@@ -9,8 +10,8 @@ namespace LinqToDB
 	using Common.Internal;
 	using Data;
 	using Data.RetryPolicy;
-
-	using LinqToDB.Remote;
+	using Remote;
+	using Interceptors;
 
 	/// <summary>
 	/// Immutable context configuration object.
@@ -113,7 +114,7 @@ namespace LinqToDB
 
 		public void Apply(DataConnection dataConnection)
 		{
-			((IApplicable<DataConnection>)ConnectionOptions). Apply(dataConnection);
+			((IApplicable<DataConnection>)ConnectionOptions).Apply(dataConnection);
 			((IApplicable<DataConnection>)RetryPolicyOptions).Apply(dataConnection);
 
 			if (_dataContextOptions is IApplicable<DataConnection> a)

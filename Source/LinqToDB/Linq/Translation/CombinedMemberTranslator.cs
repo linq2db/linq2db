@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Translation
 			Translators = new ();
 		}
 
-		public CombinedMemberTranslator(IResultEnumerable<IMemberTranslator> translators)
+		public CombinedMemberTranslator(IEnumerable<IMemberTranslator> translators)
 		{
 			Translators = translators.ToList();
 		}

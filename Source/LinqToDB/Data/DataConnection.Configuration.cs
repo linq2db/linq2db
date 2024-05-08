@@ -13,7 +13,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using RetryPolicy;
 
-	public partial class DataConnection : IConfigurationID
+	public partial class DataConnection
 	{
 		static class Configuration
 		{

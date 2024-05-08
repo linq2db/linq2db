@@ -7,8 +7,8 @@ namespace LinqToDB
 	using Common.Internal;
 	using Data;
 	using Interceptors;
-
-	using LinqToDB.Remote;
+	using Remote;
+	using Linq.Translation;
 
 	/// <param name="CommandTimeout">
 	/// The command timeout, or <c>null</c> if none has been set.
@@ -18,8 +18,10 @@ namespace LinqToDB
 	/// </param>
 	public sealed record DataContextOptions
 	(
-		int?                         CommandTimeout = default,
-		IReadOnlyList<IInterceptor>? Interceptors   = default
+		int?                              CommandTimeout    = default,
+		IReadOnlyList<IInterceptor>?      Interceptors      = default,
+		IReadOnlyList<IMemberTranslator>? MemberTranslators = default
+
 		// If you add another parameter here, don't forget to update
 		// DataContextOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -31,8 +33,9 @@ namespace LinqToDB
 
 		DataContextOptions(DataContextOptions original)
 		{
-			CommandTimeout = original.CommandTimeout;
-			Interceptors   = original.Interceptors;
+			CommandTimeout    = original.CommandTimeout;
+			Interceptors      = original.Interceptors;
+			MemberTranslators = original.MemberTranslators;
 		}
 
 		int? _configurationID;
@@ -46,6 +49,7 @@ namespace LinqToDB
 					_configurationID = idBuilder
 						.Add(CommandTimeout)
 						.AddTypes(Interceptors)
+						.AddRange(MemberTranslators)
 						.CreateID();
 				}
 

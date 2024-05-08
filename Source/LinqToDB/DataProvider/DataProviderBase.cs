@@ -23,8 +23,9 @@ namespace LinqToDB.DataProvider
 	using SchemaProvider;
 	using SqlProvider;
 	using Linq.Translation;
+	using Infrastructure;
 
-	public abstract class DataProviderBase : IDataProvider
+	public abstract class DataProviderBase : IDataProvider, IInfrastructure<IServiceProvider>
 	{
 		#region .ctor
 
@@ -521,7 +522,7 @@ namespace LinqToDB.DataProvider
 		SimpleServiceProvider? _serviceProvider;
 		readonly object        _guard = new();
 
-		public IServiceProvider ServiceProvider
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{
 			get
 			{

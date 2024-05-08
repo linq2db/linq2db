@@ -11,6 +11,7 @@ namespace LinqToDB.Data
 	using Common;
 	using RetryPolicy;
 	using Tools;
+	using Interceptors;
 
 	public partial class DataConnection
 	{
@@ -138,18 +139,18 @@ namespace LinqToDB.Data
 
 				if (_connection.State == ConnectionState.Closed)
 				{
-					if (_connectionInterceptor != null)
+					if (((IInterceptable<IConnectionInterceptor>)this).Interceptor != null)
 						await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpeningAsync))
-							await _connectionInterceptor.ConnectionOpeningAsync(new(this), _connection.Connection, cancellationToken)
+							await ((IInterceptable<IConnectionInterceptor>)this).Interceptor.ConnectionOpeningAsync(new(this), _connection.Connection, cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 					await _connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 					_closeConnection = true;
 
-					if (_connectionInterceptor != null)
+					if (((IInterceptable<IConnectionInterceptor>)this).Interceptor != null)
 						await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpenedAsync))
-							await _connectionInterceptor.ConnectionOpenedAsync(new (this), _connection.Connection, cancellationToken)
+							await ((IInterceptable<IConnectionInterceptor>)this).Interceptor.ConnectionOpenedAsync(new (this), _connection.Connection, cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 			}
@@ -269,9 +270,9 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public virtual async Task CloseAsync()
 		{
-			if (_dataContextInterceptor != null)
+			if (((IInterceptable<IDataContextInterceptor>)this).Interceptor != null)
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
-					await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await ((IInterceptable<IDataContextInterceptor>)this).Interceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 #if NET6_0_OR_GREATER
 			await DisposeCommandAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -296,9 +297,9 @@ namespace LinqToDB.Data
 					await _connection.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
-			if (_dataContextInterceptor != null)
+			if (((IInterceptable<IDataContextInterceptor>)this).Interceptor != null)
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
-					await _dataContextInterceptor.OnClosedAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await ((IInterceptable<IDataContextInterceptor>)this).Interceptor.OnClosedAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -375,9 +376,9 @@ namespace LinqToDB.Data
 		{
 			var result = Option<int>.None;
 
-			if (_commandInterceptor != null)
+			if (((IInterceptable<ICommandInterceptor>)this).Interceptor != null)
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteNonQueryAsync))
-					result = await _commandInterceptor.ExecuteNonQueryAsync(new (this), CurrentCommand!, result, cancellationToken)
+					result = await ((IInterceptable<ICommandInterceptor>)this).Interceptor.ExecuteNonQueryAsync(new (this), CurrentCommand!, result, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync))
@@ -453,9 +454,9 @@ namespace LinqToDB.Data
 		{
 			var result = Option<object?>.None;
 
-			if (_commandInterceptor != null)
+			if (((IInterceptable<ICommandInterceptor>)this).Interceptor != null)
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteScalarAsync))
-					result = await _commandInterceptor.ExecuteScalarAsync(new (this), CurrentCommand!, result, cancellationToken)
+					result = await ((IInterceptable<ICommandInterceptor>)this).Interceptor.ExecuteScalarAsync(new (this), CurrentCommand!, result, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteScalarAsync))
@@ -532,9 +533,9 @@ namespace LinqToDB.Data
 		{
 			var result = Option<DbDataReader>.None;
 
-			if (_commandInterceptor != null)
+			if (((IInterceptable<ICommandInterceptor>)this).Interceptor != null)
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteReaderAsync))
-					result = await _commandInterceptor.ExecuteReaderAsync(new (this), CurrentCommand!, commandBehavior, result, cancellationToken)
+					result = await ((IInterceptable<ICommandInterceptor>)this).Interceptor.ExecuteReaderAsync(new (this), CurrentCommand!, commandBehavior, result, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			DbDataReader? dr;
@@ -546,9 +547,9 @@ namespace LinqToDB.Data
 					: await CurrentCommand!.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
-			if (_commandInterceptor != null)
+			if (((IInterceptable<ICommandInterceptor>)this).Interceptor != null)
 				using (ActivityService.Start(ActivityID.CommandInterceptorAfterExecuteReader))
-					_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, dr);
+					((IInterceptable<ICommandInterceptor>)this).Interceptor.AfterExecuteReader(new (this), _command!, commandBehavior, dr);
 
 			var wrapper = new DataReaderWrapper(this, dr, CurrentCommand);
 			_command    = null;
