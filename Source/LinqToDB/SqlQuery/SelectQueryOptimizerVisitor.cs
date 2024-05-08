@@ -1693,7 +1693,10 @@ namespace LinqToDB.SqlQuery
 				if (QueryHelper.EnumerateJoins(subQuery).Any(j => j.JoinType != JoinType.Inner))
 				{
 					if (subQuery.Select.Columns.Any(c => IsInsideAggregate(parentQuery, c)))
-						return false;
+					{
+						if (QueryHelper.IsDependsOnOuterSources(subQuery))
+							return false;
+					}
 				}
 			}
 
