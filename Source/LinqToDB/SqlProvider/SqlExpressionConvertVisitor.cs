@@ -686,9 +686,12 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (SqlProviderFlags?.RowConstructorSupport.HasFlag(RowFeature.Between) != true && QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression)
+			if (SqlProviderFlags != null)
 			{
-				return Visit(Optimize(ConvertBetweenPredicate(predicate)));
+				if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Between) && QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression)
+				{
+					return Visit(Optimize(ConvertBetweenPredicate(predicate)));
+				}
 			}
 
 			return newElement;
