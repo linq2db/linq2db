@@ -120,6 +120,8 @@ namespace LinqToDB.Linq.Builder
 
 			Dictionary<Expression[], (SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)> _pathMapping = default!;
 
+			public override bool NeedsSubqueryForComparison => true;
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) &&

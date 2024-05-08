@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!enforceHaving)
 			{
-				if (buildSequnce is not SubQueryContext)
+				if (buildSequnce is not SubQueryContext subQuery || subQuery.NeedsSubqueryForComparison)
 				{
 					buildSequnce = new SubQueryContext(sequence);
 				}
