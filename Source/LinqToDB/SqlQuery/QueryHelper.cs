@@ -1471,6 +1471,22 @@ namespace LinqToDB.SqlQuery
 			return null != expr.Find(e => IsAggregationFunction(e) || IsWindowFunction(e));
 		}
 
+		public static bool ContainsAggregationFunctionOneLevel(IQueryElement expr)
+		{
+			var found = false;
+			expr.VisitParentFirst(expr, (_, e) =>
+			{
+				if (found)
+					return true;
+				if (e is SqlColumn)
+					return false;
+				found = IsAggregationFunction(e);
+				return !found;
+			});
+
+			return found;
+		}
+
 		public static bool ContainsAggregationOrWindowFunctionOneLevel(IQueryElement expr)
 		{
 			var found = false;

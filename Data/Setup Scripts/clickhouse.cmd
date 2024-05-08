@@ -12,8 +12,8 @@ REM update settings and restart server
 docker exec clickhouse sed -i "0,/<\/default>/{s/<\/default>/<join_use_nulls>1<\/join_use_nulls><mutations_sync>1<\/mutations_sync><allow_experimental_object_type>1<\/allow_experimental_object_type><allow_experimental_geo_types>1<\/allow_experimental_geo_types><\/default>/}" /etc/clickhouse-server/users.xml
 docker restart clickhouse
 
-REM there is no proper startup done message in log to wait
 ECHO pause to wait for ClickHouse startup completion
+call wait clickhouse "create new user"
 timeout 5
 
 REM create test databases for all providers
