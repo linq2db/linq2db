@@ -611,7 +611,7 @@ namespace LinqToDB.Linq
 		{
 			protected override Expression VisitMethodCall(MethodCallExpression node)
 			{
-				var dependedParameters = SqlQueryDependentAttributeHelper.GetQueryDependedAttributes(node.Method);
+				var dependedParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(node.Method);
 				if (dependedParameters == null)
 					return base.VisitMethodCall(node);
 

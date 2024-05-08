@@ -10,7 +10,7 @@ namespace LinqToDB.Expressions
 	{
 		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods = new ();
 
-		public static IList<SqlQueryDependentAttribute?>? GetQueryDependedAttributes(MethodInfo method)
+		public static IList<SqlQueryDependentAttribute?>? GetQueryDependentAttributes(MethodInfo method)
 		{
 			var mi = method.GetGenericMethodDefinitionCached();
 			var dependentParameters = _queryDependentMethods.GetOrAdd(

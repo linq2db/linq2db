@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS8604 // TODO:WAITFIX
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Data.SqlTypes;
@@ -604,67 +603,6 @@ namespace LinqToDB.Linq
 
 			#endregion
 
-			/*
-			#region DateOnly
-#if NET6_0_OR_GREATER
-
-			{ M(() => Sql.Types.DateOnly.Year              ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Year,        obj)!.Value    )) },
-			{ M(() => Sql.Types.DateOnly.Month             ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Month,       obj)!.Value    )) },
-			{ M(() => Sql.Types.DateOnly.DayOfYear         ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.DayOfYear,   obj)!.Value    )) },
-			{ M(() => Sql.Types.DateOnly.Day               ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.Day,         obj)!.Value    )) },
-			{ M(() => Sql.Types.DateOnly.DayOfWeek         ), N(() => L<DateOnly,int>         ((DateOnly obj)        => Sql.DatePart(Sql.DateParts.WeekDay,     obj)!.Value - 1)) },
-			{ M(() => Sql.Types.DateOnly.AddYears       (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value )) },
-			{ M(() => Sql.Types.DateOnly.AddMonths      (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value )) },
-			{ M(() => Sql.Types.DateOnly.AddDays        (0)), N(() => L<DateOnly,int,DateOnly>((DateOnly obj,int p0) => Sql.DateAdd(Sql.DateParts.Day,         p0, obj)!.Value )) },
-			{ M(() => new DateOnly(0, 0, 0)                ), N(() => L<int,int,int, DateOnly>((int y,int m,int d)   => Sql.MakeDateOnly(y, m, d)!.Value                       )) },
-
-			{ M(() => Sql.MakeDateOnly(0, 0, 0)      ), N(() => L<int?,int?,int?,DateOnly?>((int? y,int? m,int? d) => (DateOnly?)Sql.Convert(Sql.Types.DateOnly,
-				Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2)))) },
-
-#endif
-			#endregion
-			*/
-
-			/*#region DateTime
-
-			{ M(() => new DateTime(0, 0, 0)          ), N(() => L<int,int,int,DateTime>((int y,int m,int d) => Sql.MakeDateTime(y, m, d)!.Value                       )) },
-
-			{ M(() => Sql.MakeDateTime(0, 0, 0)          ), N(() => L<int?,int?,int?,DateTime?>               ((int? y,int? m,int? d)                       => (DateTime?)Sql.Convert(Sql.Types.Date, Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2)))) },
-			//{ M(() => new DateTime    (0, 0, 0, 0, 0, 0) ), N(() => L<int,int,int,int,int,int,DateTime>       ((int  y,int  m,int  d,int  h,int  mm,int s)  => Sql.MakeDateTime(y, m, d, h, mm, s)!.Value )) },
-			{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((int? y,int? m,int? d,int? h,int? mm,int? s) => (DateTime?)Sql.Convert(Sql.Types.DateTime2,
-				Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2) + " " +
-				Sql.ZeroPad(h, 2) + ":" + Sql.ZeroPad(mm, 2) + ":" + Sql.ZeroPad(s, 2)))) },
-
-			#endregion*/
-
-			#region DateTimeOffset
-
-			// Disabled for now. See #2512 (https://github.com/linq2db/linq2db/issues/2512)
-			// { M(() => DateTimeOffset.Now                   ), N(() => L<DateTimeOffset>                      (()                              => Sql.CurrentTzTimestamp                                 )) },
-
-			/*
-			{ M(() => DateTimeOffset.Now.Year              ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Year,        obj)!.Value    )) },
-			{ M(() => DateTimeOffset.Now.Month             ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Month,       obj)!.Value    )) },
-			{ M(() => DateTimeOffset.Now.DayOfYear         ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.DayOfYear,   obj)!.Value    )) },
-			{ M(() => DateTimeOffset.Now.Day               ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Day,         obj)!.Value    )) },
-			{ M(() => DateTimeOffset.Now.DayOfWeek         ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.WeekDay,     obj)!.Value - 1)) },
-			{ M(() => DateTimeOffset.Now.Hour              ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Hour,        obj)!.Value    )) },
-			{ M(() => DateTimeOffset.Now.Minute            ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Minute,      obj)!.Value    )) },
-			{ M(() => DateTimeOffset.Now.Second            ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Second,      obj)!.Value    )) },
-			{ M(() => DateTimeOffset.Now.Millisecond       ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Millisecond, obj)!.Value    )) },
-			{ M(() => DateTimeOffset.Now.Date              ), N(() => L<DateTimeOffset,DateTime>             ((DateTimeOffset obj)            => Sql.Convert(Sql.Types.Date,                obj)           )) },
-			{ M(() => DateTimeOffset.Now.TimeOfDay         ), N(() => L<DateTimeOffset,TimeSpan>             ((DateTimeOffset obj)            => Sql.DateToTime(Sql.Convert(Sql.Types.Time, obj))!.Value   )) },
-			{ M(() => DateTimeOffset.Now.AddYears       (0)), N(() => L<DateTimeOffset,int,DateTimeOffset>   ((DateTimeOffset obj,int p0)     => Sql.DateAdd(Sql.DateParts.Year,        p0, obj)!.Value )) },
-			{ M(() => DateTimeOffset.Now.AddMonths      (0)), N(() => L<DateTimeOffset,int,DateTimeOffset>   ((DateTimeOffset obj,int p0)     => Sql.DateAdd(Sql.DateParts.Month,       p0, obj)!.Value )) },
-			{ M(() => DateTimeOffset.Now.AddDays        (0)), N(() => L<DateTimeOffset,double,DateTimeOffset>((DateTimeOffset obj,double p0)  => Sql.DateAdd(Sql.DateParts.Day,         p0, obj)!.Value )) },
-			{ M(() => DateTimeOffset.Now.AddHours       (0)), N(() => L<DateTimeOffset,double,DateTimeOffset>((DateTimeOffset obj,double p0)  => Sql.DateAdd(Sql.DateParts.Hour,        p0, obj)!.Value )) },
-			{ M(() => DateTimeOffset.Now.AddMinutes     (0)), N(() => L<DateTimeOffset,double,DateTimeOffset>((DateTimeOffset obj,double p0)  => Sql.DateAdd(Sql.DateParts.Minute,      p0, obj)!.Value )) },
-			{ M(() => DateTimeOffset.Now.AddSeconds     (0)), N(() => L<DateTimeOffset,double,DateTimeOffset>((DateTimeOffset obj,double p0)  => Sql.DateAdd(Sql.DateParts.Second,      p0, obj)!.Value )) },
-			{ M(() => DateTimeOffset.Now.AddMilliseconds(0)), N(() => L<DateTimeOffset,double,DateTimeOffset>((DateTimeOffset obj,double p0)  => Sql.DateAdd(Sql.DateParts.Millisecond, p0, obj)!.Value )) },
-
-			*/
-			#endregion
-
 			#region Parse
 
 			{ M(() => bool.    Parse("")), N(() => L<string,bool>    ((string p0) => Sql.ConvertTo<bool>.    From(p0))) },
@@ -696,22 +634,9 @@ namespace LinqToDB.Linq
 
 			#region ToString
 
-//			{ M(() => ((bool)   true).ToString()), N(() => L<bool,    string>((bool    p0) => Sql.ConvertTo<string>.From(p0))) },
-//			{ M(() => ((byte)    0)  .ToString()), N(() => L<byte,    string>((byte    p0) => Sql.ConvertTo<string>.From(p0))) },
-//			{ M(() => ((char)   '0') .ToString()), N(() => L<char,    string>((char    p0) => Sql.ConvertTo<string>.From(p0))) },
-//			{ M(() => ((decimal) 0)  .ToString()), N(() => L<decimal, string>((decimal p0) => Sql.ConvertTo<string>.From(p0))) },
-//			{ M(() => ((double)  0)  .ToString()), N(() => L<double,  string>((double  p0) => Sql.ConvertTo<string>.From(p0))) },
-//			{ M(() => ((short)   0)  .ToString()), N(() => L<short,   string>((short   p0) => Sql.ConvertTo<string>.From(p0))) },
-//			{ M(() => ((int)   0)    .ToString()), N(() => L<int,     string>((int     p0) => Sql.ConvertTo<string>.From(p0))) },
-//			{ M(() => ((long)   0)   .ToString()), N(() => L<long,    string>((long    p0) => Sql.ConvertTo<string>.From(p0))) },
-//			{ M(() => ((sbyte)   0)  .ToString()), N(() => L<sbyte,   string>((sbyte   p0) => Sql.ConvertTo<string>.From(p0))) },
-//			{ M(() => ((float)   0)  .ToString()), N(() => L<float,   string>((float   p0) => Sql.ConvertTo<string>.From(p0))) },
 #pragma warning disable MA0044 // Remove useless ToString call
 			{ M(() => ((string) "0") .ToString()), N(() => L<string,  string>((string  p0) => p0                            )) },
 #pragma warning restore MA0044 // Remove useless ToString call
-//			{ M(() => ((ushort)  0)  .ToString()), N(() => L<ushort,  string>((ushort  p0) => Sql.ConvertTo<string>.From(p0))) },
-//			{ M(() => ((uint)  0)    .ToString()), N(() => L<uint,    string>((uint    p0) => Sql.ConvertTo<string>.From(p0))) },
-//			{ M(() => ((ulong)  0)  .ToString()), N(() => L<ulong,    string>((ulong   p0) => Sql.ConvertTo<string>.From(p0))) },
 
 			#endregion
 
@@ -1129,12 +1054,6 @@ namespace LinqToDB.Linq
 
 			#endregion
 
-			#region Visual Basic Compiler Services
-
-//			{ M(() => Operators.CompareString("","",false)), L<S,S,B,I>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)) },
-
-			#endregion
-
 			#region SqlTypes
 
 			{ M(() => new SqlBoolean().Value),   N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj))          },
@@ -1160,7 +1079,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char,string>       ((string p0,int? p1,char p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char,string>       ((string p0,int? p1,char p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 					{ M(() => Sql.Trim    ("")       ), N(() => L<string,string?>                ((string p0)                   => Sql.TrimLeft(Sql.TrimRight(p0)))) },
-					//{ M(() => Sql.MakeDateTime(0,0,0)), N(() => L<int?,int?,int?,DateTime?>((int? y,int? m,int? d)  => DateAdd(Sql.DateParts.Month, (y!.Value - 1900) * 12 + m!.Value - 1, d!.Value - 1))) },
 					{ M(() => Sql.Cosh(0)            ), N(() => L<double?,double?>               ( v    => (Sql.Exp(v) + Sql.Exp(-v)) / 2)) },
 					{ M(() => Sql.Log(0m, 0)         ), N(() => L<decimal?,decimal?,decimal?>    ((m,n) => Sql.Log(n) / Sql.Log(m))) },
 					{ M(() => Sql.Log(0.0,0)         ), N(() => L<double?,double?,double?>       ((m,n) => Sql.Log(n) / Sql.Log(m))) },
@@ -1217,8 +1135,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>     ((string? p0,int? p1)            => Sql.Substring(p0,  p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) =>     AltStuff (p0,  p1, p2, p3)))             },
 					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>       ((int? p0)                 => Sql.PadRight (" ", p0, ' ')))                },
-
-					//{ M(() => Sql.MakeDateTime(0,0,0)), N(() => L<int?,int?,int?,DateTime?>((y,m,d) => Mdy(m, d, y))) },
 
 					{ M(() => Sql.Cot (0)         ), N(() => L<double?,double?>      ( v            => Sql.Cos(v) / Sql.Sin(v) ))        },
 					{ M(() => Sql.Cosh(0)         ), N(() => L<double?,double?>      ( v            => (Sql.Exp(v) + Sql.Exp(-v)) / 2 )) },
@@ -1397,7 +1313,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 
 					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(Sql.Substring(p.ToString(), 2, 36)))) },
-//					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(Sql.Substring((string)(object)(p), 2, 36)))) },
 
 					{ M(() => Sql.Ceiling((decimal)0)), N(() => L<decimal?,decimal?>(p => -Sql.Floor(-p) )) },
 					{ M(() => Sql.Ceiling((double) 0)), N(() => L<double?, double?> (p => -Sql.Floor(-p) )) },
@@ -1622,7 +1537,7 @@ namespace LinqToDB.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var stringExpression = builder.GetExpression("str");
+				var stringExpression = builder.GetExpression("str")!;
 				var chars            = builder.GetValue<char[]>("trimChars");
 				if (chars == null || chars.Length == 0)
 				{
@@ -1646,7 +1561,7 @@ namespace LinqToDB.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var stringExpression = builder.GetExpression("str");
+				var stringExpression = builder.GetExpression("str")!;
 				var chars            = builder.GetValue<char[]>("trimChars");
 				if (chars == null || chars.Length == 0)
 				{
@@ -1657,9 +1572,7 @@ namespace LinqToDB.Linq
 					return;
 				}
 
-#pragma warning disable CS8600 // TODO:WAITFIX
 				ISqlExpression result = stringExpression;
-#pragma warning restore CS8600
 
 				//TODO: Not accurate, we have to find way
 				foreach (var c in chars)
@@ -1680,7 +1593,7 @@ namespace LinqToDB.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var stringExpression = builder.GetExpression("str");
+				var stringExpression = builder.GetExpression("str")!;
 				var chars            = builder.GetValue<char[]>("trimChars");
 				if (chars == null || chars.Length == 0)
 				{
@@ -1704,7 +1617,7 @@ namespace LinqToDB.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var stringExpression = builder.GetExpression("str");
+				var stringExpression = builder.GetExpression("str")!;
 				var chars            = builder.GetValue<char[]>("trimChars");
 				if (chars == null || chars.Length == 0)
 				{
@@ -1728,8 +1641,8 @@ namespace LinqToDB.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var str   = builder.GetExpression("str");
-				var value = builder.GetExpression("value");
+				var str   = builder.GetExpression("str")!;
+				var value = builder.GetExpression("value")!;
 
 				builder.ResultExpression = new SqlCompareToExpression(str, value);
 			}

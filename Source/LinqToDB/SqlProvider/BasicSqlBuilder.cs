@@ -3285,11 +3285,11 @@ namespace LinqToDB.SqlProvider
 				{
 					var sqlField = anchor.SqlExpression as SqlField;
 					if (sqlField == null || sqlField.Table == null)
-						throw new LinqToDBException("Can not find Table or Column associated with expression");
+						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var ts = Statement.GetTableSource(sqlField.Table, out var noAlias);
 					if (ts == null)
-						throw new LinqToDBException("Can not find Table Source for table.");
+						throw new LinqToDBException("Cannot find Table Source for table.");
 
 					var table = noAlias ? null : GetTableAlias(ts);
 
@@ -3304,7 +3304,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var sqlField = anchor.SqlExpression as SqlField;
 					if (sqlField == null || sqlField.Table == null)
-						throw new LinqToDBException("Can not find Table or Column associated with expression");
+						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					BuildPhysicalTable(sqlField.Table, null);
 					return;
@@ -3313,11 +3313,11 @@ namespace LinqToDB.SqlProvider
 				{
 					var sqlField = anchor.SqlExpression as SqlField;
 					if (sqlField == null || sqlField.Table == null)
-						throw new LinqToDBException("Can not find Table or Column associated with expression");
+						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var table = sqlField.Table as SqlTable;
 					if (table == null)
-						throw new LinqToDBException("Can not find table.");
+						throw new LinqToDBException("Cannot find table.");
 
 					BuildExpression(new SqlField(table, table.TableName.Name));
 
@@ -3327,11 +3327,11 @@ namespace LinqToDB.SqlProvider
 				{
 					var sqlField = anchor.SqlExpression as SqlField;
 					if (sqlField == null || sqlField.Table == null)
-						throw new LinqToDBException("Can not find Table or Column associated with expression");
+						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var table = sqlField.Table as SqlTable;
 					if (table == null)
-						throw new LinqToDBException("Can not find table.");
+						throw new LinqToDBException("Cannot find table.");
 
 					if (sqlField == table.All)
 					{

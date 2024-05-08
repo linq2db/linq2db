@@ -805,7 +805,7 @@ namespace LinqToDB.SqlQuery
 			if (nonProjecting.Count > 0)
 			{
 				if (!flags.IsOrderByAggregateFunctionsSupported)
-					throw new LinqToDBException("Can not convert sequence to SQL. DISTINCT with ORDER BY not supported.");
+					throw new LinqToDBException("Cannot convert sequence to SQL. DISTINCT with ORDER BY not supported.");
 
 				// converting to Group By
 
@@ -1605,6 +1605,35 @@ namespace LinqToDB.SqlQuery
 
 			return null;
 		}
+
+		internal static void EnsureFindTables(this SqlStatement statement)
+		{
+			statement.Visit(statement, static (statement, e) =>
+			{
+				if (e is SqlField f)
+				{
+					var ts = statement.SelectQuery?.GetTableSource(f.Table!) ?? statement.GetTableSource(f.Table!, out _);
+
+					if (ts == null && f != f.Table!.All)
+						throw new SqlException("Table '{0}' not found.", f.Table);
+				}
+			});
+		}
+
+		internal static void EnsureFindTables(this SelectQuery select)
+		{
+			select.Visit(select, static (query, e) =>
+			{
+				if (e is SqlField f)
+				{
+					var ts = query.GetTableSource(f.Table!);
+
+					if (ts == null && f != f.Table!.All)
+						throw new SqlException("Table '{0}' not found.", f.Table);
+				}
+			});
+		}
+
 
 	}
 }

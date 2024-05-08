@@ -184,7 +184,7 @@ namespace LinqToDB.Mapping
 					return methodInfo.DeclaringType!;
 				}
 
-				throw new LinqToDBException($"Can not retrieve declaring type form member {methodInfo}");
+				throw new LinqToDBException($"Cannot retrieve declaring type form member {methodInfo}");
 			}
 
 			return MemberInfo.DeclaringType!;

@@ -387,7 +387,7 @@ namespace LinqToDB.Expressions
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
 
-			var dependedParameters = SqlQueryDependentAttributeHelper.GetQueryDependedAttributes(expr1.Method);
+			var dependedParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(expr1.Method);
 
 			if (dependedParameters == null)
 			{

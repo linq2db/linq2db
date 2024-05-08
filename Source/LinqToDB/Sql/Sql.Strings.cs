@@ -1,6 +1,4 @@
-﻿#pragma warning disable CS8600 // TODO:WAITFIX
-#pragma warning disable CS8604 // TODO:WAITFIX
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -22,9 +20,9 @@ namespace LinqToDB
 			{
 				ISqlExpression data;
 				if (builder.Arguments.Length == 2)
-					data = builder.GetExpression("source");
+					data = builder.GetExpression("source")!;
 				else
-					data = builder.GetExpression("selector");
+					data = builder.GetExpression("selector")!;
 
 				// https://github.com/linq2db/linq2db/issues/1765
 				var descriptor = QueryHelper.GetColumnDescriptor(data);
@@ -182,11 +180,11 @@ namespace LinqToDB
 				}
 				else if (arguments.Expressions.Count == 1 && builder.BuilderValue != null)
 				{
-					builder.ResultExpression = IsNullExpression((string)builder.BuilderValue, builder.ConvertExpressionToSql(arguments.Expressions[0]));
+					builder.ResultExpression = IsNullExpression((string)builder.BuilderValue, builder.ConvertExpressionToSql(arguments.Expressions[0])!);
 				}
 				else
 				{
-					var items = arguments.Expressions.Select(e => builder.ConvertExpressionToSql(e));
+					var items = arguments.Expressions.Select(e => builder.ConvertExpressionToSql(e)!);
 					foreach (var item in items)
 					{
 						builder.AddParameter("argument", item);
@@ -203,7 +201,7 @@ namespace LinqToDB
 
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var separator = builder.GetExpression(0);
+				var separator = builder.GetExpression(0)!;
 				var arguments = (NewArrayExpression)builder.Arguments[1];
 				if (arguments.Expressions.Count == 0)
 				{
@@ -211,12 +209,12 @@ namespace LinqToDB
 				}
 				else if (arguments.Expressions.Count == 1)
 				{
-					builder.ResultExpression = IsNullExpression(builder.ConvertExpressionToSql(arguments.Expressions[0]));
+					builder.ResultExpression = IsNullExpression(builder.ConvertExpressionToSql(arguments.Expressions[0])!);
 				}
 				else
 				{
 					var items = arguments.Expressions.Select(e =>
-						IsNullExpression(StringConcatExpression(separator, builder.ConvertExpressionToSql(e)))
+						IsNullExpression(StringConcatExpression(separator, builder.ConvertExpressionToSql(e)!))
 					);
 
 					var concatenation =

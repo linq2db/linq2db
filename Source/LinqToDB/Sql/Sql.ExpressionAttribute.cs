@@ -203,7 +203,7 @@ namespace LinqToDB
 
 					if (string.IsNullOrEmpty(calculated) && !canBeOptional)
 					{
-						errorExpr = new SqlErrorExpression($"Non optional parameter '{paramName}' not found", typeof(string));
+						errorExpr = new SqlErrorExpression($"Non-optional parameter '{paramName}' not found", typeof(string));
 						return "error";
 					}
 
@@ -554,9 +554,7 @@ namespace LinqToDB
 					(IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None),
 					ToParametersNullabilityType(IsNullable),
 					_canBeNull,
-#pragma warning disable CS8620 // TODO:WAITFIX
-					parameters);
-#pragma warning restore CS8620
+					parameters!);
 
 				if (_canBeNull != null)
 					sqlExpression.CanBeNull = _canBeNull.Value;

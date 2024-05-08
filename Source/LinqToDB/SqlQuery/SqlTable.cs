@@ -186,7 +186,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
 
-		public override int Precedence => LinqToDB.SqlQuery.Precedence.Primary;
+		public override int Precedence => SqlQuery.Precedence.Primary;
 		public override Type SystemType => ObjectType;
 		
 		#endregion

@@ -722,7 +722,7 @@ namespace LinqToDB.Linq.Builder
 				if (found.Count == 0)
 					throw new LinqToDBException("Could not find appropriate table in expression");
 				if (found.Count > 1)
-					throw new LinqToDBException("Ambiguous tables tables in expression");
+					throw new LinqToDBException("Ambiguous tables in expression");
 
 				var (foundPath, foundGeneric) = found.First();
 

@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS8604 // TODO:WAITFIX
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -78,13 +77,13 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var fieldExpr    = builder.GetExpression(0);
+				var fieldExpr    = builder.GetExpression(0)!;
 				var qualified    = builder.Arguments.Length <= 1 || builder.GetValue<bool>(1);
 				var isExpression = builder.Member.Name == "FieldExpr";
 
 				var field = QueryHelper.ExtractField(fieldExpr);
 				if (field == null)
-					throw new LinqToDBException($"Can not convert expression {builder.Arguments[0]} to field.");
+					throw new LinqToDBException($"Cannot convert expression {builder.Arguments[0]} to field.");
 
 				if (isExpression)
 				{
@@ -198,7 +197,7 @@ namespace LinqToDB
 				return new[] { GetColumnFromExpression(entityType, fieldExpr, mappingSchema, options) };
 
 			if (init.Arguments == null || init.Arguments.Count == 0)
-				throw new LinqToDBException($"Can not extract columns info from expression {fieldExpr.Body}");
+				throw new LinqToDBException($"Cannot extract columns info from expression {fieldExpr.Body}");
 
 			var ed = mappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns = new ColumnDescriptor[init.Arguments.Count];
@@ -206,11 +205,11 @@ namespace LinqToDB
 			{
 				var memberInfo = MemberHelper.GetMemberInfo(init.Arguments[i]);
 				if (memberInfo == null)
-					throw new LinqToDBException($"Can not extract member info from expression {init.Arguments[i]}");
+					throw new LinqToDBException($"Cannot extract member info from expression {init.Arguments[i]}");
 
 				var column = ed.FindColumnDescriptor(memberInfo);
 
-				columns[i] = column ?? throw new LinqToDBException($"Can not find column for member {entityType.Name}.{memberInfo.Name}");
+				columns[i] = column ?? throw new LinqToDBException($"Cannot find column for member {entityType.Name}.{memberInfo.Name}");
 			}
 
 			return columns;
@@ -220,13 +219,13 @@ namespace LinqToDB
 		{
 			var memberInfo = MemberHelper.GetMemberInfo(fieldExpr.Body);
 			if (memberInfo == null)
-				throw new LinqToDBException($"Can not extract member info from expression {fieldExpr.Body}");
+				throw new LinqToDBException($"Cannot extract member info from expression {fieldExpr.Body}");
 
 			var ed     = mappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
 			var column = ed.FindColumnDescriptor(memberInfo);
 
 			if (column == null)
-				throw new LinqToDBException($"Can not find column for member {entityType.Name}.{memberInfo.Name}");
+				throw new LinqToDBException($"Cannot find column for member {entityType.Name}.{memberInfo.Name}");
 			return column;
 		}
 
@@ -349,7 +348,7 @@ namespace LinqToDB
 
 				//TODO: review, maybe we need here TableSource
 				if (sqlTable == null)
-					throw new LinqToDBException("Can not find Table associated with expression");
+					throw new LinqToDBException("Cannot find Table associated with expression");
 
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
 				var isExpression = builder.Member.Name == "TableExpr";
@@ -392,7 +391,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var tableOrColumnExpr = builder.GetExpression(0);
+				var tableOrColumnExpr = builder.GetExpression(0)!;
 
 				var anchor = new SqlAnchor(tableOrColumnExpr, SqlAnchor.AnchorKindEnum.TableAsSelfColumnOrField);
 
@@ -404,7 +403,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var tableExpr = builder.GetExpression(0);
+				var tableExpr = builder.GetExpression(0)!;
 
 				var anchor = new SqlAnchor(tableExpr, SqlAnchor.AnchorKindEnum.TableAsSelfColumn);
 

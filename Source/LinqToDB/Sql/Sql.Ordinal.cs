@@ -5,18 +5,19 @@ namespace LinqToDB
 	public partial class Sql
 	{
 		/// <summary>
-		/// Forces LINQ translator to generate in <b>ORDER BY</b> with ordinal position, instead of SQL Expression.
+		/// Forces LINQ translator to generate column ordinal for <paramref name="expression"/> column (1-base column index in select statement).
+		/// Currently it is supported only for <b>ORDER BY</b> clause.
 		/// <p/>
 		/// Can be used in LINQ query as top level order expression.
 		/// For example the following two similar queries
 		/// <code>
 		/// query = query
-		///		.OrderBy(x => Sql.OrderIndex(x.Field2))
+		///		.OrderBy(x => Sql.Ordinal(x.Field2))
 		///		.ThenBy(x => x.Field2);
 		/// </code>
 		/// <code>
 		/// query =	from q in query
-		///		orderby Sql.OrderIndex(q.Field2), q.Field1
+		///		orderby Sql.Ordinal(q.Field2), q.Field1
 		///		select q;
 		/// </code>
 		/// Should generate thw following SQL:
@@ -32,6 +33,6 @@ namespace LinqToDB
 		/// <param name="expression"></param>
 		/// <returns>The same <paramref name="expression"/> when calling directly.</returns>
 		/// <exception cref="LinqException">Exception is throw when used not in OrderBy/ThenBy extension methods.</exception>
-		public static T OrderIndex<T>(T expression) => expression;
+		public static T Ordinal<T>(T expression) => expression;
 	}
 }

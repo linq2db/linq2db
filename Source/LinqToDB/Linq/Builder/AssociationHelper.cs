@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (predicate == null)
-					throw new LinqException("Can not generate Association predicate");
+					throw new LinqException("Cannot generate Association predicate");
 
 				if (inline && !shouldAddDefaultIfEmpty)
 				{

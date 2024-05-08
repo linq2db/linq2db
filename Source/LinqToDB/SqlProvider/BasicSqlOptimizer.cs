@@ -58,7 +58,6 @@ namespace LinqToDB.SqlProvider
 			statement = FinalizeSelect(statement);
 			statement = CorrectUnionOrderBy(statement);
 			statement = FixSetOperationNulls(statement);
-			statement = OptimizeUpdateSubqueries(statement, dataOptions);
 
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
@@ -535,27 +534,6 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		//TODO: move tis to standard optimizer
-		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement, DataOptions dataOptions)
-		{
-			/*
-			if (statement is SqlUpdateStatement updateStatement)
-			{
-				var evaluationContext = new EvaluationContext();
-				foreach (var setItem in updateStatement.Update.Items)
-				{
-					if (setItem.Expression is SelectQuery q)
-					{
-						var optimizer = new SelectQueryOptimizer(SqlProviderFlags, q, q, 0);
-						optimizer.FinalizeAndValidate(SqlProviderFlags.IsApplyJoinSupported);
-					}
-				}
-			}
-			*/
-
-			return statement;
-		}
-
 		protected virtual void FixEmptySelect(SqlStatement statement)
 		{
 			// avoid SELECT * top level queries, as they could create a lot of unwanted traffic
@@ -635,7 +613,6 @@ namespace LinqToDB.SqlProvider
 							if (e.ElementType == QueryElementType.SqlCteTable)
 							{
 								var cte = ((SqlCteTable)e).Cte!;
-								CorrectEmptyCte(cte);
 								RegisterDependency(cte, foundCte.WriteableValue ??= new());
 							}
 						}
@@ -670,15 +647,6 @@ namespace LinqToDB.SqlProvider
 					select.With.Clauses.AddRange(ordered);
 				}
 			}
-		}
-
-		static void CorrectEmptyCte(CteClause cte)
-		{
-			/*if (cte.Fields.Count == 0)
-			{
-				cte.Fields.Add(new SqlField(new DbDataType(typeof(int)), "any", false));
-				cte.Body!.Select.AddNew(new SqlValue(1), "any");
-			}*/
 		}
 
 		protected static bool HasParameters(ISqlExpression expr)
