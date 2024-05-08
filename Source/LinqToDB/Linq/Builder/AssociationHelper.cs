@@ -8,8 +8,9 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
-	using Reflection;
 	using Mapping;
+	using Reflection;
+	using Interceptors;
 
 	static class AssociationHelper
 	{
@@ -49,7 +50,14 @@ namespace LinqToDB.Linq.Builder
 				definedQueryMethod = (LambdaExpression)builder.ParametersContext.RegisterDynamicExpressionAccessor(Expression.Constant(association), builder.DataContext, mappingSchema, (dc, _) =>
 				{
 					var associationExpression = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
-					var optimizationContext   = new ExpressionTreeOptimizationContext(dc);
+
+                    if (dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+                    {
+                        associationExpression = (LambdaExpression)interceptor.ProcessExpression(associationExpression,
+                            new QueryExpressionArgs(dc, associationExpression, QueryExpressionArgs.ExpressionKind.AssociationExpression));
+                    }
+
+                    var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					associationExpression = (LambdaExpression)ExpressionBuilder.ExposeExpression(associationExpression, dc, optimizationContext, null, optimizeConditions : true, compactBinary : true);
 					return associationExpression;
 				});
@@ -201,7 +209,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = ExpressionBuilder.ExposeExpression(closureExpr, dc, optimizationContext, null, optimizeConditions : true, compactBinary : true);
-					optimizedExpr = optimizedExpr.OptimizeExpression(ms);
+					optimizedExpr = optimizedExpr.OptimizeExpression(dc.MappingSchema);
 					return optimizedExpr;
 				});
 			}

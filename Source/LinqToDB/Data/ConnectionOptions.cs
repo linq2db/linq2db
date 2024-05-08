@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
@@ -10,7 +8,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using Interceptors;
 
-	using LinqToDB.Remote;
+	using Remote;
 
 	using Mapping;
 

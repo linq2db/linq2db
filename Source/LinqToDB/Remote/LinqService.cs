@@ -17,6 +17,7 @@ namespace LinqToDB.Remote
 	using Tools;
 	using Infrastructure;
 	using Linq.Translation;
+	using Interceptors;
 
 	public class LinqService : ILinqService
 	{
@@ -77,10 +78,12 @@ namespace LinqToDB.Remote
 		{
 			using var ctx = CreateDataContext(configuration);
 
+			var serviceProvider = ((IInfrastructure<IServiceProvider>)ctx.DataProvider).Instance;
+
 			return new LinqServiceInfo
 			{
 				MappingSchemaType        = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				MethodCallTranslatorType = ctx.DataProvider.ServiceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
+				MethodCallTranslatorType = serviceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
 				SqlBuilderType           = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlOptimizerType         = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags         = ctx.DataProvider.SqlProviderFlags,
@@ -92,10 +95,12 @@ namespace LinqToDB.Remote
 		{
 			using var ctx = CreateDataContext(configuration);
 
+			var serviceProvider = ((IInfrastructure<IServiceProvider>)ctx.DataProvider).Instance;
+
 			return Task.FromResult(new LinqServiceInfo()
 			{
 				MappingSchemaType        = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				MethodCallTranslatorType = ctx.DataProvider.ServiceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
+				MethodCallTranslatorType = serviceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
 				SqlBuilderType           = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlOptimizerType         = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags         = ctx.DataProvider.SqlProviderFlags,
@@ -340,7 +345,7 @@ namespace LinqToDB.Remote
 		{
 			DbDataReader reader;
 
-			if (((IDataContext)db).UnwrapDataObjectInterceptor is {} interceptor)
+			if (db is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 			{
 				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 					reader = interceptor.UnwrapDataReader(db, rd.DataReader!);

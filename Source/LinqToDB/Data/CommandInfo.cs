@@ -31,6 +31,7 @@ namespace LinqToDB.Data
 	using Mapping;
 	using Reflection;
 	using Tools;
+	using Interceptors;
 
 	/// <summary>
 	/// Provides database connection command abstraction.
@@ -330,7 +331,7 @@ namespace LinqToDB.Data
 
 						DbDataReader reader;
 
-						if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+						if (DataConnection is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: {} interceptor })
 						{
 							using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 								reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
@@ -445,7 +446,7 @@ namespace LinqToDB.Data
 
 						DbDataReader reader;
 
-						if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+						if (DataConnection is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 						{
 							using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 								reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
@@ -1037,7 +1038,7 @@ namespace LinqToDB.Data
 
 					DbDataReader reader;
 
-					if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+					if (DataConnection is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 					{
 						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 							reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);

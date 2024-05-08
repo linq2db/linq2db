@@ -260,7 +260,8 @@ namespace LinqToDB.Data
 					}
 
 					// correct aliases if needed
-					AliasesHelper.PrepareQueryAndAliases(dataConnection.DataProvider.ServiceProvider.GetRequiredService<IIdentifierService>(), statement, query.Aliases, out var aliases);
+					var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
+					AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, query.Aliases, out var aliases);
 
 					query.Aliases = aliases;
 
