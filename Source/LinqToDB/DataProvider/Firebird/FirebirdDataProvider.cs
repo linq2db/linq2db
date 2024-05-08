@@ -40,6 +40,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 			SqlProviderFlags.MaxInListValuesCount = Version >= FirebirdVersion.v5 ? 65535 : 1500;
 
+			SqlProviderFlags.IsDeleteTakeSupported     = true;
+			SqlProviderFlags.IsDeleteSkipTakeSupported = true;
+			SqlProviderFlags.IsUpdateTakeSupported     = true;
+			SqlProviderFlags.IsUpdateSkipTakeSupported = true;
+
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 

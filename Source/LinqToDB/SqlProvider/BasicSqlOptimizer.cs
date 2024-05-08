@@ -868,17 +868,19 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		protected static bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
+		protected bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
 		{
 			source = null;
 
-			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
+			
+			if (query.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported) ||
+				!query.GroupBy.IsEmpty)
 				return false;
 
 			if (table.SqlQueryExtensions?.Count > 0)
 				return false;
 
-			for (int i = 0; i < query.From.Tables.Count; i++)
+			for (var i = 0; i < query.From.Tables.Count; i++)
 			{
 				var ts = query.From.Tables[i];
 				if (ts.Joins.All(j => j.JoinType is JoinType.Inner or JoinType.Left or JoinType.Cross))
@@ -888,7 +890,7 @@ namespace LinqToDB.SqlProvider
 						source = ts;
 
 						query.From.Tables.RemoveAt(i);
-						for (int j = 0; j < ts.Joins.Count; j++)
+						for (var j = 0; j < ts.Joins.Count; j++)
 						{
 							query.From.Tables.Insert(i + j, ts.Joins[j].Table);
 							query.Where.ConcatSearchCondition(ts.Joins[j].Condition);
@@ -899,7 +901,7 @@ namespace LinqToDB.SqlProvider
 						return true;
 					}
 
-					for (int j = 0; j < ts.Joins.Count; j++)
+					for (var j = 0; j < ts.Joins.Count; j++)
 					{
 						var join = ts.Joins[j];
 						if (join.Table.Source == table)
@@ -912,7 +914,7 @@ namespace LinqToDB.SqlProvider
 							ts.Joins.RemoveAt(j);
 							query.Where.ConcatSearchCondition(join.Condition);
 
-							for (int sj = 0; j < join.Table.Joins.Count; j++)
+							for (var sj = 0; j < join.Table.Joins.Count; j++)
 							{
 								ts.Joins.Insert(j + sj, join.Table.Joins[sj]);
 							}
@@ -1019,7 +1021,7 @@ namespace LinqToDB.SqlProvider
 				if (targetRow.Values.Length != sourceRow.Values.Length)
 					throw new InvalidOperationException("Target and Source SqlRows are different");
 
-				for (int i = 0; i < targetRow.Values.Length; i++)
+				for (var i = 0; i < targetRow.Values.Length; i++)
 				{
 					var tagetRowValue  = targetRow.Values[i];
 					var sourceRowValue = sourceRow.Values[i];
@@ -1034,7 +1036,6 @@ namespace LinqToDB.SqlProvider
 				var columnExpr = selectQuery.Select.AddNewColumn(ex);
 
 				yield return (target, columnExpr);
-
 			}
 		}
 
@@ -1043,7 +1044,8 @@ namespace LinqToDB.SqlProvider
 			if (updateStatement.Update.Table == null)
 				throw new InvalidOperationException();
 
-			if (!updateStatement.SelectQuery.Select.HasModifier && updateStatement.SelectQuery.From.Tables.Count == 1)
+			if (!updateStatement.SelectQuery.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported)
+				&& updateStatement.SelectQuery.From.Tables.Count == 1)
 			{
 				var sqlTableSource = updateStatement.SelectQuery.From.Tables[0];
 				if (sqlTableSource.Source == updateStatement.Update.Table && sqlTableSource.Joins.Count == 0)
@@ -1310,7 +1312,7 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			if (statement.SelectQuery.Select.HasModifier)
+			if (statement.SelectQuery.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported))
 			{
 				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
 			}

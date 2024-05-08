@@ -45,6 +45,8 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 			SqlProviderFlags.IsWindowFunctionsSupported       = false;
 			SqlProviderFlags.IsDerivedTableOrderBySupported   = false;
+			SqlProviderFlags.IsDeleteTakeSupported            = true;
+			SqlProviderFlags.IsUpdateTakeSupported            = true;
 
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
 			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported            = false;

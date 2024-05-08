@@ -1656,7 +1656,8 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.Select.HasModifier)
 			{
 				// Do not optimize queries for update
-				if (_updateQuery == parentQuery)
+				if (_updateQuery == parentQuery
+					&& subQuery.Select.HasSomeModifiers(_providerFlags.IsUpdateSkipTakeSupported, _providerFlags.IsUpdateTakeSupported))
 					return false;
 
 				if (tableSource.Joins.Count > 0)

@@ -33,6 +33,14 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
 			SqlProviderFlags.IsRecursiveCTEJoinWithConditionSupported     = false;
 
+			// Requires:
+			// DB2 LUW: 11.1+
+			// DB2 zOS: 12+
+			SqlProviderFlags.IsDeleteTakeSupported     = version is DB2Version.zOS or DB2Version.LUW;
+			SqlProviderFlags.IsDeleteSkipTakeSupported = version is DB2Version.LUW;
+			SqlProviderFlags.IsUpdateTakeSupported     = version is DB2Version.LUW;
+			SqlProviderFlags.IsUpdateSkipTakeSupported = version is DB2Version.LUW;
+
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Update |
 			                                         RowFeature.UpdateLiteral | RowFeature.Overlaps | RowFeature.Between;
 

@@ -47,6 +47,9 @@ namespace LinqToDB.DataProvider.MySql
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
+			SqlProviderFlags.IsDeleteTakeSupported     = true;
+			SqlProviderFlags.IsUpdateTakeSupported     = true;
+
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 
 			// configure provider-specific data readers
