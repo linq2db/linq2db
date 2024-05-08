@@ -1,7 +1,6 @@
 ﻿{
-	"NET80.Azure": {
+	"NET60.Azure": {
 		"Providers": [
-			"ClickHouse.Octonica",
 			"ClickHouse.MySql"
 		]
 	}
