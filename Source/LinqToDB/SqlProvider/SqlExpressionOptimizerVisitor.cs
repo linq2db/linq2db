@@ -840,7 +840,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
-
 			if (unwrapped is SqlBinaryExpression binaryExpression)
 			{
 				ISqlPredicate? result = null;
@@ -860,19 +859,6 @@ namespace LinqToDB.SqlProvider
 				if (result != null)
 					return Visit(result);
 			}
-
-			if (unwrapped is SqlConditionExpression conditionExpression)
-			{
-				var searchCondition = new SqlSearchCondition(true);
-				searchCondition
-					.AddIsNull(conditionExpression.TrueValue)
-					.AddIsNull(conditionExpression.FalseValue);
-
-				var result = searchCondition.MakeNot(predicate.IsNot);
-
-				return Visit(result);
-			}
-
 
 			return predicate;
 		}
