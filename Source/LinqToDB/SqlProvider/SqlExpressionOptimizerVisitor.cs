@@ -1349,9 +1349,14 @@ namespace LinqToDB.SqlProvider
 			    exprExpr.Expr1.SystemType.IsSignedType()           &&
 			    exprExpr.Expr2.SystemType.IsSignedType())
 			{
-				var newExpr = exprExpr switch
+				var left  = QueryHelper.UnwrapNullablity(exprExpr.Expr1);
+				var right = QueryHelper.UnwrapNullablity(exprExpr.Expr2);
+
+				var unwrapped = (left, exprExpr.Operator, right);
+
+				var newExpr = unwrapped switch
 				{
-					(SqlBinaryExpression binary, var op, var v, _) when v.CanBeEvaluated(_evaluationContext) =>
+					(SqlBinaryExpression binary, var op, var v) when v.CanBeEvaluated(_evaluationContext) =>
 
 						// binary < v
 						binary switch
@@ -1369,7 +1374,25 @@ namespace LinqToDB.SqlProvider
 							_ => null
 						},
 
-					(var v, var op, SqlBinaryExpression binary, _) when v.CanBeEvaluated(_evaluationContext) =>
+					(SqlBinaryExpression binary, var op, var v) when v.CanBeEvaluated(_evaluationContext) =>
+
+						// binary < v
+						binary switch
+						{
+							// e + some < v ===> some < v - e
+							(var e, "+", var some) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							// e - some < v ===>  e - v < some
+							(var e, "-", var some) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, e, "-", v), op, some, null),
+
+							// some + e < v ===> some < v - e
+							(var some, "+", var e) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							// some - e < v ===> some < v + e
+							(var some, "-", var e) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "+", e), null),
+
+							_ => null
+						},
+
+					(var v, var op, SqlBinaryExpression binary) when v.CanBeEvaluated(_evaluationContext) =>
 
 						// v < binary
 						binary switch
