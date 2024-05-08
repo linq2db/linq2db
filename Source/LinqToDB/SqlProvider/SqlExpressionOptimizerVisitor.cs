@@ -91,7 +91,12 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
 		{
+			var saveAllowOptimize = _allowOptimize;
+			_allowOptimize = element.Condition;
+
 			var newExpr = base.VisitSqlConditionExpression(element);
+
+			_allowOptimize = saveAllowOptimize;
 
 			if (!ReferenceEquals(newExpr, element))
 				return Visit(newExpr);
@@ -125,6 +130,24 @@ namespace LinqToDB.SqlProvider
 				var newCaseExpression = new SqlCaseExpression(falseCase.Type, caseItems, falseCase.ElseExpression);
 
 				return Visit(newCaseExpression);
+			}
+
+			if (element.Condition is SqlPredicate.IsNull isNullPredicate)
+			{
+				var unwrapped = QueryHelper.UnwrapNullablity(isNullPredicate.Expr1);
+
+				if (isNullPredicate.IsNot)
+				{
+					if (unwrapped.Equals(element.TrueValue, SqlExpression.DefaultComparer) && element.FalseValue is SqlValue { Value: null })
+					{
+						return isNullPredicate.Expr1;
+					}
+				}
+				else if (unwrapped.Equals(element.FalseValue, SqlExpression.DefaultComparer) && element.TrueValue is SqlValue { Value: null })
+				{
+					return isNullPredicate.Expr1;
+				}
+
 			}
 
 			return element;
