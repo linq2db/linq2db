@@ -951,7 +951,7 @@ namespace LinqToDB
 					return expression;
 
 				if (chain.Count == 0)
-					throw new InvalidOperationException("No sequence found for expression '{expression}'");
+					throw new InvalidOperationException($"No sequence found for expression '{expression}'");
 
 				var ordered = chain
 					.Select(static (c, i) => Tuple.Create(c, i))

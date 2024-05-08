@@ -1167,7 +1167,7 @@ namespace LinqToDB.SqlProvider
 
 						var field = QueryHelper.GetUnderlyingField(column);
 						if (field == null)
-							throw new LinqToDBException("Expression {column} cannot be used for update field");
+							throw new LinqToDBException($"Expression {column} cannot be used for update field");
 
 						setExpression.Column = field;
 					}
@@ -1272,7 +1272,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var field = QueryHelper.GetUnderlyingField(column.Expression);
 					if (field == null)
-						throw new InvalidOperationException("Expression {column.Expression} cannot be used for update field");
+						throw new InvalidOperationException($"Expression {column.Expression} cannot be used for update field");
 					item.Column = field;
 				}
 			}

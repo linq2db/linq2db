@@ -321,7 +321,7 @@ namespace LinqToDB.Mapping
 
 			if (!(typeof(IQueryable<>).IsSameOrParentOf(lambda.ReturnType) &&
 			      lambda.ReturnType.GetGenericArguments()[0].IsSameOrParentOf(objectType)))
-				throw new LinqToDBException("Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
+				throw new LinqToDBException($"Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
 
 			return lambda;
 		}
