@@ -648,7 +648,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (TargetTable == null)
 				{
-					throw new LinqToDBException("Insert query has no defined target table.");
+					throw new LinqToDBException("Update query has no defined target table.");
 				}
 
 				var tableContext = TargetTable;
@@ -683,7 +683,7 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 					default:
-						throw new InvalidOperationException($"Unexpected insert type: {UpdateType}");
+						throw new InvalidOperationException($"Unexpected update type: {UpdateType}");
 				}
 			}
 

@@ -105,7 +105,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 				var memberName           = memberNameExpression.EvaluateExpression<string>();
 				if (memberName == null)
 					throw new InvalidOperationException(
-						$"Could not retrieve member mane from expression '{memberNameExpression}'");
+						$"Could not retrieve member name from expression '{memberNameExpression}'");
 
 				var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type, DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 

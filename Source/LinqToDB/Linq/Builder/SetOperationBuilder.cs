@@ -840,7 +840,6 @@ namespace LinqToDB.Linq.Builder
 
 				public List<(SqlPlaceholderExpression placeholder, Expression[] path)> FoundPlaceholders { get; } = new();
 
-				//public List<(SqlEagerLoadExpression eager, Expression[] path)> FoundEager { get; } = new();
 				public List<SqlEagerLoadExpression> FoundEager { get; } = new();
 
 				protected override Expression VisitConditional(ConditionalExpression node)
