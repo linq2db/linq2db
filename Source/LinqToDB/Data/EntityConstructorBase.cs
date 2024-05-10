@@ -28,16 +28,6 @@ namespace LinqToDB.Data
 
 		#region Entity Construction
 
-		public static Type GetTypeForInstantiation(Type entityType)
-		{
-			// choosing type that can be instantiated
-			if (entityType.IsInterface || entityType.IsAbstract)
-			{
-				throw new NotImplementedException();
-			}
-			return entityType;
-		}
-
 		public virtual List<LoadWithInfo>? GetTableLoadWith(Expression path)
 		{
 			return null;
@@ -270,8 +260,6 @@ namespace LinqToDB.Data
 
 		SqlGenericConstructorExpression BuildFullEntityExpressionInternal(Expression refExpression, Type entityType, ProjectFlags flags, FullEntityPurpose purpose)
 		{
-			entityType = GetTypeForInstantiation(entityType);
-
 			refExpression = SequenceHelper.EnsureType(refExpression, entityType);
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
@@ -285,8 +273,6 @@ namespace LinqToDB.Data
 		{
 			DataContext   = dataContext;
 			MappingSchema = mappingSchema;
-
-			entityType = GetTypeForInstantiation(entityType);
 
 			refExpression = SequenceHelper.EnsureType(refExpression, entityType);
 
