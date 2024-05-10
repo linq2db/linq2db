@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
+	using System.Data.SqlTypes;
+
 	using Common;
 	using Expressions;
 	using Mapping;
@@ -41,6 +43,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			Type commandType,
 			Func<string, DbConnection> connectionFactory,
 
+			bool                  needsDecimalFix,
 			Type?                 clientDecimalType,
 			Func<object, string>? clientDecimalToStringConverter,
 
@@ -68,7 +71,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 			CommandType        = commandType;
 			_connectionFactory = connectionFactory;
 
-			ClientDecimalType = clientDecimalType;
+			HasFaultyClientDecimalType     = needsDecimalFix;
+			ClientDecimalType              = clientDecimalType;
 			ClientDecimalToStringConverter = clientDecimalToStringConverter;
 
 			GetDateTimeOffsetReaderMethod = getDateTimeOffsetReaderMethod;
@@ -117,8 +121,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 		readonly Func<string, DbConnection> _connectionFactory;
 		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
 
-#endregion
+		#endregion
 
+		// https://github.com/DarkWanderer/ClickHouse.Client/issues/459
+		public bool                  HasFaultyClientDecimalType     { get; }
 		public Type?                 ClientDecimalType              { get; }
 		public Func<object, string>? ClientDecimalToStringConverter { get; }
 
@@ -210,6 +216,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			MappingSchema? mappingSchema           = null;
 			Func<object, string>? decimalConverter = null;
+			var decimalIsBroken                    = false;
 			if (decimalType != null)
 			{
 				mappingSchema = new ();
@@ -219,6 +226,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 				typeMapper.FinalizeMappings();
 
 				decimalConverter = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((ClientWrappers.ClickHouseDecimal)value).ToString(CultureInfo.InvariantCulture)));
+
+				decimalIsBroken = assembly.GetName().Version < new Version(7, 2, 2);
 			}
 			else
 				typeMapper.FinalizeMappings();
@@ -232,6 +241,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				commandType,
 				connectionFactory,
 
+				decimalIsBroken,
 				decimalType,
 				decimalConverter,
 
@@ -300,6 +310,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				commandType,
 				connectionFactory,
 
+				false,
 				null,
 				null,
 

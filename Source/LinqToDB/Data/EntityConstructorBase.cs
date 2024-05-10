@@ -31,7 +31,7 @@ namespace LinqToDB.Data
 		public static Type GetTypeForInstantiation(Type entityType)
 		{
 			// choosing type that can be instantiated
-			if ((entityType.IsInterface || entityType.IsAbstract) && !(entityType.IsInterface || entityType.IsAbstract))
+			if (entityType.IsInterface || entityType.IsAbstract)
 			{
 				throw new NotImplementedException();
 			}
@@ -150,7 +150,7 @@ namespace LinqToDB.Data
 							}
 
 							if (memberInfo == null)
-								throw new InvalidOperationException($"No suitable member '[currentMemberName]' found for type '{currentPath.Type}'");
+								throw new InvalidOperationException($"No suitable member '[{currentMemberName}]' found for type '{currentPath.Type}'");
 						}
 
 						var newColumns = columns.Where(c => c.MemberName.StartsWith(propPath)).ToList();
@@ -594,25 +594,14 @@ namespace LinqToDB.Data
 						var onType = firstMapping.Discriminator.MemberInfo.DeclaringType;
 						if (onType == null)
 						{
-							throw new LinqToDBException("Could not get discriminator DeclaringType.");
+							throw new LinqToDBException("Could not get discriminator's DeclaringType.");
 						}
 
 						var access = GetMemberExpression(constructorExpression, firstMapping.Discriminator.MemberInfo);
 						var codeExpr = Expression.Convert(access, typeof(object));
 
 						var generator    = new ExpressionGenerator();
-#if true
 						generator.AddExpression(Expression.Call(_throwErrorMethodInf.MakeGenericMethod(entityType), codeExpr, Expression.Constant(onType, typeof(Type))));
-#else
-						//TODO: probably remove. Other part work with NETFRAMEWEORK also.
-						Expression<Func<object, Type, Exception>> throwExpr = (code, et) =>
-							new LinqException(
-								"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
-								code, et);
-
-						generator.Throw(throwExpr.GetBody(codeExpr, Expression.Constant(onType, typeof(Type))));
-						generator.AddExpression(new DefaultValueExpression(MappingSchema, entityType));
-#endif
 						defaultExpression = generator.Build();
 					}
 

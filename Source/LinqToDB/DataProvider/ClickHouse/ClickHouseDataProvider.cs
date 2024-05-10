@@ -116,11 +116,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 				}
 			}
 
-			if (Provider == ClickHouseProvider.ClickHouseClient && Adapter.ClientDecimalType != null)
+			if (Provider == ClickHouseProvider.ClickHouseClient && Adapter.ClientDecimalType != null && Adapter.HasFaultyClientDecimalType)
 			{
-				// TODO: add only to older versions after fix
-				// workaround for
-				// https://github.com/DarkWanderer/ClickHouse.Client/issues/459
 				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (int  )rd.GetDecimal(idx));
 				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (uint )rd.GetDecimal(idx));
 				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (long )rd.GetDecimal(idx));
