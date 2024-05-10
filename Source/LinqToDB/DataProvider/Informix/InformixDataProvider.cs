@@ -27,12 +27,9 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
-			SqlProviderFlags.IsCrossJoinSupported              = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.IsGroupByColumnRequred            = true;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
 			SqlProviderFlags.IsExistsPreferableForContains     = true;
 

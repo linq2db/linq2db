@@ -23,14 +23,11 @@ namespace LinqToDB.DataProvider.Access
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter                       = false;
 			SqlProviderFlags.IsSkipSupported                              = false;
-			SqlProviderFlags.IsCountSubQuerySupported                     = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported                    = false;
 			SqlProviderFlags.IsSubQuerySkipSupported                      = false;
 			SqlProviderFlags.IsSupportsJoinWithoutCondition               = false;
 			SqlProviderFlags.TakeHintsSupported                           = TakeHints.Percent;
 			SqlProviderFlags.IsCrossJoinSupported                         = false;
-			SqlProviderFlags.IsInnerJoinAsCrossSupported                  = false;
-			SqlProviderFlags.IsDistinctOrderBySupported                   = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported             = false;
 			SqlProviderFlags.IsParameterOrderDependent                    = true;
 			SqlProviderFlags.IsUpdateFromSupported                        = false;

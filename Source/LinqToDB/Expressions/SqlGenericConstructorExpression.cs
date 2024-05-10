@@ -135,7 +135,7 @@ namespace LinqToDB.Expressions
 			if (memberInitExpression.NewExpression.Members != null)
 				throw new NotImplementedException();
 
-			Parameters = GetMethodParameters(memberInitExpression.NewExpression.Constructor, memberInitExpression.NewExpression.Arguments);
+			Parameters = GetMethodParameters(memberInitExpression.NewExpression.Constructor!, memberInitExpression.NewExpression.Arguments);
 
 			var items = GetBindingsAssignments(memberInitExpression.Bindings);
 

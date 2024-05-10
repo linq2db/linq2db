@@ -26,7 +26,6 @@ namespace LinqToDB.DataProvider.DB2
 
 			SqlProviderFlags.AcceptsTakeAsParameter                       = false;
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip                 = true;
-			SqlProviderFlags.IsDistinctOrderBySupported                   = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported            = true;
 			SqlProviderFlags.IsUpdateFromSupported                        = false;
 			SqlProviderFlags.IsCrossJoinSupported                         = false;
@@ -36,8 +35,6 @@ namespace LinqToDB.DataProvider.DB2
 			// Requires:
 			// DB2 LUW: 11.1+
 			// DB2 zOS: 12+
-			SqlProviderFlags.IsDeleteTakeSupported     = version is DB2Version.zOS or DB2Version.LUW;
-			SqlProviderFlags.IsDeleteSkipTakeSupported = version is DB2Version.LUW;
 			SqlProviderFlags.IsUpdateTakeSupported     = version is DB2Version.LUW;
 			SqlProviderFlags.IsUpdateSkipTakeSupported = version is DB2Version.LUW;
 

@@ -1798,14 +1798,14 @@ namespace LinqToDB.SqlQuery
 				{
 					if (joinTable.JoinType == JoinType.OuterApply)
 					{
-						if (_providerFlags.IsApplyJoinSupportsCondition)
+						if (_providerFlags.IsOuterApplyJoinSupportsCondition)
 							moveConditionToQuery = false;
 						else
 							return false;
 					}
 					else if (joinTable.JoinType == JoinType.CrossApply)
 					{
-						if (_providerFlags.IsApplyJoinSupportsCondition)
+						if (_providerFlags.IsCrossApplyJoinSupportsCondition)
 							moveConditionToQuery = false;
 					}
 					else if (joinTable.JoinType == JoinType.Left)

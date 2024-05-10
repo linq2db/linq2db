@@ -45,16 +45,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// as emulation doesn't work properly due to missing rowcount functionality
 			SqlProviderFlags.IsInsertOrUpdateSupported         = true;
 
-			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.DoesNotSupportCorrelatedSubquery  = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsNestedJoinsSupported            = false;
-
-			if (this is ClickHouseOctonicaDataProvider or ClickHouseMySqlDataProvider)
-				SqlProviderFlags.IsProjectionBoolSupported = false;
 
 			// unconfigured flags
 			// 1. ClickHouse doesn't support correlated subqueries at all so this flag's value doesn't make difference
