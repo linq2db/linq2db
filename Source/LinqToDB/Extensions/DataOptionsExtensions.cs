@@ -970,11 +970,12 @@ namespace LinqToDB
 		/// <param name="options"></param>
 		/// <param name="translator"></param>
 		/// <returns>The new DataOptions instance.</returns>
+		[Pure]
 		public static DataOptions UseMemberTranslator(this DataOptions options, IMemberTranslator translator)
 		{
 			return options.WithOptions<DataContextOptions>(o =>
 			{
-				var list = new List<IMemberTranslator>();
+				var list = new List<IMemberTranslator>(o.MemberTranslators?.Count ?? 0 + 1);
 
 				if (o.MemberTranslators != null)
 					list.AddRange(o.MemberTranslators);
@@ -995,6 +996,7 @@ namespace LinqToDB
 		/// <param name="options"></param>
 		/// <param name="translators"></param>
 		/// <returns>The new DataOptions instance.</returns>
+		[Pure]
 		public static DataOptions UseMemberTranslator(this DataOptions options, IEnumerable<IMemberTranslator> translators)
 		{
 			return options.WithOptions<DataContextOptions>(o =>
