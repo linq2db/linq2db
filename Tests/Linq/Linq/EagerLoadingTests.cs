@@ -2059,7 +2059,7 @@ FROM
 
 			var query = db.GetTable<EntityA>().LoadWith(e => e.ObjectBRO.ObjectC).LoadWith(e => e.ObjectBRO.ObjectsD);
 
-			Assert.That(() => query.ToList(), Throws.Exception);
+			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityA'. Following members are not assignable: ObjectBRO."));
 		}
 
 		[Test]
@@ -2075,7 +2075,7 @@ FROM
 				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectsC)
 				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectD);
 
-			Assert.That(() => query.ToList(), Throws.Exception);
+			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityMA'. Following members are not assignable: ObjectsBRO."));
 		}
 
 		[Test]
@@ -2089,7 +2089,7 @@ FROM
 
 			var query = db.GetTable<EntityA>().LoadWith(e => e.ObjectBRO.ObjectC).LoadWith(e => e.ObjectBRO.ObjectsD);
 
-			Assert.That(() => query.ToList(), Throws.Exception);
+			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityA'. Following members are not assignable: ObjectBRO."));
 		}
 
 		[Test]
@@ -2105,7 +2105,7 @@ FROM
 				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectsC)
 				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectD);
 
-			Assert.That(() => query.ToList(), Throws.Exception);
+			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityMA'. Following members are not assignable: ObjectsBRO."));
 		}
 
 		[Test]
