@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.AspNet.Logging;
+using LinqToDB.Extensions.Logging;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 

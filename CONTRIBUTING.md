@@ -14,7 +14,7 @@ uid: contributing
 |.\NuGet|LINQ to DB NuGet packages build files|
 |.\Redist| Binaries, unavailable officially at NuGet, used by tests and nugets|
 |.\Source\LinqToDB| LINQ to DB source code|
-|.\Source\LinqToDB.AspNet| LINQ to DB ASP.NET Core integration library source code|
+|.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
 |.\Source\LinqToDB.CLI| LINQ to DB CLI scaffold tool source code|
 |.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
 |.\Source\LinqToDB.Remote.Grpc| LINQ to DB Remote Context GRPC client/server source code|

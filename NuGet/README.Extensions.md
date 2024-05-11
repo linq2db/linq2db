@@ -1,4 +1,4 @@
-# LINQ to DB ASP.NET Core<!-- omit in toc -->
+# LINQ to DB Dependency Injection and Logging Extensions<!-- omit in toc -->
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
@@ -30,7 +30,7 @@ dotnet new webapp -o gettingStartedLinqToDBAspNet
 We can now use the CLI to install LINQ To DB and database provider (SQLite in this walkthrough)
 
 ```txt
-dotnet add package linq2db.AspNet
+dotnet add package linq2db.Extensions
 dotnet add package System.Data.SQLite.Core
 ```
 
@@ -39,7 +39,8 @@ dotnet add package System.Data.SQLite.Core
 We're going to create a custom data connection to use to access LINQ To DB, create a class like this:
 
 ```C#
-using LinqToDB.Configuration;
+using LinqToDB.Extensions.DependencyInjection;
+using LinqToDB.Extensions.Logging;
 using LinqToDB.Data;
 
 public class AppDataConnection: DataConnection
@@ -92,7 +93,7 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         //...
-        //using LinqToDB.AspNet
+        //using LinqToDB.Configuration
         services.AddLinqToDBContext<AppDataConnection>((provider, options)
             => options
                 //will configure the AppDataConnection to use
@@ -223,7 +224,7 @@ public class PeopleController : Controller
 
 ### Quick start for people already familiar with LINQ To DB
 
-LINQ To DB now has support for ASP.NET Dependency injection. Here's a simple example of how to add it to dependency injection
+LINQ To DB now has support for Dependency injection. Here's a simple example of how to add it to dependency injection
 
 ```C#
 public class Startup
@@ -233,7 +234,7 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         //...
-        //using LinqToDB.AspNet
+        //using LinqToDB.Configuration
         services.AddLinqToDBContext<AppDataConnection>((provider, options)
             => options
                 //will configure the AppDataConnection to use
