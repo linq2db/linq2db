@@ -21,15 +21,13 @@
 			<JunkFiles
 				Condition="$(Configuration) == 'Release'"
 				Include="
-			$(ArtifactsPath)\bin\$(ProjectName)\Release\net6.0\dotnet-linq2db.runtimeconfig.dev.json;
-			$(ArtifactsPath)\bin\$(ProjectName)\Release\net6.0\*.pdb;
 			$(ArtifactsPath)\bin\$(ProjectName)\Release\net6.0\*.xml;
-			$(ArtifactsPath)\bin\$(ProjectName)\Release\net7.0\dotnet-linq2db.runtimeconfig.dev.json;
-			$(ArtifactsPath)\bin\$(ProjectName)\Release\net7.0\*.pdb;
+			$(ArtifactsPath)\bin\$(ProjectName)\Release\net6.0\*.pdb;
 			$(ArtifactsPath)\bin\$(ProjectName)\Release\net7.0\*.xml;
-			$(ArtifactsPath)\bin\$(ProjectName)\Release\net8.0\dotnet-linq2db.runtimeconfig.dev.json;
-			$(ArtifactsPath)\bin\$(ProjectName)\Release\net8.0\*.pdb;
-			$(ArtifactsPath)\bin\$(ProjectName)\Release\net8.0\*.xml;" />
+			$(ArtifactsPath)\bin\$(ProjectName)\Release\net7.0\*.pdb;
+			$(ArtifactsPath)\bin\$(ProjectName)\Release\net8.0\*.xml;
+			$(ArtifactsPath)\bin\$(ProjectName)\Release\net8.0\*.pdb;"
+		/>
 		</ItemGroup>
 
 		<Delete Condition="$(Configuration) == 'Release'" Files="@(JunkFiles)" />
