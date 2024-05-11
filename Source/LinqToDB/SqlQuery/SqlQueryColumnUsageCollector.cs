@@ -116,6 +116,30 @@ namespace LinqToDB.SqlQuery
 			return newExpression;
 		}
 
+		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		{
+			base.VisitExprExprPredicate(predicate);
+
+			if (QueryHelper.UnwrapNullablity(predicate.Expr1).ElementType == QueryElementType.SqlRow && QueryHelper.UnwrapNullablity(predicate.Expr2) is SelectQuery selectQuery2)
+			{
+				foreach (var column in selectQuery2.Select.Columns)
+				{
+					RegisterColumn(column);
+				}
+			}
+
+			if (QueryHelper.UnwrapNullablity(predicate.Expr2).ElementType == QueryElementType.SqlRow && QueryHelper.UnwrapNullablity(predicate.Expr1) is SelectQuery selectQuery1)
+			{
+				foreach (var column in selectQuery1.Select.Columns)
+				{
+					RegisterColumn(column);
+				}
+			}
+
+
+			return predicate;
+		}
+
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			if (_parentSelectQuery == null || selectQuery.HasSetOperators || selectQuery.Select.IsDistinct || selectQuery.From.Tables.Count == 0)

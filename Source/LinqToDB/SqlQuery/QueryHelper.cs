@@ -1590,6 +1590,20 @@ namespace LinqToDB.SqlQuery
 			return null != root.Find(element, static (tf, e) => ReferenceEquals(tf, e));
 		}
 
+		public static bool HasQueryParameter(this IQueryElement root)
+		{
+			return null != root.Find(static e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var param = (SqlParameter)e;
+					return param.IsQueryParameter;
+				}
+
+				return false;
+			});
+		}
+
 		public static void DebugCheckNesting(SqlStatement statement, bool isSubQuery)
 		{
 			// TODO: temporary disabled

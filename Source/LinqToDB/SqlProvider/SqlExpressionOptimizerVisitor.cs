@@ -75,6 +75,39 @@ namespace LinqToDB.SqlProvider
 			return newElement;
 		}
 
+		#region Helper functions
+
+		protected bool CanBeEvaluateNoParameters(IQueryElement expr)
+		{
+			if (expr.HasQueryParameter())
+			{
+				return false;
+			}
+
+			return expr.CanBeEvaluated(_evaluationContext);
+		}
+
+		protected bool TryEvaluateNoParameters(IQueryElement expr, out object? result)
+		{
+			if (expr.HasQueryParameter())
+			{
+				result = null;
+				return false;
+			}
+
+			return TryEvaluate(expr, out result);
+		}
+
+		protected bool TryEvaluate(IQueryElement expr, out object? result)
+		{
+			if (expr.TryEvaluateExpression(_evaluationContext, out result))
+				return true;
+
+			return false;
+		}
+
+		#endregion
+
 		protected override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
 		{
 			var newElement = base.VisitIsTruePredicate(predicate);
@@ -101,7 +134,7 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newExpr, element))
 				return Visit(newExpr);
 
-			if (element.Condition.TryEvaluateExpression(_evaluationContext, out var value) && value is bool boolValue)
+			if (TryEvaluate(element.Condition, out var value) && value is bool boolValue)
 			{
 				return boolValue ? element.TrueValue : element.FalseValue;
 			}
@@ -157,7 +190,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var newElement =  base.VisitCaseItem(element);
 
-			if (newElement.Condition.TryEvaluateExpression(_evaluationContext, out var result) && result is bool boolValue)
+			if (TryEvaluate(newElement.Condition, out var result) && result is bool boolValue)
 			{
 				return new SqlCaseExpression.CaseItem(SqlPredicate.MakeBool(boolValue), newElement.ResultExpression);
 			}
@@ -261,7 +294,7 @@ namespace LinqToDB.SqlProvider
 						continue;
 					}
 
-					if (predicate.TryEvaluateExpression(_evaluationContext, out var value) &&
+					if (TryEvaluate(predicate, out var value) &&
 					    value is bool boolValue)
 					{
 						if (boolValue)
@@ -348,7 +381,7 @@ namespace LinqToDB.SqlProvider
 						continue;
 					}
 
-					if (predicate.TryEvaluateExpression(_evaluationContext, out var value) &&
+					if (TryEvaluate(predicate, out var value) &&
 					    value is bool boolValue)
 					{
 						if (boolValue)
@@ -430,12 +463,12 @@ namespace LinqToDB.SqlProvider
 			// - If both expressions could not be null, an Equals expression would have been used instead.
 
 			// The only remaining case that we'd like to simplify is when one expression is the constant null.
-			if (predicate.Expr1.TryEvaluateExpression(_evaluationContext, out var value1) && value1 == null)
+			if (TryEvaluate(predicate.Expr1, out var value1) && value1 == null)
 			{
 				return new SqlPredicate.IsNull(predicate.Expr2, !predicate.IsNot);
 			}
 
-			if (predicate.Expr2.TryEvaluateExpression(_evaluationContext, out var value2) && value2 == null)
+			if (TryEvaluate(predicate.Expr2, out var value2) && value2 == null)
 			{
 				return new SqlPredicate.IsNull(predicate.Expr1, !predicate.IsNot);
 			}
@@ -517,14 +550,14 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			if (element.TryEvaluateExpression(_evaluationContext, out var evaluatedValue))
+			if (TryEvaluateNoParameters(element, out var evaluatedValue))
 				return new SqlValue(element.SystemType, evaluatedValue);
 
 			switch (element.Operation)
 			{
 				case "+":
 				{
-					var v1 = element.Expr1.TryEvaluateExpression(_evaluationContext, out var value1);
+					var v1 = TryEvaluateNoParameters(element.Expr1, out var value1);
 					if (v1)
 					{
 						switch (value1)
@@ -537,7 +570,7 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					var v2 = element.Expr2.TryEvaluateExpression(_evaluationContext, out var value2);
+					var v2 = TryEvaluateNoParameters(element.Expr2, out var value2);
 					if (v2)
 					{
 						switch (value2)
@@ -545,8 +578,8 @@ namespace LinqToDB.SqlProvider
 							case int vi when vi == 0 : return element.Expr1;
 							case int vi when
 								element.Expr1    is SqlBinaryExpression be1                             &&
-								be1.Expr2.TryEvaluateExpression(_evaluationContext, out var be1v2) &&
-								be1v2 is int be1v2i :
+								TryEvaluateNoParameters(be1.Expr2, out var be1v2) &&
+								                        be1v2 is int be1v2i :
 							{
 								switch (be1.Operation)
 								{
@@ -586,7 +619,7 @@ namespace LinqToDB.SqlProvider
 							case string vs when
 								element.Expr1    is SqlBinaryExpression be1 &&
 								//be1.Operation == "+"                   &&
-								be1.Expr2.TryEvaluateExpression(_evaluationContext, out var be1v2) &&
+								TryEvaluateNoParameters(be1.Expr2, out var be1v2) &&
 								be1v2 is string be1v2s :
 							{
 								return new SqlBinaryExpression(
@@ -609,7 +642,7 @@ namespace LinqToDB.SqlProvider
 
 				case "-":
 				{
-					var v2 = element.Expr2.TryEvaluateExpression(_evaluationContext, out var value2);
+					var v2 = TryEvaluateNoParameters(element.Expr2, out var value2);
 					if (v2)
 					{
 						switch (value2)
@@ -617,7 +650,7 @@ namespace LinqToDB.SqlProvider
 							case int vi when vi == 0 : return element.Expr1;
 							case int vi when
 								element.Expr1 is SqlBinaryExpression be1 &&
-								be1.Expr2.TryEvaluateExpression(_evaluationContext, out var be1v2) &&
+								TryEvaluateNoParameters(be1.Expr2, out var be1v2) &&
 								be1v2 is int be1v2i :
 							{
 								switch (be1.Operation)
@@ -656,7 +689,7 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					if (v2 && element.Expr1.TryEvaluateExpression(_evaluationContext, out var value1))
+					if (v2 && TryEvaluateNoParameters(element.Expr1, out var value1))
 					{
 						if (value1 is int i1 && value2 is int i2) return QueryHelper.CreateSqlValue(i1 - i2, element, _mappingSchema);
 					}
@@ -666,7 +699,7 @@ namespace LinqToDB.SqlProvider
 
 				case "*":
 				{
-					var v1 = element.Expr1.TryEvaluateExpression(_evaluationContext, out var value1);
+					var v1 = TryEvaluateNoParameters(element.Expr1, out var value1);
 					if (v1)
 					{
 						switch (value1)
@@ -676,7 +709,7 @@ namespace LinqToDB.SqlProvider
 							case int i when
 								element.Expr2    is SqlBinaryExpression be2 &&
 								be2.Operation == "*"                   &&
-								be2.Expr1.TryEvaluateExpression(_evaluationContext, out var be2v1)  &&
+								TryEvaluateNoParameters(be2.Expr1, out var be2v1)  &&
 								be2v1 is int bi :
 							{
 								return new SqlBinaryExpression(be2.SystemType, QueryHelper.CreateSqlValue(i * bi, element, _mappingSchema), "*", be2.Expr2);
@@ -684,7 +717,7 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					var v2 = element.Expr2.TryEvaluateExpression(_evaluationContext, out var value2);
+					var v2 = TryEvaluateNoParameters(element.Expr2, out var value2);
 					if (v2)
 					{
 						switch (value2)
@@ -770,7 +803,7 @@ namespace LinqToDB.SqlProvider
 			if (element.DoNotOptimize)
 				return element;
 
-			if (element.TryEvaluateExpression(_evaluationContext, out var value))
+			if (TryEvaluate(element, out var value))
 			{
 				return QueryHelper.CreateSqlValue(value, QueryHelper.GetDbDataType(element, _mappingSchema), element.Parameters);
 			}
@@ -834,7 +867,7 @@ namespace LinqToDB.SqlProvider
 				return SqlPredicate.MakeBool(predicate.IsNot);
 			}
 
-			if (predicate.Expr1.TryEvaluateExpression(_evaluationContext, out var value))
+			if (TryEvaluate(predicate.Expr1, out var value))
 			{
 				return SqlPredicate.MakeBool((value == null) != predicate.IsNot);
 			}
@@ -904,7 +937,7 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (predicate.TryEvaluateExpression(_evaluationContext, out var value) && value is bool boolValue)
+			if (TryEvaluateNoParameters(predicate, out var value) && value is bool boolValue)
 			{
 				return SqlPredicate.MakeBool(boolValue);
 			}
@@ -1200,9 +1233,9 @@ namespace LinqToDB.SqlProvider
 						return sqlConditionExpression.Condition.MakeNot(!isNot);
 				}
 
-				if (unwrappedValue.TryEvaluateExpression(_evaluationContext, out _))
+				if (TryEvaluateNoParameters(unwrappedValue, out _))
 				{
-					if (sqlConditionExpression.TrueValue.TryEvaluateExpression(_evaluationContext, out _) || sqlConditionExpression.FalseValue.TryEvaluateExpression(_evaluationContext, out _))
+					if (TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out _) || TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out _))
 					{
 						var sc = new SqlSearchCondition(true)
 							.AddAnd( sub => 
@@ -1224,7 +1257,7 @@ namespace LinqToDB.SqlProvider
 			{
 				// Try comparing by values
 
-				if (unwrappedValue.TryEvaluateExpression(_evaluationContext, out var value))
+				if (TryEvaluateNoParameters(unwrappedValue, out var value))
 				{
 					var caseMatch      = new bool [sqlCaseExpression._cases.Count];
 					var allEvaluatable = true;
@@ -1233,7 +1266,7 @@ namespace LinqToDB.SqlProvider
 					for (var index = 0; index < sqlCaseExpression._cases.Count; index++)
 					{
 						var caseItem = sqlCaseExpression._cases[index];
-						if (caseItem.ResultExpression.TryEvaluateExpression(_evaluationContext, out var caseItemValue)
+						if (TryEvaluateNoParameters(caseItem.ResultExpression, out var caseItemValue)
 						    && Compare(caseItemValue, value, op, out var result))
 						{
 							caseMatch[index] = result;
@@ -1301,7 +1334,7 @@ namespace LinqToDB.SqlProvider
 
 		ISqlPredicate OptimizeIsTruePredicate(SqlPredicate.IsTrue isTrue)
 		{
-			if (isTrue.Expr1.TryEvaluateExpression(_evaluationContext, out var result) && result is bool boolValue)
+			if (TryEvaluateNoParameters(isTrue.Expr1, out var result) && result is bool boolValue)
 			{
 				return SqlPredicate.MakeBool(boolValue == isTrue.IsNot);
 			}
@@ -1336,7 +1369,7 @@ namespace LinqToDB.SqlProvider
 
 			if (unwrapped1 is SqlCompareToExpression compareTo1)
 			{
-				if (exprExpr.Expr2.TryEvaluateExpression(_evaluationContext, out var result) && result is int intValue)
+				if (TryEvaluateNoParameters(exprExpr.Expr2, out var result) && result is int intValue)
 				{
 					SqlPredicate.Operator? current = null;
 
@@ -1360,7 +1393,7 @@ namespace LinqToDB.SqlProvider
 
 			if (unwrapped2 is SqlCompareToExpression compareTo2)
 			{
-				if (exprExpr.Expr1.TryEvaluateExpression(_evaluationContext, out var result) && result is int intValue)
+				if (TryEvaluateNoParameters(exprExpr.Expr1, out var result) && result is int intValue)
 				{
 					SqlPredicate.Operator? current = null;
 
@@ -1412,56 +1445,56 @@ namespace LinqToDB.SqlProvider
 
 				var newExpr = unwrapped switch
 				{
-					(SqlBinaryExpression binary, var op, var v) when v.CanBeEvaluated(_evaluationContext) =>
+					(SqlBinaryExpression binary, var op, var v) when CanBeEvaluateNoParameters(v) =>
 
 						// binary < v
 						binary switch
 						{
 							// e + some < v ===> some < v - e
-							(var e, "+", var some) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							(var e, "+", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
 							// e - some < v ===>  e - v < some
-							(var e, "-", var some) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, e, "-", v), op, some, null),
+							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, e, "-", v), op, some, null),
 
 							// some + e < v ===> some < v - e
-							(var some, "+", var e) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							(var some, "+", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
 							// some - e < v ===> some < v + e
-							(var some, "-", var e) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "+", e), null),
+							(var some, "-", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "+", e), null),
 
 							_ => null
 						},
 
-					(SqlBinaryExpression binary, var op, var v) when v.CanBeEvaluated(_evaluationContext) =>
+					(SqlBinaryExpression binary, var op, var v) when CanBeEvaluateNoParameters(v) =>
 
 						// binary < v
 						binary switch
 						{
 							// e + some < v ===> some < v - e
-							(var e, "+", var some) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							(var e, "+", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
 							// e - some < v ===>  e - v < some
-							(var e, "-", var some) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, e, "-", v), op, some, null),
+							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, e, "-", v), op, some, null),
 
 							// some + e < v ===> some < v - e
-							(var some, "+", var e) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							(var some, "+", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
 							// some - e < v ===> some < v + e
-							(var some, "-", var e) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "+", e), null),
+							(var some, "-", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "+", e), null),
 
 							_ => null
 						},
 
-					(var v, var op, SqlBinaryExpression binary) when v.CanBeEvaluated(_evaluationContext) =>
+					(var v, var op, SqlBinaryExpression binary) when CanBeEvaluateNoParameters(v) =>
 
 						// v < binary
 						binary switch
 						{
 							// v < e + some ===> v - e < some
-							(var e, "+", var some) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "-", e), op, some, null),
+							(var e, "+", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "-", e), op, some, null),
 							// v < e - some ===> some < e - v
-							(var e, "-", var some) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, e, "-", v), null),
+							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, e, "-", v), null),
 
 							// v < some + e ===> v - e < some
-							(var some, "+", var e) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "-", e), op, some, null),
+							(var some, "+", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "-", e), op, some, null),
 							// v < some - e ===> v + e < some
-							(var e, "-", var some) when e.CanBeEvaluated(_evaluationContext) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "+", e), op, some, null),
+							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "+", e), op, some, null),
 
 							_ => null
 						},

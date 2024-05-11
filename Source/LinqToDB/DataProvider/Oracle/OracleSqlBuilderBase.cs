@@ -232,7 +232,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			var exprPrecedence = GetPrecedence(expr);
 
-			if (expr.Expr2.ElementType == QueryElementType.SqlRow && expr.Operator != SqlPredicate.Operator.Overlaps)
+			if (QueryHelper.UnwrapNullablity(expr.Expr2).ElementType == QueryElementType.SqlRow && expr.Operator != SqlPredicate.Operator.Overlaps)
 			{
 				// Oracle needs brackets around the right-hand side to disambiguate the syntax, e.g.:
 				// (1, 2) = ( (3, 4) )

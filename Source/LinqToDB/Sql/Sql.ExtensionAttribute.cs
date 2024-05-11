@@ -290,7 +290,7 @@ namespace LinqToDB
 				string str;
 
 #if DEBUG
-				var paramPrefix = $"Param[{ParamNumber}]";
+				var paramPrefix = $"Param[{ParamNumber.ToString(CultureInfo.InvariantCulture)}]";
 #else
 				var paramPrefix = $"Param";
 #endif

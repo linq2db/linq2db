@@ -649,7 +649,6 @@ namespace LinqToDB.SqlQuery
 
 			if (join.JoinType is JoinType.Left or JoinType.OuterApply)
 			{
-
 				if ((join.Cardinality & SourceCardinality.One) != 0)
 					return true;
 
@@ -2385,34 +2384,44 @@ namespace LinqToDB.SqlQuery
 
 					for (int j = table.Joins.Count - 1; j >= 0; j--)
 					{
-						var join = table.Joins[j];
+						var join            = table.Joins[j];
+						var isOneRecordJoin = join.Cardinality == SourceCardinality.One;
+						var joinQuery       = join.Table.Source as SelectQuery;
+
 						if (join.JoinType == JoinType.OuterApply ||
 						    join.JoinType == JoinType.Left       ||
 						    join.JoinType == JoinType.CrossApply)
 						{
 							if (join.JoinType == JoinType.CrossApply)
 							{
-								if (_applySelect == null)
+								var isValid = _applySelect != null;
+								if (!isValid)
+								{
+									if (isOneRecordJoin && joinQuery is { Select.Columns: [{ Expression: SqlRowExpression }] })
+										isValid = true;
+								}
+
+								if (!isValid)
 									continue;
 							}
 
 							evaluationContext ??= new EvaluationContext();
 
-							if (join.Table.Source is SelectQuery tsQuery && tsQuery.Select.Columns.Count > 0)
+							if (joinQuery != null && joinQuery.Select.Columns.Count > 0)
 							{
-								if (tsQuery.Select.Columns.Count > 1)
+								if (joinQuery.Select.Columns.Count > 1)
 								{
-									if (!processMultiColumn || ProviderOuterCanHandleSeveralColumnsQuery(tsQuery))
+									if (!processMultiColumn || ProviderOuterCanHandleSeveralColumnsQuery(joinQuery))
 									{
 										// provider can handle this query
 										continue;
 									}
 								}
 
-								if (!IsLimitedToOneRecord(sq, tsQuery, evaluationContext))
+								if (!isOneRecordJoin && !IsLimitedToOneRecord(sq, joinQuery, evaluationContext))
 									continue;
 
-								if (!SqlProviderHelper.IsValidQuery(tsQuery, parentQuery: sq, fakeJoin: null, forColumn: true, _providerFlags, out _))
+								if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: sq, fakeJoin: null, forColumn: true, _providerFlags, out _))
 									continue;
 
 								if (_providerFlags.DoesNotSupportCorrelatedSubquery)
@@ -2423,7 +2432,7 @@ namespace LinqToDB.SqlQuery
 
 								var isValid = true;
 
-								foreach (var testedColumn in tsQuery.Select.Columns)
+								foreach (var testedColumn in joinQuery.Select.Columns)
 								{
 									// where we can start analyzing that we can move join to subquery
 									
@@ -2474,19 +2483,19 @@ namespace LinqToDB.SqlQuery
 								// moving whole join to subquery
 
 								table.Joins.RemoveAt(j);
-								tsQuery.Where.ConcatSearchCondition(join.Condition);
+								joinQuery.Where.ConcatSearchCondition(join.Condition);
 
 								// replacing column with subquery
 
-								for (var index = tsQuery.Select.Columns.Count - 1; index >= 0; index--)
+								for (var index = joinQuery.Select.Columns.Count - 1; index >= 0; index--)
 								{
-									var queryToReplace = tsQuery;
-									var testedColumn   = tsQuery.Select.Columns[index];
+									var queryToReplace = joinQuery;
+									var testedColumn   = joinQuery.Select.Columns[index];
 
 									// cloning if there are many columns
 									if (index > 0)
 									{
-										queryToReplace = tsQuery.Clone();
+										queryToReplace = joinQuery.Clone();
 									}
 
 

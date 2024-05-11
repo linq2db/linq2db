@@ -259,6 +259,23 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
+			public static Operator SwapOperator(Operator op)
+			{
+				switch (op)
+				{
+					case Operator.Equal:          return Operator.Equal;
+					case Operator.NotEqual:       return Operator.NotEqual;
+					case Operator.Greater:        return Operator.Less;
+					case Operator.NotLess:        return Operator.NotGreater;
+					case Operator.GreaterOrEqual: return Operator.LessOrEqual;
+					case Operator.Less:           return Operator.Greater;
+					case Operator.NotGreater:     return Operator.NotLess;
+					case Operator.LessOrEqual:    return Operator.GreaterOrEqual;
+					case Operator.Overlaps:       return Operator.Overlaps;
+					default:                      throw new InvalidOperationException();
+				}
+			}
+
 			public override bool CanInvert(NullabilityContext nullability) => true;
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)
