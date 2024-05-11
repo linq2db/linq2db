@@ -1,73 +1,76 @@
-rmdir ..\BuiltNuGet\built /S /Q
-md ..\BuiltNuGet\built
+SET NUSPECS="..\.build\nuspecs"
+SET NUGETS="..\.build\nugets"
+
+rmdir %NUGETS% /S /Q
+md %NUGETS%
 
 IF [%1] EQU [snupkg] (
-nuget.exe Pack ..\BuiltNuGet\linq2db.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack %NUSPECS%\linq2db.nuspec -OutputDirectory %NUGETS% -Symbols -SymbolPackageFormat snupkg
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.AspNet.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack %NUSPECS%\linq2db.AspNet.nuspec -OutputDirectory %NUGETS% -Symbols -SymbolPackageFormat snupkg
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Tools.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack %NUSPECS%\linq2db.Tools.nuspec -OutputDirectory %NUGETS% -Symbols -SymbolPackageFormat snupkg
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Grpc.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack %NUSPECS%\linq2db.Remote.Grpc.nuspec -OutputDirectory %NUGETS% -Symbols -SymbolPackageFormat snupkg
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Wcf.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack %NUSPECS%\linq2db.Remote.Wcf.nuspec -OutputDirectory %NUGETS% -Symbols -SymbolPackageFormat snupkg
 if %errorlevel% neq 0 exit
 ) ELSE (
 REM Azure Artifacts doesn't support snupkg yet/still
 REM https://developercommunity.visualstudio.com/idea/657354/add-snupkg-support-to-azure-devops-artifacts.html
-nuget.exe Pack ..\BuiltNuGet\linq2db.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.AspNet.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.AspNet.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Tools.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.Tools.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Grpc.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.Remote.Grpc.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Remote.Wcf.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.Remote.Wcf.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 )
 
-nuget.exe Pack ..\BuiltNuGet\linq2db.cli.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.cli.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 
 REM disable new T4 nugets publishing, prepare for their obsoletion and removal
 REM goto eof:
-nuget.exe Pack ..\BuiltNuGet\linq2db.Access.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.Access.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.DB2.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.DB2.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.DB2.Core.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.DB2.Core.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Firebird.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.Firebird.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Informix.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.Informix.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Informix.Core.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.Informix.Core.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.MySql.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.MySql.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.MySqlConnector.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.MySqlConnector.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Oracle.Managed.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.Oracle.Managed.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Oracle.Unmanaged.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.Oracle.Unmanaged.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.PostgreSQL.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.PostgreSQL.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.SapHana.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.SapHana.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.SqlCe.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.SqlCe.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.SQLite.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.SQLite.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.SQLite.MS.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.SQLite.MS.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.SqlServer.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.SqlServer.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.SqlServer.MS.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.SqlServer.MS.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Sybase.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.Sybase.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.Sybase.DataAction.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.Sybase.DataAction.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack ..\BuiltNuGet\linq2db.t4models.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack %NUSPECS%\linq2db.t4models.nuspec -OutputDirectory %NUGETS%

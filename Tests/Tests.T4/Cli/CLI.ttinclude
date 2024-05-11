@@ -1,9 +1,9 @@
-﻿<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net462\linq2db.Tests.Base.dll" #>
-<#@ import namespace="System"                                                        #>
-<#@ import namespace="System.IO"                                                     #>
-<#@ import namespace="System.Diagnostics"                                            #>
-<#@ import namespace="System.Threading"                                              #>
-<#@ import namespace="Microsoft.Win32.SafeHandles"                                   #>
+﻿<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\linq2db.Tests.Base.dll" #>
+<#@ import namespace="System"                                                      #>
+<#@ import namespace="System.IO"                                                   #>
+<#@ import namespace="System.Diagnostics"                                          #>
+<#@ import namespace="System.Threading"                                            #>
+<#@ import namespace="Microsoft.Win32.SafeHandles"                                 #>
 <#+
 #nullable enable
 	string GetConnectionString(string config)

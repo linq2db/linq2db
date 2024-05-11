@@ -34,19 +34,19 @@
 	</metadata>
 
 	<files>
-		<file src="..\Nuget\README.AspNet.md"                                              target="README.md"            />
+		<file src="..\..\NuGet\README.AspNet.md"                                     target="README.md"           />
 
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\net462\linq2db.AspNet.pdb"         target="lib\net462\"         />
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\net462\linq2db.AspNet.xml"         target="lib\net462\"         />
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\net462\linq2db.AspNet.dll"         target="lib\net462\"         />
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\netstandard2.0\linq2db.AspNet.pdb" target="lib\netstandard2.0\" />
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\netstandard2.0\linq2db.AspNet.xml" target="lib\netstandard2.0\" />
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\netstandard2.0\linq2db.AspNet.dll" target="lib\netstandard2.0\" />
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\net6.0\linq2db.AspNet.pdb"         target="lib\net6.0\"         />
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\net6.0\linq2db.AspNet.xml"         target="lib\net6.0\"         />
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\net6.0\linq2db.AspNet.dll"         target="lib\net6.0\"         />
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\net8.0\linq2db.AspNet.pdb"         target="lib\net8.0\"         />
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\net8.0\linq2db.AspNet.xml"         target="lib\net8.0\"         />
-		<file src="..\Source\LinqToDB.AspNet\bin\Release\net8.0\linq2db.AspNet.dll"         target="lib\net8.0\"         />
+		<file src="..\bin\LinqToDB.AspNet\Release\net462\linq2db.AspNet.pdb"         target="lib\net462\"         />
+		<file src="..\bin\LinqToDB.AspNet\Release\net462\linq2db.AspNet.xml"         target="lib\net462\"         />
+		<file src="..\bin\LinqToDB.AspNet\Release\net462\linq2db.AspNet.dll"         target="lib\net462\"         />
+		<file src="..\bin\LinqToDB.AspNet\Release\netstandard2.0\linq2db.AspNet.pdb" target="lib\netstandard2.0\" />
+		<file src="..\bin\LinqToDB.AspNet\Release\netstandard2.0\linq2db.AspNet.xml" target="lib\netstandard2.0\" />
+		<file src="..\bin\LinqToDB.AspNet\Release\netstandard2.0\linq2db.AspNet.dll" target="lib\netstandard2.0\" />
+		<file src="..\bin\LinqToDB.AspNet\Release\net6.0\linq2db.AspNet.pdb"         target="lib\net6.0\"         />
+		<file src="..\bin\LinqToDB.AspNet\Release\net6.0\linq2db.AspNet.xml"         target="lib\net6.0\"         />
+		<file src="..\bin\LinqToDB.AspNet\Release\net6.0\linq2db.AspNet.dll"         target="lib\net6.0\"         />
+		<file src="..\bin\LinqToDB.AspNet\Release\net8.0\linq2db.AspNet.pdb"         target="lib\net8.0\"         />
+		<file src="..\bin\LinqToDB.AspNet\Release\net8.0\linq2db.AspNet.xml"         target="lib\net8.0\"         />
+		<file src="..\bin\LinqToDB.AspNet\Release\net8.0\linq2db.AspNet.dll"         target="lib\net8.0\"         />
 	</files>
 </package>

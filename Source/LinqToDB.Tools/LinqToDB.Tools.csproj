@@ -4,7 +4,7 @@
 		<AssemblyName>linq2db.Tools</AssemblyName>
 		<RootNamespace>LinqToDB.Tools</RootNamespace>
 
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.Tools.xml</DocumentationFile>
+		<DocumentationFile>$(ArtifactsPath)\bin\$(ProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 
 		<!--published targets-->
 		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0</TargetFrameworks>
