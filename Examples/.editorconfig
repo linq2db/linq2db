@@ -1,0 +1,9 @@
+[*.cs]
+dotnet_analyzer_diagnostic.severity = none
+
+# nobody asked for this analyzer to trigger in tests...
+dotnet_public_api_analyzer.require_api_files = false
+dotnet_diagnostic.RS0016.severity = none
+dotnet_diagnostic.RS0026.severity = none
+dotnet_diagnostic.RS0027.severity = none
+dotnet_diagnostic.RS0037.severity = none
