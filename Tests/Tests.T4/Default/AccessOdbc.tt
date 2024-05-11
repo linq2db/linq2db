@@ -7,7 +7,7 @@
 	DataContextName   = "TestDataDB";
 	var artifactsPath = Host.ResolveAssemblyReference("$(ArtifactsPath)");
 	var path          = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.ODBC.mdb";
-	LoadAccessMetadataByProvider($"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={path};ExtendedAnsiSQL=1", LinqToDB.ProviderName.AccessOdbc);
+	LoadAccessMetadataByProvider($"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={path};ExtendedAnsiSQL=1", LinqToDB.DataProvider.Access.AccessProvider.ODBC);
 
 	GenerateModel();
 #>

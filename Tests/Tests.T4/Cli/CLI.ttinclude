@@ -10,8 +10,8 @@
 	{
 		var settings = Tests.Tools.SettingsReader.Deserialize(
 			"NETFX",
-			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\DataProviders.json")),
-			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\UserDataProviders.json")));
+			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\..\DataProviders.json")),
+			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\..\UserDataProviders.json")));
 
 		return settings.Connections[config]!.ConnectionString!;
 	}

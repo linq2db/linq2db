@@ -10,7 +10,7 @@
 <#+
 	string GetConnectionString(string config)
 	{
-		var path = System.IO.Path.GetFullPath(Host.ResolvePath(@"..\.."));
+		var path = System.IO.Path.GetFullPath(Host.ResolvePath(@"."));
 
 		var settings = Tests.Tools.SettingsReader.Deserialize(
 			"NETFX",

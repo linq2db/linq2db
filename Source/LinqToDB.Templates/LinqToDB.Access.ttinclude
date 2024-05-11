@@ -6,9 +6,9 @@ LinqToDB.Data.DataConnection GetAccessConnection(string connectionString)
 	return LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(connectionString);
 }
 
-LinqToDB.Data.DataConnection GetAccessConnectionForProvider(string connectionString, string providerName)
+LinqToDB.Data.DataConnection GetAccessConnectionForProvider(string connectionString, LinqToDB.DataProvider.Access.AccessProvider provider)
 {
-	return LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(connectionString, providerName);
+	return LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(connectionString, provider);
 }
 
 LinqToDB.Data.DataConnection GetAccessConnection(string path, string database)
@@ -22,9 +22,9 @@ public void LoadAccessMetadata(string connectionString)
 		LoadMetadata(dataConnection);
 }
 
-public void LoadAccessMetadataByProvider(string connectionString, string providerName)
+public void LoadAccessMetadataByProvider(string connectionString, LinqToDB.DataProvider.Access.AccessProvider provider)
 {
-	using (var dataConnection = GetAccessConnectionForProvider(connectionString, providerName))
+	using (var dataConnection = GetAccessConnectionForProvider(connectionString, provider))
 		LoadMetadata(dataConnection);
 }
 

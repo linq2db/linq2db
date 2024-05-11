@@ -74,17 +74,17 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i /s .build\bin\Tests\$(build_configuration)\net8.0\publishx86 testing\net80x86
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\netfx
+        copy DataProviders.json testing\netfx
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\netfxx64
+        copy DataProviders.json testing\netfxx64
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\net60
+        copy DataProviders.json testing\net60
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\net80
+        copy DataProviders.json testing\net80
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\net60x86
+        copy DataProviders.json testing\net60x86
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\net80x86
+        copy DataProviders.json testing\net80x86
         if %errorlevel% neq 0 exit
         xcopy /i Build\$(build_configuration)\netfx testing\configs\netfx
         if %errorlevel% neq 0 exit
