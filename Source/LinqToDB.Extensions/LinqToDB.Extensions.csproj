@@ -2,8 +2,8 @@
 
 	<PropertyGroup>
 
-		<AssemblyName>linq2db.AspNet</AssemblyName>
-		<RootNamespace>LinqToDB.AspNet</RootNamespace>
+		<AssemblyName>linq2db.Extensions</AssemblyName>
+		<RootNamespace>LinqToDB.Extensions</RootNamespace>
 
 		<DocumentationFile>$(ArtifactsPath)\bin\$(ProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 

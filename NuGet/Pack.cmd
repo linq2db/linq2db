@@ -7,7 +7,7 @@ md %NUGETS%
 IF [%1] EQU [snupkg] (
 nuget.exe Pack %NUSPECS%\linq2db.nuspec -OutputDirectory %NUGETS% -Symbols -SymbolPackageFormat snupkg
 if %errorlevel% neq 0 exit
-nuget.exe Pack %NUSPECS%\linq2db.AspNet.nuspec -OutputDirectory %NUGETS% -Symbols -SymbolPackageFormat snupkg
+nuget.exe Pack %NUSPECS%\linq2db.Extensions.nuspec -OutputDirectory %NUGETS% -Symbols -SymbolPackageFormat snupkg
 if %errorlevel% neq 0 exit
 nuget.exe Pack %NUSPECS%\linq2db.Tools.nuspec -OutputDirectory %NUGETS% -Symbols -SymbolPackageFormat snupkg
 if %errorlevel% neq 0 exit
@@ -20,7 +20,7 @@ REM Azure Artifacts doesn't support snupkg yet/still
 REM https://developercommunity.visualstudio.com/idea/657354/add-snupkg-support-to-azure-devops-artifacts.html
 nuget.exe Pack %NUSPECS%\linq2db.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-nuget.exe Pack %NUSPECS%\linq2db.AspNet.nuspec -OutputDirectory %NUGETS%
+nuget.exe Pack %NUSPECS%\linq2db.Extensions.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 nuget.exe Pack %NUSPECS%\linq2db.Tools.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit

@@ -121,9 +121,9 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.AspNet/Release'
-      artifact: '$(artifact_linq2db_aspnet_binaries)'
-    displayName: Publish linq2db.AspNet build results
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Extensions/Release'
+      artifact: '$(artifact_linq2db_extensions_binaries)'
+    displayName: Publish linq2db.Extensions build results
     condition: and(succeeded(), ${{ parameters.for_nuget }})
 
   - task: PublishPipelineArtifact@1
