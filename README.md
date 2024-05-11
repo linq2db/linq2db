@@ -149,7 +149,7 @@ And later just set on program startup before the first query is done (Startup.cs
 DataConnection.DefaultSettings = new MySettings();
 ```
 
-### Use with ASP.NET Core
+### Use with ASP.NET Core and Dependency Injection
 
 See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
 

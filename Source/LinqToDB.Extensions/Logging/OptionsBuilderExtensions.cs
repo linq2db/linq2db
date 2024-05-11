@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace LinqToDB.AspNet.Logging
+namespace LinqToDB.Extensions.Logging
 {
 	using Data;
 
