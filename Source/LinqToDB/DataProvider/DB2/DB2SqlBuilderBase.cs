@@ -424,13 +424,13 @@ END");
 			{
 				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 
-				// TODO: temporary guard against cast to unknown type (Variant)
 				var dbDataType = paramValue.DbDataType;
-				if (dbDataType.DataType == DataType.Undefined)
-				{
-					base.BuildParameter(parameter);
-					return;
-				}
+				// temporary guard against cast to unknown type (Variant)
+				//if (dbDataType.DataType == DataType.Undefined)
+				//{
+				//	base.BuildParameter(parameter);
+				//	return;
+				//}
 
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;

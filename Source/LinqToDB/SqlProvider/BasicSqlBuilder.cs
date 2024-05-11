@@ -529,7 +529,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
-			=> throw new SqlException("This data provider does not support multi-table insert.");
+			=> throw new SqlException(ErrorHelper.Error_MutiTable_Insert);
 
 		protected virtual void BuildUnknownQuery()
 		{
@@ -845,9 +845,9 @@ namespace LinqToDB.SqlProvider
 				if (expr.Column is SqlRowExpression)
 				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
-						throw new LinqToDBException("This provider does not support SqlRow in UPDATE.");
+						throw new LinqToDBException(ErrorHelper.Error_SqlRow_in_Update);
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral) && expr.Expression is not SelectQuery)
-						throw new LinqToDBException("This provider does not support SqlRow literal on the right-hand side of an UPDATE SET.");
+						throw new LinqToDBException(ErrorHelper.Error_SqlRow_in_Update_Value);
 				}
 
 				BuildExpression(expr.Column, updateClause.TableSource != null, true, false);

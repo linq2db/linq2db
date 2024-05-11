@@ -36,7 +36,6 @@ namespace LinqToDB.DataProvider
 			// set default flags values explicitly even for default values
 			SqlProviderFlags = new SqlProviderFlags()
 			{
-				IsSybaseBuggyGroupBy                 = false,
 				IsParameterOrderDependent            = false,
 				AcceptsTakeAsParameter               = true,
 				AcceptsTakeAsParameterIfSkip         = false,
@@ -56,15 +55,11 @@ namespace LinqToDB.DataProvider
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
-				IsUpdateSetTableAliasSupported       = true,
 				OutputDeleteUseSpecialTable          = false,
 				OutputInsertUseSpecialTable          = false,
 				OutputUpdateUseSpecialTables         = false,
-				IsGroupByColumnRequred               = false,
 				IsCrossJoinSupported                 = true,
-				IsInnerJoinAsCrossSupported          = true,
 				IsCommonTableExpressionsSupported    = false,
-				IsDistinctOrderBySupported           = true,
 				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,

@@ -29,7 +29,6 @@ namespace LinqToDB.DataProvider.MySql
 			Provider = provider;
 			Version  = version;
 
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = version > MySqlVersion.MySql57;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
@@ -40,14 +39,14 @@ namespace LinqToDB.DataProvider.MySql
 			// https://jira.mariadb.org/browse/MDEV-6373
 			// https://jira.mariadb.org/browse/MDEV-19078
 			SqlProviderFlags.IsApplyJoinSupported              = version == MySqlVersion.MySql80;
-			SqlProviderFlags.IsApplyJoinSupportsCondition      = version == MySqlVersion.MySql80;
+			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = version == MySqlVersion.MySql80;
+			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = version == MySqlVersion.MySql80;
 			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= MySqlVersion.MySql80;
 
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
-			SqlProviderFlags.IsDeleteTakeSupported     = true;
 			SqlProviderFlags.IsUpdateTakeSupported     = true;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);

@@ -1339,7 +1339,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void GroupByAggregate1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1354,7 +1354,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void GroupByAggregate11([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1371,7 +1371,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void GroupByAggregate12([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))

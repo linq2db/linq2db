@@ -35,23 +35,18 @@ namespace LinqToDB.DataProvider.SQLite
 			: base(name, MappingSchemaInstance.Get(provider), SQLiteProviderAdapter.GetInstance(provider))
 		{
 			Provider = provider;
+			// currently enabled flags require at least 3.33.0 SQLite (for IsUpdateFromSupported)
 
 			SqlProviderFlags.IsSkipSupported                   = false;
 			SqlProviderFlags.IsSkipSupportedIfTake             = true;
-			SqlProviderFlags.IsInsertOrUpdateSupported         = true; // 3.24.0
-			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsCountDistinctSupported          = true; // 3.2.6
-			SqlProviderFlags.IsUpdateFromSupported             = true; // 3.33.0
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
 			// this actually requires compilation flag set
 			// System.Data.Sqlite enabled it in 2021
 			// MS use different runtime build without it enabled yet:
 			// https://github.com/ericsink/SQLitePCL.raw/issues/377
-			SqlProviderFlags.IsDeleteTakeSupported     = Provider == SQLiteProvider.System;
-			SqlProviderFlags.IsDeleteSkipTakeSupported = Provider == SQLiteProvider.System;
 			SqlProviderFlags.IsUpdateTakeSupported     = Provider == SQLiteProvider.System;
 			SqlProviderFlags.IsUpdateSkipTakeSupported = Provider == SQLiteProvider.System;
 
