@@ -8,7 +8,7 @@
   - [Passing Into Constructor](#passing-into-constructor)
   - [Using Config File (.NET Framework)](#using-config-file-net-framework)
   - [Using Connection String Settings Provider](#using-connection-string-settings-provider)
-  - [Use with ASP.NET Core](#use-with-aspnet-core)
+  - [Use with ASP.NET Core](#use-with-aspnet-core-and-dependency-injection)
 - [Define **POCO** class](#define-poco-class)
   - [Configuration using mapping attributes](#configuration-using-mapping-attributes)
   - [Fluent Configuration](#fluent-configuration)
@@ -161,7 +161,7 @@ And later just set on program startup before the first query is done (Startup.cs
 DataConnection.DefaultSettings = new MySettings();
 ```
 
-### Use with ASP.NET Core
+### Use with ASP.NET Core and Dependency Injection
 
 See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
 
