@@ -152,6 +152,10 @@ namespace LinqToDB.Linq.Builder
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
+			// Quick shortcut for non-queries
+			if (expression.NodeType == ExpressionType.Default)
+				return expression;
+
 			// convert all missed references
 			
 			var postProcessed = FinalizeConstructors(context, expression, true);

@@ -51,6 +51,8 @@ namespace LinqToDB.Linq.Builder
 			return this;
 		}
 
+		public virtual bool IsOptional => false;
+
 		#region Obsolete
 
 		public virtual void CompleteColumns()

@@ -1011,6 +1011,14 @@ namespace LinqToDB.Linq.Builder
 			return Expression.NotEqual(expr, Expression.Default(expr.Type));
 		}
 
+		public static bool GetIsOptional(BuildInfo buildInfo)
+		{
+			if (!buildInfo.IsSubQuery)
+				return false;
+
+			return (buildInfo.SourceCardinality & SourceCardinality.Zero) != 0 || buildInfo.SourceCardinality == SourceCardinality.Unknown;
+		}
+
 
 		#region Special fields helpers
 

@@ -48,6 +48,7 @@ namespace LinqToDB.Linq.Builder
 				Expression     = buildInfo.Expression;
 				SelectQuery    = buildInfo.SelectQuery;
 				IsSubQuery     = buildInfo.IsSubQuery;
+				IsOptional     = SequenceHelper.GetIsOptional(buildInfo);
 				_mappingSchema = mappingSchema;
 
 				OriginalType     = originalType;
@@ -67,6 +68,7 @@ namespace LinqToDB.Linq.Builder
 				Expression     = buildInfo.Expression;
 				SelectQuery    = buildInfo.SelectQuery;
 				IsSubQuery     = buildInfo.IsSubQuery;
+				IsOptional     = SequenceHelper.GetIsOptional(buildInfo);
 				_mappingSchema = mappingSchema;
 
 				OriginalType     = table.ObjectType;
@@ -80,11 +82,12 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			internal TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, SelectQuery selectQuery, SqlTable table) : base(builder, table.ObjectType, selectQuery)
+			internal TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, SelectQuery selectQuery, SqlTable table, bool isOptional) : base(builder, table.ObjectType, selectQuery)
 			{
 				Parent         = null;
 				Expression     = null;
 				IsSubQuery     = false;
+				IsOptional     = isOptional;
 				_mappingSchema = mappingSchema;
 
 				OriginalType     = table.ObjectType;
@@ -103,6 +106,7 @@ namespace LinqToDB.Linq.Builder
 				Parent         = buildInfo.Parent;
 				Expression     = buildInfo.Expression;
 				IsSubQuery     = buildInfo.IsSubQuery;
+				IsOptional     = SequenceHelper.GetIsOptional(buildInfo);
 				_mappingSchema = mappingSchema;
 
 				var mc   = (MethodCallExpression)buildInfo.Expression;
@@ -238,7 +242,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new TableContext(Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable));
+				return new TableContext(Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional);
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -247,6 +251,8 @@ namespace LinqToDB.Linq.Builder
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
+
+			public override bool IsOptional { get; }
 
 			#region GetContext
 

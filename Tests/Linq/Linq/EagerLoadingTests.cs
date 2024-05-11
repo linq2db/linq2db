@@ -2746,11 +2746,14 @@ FROM
 			using var tc = db.CreateLocalTable(EntityC.Data);
 			using var td = db.CreateLocalTable(EntityD.Data);
 
-			var result = testCase == 1
-				? db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectCRequired).ToList()
-				: testCase == 2
-					? db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectsD).ToList()
-					: db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectCRequired).LoadWith(e => e.ObjectBOptional!.ObjectsD).ToList();
+			var query = testCase switch
+			{
+				1 => db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectCRequired).AsQueryable(),
+				2 => db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectsD),
+				_ => db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectCRequired).LoadWith(e => e.ObjectBOptional!.ObjectsD)
+			};
+
+			var result = query.ToList();
 
 			var expected = new int?[][]
 			{
@@ -2776,8 +2779,9 @@ FROM
 
 			Assert.That(result, Has.Count.EqualTo(expected.Length));
 
-			foreach (var set in expected)
+			for (var index = 0; index < expected.Length; index++)
 			{
+				var set = expected[index];
 				var obj = result.SingleOrDefault(o => o.Id == set[0]);
 				Assert.That(obj, Is.Not.Null);
 				if (set[1] is null)

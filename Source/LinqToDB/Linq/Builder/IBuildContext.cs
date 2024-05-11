@@ -23,6 +23,10 @@ namespace LinqToDB.Linq.Builder
 		Type ElementType { get; }
 
 		Expression    MakeExpression(Expression path, ProjectFlags flags);
+		/// <summary>
+		/// Optional cardinality for associations
+		/// </summary>
+		bool          IsOptional { get; }
 		IBuildContext Clone(CloningContext      context);
 
 		void           SetRunQuery<T>(Query<T>   query,      Expression   expr);

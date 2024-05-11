@@ -245,6 +245,8 @@ namespace LinqToDB.Linq.Builder
 				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 				return Sequence.GetContext(expression, buildInfo);
 			}
+
+			public override bool IsOptional => true;
 		}
 	}
 }

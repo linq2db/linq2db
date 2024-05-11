@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 			bool?                 enforceDefault,
 			LoadWithInfo?         loadWith,
 			MemberInfo[]?         loadWithPath,
-			out bool?             isOuter)
+			out bool?             isOptional)
 		{
 			Expression dataContextExpr = SqlQueryRootExpression.Create(mappingSchema, builder.DataContext.GetType());
 
@@ -318,6 +318,7 @@ namespace LinqToDB.Linq.Builder
 				shouldAddDefaultIfEmpty = false;
 			}
 
+			isOptional = shouldAddDefaultIfEmpty;
 			if (inline)
 			{
 				var body = definedQueryMethod.Body.Unwrap();
@@ -326,18 +327,6 @@ namespace LinqToDB.Linq.Builder
 					.MakeGenericMethod(objectType), body);
 
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
-				isOuter = true;
-			}
-			else
-			{
-				if (shouldAddDefaultIfEmpty)
-				{
-					isOuter = true;
-				}
-				else
-				{
-					isOuter = false;
-				}
 			}
 
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpressionTree(definedQueryMethod);
@@ -347,7 +336,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext,
-			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool? isOuter)
+			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool? isOptional)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);
 			var parentExactType = descriptor.GetParentElementType();
@@ -355,7 +344,7 @@ namespace LinqToDB.Linq.Builder
 			var queryMethod = CreateAssociationQueryLambda(
 				builder, tableContext.BuildContext.MappingSchema, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
 				additionalCondition,
-				inline, isOuter, loadwith, loadWithPath, out isOuter);
+				inline, isOptional, loadwith, loadWithPath, out isOptional);
 
 			var correctedContext = tableContext.WithType(parentExactType);
 
