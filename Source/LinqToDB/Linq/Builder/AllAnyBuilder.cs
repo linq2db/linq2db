@@ -20,7 +20,15 @@ namespace LinqToDB.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { /*CopyTable = true,*/ CreateSubQuery = true, SelectQuery = new SelectQuery()});
+			var sequenceBuildInfo = new BuildInfo(buildInfo, methodCall.Arguments[0])
+			{
+				/*CopyTable = true,*/
+				CreateSubQuery = true,
+				SourceCardinality = SourceCardinality.Unknown,
+				SelectQuery = new SelectQuery()
+			};
+
+			var buildResult = builder.TryBuildSequence(sequenceBuildInfo);
 			if (buildResult.BuildContext == null)
 				return buildResult;
 

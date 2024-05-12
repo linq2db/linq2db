@@ -1164,6 +1164,9 @@ namespace LinqToDB.SqlProvider
 					var isComplex = false;
 					foreach (var item in updateStatement.Update.Items)
 					{
+						if (item.Column is SqlRowExpression)
+							continue;
+
 						var usedSources = new HashSet<ISqlTableSource>();
 						QueryHelper.GetUsedSources(item.Expression!, usedSources);
 						usedSources.Remove(updateStatement.Update.Table!);
@@ -1312,6 +1315,23 @@ namespace LinqToDB.SqlProvider
 					}
 					return e;
 				});
+
+				if (item.Column is SqlRowExpression && item.Expression is SelectQuery subQuery)
+				{
+					if (subQuery.Select.Columns.Count == 1)
+					{
+						var column = subQuery.Select.Columns[0];
+
+						if (column.Expression is SelectQuery columnQuery && columnQuery.From.Tables.Count == 0)
+						{
+							subQuery.Select.Columns.Clear();
+							foreach (var c in columnQuery.Select.Columns)
+							{
+								subQuery.Select.AddNew(c.Expression);
+							}
+						}
+					}
+				}
 			}
 		}
 

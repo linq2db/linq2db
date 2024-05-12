@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 			Parent            = parent;
 			Expression        = expression;
 			SelectQuery       = selectQuery;
-			SourceCardinality = SourceCardinality.ZeroOrMany;
+			SourceCardinality = SourceCardinality.Unknown;
 		}
 
 		public BuildInfo(BuildInfo buildInfo, Expression expression)
@@ -59,7 +59,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (SequenceInfo == null)
 					return _sourceCardinality;
-				return SequenceInfo.SourceCardinality;
+				var parent = SequenceInfo.SourceCardinality;
+				if (parent == SourceCardinality.Unknown)
+					return _sourceCardinality;
+				return parent;
 			}
 
 			set => _sourceCardinality = value;

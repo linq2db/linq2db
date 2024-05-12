@@ -2385,7 +2385,6 @@ namespace LinqToDB.SqlQuery
 					for (int j = table.Joins.Count - 1; j >= 0; j--)
 					{
 						var join            = table.Joins[j];
-						var isOneRecordJoin = join.Cardinality == SourceCardinality.One;
 						var joinQuery       = join.Table.Source as SelectQuery;
 
 						if (join.JoinType == JoinType.OuterApply ||
@@ -2394,15 +2393,10 @@ namespace LinqToDB.SqlQuery
 						{
 							if (join.JoinType == JoinType.CrossApply)
 							{
-								var isValid = _applySelect != null;
-								if (!isValid)
+								if (_applySelect == null)
 								{
-									if (isOneRecordJoin && joinQuery is { Select.Columns: [{ Expression: SqlRowExpression }] })
-										isValid = true;
-								}
-
-								if (!isValid)
 									continue;
+								}
 							}
 
 							evaluationContext ??= new EvaluationContext();
@@ -2418,7 +2412,7 @@ namespace LinqToDB.SqlQuery
 									}
 								}
 
-								if (!isOneRecordJoin && !IsLimitedToOneRecord(sq, joinQuery, evaluationContext))
+								if (!IsLimitedToOneRecord(sq, joinQuery, evaluationContext))
 									continue;
 
 								if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: sq, fakeJoin: null, forColumn: true, _providerFlags, out _))

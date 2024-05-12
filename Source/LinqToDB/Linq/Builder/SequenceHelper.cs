@@ -1016,7 +1016,10 @@ namespace LinqToDB.Linq.Builder
 			if (!buildInfo.IsSubQuery)
 				return false;
 
-			return (buildInfo.SourceCardinality & SourceCardinality.Zero) != 0 || buildInfo.SourceCardinality == SourceCardinality.Unknown;
+			if ((buildInfo.SourceCardinality & SourceCardinality.Zero) != 0)
+				return true;
+
+			return false;
 		}
 
 
