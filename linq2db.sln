@@ -94,7 +94,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 	ProjectSection(SolutionItems) = preProject
 		NuGet\icon.png = NuGet\icon.png
 		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
-		NuGet\linq2db.AspNet.nuspec = NuGet\linq2db.AspNet.nuspec
+		NuGet\linq2db.Extensions.nuspec = NuGet\linq2db.Extensions.nuspec
 		NuGet\linq2db.cli.nuspec = NuGet\linq2db.cli.nuspec
 		NuGet\linq2db.DB2.Core.nuspec = NuGet\linq2db.DB2.Core.nuspec
 		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
@@ -122,8 +122,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.Tools.nuspec = NuGet\linq2db.Tools.nuspec
 		NuGet\Pack.cmd = NuGet\Pack.cmd
 		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
-		NuGet\README.AspNet.md = NuGet\README.AspNet.md
 		NuGet\README.FSharp.md = NuGet\README.FSharp.md
+		NuGet\README.Extensions.md = NuGet\README.Extensions.md
 		NuGet\README.linq2db.md = NuGet\README.linq2db.md
 		NuGet\README.md = NuGet\README.md
 		NuGet\README.Remote.Grpc.md = NuGet\README.Remote.Grpc.md
@@ -250,7 +250,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySqlConnector", "MySqlConn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Tools", "Source\LinqToDB.Tools\LinqToDB.Tools.csproj", "{B6D0309F-61AA-4F2B-B918-5446609CBECD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.AspNet", "Source\LinqToDB.AspNet\LinqToDB.AspNet.csproj", "{52EABB0B-0C56-43F1-B98B-6461FA841E5F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Extensions", "Source\LinqToDB.Extensions\LinqToDB.Extensions.csproj", "{52EABB0B-0C56-43F1-B98B-6461FA841E5F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{ED41F9D3-8E93-4D80-A45F-21A90428253F}"
 	ProjectSection(SolutionItems) = preProject
