@@ -44,23 +44,23 @@ jobs:
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration)
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x86 -o .build\bin\Tests\$(build_configuration)\$(netfx_tfm)\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x86 -o .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x64 /p:DB2STUB=True -o .build\bin\Tests\$(build_configuration)\$(netfx_tfm)\publishx64
+        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x64 /p:DB2STUB=True -o .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x64
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 /p:DB2STUB=True -o .build\bin\Tests\$(build_configuration)\net6.0\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 /p:DB2STUB=True -o .build\publish\Tests\$(build_configuration)\net6.0_x86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration) -a x86 /p:DB2STUB=True -o .build\bin\Tests\$(build_configuration)\net8.0\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration) -a x86 /p:DB2STUB=True -o .build\publish\Tests\$(build_configuration)\net8.0_x86
         if %errorlevel% neq 0 exit
         mkdir testing
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\bin\Tests\$(build_configuration)\$(netfx_tfm)\publishx86 testing\netfx
+        xcopy /i /s .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x86 testing\netfx
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\bin\Tests\$(build_configuration)\net6.0\publish testing\net60
+        xcopy /i /s .build\publish\Tests\$(build_configuration)\net6.0 testing\net60
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\bin\Tests\$(build_configuration)\net8.0\publish testing\net80
+        xcopy /i /s .build\publish\Tests\$(build_configuration)\net8.0 testing\net80
         if %errorlevel% neq 0 exit
-        xcopy /i /s.build\bin\Tests\$(build_configuration)\$(netfx_tfm)\publishx64 testing\netfxx64
+        xcopy /i /s .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x64 testing\netfxx64
         if %errorlevel% neq 0 exit
         xcopy /i /s .build\bin\Tests\$(build_configuration)\$(netfx_tfm)\runtimes\win-x86 testing\netfx\runtimes\win-x86
         if %errorlevel% neq 0 exit
@@ -70,9 +70,9 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i /s /y .build\bin\Tests\$(build_configuration)\$(netfx_tfm)\x64 testing\netfxx64\x64
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\bin\Tests\$(build_configuration)\net6.0\publishx86 testing\net60x86
+        xcopy /i /s .build\publish\Tests\$(build_configuration)\net6.0_x86 testing\net60x86
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\bin\Tests\$(build_configuration)\net8.0\publishx86 testing\net80x86
+        xcopy /i /s .build\publish\Tests\$(build_configuration)\net8.0_x86 testing\net80x86
         if %errorlevel% neq 0 exit
         copy DataProviders.json testing\netfx
         if %errorlevel% neq 0 exit
