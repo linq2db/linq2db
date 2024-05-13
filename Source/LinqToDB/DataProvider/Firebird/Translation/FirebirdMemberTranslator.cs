@@ -135,6 +135,9 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 					}
 				}
 
+				// Firebird does not support dynamic increment in DateAdd function
+				QueryHelper.MarkAsNonQueryParameters(number);
+
 				var partExpression   = factory.Fragment(factory.GetDbDataType(typeof(string)), datepart.ToString());
 				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", partExpression, number, dateTimeExpression);
 

@@ -1604,6 +1604,18 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
+		public static void MarkAsNonQueryParameters(IQueryElement root)
+		{
+			root.VisitAll(static e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					var param = (SqlParameter)e;
+					param.IsQueryParameter = false;
+				}
+			});
+		}
+
 		public static void DebugCheckNesting(SqlStatement statement, bool isSubQuery)
 		{
 			// TODO: temporary disabled
