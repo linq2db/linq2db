@@ -62,11 +62,7 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i /s .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x64 testing\netfxx64
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\bin\Tests\$(build_configuration)\$(netfx_tfm)\runtimes\win-x86 testing\netfx\runtimes\win-x86
-        if %errorlevel% neq 0 exit
         xcopy /i /s /y .build\bin\Tests\$(build_configuration)\$(netfx_tfm)\x86 testing\netfx\x86
-        if %errorlevel% neq 0 exit
-        xcopy /i /s .build\bin\Tests\$(build_configuration)\$(netfx_tfm)\runtimes\win-x64 testing\netfxx64\runtimes\win-x64
         if %errorlevel% neq 0 exit
         xcopy /i /s /y .build\bin\Tests\$(build_configuration)\$(netfx_tfm)\x64 testing\netfxx64\x64
         if %errorlevel% neq 0 exit
