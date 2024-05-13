@@ -14,7 +14,7 @@ uid: contributing
 |.\NuGet|LINQ to DB NuGet packages build files|
 |.\Redist| Binaries, unavailable officially at NuGet, used by tests and nugets|
 |.\Source\LinqToDB| LINQ to DB source code|
-|.\Source\LinqToDB.AspNet| LINQ to DB ASP.NET Core integration library source code|
+|.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
 |.\Source\LinqToDB.CLI| LINQ to DB CLI scaffold tool source code|
 |.\Source\LinqToDB.Remote.Grpc| LINQ to DB Remote Context GRPC client/server source code|
 |.\Source\LinqToDB.Remote.Wcf| LINQ to DB Remote Context WCF client/server source code|
@@ -136,7 +136,7 @@ The `[User]DataProviders.json` is a regular JSON file:
 
         // default provider, used as a source of reference data
         // LINQ to DB uses SQLite for it and you hardly need to change it
-        "DefaultConfiguration" : "SQLite.Classic",
+        "DefaultConfiguration" : "SQLite.MS",
 
         // (optional) contains full or relative (from test assembly location) path to test baselines directory.
         // When path is set and specified directory exists - enables baselines generation for tests.

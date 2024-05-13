@@ -23,7 +23,7 @@
 {
 	"NETFX": {
 		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.Default",
+		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
 			"Access",
 			"Access.Odbc",
@@ -60,7 +60,7 @@
 
 	"NETFX.Azure": {
 		"BasedOn": "AzureConnectionStrings",
-		"DefaultConfiguration": "SQLite.Default",
+		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"
 	},
 
@@ -84,7 +84,6 @@
 			"Access.Odbc.Data"   : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;"                                                                  },
 			"SqlCe"              : {                                      "ConnectionString": "Data Source=Database\\TestData.sdf"                                                                                                                  },
 			"SqlCe.Data"         : {                                      "ConnectionString": "Data Source=Database\\Data\\TestData.sdf"                                                                                                            },
-			"SQLite.Default"     : { "Provider": "Microsoft.Data.Sqlite", "ConnectionString": "Data Source=Database/TestData.Default.sqlite"                                                                                                        },
 			"SQLite.Classic"     : { "Provider": "SQLite",                "ConnectionString": "Data Source=Database/TestData.sqlite"                                                                                                                },
 			"SQLite.Classic.MPU" : { "Provider": "SQLite.Classic.MPU",    "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Unmapped.sqlite"                                                                                          },
 			"SQLite.Classic.MPM" : { "Provider": "SQLite.Classic.MPM",    "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Mapped.sqlite"                                                                                            },
@@ -219,7 +218,6 @@
 	"All.Providers": {
 		"Providers": [
 			"TestNoopProvider",
-			"SQLite.Default",
 			"SQLite.Classic",
 			"SQLite.MS",
 			"Northwind.SQLite",
@@ -333,7 +331,7 @@
 
 	"Base Example Configuration": {
 		// Default configuration is used to load etalon data to compare.
-		"DefaultConfiguration": "SQLite.Classic",
+		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
 			"Access",
 			"SQLite.Classic",
@@ -348,7 +346,7 @@
 
 	"Result Example Configuration": {
 		"TraceLevel": "Error",
-		"DefaultConfiguration": "SQLite.Classic",
+		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
 			"Access",
 			"SQLite.Classic",

@@ -30,10 +30,10 @@ jobs:
       targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
 
   - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.AspNet files
+    displayName: Download LinqToDB.Extensions files
     inputs:
-      artifactName: '$(artifact_linq2db_aspnet_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
+      artifactName: '$(artifact_linq2db_extensions_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Extensions/bin/Release'
 
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.Remote.Wcf files

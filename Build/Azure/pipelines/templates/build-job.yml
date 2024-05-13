@@ -44,15 +44,17 @@ jobs:
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration)
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x64 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\publishx64
+        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x86 -o Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\publishx86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net6.0\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x64 /p:DB2STUB=True -o Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\publishx64
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net8.0\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 /p:DB2STUB=True -o Tests\Linq\bin\$(build_configuration)\net6.0\publishx86
+        if %errorlevel% neq 0 exit
+        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration) -a x86 /p:DB2STUB=True -o Tests\Linq\bin\$(build_configuration)\net8.0\publishx86
         if %errorlevel% neq 0 exit
         mkdir testing
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm) testing\netfx
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\publishx86 testing\netfx
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net6.0\publish testing\net60
         if %errorlevel% neq 0 exit
@@ -60,15 +62,21 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\publishx64 testing\netfxx64
         if %errorlevel% neq 0 exit
-        xcopy /i /s testing\netfx\runtimes testing\netfxx64\runtimes
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\runtimes\win-x86 testing\netfx\runtimes\win-x86
         if %errorlevel% neq 0 exit
-        xcopy /i /s /y testing\netfx\x64 testing\netfxx64\x64
+        xcopy /i /s /y Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\x86 testing\netfx\x86
+        if %errorlevel% neq 0 exit
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\runtimes\win-x64 testing\netfxx64\runtimes\win-x64
+        if %errorlevel% neq 0 exit
+        xcopy /i /s /y Tests\Linq\bin\$(build_configuration)\$(netfx_tfm)\x64 testing\netfxx64\x64
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net6.0\publishx86 testing\net60x86
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net8.0\publishx86 testing\net80x86
         if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\netfx
+        if %errorlevel% neq 0 exit
+        copy Tests\DataProviders.json testing\netfxx64
         if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\net60
         if %errorlevel% neq 0 exit
@@ -113,9 +121,9 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
-      artifact: '$(artifact_linq2db_aspnet_binaries)'
-    displayName: Publish linq2db.AspNet build results
+      path: '$(Build.SourcesDirectory)/Source/LinqToDB.Extensions/bin/Release'
+      artifact: '$(artifact_linq2db_extensions_binaries)'
+    displayName: Publish linq2db.Extensions build results
     condition: and(succeeded(), ${{ parameters.for_nuget }})
 
   - task: PublishPipelineArtifact@1

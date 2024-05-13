@@ -135,15 +135,23 @@ namespace Tests.Data
 					Assert.That(db.Execute<int>("SELECT ID FROM AllTypes WHERE ntextDataType = @p", new DataParameter("@p", "111", DataType.NText)), Is.EqualTo(2));
 				});
 				Assert.That(trace, Does.Contain("DECLARE @p LongVarWChar(3)"));
+			}
+		}
 
-				// TODO: reenable, when issue with OleDb transactions under .net core fixed
 #if NETFRAMEWORK
+		[Test]
+		public void TestAccessOleDbSchema([IncludeDataSources(ProviderName.Access)] string context, [Values] ConnectionType type)
+		{
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
+			{
+				// TODO: reenable for .net, when issue with OleDb transactions under .net core fixed
 				// assert custom schema table access
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				Assert.That(schema.Tables.Any(t => t.ForeignKeys.Count > 0), Is.EqualTo(!unmapped));
-#endif
 			}
 		}
+#endif
 
 		[Test]
 		public void TestAccessODBC([IncludeDataSources(ProviderName.AccessOdbc)] string context, [Values] ConnectionType type)
