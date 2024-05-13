@@ -49,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 			var collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery)
 			{
 				CreateSubQuery    = true,
-				SourceCardinality = SourceCardinality.ZeroOrMany
+				SourceCardinality = SourceCardinality.Many
 			};
 
 			var collectionResult = builder.TryBuildSequence(collectionInfo);

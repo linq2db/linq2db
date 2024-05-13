@@ -1330,6 +1330,14 @@ namespace LinqToDB.SqlProvider
 								subQuery.Select.AddNew(c.Expression);
 							}
 						}
+						else if (column.Expression is SqlRowExpression rowExpression)
+						{
+							subQuery.Select.Columns.Clear();
+							foreach (var value in rowExpression.Values)
+							{
+								subQuery.Select.AddNew(value);
+							}
+						}
 					}
 				}
 			}

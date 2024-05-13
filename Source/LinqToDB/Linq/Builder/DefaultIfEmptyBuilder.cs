@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) {SourceCardinality = buildInfo.SourceCardinality | SourceCardinality.Zero});
 				if (buildResult.BuildContext == null)
 					return buildResult;
 				var sequence = buildResult.BuildContext;

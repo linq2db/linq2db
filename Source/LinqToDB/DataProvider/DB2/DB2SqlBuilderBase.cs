@@ -457,7 +457,14 @@ END");
 					return;
 				}
 
-				BuildTypedExpression(dbDataType, parameter);
+				if (dbDataType.DataType != DataType.Undefined)
+				{
+					BuildTypedExpression(dbDataType, parameter);
+				}
+				else
+				{
+					base.BuildParameter(parameter);
+				}
 				BuildStep = saveStep;
 
 				return;
