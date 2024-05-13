@@ -110,7 +110,7 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource, TTarget>(
 							IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -248,7 +248,7 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<TOutput[]> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
 							IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -545,7 +545,7 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource, TTarget>(
 							IQueryable<TSource> source,
 							Expression<Func<TSource, TTarget>> target,
@@ -682,7 +682,7 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<TOutput[]> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
 							IQueryable<TSource> source,
 							Expression<Func<TSource, TTarget>> target,
@@ -962,7 +962,7 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
 					        IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, T>> setter,
@@ -1081,7 +1081,7 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<TOutput[]> UpdateWithOutputAsync<T, TOutput>(
 					        IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, T>> setter,
@@ -1331,7 +1331,7 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
 					        IUpdatable<T> source,
 							CancellationToken token)
@@ -1444,7 +1444,7 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<TOutput[]> UpdateWithOutputAsync<T, TOutput>(
 					        IUpdatable<T> source,
 							Expression<Func<T, T, TOutput>> outputExpression,

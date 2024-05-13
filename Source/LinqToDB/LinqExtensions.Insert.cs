@@ -507,7 +507,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<TTarget[]> InsertWithOutputAsync<TSource, TTarget>(
 							IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -636,7 +636,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<TOutput[]> InsertWithOutputAsync<TSource, TTarget, TOutput>(
 							IQueryable<TSource> source,
 							ITable<TTarget> target,

@@ -92,7 +92,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<TSource[]> DeleteWithOutputAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken token)
@@ -196,7 +196,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in l2db 7.0")]
+		[Obsolete("Will be removed in Linq To DB 7")]
 		public static Task<TOutput[]> DeleteWithOutputAsync<TSource, TOutput>(
 			IQueryable<TSource> source,
 			Expression<Func<TSource, TOutput>> outputExpression,
