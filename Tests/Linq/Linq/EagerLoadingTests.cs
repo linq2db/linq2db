@@ -2346,11 +2346,12 @@ FROM
 			using var tc = db.CreateLocalTable(EntityMC.Data);
 			using var td = db.CreateLocalTable(EntityMD.Data);
 
-			var result = testCase == 1
-				? db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsB = e.ObjectsB.Select(e => new { e.Id, e.ObjectsC, ObjectD = (EntityMD?)null }).ToArray() }).ToList()
-				: testCase == 2
-					? db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsB = e.ObjectsB.Select(e => new { e.Id, ObjectsC = (EntityMC[])null!, e.ObjectD }).ToArray() }).ToList()
-					: db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsB = e.ObjectsB.Select(e => new { e.Id, e.ObjectsC, e.ObjectD }).ToArray() }).ToList();
+			var result = testCase switch
+			{
+				1 => db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsB = e.ObjectsB.Select(e => new { e.Id, e.ObjectsC, ObjectD = (EntityMD?)null }).ToArray() }).ToList(),
+				2 => db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsB = e.ObjectsB.Select(e => new { e.Id, ObjectsC            = (EntityMC[])null!, e.ObjectD }).ToArray() }).ToList(),
+				_ => db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsB = e.ObjectsB.Select(e => new { e.Id, e.ObjectsC, e.ObjectD }).ToArray() }).ToList()
+			};
 
 			var expected = new Dictionary<int, Dictionary<int, (int? IdD, HashSet<int> IdsC)>>()
 			{

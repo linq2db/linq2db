@@ -561,6 +561,9 @@ namespace LinqToDB.Linq.Builder
 				if (correctedSetter is SqlPlaceholderExpression { Sql: SqlValue { Value: null } })
 					return;
 
+				if (correctedSetter is ConstantExpression { Value: null })
+					return;
+
 				throw new NotImplementedException();
 			}
 		}

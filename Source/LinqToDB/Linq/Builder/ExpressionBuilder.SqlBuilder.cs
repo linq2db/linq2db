@@ -498,9 +498,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (columnDescriptor?.ValueConverter == null && CanBeConstant(newExpr) && !forceParameter)
 					{
-						sql = BuildConstant(newExpr, columnDescriptor);
+						sql = BuildConstant(context?.MappingSchema ?? MappingSchema, newExpr, columnDescriptor);
 					}
-					else if (CanBeCompiled(newExpr, flags.IsExpression()))
+
+					if (sql == null && CanBeCompiled(newExpr, flags.IsExpression()))
 					{
 						if (!TryTranslateMember(newExpr, out result))
 						{
@@ -1412,19 +1413,19 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Constant
 
-		readonly Dictionary<(Expression, ColumnDescriptor?),SqlValue> _constants = new ();
+		readonly Dictionary<(Expression, ColumnDescriptor?, int),SqlValue> _constants = new ();
 
-		SqlValue BuildConstant(Expression expr, ColumnDescriptor? columnDescriptor)
+		SqlValue? BuildConstant(MappingSchema mappingSchema, Expression expr, ColumnDescriptor? columnDescriptor)
 		{
-			var key = (expr, columnDescriptor);
+			var key = (expr, columnDescriptor, ((IConfigurationID)mappingSchema).ConfigurationID);
 			if (_constants.TryGetValue(key, out var sqlValue))
 				return sqlValue;
 
-			var dbType = columnDescriptor?.GetDbDataType(true).WithSystemType(expr.Type) ?? new DbDataType(expr.Type);
+			var dbType = columnDescriptor?.GetDbDataType(true).WithSystemType(expr.Type) ?? mappingSchema.GetDbDataType(expr.Type);
 
 			var unwrapped = expr.Unwrap();
-			if (unwrapped != expr && !MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType) &&
-				MappingSchema.ValueToSqlConverter.CanConvert(unwrapped.Type))
+			if (unwrapped != expr && !mappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType) &&
+			    mappingSchema.ValueToSqlConverter.CanConvert(unwrapped.Type))
 			{
 				dbType = dbType.WithSystemType(unwrapped.Type);
 				expr   = unwrapped;
@@ -1432,20 +1433,30 @@ namespace LinqToDB.Linq.Builder
 
 			dbType = dbType.WithSystemType(expr.Type);
 
+			var hasConverter = false;
+
 			if (columnDescriptor != null)
 			{
 				expr = columnDescriptor.ApplyConversions(expr, dbType, true);
 			}
 			else
 			{
-				if (!MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType))
-					expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, true);
+				if (!mappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType))
+				{
+					expr = ColumnDescriptor.ApplyConversions(mappingSchema, expr, dbType, null, true);
+				}
+				else
+				{
+					hasConverter = true;
+				}
 			}
 
 			var value = EvaluateExpression(expr);
 
-			// TODO: MappingSchema.GetSqlValue should use DbDataType
-			sqlValue = MappingSchema.GetSqlValue(expr.Type, value, columnDescriptor?.GetDbDataType(true));
+			if (dbType.DataType == DataType.Undefined && !hasConverter)
+				return null;
+
+			sqlValue = mappingSchema.GetSqlValue(expr.Type, value, dbType);
 
 			_constants.Add(key, sqlValue);
 			
