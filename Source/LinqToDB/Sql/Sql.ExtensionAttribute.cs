@@ -748,7 +748,7 @@ namespace LinqToDB
 								}
 								else
 								{
-									var sqlExpression = converter(context, arg, descriptor, inlineParameters);
+									var sqlExpression = converter(context, arg, null, inlineParameters);
 									sqlExpressions = new[] { sqlExpression };
 								}
 
