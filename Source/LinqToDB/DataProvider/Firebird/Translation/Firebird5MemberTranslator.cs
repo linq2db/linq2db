@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Globalization;
 
 namespace LinqToDB.DataProvider.Firebird.Translation
 {
-	using Common;
 	using Linq.Translation;
 	using SqlQuery;
 
 	public class Firebird5MemberTranslator : FirebirdMemberTranslator
 	{
-		class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		class Firebird5DateFunctionsTranslator : FirebirdDateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
@@ -71,122 +69,11 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 
 				return resultExpression;
 			}
-
-			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
-				Sql.DateParts                                                       datepart)
-			{
-				var factory = translationContext.ExpressionFactory;
-
-				var number = increment;
-				switch (datepart)
-				{
-					case Sql.DateParts.Quarter:
-					{
-						datepart = Sql.DateParts.Month;
-						number   = factory.Multiply(number, 3);
-						break;
-					}					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
-					{
-						datepart = Sql.DateParts.Day;
-						break;
-					}	
-					case Sql.DateParts.Week:
-					{
-						datepart = Sql.DateParts.Day;
-						number   = factory.Multiply(number, 7);
-						break;
-					}
-				}
-
-				var partExpression   = factory.Fragment(factory.GetDbDataType(typeof(string)), datepart.ToString());
-				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", partExpression, number, dateTimeExpression);
-
-				return resultExpression;
-			}
-
-			protected override ISqlExpression? TranslateMakeDateTime(
-				ITranslationContext translationContext,
-				DbDataType          resulType,
-				ISqlExpression      year,
-				ISqlExpression      month,
-				ISqlExpression      day,
-				ISqlExpression?     hour,
-				ISqlExpression?     minute,
-				ISqlExpression?     second,
-				ISqlExpression?     millisecond)
-			{
-				var factory        = translationContext.ExpressionFactory;
-				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.VarChar);
-				var intDataType    = factory.GetDbDataType(typeof(int));
-
-				ISqlExpression CastToLength(ISqlExpression expression, int stringLength)
-				{
-					return factory.Cast(expression, stringDataType.WithLength(stringLength));
-				}
-
-				ISqlExpression PartExpression(ISqlExpression expression, int padSize)
-				{
-					if (translationContext.TryEvaluate(expression, out var expressionValue) && expressionValue is int intValue)
-					{
-						return factory.Value(stringDataType, intValue.ToString(CultureInfo.InvariantCulture).PadLeft(padSize, '0'));
-					}
-
-					return factory.Function(stringDataType, "LPad",
-						CastToLength(expression, padSize),
-						factory.Value(intDataType, padSize),
-						factory.Value(stringDataType, "0"));
-				}
-
-				var yearString  = PartExpression(year, 4);
-				var monthString = PartExpression(month, 2);
-				var dayString   = PartExpression(day, 2);
-
-
-				var resultExpression = factory.Concat(
-					yearString, factory.Value(stringDataType, "-"),
-					monthString, factory.Value(stringDataType, "-"), dayString);
-
-				if (hour != null || minute != null || second != null || millisecond != null)
-				{
-					hour        ??= factory.Value(intDataType, 0);
-					minute      ??= factory.Value(intDataType, 0);
-					second      ??= factory.Value(intDataType, 0);
-					millisecond ??= factory.Value(intDataType, 0);
-
-					resultExpression = factory.Concat(
-						resultExpression,
-						factory.Value(stringDataType, " "),
-						PartExpression(hour, 2), factory.Value(stringDataType, ":"),
-						PartExpression(minute, 2), factory.Value(stringDataType, ":"),
-						PartExpression(second, 2), factory.Value(stringDataType, "."),
-						PartExpression(millisecond, 3)
-					);
-				}
-
-				resultExpression = factory.Cast(resultExpression, resulType);
-
-				return resultExpression;
-			}
-
-			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				var factory = translationContext.ExpressionFactory;
-				var cast = factory.Cast(dateExpression, factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), true);
-
-				return cast;
-			}
-
-			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
-			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.Fragment(factory.GetDbDataType(typeof(DateTime)), "LOCALTIMESTAMP");
-			}
 		}
 
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
-			return new DateFunctionsTranslator();
+			return new Firebird5DateFunctionsTranslator();
 		}
 	}
 }
