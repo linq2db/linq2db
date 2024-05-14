@@ -37,7 +37,7 @@ if %errorlevel% neq 0 exit
 nuget.exe Pack %NUSPECS%\linq2db.cli.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 
-uget.exe Pack %NUSPECS%\linq2db.Access.nuspec -OutputDirectory %NUGETS%
+nuget.exe Pack %NUSPECS%\linq2db.Access.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 nuget.exe Pack %NUSPECS%\linq2db.DB2.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
