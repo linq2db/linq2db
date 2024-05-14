@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -107,6 +108,17 @@ namespace LinqToDB.Data
 				action(objectReader(Reader));
 		}
 
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(Func<DbDataReader, T> objectReader)
+		{
+			return Impl(objectReader);
+
+			async IAsyncEnumerable<T> Impl(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					yield return objectReader(Reader);
+			}
+		}
+
 		#endregion
 
 		#region Query
@@ -151,6 +163,29 @@ namespace LinqToDB.Data
 			await CommandInfo!.ExecuteQueryAsync(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>()
+		{
+			return Impl();
+
+			async IAsyncEnumerable<T> Impl([EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				if (ReadNumber != 0
+					&& !await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					yield break;
+				}
+
+				ReadNumber++;
+
+				await foreach (var element in CommandInfo!.ExecuteQueryAsync<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"))
+						.WithCancellation(cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					yield return element;
+				}
+			}
+		}
+
 		#endregion
 
 		#region Query with template
@@ -189,6 +224,11 @@ namespace LinqToDB.Data
 			return QueryForEachAsync(action, cancellationToken);
 		}
 
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(T template)
+		{
+			return QueryToAsyncEnumerable<T>();
+		}
+		
 		#endregion
 
 		#region Execute scalar

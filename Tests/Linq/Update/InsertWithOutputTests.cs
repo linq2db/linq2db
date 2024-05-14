@@ -13,6 +13,8 @@ using LinqToDB.Common;
 
 namespace Tests.xUpdate
 {
+	using LinqToDB.Async;
+
 	using Model;
 
 	[TestFixture]
@@ -166,7 +168,8 @@ namespace Tests.xUpdate
 							Id       = s.Id       + param,
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(source.Where(s => s.Id > 3).Select(s => new DestinationTable
 				{
@@ -195,7 +198,8 @@ namespace Tests.xUpdate
 							Id       = s.Id       + param,
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(source.Where(s => s.Id == 3).Select(s => new DestinationTable
 				{

@@ -26,11 +26,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DF8DE665
 	ProjectSection(SolutionItems) = preProject
 		Tests\.editorconfig = Tests\.editorconfig
 		Tests\BannedSymbols.txt = Tests\BannedSymbols.txt
-		Tests\DataProviders.json = Tests\DataProviders.json
+		DataProviders.json = DataProviders.json
 		Tests\Directory.Build.props = Tests\Directory.Build.props
 		Tests\linq2db.Providers.props = Tests\linq2db.Providers.props
 		Tests\linq2db.TestProjects.props = Tests\linq2db.TestProjects.props
-		Tests\UserDataProviders.json = Tests\UserDataProviders.json
+		UserDataProviders.json = UserDataProviders.json
 		Tests\UserDataProviders.json.template = Tests\UserDataProviders.json.template
 	EndProjectSection
 EndProject
@@ -94,10 +94,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 	ProjectSection(SolutionItems) = preProject
 		NuGet\icon.png = NuGet\icon.png
 		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
-		NuGet\linq2db.Extensions.nuspec = NuGet\linq2db.Extensions.nuspec
 		NuGet\linq2db.cli.nuspec = NuGet\linq2db.cli.nuspec
 		NuGet\linq2db.DB2.Core.nuspec = NuGet\linq2db.DB2.Core.nuspec
 		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
+		NuGet\linq2db.Extensions.nuspec = NuGet\linq2db.Extensions.nuspec
 		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
 		NuGet\linq2db.FSharp.nuspec = NuGet\linq2db.FSharp.nuspec
 		NuGet\linq2db.Informix.Core.nuspec = NuGet\linq2db.Informix.Core.nuspec
