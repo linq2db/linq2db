@@ -748,7 +748,14 @@ namespace LinqToDB
 								}
 								else
 								{
-									var sqlExpression = converter(context, arg, null, inlineParameters);
+									var callDescriptor = descriptor;
+
+									if (callDescriptor != null && callDescriptor.MemberType != arg.Type && !(callDescriptor.MemberType.IsAssignableFrom(arg.Type) || arg.Type.IsAssignableFrom(callDescriptor.MemberType)))
+									{
+										callDescriptor = null;
+									}
+
+									var sqlExpression = converter(context, arg, callDescriptor, inlineParameters);
 									sqlExpressions = new[] { sqlExpression };
 								}
 
