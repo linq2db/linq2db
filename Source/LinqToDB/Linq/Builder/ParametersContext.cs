@@ -327,7 +327,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			name ??= columnDescriptor?.MemberName ?? "p";
+			name ??= columnDescriptor?.MemberName;
 
 			var p = CreateParameterAccessor(
 				DataContext, newExpr.ValueExpression, originalAccessor, newExpr.DbDataTypeExpression, valueExpression, ParametersExpression, name);
@@ -492,8 +492,10 @@ namespace LinqToDB.Linq.Builder
 					name = dp.Name;
 			}
 
+			name ??= "p";
+
 			// see #820
-			accessorExpression           = CorrectAccessorExpression(accessorExpression, dataContext);
+			accessorExpression = CorrectAccessorExpression(accessorExpression, dataContext);
 			originalAccessorExpression   = CorrectAccessorExpression(originalAccessorExpression, dataContext);
 			dbDataTypeAccessorExpression = CorrectAccessorExpression(dbDataTypeAccessorExpression, dataContext);
 
