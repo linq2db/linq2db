@@ -542,7 +542,19 @@ namespace LinqToDB.Data
 						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
 							var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-							var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
+
+							DbDataReader reader;
+
+							if (DataConnection is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
+							{
+								using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+									reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
+							}
+							else
+							{
+								reader = rd.DataReader!;
+							}
+
 							var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
 							var isFaulted     = false;
 
