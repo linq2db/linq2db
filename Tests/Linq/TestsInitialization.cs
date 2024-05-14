@@ -56,7 +56,6 @@ public class TestsInitialization
 
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
-		CopySQLiteRuntime();
 		RegisterSqlCEFactory();
 
 #if NETFRAMEWORK && !AZURE
@@ -88,25 +87,6 @@ public class TestsInitialization
 
 		//custom initialization logic
 		CustomizationSupport.Init();
-	}
-
-	// workaround for
-	// https://github.com/ericsink/SQLitePCL.raw/issues/389
-	// https://github.com/dotnet/efcore/issues/19396
-	private void CopySQLiteRuntime()
-	{
-#if NETFRAMEWORK
-		const string runtimeFile = "e_sqlite3.dll";
-		var destPath             = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, runtimeFile);
-		var sourcePath           = System.IO.Path.Combine(
-			AppDomain.CurrentDomain.BaseDirectory,
-			"runtimes",
-			IntPtr.Size == 4 ? "win-x86" : "win-x64",
-			"native",
-			runtimeFile);
-
-		System.IO.File.Copy(sourcePath, destPath, true);
-#endif
 	}
 
 	private void RegisterSqlCEFactory()
