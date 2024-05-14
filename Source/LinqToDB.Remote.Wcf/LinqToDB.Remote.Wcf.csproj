@@ -4,7 +4,7 @@
 		<AssemblyName>linq2db.Remote.Wcf</AssemblyName>
 		<RootNamespace>LinqToDB.Remote.Wcf</RootNamespace>
 
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.wcf.xml</DocumentationFile>
+		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<TargetFrameworks>net462</TargetFrameworks>
 	</PropertyGroup>
 

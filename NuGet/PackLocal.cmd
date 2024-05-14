@@ -16,5 +16,5 @@ cd ..
 call Build.cmd
 cd NuGet
 
-powershell ..\Build\BuildNuspecs.ps1 -path *.nuspec -buildPath ..\BuiltNuGet -version %VERSION%
+powershell ..\Build\BuildNuspecs.ps1 -path *.nuspec -buildPath ..\.build\nuspecs -version %VERSION%
 call Pack.cmd %SNUPKG%
