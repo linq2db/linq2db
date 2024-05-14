@@ -928,7 +928,7 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <returns>Sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
@@ -964,7 +964,7 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <returns>Sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
@@ -1000,7 +1000,7 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
@@ -1036,7 +1036,7 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
