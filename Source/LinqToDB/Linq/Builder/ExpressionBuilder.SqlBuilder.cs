@@ -3838,12 +3838,7 @@ namespace LinqToDB.Linq.Builder
 								}
 								else
 								{
-#pragma warning disable CS8603 // TODO:WAITFIX
-									return next;
-#pragma warning restore CS8603
-									// TODO: recheck
-									throw new InvalidOperationException(
-										$"Member '{member}' not found in type '{contextRef.Type}'.");
+									return next!;
 								}
 							}
 
@@ -4288,10 +4283,9 @@ namespace LinqToDB.Linq.Builder
 			if (!force && MappingSchema.IsScalarType(createExpression.Type))
 				return createExpression;
 
-#if !NET45
 			if (typeof(FormattableString).IsSameOrParentOf(createExpression.Type))
 				return createExpression;
-#endif
+
 			if (flags.IsSql() && IsForceParameter(createExpression, columnDescriptor))
 				return createExpression;
 
