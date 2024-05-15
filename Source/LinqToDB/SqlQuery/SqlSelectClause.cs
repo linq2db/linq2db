@@ -367,7 +367,8 @@ namespace LinqToDB.SqlQuery
 					maxLength = Math.Max(maxLength, columnName.Length);
 				}
 
-				using(writer.IndentScope())
+				using (writer.IndentScope())
+				{
 					for (var index = 0; index < Columns.Count; index++)
 					{
 						var c          = Columns[index];
@@ -387,6 +388,7 @@ namespace LinqToDB.SqlQuery
 						else
 							writer.AppendLine();
 					}
+				}
 			}
 
 			writer.RemoveVisited(this);

@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB
 {
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	/// <summary>
 	/// Defines signature for column filter for insert operations.

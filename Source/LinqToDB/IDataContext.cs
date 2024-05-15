@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -10,8 +11,6 @@ namespace LinqToDB
 	using Common.Internal;
 	using Interceptors;
 	using Linq;
-	using Infrastructure;
-
 	using Mapping;
 	using SqlProvider;
 

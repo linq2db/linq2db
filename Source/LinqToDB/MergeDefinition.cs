@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	using LinqToDB.Common;
-	using LinqToDB.Linq;
+	using Common;
+	using Linq;
 
 	public enum MergeOperationType
 	{

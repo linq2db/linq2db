@@ -186,15 +186,14 @@ namespace LinqToDB.SqlQuery
 				.Append(RawAlias ?? "<none>")
 				.Append(")");
 
-			writer.Indent();
-
-			foreach (var join in Joins)
+			using (writer.IndentScope())
 			{
-				writer.AppendLine();
-				writer.AppendElement(join);
+				foreach (var join in Joins)
+				{
+					writer.AppendLine();
+					writer.AppendElement(join);
+				}
 			}
-
-			writer.UnIndent();
 
 			writer.RemoveVisited(this);
 

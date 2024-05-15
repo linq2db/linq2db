@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB
 {
@@ -7,8 +6,8 @@ namespace LinqToDB
 	using Common.Internal;
 	using Data;
 	using Interceptors;
-	using Remote;
 	using Linq.Translation;
+	using Remote;
 
 	/// <param name="CommandTimeout">
 	/// The command timeout, or <c>null</c> if none has been set.
