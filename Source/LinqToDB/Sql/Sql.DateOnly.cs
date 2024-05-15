@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS8604 // TODO:WAITFIX
-#if NET6_0_OR_GREATER
+﻿#if NET6_0_OR_GREATER
 using System;
 using System.Globalization;
 

@@ -381,7 +381,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void OrderByContinuous([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -560,7 +560,7 @@ namespace Tests.Linq
 				var query =
 					from p in db.ComplexPerson
 					where p.ID.In(1, 3)
-					orderby Sql.OrderIndex(p.Name.LastName) descending, p.Name.FirstName descending
+					orderby Sql.Ordinal(p.Name.LastName) descending, p.Name.FirstName descending
 					select new
 					{
 						p.ID, 
@@ -586,7 +586,7 @@ namespace Tests.Linq
 						p.ID, 
 						CuttedName = p.Name.LastName.Substring(0, 3)
 					} into s
-					orderby withIndex ? Sql.OrderIndex(s.CuttedName) : s.CuttedName descending
+					orderby withIndex ? Sql.Ordinal(s.CuttedName) : s.CuttedName descending
 					select new
 					{
 						s.ID, 
@@ -617,7 +617,7 @@ namespace Tests.Linq
 			{
 				var query =
 					from p in db.ComplexPerson
-					where Sql.OrderIndex(p.Name.LastName) == "Some"
+					where Sql.Ordinal(p.Name.LastName) == "Some"
 					select new
 					{
 						p.ID, 
@@ -627,7 +627,7 @@ namespace Tests.Linq
 				FluentActions.Enumerating(() => query)
 					.Should()
 					.Throw<LinqException>()
-					.WithMessage("The LINQ expression 'Sql.OrderIndex<string>(p.Name.LastName) == \"Some\"' could not be converted to SQL.");
+					.WithMessage("The LINQ expression 'Sql.Ordinal<string>(p.Name.LastName) == \"Some\"' could not be converted to SQL.");
 			}
 		}
 

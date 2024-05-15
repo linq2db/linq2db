@@ -55,7 +55,7 @@ namespace Tests.Linq
 		{
 			using (new PreloadGroups(false))
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from ch in db.GrandChild
@@ -123,7 +123,7 @@ namespace Tests.Linq
 		public void Simple6([DataSources] string context)
 		{
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			{
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID);
 				var list = q.ToList();
@@ -1339,7 +1339,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void GroupByAggregate1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1354,7 +1354,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void GroupByAggregate11([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1371,7 +1371,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = "Provider does not support Correlated subqueries.")] 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void GroupByAggregate12([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -2961,6 +2961,43 @@ namespace Tests.Linq
 				)
 				select new { pmp });
 		}
+
+		[Test]
+		public void GroupByConstants([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var constants =
+				from c in db.Child
+				select new { ChildId = 1, ParentId = 2 };
+
+			var query =
+				from c in constants
+				group c by new { c.ChildId, c.ParentId }
+				into g
+				select new { g.Key, Count = g.Count() };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByConstantsEmpty([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var constants =
+				from c in db.Child.Where(c => false)
+				select new { ChildId = 1, ParentId = 2 };
+
+			var query =
+				from c in constants
+				group c by new { c.ChildId, c.ParentId }
+				into g
+				select new { g.Key, Count = g.Count() };
+
+			AssertQuery(query);
+		}
+
 
 		#region issue 4256
 		[Test]

@@ -45,16 +45,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// as emulation doesn't work properly due to missing rowcount functionality
 			SqlProviderFlags.IsInsertOrUpdateSupported         = true;
 
-			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.DoesNotSupportCorrelatedSubquery  = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsNestedJoinsSupported            = false;
-
-			if (this is ClickHouseOctonicaDataProvider or ClickHouseMySqlDataProvider)
-				SqlProviderFlags.IsProjectionBoolSupported = false;
 
 			// unconfigured flags
 			// 1. ClickHouse doesn't support correlated subqueries at all so this flag's value doesn't make difference
@@ -116,11 +112,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 				}
 			}
 
-			if (Provider == ClickHouseProvider.ClickHouseClient && Adapter.ClientDecimalType != null)
+			if (Provider == ClickHouseProvider.ClickHouseClient && Adapter.ClientDecimalType != null && Adapter.HasFaultyClientDecimalType)
 			{
-				// TODO: add only to older versions after fix
-				// workaround for
-				// https://github.com/DarkWanderer/ClickHouse.Client/issues/459
 				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (int  )rd.GetDecimal(idx));
 				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (uint )rd.GetDecimal(idx));
 				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (long )rd.GetDecimal(idx));

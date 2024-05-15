@@ -51,10 +51,8 @@ namespace LinqToDB.Linq.Builder
 
 					var sourceRef = mergeContext.SourceContext.SourcePropAccess;
 					var targetRef = new ContextRefExpression(sqlTable.ObjectType, mergeContext.TargetContext);
+					var keys       = sqlTable.GetKeys(false)!.Cast<SqlField>().ToList();
 
-#pragma warning disable CS8604 // TODO:WAITFIX
-					var keys       = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
-#pragma warning restore CS8604
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
 						var sourceMemberInfo = sourceRef.Type.GetMemberEx(field.ColumnDescriptor.MemberInfo);

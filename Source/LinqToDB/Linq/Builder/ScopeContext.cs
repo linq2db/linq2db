@@ -76,5 +76,43 @@ namespace LinqToDB.Linq.Builder
 			expression = SequenceHelper.CorrectExpression(expression, this, Context);
 			return Context.GetContext(expression, buildInfo);
 		}
+
+		public override bool IsOptional => Context.IsOptional;
+
+		protected bool Equals(ScopeContext other)
+		{
+			return Context.Equals(other.Context) && UpTo.Equals(other.UpTo) && OnlyForSql == other.OnlyForSql;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((ScopeContext)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				var hashCode = Context.GetHashCode();
+				hashCode = (hashCode * 397) ^ UpTo.GetHashCode();
+				hashCode = (hashCode * 397) ^ OnlyForSql.GetHashCode();
+				return hashCode;
+			}
+		}
 	}
 }

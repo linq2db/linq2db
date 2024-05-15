@@ -131,9 +131,17 @@ namespace LinqToDB.DataProvider.DB2
 				base.BuildSelectClause(selectQuery);
 		}
 
+		protected override bool OffsetFirst => true;
+
 		protected override string? LimitFormat(SelectQuery selectQuery)
 		{
-			return selectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null;
+			//return selectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null;
+			return "FETCH NEXT {0} ROWS ONLY";
+		}
+
+		protected override string OffsetFormat(SelectQuery selectQuery)
+		{
+			return "OFFSET {0} ROWS";
 		}
 
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
@@ -416,13 +424,13 @@ END");
 			{
 				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 
-				// TODO: temporary guard against cast to unknown type (Variant)
 				var dbDataType = paramValue.DbDataType;
-				if (dbDataType.DataType == DataType.Undefined)
-				{
-					base.BuildParameter(parameter);
-					return;
-				}
+				// temporary guard against cast to unknown type (Variant)
+				//if (dbDataType.DataType == DataType.Undefined)
+				//{
+				//	base.BuildParameter(parameter);
+				//	return;
+				//}
 
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;
@@ -449,7 +457,14 @@ END");
 					return;
 				}
 
-				BuildTypedExpression(dbDataType, parameter);
+				if (dbDataType.DataType != DataType.Undefined)
+				{
+					BuildTypedExpression(dbDataType, parameter);
+				}
+				else
+				{
+					base.BuildParameter(parameter);
+				}
 				BuildStep = saveStep;
 
 				return;

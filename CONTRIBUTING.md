@@ -14,7 +14,7 @@ uid: contributing
 |.\NuGet|LINQ to DB NuGet packages build files|
 |.\Redist| Binaries, unavailable officially at NuGet, used by tests and nugets|
 |.\Source\LinqToDB| LINQ to DB source code|
-|.\Source\LinqToDB.AspNet| LINQ to DB ASP.NET Core integration library source code|
+|.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
 |.\Source\LinqToDB.CLI| LINQ to DB CLI scaffold tool source code|
 |.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
 |.\Source\LinqToDB.Remote.Grpc| LINQ to DB Remote Context GRPC client/server source code|
@@ -115,7 +115,7 @@ public class Test: TestBase
 ### Configure data providers for tests
 
 `DataSourcesAttribute` generates tests for each enabled data provider. Configuration is taken
-from `.\Tests\DataProviders.json` and `.\Tests\UserDataProviders.json` (used first, if exists).
+from `.\DataProviders.json` and `.\UserDataProviders.json` (used first, if exists).
 
 Repository already contains pre-configured `UserDataProviders.json.template` configuration with basic setup for SQLite-based testing and all you need is to rename it to `UserDataProviders.json`, add connection string for other databases you want to test.
 `UserDataProviders.json` will be ignored by git, so you can edit it freely.
@@ -249,7 +249,7 @@ The `[User]DataProviders.json` is a regular JSON file:
 }
 ```
 
-To define your own configurations **DO NOT EDIT** `DataProviders.json` - create `.\Tests\Linq\UserDataProviders.json` and define needed configurations.
+To define your own configurations **DO NOT EDIT** `DataProviders.json` - create `.\UserDataProviders.json` and define needed configurations.
 
 Tests execution depends on `_CreateData.*` tests executed first. Those tests recreate test databases and populate them with test data, so if you are going to run one test be sure to run `_CreateData` before it manually.
 

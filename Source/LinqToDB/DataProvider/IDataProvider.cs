@@ -94,10 +94,5 @@ namespace LinqToDB.DataProvider
 		/// E.g. this could be done for providers with positional parameters that ignore names.
 		/// </summary>
 		IQueryParametersNormalizer GetQueryParameterNormalizer();
-
-		/// <summary>
-		/// Returns ServiceProvider instance for provider.
-		/// </summary>
-		public IServiceProvider ServiceProvider { get; }
 	}
 }

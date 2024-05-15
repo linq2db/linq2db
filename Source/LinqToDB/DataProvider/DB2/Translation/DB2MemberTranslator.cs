@@ -218,8 +218,8 @@ namespace LinqToDB.DataProvider.DB2.Translation
 					case Sql.DateParts.Second: expStr = "SECOND"; break;
 					case Sql.DateParts.Millisecond:
 					{
-						expStr             = "SECOND";
-						incrementValueExpr = factory.Div(doubleDataType, increment, 1000.0);
+						expStr             = "MICROSECONDS";
+						incrementValueExpr = factory.Multiply(doubleDataType, increment, 1000.0);
 						break;
 					}
 					default:

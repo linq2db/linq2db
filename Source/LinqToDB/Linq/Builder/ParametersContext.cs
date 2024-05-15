@@ -88,6 +88,7 @@ namespace LinqToDB.Linq.Builder
 		internal enum BuildParameterType
 		{
 			Default,
+			Bool,
 			InPredicate
 		}
 
@@ -282,24 +283,31 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						// Try GetConvertExpression<.., DataParameter>() first.
-						//
-						if (newExpr.ValueExpression.Type != typeof(DataParameter))
+						if (buildParameterType == BuildParameterType.Bool)
 						{
-							LambdaExpression? convertExpr = null;
-							if (buildParameterType == BuildParameterType.Default && !HasDbMapping(MappingSchema, newExpr.ValueExpression.Type, out convertExpr))
-							{
-								if (!doNotCheckCompatibility)
-									return null;
-							}
-
-							newExpr.ValueExpression = convertExpr != null ?
-								InternalExtensions.ApplyLambdaToExpression(convertExpr, newExpr.ValueExpression) :
-								ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
+							// right now, do nothing
 						}
 						else
 						{
-							newExpr.ValueExpression = ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
+							// Try GetConvertExpression<.., DataParameter>() first.
+							//
+							if (newExpr.ValueExpression.Type != typeof(DataParameter))
+							{
+								LambdaExpression? convertExpr = null;
+								if (buildParameterType == BuildParameterType.Default && !HasDbMapping(MappingSchema, newExpr.ValueExpression.Type, out convertExpr))
+								{
+									if (!doNotCheckCompatibility)
+										return null;
+								}
+
+								newExpr.ValueExpression = convertExpr != null
+									? InternalExtensions.ApplyLambdaToExpression(convertExpr, newExpr.ValueExpression)
+									: ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
+							}
+							else
+							{
+								newExpr.ValueExpression = ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
+							}
 						}
 					}
 				}
@@ -484,8 +492,10 @@ namespace LinqToDB.Linq.Builder
 					name = dp.Name;
 			}
 
+			name ??= "p";
+
 			// see #820
-			accessorExpression           = CorrectAccessorExpression(accessorExpression, dataContext);
+			accessorExpression = CorrectAccessorExpression(accessorExpression, dataContext);
 			originalAccessorExpression   = CorrectAccessorExpression(originalAccessorExpression, dataContext);
 			dbDataTypeAccessorExpression = CorrectAccessorExpression(dbDataTypeAccessorExpression, dataContext);
 

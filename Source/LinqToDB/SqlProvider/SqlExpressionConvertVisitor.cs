@@ -686,9 +686,12 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (SqlProviderFlags?.RowConstructorSupport.HasFlag(RowFeature.Between) != true && QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression)
+			if (SqlProviderFlags != null)
 			{
-				return Visit(Optimize(ConvertBetweenPredicate(predicate)));
+				if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Between) && QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression)
+				{
+					return Visit(Optimize(ConvertBetweenPredicate(predicate)));
+				}
 			}
 
 			return newElement;
@@ -865,6 +868,7 @@ namespace LinqToDB.SqlProvider
 			var testExpr = inPredicate.Expr1;
 
 			var intTestSubQuery = inPredicate.SubQuery.Clone();
+			intTestSubQuery = WrapIfNeeded(intTestSubQuery);
 			var inSubqueryExpr = intTestSubQuery.Select.Columns[0].Expression;
 
 			intTestSubQuery.Select.Columns.Clear();
@@ -883,6 +887,24 @@ namespace LinqToDB.SqlProvider
 			var result = Optimize(sc.MakeNot(inPredicate.IsNot));
 
 			return (ISqlPredicate)result;
+		}
+
+		static SelectQuery WrapIfNeeded(SelectQuery selectQuery)
+		{
+			if (selectQuery.Select.HasModifier || !selectQuery.GroupBy.IsEmpty || selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			{
+				var newQuery = new SelectQuery();
+				newQuery.From.Tables.Add(new SqlTableSource(selectQuery, null));
+
+				foreach (var column in selectQuery.Select.Columns)
+				{
+					newQuery.Select.AddNew(column);
+				}
+
+				selectQuery = newQuery;
+			}
+
+			return selectQuery;
 		}
 
 		ISqlPredicate ConvertToExists(SqlPredicate.InSubQuery inPredicate)
@@ -907,6 +929,8 @@ namespace LinqToDB.SqlProvider
 				subQuery = subQuery.CloneQuery();
 				subQuery.Where.EnsureConjunction();
 			}
+
+			subQuery = WrapIfNeeded(subQuery);
 
 			var predicates = new List<ISqlPredicate>(testExpressions.Length);
 

@@ -28,16 +28,6 @@ namespace LinqToDB.Data
 
 		#region Entity Construction
 
-		public static Type GetTypeForInstantiation(Type entityType)
-		{
-			// choosing type that can be instantiated
-			if ((entityType.IsInterface || entityType.IsAbstract) && !(entityType.IsInterface || entityType.IsAbstract))
-			{
-				throw new NotImplementedException();
-			}
-			return entityType;
-		}
-
 		public virtual List<LoadWithInfo>? GetTableLoadWith(Expression path)
 		{
 			return null;
@@ -150,7 +140,7 @@ namespace LinqToDB.Data
 							}
 
 							if (memberInfo == null)
-								throw new InvalidOperationException($"No suitable member '[currentMemberName]' found for type '{currentPath.Type}'");
+								throw new InvalidOperationException($"No suitable member '[{currentMemberName}]' found for type '{currentPath.Type}'");
 						}
 
 						var newColumns = columns.Where(c => c.MemberName.StartsWith(propPath)).ToList();
@@ -195,7 +185,7 @@ namespace LinqToDB.Data
 						var expression = Expression.MakeMemberAccess(currentPath, memberInfo);
 
 						members.Add(
-							new SqlGenericConstructorExpression.Assignment(memberInfo, expression, false, true));
+							new SqlGenericConstructorExpression.Assignment(memberInfo, expression, true, true));
 					}
 				}
 			}
@@ -270,8 +260,6 @@ namespace LinqToDB.Data
 
 		SqlGenericConstructorExpression BuildFullEntityExpressionInternal(Expression refExpression, Type entityType, ProjectFlags flags, FullEntityPurpose purpose)
 		{
-			entityType = GetTypeForInstantiation(entityType);
-
 			refExpression = SequenceHelper.EnsureType(refExpression, entityType);
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
@@ -285,8 +273,6 @@ namespace LinqToDB.Data
 		{
 			DataContext   = dataContext;
 			MappingSchema = mappingSchema;
-
-			entityType = GetTypeForInstantiation(entityType);
 
 			refExpression = SequenceHelper.EnsureType(refExpression, entityType);
 
@@ -524,11 +510,11 @@ namespace LinqToDB.Data
 		public Expression ConstructFullEntity(
 			SqlGenericConstructorExpression constructorExpression, ProjectFlags flags, bool checkInheritance = true)
 		{
-			var constructed = TryConstructFullEntity(constructorExpression, constructorExpression.ObjectType, flags, checkInheritance);
+			var constructed = TryConstructFullEntity(constructorExpression, constructorExpression.ObjectType, flags, checkInheritance, out var error);
 
 			if (constructed == null)
 				throw new InvalidOperationException(
-					$"Cannot construct full object '{constructorExpression.ObjectType}'. No suitable constructors found.");
+					$"Cannot construct full object '{constructorExpression.ObjectType}'. {error ?? "No suitable constructors found."}");
 
 			return constructed;
 		}
@@ -553,8 +539,10 @@ namespace LinqToDB.Data
 				code, onType);
 		}
 
-		public virtual Expression? TryConstructFullEntity(SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance = true)
+		public virtual Expression? TryConstructFullEntity(SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance, out string? error)
 		{
+			error = null;
+
 			var entityType       = constructorExpression.ObjectType;
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
 			var rootReference    = constructorExpression.ConstructionRoot;
@@ -592,25 +580,14 @@ namespace LinqToDB.Data
 						var onType = firstMapping.Discriminator.MemberInfo.DeclaringType;
 						if (onType == null)
 						{
-							throw new LinqToDBException("Could not get discriminator DeclaringType.");
+							throw new LinqToDBException("Could not get discriminator's DeclaringType.");
 						}
 
 						var access = GetMemberExpression(constructorExpression, firstMapping.Discriminator.MemberInfo);
 						var codeExpr = Expression.Convert(access, typeof(object));
 
 						var generator    = new ExpressionGenerator();
-#if true
 						generator.AddExpression(Expression.Call(_throwErrorMethodInf.MakeGenericMethod(entityType), codeExpr, Expression.Constant(onType, typeof(Type))));
-#else
-						//TODO: probably remove. Other part work with NETFRAMEWEORK also.
-						Expression<Func<object, Type, Exception>> throwExpr = (code, et) =>
-							new LinqException(
-								"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
-								code, et);
-
-						generator.Throw(throwExpr.GetBody(codeExpr, Expression.Constant(onType, typeof(Type))));
-						generator.AddExpression(new DefaultValueExpression(MappingSchema, entityType));
-#endif
 						defaultExpression = generator.Build();
 					}
 
@@ -649,7 +626,7 @@ namespace LinqToDB.Data
 								Expression.Constant(inheritance.Code));
 						}
 
-						var fullEntity = TryConstructFullEntity(constructorExpression, inheritance.Type, flags, false);
+						var fullEntity = TryConstructFullEntity(constructorExpression, inheritance.Type, flags, false, out error);
 						if (fullEntity == null)
 							return null;
 						var tableExpr = Expression.Convert(fullEntity, current.Type);
@@ -700,7 +677,7 @@ namespace LinqToDB.Data
 			if (newAssignments != null)
 				constructorExpression = constructorExpression.ReplaceAssignments(newAssignments);
 
-			var constructed = TryConstructObject(constructorExpression, constructType);
+			var constructed = TryConstructObject(constructorExpression, constructType, out error);
 
 			if (constructed == null)
 				return null;
@@ -769,8 +746,10 @@ namespace LinqToDB.Data
 		}
 
 		public Expression? TryConstructObject(
-			SqlGenericConstructorExpression constructorExpression, Type constructType)
+			SqlGenericConstructorExpression constructorExpression, Type constructType, out string? failureReason)
 		{
+			failureReason = null;
+
 			if (constructorExpression.ConstructorMethod != null)
 			{
 				var parameterInfos = constructorExpression.ConstructorMethod.GetParameters();
@@ -798,14 +777,24 @@ namespace LinqToDB.Data
 			var constructor = SelectParameterizedConstructor(constructType);
 			if (constructor != null)
 			{
+				var unset = constructorExpression.Assignments.Any(a => a.IsMandatory)
+					? new List<SqlGenericConstructorExpression.Assignment>(constructorExpression.Assignments.Count)
+					: null;
+
 				var instantiation = TryWithConstructor(typeAccessor, constructor,
-					constructorExpression, null);
+					constructorExpression, unset);
 				if (instantiation != null)
 					return instantiation;
+
+				if (unset?.Count > 0)
+				{
+					failureReason = $"Following members are not assignable: {string.Join(", ", unset.Select(a => a.MemberInfo.Name))}.";
+				}
 			}
 
 			if (constructType.IsValueType)
 			{
+				failureReason = null;
 				return TryWithConstructor(typeAccessor, null, constructorExpression, null);
 			}
 
@@ -821,17 +810,17 @@ namespace LinqToDB.Data
 			if (DataContext is IInterceptable<IEntityBindingInterceptor> expressionServices)
 				constructorExpression = expressionServices.Interceptor?.ConvertConstructorExpression(constructorExpression) ?? constructorExpression;
 
-			var constructed = TryConstruct(dataContext, mappingSchema, constructorExpression, flags);
+			var constructed = TryConstruct(dataContext, mappingSchema, constructorExpression, flags, out var error);
 			if (constructed == null)
 			{
 				throw new InvalidOperationException(
-					$"Cannot construct object '{constructorExpression.ObjectType}'. No suitable constructors found.");
+					$"Cannot construct object '{constructorExpression.ObjectType}'. {error ?? "No suitable constructors found."}");
 			}
 
 			return constructed;
 		}
 
-		public Expression? TryConstruct(IDataContext dataContext, MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression,  ProjectFlags flags)
+		public Expression? TryConstruct(IDataContext dataContext, MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression,  ProjectFlags flags, out string? error)
 		{
 			DataContext   = dataContext;
 			MappingSchema = mappingSchema;
@@ -840,7 +829,7 @@ namespace LinqToDB.Data
 			{
 				case SqlGenericConstructorExpression.CreateType.Full:
 				{
-					return TryConstructFullEntity(constructorExpression, constructorExpression.ObjectType, flags);
+					return TryConstructFullEntity(constructorExpression, constructorExpression.ObjectType, flags, true, out error);
 				}
 				case SqlGenericConstructorExpression.CreateType.MemberInit:
 				case SqlGenericConstructorExpression.CreateType.Auto:
@@ -848,7 +837,7 @@ namespace LinqToDB.Data
 				case SqlGenericConstructorExpression.CreateType.New:
 				case SqlGenericConstructorExpression.CreateType.MethodCall:
 				{
-					return TryConstructObject(constructorExpression, constructorExpression.ObjectType);
+					return TryConstructObject(constructorExpression, constructorExpression.ObjectType, out error);
 				}
 				default:
 					throw new NotImplementedException();

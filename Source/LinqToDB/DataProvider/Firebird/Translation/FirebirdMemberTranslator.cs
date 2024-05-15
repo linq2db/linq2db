@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 			}
 		}
 
-		class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		protected class FirebirdDateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
@@ -121,7 +121,8 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 						datepart = Sql.DateParts.Month;
 						number   = factory.Multiply(number, 3);
 						break;
-					}					case Sql.DateParts.DayOfYear:
+					}				
+					case Sql.DateParts.DayOfYear:
 					case Sql.DateParts.WeekDay:
 					{
 						datepart = Sql.DateParts.Day;
@@ -134,6 +135,9 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 						break;
 					}
 				}
+
+				// Firebird does not support dynamic increment in DateAdd function
+				QueryHelper.MarkAsNonQueryParameters(number);
 
 				var partExpression   = factory.Fragment(factory.GetDbDataType(typeof(string)), datepart.ToString());
 				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", partExpression, number, dateTimeExpression);
@@ -227,7 +231,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
-			return new DateFunctionsTranslator();
+			return new FirebirdDateFunctionsTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

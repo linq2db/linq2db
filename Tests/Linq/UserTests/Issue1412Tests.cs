@@ -160,7 +160,7 @@ namespace Tests.UserTests
 			var carriersA = new[] { new WmsLoadCarrierDTO { Id = TestData.Guid2, TypeID = typeId } };
 			var carriersB = new[] { new WmsLoadCarrierDTO { Id = TestData.Guid3, TypeID = typeId } };
 
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<WmsResourceTypeDTO>(resources))
 			using (db.CreateLocalTable<WmsLoadCarrierDTO>(carriersA))
 			using (db.CreateLocalTable<WmsLoadCarrierDTO>("WMS_ResourceA", carriersB))

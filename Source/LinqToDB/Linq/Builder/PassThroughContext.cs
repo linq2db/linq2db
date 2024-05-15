@@ -54,5 +54,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			Context.CompleteColumns();
 		}
+
+		public override bool IsOptional => Context.IsOptional;
 	}
 }

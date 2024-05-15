@@ -74,12 +74,12 @@ namespace LinqToDB.Linq.Builder
 				// create separate query for output
 				var outputSelectQuery = new SelectQuery();
 
-				deletedContext = new TableBuilder.TableContext(builder, sequence.MappingSchema, outputSelectQuery, deletedTable);
+				deletedContext = new TableBuilder.TableContext(builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false);
 
 				if (builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable)
 				{
 					deletedContext = new AnchorContext(null,
-						new TableBuilder.TableContext(builder, sequence.MappingSchema, outputSelectQuery, deletedTable),
+						new TableBuilder.TableContext(builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false),
 						SqlAnchor.AnchorKindEnum.Deleted);
 
 					deleteStatement.Output.DeletedTable = deletedTable;

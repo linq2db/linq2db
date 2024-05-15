@@ -15,6 +15,7 @@ namespace LinqToDB.SqlQuery
 		public NullabilityContext Nullability { get; }
 
 #if DEBUG
+		// character added to visually detect end of string
 		public string DebugString => _writer + "¶";
 #endif
 

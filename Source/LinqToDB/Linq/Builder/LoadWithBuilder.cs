@@ -10,6 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Common;
+	using LinqToDB.Reflection;
 
 	sealed class LoadWithBuilder : MethodCallBuilder
 	{
@@ -129,7 +130,7 @@ namespace LinqToDB.Linq.Builder
 					// append to the last member chain
 					var lastPath = CorrectLastPath(prevSequence.LastLoadWithInfo, table.LoadWithPath);
 					if (lastPath == null)
-						throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Can not find previous property for '{path}'.");
+						throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Cannot find previous property for '{path}'.");
 
 					lastLoadWith = MergeLoadWith(lastPath, associations);
 

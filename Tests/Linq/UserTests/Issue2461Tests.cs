@@ -37,7 +37,7 @@ namespace Tests.UserTests
 		[Test]
 		public void AssociationConcat([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<TestReceipt>())
 			using (db.CreateLocalTable<TestReceipt>(TestReceipt.ExternalReceiptsTableName))
 			using (db.CreateLocalTable<TestCustomer>())

@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS8604 // TODO:WAITFIX
-using System;
+﻿using System;
 using System.Globalization;
 
 namespace LinqToDB
@@ -274,8 +273,8 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var part = builder.GetValue<DateParts>(0);
-				var startDate = builder.GetExpression(1);
-				var endDate = builder.GetExpression(2);
+				var startDate = builder.GetExpression(1)!;
+				var endDate = builder.GetExpression(2)!;
 				var expStr = part switch
 				{
 					DateParts.Year        => "(DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date))",

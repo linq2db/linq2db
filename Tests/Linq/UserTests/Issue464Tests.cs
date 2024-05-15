@@ -13,7 +13,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue464Tests : TestBase
 	{
-
 		[Test]
 		public void Test([DataSources(false)] string context)
 		{

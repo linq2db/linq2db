@@ -120,6 +120,8 @@ namespace LinqToDB.Linq.Builder
 
 			Dictionary<Expression[], (SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)> _pathMapping = default!;
 
+			public override bool NeedsSubqueryForComparison => true;
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) &&
@@ -838,7 +840,6 @@ namespace LinqToDB.Linq.Builder
 
 				public List<(SqlPlaceholderExpression placeholder, Expression[] path)> FoundPlaceholders { get; } = new();
 
-				//public List<(SqlEagerLoadExpression eager, Expression[] path)> FoundEager { get; } = new();
 				public List<SqlEagerLoadExpression> FoundEager { get; } = new();
 
 				protected override Expression VisitConditional(ConditionalExpression node)

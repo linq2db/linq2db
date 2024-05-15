@@ -6,11 +6,11 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
+	using Interceptors;
 
 	static class AssociationHelper
 	{
@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 			bool?                 enforceDefault,
 			LoadWithInfo?         loadWith,
 			MemberInfo[]?         loadWithPath,
-			out bool?             isOuter)
+			out bool?             isOptional)
 		{
 			Expression dataContextExpr = SqlQueryRootExpression.Create(mappingSchema, builder.DataContext.GetType());
 
@@ -50,7 +50,14 @@ namespace LinqToDB.Linq.Builder
 				definedQueryMethod = (LambdaExpression)builder.ParametersContext.RegisterDynamicExpressionAccessor(Expression.Constant(association), builder.DataContext, mappingSchema, (dc, _) =>
 				{
 					var associationExpression = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
-					var optimizationContext   = new ExpressionTreeOptimizationContext(dc);
+
+                    if (dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+                    {
+                        associationExpression = (LambdaExpression)interceptor.ProcessExpression(associationExpression,
+                            new QueryExpressionArgs(dc, associationExpression, QueryExpressionArgs.ExpressionKind.AssociationExpression));
+                    }
+
+                    var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					associationExpression = (LambdaExpression)ExpressionBuilder.ExposeExpression(associationExpression, dc, optimizationContext, null, optimizeConditions : true, compactBinary : true);
 					return associationExpression;
 				});
@@ -135,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (predicate == null)
-					throw new LinqException("Can not generate Association predicate");
+					throw new LinqException("Cannot generate Association predicate");
 
 				if (inline && !shouldAddDefaultIfEmpty)
 				{
@@ -202,7 +209,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = ExpressionBuilder.ExposeExpression(closureExpr, dc, optimizationContext, null, optimizeConditions : true, compactBinary : true);
-					optimizedExpr = optimizedExpr.OptimizeExpression(ms);
+					optimizedExpr = optimizedExpr.OptimizeExpression(dc.MappingSchema);
 					return optimizedExpr;
 				});
 			}
@@ -311,6 +318,7 @@ namespace LinqToDB.Linq.Builder
 				shouldAddDefaultIfEmpty = false;
 			}
 
+			isOptional = shouldAddDefaultIfEmpty;
 			if (inline)
 			{
 				var body = definedQueryMethod.Body.Unwrap();
@@ -319,18 +327,6 @@ namespace LinqToDB.Linq.Builder
 					.MakeGenericMethod(objectType), body);
 
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
-				isOuter = true;
-			}
-			else
-			{
-				if (shouldAddDefaultIfEmpty)
-				{
-					isOuter = true;
-				}
-				else
-				{
-					isOuter = false;
-				}
 			}
 
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpressionTree(definedQueryMethod);
@@ -340,7 +336,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext,
-			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool? isOuter)
+			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool? isOptional)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);
 			var parentExactType = descriptor.GetParentElementType();
@@ -348,7 +344,7 @@ namespace LinqToDB.Linq.Builder
 			var queryMethod = CreateAssociationQueryLambda(
 				builder, tableContext.BuildContext.MappingSchema, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
 				additionalCondition,
-				inline, isOuter, loadwith, loadWithPath, out isOuter);
+				inline, isOptional, loadwith, loadWithPath, out isOptional);
 
 			var correctedContext = tableContext.WithType(parentExactType);
 

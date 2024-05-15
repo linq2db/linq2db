@@ -61,7 +61,7 @@ namespace LinqToDB.Linq.Builder
 			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
 
 			// Generating LEFT JOIN from one record resultset
-			if (buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero))
+			if (buildInfo.SourceCardinality == SourceCardinality.Unknown)
 			{
 				var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
 				if (sequenceResult.BuildContext == null)
@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) {SourceCardinality = buildInfo.SourceCardinality | SourceCardinality.Zero});
 				if (buildResult.BuildContext == null)
 					return buildResult;
 				var sequence = buildResult.BuildContext;
@@ -187,7 +187,13 @@ namespace LinqToDB.Linq.Builder
 
 					var testCondition = notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
 
-					var body = Expression.Condition(testCondition, sequenceRef, DefaultValue);
+					var defaultValue = DefaultValue;
+					if (defaultValue.Type != sequenceRef.Type)
+					{
+						defaultValue = Expression.Convert(defaultValue, sequenceRef.Type);
+					}
+
+					var body = Expression.Condition(testCondition, sequenceRef, defaultValue);
 
 					var projectedDefault = Builder.Project(Sequence, newPath, null, -1, flags, body, true);
 					return projectedDefault;
@@ -245,6 +251,8 @@ namespace LinqToDB.Linq.Builder
 				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 				return Sequence.GetContext(expression, buildInfo);
 			}
+
+			public override bool IsOptional => true;
 		}
 	}
 }

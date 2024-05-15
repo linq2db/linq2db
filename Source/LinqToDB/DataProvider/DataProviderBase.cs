@@ -23,8 +23,9 @@ namespace LinqToDB.DataProvider
 	using SchemaProvider;
 	using SqlProvider;
 	using Linq.Translation;
+	using Infrastructure;
 
-	public abstract class DataProviderBase : IDataProvider
+	public abstract class DataProviderBase : IDataProvider, IInfrastructure<IServiceProvider>
 	{
 		#region .ctor
 
@@ -35,7 +36,6 @@ namespace LinqToDB.DataProvider
 			// set default flags values explicitly even for default values
 			SqlProviderFlags = new SqlProviderFlags()
 			{
-				IsSybaseBuggyGroupBy                 = false,
 				IsParameterOrderDependent            = false,
 				AcceptsTakeAsParameter               = true,
 				AcceptsTakeAsParameterIfSkip         = false,
@@ -55,15 +55,11 @@ namespace LinqToDB.DataProvider
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
-				IsUpdateSetTableAliasSupported       = true,
 				OutputDeleteUseSpecialTable          = false,
 				OutputInsertUseSpecialTable          = false,
 				OutputUpdateUseSpecialTables         = false,
-				IsGroupByColumnRequred               = false,
 				IsCrossJoinSupported                 = true,
-				IsInnerJoinAsCrossSupported          = true,
 				IsCommonTableExpressionsSupported    = false,
-				IsDistinctOrderBySupported           = true,
 				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
@@ -521,7 +517,7 @@ namespace LinqToDB.DataProvider
 		SimpleServiceProvider? _serviceProvider;
 		readonly object        _guard = new();
 
-		public IServiceProvider ServiceProvider
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{
 			get
 			{

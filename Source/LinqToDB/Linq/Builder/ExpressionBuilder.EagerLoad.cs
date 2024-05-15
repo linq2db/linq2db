@@ -100,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 			var type         = MutableTuple.MTypes[count - 1];
 			var concreteType = type.MakeGenericType(arguments.Select(a => a.Type).ToArray());
 			var constructor = concreteType.GetConstructor(Type.EmptyTypes) ??
-			                  throw new LinqToDBException($"Can not retrieve default constructor for '{type.Name}'");
+			                  throw new LinqToDBException($"Cannot retrieve default constructor for '{type.Name}'");
 
 			var newExpression = Expression.New(constructor);
 			var initExpression = Expression.MemberInit(newExpression,

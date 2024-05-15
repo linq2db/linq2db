@@ -25,16 +25,12 @@ namespace LinqToDB.DataProvider.SapHana
 			//when expression returns more than 1 row
 			//mark this as supported, it's better to throw exception
 			//then replace with left join, in which case returns incorrect data
-			SqlProviderFlags.IsSubQueryColumnSupported         = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsSubQueryTakeSupported           = true;
 			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.AcceptsOuterExpressionInAggregate = true;
-			SqlProviderFlags.IsSubQueryColumnSupported         = true;
 			SqlProviderFlags.IsApplyJoinSupported              = true;
-			SqlProviderFlags.IsApplyJoinSupportsCondition      = true;
+			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = true;
+			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = true;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}

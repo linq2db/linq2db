@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS8604 // TODO:WAITFIX
-using System;
+﻿using System;
 using System.Globalization;
 
 namespace LinqToDB

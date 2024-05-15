@@ -8,7 +8,6 @@ namespace LinqToDB.SqlProvider
 	using Common;
 	using SqlQuery;
 
-	// TODO: refactoring in progress
 	sealed partial class JoinsOptimizer
 	{
 		Dictionary<IQueryElement,IQueryElement>?                                 _replaceMap;
@@ -79,9 +78,6 @@ namespace LinqToDB.SqlProvider
 				statement.Replace(_replaceMap);
 			}
 
-			else if (_removedSources != null)
-				throw new InvalidOperationException("RemoveDuplicateJoins:Debug");
-
 			return statement;
 		}
 
@@ -102,9 +98,6 @@ namespace LinqToDB.SqlProvider
 			return keys != null;
 		}
 
-		// TryMergeSources2(source, null, null, join, keys)
-		// TryMergeSources2(source, null/*source*/, join, join2, keys2)
-		// TryMergeSources2(source, join3.Table, join, join2, keys2)
 		bool TryMergeSources2(SqlStatement statement, SelectQuery selectQuery, NullabilityContext nullability, SqlTableSource fromTable, SqlTableSource? manySource, SqlJoinedTable? join1, SqlJoinedTable join2, ISqlExpression[][] uniqueKeys)
 		{
 			if (join2.Table.Joins.Count != 0)
@@ -138,12 +131,10 @@ namespace LinqToDB.SqlProvider
 						return false;
 
 					if (found1.Count != found2.Count)
-						throw new InvalidOperationException("TryMergeSources2:Debug3");
-					//return false;
+						return false;
 
 					if (join1.Table.Joins.Count != 0 || join2.Table.Joins.Count != 0)
-						throw new InvalidOperationException("TryMergeSources2:Debug4");
-					//return false;
+						return false;
 				}
 
 				for (var i = 0; i < found2.Count;)
@@ -207,8 +198,6 @@ namespace LinqToDB.SqlProvider
 					// currently no dependencies in search condition allowed for left join
 					if (IsDependedExcludeJoins(statement, selectQuery, join2))
 						return false;
-					else
-						throw new InvalidOperationException("TryMergeSources2:Debug5");
 				}
 
 				foundPairs = found;
@@ -277,8 +266,6 @@ namespace LinqToDB.SqlProvider
 					foreach (var sourceId in toIgnore.Table.GetTables().Select(t => t.SourceID))
 						testedSources.Add(sourceId);
 				}
-				else
-					throw new InvalidOperationException("IsDepended:Debug");
 
 				var ctx = new IsDependedContext(testedSources);
 
@@ -370,32 +357,6 @@ namespace LinqToDB.SqlProvider
 			public readonly HashSet<int>  TestedSources;
 		}
 
-		/*void AddSearchConditions(SqlSearchCondition search, IEnumerable<ISqlPredicate> conditions)
-		{
-			_additionalFilter ??= new ();
-
-			if (!_additionalFilter.TryGetValue(search, out var value))
-			{
-				if (search.Predicates.Count > 0 && search.Precedence < Precedence.LogicalConjunction)
-				{
-					value = new SqlSearchCondition();
-					var prev  = new SqlSearchCondition();
-
-					prev.Predicates.AddRange(search.Predicates);
-					search.Predicates.Clear();
-
-					search.Predicates.Add(new SqlCondition(false, value, false));
-					search.Predicates.Add(new SqlCondition(false, prev, false));
-				}
-				else
-					value = search;
-
-				_additionalFilter.Add(search, value);
-			}
-
-			value.Predicates.AddRange(conditions);
-		}*/
-
 		void AddSearchConditions(SqlSearchCondition search, IEnumerable<ISqlPredicate> predicates)
 		{
 			_additionalFilter ??= new ();
@@ -431,8 +392,7 @@ namespace LinqToDB.SqlProvider
 				SqlTableSource? table, ISqlExpression field, HashSet<int> excludeSourceIds, int testedSourceIndex, HashSet<ISqlExpression> visited)
 			{
 				if (visited.Contains(field))
-					throw new InvalidOperationException("CanWeReplaceFieldInternal:Debug1");
-				//return false;
+					return false;
 
 				var sourceId = GetFieldSourceID(field);
 				if (!excludeSourceIds.Contains(sourceId) && !IsSourceRemoved(sourceId))
@@ -444,8 +404,7 @@ namespace LinqToDB.SqlProvider
 					return false;
 
 				if (testedSourceIndex < 0)
-					throw new InvalidOperationException("CanWeReplaceFieldInternal:Debug2");
-				//return false;
+					return false;
 
 				if (_equalityMap.TryGetValue(field, out var sameFields))
 				{
@@ -633,8 +592,7 @@ namespace LinqToDB.SqlProvider
 				if (field2 is SqlField sqlField2)
 					return sqlField1.PhysicalName == sqlField2.PhysicalName;
 
-				//return false;
-				throw new InvalidOperationException("IsSimilarFields:Debug");
+				return false;
 			}
 
 			return ReferenceEquals(field1, field2);
@@ -663,8 +621,7 @@ namespace LinqToDB.SqlProvider
 					continue;
 
 				if (field1.Equals(field2))
-					throw new InvalidOperationException("CollectEqualFields:Debug");
-				//continue;
+					continue;
 
 				AddEqualFields(field1, field2, join.Table.SourceID);
 				AddEqualFields(field2, field1, join.Table.SourceID);

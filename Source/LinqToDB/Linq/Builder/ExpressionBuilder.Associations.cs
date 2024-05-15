@@ -147,7 +147,6 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		Dictionary<SqlCacheKey, Expression>? _associations;
-		HashSet<Expression>?                 _isOuterAssociations;
 
 		public Expression TryCreateAssociation(Expression expression, ContextRefExpression rootContext, IBuildContext? forContext, ProjectFlags flags)
 		{
@@ -168,17 +167,24 @@ namespace LinqToDB.Linq.Builder
 			LoadWithInfo? loadWith     = null;
 			MemberInfo[]? loadWithPath = null;
 
+			var   prevIsOuter = flags.HasFlag(ProjectFlags.ForceOuterAssociation);
+			bool? isOptional  = prevIsOuter ? true : null;
+
+			if (rootContext.BuildContext.IsOptional)
+				isOptional = true;
+
 			var table = SequenceHelper.GetTableOrCteContext(rootContext.BuildContext);
 
 			if (table != null)
 			{
 				loadWith     = table.LoadWithRoot;
 				loadWithPath = table.LoadWithPath;
+				if (table.IsOptional)
+					isOptional = true;
 			}
 
-			bool? isOuter = flags.HasFlag(ProjectFlags.ForceOuterAssociation) ? true : null;
-
-			var prevIsOuter = _isOuterAssociations?.Contains(rootContext) == true;
+			if (forContext?.IsOptional == true)
+				isOptional = true;
 
 			if (associationDescriptor.IsList)
 			{
@@ -187,7 +193,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				isOuter = isOuter == true || associationDescriptor.CanBeNull || prevIsOuter;
+				isOptional = isOptional == true || associationDescriptor.CanBeNull;
 			}
 
 			Expression? notNullCheck = null;
@@ -201,7 +207,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo,
-				associationDescriptor, notNullCheck, !associationDescriptor.IsList, loadWith, loadWithPath, ref isOuter);
+				associationDescriptor, notNullCheck, !associationDescriptor.IsList, loadWith, loadWithPath, ref isOptional);
 
 			associationExpression = association;
 
@@ -212,6 +218,7 @@ namespace LinqToDB.Linq.Builder
 				var buildInfo = new BuildInfo(forContext, association, new SelectQuery())
 				{
 					IsTest = flags.IsTest(),
+					SourceCardinality = isOptional == true ? SourceCardinality.ZeroOrOne : SourceCardinality.One,
 					IsAssociation = true
 				};
 
@@ -229,13 +236,6 @@ namespace LinqToDB.Linq.Builder
 					sequence = new ScopeContext(sequence, forContext);
 
 				associationExpression = new ContextRefExpression(association.Type, sequence);
-
-				if (!flags.IsTest() && isOuter == true)
-				{
-					var root = MakeExpression(rootContext.BuildContext, associationExpression, flags.AssociationRootFlag());
-					_isOuterAssociations ??= new HashSet<Expression>(ExpressionEqualityComparer.Instance);
-					_isOuterAssociations.Add(root);
-				}
 			}
 			else
 			{

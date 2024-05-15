@@ -23,6 +23,7 @@ namespace LinqToDB.Linq
 	using Reflection;
 	using SqlQuery;
 	using Tools;
+	using Interceptors;
 
 	static partial class QueryRunner
 	{
@@ -246,7 +247,7 @@ namespace LinqToDB.Linq
 
 			var evaluated = sqlExpr.EvaluateExpression(new EvaluationContext(parameterValues)) as int?;
 			if (evaluated == null)
-				throw new InvalidOperationException($"Can not evaluate integer expression from '{sqlExpr}'.");
+				throw new InvalidOperationException($"Cannot evaluate integer expression from '{sqlExpr}'.");
 			return evaluated.Value;
 		}
 
@@ -436,7 +437,7 @@ namespace LinqToDB.Linq
 				{
 					DbDataReader origDataReader;
 
-					if (_dataContext.UnwrapDataObjectInterceptor is { } interceptor)
+					if (_dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 					{
 						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 							origDataReader = interceptor.UnwrapDataReader(_dataContext, dataReader);
@@ -501,7 +502,7 @@ namespace LinqToDB.Linq
 					{
 						DbDataReader origDataReader;
 
-						if (_dataContext.UnwrapDataObjectInterceptor is { } interceptor)
+						if (_dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 						{
 							using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 								origDataReader = interceptor.UnwrapDataReader(_dataContext, dr.DataReader);
@@ -630,7 +631,7 @@ namespace LinqToDB.Linq
 				{
 					DbDataReader dataReader;
 
-					if (_dataContext.UnwrapDataObjectInterceptor is { } interceptor)
+					if (_dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 					{
 						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 							dataReader = interceptor.UnwrapDataReader(_dataContext, _dataReader.DataReader);
@@ -793,7 +794,7 @@ namespace LinqToDB.Linq
 
 			DbDataReader dataReader;
 
-			if (dataContext.UnwrapDataObjectInterceptor is { } interceptor)
+			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 			{
 				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 					dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader!);
@@ -836,7 +837,7 @@ namespace LinqToDB.Linq
 						{
 							DbDataReader dataReader;
 
-							if (dataContext.UnwrapDataObjectInterceptor is { } interceptor)
+							if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 							{
 								using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 									dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader);

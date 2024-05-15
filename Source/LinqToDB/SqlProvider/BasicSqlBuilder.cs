@@ -529,7 +529,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
-			=> throw new SqlException("This data provider does not support multi-table insert.");
+			=> throw new SqlException(ErrorHelper.Error_MutiTable_Insert);
 
 		protected virtual void BuildUnknownQuery()
 		{
@@ -845,9 +845,9 @@ namespace LinqToDB.SqlProvider
 				if (expr.Column is SqlRowExpression)
 				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
-						throw new LinqToDBException("This provider does not support SqlRow in UPDATE.");
+						throw new LinqToDBException(ErrorHelper.Error_SqlRow_in_Update);
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral) && expr.Expression is not SelectQuery)
-						throw new LinqToDBException("This provider does not support SqlRow literal on the right-hand side of an UPDATE SET.");
+						throw new LinqToDBException(ErrorHelper.Error_SqlRow_in_Update_Value);
 				}
 
 				BuildExpression(expr.Column, updateClause.TableSource != null, true, false);
@@ -3285,11 +3285,11 @@ namespace LinqToDB.SqlProvider
 				{
 					var sqlField = anchor.SqlExpression as SqlField;
 					if (sqlField == null || sqlField.Table == null)
-						throw new LinqToDBException("Can not find Table or Column associated with expression");
+						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var ts = Statement.GetTableSource(sqlField.Table, out var noAlias);
 					if (ts == null)
-						throw new LinqToDBException("Can not find Table Source for table.");
+						throw new LinqToDBException("Cannot find Table Source for table.");
 
 					var table = noAlias ? null : GetTableAlias(ts);
 
@@ -3304,7 +3304,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var sqlField = anchor.SqlExpression as SqlField;
 					if (sqlField == null || sqlField.Table == null)
-						throw new LinqToDBException("Can not find Table or Column associated with expression");
+						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					BuildPhysicalTable(sqlField.Table, null);
 					return;
@@ -3313,11 +3313,11 @@ namespace LinqToDB.SqlProvider
 				{
 					var sqlField = anchor.SqlExpression as SqlField;
 					if (sqlField == null || sqlField.Table == null)
-						throw new LinqToDBException("Can not find Table or Column associated with expression");
+						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var table = sqlField.Table as SqlTable;
 					if (table == null)
-						throw new LinqToDBException("Can not find table.");
+						throw new LinqToDBException("Cannot find table.");
 
 					BuildExpression(new SqlField(table, table.TableName.Name));
 
@@ -3327,11 +3327,11 @@ namespace LinqToDB.SqlProvider
 				{
 					var sqlField = anchor.SqlExpression as SqlField;
 					if (sqlField == null || sqlField.Table == null)
-						throw new LinqToDBException("Can not find Table or Column associated with expression");
+						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var table = sqlField.Table as SqlTable;
 					if (table == null)
-						throw new LinqToDBException("Can not find table.");
+						throw new LinqToDBException("Cannot find table.");
 
 					if (sqlField == table.All)
 					{

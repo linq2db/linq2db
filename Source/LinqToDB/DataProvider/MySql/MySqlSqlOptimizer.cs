@@ -27,11 +27,12 @@ namespace LinqToDB.DataProvider.MySql
 			};
 		}
 
-		static SqlStatement PrepareDelete(SqlDeleteStatement statement)
+		SqlStatement PrepareDelete(SqlDeleteStatement statement)
 		{
 			var tables = statement.SelectQuery.From.Tables;
 
-			if (statement.Output != null && tables.Count == 1 && tables[0].Joins.Count == 0)
+			if (tables.Count == 1 && tables[0].Joins.Count == 0
+				&& !statement.SelectQuery.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported))
 				tables[0].Alias = "$";
 
 			return statement;
@@ -73,8 +74,8 @@ namespace LinqToDB.DataProvider.MySql
 				return true;
 			});
 
-			if (!statement.SelectQuery.OrderBy.IsEmpty)
-				statement.SelectQuery.OrderBy.Items.Clear();
+			//if (!statement.SelectQuery.OrderBy.IsEmpty)
+			//	statement.SelectQuery.OrderBy.Items.Clear();
 
 			CorrectUpdateSetters(statement);
 

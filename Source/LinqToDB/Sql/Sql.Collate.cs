@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS8604 // TODO:WAITFIX
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
@@ -22,7 +21,7 @@ namespace LinqToDB
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(NamedCollationBuilder))]
 		[return: NotNullIfNotNull(nameof(expr))]
 		public static string? Collate(this string? expr, [SqlQueryDependent] string collation)
-			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
+			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Collate)} is server-side only API.");
 
 		internal sealed class NamedCollationBuilder : IExtensionCallBuilder
 		{
@@ -30,7 +29,7 @@ namespace LinqToDB
 
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var expr = builder.GetExpression("expr");
+				var expr = builder.GetExpression("expr")!;
 				var collation = builder.GetValue<string>("collation");
 
 				if (!ValidateCollation(collation))
@@ -56,7 +55,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var expr      = builder.GetExpression("expr");
+				var expr      = builder.GetExpression("expr")!;
 				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
 
 				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"",
@@ -69,7 +68,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var expr      = builder.GetExpression("expr");
+				var expr      = builder.GetExpression("expr")!;
 				var collation = builder.GetValue<string>("collation");
 
 				// collation cannot be parameter

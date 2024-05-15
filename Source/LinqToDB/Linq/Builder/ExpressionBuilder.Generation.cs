@@ -34,9 +34,9 @@ namespace LinqToDB.Linq.Builder
 				return Builder.GetTableLoadWith(table);
 			}
 
-			public override Expression? TryConstructFullEntity(SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance = true)
+			public override Expression? TryConstructFullEntity(SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance, out string? error)
 			{
-				var constructed = base.TryConstructFullEntity(constructorExpression, constructType, flags, checkInheritance);
+				var constructed = base.TryConstructFullEntity(constructorExpression, constructType, flags, checkInheritance, out error);
 
 				if (constructed != null)
 				{
@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 			mappingSchema      =   constructorExpression.MappingSchema ?? mappingSchema;
 			_entityConstructor ??= new EntityConstructor(this);
 
-			var result = _entityConstructor.TryConstruct(DataContext, mappingSchema, constructorExpression, flags);
+			var result = _entityConstructor.TryConstruct(DataContext, mappingSchema, constructorExpression, flags, out var error);
 
 			return result;
 		}

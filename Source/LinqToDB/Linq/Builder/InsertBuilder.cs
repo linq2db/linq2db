@@ -195,7 +195,7 @@ namespace LinqToDB.Linq.Builder
 					if (insertedTable == null)
 						throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
-					insertContext.OutputContext = new TableBuilder.TableContext(builder, sequence.MappingSchema, new SelectQuery(), insertedTable);
+					insertContext.OutputContext = new TableBuilder.TableContext(builder, sequence.MappingSchema, new SelectQuery(), insertedTable, false);
 
 					if (builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable)
 						insertStatement.Output.InsertedTable = insertedTable;

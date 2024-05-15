@@ -1035,7 +1035,7 @@ namespace Tests.Linq
 			ms.SetConvertExpression<Guid, string>(a => a.ToString());
 			ms.SetConvertExpression<string, Guid>(a => Guid.Parse(a));
 
-			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
+			using var db = GetDataContext(context);
 
 			using var table = db.CreateLocalTable<Issue3791Table>();
 			using var _     = db.CreateLocalTable<Issue3791GuidTable>();

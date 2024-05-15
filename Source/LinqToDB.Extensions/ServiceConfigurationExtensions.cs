@@ -6,16 +6,15 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace LinqToDB.AspNet
+namespace LinqToDB.Extensions.DependencyInjection
 {
-
 	using Data;
 
 	public static class ServiceConfigurationExtensions
 	{
 		/// <summary>
 		///     Registers <see cref="DataConnection"/> as the service <see cref="IDataContext"/> in the <see cref="IServiceCollection" />.
-		///     You use this method when using dependency injection in your application, such as with ASP.NET.
+		///     You use this method when using dependency injection in your application.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
 		/// <example>

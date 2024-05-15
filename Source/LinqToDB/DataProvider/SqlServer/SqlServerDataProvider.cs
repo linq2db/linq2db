@@ -54,7 +54,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			Version  = version;
 			Provider = provider;
 
-			SqlProviderFlags.IsDistinctOrderBySupported         = false;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate  = false;
 			SqlProviderFlags.OutputDeleteUseSpecialTable        = true;
 			SqlProviderFlags.OutputInsertUseSpecialTable        = true;
@@ -65,6 +64,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.IsRowNumberWithoutOrderBySupported = false;
 			SqlProviderFlags.IsSubQueryTakeSupported            = version > SqlServerVersion.v2005;
 			SqlProviderFlags.IsCTESupportsOrdering              = false;
+			SqlProviderFlags.IsUpdateTakeSupported              = true;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));

@@ -26,12 +26,17 @@ namespace LinqToDB.DataProvider.DB2
 
 			SqlProviderFlags.AcceptsTakeAsParameter                       = false;
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip                 = true;
-			SqlProviderFlags.IsDistinctOrderBySupported                   = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported            = true;
 			SqlProviderFlags.IsUpdateFromSupported                        = false;
 			SqlProviderFlags.IsCrossJoinSupported                         = false;
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
 			SqlProviderFlags.IsRecursiveCTEJoinWithConditionSupported     = false;
+
+			// Requires:
+			// DB2 LUW: 11.1+
+			// DB2 zOS: 12+
+			SqlProviderFlags.IsUpdateTakeSupported     = version is DB2Version.LUW;
+			SqlProviderFlags.IsUpdateSkipTakeSupported = version is DB2Version.LUW;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Update |
 			                                         RowFeature.UpdateLiteral | RowFeature.Overlaps | RowFeature.Between;

@@ -21,17 +21,17 @@ namespace Tests.Model
 
 	public class Parent : IEquatable<Parent>, IComparable
 	{
-		public int  ParentID;
-		public int? Value1;
+		public int  ParentID { get; set; }
+		public int? Value1   { get; set; }
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public List<Child> Children = null!;
+		public List<Child> Children { get; set; } = null!;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public List<GrandChild> GrandChildren = null!;
+		public List<GrandChild> GrandChildren { get; set; } = null!;
 
 		[Association(ThisKey = "ParentID, Value1", OtherKey = "ParentID, Value1")]
-		public Parent? ParentTest;
+		public Parent? ParentTest { get; set; }
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public IEnumerable<Child> Children2
@@ -40,7 +40,7 @@ namespace Tests.Model
 		}
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public ImmutableList<Child> Children3 = null!;
+		public ImmutableList<Child> Children3 { get; set; } = null!;
 
 		public override bool Equals(object? obj)
 		{
@@ -75,7 +75,7 @@ namespace Tests.Model
 		}
 
 		[Association(ThisKey = "ParentID", OtherKey = "ID")]
-		public LinqDataTypes? Types;
+		public LinqDataTypes? Types { get; set; }
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID", ExpressionPredicate = "ChildrenPredicate", CanBeNull = true)]
 		public List<Child> ChildrenX { get; set; } = null!;
@@ -118,26 +118,26 @@ namespace Tests.Model
 
 	public class Child
 	{
-		[PrimaryKey] public int ParentID;
-		[PrimaryKey] public int ChildID;
+		[PrimaryKey] public int ParentID { get; set; }
+		[PrimaryKey] public int ChildID  { get; set; }
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public Parent?  Parent;
+		public Parent? Parent { get; set; }
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false)]
-		public Parent1? Parent1;
+		public Parent1? Parent1 { get; set; }
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID2", CanBeNull = false)]
-		public Parent3? ParentID2;
+		public Parent3? ParentID2 { get; set; }
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
-		public List<GrandChild> GrandChildren = null!;
+		public List<GrandChild> GrandChildren { get; set; } = null!;
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID", CanBeNull = false)]
-		public List<GrandChild> GrandChildren1 = null!;
+		public List<GrandChild> GrandChildren1 { get; set; } = null!;
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
-		public GrandChild[] GrandChildren2 = null!;
+		public GrandChild[] GrandChildren2 { get; set; } = null!;
 
 		public override bool Equals(object? obj)
 		{
@@ -165,12 +165,12 @@ namespace Tests.Model
 
 		}
 
-		public int? ParentID;
-		public int? ChildID;
-		public int? GrandChildID;
+		public int? ParentID     { get; set; }
+		public int? ChildID      { get; set; }
+		public int? GrandChildID { get; set; }
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
-		public Child? Child;
+		public Child? Child { get; set; }
 
 		public override bool Equals(object? obj)
 		{
@@ -240,7 +240,8 @@ namespace Tests.Model
 	[Table("Parent")]
 	public class Parent4 : IEquatable<Parent4>, IComparable
 	{
-		[Column] public int       ParentID;
+		[Column] public int       ParentID { get; set; }
+
 		public TypeValue _Value1;
 		[Column] public TypeValue Value1
 		{
@@ -292,11 +293,11 @@ namespace Tests.Model
 	[Table(Name = "Parent", IsColumnAttributeRequired = false)]
 	public class Parent5 : IEquatable<Parent5>, IComparable
 	{
-		public int  ParentID;
-		public int? Value1;
+		public int  ParentID { get; set; }
+		public int? Value1   { get; set; }
 
 		[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
-		public List<Parent5> Children = null!;
+		public List<Parent5> Children { get; set; } = null!;
 
 		public override bool Equals(object? obj)
 		{
@@ -370,15 +371,15 @@ namespace Tests.Model
 	[Table(Name="GrandChild", IsColumnAttributeRequired=false)]
 	public class GrandChild1 : IEquatable<GrandChild1>
 	{
-		public int  ParentID;
-		public int? ChildID;
-		public int? GrandChildID;
+		public int  ParentID     { get; set; }
+		public int? ChildID      { get; set; }
+		public int? GrandChildID { get; set; }
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
-		public Child? Child;
+		public Child? Child { get; set; }
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false)]
-		public Parent1? Parent;
+		public Parent1? Parent { get; set; }
 
 		public override bool Equals(object? obj)
 		{
@@ -422,10 +423,10 @@ namespace Tests.Model
 	public abstract class ParentInheritanceBase : IEquatable<ParentInheritanceBase>, IComparable
 	{
 		[PrimaryKey]
-		public int ParentID;
+		public int ParentID { get; set; }
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-		public List<Child> Children = null!;
+		public List<Child> Children { get; set; } = null!;
 
 		public override bool Equals(object? obj)
 		{
@@ -485,7 +486,7 @@ namespace Tests.Model
 	public class ParentInheritanceValue : ParentInheritanceBase
 	{
 		[Column(IsDiscriminator = true)]
-		public int Value1;
+		public int Value1 { get; set; }
 
 		public override bool Equals(object? obj)
 		{

@@ -11,6 +11,7 @@ namespace LinqToDB.SqlProvider
 	using Expressions;
 	using Mapping;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -58,7 +59,6 @@ namespace LinqToDB.SqlProvider
 			statement = FinalizeSelect(statement);
 			statement = CorrectUnionOrderBy(statement);
 			statement = FixSetOperationNulls(statement);
-			statement = OptimizeUpdateSubqueries(statement, dataOptions);
 
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
@@ -391,33 +391,73 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual SqlStatement FinalizeSelect(SqlStatement statement)
 		{
-			if (statement is SqlSelectStatement selectStatement)
-			{
-				// When selecting a SqlRow, expand the row into individual columns.
-
-				var selectQuery = selectStatement.SelectQuery;
-				var columns     = selectQuery.Select.Columns;
-
-				for (var i = 0; i < columns.Count; i++)
-				{
-					var c = columns[i];
-					if (c.Expression.ElementType == QueryElementType.SqlRow)
-					{
-						if (columns.Count > 1)
-							throw new LinqToDBException("SqlRow expression must be the only result in a SELECT");
-
-						var row = (SqlRowExpression)columns[0].Expression;
-						columns.Clear();
-						foreach (var value in row.Values)
-							selectQuery.Select.AddNew(value);
-
-						break;
-					}
-				}
-			}
+			var expandVisitor = new SqlRowExpandVisitor();
+			expandVisitor.ProcessElement(statement);
 
 			return statement;
 		}
+
+		class SqlRowExpandVisitor : SqlQueryVisitor
+		{
+			SelectQuery? _updateSelect;
+
+			public SqlRowExpandVisitor() : base(VisitMode.Modify, null)
+			{
+			}
+
+			protected override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+			{
+				var newElement = base.VisitSqlSelectClause(element);
+
+				if (!ReferenceEquals(newElement, element))
+					return Visit(newElement);
+
+				if (_updateSelect == element.SelectQuery)
+					return element;
+
+				// When selecting a SqlRow, expand the row into individual columns.
+
+				for (var i = 0; i < element.Columns.Count; i++)
+				{
+					var column    = element.Columns[i];
+					var unwrapped = QueryHelper.UnwrapNullablity(column.Expression);
+					if (unwrapped.ElementType == QueryElementType.SqlRow)
+					{
+						var row = (SqlRowExpression)unwrapped;
+						element.Columns.RemoveAt(i);
+						element.Columns.InsertRange(i, row.Values.Select(v => new SqlColumn(element.SelectQuery, v)));
+					}
+				}
+
+				return element;
+			}
+
+			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+			{
+				base.VisitExprExprPredicate(predicate);
+
+				// flip expressions when comparing a row to a query
+				if (QueryHelper.UnwrapNullablity(predicate.Expr2).ElementType == QueryElementType.SqlRow && QueryHelper.UnwrapNullablity(predicate.Expr1).ElementType == QueryElementType.SqlQuery)
+				{
+					var newPredicate = new SqlPredicate.ExprExpr(predicate.Expr2, SqlPredicate.ExprExpr.SwapOperator(predicate.Operator), predicate.Expr1, predicate.WithNull);
+					return newPredicate;
+				}
+
+				return predicate;
+			}
+
+			protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+			{
+				var saveUpdateSelect = _updateSelect;
+				_updateSelect = element.SelectQuery;
+
+				var result = base.VisitSqlUpdateStatement(element);
+
+				_updateSelect = saveUpdateSelect;
+				return result;
+			}
+		}
+
 
 		protected virtual SqlStatement CorrectUnionOrderBy(SqlStatement statement)
 		{
@@ -535,27 +575,6 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		//TODO: move tis to standard optimizer
-		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement, DataOptions dataOptions)
-		{
-			/*
-			if (statement is SqlUpdateStatement updateStatement)
-			{
-				var evaluationContext = new EvaluationContext();
-				foreach (var setItem in updateStatement.Update.Items)
-				{
-					if (setItem.Expression is SelectQuery q)
-					{
-						var optimizer = new SelectQueryOptimizer(SqlProviderFlags, q, q, 0);
-						optimizer.FinalizeAndValidate(SqlProviderFlags.IsApplyJoinSupported);
-					}
-				}
-			}
-			*/
-
-			return statement;
-		}
-
 		protected virtual void FixEmptySelect(SqlStatement statement)
 		{
 			// avoid SELECT * top level queries, as they could create a lot of unwanted traffic
@@ -635,7 +654,6 @@ namespace LinqToDB.SqlProvider
 							if (e.ElementType == QueryElementType.SqlCteTable)
 							{
 								var cte = ((SqlCteTable)e).Cte!;
-								CorrectEmptyCte(cte);
 								RegisterDependency(cte, foundCte.WriteableValue ??= new());
 							}
 						}
@@ -670,15 +688,6 @@ namespace LinqToDB.SqlProvider
 					select.With.Clauses.AddRange(ordered);
 				}
 			}
-		}
-
-		static void CorrectEmptyCte(CteClause cte)
-		{
-			/*if (cte.Fields.Count == 0)
-			{
-				cte.Fields.Add(new SqlField(new DbDataType(typeof(int)), "any", false));
-				cte.Body!.Select.AddNew(new SqlValue(1), "any");
-			}*/
 		}
 
 		protected static bool HasParameters(ISqlExpression expr)
@@ -868,17 +877,19 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		protected static bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
+		protected bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
 		{
 			source = null;
 
-			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
+			
+			if (query.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported) ||
+				!query.GroupBy.IsEmpty)
 				return false;
 
 			if (table.SqlQueryExtensions?.Count > 0)
 				return false;
 
-			for (int i = 0; i < query.From.Tables.Count; i++)
+			for (var i = 0; i < query.From.Tables.Count; i++)
 			{
 				var ts = query.From.Tables[i];
 				if (ts.Joins.All(j => j.JoinType is JoinType.Inner or JoinType.Left or JoinType.Cross))
@@ -888,7 +899,7 @@ namespace LinqToDB.SqlProvider
 						source = ts;
 
 						query.From.Tables.RemoveAt(i);
-						for (int j = 0; j < ts.Joins.Count; j++)
+						for (var j = 0; j < ts.Joins.Count; j++)
 						{
 							query.From.Tables.Insert(i + j, ts.Joins[j].Table);
 							query.Where.ConcatSearchCondition(ts.Joins[j].Condition);
@@ -899,7 +910,7 @@ namespace LinqToDB.SqlProvider
 						return true;
 					}
 
-					for (int j = 0; j < ts.Joins.Count; j++)
+					for (var j = 0; j < ts.Joins.Count; j++)
 					{
 						var join = ts.Joins[j];
 						if (join.Table.Source == table)
@@ -912,7 +923,7 @@ namespace LinqToDB.SqlProvider
 							ts.Joins.RemoveAt(j);
 							query.Where.ConcatSearchCondition(join.Condition);
 
-							for (int sj = 0; j < join.Table.Joins.Count; j++)
+							for (var sj = 0; j < join.Table.Joins.Count; j++)
 							{
 								ts.Joins.Insert(j + sj, join.Table.Joins[sj]);
 							}
@@ -1007,6 +1018,46 @@ namespace LinqToDB.SqlProvider
 			return newElement;
 		}
 
+		static IEnumerable<(ISqlExpression target, ISqlExpression source, SelectQuery? query)> GenerateRows(
+			ISqlExpression                            target,
+			ISqlExpression                            source)
+		{
+			if (target is SqlRowExpression targetRow)
+			{
+				if (source is SqlRowExpression sourceRow)
+				{
+					if (targetRow.Values.Length != sourceRow.Values.Length)
+						throw new InvalidOperationException("Target and Source SqlRows are different");
+
+					for (var i = 0; i < targetRow.Values.Length; i++)
+					{
+						var targetRowValue = targetRow.Values[i];
+						var sourceRowValue = sourceRow.Values[i];
+
+						foreach (var r in GenerateRows(targetRowValue, sourceRowValue))
+							yield return r;
+					}
+
+					yield break;
+				}
+				else if (source is SqlColumn { Expression: SelectQuery selectQuery })
+				{
+					for (var i = 0; i < targetRow.Values.Length; i++)
+					{
+						var targetRowValue = targetRow.Values[i];
+						var sourceRowValue = selectQuery.Select.Columns[i].Expression;
+
+						foreach (var r in GenerateRows(targetRowValue, sourceRowValue))
+							yield return (r.target, r.source, selectQuery);
+					}
+
+					yield break;
+				}
+			}
+
+			yield return (target, source, null);
+		}
+
 		static IEnumerable<(ISqlExpression, ISqlExpression)> GenerateRows(
 			ISqlExpression                            target,
 			ISqlExpression                            source,
@@ -1019,7 +1070,7 @@ namespace LinqToDB.SqlProvider
 				if (targetRow.Values.Length != sourceRow.Values.Length)
 					throw new InvalidOperationException("Target and Source SqlRows are different");
 
-				for (int i = 0; i < targetRow.Values.Length; i++)
+				for (var i = 0; i < targetRow.Values.Length; i++)
 				{
 					var tagetRowValue  = targetRow.Values[i];
 					var sourceRowValue = sourceRow.Values[i];
@@ -1034,7 +1085,6 @@ namespace LinqToDB.SqlProvider
 				var columnExpr = selectQuery.Select.AddNewColumn(ex);
 
 				yield return (target, columnExpr);
-
 			}
 		}
 
@@ -1043,7 +1093,8 @@ namespace LinqToDB.SqlProvider
 			if (updateStatement.Update.Table == null)
 				throw new InvalidOperationException();
 
-			if (!updateStatement.SelectQuery.Select.HasModifier && updateStatement.SelectQuery.From.Tables.Count == 1)
+			if (!updateStatement.SelectQuery.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported)
+				&& updateStatement.SelectQuery.From.Tables.Count == 1)
 			{
 				var sqlTableSource = updateStatement.SelectQuery.From.Tables[0];
 				if (sqlTableSource.Source == updateStatement.Update.Table && sqlTableSource.Joins.Count == 0)
@@ -1113,6 +1164,9 @@ namespace LinqToDB.SqlProvider
 					var isComplex = false;
 					foreach (var item in updateStatement.Update.Items)
 					{
+						if (item.Column is SqlRowExpression)
+							continue;
+
 						var usedSources = new HashSet<ISqlTableSource>();
 						QueryHelper.GetUsedSources(item.Expression!, usedSources);
 						usedSources.Remove(updateStatement.Update.Table!);
@@ -1197,7 +1251,7 @@ namespace LinqToDB.SqlProvider
 
 						var field = QueryHelper.GetUnderlyingField(column);
 						if (field == null)
-							throw new LinqToDBException("Expression {column} cannot be used for update field");
+							throw new LinqToDBException($"Expression {column} cannot be used for update field");
 
 						setExpression.Column = field;
 					}
@@ -1230,7 +1284,7 @@ namespace LinqToDB.SqlProvider
 			return updateStatement;
 		}
 
-		protected static void CorrectUpdateSetters(SqlUpdateStatement updateStatement)
+		protected void CorrectUpdateSetters(SqlUpdateStatement updateStatement)
 		{
 			// remove current column wrapping
 			foreach (var item in updateStatement.Update.Items)
@@ -1241,9 +1295,51 @@ namespace LinqToDB.SqlProvider
 				item.Expression = item.Expression.Convert(updateStatement.SelectQuery, (v, e) =>
 				{
 					if (e is SqlColumn column && column.Parent == v.Context)
+					{
+						if (QueryHelper.UnwrapNullablity(column.Expression) is SqlRowExpression rowExpression)
+						{
+							if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral))
+							{
+								var rowSubquery = new SelectQuery();
+
+								foreach (var expr in rowExpression.Values)
+								{
+									rowSubquery.Select.AddNew(expr);
+								}
+
+								return rowSubquery;
+							}
+						}
+
 						return column.Expression;
+					}
 					return e;
 				});
+
+				if (item.Column is SqlRowExpression && item.Expression is SelectQuery subQuery)
+				{
+					if (subQuery.Select.Columns.Count == 1)
+					{
+						var column = subQuery.Select.Columns[0];
+
+						if (column.Expression is SelectQuery columnQuery && columnQuery.From.Tables.Count == 0)
+						{
+							subQuery.Select.Columns.Clear();
+							foreach (var c in columnQuery.Select.Columns)
+							{
+								subQuery.Select.AddNew(c.Expression);
+							}
+						}
+						else if (column.Expression is SqlRowExpression rowExpression)
+						{
+							subQuery.Select.Columns.Clear();
+							foreach (var value in rowExpression.Values)
+							{
+								subQuery.Select.AddNew(value);
+							}
+						}
+					}
+				}
 			}
 		}
 
@@ -1302,7 +1398,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var field = QueryHelper.GetUnderlyingField(column.Expression);
 					if (field == null)
-						throw new InvalidOperationException("Expression {column.Expression} cannot be used for update field");
+						throw new InvalidOperationException($"Expression {column.Expression} cannot be used for update field");
 					item.Column = field;
 				}
 			}
@@ -1310,7 +1406,7 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			if (statement.SelectQuery.Select.HasModifier)
+			if (statement.SelectQuery.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported))
 			{
 				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
 			}

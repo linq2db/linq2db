@@ -5,13 +5,13 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
+	using Reflection;
 
 	/// <inheritdoc />
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
 	/// </summary>
-	public class DynamicColumnInfo : PropertyInfo, IEquatable<DynamicColumnInfo>
+	public class DynamicColumnInfo : VirtualPropertyInfoBase, IEquatable<DynamicColumnInfo>
 	{
 		private static readonly MethodInfo _dummyGetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummyGetter), BindingFlags.Instance | BindingFlags.NonPublic)!;
 		private static readonly MethodInfo _dummySetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummySetter), BindingFlags.Instance | BindingFlags.NonPublic)!;
@@ -128,9 +128,5 @@ namespace LinqToDB.Mapping
 
 		private void DummySetter<T>(T value)
 			=> throw new InvalidOperationException("Dynamic column setter is not to be called.");
-
-		public override int MetadataToken => -1;
-
-		public override Module Module => typeof(object).Module;
 	}
 }

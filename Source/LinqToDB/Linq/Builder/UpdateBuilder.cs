@@ -338,8 +338,8 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				insertedContext = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable);
-				deletedContext  = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable);
+				insertedContext = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
+				deletedContext  = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
 			}
 
 			outputContext = deletedContext;
@@ -561,6 +561,9 @@ namespace LinqToDB.Linq.Builder
 				if (correctedSetter is SqlPlaceholderExpression { Sql: SqlValue { Value: null } })
 					return;
 
+				if (correctedSetter is ConstantExpression { Value: null })
+					return;
+
 				throw new NotImplementedException();
 			}
 		}
@@ -648,7 +651,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (TargetTable == null)
 				{
-					throw new LinqToDBException("Insert query has no defined target table.");
+					throw new LinqToDBException("Update query has no defined target table.");
 				}
 
 				var tableContext = TargetTable;
@@ -683,7 +686,7 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 					default:
-						throw new InvalidOperationException($"Unexpected insert type: {UpdateType}");
+						throw new InvalidOperationException($"Unexpected update type: {UpdateType}");
 				}
 			}
 
@@ -722,7 +725,7 @@ namespace LinqToDB.Linq.Builder
 				if (found.Count == 0)
 					throw new LinqToDBException("Could not find appropriate table in expression");
 				if (found.Count > 1)
-					throw new LinqToDBException("Ambiguous tables tables in expression");
+					throw new LinqToDBException("Ambiguous tables in expression");
 
 				var (foundPath, foundGeneric) = found.First();
 

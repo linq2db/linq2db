@@ -20,6 +20,15 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			if (statement.QueryType is QueryType.Update or QueryType.Delete)
+			{
+				if (statement.SelectQuery!.Select.TakeValue != null && !statement.SelectQuery.Select.OrderBy.IsEmpty)
+					throw new LinqToDBException($"The Sybase ASE does not support the {(statement.QueryType == QueryType.Update ? "UPDATE" : "DELETE")} statement with the TOP + ORDER BY clause.");
+
+				if (statement.SelectQuery.Select.SkipValue != null)
+					throw new LinqToDBException($"The Sybase ASE does not support the {(statement.QueryType == QueryType.Update ? "UPDATE" : "DELETE")} statement with the SKIP clause.");
+			}
+
 			if (statement.QueryType == QueryType.Update)
 				return CorrectSybaseUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema);
 
@@ -28,12 +37,6 @@ namespace LinqToDB.DataProvider.Sybase
 
 		SqlUpdateStatement CorrectSybaseUpdate(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			if (statement.SelectQuery.Select.TakeValue != null)
-				throw new LinqToDBException("The Sybase ASE does not support the UPDATE statement with the TOP clause.");
-
-			if (statement.SelectQuery.Select.SkipValue != null)
-				throw new LinqToDBException("The Sybase ASE does not support the UPDATE statement with the SKIP clause.");
-
 			CorrectUpdateSetters(statement);
 
 			var isInCompatible = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery).Any(t =>

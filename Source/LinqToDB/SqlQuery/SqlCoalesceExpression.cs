@@ -42,7 +42,7 @@ namespace LinqToDB.SqlQuery
 
 			for (var index = 0; index < Expressions.Length; index++)
 			{
-				if (!comparer(Expressions[index], otherCoalesceExpression.Expressions[index]))
+				if (!Expressions[index].Equals(otherCoalesceExpression.Expressions[index], comparer))
 					return false;
 			}
 

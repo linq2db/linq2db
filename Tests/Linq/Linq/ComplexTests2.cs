@@ -243,7 +243,7 @@ namespace Tests.Linq
 			var ms = SetMappings();
 
 			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context).UseMappingSchema(ms)))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
 			using (db.CreateLocalTable<Test>())
@@ -260,7 +260,7 @@ namespace Tests.Linq
 			var ms = SetMappings();
 
 			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context).UseMappingSchema(ms)))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
 			using (db.CreateLocalTable<Test>())
@@ -309,7 +309,7 @@ namespace Tests.Linq
 			var ms = SetMappings();
 
 			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context).UseMappingSchema(ms)))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
 			using (db.CreateLocalTable<Test>())

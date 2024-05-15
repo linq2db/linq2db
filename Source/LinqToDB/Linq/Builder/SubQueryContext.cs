@@ -118,5 +118,8 @@ namespace LinqToDB.Linq.Builder
 
 			return result;
 		}
+
+		public virtual  bool NeedsSubqueryForComparison => false;
+		public override bool IsOptional                 => SubQuery.IsOptional;
 	}
 }

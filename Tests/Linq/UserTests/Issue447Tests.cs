@@ -30,7 +30,7 @@ namespace Tests.UserTests
 
 					var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
 					(Expression.Equal(
-						Expression.Convert(Expression.Field(param, "ChildID"), typeof(int)),
+						Expression.Convert(Expression.PropertyOrField(param, "ChildID"), typeof(int)),
 						Expression.Constant(id)
 					), param);
 
@@ -64,7 +64,7 @@ namespace Tests.UserTests
 
 					var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
 					(Expression.Equal(
-						Expression.Convert(Expression.Field(param, "ChildID"), typeof(int)),
+						Expression.Convert(Expression.PropertyOrField(param, "ChildID"), typeof(int)),
 						Expression.Constant(id)
 					), param);
 
@@ -107,7 +107,7 @@ namespace Tests.UserTests
 
 					var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
 					(Expression.Equal(
-						Expression.Convert(Expression.Field(param, "ChildID"), typeof(int)),
+						Expression.Convert(Expression.PropertyOrField(param, "ChildID"), typeof(int)),
 						Expression.Constant(id)
 					), param);
 

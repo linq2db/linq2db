@@ -135,9 +135,7 @@ namespace LinqToDB.Expressions
 			if (memberInitExpression.NewExpression.Members != null)
 				throw new NotImplementedException();
 
-#pragma warning disable CS8604 // Possible null reference argument.
-			Parameters = GetMethodParameters(memberInitExpression.NewExpression.Constructor, memberInitExpression.NewExpression.Arguments);
-#pragma warning restore CS8604 // Possible null reference argument.
+			Parameters = GetMethodParameters(memberInitExpression.NewExpression.Constructor!, memberInitExpression.NewExpression.Arguments);
 
 			var items = GetBindingsAssignments(memberInitExpression.Bindings);
 

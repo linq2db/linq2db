@@ -123,8 +123,6 @@ namespace LinqToDB
 		/// <param name="interceptor">Interceptor.</param>
 		void RemoveInterceptor(IInterceptor interceptor);
 
-		IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
-
 		/// <summary>
 		/// Gets initial value for database connection configuration name.
 		/// </summary>

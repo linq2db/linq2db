@@ -59,7 +59,33 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.IsAsyncExtension(MethodNamesAsync))
 				--argumentCount;
 
-			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, argument));
+			var cardinality = SourceCardinality.One;
+			var methodKind  = GetMethodKind(methodCall.Method.Name);
+
+			switch (methodKind)
+			{
+				case MethodKind.First: break;
+				case MethodKind.FirstOrDefault:
+				{
+					cardinality |= SourceCardinality.Zero;
+					break;
+				}
+				case MethodKind.Single:
+				case MethodKind.SingleOrDefault:
+				{
+					if (methodKind == MethodKind.SingleOrDefault)
+						cardinality |= SourceCardinality.Zero;
+					break;
+				}
+			}
+
+			var isOptional = (cardinality & SourceCardinality.Zero) != 0;
+
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, argument)
+			{
+				SourceCardinality = isOptional ? SourceCardinality.ZeroOrMany : SourceCardinality.Many
+			});
+
 			if (buildResult.BuildContext == null)
 				return BuildSequenceResult.Error(methodCall);
 
@@ -78,9 +104,6 @@ namespace LinqToDB.Linq.Builder
 
 			var take = 0;
 
-			var cardinality = SourceCardinality.One;
-			var methodKind  = GetMethodKind(methodCall.Method.Name);
-
 			switch (methodKind)
 			{
 				case MethodKind.First          :
@@ -90,16 +113,12 @@ namespace LinqToDB.Linq.Builder
 				}
 				case MethodKind.FirstOrDefault :
 				{
-					cardinality |= SourceCardinality.Zero;
 					take        = 1;
 					break;
 				}
 				case MethodKind.Single          :
 				case MethodKind.SingleOrDefault :
 				{
-					if (methodKind == MethodKind.SingleOrDefault)
-						cardinality |= SourceCardinality.Zero;
-
 					if (!buildInfo.IsSubQuery)
 						if (buildInfo.SelectQuery.Select.TakeValue == null ||
 						    buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
@@ -117,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 
 			var canBeWeak = false;
 
-			if (buildInfo.Parent != null && methodCall.Method.Name.Contains("OrDefault"))
+			if (buildInfo.Parent != null && isOptional)
 			{
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, allowNullField: true);
 				canBeWeak = true;
@@ -147,6 +166,8 @@ namespace LinqToDB.Linq.Builder
 			public bool              CanBeWeak     { get; }
 			public bool              IsTest        { get; }
 			public SourceCardinality Cardinality   { get; set; }
+
+			public override bool IsOptional => (Cardinality & SourceCardinality.Zero) != 0 || Cardinality == SourceCardinality.Unknown;
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
@@ -233,30 +254,6 @@ namespace LinqToDB.Linq.Builder
 
 					Parent!.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}
-			}
-
-			bool IsSupportedByProvider(Expression expression)
-			{
-				if (_methodKind == MethodKind.Single || _methodKind == MethodKind.SingleOrDefault)
-					return true;
-
-				if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
-					return true;
-
-				var sqlProjected = Builder.ConvertToSqlExpr(this, expression, ProjectFlags.SQL | ProjectFlags.Test);
-
-				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlProjected);
-
-				if (!Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported && placeholders.Count > 1)
-				{
-					if (!Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
-						return false;
-				}
-
-				if (!Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
-					return false;
-
-				return true;
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
