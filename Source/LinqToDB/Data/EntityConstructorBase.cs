@@ -9,10 +9,10 @@ namespace LinqToDB.Data
 {
 	using Expressions;
 	using Extensions;
-	using Interceptors;
 	using Interceptors.Internal;
-	using Linq;
+	using Interceptors;
 	using Linq.Builder;
+	using Linq;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
@@ -24,7 +24,6 @@ namespace LinqToDB.Data
 		public IDataContext DataContext { get; private set; } = default!;
 
 		public DataOptions DataOptions => DataContext.Options;
-
 
 		#region Entity Construction
 
@@ -191,11 +190,12 @@ namespace LinqToDB.Data
 			}
 
 			var generic = new SqlGenericConstructorExpression(
-				purpose == FullEntityPurpose.Default
-					? checkForKey
-						? SqlGenericConstructorExpression.CreateType.Keys
-						: SqlGenericConstructorExpression.CreateType.Full
-					: SqlGenericConstructorExpression.CreateType.Auto,
+				(purpose, checkForKey) switch
+				{
+					(FullEntityPurpose.Default, true) => SqlGenericConstructorExpression.CreateType.Keys,
+					(FullEntityPurpose.Default, _)    => SqlGenericConstructorExpression.CreateType.Full,
+					_                                 => SqlGenericConstructorExpression.CreateType.Auto,
+				},
 				currentPath.Type,
 				null,
 				new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(members), MappingSchema,
@@ -245,7 +245,7 @@ namespace LinqToDB.Data
 		{
 			Default,
 			Insert,
-			Update
+			Update,
 		}
 
 		public SqlGenericConstructorExpression BuildFullEntityExpression(IDataContext dataContext, MappingSchema mappingSchema, Expression refExpression, Type entityType, ProjectFlags flags, FullEntityPurpose purpose)
@@ -513,8 +513,10 @@ namespace LinqToDB.Data
 			var constructed = TryConstructFullEntity(constructorExpression, constructorExpression.ObjectType, flags, checkInheritance, out var error);
 
 			if (constructed == null)
+			{
 				throw new InvalidOperationException(
 					$"Cannot construct full object '{constructorExpression.ObjectType}'. {error ?? "No suitable constructors found."}");
+			}
 
 			return constructed;
 		}
@@ -583,7 +585,7 @@ namespace LinqToDB.Data
 							throw new LinqToDBException("Could not get discriminator's DeclaringType.");
 						}
 
-						var access = GetMemberExpression(constructorExpression, firstMapping.Discriminator.MemberInfo);
+						var access   = GetMemberExpression(constructorExpression, firstMapping.Discriminator.MemberInfo);
 						var codeExpr = Expression.Convert(access, typeof(object));
 
 						var generator    = new ExpressionGenerator();
@@ -845,7 +847,5 @@ namespace LinqToDB.Data
 		}
 
 		#endregion
-
-		
 	}
 }

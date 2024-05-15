@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.

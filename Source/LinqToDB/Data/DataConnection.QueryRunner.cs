@@ -12,11 +12,11 @@ namespace LinqToDB.Data
 {
 	using Common.Internal;
 	using DataProvider;
-	using Linq;
-	using SqlQuery;
-	using SqlProvider;
-	using Tools;
 	using Infrastructure;
+	using Linq;
+	using SqlProvider;
+	using SqlQuery;
+	using Tools;
 
 	public partial class DataConnection
 	{
@@ -211,9 +211,8 @@ namespace LinqToDB.Data
 					var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
 
 					// custom query handling
-					var          preprocessContext = new EvaluationContext(parameterValues);
-					SqlStatement newSql;
-					newSql = dataConnection.ProcessQuery(statement, preprocessContext);
+					var preprocessContext = new EvaluationContext(parameterValues);
+					var newSql            = dataConnection.ProcessQuery(statement, preprocessContext);
 
 					if (!ReferenceEquals(statement, newSql))
 					{
