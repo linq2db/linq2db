@@ -11,15 +11,15 @@
 		<dependencies>
 			<group targetFramework="net45">
 				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="4.0.13" />
+				<dependency id="Npgsql"  version="4.0.14" />
 			</group>
 			<group targetFramework="net461">
 				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="4.1.12" />
+				<dependency id="Npgsql"  version="4.1.13" />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="7.0.6"  />
+				<dependency id="Npgsql"  version="7.0.7"  />
 			</group>
 		</dependencies>
 		<contentFiles>
