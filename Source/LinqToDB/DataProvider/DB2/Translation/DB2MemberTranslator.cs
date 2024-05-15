@@ -4,9 +4,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.DB2.Translation
 {
-	using SqlQuery;
 	using Common;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
+	using SqlQuery;
 
 	public class DB2MemberTranslator : ProviderMemberTranslatorDefault
 	{
@@ -275,6 +275,5 @@ namespace LinqToDB.DataProvider.DB2.Translation
 		{
 			return new DB2MathMemberTranslator();
 		}
-
 	}
 }

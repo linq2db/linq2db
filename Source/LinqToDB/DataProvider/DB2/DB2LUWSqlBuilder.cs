@@ -1,12 +1,12 @@
-﻿using System.Text;
-using System.Globalization;
+﻿using System.Globalization;
+using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Common;
 
 	sealed class DB2LUWSqlBuilder : DB2SqlBuilderBase
 	{
@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.DB2
 		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias,
 			bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
 		{
-			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression : ignoreTableExpression, defaultDatabaseName : defaultDatabaseName, withoutSuffix : withoutSuffix);
+			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression: ignoreTableExpression, defaultDatabaseName: defaultDatabaseName, withoutSuffix: withoutSuffix);
 
 			if (table.SqlTableType == SqlTableType.Function)
 				return $"TABLE({name})";

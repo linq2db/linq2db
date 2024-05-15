@@ -11,11 +11,11 @@ namespace LinqToDB.DataProvider.Access
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
 	using Translation;
-	using LinqToDB.Linq.Translation;
 
 	public class AccessOleDbDataProvider : DynamicDataProviderBase<OleDbProviderAdapter>
 	{

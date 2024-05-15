@@ -418,7 +418,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		static bool ShouldSkipCast(ISqlExpression expr, DbDataType toDataType)
 		{
-			if (expr is SqlValue sqlValue && sqlValue.Value is null && toDataType.DataType is DataType.Interval 
+			// TODO: change to single return
+			if (expr is SqlValue { Value: null } sqlValue 
+				&& toDataType.DataType is DataType.Interval 
 				    or DataType.IntervalSecond 
 				    or DataType.IntervalMinute
 				    or DataType.IntervalHour

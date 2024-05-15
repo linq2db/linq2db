@@ -1,9 +1,8 @@
 ﻿namespace LinqToDB.DataProvider.ClickHouse
 {
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
-
 
 	sealed class ClickHouseSqlOptimizer : BasicSqlOptimizer
 	{

@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlTypes;
 using System.Data.Common;
-using System.Text;
+using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Mapping;
-	using SqlQuery;
-	using SqlProvider;
 	using Common;
-
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{

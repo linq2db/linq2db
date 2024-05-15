@@ -6,9 +6,9 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
-	using Common;
 
 	sealed class DB2zOSSqlBuilder : DB2SqlBuilderBase
 	{
@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				case DataType.VarBinary:
 					// https://www.ibm.com/docs/en/db2-for-zos/12?topic=strings-varying-length-binary
-					var length =type.Length == null || type.Length > 32704 || type.Length < 1 ? 32704 : type.Length;
+					var length = type.Length == null || type.Length > 32704 || type.Length < 1 ? 32704 : type.Length;
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARBINARY({length})");
 					return;
 			}
