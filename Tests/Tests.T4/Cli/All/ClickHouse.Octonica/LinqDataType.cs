@@ -23,7 +23,7 @@ namespace Cli.All.ClickHouse.Octonica
 		[Column("MoneyValue"    , DataType = DataType.Decimal64 , DbType = "Decimal(18, 4)", Precision    = 18  , Scale        = 4   )] public decimal?        MoneyValue     { get; set; } // Decimal(18, 4)
 		[Column("DateTimeValue" , DataType = DataType.DateTime64, DbType = "DateTime64(3)" , Precision    = 3                        )] public DateTimeOffset? DateTimeValue  { get; set; } // DateTime64(3)
 		[Column("DateTimeValue2", DataType = DataType.DateTime64, DbType = "DateTime64(7)" , Precision    = 7                        )] public DateTimeOffset? DateTimeValue2 { get; set; } // DateTime64(7)
-		[Column("BoolValue"     , DataType = DataType.Byte      , DbType = "UInt8"                                                   )] public byte?           BoolValue      { get; set; } // UInt8
+		[Column("BoolValue"     , DataType = DataType.Boolean   , DbType = "Bool"                                                    )] public bool?           BoolValue      { get; set; } // Bool
 		[Column("GuidValue"     , DataType = DataType.Guid      , DbType = "UUID"                                                    )] public Guid?           GuidValue      { get; set; } // UUID
 		[Column("BinaryValue"   , DataType = DataType.NVarChar  , DbType = "String"                                                  )] public string?         BinaryValue    { get; set; } // String
 		[Column("SmallIntValue" , DataType = DataType.Int16     , DbType = "Int16"                                                   )] public short?          SmallIntValue  { get; set; } // Int16

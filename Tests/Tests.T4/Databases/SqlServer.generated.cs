@@ -1185,8 +1185,7 @@ namespace DataModel
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? @id)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				@id);
+			return this.TableFromExpression(() => GetParentByID(@id));
 		}
 
 		#endregion
@@ -1196,7 +1195,7 @@ namespace DataModel
 		[Sql.TableFunction(Name="Issue1921")]
 		public ITable<Issue1921Result> Issue1921()
 		{
-			return this.GetTable<Issue1921Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => Issue1921());
 		}
 
 		public partial class Issue1921Result
@@ -2738,8 +2737,7 @@ namespace DataModel
 			[Sql.TableFunction(Schema="TestSchema", Name="SchemaTableFunction")]
 			public ITable<Parent> SchemaTableFunction(int? @id)
 			{
-				return _dataContext.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-					@id);
+				return _dataContext.TableFromExpression(() => SchemaTableFunction(@id));
 			}
 
 			#endregion

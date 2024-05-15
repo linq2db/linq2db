@@ -16,8 +16,8 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _informixDataProvider    = DataConnection.CreateDataProvider<InformixDataProviderInformix>();
-		static readonly Lazy<IDataProvider> _informixDB2DataProvider = DataConnection.CreateDataProvider<InformixDataProviderDB2>();
+		static readonly Lazy<IDataProvider> _informixDataProvider    = CreateDataProvider<InformixDataProviderInformix>();
+		static readonly Lazy<IDataProvider> _informixDB2DataProvider = CreateDataProvider<InformixDataProviderDB2>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{

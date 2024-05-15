@@ -1079,15 +1079,6 @@ If you don't specify some property, CLI will use default value for current optio
 				_t4ModeOptions.DataModel.ProcedureResultColumnPropertyNameOptions);
 
 			/// <summary>
-			/// Table function <see cref="MethodInfo"/> field naming option.
-			/// </summary>
-			public static readonly CliOption TableFunctionMethodInfoNaming = DefineNamingOption(
-				"table-function-methodinfo-field-name",
-				"table function FieldInfo field naming options",
-				_defaultOptions.DataModel.TableFunctionMethodInfoFieldNameOptions,
-				_t4ModeOptions.DataModel.TableFunctionMethodInfoFieldNameOptions);
-
-			/// <summary>
 			/// Scalar function with tuple return type tuple mapping class naming option.
 			/// </summary>
 			public static readonly CliOption FunctionTupleClassNaming = DefineNamingOption(

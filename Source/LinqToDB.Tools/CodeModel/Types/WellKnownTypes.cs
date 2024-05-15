@@ -381,6 +381,16 @@ namespace LinqToDB.CodeModel
 			public static CodeIdentifier DataExtensions_GetTable { get; } = new CodeIdentifier(nameof(global::LinqToDB.DataExtensions.GetTable), true);
 
 			/// <summary>
+			/// DataExtensions.TableFromExpression method reference.
+			/// </summary>
+			public static CodeIdentifier DataExtensions_TableFromExpression { get; } = new CodeIdentifier(nameof(global::LinqToDB.DataExtensions.TableFromExpression), true);
+
+			/// <summary>
+			/// DataExtensions.TableFromExpression method reference.
+			/// </summary>
+			public static CodeIdentifier DataExtensions_QueryFromExpression { get; } = new CodeIdentifier(nameof(global::LinqToDB.DataExtensions.QueryFromExpression), true);
+
+			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/> property reference.
 			/// </summary>
 			public static CodeReference Sql_ExpressionAttribute_ServerSideOnly   { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.ServerSideOnly);

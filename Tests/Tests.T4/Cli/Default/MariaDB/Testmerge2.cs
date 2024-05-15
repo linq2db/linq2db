@@ -30,12 +30,12 @@ namespace Cli.Default.MariaDB
 		[Column("FieldNChar"                          )] public char?     FieldNChar      { get; set; } // char(1)
 		[Column("FieldFloat"                          )] public float?    FieldFloat      { get; set; } // float
 		[Column("FieldDouble"                         )] public double?   FieldDouble     { get; set; } // double
-		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime
+		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime(6)
 		[Column("FieldBinary"                         )] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column("FieldGuid"                           )] public string?   FieldGuid       { get; set; } // char(36)
 		[Column("FieldDecimal"                        )] public decimal?  FieldDecimal    { get; set; } // decimal(24,10)
 		[Column("FieldDate"                           )] public DateTime? FieldDate       { get; set; } // date
-		[Column("FieldTime"                           )] public TimeSpan? FieldTime       { get; set; } // time
+		[Column("FieldTime"                           )] public TimeSpan? FieldTime       { get; set; } // time(6)
 		[Column("FieldEnumString"                     )] public string?   FieldEnumString { get; set; } // varchar(20)
 		[Column("FieldEnumNumber"                     )] public int?      FieldEnumNumber { get; set; } // int(11)
 	}

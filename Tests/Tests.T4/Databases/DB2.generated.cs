@@ -63,6 +63,13 @@ namespace DB2DataContext
 			InitMappingSchema();
 		}
 
+		public TESTDATADB(DataOptions<TESTDATADB> options)
+			: base(options.Options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 
@@ -71,10 +78,9 @@ namespace DB2DataContext
 		#region TestMODULE1TestTableFunction
 
 		[Sql.TableFunction(Schema="DB2INST1", Package="TEST_MODULE1", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult> TestMODULE1TestTableFunction(int? I)
+		public ITable<TestTableFUNCTIONResult> TestMODULE1TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+			return this.TableFromExpression(() => TestMODULE1TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult
@@ -87,10 +93,9 @@ namespace DB2DataContext
 		#region TestMODULE2TestTableFunction
 
 		[Sql.TableFunction(Schema="DB2INST1", Package="TEST_MODULE2", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult0> TestMODULE2TestTableFunction(int? I)
+		public ITable<TestTableFUNCTIONResult0> TestMODULE2TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+			return this.TableFromExpression(() => TestMODULE2TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult0
@@ -103,10 +108,9 @@ namespace DB2DataContext
 		#region TestTableFunction
 
 		[Sql.TableFunction(Schema="DB2INST1", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult1> TestTableFunction(int? I)
+		public ITable<TestTableFUNCTIONResult1> TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult1>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+			return this.TableFromExpression(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult1
@@ -382,34 +386,6 @@ namespace DB2DataContext
 
 	public static partial class TESTDATADBStoredProcedures
 	{
-		#region TestMODULE1TestProcedure
-
-		public static int TestMODULE1TestProcedure(this TESTDATADB dataConnection, int? I)
-		{
-			var parameters = new []
-			{
-				new DataParameter("I", I, LinqToDB.DataType.Int32)
-			};
-
-			return dataConnection.ExecuteProc("DB2INST1.TEST_MODULE1.TEST_PROCEDURE", parameters);
-		}
-
-		#endregion
-
-		#region TestMODULE2TestProcedure
-
-		public static int TestMODULE2TestProcedure(this TESTDATADB dataConnection, int? I)
-		{
-			var parameters = new []
-			{
-				new DataParameter("I", I, LinqToDB.DataType.Int32)
-			};
-
-			return dataConnection.ExecuteProc("DB2INST1.TEST_MODULE2.TEST_PROCEDURE", parameters);
-		}
-
-		#endregion
-
 		#region ADDISSUE792RECORD
 
 		public static int ADDISSUE792RECORD(this TESTDATADB dataConnection)
@@ -421,11 +397,11 @@ namespace DB2DataContext
 
 		#region PersonSelectbykey
 
-		public static int PersonSelectbykey(this TESTDATADB dataConnection, int? ID)
+		public static int PersonSelectbykey(this TESTDATADB dataConnection, int? iD)
 		{
 			var parameters = new []
 			{
-				new DataParameter("ID", ID, LinqToDB.DataType.Int32)
+				new DataParameter("ID", iD, LinqToDB.DataType.Int32)
 			};
 
 			return dataConnection.ExecuteProc("DB2INST1.PERSON_SELECTBYKEY", parameters);
@@ -433,13 +409,41 @@ namespace DB2DataContext
 
 		#endregion
 
-		#region TestProcedure
+		#region TestMODULE1TestProcedure
 
-		public static int TestProcedure(this TESTDATADB dataConnection, int? I)
+		public static int TestMODULE1TestProcedure(this TESTDATADB dataConnection, int? i)
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", I, LinqToDB.DataType.Int32)
+				new DataParameter("I", i, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.ExecuteProc("DB2INST1.TEST_MODULE1.TEST_PROCEDURE", parameters);
+		}
+
+		#endregion
+
+		#region TestMODULE2TestProcedure
+
+		public static int TestMODULE2TestProcedure(this TESTDATADB dataConnection, int? i)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.ExecuteProc("DB2INST1.TEST_MODULE2.TEST_PROCEDURE", parameters);
+		}
+
+		#endregion
+
+		#region TestProcedure
+
+		public static int TestProcedure(this TESTDATADB dataConnection, int? i)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, LinqToDB.DataType.Int32)
 			};
 
 			return dataConnection.ExecuteProc("DB2INST1.TEST_PROCEDURE", parameters);
@@ -450,10 +454,20 @@ namespace DB2DataContext
 
 	public static partial class SqlFunctions
 	{
+		#region TestFunction
+
+		[Sql.Function(Name="DB2INST1.TEST_FUNCTION", ServerSideOnly=true)]
+		public static int? TestFunction(int? i)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
 		#region TestMODULE1TestFunction
 
 		[Sql.Function(Name="DB2INST1.TEST_MODULE1.TEST_FUNCTION", ServerSideOnly=true)]
-		public static int? TestMODULE1TestFunction(int? I)
+		public static int? TestMODULE1TestFunction(int? i)
 		{
 			throw new InvalidOperationException();
 		}
@@ -463,17 +477,7 @@ namespace DB2DataContext
 		#region TestMODULE2TestFunction
 
 		[Sql.Function(Name="DB2INST1.TEST_MODULE2.TEST_FUNCTION", ServerSideOnly=true)]
-		public static int? TestMODULE2TestFunction(int? I)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
-		#region TestFunction
-
-		[Sql.Function(Name="DB2INST1.TEST_FUNCTION", ServerSideOnly=true)]
-		public static int? TestFunction(int? I)
+		public static int? TestMODULE2TestFunction(int? i)
 		{
 			throw new InvalidOperationException();
 		}

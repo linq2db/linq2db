@@ -26,7 +26,7 @@ namespace Cli.All.Firebird
 		[Column("Field4"         , DataType = DataType.Int32   , DbType = "integer"                                          )] public int?      Field4          { get; set; } // integer
 		[Column("Field5"         , DataType = DataType.Int32   , DbType = "integer"                                          )] public int?      Field5          { get; set; } // integer
 		[Column("FieldInt64"     , DataType = DataType.Int64   , DbType = "bigint"                                           )] public long?     FieldInt64      { get; set; } // bigint
-		[Column("FieldBoolean"   , DataType = DataType.NChar   , DbType = "char(1)"         , Length       = 1               )] public char?     FieldBoolean    { get; set; } // char(1)
+		[Column("FieldBoolean"   , DataType = DataType.Boolean , DbType = "boolean"                                          )] public bool?     FieldBoolean    { get; set; } // boolean
 		[Column("FieldString"    , DataType = DataType.NVarChar, DbType = "varchar(20)"     , Length       = 20              )] public string?   FieldString     { get; set; } // varchar(20)
 		[Column("FieldNString"   , DataType = DataType.NVarChar, DbType = "varchar(20)"     , Length       = 20              )] public string?   FieldNString    { get; set; } // varchar(20)
 		[Column("FieldChar"      , DataType = DataType.NChar   , DbType = "char(1)"         , Length       = 1               )] public char?     FieldChar       { get; set; } // char(1)

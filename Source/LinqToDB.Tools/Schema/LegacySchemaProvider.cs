@@ -58,7 +58,7 @@ namespace LinqToDB.Schema
 			_providerName      = connection.DataProvider.Name;
 
 			_isPostgreSql       = _providerName.Contains(ProviderName.PostgreSQL);
-			_isMySqlOrMariaDB   = _providerName == "MySql.Official" || _providerName == "MySqlConnector";
+			_isMySqlOrMariaDB   = _providerName is ProviderName.MariaDB10MySqlConnector or ProviderName.MySql80MySqlConnector or ProviderName.MySql57MySqlConnector;
 			_isSystemDataSqlite = _providerName == "SQLite.Classic";
 			_isAccessOleDb      = _providerName == "Access";
 			_isAccessOdbc       = _providerName == "Access.Odbc";

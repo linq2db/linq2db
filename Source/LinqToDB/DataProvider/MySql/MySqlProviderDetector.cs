@@ -13,12 +13,12 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _mySql57DataProvider            = DataConnection.CreateDataProvider<MySql57DataProviderMySqlData>();
-		static readonly Lazy<IDataProvider> _mySql57ConnectorDataProvider   = DataConnection.CreateDataProvider<MySql57DataProviderMySqlConnector>();
-		static readonly Lazy<IDataProvider> _mySql80DataProvider            = DataConnection.CreateDataProvider<MySql80DataProviderMySqlData>();
-		static readonly Lazy<IDataProvider> _mySql80ConnectorDataProvider   = DataConnection.CreateDataProvider<MySql80DataProviderMySqlConnector>();
-		static readonly Lazy<IDataProvider> _mariadb10DataProvider          = DataConnection.CreateDataProvider<MariaDB10DataProviderMySqlData>();
-		static readonly Lazy<IDataProvider> _mariadb10ConnectorDataProvider = DataConnection.CreateDataProvider<MariaDB10DataProviderMySqlConnector>();
+		static readonly Lazy<IDataProvider> _mySql57DataProvider            = CreateDataProvider<MySql57DataProviderMySqlData>();
+		static readonly Lazy<IDataProvider> _mySql57ConnectorDataProvider   = CreateDataProvider<MySql57DataProviderMySqlConnector>();
+		static readonly Lazy<IDataProvider> _mySql80DataProvider            = CreateDataProvider<MySql80DataProviderMySqlData>();
+		static readonly Lazy<IDataProvider> _mySql80ConnectorDataProvider   = CreateDataProvider<MySql80DataProviderMySqlConnector>();
+		static readonly Lazy<IDataProvider> _mariadb10DataProvider          = CreateDataProvider<MariaDB10DataProviderMySqlData>();
+		static readonly Lazy<IDataProvider> _mariadb10ConnectorDataProvider = CreateDataProvider<MariaDB10DataProviderMySqlConnector>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{

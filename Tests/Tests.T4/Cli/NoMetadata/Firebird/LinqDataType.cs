@@ -18,7 +18,7 @@ namespace Cli.NoMetadata.Firebird
 		public decimal?  MoneyValue     { get; set; } // decimal(10,4)
 		public DateTime? DateTimeValue  { get; set; } // timestamp
 		public DateTime? DateTimeValue2 { get; set; } // timestamp
-		public char?     BoolValue      { get; set; } // char(1)
+		public bool?     BoolValue      { get; set; } // boolean
 		public string?   GuidValue      { get; set; } // char(16)
 		public byte[]?   BinaryValue    { get; set; } // blob
 		public short?    SmallIntValue  { get; set; } // smallint

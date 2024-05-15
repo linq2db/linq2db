@@ -18,7 +18,7 @@ namespace Cli.Fluent.ClickHouse.Octonica
 		public decimal?        MoneyValue     { get; set; } // Decimal(18, 4)
 		public DateTimeOffset? DateTimeValue  { get; set; } // DateTime64(3)
 		public DateTimeOffset? DateTimeValue2 { get; set; } // DateTime64(7)
-		public byte?           BoolValue      { get; set; } // UInt8
+		public bool?           BoolValue      { get; set; } // Bool
 		public Guid?           GuidValue      { get; set; } // UUID
 		public string?         BinaryValue    { get; set; } // String
 		public short?          SmallIntValue  { get; set; } // Int16

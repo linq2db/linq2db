@@ -14,10 +14,10 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _firebirdDataProvider25 = DataConnection.CreateDataProvider<FirebirdDataProvider25>();
-		static readonly Lazy<IDataProvider> _firebirdDataProvider3  = DataConnection.CreateDataProvider<FirebirdDataProvider3 >();
-		static readonly Lazy<IDataProvider> _firebirdDataProvider4  = DataConnection.CreateDataProvider<FirebirdDataProvider4 >();
-		static readonly Lazy<IDataProvider> _firebirdDataProvider5  = DataConnection.CreateDataProvider<FirebirdDataProvider5 >();
+		static readonly Lazy<IDataProvider> _firebirdDataProvider25 = CreateDataProvider<FirebirdDataProvider25>();
+		static readonly Lazy<IDataProvider> _firebirdDataProvider3  = CreateDataProvider<FirebirdDataProvider3 >();
+		static readonly Lazy<IDataProvider> _firebirdDataProvider4  = CreateDataProvider<FirebirdDataProvider4 >();
+		static readonly Lazy<IDataProvider> _firebirdDataProvider5  = CreateDataProvider<FirebirdDataProvider5 >();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
