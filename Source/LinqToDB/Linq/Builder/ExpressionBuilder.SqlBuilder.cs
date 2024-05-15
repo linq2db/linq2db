@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	partial class ExpressionBuilder
 	{

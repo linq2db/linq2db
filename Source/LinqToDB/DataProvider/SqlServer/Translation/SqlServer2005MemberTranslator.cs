@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 {
 	using Common;
 	using SqlQuery;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	public class SqlServer2005MemberTranslator : SqlServerMemberTranslator
 	{

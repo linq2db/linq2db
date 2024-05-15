@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Common;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Common;
 
 	class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{

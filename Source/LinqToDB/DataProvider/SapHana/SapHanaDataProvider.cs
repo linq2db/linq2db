@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Mapping;
 	using SqlProvider;
 	using Translation;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{

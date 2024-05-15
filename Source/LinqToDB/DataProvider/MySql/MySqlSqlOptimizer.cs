@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.MySql
+﻿namespace LinqToDB.DataProvider.MySql
 {
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
 	sealed class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
@@ -59,10 +57,14 @@ namespace LinqToDB.DataProvider.MySql
 
 				if (e is SqlTableSource ts)
 				{
-					if (ts.Source is SqlTable table && !ReferenceEquals(table, statement.Update.Table) && QueryHelper.IsEqualTables(table, statement.Update.Table))
+					if (ts.Source is SqlTable table 
+						&& !ReferenceEquals(table, statement.Update.Table) 
+						&& QueryHelper.IsEqualTables(table, statement.Update.Table))
 					{
-						var subQuery = new SelectQuery();
-						subQuery.DoNotRemove = true;
+						var subQuery = new SelectQuery
+						{
+							DoNotRemove = true,
+						};
 						subQuery.From.Tables.Add(new SqlTableSource(table, ts.Alias));
 						ts.Source = subQuery;
 						changed = true;
@@ -87,6 +89,5 @@ namespace LinqToDB.DataProvider.MySql
 
 			return statement;
 		}
-
 	}
 }

@@ -1,5 +1,5 @@
 ﻿using LinqToDB.Common;
-using LinqToDB.Linq.Translation;
+using Linq.Translation;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer.Translation

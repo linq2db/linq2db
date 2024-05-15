@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
 {
 	using SqlQuery;
-	using Common;
 
 	public partial class FirebirdSqlBuilder
 	{
@@ -48,8 +46,6 @@ namespace LinqToDB.DataProvider.Firebird
 			return _typedColumns.Contains(Tuple.Create(source, column))
 				&& ConvertElement(rows[row][column]) is SqlValue sqlValue && sqlValue.Value != null;
 		}
-
-		
 
 		// available since FB5
 		protected override void BuildMergeOperationDeleteBySource(NullabilityContext nullability, SqlMergeOperationClause operation)

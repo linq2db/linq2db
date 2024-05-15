@@ -2,10 +2,10 @@
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using Common;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Common;
 
 	public class InformixSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SQLite.Translation
 {
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	public class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
 	{

@@ -9,7 +9,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SQLite.Translation;
-using LinqToDB.Linq.Translation;
+using Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlProvider;

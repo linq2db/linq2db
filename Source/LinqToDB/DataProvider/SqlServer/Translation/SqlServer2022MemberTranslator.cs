@@ -2,7 +2,7 @@
 
 namespace LinqToDB.DataProvider.SqlServer.Translation
 {
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 	using SqlQuery;
 
 	public class SqlServer2022MemberTranslator : SqlServer2012MemberTranslator

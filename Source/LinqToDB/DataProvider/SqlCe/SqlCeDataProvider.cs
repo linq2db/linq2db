@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using SchemaProvider;
 	using SqlProvider;
 	using Translation;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	public class SqlCeDataProvider : DynamicDataProviderBase<SqlCeProviderAdapter>
 	{

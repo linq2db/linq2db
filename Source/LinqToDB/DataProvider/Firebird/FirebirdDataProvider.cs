@@ -8,10 +8,10 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
 	using Translation;
-	using LinqToDB.Linq.Translation;
 
 	sealed class FirebirdDataProvider25 : FirebirdDataProvider { public FirebirdDataProvider25() : base(ProviderName.Firebird25, FirebirdVersion.v25) { } }
 	sealed class FirebirdDataProvider3  : FirebirdDataProvider { public FirebirdDataProvider3()  : base(ProviderName.Firebird3,  FirebirdVersion.v3 ) { } }

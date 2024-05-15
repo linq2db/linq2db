@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using LinqToDB;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	public class MemberTranslatorTests : TestBase
 	{

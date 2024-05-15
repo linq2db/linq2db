@@ -4,9 +4,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Firebird.Translation
 {
-	using SqlQuery;
 	using Common;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
+	using SqlQuery;
 
 	public class FirebirdMemberTranslator : ProviderMemberTranslatorDefault
 	{

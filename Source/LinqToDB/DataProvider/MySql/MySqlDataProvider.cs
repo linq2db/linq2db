@@ -9,10 +9,10 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
 	using Translation;
-	using LinqToDB.Linq.Translation;
 
 	sealed class MySql57DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql57MySqlData,        MySqlVersion.MySql57,   MySqlProvider.MySqlData     ) { }
 	sealed class MySql57DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql57MySqlConnector,   MySqlVersion.MySql57,   MySqlProvider.MySqlConnector) { }

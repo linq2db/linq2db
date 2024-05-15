@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Access.Translation
 {
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	public class AccessMemberTranslator : ProviderMemberTranslatorDefault
 	{

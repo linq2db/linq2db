@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Mapping;
-	using SqlQuery;
-	using SqlProvider;
 	using Common;
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	sealed partial class InformixSqlBuilder : BasicSqlBuilder
 	{

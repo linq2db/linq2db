@@ -7,9 +7,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
-
-	using LinqToDB.Data;
-
+	using Data;
 	using Mapping;
 	using SqlQuery;
 
