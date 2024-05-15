@@ -389,17 +389,6 @@ namespace LinqToDB.Data
 			ConnectionOptionsByConfigurationString.Clear();
 		}
 
-		internal static Lazy<IDataProvider> CreateDataProvider<T>()
-			where T : IDataProvider, new()
-		{
-			return new(() =>
-			{
-				var provider = new T();
-				AddDataProvider(provider);
-				return provider;
-			}, true);
-		}
-
 		public static void AddOrSetConfiguration(
 			string configuration,
 			string connectionString,

@@ -16,12 +16,10 @@ namespace LinqToDB.DataModel
 			// generated code sample:
 			/*
 			 * #region Function1
-			 * private static readonly MethodInfo _function1 = MemberHelper.MethodOf<DataContext>(ctx => ctx.Function1(default));
-			 * 
 			 * [Sql.TableFunction("Function1")]
 			 * public IQueryable<Parent> Function1(int? id)
 			 * {
-			 * return this.GetTable<Parent>(this, _function1, id);
+			 *     return this.TableFromExpression(() => this.Function1(id));
 			 * }
 			 * #endregion
 			 */
@@ -44,15 +42,6 @@ namespace LinqToDB.DataModel
 			if (tableFunction.Result == null || tableFunction.Result.CustomTable == null && tableFunction.Result.Entity == null)
 				throw new InvalidOperationException($"Table function {tableFunction.Name} result record type not set");
 
-			// GetTable API for table functions need MethodInfo instance of generated method as parameter
-			// to not load it on each call, we cache MethodInfo instance in static field
-			var methodInfo = region
-				.Fields(false)
-					.New(context.AST.Name(tableFunction.MethodInfoFieldName), WellKnownTypes.System.Reflection.MethodInfo)
-						.Private()
-						.Static()
-						.ReadOnly();
-
 			// generate mapping method with metadata
 			var method = context.DefineMethod(region.Methods(false), tableFunction.Method);
 
@@ -73,26 +62,31 @@ namespace LinqToDB.DataModel
 				: WellKnownTypes.System.Linq.IQueryable(returnEntity);
 			method.Returns(returnType);
 
-			// parameters for GetTable call in mapping body
-			var parameters = new ICodeExpression[3 + tableFunction.Parameters.Count];
-			parameters[0] = context.ContextReference; // `this` extension method parameter
-			parameters[1] = context.CurrentDataContext.Type.This; // context parameter
-			parameters[2] = methodInfo.Field.Reference; // method info field
-
 			// add table function parameters (if any)
-			var fieldInitParameters = new ICodeExpression[tableFunction.Parameters.Count];
+			var methodParameters = new ICodeExpression[tableFunction.Parameters.Count];
 			for (var i = 0; i < tableFunction.Parameters.Count; i++)
 			{
-				var param = tableFunction.Parameters[i];
-				// parameters added to 3 places:
-				// - to mapping method
-				// - to GetTable call in mapping
-				// - to mapping call in MethodInfo initializer we add parameter's default value
-				var parameter = context.DefineParameter(method, param.Parameter);
-				parameters[i + 3] = parameter.Reference;
-				// TODO: potential issue: target-typed `default` could cause errors with overloads
-				fieldInitParameters[i] = context.AST.Default(param.Parameter.Type, true);
+				var param           = tableFunction.Parameters[i];
+				var parameter       = context.DefineParameter(method, param.Parameter);
+				methodParameters[i] = parameter.Reference;
 			}
+
+			var lambda = context.AST
+				.Lambda(WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(returnType)), true);
+
+			lambda.Body()
+				.Append(
+					context.AST.Return(
+						context.AST.Call(
+							context.CurrentDataContext.Type.This,
+							method.Method.Name,
+							returnType,
+							methodParameters)));
+
+			// parameters for TableFromExpression call in mapping body
+			var parameters = new ICodeExpression[2];
+			parameters[0] = context.ContextReference; // `this` extension method parameter
+			parameters[1] = lambda.Method; // self-call expression
 
 			// generate mapping body
 			method.Body()
@@ -100,37 +94,13 @@ namespace LinqToDB.DataModel
 					context.AST.Return(
 						context.AST.ExtCall(
 							WellKnownTypes.LinqToDB.DataExtensions,
-							WellKnownTypes.LinqToDB.DataExtensions_GetTable,
-							WellKnownTypes.LinqToDB.ITable(returnEntity),
+							context.Options.TableFunctionReturnsTable
+								? WellKnownTypes.LinqToDB.DataExtensions_TableFromExpression
+								: WellKnownTypes.LinqToDB.DataExtensions_QueryFromExpression,
+							returnType,
 							new[] { returnEntity },
 							false,
 							parameters)));
-
-			// generate MethodInfo field initializer
-			var lambdaParam = context.AST.LambdaParameter(context.AST.Name(DataModelConstants.TABLE_FUNCTION_METHOD_INFO_CONTEXT_PARAMETER), context.CurrentDataContext.Type.Type);
-
-			// Expression<Func<context, returnType>>
-			var lambda = context.AST
-				.Lambda(WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(returnType, context.CurrentDataContext.Type.Type)), true)
-				.Parameter(lambdaParam);
-
-			lambda.Body()
-				.Append(
-					context.AST.Return(
-						context.AST.Call(
-							lambdaParam.Reference,
-							method.Method.Name,
-							returnType,
-							fieldInitParameters)));
-
-			methodInfo.AddInitializer(
-				context.AST.Call(
-					new CodeTypeReference(WellKnownTypes.LinqToDB.Expressions.MemberHelper),
-					WellKnownTypes.LinqToDB.Expressions.MemberHelper_MethodOf,
-					WellKnownTypes.System.Reflection.MethodInfo,
-					new[] { context.TableFunctionsClass.Type },
-					false,
-					lambda.Method));
 
 			// TODO: similar tables deduplication
 

@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.MySql
 		public sealed class MySqlConnector57MappingSchema : LockedMappingSchema
 		{
 			public MySqlConnector57MappingSchema()
-				: base(ProviderName.MySql57MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, MySql57Instance)
+				: base(ProviderName.MySql57MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlConnector).MappingSchema, MySql57Instance)
 			{
 			}
 		}
@@ -129,7 +129,7 @@ namespace LinqToDB.DataProvider.MySql
 		public sealed class MySqlConnector80MappingSchema : LockedMappingSchema
 		{
 			public MySqlConnector80MappingSchema()
-				: base(ProviderName.MySql80MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, MySql80Instance)
+				: base(ProviderName.MySql80MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlConnector).MappingSchema, MySql80Instance)
 			{
 			}
 		}
@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.MySql
 		public sealed class MySqlConnectorMariaDB10MappingSchema : LockedMappingSchema
 		{
 			public MySqlConnectorMariaDB10MappingSchema()
-				: base(ProviderName.MariaDB10MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, MariaDB10Instance)
+				: base(ProviderName.MariaDB10MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlConnector).MappingSchema, MariaDB10Instance)
 			{
 			}
 		}

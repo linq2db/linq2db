@@ -73,6 +73,13 @@ namespace Default.SqlServerNorthwind
 			InitMappingSchema();
 		}
 
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 	}
@@ -695,12 +702,12 @@ namespace Default.SqlServerNorthwind
 
 		#region EmployeeSalesByCountry
 
-		public static IEnumerable<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this TestDataDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static IEnumerable<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this TestDataDB dataConnection, DateTime? @BeginningDate, DateTime? @EndingDate)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
+				new DataParameter("@Beginning_Date", @BeginningDate, LinqToDB.DataType.DateTime),
+				new DataParameter("@Ending_Date",    @EndingDate,    LinqToDB.DataType.DateTime)
 			};
 
 			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[dbo].[Employee Sales by Country]", parameters);
@@ -714,29 +721,6 @@ namespace Default.SqlServerNorthwind
 			public DateTime? ShippedDate { get; set; }
 			public int       OrderID     { get; set; }
 			public decimal?  SaleAmount  { get; set; }
-		}
-
-		#endregion
-
-		#region SalesByYear
-
-		public static IEnumerable<SalesByYearResult> SalesByYear(this TestDataDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
-		{
-			var parameters = new []
-			{
-				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
-			};
-
-			return dataConnection.QueryProc<SalesByYearResult>("[dbo].[Sales by Year]", parameters);
-		}
-
-		public partial class SalesByYearResult
-		{
-			public DateTime? ShippedDate { get; set; }
-			public int       OrderID     { get; set; }
-			public decimal?  Subtotal    { get; set; }
-			public string?   Year        { get; set; }
 		}
 
 		#endregion
@@ -764,6 +748,29 @@ namespace Default.SqlServerNorthwind
 		{
 			public string   ProductName   { get; set; } = null!;
 			public decimal? TotalPurchase { get; set; }
+		}
+
+		#endregion
+
+		#region SalesByYear
+
+		public static IEnumerable<SalesByYearResult> SalesByYear(this TestDataDB dataConnection, DateTime? @BeginningDate, DateTime? @EndingDate)
+		{
+			var parameters = new []
+			{
+				new DataParameter("@Beginning_Date", @BeginningDate, LinqToDB.DataType.DateTime),
+				new DataParameter("@Ending_Date",    @EndingDate,    LinqToDB.DataType.DateTime)
+			};
+
+			return dataConnection.QueryProc<SalesByYearResult>("[dbo].[Sales by Year]", parameters);
+		}
+
+		public partial class SalesByYearResult
+		{
+			public DateTime? ShippedDate { get; set; }
+			public int       OrderID     { get; set; }
+			public decimal?  Subtotal    { get; set; }
+			public string?   Year        { get; set; }
 		}
 
 		#endregion

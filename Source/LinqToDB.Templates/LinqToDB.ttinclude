@@ -807,14 +807,8 @@ void GenerateTypesFromMetadata()
 			{
 				p.BodyBuilders.Add(() => new[]
 				{
-					string.Format("return {0}.GetTable<{1}>(this, (MethodInfo)MethodBase.GetCurrentMethod(){2}{3}", thisDataContext, p.ResultTable.TypeName, EnableNullableReferenceTypes ? "!" : "", p.ProcParameters.Count == 0 ? ");" : ",")
+					string.Format("return {0}.TableFromExpression(() => {1}({2}));", thisDataContext, p.Name, string.Join(", ", p.ProcParameters.Select(par => par.ParameterName)))
 				});
-
-				for (var idx = 0; idx < p.ProcParameters.Count; idx++)
-				{
-					var i = idx;
-					p.BodyBuilders.Add(() => new []{ "\t" + p.ProcParameters[i].ParameterName + (i + 1 == p.ProcParameters.Count ? ");" : ",") });
-				}
 			}
 			else if (p.IsFunction)
 			{

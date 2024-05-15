@@ -16,9 +16,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _octonicaDataProvider = DataConnection.CreateDataProvider<ClickHouseOctonicaDataProvider>();
-		static readonly Lazy<IDataProvider> _clientDataProvider   = DataConnection.CreateDataProvider<ClickHouseClientDataProvider>();
-		static readonly Lazy<IDataProvider> _mysqlDataProvider    = DataConnection.CreateDataProvider<ClickHouseMySqlDataProvider>();
+		static readonly Lazy<IDataProvider> _octonicaDataProvider = CreateDataProvider<ClickHouseOctonicaDataProvider>();
+		static readonly Lazy<IDataProvider> _clientDataProvider   = CreateDataProvider<ClickHouseClientDataProvider>();
+		static readonly Lazy<IDataProvider> _mysqlDataProvider    = CreateDataProvider<ClickHouseMySqlDataProvider>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{

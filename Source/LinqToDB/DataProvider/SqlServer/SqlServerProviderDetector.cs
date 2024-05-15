@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.IO;
+using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Reflection;
-
-using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Data.Common;
-
-	using Configuration;
+	using Common;
 	using Data;
 
 	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion>
@@ -18,8 +16,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServerProviderDetector() : base(SqlServerVersion.AutoDetect, SqlServerVersion.v2012)
 		{
 		}
-
-		static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new();
 
 		// System.Data
 		// and/or
@@ -42,19 +38,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2019Mdc = CreateDataProvider<SqlServerDataProvider2019MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2022Mdc = CreateDataProvider<SqlServerDataProvider2022MicrosoftDataSqlClient>();
 
-		static Lazy<IDataProvider> CreateDataProvider<T>()
-			where T : SqlServerDataProvider, new()
+		static IEnumerable<SqlServerDataProvider> GetInstantiatedProviders()
 		{
-			return new(() =>
-			{
-				var provider = new T();
-
-				DataConnection.AddDataProvider(provider);
-
-				_providers.Enqueue(provider);
-
-				return provider;
-			}, true);
+			return DataConnection.GetRegisteredProviders().Values.OfType<SqlServerDataProvider>();
 		}
 
 		/// <summary>
@@ -69,7 +55,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_ = new AssemblyResolver(path, SqlServerTypes.AssemblyName);
 
 			if (SqlServerTypes.UpdateTypes())
-				foreach (var provider in _providers)
+				foreach (var provider in GetInstantiatedProviders())
 					SqlServerTypes.Configure(provider);
 		}
 
@@ -81,7 +67,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static void ResolveSqlTypes(Assembly assembly)
 		{
 			if (SqlServerTypes.UpdateTypes(assembly))
-				foreach (var provider in _providers)
+				foreach (var provider in GetInstantiatedProviders())
 					SqlServerTypes.Configure(provider);
 		}
 

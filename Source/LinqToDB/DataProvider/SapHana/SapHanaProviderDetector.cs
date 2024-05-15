@@ -15,8 +15,8 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _hanaDataProvider     = DataConnection.CreateDataProvider<SapHanaDataProvider>();
-		static readonly Lazy<IDataProvider> _hanaOdbcDataProvider = DataConnection.CreateDataProvider<SapHanaOdbcDataProvider>();
+		static readonly Lazy<IDataProvider> _hanaDataProvider     = CreateDataProvider<SapHanaDataProvider>();
+		static readonly Lazy<IDataProvider> _hanaOdbcDataProvider = CreateDataProvider<SapHanaOdbcDataProvider>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{

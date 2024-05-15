@@ -8,12 +8,10 @@
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -63,11 +61,9 @@ namespace Cli.NoMetadata.SapHana
 
 		#region Table Functions
 		#region GetParentById
-		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.GetParentById(default));
-
 		public IQueryable<GetParentByIdResult> GetParentById(int? id)
 		{
-			return this.GetTable<GetParentByIdResult>(this, _getParentById, id);
+			return this.QueryFromExpression<GetParentByIdResult>(() => GetParentById(id));
 		}
 
 		public partial class GetParentByIdResult
@@ -78,11 +74,9 @@ namespace Cli.NoMetadata.SapHana
 		#endregion
 
 		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
-
 		public IQueryable<TestTableFunctionResult> TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction, i);
+			return this.QueryFromExpression<TestTableFunctionResult>(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFunctionResult

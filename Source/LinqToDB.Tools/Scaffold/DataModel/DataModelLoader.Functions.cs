@@ -171,8 +171,7 @@ namespace LinqToDB.Scaffold
 			var funcModel = new TableFunctionModel(
 				name,
 				method,
-				metadata,
-				_namingServices.NormalizeIdentifier(_options.DataModel.TableFunctionMethodInfoFieldNameOptions, func.Name.Name))
+				metadata)
 			{
 				Error = func.SchemaError?.Message
 			};

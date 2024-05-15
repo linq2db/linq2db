@@ -8,14 +8,12 @@
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using Oracle.ManagedDataAccess.Types;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -819,11 +817,9 @@ namespace Cli.Fluent.Oracle
 
 		#region Table Functions
 		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
-
 		public IQueryable<TestTableFunctionResult> TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction, i);
+			return this.QueryFromExpression<TestTableFunctionResult>(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFunctionResult
@@ -833,11 +829,9 @@ namespace Cli.Fluent.Oracle
 		#endregion
 
 		#region TestPackage1TestTableFunction
-		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage1TestTableFunction(default));
-
 		public IQueryable<TestPackage1TestTableFunctionResult> TestPackage1TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestPackage1TestTableFunctionResult>(this, _testTableFunction1, i);
+			return this.QueryFromExpression<TestPackage1TestTableFunctionResult>(() => TestPackage1TestTableFunction(i));
 		}
 
 		public partial class TestPackage1TestTableFunctionResult
@@ -847,11 +841,9 @@ namespace Cli.Fluent.Oracle
 		#endregion
 
 		#region TestPackage2TestTableFunction
-		private static readonly MethodInfo _testTableFunction2 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage2TestTableFunction(default));
-
 		public IQueryable<TestPackage2TestTableFunctionResult> TestPackage2TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestPackage2TestTableFunctionResult>(this, _testTableFunction2, i);
+			return this.QueryFromExpression<TestPackage2TestTableFunctionResult>(() => TestPackage2TestTableFunction(i));
 		}
 
 		public partial class TestPackage2TestTableFunctionResult
@@ -905,7 +897,7 @@ namespace Cli.Fluent.Oracle
 
 		#region TTestUserContract Associations
 		/// <summary>
-		/// SYS_C007192
+		/// SYS_C007123
 		/// </summary>
 		public static TTestUser User(this TTestUserContract obj, IDataContext db)
 		{
@@ -915,7 +907,7 @@ namespace Cli.Fluent.Oracle
 
 		#region TTestUser Associations
 		/// <summary>
-		/// SYS_C007192 backreference
+		/// SYS_C007123 backreference
 		/// </summary>
 		public static IQueryable<TTestUserContract> TTestUserContracts(this TTestUser obj, IDataContext db)
 		{

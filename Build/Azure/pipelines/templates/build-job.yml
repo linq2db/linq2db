@@ -46,7 +46,7 @@ jobs:
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x86 -o .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x64 /p:DB2STUB=True -o .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x64
+        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x64 -o .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x64
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 /p:DB2STUB=True -o .build\publish\Tests\$(build_configuration)\net6.0_x86
         if %errorlevel% neq 0 exit

@@ -15,14 +15,14 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11  = DataConnection.CreateDataProvider<OracleDataProviderNative11>();
-		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12  = DataConnection.CreateDataProvider<OracleDataProviderNative12>();
+		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11  = CreateDataProvider<OracleDataProviderNative11>();
+		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12  = CreateDataProvider<OracleDataProviderNative12>();
 
-		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderManaged11>();
-		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderManaged12>();
+		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = CreateDataProvider<OracleDataProviderManaged11>();
+		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = CreateDataProvider<OracleDataProviderManaged12>();
 
-		static readonly Lazy<IDataProvider> _oracleDevartDataProvider11  = DataConnection.CreateDataProvider<OracleDataProviderDevart11>();
-		static readonly Lazy<IDataProvider> _oracleDevartDataProvider12  = DataConnection.CreateDataProvider<OracleDataProviderDevart12>();
+		static readonly Lazy<IDataProvider> _oracleDevartDataProvider11  = CreateDataProvider<OracleDataProviderDevart11>();
+		static readonly Lazy<IDataProvider> _oracleDevartDataProvider12  = CreateDataProvider<OracleDataProviderDevart12>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{

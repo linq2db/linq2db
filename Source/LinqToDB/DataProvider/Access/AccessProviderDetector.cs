@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Data.Common;
 using System.IO;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using System.Data.Common;
 	using Common;
 	using Data;
 
@@ -15,15 +15,21 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _accessOleDbDataProvider = DataConnection.CreateDataProvider<AccessOleDbDataProvider>();
-		static readonly Lazy<IDataProvider> _accessODBCDataProvider  = DataConnection.CreateDataProvider<AccessODBCDataProvider>();
+		static readonly Lazy<IDataProvider> _accessOleDbDataProvider = CreateDataProvider<AccessOleDbDataProvider>();
+		static readonly Lazy<IDataProvider> _accessODBCDataProvider  = CreateDataProvider<AccessODBCDataProvider>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB") == true 
+			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB") == true
 			    || options.ConnectionString?.Contains("Microsoft.Jet.OLEDB") == true)
 			{
 				return _accessOleDbDataProvider.Value;
+			}
+
+			if (options.ConnectionString?.Contains("(*.mdb)") == true
+				|| options.ConnectionString?.Contains("(*.mdb, *.accdb)") == true)
+			{
+				return _accessODBCDataProvider.Value;
 			}
 
 			if (options.ProviderName == ProviderName.AccessOdbc
