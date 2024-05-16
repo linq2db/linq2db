@@ -31,12 +31,16 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func.Name)
+			return func switch
 			{
-				case "Space"   : return new SqlFunction(func.SystemType, "PadR", new SqlValue(" "), func.Parameters[0]);
-			}
+				{
+					Name: "Space",
+					Parameters: [var p0],
+					SystemType: var type,
+				} => new SqlFunction(type, "PadR", new SqlValue(" "), p0),
 
-			return base.ConvertSqlFunction(func);
+				_ => base.ConvertSqlFunction(func),
+			};
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)

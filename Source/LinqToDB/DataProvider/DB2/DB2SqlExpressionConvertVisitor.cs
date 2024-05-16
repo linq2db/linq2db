@@ -56,10 +56,8 @@ namespace LinqToDB.DataProvider.DB2
 				case "Single"        : return new SqlFunction(func.SystemType, "Real",      func.Parameters);
 				case "Money"         : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(19), new SqlValue(4));
 				case "SmallMoney"    : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(10), new SqlValue(4));
-				case "VarChar"       :
-					if (func.Parameters[0].SystemType!.ToUnderlying() == typeof(decimal))
-						return new SqlFunction(func.SystemType, "Char", func.Parameters[0]);
-					break;
+				case "VarChar" when func.Parameters[0].SystemType!.ToUnderlying() == typeof(decimal):
+					return new SqlFunction(func.SystemType, "Char", func.Parameters[0]);
 
 				case "NChar"         :
 				case "NVarChar"      : return new SqlFunction(func.SystemType, "Char",      func.Parameters);

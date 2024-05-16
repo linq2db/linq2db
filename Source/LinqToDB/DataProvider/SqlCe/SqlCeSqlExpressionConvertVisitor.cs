@@ -48,15 +48,11 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func.Name)
+			return func.Name switch
 			{
-				case "Length":
-				{
-					return func.WithName("LEN");
-				}
-			}
-
-			return base.ConvertSqlFunction(func);
+				"Length" => func.WithName("LEN"),
+				_        => base.ConvertSqlFunction(func),
+			};
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)

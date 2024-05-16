@@ -26,11 +26,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 			// Oracle saves empty string as null to database, so we need predicate modification before sending query
 			//
-			if (expr.WithNull == true &&
-			    (expr.Operator == SqlPredicate.Operator.Equal          ||
-			     expr.Operator == SqlPredicate.Operator.NotEqual       ||
-			     expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
-			     expr.Operator == SqlPredicate.Operator.LessOrEqual))
+			if (expr is
+				{
+					WithNull: true,
+					Operator: SqlPredicate.Operator.Equal
+						or SqlPredicate.Operator.NotEqual
+						or SqlPredicate.Operator.GreaterOrEqual
+						or SqlPredicate.Operator.LessOrEqual,
+				})
 			{
 				if (expr.Expr1.SystemType == typeof(string) &&
 				    expr.Expr1.TryEvaluateExpression(EvaluationContext, out var value1) && value1 is string string1)
@@ -123,23 +126,25 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func.Name)
+			return func switch
 			{
-				case "Coalesce":
+				{ Name: "Coalesce", Parameters.Length: 2 } =>
+					ConvertCoalesceToBinaryFunc(func, "Nvl"),
+
 				{
-					if (func.Parameters.Length == 2)
-						return ConvertCoalesceToBinaryFunc(func, "Nvl");
+					Name: "CharIndex",
+					Parameters: [var p0, var p1],
+					SystemType: var type,
+				} => new SqlFunction(type, "InStr", p1, p0),
 
-					return func;
-				}
+				{
+					Name: "CharIndex",
+					Parameters: [var p0, var p1, var p2],
+					SystemType: var type,
+				} => new SqlFunction(type, "InStr", p1, p0, p2),
 
-				case "CharIndex"      :
-					return func.Parameters.Length == 2?
-						new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0]):
-						new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0], func.Parameters[2]);
-			}
-
-			return base.ConvertSqlFunction(func);
+				_ => base.ConvertSqlFunction(func),
+			};
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

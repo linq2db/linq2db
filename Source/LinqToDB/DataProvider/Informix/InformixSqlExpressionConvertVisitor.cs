@@ -48,13 +48,12 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func.Name)
+			return func.Name switch
 			{
 				// passing parameter to NVL will result in "A syntax error has occurred." error from server
-				case PseudoFunctions.COALESCE : return ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false);
-			}
-
-			return base.ConvertSqlFunction(func);
+				PseudoFunctions.COALESCE => ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false),
+				_                        => base.ConvertSqlFunction(func),
+			};
 		}
 
 		//TODO: Move everything to SQLBuilder

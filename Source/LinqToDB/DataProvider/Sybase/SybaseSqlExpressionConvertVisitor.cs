@@ -42,46 +42,44 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func.Name)
+			return func switch
 			{
-				case PseudoFunctions.REPLACE: return func.WithName("Str_Replace");
+				{ Name: PseudoFunctions.REPLACE } => func.WithName("Str_Replace"),
 
-				case "CharIndex":
 				{
-					if (func.Parameters.Length == 3)
-						return Add<int>(
-							new SqlFunction(func.SystemType, "CharIndex",
-								func.Parameters[0],
-								new SqlFunction(typeof(string), "Substring",
-									func.Parameters[1],
-									func.Parameters[2],
-									new SqlFunction(typeof(int), "Len", func.Parameters[1]))),
-							Sub(func.Parameters[2], 1));
-					break;
-				}
+					Name: "CharIndex",
+					Parameters: [var p0, var p1, var p2],
+					SystemType: var type,
+				} => Add<int>(
+						new SqlFunction(func.SystemType, "CharIndex",
+							p0,
+							new SqlFunction(typeof(string), "Substring",
+								p1,
+								p2,
+								new SqlFunction(typeof(int), "Len", p1))),
+						Sub(p2, 1)),
 
-				case "Stuff":
 				{
-					if (func.Parameters[3] is SqlValue value)
-					{
-						if (value.Value is string @string && string.IsNullOrEmpty(@string))
-							return new SqlFunction(
-								func.SystemType,
-								func.Name,
-								false,
-								func.Precedence,
-								func.Parameters[0],
-								func.Parameters[1],
-								func.Parameters[1],
-								new SqlValue(value.ValueType, null));
-					}
+					Name: "Stuff",
+					Parameters:
+					[
+						var p0, var p1, _, 
+						SqlValue { Value: string @string, ValueType: var valueType }
+					],
+					SystemType: var type,
+					Precedence: var precedence,
+				} => new SqlFunction(
+						type,
+						"Stuff",
+						false,
+						precedence,
+						p0,
+						p1,
+						p1,
+						new SqlValue(valueType, null)),
 
-					break;
-				}
-			}
-
-			return base.ConvertSqlFunction(func);
+				_ => base.ConvertSqlFunction(func),
+			};
 		}
-
 	}
 }

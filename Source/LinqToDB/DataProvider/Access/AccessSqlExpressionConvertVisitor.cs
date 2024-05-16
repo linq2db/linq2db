@@ -119,34 +119,38 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func.Name)
+			return func switch
 			{
-				case PseudoFunctions.TO_LOWER: return func.WithName("LCase");
-				case PseudoFunctions.TO_UPPER: return func.WithName("UCase");
-				case "Length"                : return func.WithName("Len");
-				case PseudoFunctions.COALESCE  :
+				{ Name: PseudoFunctions.TO_LOWER } => func.WithName("UCase"),
+				{ Name: PseudoFunctions.TO_UPPER } => func.WithName("LCase"),
+				{ Name: "Length" }                 => func.WithName("Len"),
+
 				{
-					if (func.Parameters.Length > 2)
-					{
-						var parms = new ISqlExpression[func.Parameters.Length - 1];
+					Name: PseudoFunctions.COALESCE,
+					Parameters: [var p0, var p1],
+					SystemType: var type,
+				} => new SqlFunction(type, "IIF", new SqlSearchCondition { Predicates = { new SqlPredicate.IsNull(p0, false) } }, p1, p0),
 
-						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
-						return new SqlFunction(func.SystemType, func.Name, func.Parameters[0], new SqlFunction(func.SystemType, func.Name, parms));
-					}
+				{
+					Name: PseudoFunctions.COALESCE,
+					Parameters: [var p0, .. var parms],
+					SystemType: var type,
+				} => new SqlFunction(type, PseudoFunctions.COALESCE, p0, new SqlFunction(type, PseudoFunctions.COALESCE, parms)),
 
-					var sc = new SqlSearchCondition();
+				{
+					Name: "CharIndex",
+					Parameters: [var p0, var p1],
+					SystemType: var type,
+				} => new SqlFunction(type, "InStr", new SqlValue(1), p1, p0, new SqlValue(1)),
 
-					sc.Predicates.Add(new SqlPredicate.IsNull(func.Parameters[0], false));
+				{
+					Name: "CharIndex",
+					Parameters: [var p0, var p1, var p2],
+					SystemType: var type,
+				} => new SqlFunction(type, "InStr", p2, p1, p0, new SqlValue(1)),
 
-					return new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0]);
-				}
-				case "CharIndex" :
-					return func.Parameters.Length == 2?
-						new SqlFunction(func.SystemType, "InStr", new SqlValue(1),    func.Parameters[1], func.Parameters[0], new SqlValue(1)):
-						new SqlFunction(func.SystemType, "InStr", func.Parameters[2], func.Parameters[1], func.Parameters[0], new SqlValue(1));
-			}
-
-			return base.ConvertSqlFunction(func);
+				_ => base.ConvertSqlFunction(func),
+			};
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

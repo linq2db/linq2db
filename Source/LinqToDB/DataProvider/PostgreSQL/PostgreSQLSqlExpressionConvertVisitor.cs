@@ -55,30 +55,35 @@
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func.Name)
+			return func switch
 			{
-				case "CharIndex" :
 				{
-					return func.Parameters.Length == 2
-						? new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary,
-							func.Parameters[0], func.Parameters[1])
-						: Add<int>(
-							new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary,
-								func.Parameters[0],
-								(ISqlExpression)Visit(
-									new SqlFunction(typeof(string), "Substring",
-										func.Parameters[1],
-										func.Parameters[2],
-										Sub<int>(
-											(ISqlExpression)Visit(
-												new SqlFunction(typeof(int), "Length", func.Parameters[1])),
-											func.Parameters[2]))
-								)),
-							Sub(func.Parameters[2], 1));
-				}
-			}
+					Name: "CharIndex",
+					Parameters: [var p0, var p1],
+					SystemType: var type,
+				} => new SqlExpression(type, "Position({0} in {1})", Precedence.Primary, p0, p1),
 
-			return base.ConvertSqlFunction(func);
+				{
+					Name: "CharIndex",
+					Parameters: [var p0, var p1, var p2],
+					SystemType: var type,
+				} =>
+					Add<int>(
+						new SqlExpression(type, "Position({0} in {1})", Precedence.Primary,
+							p0,
+							(ISqlExpression)Visit(
+								new SqlFunction(typeof(string), "Substring",
+									p1,
+									p2,
+									Sub<int>(
+										(ISqlExpression)Visit(
+											new SqlFunction(typeof(int), "Length", p1)),
+										p2))
+							)),
+						Sub(p2, 1)),
+
+				_ => base.ConvertSqlFunction(func),
+			};
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
