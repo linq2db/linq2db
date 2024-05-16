@@ -52,7 +52,6 @@ namespace LinqToDB.DataProvider.MySql
 
 #endregion
 
-
 		public MySqlProvider ProviderType    { get; protected set; }
 		public MappingSchema MappingSchema   { get; protected set; } = null!;
 

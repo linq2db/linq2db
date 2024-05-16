@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Common
 {
-	using LinqToDB.Async;
+	using Async;
 
 	public static class EnumerableHelper
 	{

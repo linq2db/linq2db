@@ -369,7 +369,6 @@ namespace LinqToDB.Linq
 					newTakeValue = null;
 				}
 
-
 				var skipValue = select.SkipValue;
 
 				select.TakeValue = newTakeValue;

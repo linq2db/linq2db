@@ -4,11 +4,11 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Common;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Common;
 
 	abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{

@@ -21,8 +21,8 @@ namespace LinqToDB.SqlQuery
 			return sqlExpression switch
 			{
 				SqlNullabilityExpression => sqlExpression,
-				SqlSearchCondition => sqlExpression,
-				SqlRowExpression row => new SqlRowExpression(row.Values.Select(v => ApplyNullability(v, nullability)).ToArray()),
+				SqlSearchCondition       => sqlExpression,
+				SqlRowExpression row     => new SqlRowExpression(row.Values.Select(v => ApplyNullability(v, nullability)).ToArray()),
 				_ => new SqlNullabilityExpression(sqlExpression, nullability.CanBeNull(sqlExpression))
 			};
 		}

@@ -20,7 +20,6 @@ namespace LinqToDB.DataProvider.SQLite
 		private  const string DATETIME_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
 #endif
 
-
 		SQLiteMappingSchema() : base(ProviderName.SQLite)
 		{
 			SetConvertExpression<string,TimeSpan>(s => DateTime.Parse(s, null, DateTimeStyles.NoCurrentDateDefault).TimeOfDay);

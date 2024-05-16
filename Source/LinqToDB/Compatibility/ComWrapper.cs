@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace LinqToDB
 {
-	using LinqToDB.Common;
+	using Common;
 
 	// implementation based on code from https://github.com/dotnet/runtime/issues/12587
 	/// <summary>

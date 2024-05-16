@@ -315,7 +315,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-
 		#region System tables
 
 		internal static SqlTable Inserted(EntityDescriptor entityDescriptor)

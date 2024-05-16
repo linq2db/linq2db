@@ -102,7 +102,6 @@ namespace LinqToDB.Linq
 
 		public Expression? GetExpression() => Expression;
 
-
 		protected Expression ReplaceParametrized(Expression expression, List<Expression> newParametrized)
 		{
 			var result = expression.Transform((parametrized: _parametrized!, newParametrized), static (ctx, e) =>

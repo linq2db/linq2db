@@ -75,7 +75,6 @@ namespace LinqToDB.SqlQuery
 			                  element.Operation == SetOperation.IntersectAll ||
 			                  element.Operation == SetOperation.Union;
 
-
 			var newElement = base.VisitSqlSetOperator(element);
 
 			_disableOrderBy     = saveDisableOrderBy;

@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.SQLite
 {
 	using Common;
 	using Data;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -268,7 +268,6 @@ namespace LinqToDB.DataProvider.SQLite
 				if (Name == ProviderName.SQLiteClassic)
 					dataType = dataType.WithDataType(DataType.VarChar);
 			}
-
 
 #if NET6_0_OR_GREATER
 			if (!Adapter.SupportsDateOnly && value is DateOnly d)

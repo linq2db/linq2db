@@ -136,7 +136,6 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-
 			return predicate;
 		}
 

@@ -7,7 +7,6 @@ namespace LinqToDB.DataProvider.SqlCe
 	using SqlQuery;
 	using Common;
 
-
 	public class SqlCeSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SqlCeSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)

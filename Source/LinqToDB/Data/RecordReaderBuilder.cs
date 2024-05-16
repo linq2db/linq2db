@@ -7,11 +7,11 @@ using System.Reflection;
 
 namespace LinqToDB.Data
 {
+	using Common;
 	using Expressions;
 	using Extensions;
-	using Linq;
 	using Linq.Builder;
-	using Common;
+	using Linq;
 	using Mapping;
 
 	sealed class RecordReaderBuilder
@@ -80,17 +80,17 @@ namespace LinqToDB.Data
 		public Func<DbDataReader, T> BuildReaderFunction<T>()
 		{
 			var generator          = new ExpressionGenerator();
-			var typedDataReader = Expression.Convert(DataReaderParam, Reader.GetType());
+			var typedDataReader    = Expression.Convert(DataReaderParam, Reader.GetType());
 
 			var dataReaderVariable = generator.AssignToVariable(ConverterExpr?.GetBody(typedDataReader) ?? typedDataReader, "ldr");
 
-			var constructor = new EntityConstructor(this, dataReaderVariable);
+			var constructor        = new EntityConstructor(this, dataReaderVariable);
 
-			var entityParam = Expression.Parameter(ObjectType, "e");
-			var entityExpression = constructor.BuildFullEntityExpression(DataContext, MappingSchema, entityParam, ObjectType, ProjectFlags.Expression,
+			var entityParam        = Expression.Parameter(ObjectType, "e");
+			var entityExpression   = constructor.BuildFullEntityExpression(DataContext, MappingSchema, entityParam, ObjectType, ProjectFlags.Expression,
 				EntityConstructorBase.FullEntityPurpose.Default);
 
-			Expression finalized = entityExpression;
+			Expression finalized   = entityExpression;
 
 			while (true)
 			{

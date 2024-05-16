@@ -175,7 +175,8 @@ namespace LinqToDB.SqlQuery
 
 			if (Tables.Count > 0)
 			{
-				using(writer.IndentScope())
+				using (writer.IndentScope())
+				{
 					for (var index = 0; index < Tables.Count; index++)
 					{
 						var ts = Tables[index];
@@ -184,6 +185,7 @@ namespace LinqToDB.SqlQuery
 						if (index < Tables.Count - 1)
 							writer.AppendLine(",");
 					}
+				}
 			}
 
 			return writer;

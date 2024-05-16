@@ -289,7 +289,6 @@ namespace LinqToDB.DataProvider
 
 				_newAliases.RegisterAliased(selectQuery);
 
-
 				return selectQuery;
 			}
 

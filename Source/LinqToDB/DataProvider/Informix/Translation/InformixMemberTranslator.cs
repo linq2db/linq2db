@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 namespace LinqToDB.DataProvider.Informix.Translation
 {
 	using Common;
+	using Linq.Translation;
 	using SqlQuery;
-	using LinqToDB.Linq.Translation;
 
 	public class InformixMemberTranslator : ProviderMemberTranslatorDefault
 	{
@@ -69,7 +69,6 @@ namespace LinqToDB.DataProvider.Informix.Translation
 					}
 				}
 
-
 				hour   = hour   ?? factory.Value(intDataType, 0);
 				minute = minute ?? factory.Value(intDataType, 0);
 				second = second ?? factory.Value(intDataType, 0);
@@ -91,7 +90,6 @@ namespace LinqToDB.DataProvider.Informix.Translation
 						PartExpression(second, 2) 
 					);
 				}
-
 
 				resultExpression = factory.Function(resulType, "To_Date", resultExpression, factory.Value("%Y-%m-%d %H:%M:%S"));
 
@@ -184,7 +182,6 @@ namespace LinqToDB.DataProvider.Informix.Translation
 								intDataType
 							);
 
-
 						return result;
 					}
 					case Sql.DateParts.Minute:
@@ -266,7 +263,6 @@ namespace LinqToDB.DataProvider.Informix.Translation
 					default:
 						return null;
 				}
-
 
 				var intervalExpr     = factory.Fragment(intervalType, "Interval ({0}) " + fragmentStr, increment);
 				if (multiplier != null)

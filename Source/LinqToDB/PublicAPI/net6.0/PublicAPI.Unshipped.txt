@@ -3,3 +3,4 @@
 *REMOVED*override LinqToDB.DataExtensions.SqlFormattableComparerAttribute.ExpressionsEqual<TContext>(TContext context, System.Linq.Expressions.Expression! expr1, System.Linq.Expressions.Expression! expr2, System.Func<TContext, System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!, bool>! comparer) -> bool
 *REMOVED*LinqToDB.DataExtensions.SqlFormattableComparerAttribute
 *REMOVED*LinqToDB.DataExtensions.SqlFormattableComparerAttribute.SqlFormattableComparerAttribute() -> void
+virtual LinqToDB.Linq.Translation.SqlTypesTranslationDefault.ConvertDateOnly(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?

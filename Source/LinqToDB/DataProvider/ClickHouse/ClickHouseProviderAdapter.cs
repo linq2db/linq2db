@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using System.Data.SqlTypes;
-
 	using Common;
 	using Expressions;
 	using Mapping;

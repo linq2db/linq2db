@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using LinqToDB.Mapping;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -210,7 +207,5 @@ namespace LinqToDB.DataProvider.Access
 
 			return statement;
 		}
-
-
 	}
 }

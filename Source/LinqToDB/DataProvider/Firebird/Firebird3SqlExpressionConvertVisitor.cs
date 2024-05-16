@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			var isNull = cast.Expression is SqlValue sqlValue && sqlValue.Value == null;
+			var isNull = cast.Expression is SqlValue { Value: null } sqlValue;
 
 			if (!isNull
 				&& Type.GetTypeCode(cast.SystemType.ToUnderlying()) == TypeCode.Boolean

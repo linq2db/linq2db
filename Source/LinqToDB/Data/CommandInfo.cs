@@ -22,16 +22,16 @@ using JetBrains.Annotations;
 namespace LinqToDB.Data
 {
 	using Async;
-	using Common;
-	using Common.Internal;
 	using Common.Internal.Cache;
+	using Common.Internal;
+	using Common;
 	using Expressions;
 	using Extensions;
+	using Interceptors;
 	using Linq;
 	using Mapping;
 	using Reflection;
 	using Tools;
-	using Interceptors;
 
 	/// <summary>
 	/// Provides database connection command abstraction.
@@ -1728,18 +1728,21 @@ namespace LinqToDB.Data
 					//
 					return CreateDynamicObjectReader<T>(context.dataConnection, context.dataReader,
 						(dc, dr, type, idx, dataReaderExpr) =>
-							new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, (bool?)null).Reduce(dc, dr));
+							new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, canBeNull: (bool?)null).Reduce(dc, dr));
 				}
 
 				return CreateObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr, conv) =>
-					new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr, (bool?)null).Reduce(dc, dr));
+					new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr, canBeNull: (bool?)null).Reduce(dc, dr));
 			});
 
 			return (Func<DbDataReader,T>)func;
 		}
 
-		static Func<DbDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, DbDataReader dataReader,
-			string sql, string? additionalKey)
+		static Func<DbDataReader,T> GetObjectReader2<T>(
+			DataConnection dataConnection,
+			DbDataReader   dataReader,
+			string         sql,
+			string?        additionalKey)
 		{
 			var key = new QueryKey(typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1, dataReader.FieldCount == 1 ? dataReader.GetFieldType(0) : null);
 
@@ -1750,12 +1753,12 @@ namespace LinqToDB.Data
 				// dynamic case
 				//
 				func = CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, true).Reduce(dc, slowMode: true));
+				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, canBeNull: true).Reduce(dc, slowMode: true));
 			}
 			else
 			{
 				func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr, conv) =>
-				new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr, true).Reduce(dc, slowMode: true));
+				new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr, canBeNull: true).Reduce(dc, slowMode: true));
 			}
 
 			_objectReaders.Set(key, func,

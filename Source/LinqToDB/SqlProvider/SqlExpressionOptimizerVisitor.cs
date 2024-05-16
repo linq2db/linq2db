@@ -762,7 +762,6 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-
 			if (element.Expression is SelectQuery selectQuery && selectQuery.Select.Columns.Count == 1)
 			{
 				if (GetVisitMode(selectQuery) == VisitMode.Modify)
@@ -994,7 +993,6 @@ namespace LinqToDB.SqlProvider
 
 			}
 
-
 			switch (expr.Operator)
 			{
 				case SqlPredicate.Operator.Equal          :
@@ -1171,7 +1169,6 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-
 		static void CombineOperator(ref SqlPredicate.Operator? current, SqlPredicate.Operator additional)
 		{
 			if (current == null)
@@ -1288,7 +1285,6 @@ namespace LinqToDB.SqlProvider
 					else
 						allEvaluatable = false;
 
-
 					if (allEvaluatable)
 					{
 						if (caseMatch.All(c => !c) && !elseMatch)
@@ -1358,7 +1354,6 @@ namespace LinqToDB.SqlProvider
 					return (ISqlPredicate)Visit(reduced);
 				}
 			}
-
 
 			return isTrue;
 		}

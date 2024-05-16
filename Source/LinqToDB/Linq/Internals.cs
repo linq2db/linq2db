@@ -58,7 +58,6 @@ namespace LinqToDB.Linq
 			return GetDataContext(((LinqExtensions.SelectInsertable<TSource, TTarget>)insertable).Query);
 		}
 
-
 		/// <summary>
 		/// This method makes all needed executions to fully expose expression.
 		/// </summary>

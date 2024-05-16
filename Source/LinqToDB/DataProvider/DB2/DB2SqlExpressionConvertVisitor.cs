@@ -2,9 +2,9 @@
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlProvider;
-	using LinqToDB.SqlQuery;
+	using Extensions;
+	using SqlProvider;
+	using SqlQuery;
 
 	public class DB2SqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

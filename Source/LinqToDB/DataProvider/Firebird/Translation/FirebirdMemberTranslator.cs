@@ -4,9 +4,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Firebird.Translation
 {
-	using SqlQuery;
 	using Common;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
+	using SqlQuery;
 
 	public class FirebirdMemberTranslator : ProviderMemberTranslatorDefault
 	{
@@ -181,7 +181,6 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 				var yearString  = PartExpression(year, 4);
 				var monthString = PartExpression(month, 2);
 				var dayString   = PartExpression(day, 2);
-
 
 				var resultExpression = factory.Concat(
 					yearString, factory.Value(stringDataType, "-"),

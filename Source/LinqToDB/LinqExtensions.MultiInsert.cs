@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using LinqToDB.Async;
+	using Async;
 	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
 
 	public static class MultiInsertExtensions

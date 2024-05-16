@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Common;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.DataProvider.ClickHouse.Translation
 {
-	using LinqToDB.Linq.Translation;
+	using Common;
+	using Linq.Translation;
+	using SqlQuery;
 
 	public class ClickHouseMemberTranslator : ProviderMemberTranslatorDefault
 	{
@@ -33,26 +32,21 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 				var intDataType  = factory.GetDbDataType(typeof(int));
 				var longDataType = factory.GetDbDataType(typeof(long));
 
-				ISqlExpression? result;
-
 				switch (datepart)
 				{
-					case Sql.DateParts.Year:        result = factory.Function(intDataType, "toYear", dateTimeExpression); break;
-					case Sql.DateParts.Quarter:     result = factory.Function(intDataType, "toQuarter", dateTimeExpression); break;
-					case Sql.DateParts.Month:       result = factory.Function(intDataType, "toMonth", dateTimeExpression); break;
-					case Sql.DateParts.DayOfYear:   result = factory.Function(intDataType, "toDayOfYear", dateTimeExpression); break;
-					case Sql.DateParts.Day:         result = factory.Function(intDataType, "toDayOfMonth", dateTimeExpression); break;
-					case Sql.DateParts.Week:        result = factory.Function(intDataType, "toISOWeek", factory.Function(longDataType, "toDateTime64", dateTimeExpression, factory.Value(intDataType, 1))); break;
-					case Sql.DateParts.Hour:        result = factory.Function(intDataType, "toHour", dateTimeExpression); break;
-					case Sql.DateParts.Minute:      result = factory.Function(intDataType, "toMinute", dateTimeExpression); break;
-					case Sql.DateParts.Second:      result = factory.Function(intDataType, "toSecond", dateTimeExpression); break;
-					case Sql.DateParts.WeekDay:     result = factory.Function(intDataType, "toDayOfWeek", factory.Function(intDataType, "addDays", dateTimeExpression, factory.Value(intDataType, 1))); break;
-					case Sql.DateParts.Millisecond: result = factory.Mod(factory.Function(intDataType, "toUnixTimestamp64Milli", dateTimeExpression), 1000); break;
-					default:
-						return null;
+					case Sql.DateParts.Year:        return factory.Function(intDataType, "toYear", dateTimeExpression);
+					case Sql.DateParts.Quarter:     return factory.Function(intDataType, "toQuarter", dateTimeExpression);
+					case Sql.DateParts.Month:       return factory.Function(intDataType, "toMonth", dateTimeExpression);
+					case Sql.DateParts.DayOfYear:   return factory.Function(intDataType, "toDayOfYear", dateTimeExpression);
+					case Sql.DateParts.Day:         return factory.Function(intDataType, "toDayOfMonth", dateTimeExpression);
+					case Sql.DateParts.Week:        return factory.Function(intDataType, "toISOWeek", factory.Function(longDataType, "toDateTime64", dateTimeExpression, factory.Value(intDataType, 1)));
+					case Sql.DateParts.Hour:        return factory.Function(intDataType, "toHour", dateTimeExpression);
+					case Sql.DateParts.Minute:      return factory.Function(intDataType, "toMinute", dateTimeExpression);
+					case Sql.DateParts.Second:      return factory.Function(intDataType, "toSecond", dateTimeExpression);
+					case Sql.DateParts.WeekDay:     return factory.Function(intDataType, "toDayOfWeek", factory.Function(intDataType, "addDays", dateTimeExpression, factory.Value(intDataType, 1)));
+					case Sql.DateParts.Millisecond: return factory.Mod(factory.Function(intDataType, "toUnixTimestamp64Milli", dateTimeExpression), 1000);
+					default:                        return null;
 				}
-
-				return result;
 			}
 
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)

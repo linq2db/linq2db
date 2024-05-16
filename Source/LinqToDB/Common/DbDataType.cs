@@ -83,13 +83,13 @@ namespace LinqToDB.Common
 		public readonly DbDataType WithoutSystemType(DbDataType       from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
 		public readonly DbDataType WithoutSystemType(ColumnDescriptor from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
 
-		public readonly DbDataType WithSystemType(Type     systemType)            => new (systemType, DataType, DbType, Length, Precision, Scale);
-		public readonly DbDataType WithDataType  (DataType dataType  )            => new (SystemType, dataType, DbType, Length, Precision, Scale);
-		public readonly DbDataType WithDbType    (string?  dbName    )            => new (SystemType, DataType, dbName, Length, Precision, Scale);
-		public readonly DbDataType WithLength    (int?     length    )            => new (SystemType, DataType, DbType, length, Precision, Scale);
-		public readonly DbDataType WithPrecision (int?     precision )            => new (SystemType, DataType, DbType, Length, precision, Scale);
-		public readonly DbDataType WithScale     (int?     scale     )            => new (SystemType, DataType, DbType, Length, Precision, scale);
-		public readonly DbDataType WithPrecisionScale(int? precision, int? scale) => new (SystemType, DataType, DbType, Length, precision, scale);
+		public readonly DbDataType WithSystemType    (Type     systemType           ) => new (systemType, DataType, DbType, Length, Precision, Scale);
+		public readonly DbDataType WithDataType      (DataType dataType             ) => new (SystemType, dataType, DbType, Length, Precision, Scale);
+		public readonly DbDataType WithDbType        (string?  dbName               ) => new (SystemType, DataType, dbName, Length, Precision, Scale);
+		public readonly DbDataType WithLength        (int?     length               ) => new (SystemType, DataType, DbType, length, Precision, Scale);
+		public readonly DbDataType WithPrecision     (int?     precision            ) => new (SystemType, DataType, DbType, Length, precision, Scale);
+		public readonly DbDataType WithScale         (int?     scale                ) => new (SystemType, DataType, DbType, Length, Precision, scale);
+		public readonly DbDataType WithPrecisionScale(int?     precision, int? scale) => new (SystemType, DataType, DbType, Length, precision, scale);
 
 		public readonly override string ToString()
 		{

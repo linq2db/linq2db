@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Linq.Translation;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
+	using Linq.Translation;
+	using LinqToDB.Expressions;
+	using Mapping;
+	using SqlQuery;
+
 	internal partial class ExpressionBuilder
 	{
 		class TranslationContext : ITranslationContext
@@ -86,7 +86,6 @@ namespace LinqToDB.Linq.Builder
 			public DataOptions   DataOptions   => Builder.DataOptions;
 			
 			public SelectQuery CurrentSelectQuery => CurrentContext?.SelectQuery ?? throw new InvalidOperationException();
-
 
 			public SqlPlaceholderExpression CreatePlaceholder(SelectQuery selectQuery, ISqlExpression sqlExpression, Expression basedOn)
 			{

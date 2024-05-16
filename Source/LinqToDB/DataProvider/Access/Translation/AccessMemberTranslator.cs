@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Access.Translation
 {
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	public class AccessMemberTranslator : ProviderMemberTranslatorDefault
 	{
@@ -127,9 +127,9 @@ namespace LinqToDB.DataProvider.Access.Translation
 					var monthString = PartExpression(month, 2);
 					var dayString   = PartExpression(day, 2);
 
-					hour        ??= factory.Value(intDataType, 0);
-					minute      ??= factory.Value(intDataType, 0);
-					second      ??= factory.Value(intDataType, 0);
+					hour          ??= factory.Value(intDataType, 0);
+					minute        ??= factory.Value(intDataType, 0);
+					second        ??= factory.Value(intDataType, 0);
 
 					resultExpression = factory.Concat(
 						yearString, factory.Value(stringDataType, "-"),
@@ -148,14 +148,14 @@ namespace LinqToDB.DataProvider.Access.Translation
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				var cast = factory.Cast(dateExpression, new DbDataType(typeof(DateTime), DataType.Date));
+				var cast    = factory.Cast(dateExpression, new DbDataType(typeof(DateTime), DataType.Date));
 
 				return cast;
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
+				var factory  = translationContext.ExpressionFactory;
 				var timePart = factory.Function(factory.GetDbDataType(typeof(TimeSpan)), "TimeValue", dateExpression);
 
 				return timePart;
@@ -178,7 +178,5 @@ namespace LinqToDB.DataProvider.Access.Translation
 		{
 			return new DateFunctionsTranslator();
 		}
-
 	}
-
 }

@@ -64,18 +64,21 @@ namespace LinqToDB.SqlQuery
 				writer
 					.Append("(")
 					.AppendLine();
-				writer.Indent();
-			}
 
-			writer
-				.AppendElement(Table);
+				using (writer.IndentScope())
+				{
+					writer
+						.AppendElement(Table);
+				}
 
-			if (Table.Joins.Count > 0)
-			{
-				writer.UnIndent();
 				writer
 					.AppendLine()
 					.Append(") ");
+			}
+			else
+			{
+				writer
+					.AppendElement(Table);
 			}
 
 			if (JoinType != JoinType.Cross)

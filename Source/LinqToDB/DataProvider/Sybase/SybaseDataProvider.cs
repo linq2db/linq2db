@@ -17,8 +17,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using SchemaProvider;
 	using SqlProvider;
 	using Translation;
-	using LinqToDB.Linq.Translation;
-
+	using Linq.Translation;
 
 	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase,        SybaseProvider.Unmanaged ) {} }
 	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged, SybaseProvider.DataAction) {} }

@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 {
 	using Common;
 	using SqlQuery;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	public class MySqlMemberTranslator : ProviderMemberTranslatorDefault
 	{
@@ -209,7 +209,6 @@ namespace LinqToDB.DataProvider.MySql.Translation
 				return factory.Function(factory.GetDbDataType(dateExpression), "Date", dateExpression);
 			}
 		}
-
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{

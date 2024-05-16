@@ -121,7 +121,7 @@ namespace Tests.Tools.EntityServices
 			var result1 = await query(db, default);
 			var result2 = await query(db, default);
 
-			Assert.That(result2[0], Is.SameAs(result1[0]));
+			Assert.That(result1[0], Is.SameAs(result2[0]));
 		}
 	}
 }

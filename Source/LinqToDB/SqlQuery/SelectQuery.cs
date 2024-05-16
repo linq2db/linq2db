@@ -172,7 +172,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-
 		#region IEquatable<ISqlExpression> Members
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)

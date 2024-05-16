@@ -23,10 +23,10 @@ namespace LinqToDB.Async
 	[PublicAPI]
 	public static class AsyncFactory
 	{
-		private static readonly Type?[] _noTokenParams         = { null };
+		private static readonly Type?[] _noTokenParams         = [null];
 
-		private static readonly Type[] _tokenParams            = { typeof(CancellationToken) };
-		private static readonly Type[] _beginTransactionParams = { typeof(IsolationLevel)   , typeof(CancellationToken) };
+		private static readonly Type[] _tokenParams            = [typeof(CancellationToken)];
+		private static readonly Type[] _beginTransactionParams = [typeof(IsolationLevel)   , typeof(CancellationToken)];
 
 		private static readonly ConcurrentDictionary<Type, Func<DbConnection, IAsyncDbConnection>> _connectionFactories = new ();
 

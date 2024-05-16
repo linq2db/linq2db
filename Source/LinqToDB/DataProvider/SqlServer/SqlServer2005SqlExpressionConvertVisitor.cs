@@ -8,7 +8,6 @@
 		{
 		}
 
-
 		protected virtual bool ProcessConversion(SqlCastExpression cast, out ISqlExpression result)
 		{
 			// SQL Server 2005 does not support TIME data type

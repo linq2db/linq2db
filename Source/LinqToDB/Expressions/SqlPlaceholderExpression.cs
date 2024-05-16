@@ -77,7 +77,6 @@ namespace LinqToDB.Expressions
 		}
 #endif
 
-
 		public SqlPlaceholderExpression MakeNullable()
 		{
 			if (!Type.IsNullableType())

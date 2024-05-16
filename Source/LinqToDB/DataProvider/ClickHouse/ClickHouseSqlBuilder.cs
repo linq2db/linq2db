@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using SqlQuery;
-	using SqlProvider;
-	using Mapping;
 	using Common;
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	sealed class ClickHouseSqlBuilder : BasicSqlBuilder
 	{

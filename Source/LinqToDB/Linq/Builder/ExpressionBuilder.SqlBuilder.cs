@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	partial class ExpressionBuilder
 	{
@@ -2027,7 +2027,6 @@ namespace LinqToDB.Linq.Builder
 			var leftExpr         = ConvertToSqlExpr(context, left,  keysFlag, columnDescriptor : columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, keysFlag, columnDescriptor : columnDescriptor);
 
-
 			var compareNullsAsValues = CompareNullsAsValues;
 
 			//SQLRow case when needs to add Single
@@ -2199,7 +2198,6 @@ namespace LinqToDB.Linq.Builder
 			var isEquality = op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual
 				? op == SqlPredicate.Operator.Equal
 				: (bool?)null;
-
 
 			// TODO: maybe remove
 			if (l is SqlSearchCondition lsc)
@@ -3838,12 +3836,7 @@ namespace LinqToDB.Linq.Builder
 								}
 								else
 								{
-#pragma warning disable CS8603 // TODO:WAITFIX
-									return next;
-#pragma warning restore CS8603
-									// TODO: recheck
-									throw new InvalidOperationException(
-										$"Member '{member}' not found in type '{contextRef.Type}'.");
+									return next!;
 								}
 							}
 
@@ -4288,10 +4281,9 @@ namespace LinqToDB.Linq.Builder
 			if (!force && MappingSchema.IsScalarType(createExpression.Type))
 				return createExpression;
 
-#if !NET45
 			if (typeof(FormattableString).IsSameOrParentOf(createExpression.Type))
 				return createExpression;
-#endif
+
 			if (flags.IsSql() && IsForceParameter(createExpression, columnDescriptor))
 				return createExpression;
 
@@ -4426,7 +4418,6 @@ namespace LinqToDB.Linq.Builder
 			var shouldCache = null != path.Find(1, (_, e) => e is ContextRefExpression);
 
 			var key = new SqlCacheKey(path, null, null, null, flags);
-
 
 			Expression? expression;
 

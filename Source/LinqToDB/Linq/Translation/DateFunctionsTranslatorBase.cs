@@ -120,7 +120,6 @@ namespace LinqToDB.Linq.Translation
 #endif
 		}
 
-
 		Expression? TranslateDateTimeConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
 		{
 			if (expression is not NewExpression newExpression)
@@ -232,7 +231,6 @@ namespace LinqToDB.Linq.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, makeExpression, newExpression);
 		}
 
-
 		Expression? TranslateMakeDateTime(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (methodCall.Arguments.Count < 3)
@@ -266,7 +264,6 @@ namespace LinqToDB.Linq.Translation
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, makeExpression, methodCall);
 		}
-
 
 		Expression? TranslateSqlGetDate(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
@@ -729,7 +726,6 @@ namespace LinqToDB.Linq.Translation
 		{
 			return TranslateMakeDateTime(translationContext, resulType, year, month, day, null, null, null, null);
 		}
-
 
 		#endregion
 

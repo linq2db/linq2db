@@ -448,7 +448,6 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 51), DefaultValue(true)]
 		public bool IsNestedJoinsSupported { get; set; } = true;
 
-
 		/// <summary>
 		/// Provider supports COUNT(DISTINCT column) function. Otherwise, it will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.

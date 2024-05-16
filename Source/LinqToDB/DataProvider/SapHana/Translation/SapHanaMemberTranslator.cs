@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SapHana.Translation
 {
 	using Common;
 	using SqlQuery;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	public class SapHanaMemberTranslator : ProviderMemberTranslatorDefault
 	{

@@ -105,7 +105,6 @@ namespace LinqToDB.SqlQuery
 			return new SqlFunction(SystemType, Name, IsAggregate, IsPure, Precedence, NullabilityType, _canBeNull, parameters);
 		}
 
-
 		#region Overrides
 
 		#endregion

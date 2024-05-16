@@ -5,7 +5,7 @@ namespace LinqToDB.Common.Internal
 {
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Linq;
+	using Linq;
 
 	static class MemberCache
 	{

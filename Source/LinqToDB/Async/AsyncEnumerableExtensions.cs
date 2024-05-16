@@ -147,14 +147,14 @@ namespace LinqToDB.Async
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
+				if (!await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					return default;
+
+				var first = enumerator.Current;
 				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-				{
-					var first = enumerator.Current;
-					if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-						throw new InvalidOperationException("The input sequence contains more than one element.");
-					return first;
-				}
-				return default;
+					throw new InvalidOperationException("The input sequence contains more than one element.");
+
+				return first;
 			}
 		}
 
@@ -189,15 +189,14 @@ namespace LinqToDB.Async
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
-				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-				{
-					var first = enumerator.Current;
-					if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-						throw new InvalidOperationException("Sequence contains more than one element.");
-					return first;
-				}
+				if (!await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					throw new InvalidOperationException("Sequence contains no elements.");
 
-				throw new InvalidOperationException("Sequence contains no elements.");
+				var first = enumerator.Current;
+				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					throw new InvalidOperationException("Sequence contains more than one element.");
+
+				return first;
 			}
 		}
 	}

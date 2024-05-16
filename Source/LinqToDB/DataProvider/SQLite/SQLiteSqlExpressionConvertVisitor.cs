@@ -172,7 +172,6 @@ namespace LinqToDB.DataProvider.SQLite
 			return base.ConvertConversion(cast);
 		}
 
-
 		protected ISqlExpression WrapDateTime(ISqlExpression expression, DbDataType dbDataType)
 		{
 			if (IsDateTime(dbDataType))

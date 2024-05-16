@@ -281,7 +281,7 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 
 				// TODO: temporary guard against cast to unknown type (Variant)
-				if (dbDataType.DataType   == DataType.Undefined)
+				if (dbDataType.DataType == DataType.Undefined)
 				{
 					base.BuildParameter(parameter);
 					return;
@@ -645,7 +645,7 @@ namespace LinqToDB.DataProvider.Firebird
 				return sb.Value.ToString();
 			}
 
-			return base.GetPhysicalTableName(table, alias, ignoreTableExpression : ignoreTableExpression, defaultDatabaseName : defaultDatabaseName, withoutSuffix : withoutSuffix);
+			return base.GetPhysicalTableName(table, alias, ignoreTableExpression: ignoreTableExpression, defaultDatabaseName: defaultDatabaseName, withoutSuffix: withoutSuffix);
 		}
 
 		// FB 2.5 need to use small values to avoid error due to bad row size calculation
@@ -656,7 +656,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
-			if (dataType.DbType == null && (dataType.DataType == DataType.NVarChar || dataType.DataType == DataType.NChar))
+			if (dataType is { DbType: null, DataType: DataType.NVarChar or DataType.NChar })
 			{
 				object? providerValue = null;
 				var     typeRequired  = false;

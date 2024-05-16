@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.Firebird
+﻿namespace LinqToDB.DataProvider.Firebird
 {
 	using Mapping;
 	using SqlProvider;

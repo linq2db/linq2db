@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 {
 	using Common;
 	using SqlQuery;
-	using LinqToDB.Linq.Translation;
+	using Linq.Translation;
 
 	public class PostgreSQLMemberTranslator : ProviderMemberTranslatorDefault
 	{
@@ -188,7 +188,6 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 				var doubleDataType = factory.GetDbDataType(typeof(double));
 
 				ISqlExpression resultExpression;
-
 
 				hour   = hour   == null ? factory.Value(intDataType, 0) : factory.Cast(hour, intDataType);
 				minute = minute == null ? factory.Value(intDataType, 0) : factory.Cast(minute, intDataType);

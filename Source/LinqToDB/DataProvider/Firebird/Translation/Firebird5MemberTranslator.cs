@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.Firebird.Translation
+﻿namespace LinqToDB.DataProvider.Firebird.Translation
 {
 	using Linq.Translation;
 	using SqlQuery;

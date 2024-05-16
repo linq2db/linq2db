@@ -15,12 +15,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using Reflection;
 	using SchemaProvider;
 	using SqlProvider;
 	using Translation;
-	using LinqToDB.Linq.Translation;
 
 	sealed class ClickHouseOctonicaDataProvider : ClickHouseDataProvider { public ClickHouseOctonicaDataProvider() : base(ProviderName.ClickHouseOctonica, ClickHouseProvider.Octonica        ) { } }
 	sealed class ClickHouseClientDataProvider   : ClickHouseDataProvider { public ClickHouseClientDataProvider  () : base(ProviderName.ClickHouseClient  , ClickHouseProvider.ClickHouseClient) { } }

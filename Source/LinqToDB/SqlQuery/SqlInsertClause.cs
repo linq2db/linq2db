@@ -47,7 +47,8 @@ namespace LinqToDB.SqlQuery
 				.Append(" VALUES ")
 				.AppendLine();
 
-			using(writer.IndentScope())
+			using (writer.IndentScope())
+			{
 				for (var index = 0; index < Items.Count; index++)
 				{
 					var e = Items[index];
@@ -55,6 +56,7 @@ namespace LinqToDB.SqlQuery
 					if (index < Items.Count - 1)
 						writer.AppendLine();
 				}
+			}
 
 			return writer;
 		}

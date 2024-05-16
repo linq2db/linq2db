@@ -1,16 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-
-namespace LinqToDB.DataProvider.MySql
+﻿namespace LinqToDB.DataProvider.MySql
 {
-	using Extensions;
-
-	using LinqToDB.Common;
-
+	using Common;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;

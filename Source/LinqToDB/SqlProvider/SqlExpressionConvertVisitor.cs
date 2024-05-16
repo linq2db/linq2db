@@ -1046,7 +1046,6 @@ namespace LinqToDB.SqlProvider
 			return expr;
 		}
 
-
 		#region DataTypes
 
 		protected virtual int? GetMaxLength(DbDataType      type) { return SqlDataType.GetMaxLength(type.DataType); }
@@ -1300,7 +1299,6 @@ namespace LinqToDB.SqlProvider
 					AddCase(rewrite, (row1.Values[0], row1.Values[1]), (row2.Values[1], row2.Values[0]));
 					AddCase(rewrite, (row1.Values[1], row1.Values[0]), (row2.Values[0], row2.Values[1]));
 					AddCase(rewrite, (row1.Values[1], row1.Values[0]), (row2.Values[1], row2.Values[0]));
-
 
 					return rewrite;
 				}*/
