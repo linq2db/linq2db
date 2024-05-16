@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlAnchor : ISqlExpression
+	public class SqlAnchor : SqlExpressionBase
 	{
 		public enum AnchorKindEnum
 		{
@@ -28,26 +28,9 @@ namespace LinqToDB.SqlQuery
 			SqlExpression = expression;
 		}
 
-		#region Overrides
+		public override bool CanBeNullable(NullabilityContext nullability) => true;
 
-//#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-//#endif
-
-		#endregion
-
-		#region ISqlExpression Members
-
-		public bool CanBeNullable(NullabilityContext nullability) => true;
-
-		public bool         CanBeNull => true;
-
-		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (other is not SqlAnchor anchor)
 				return false;
@@ -55,28 +38,12 @@ namespace LinqToDB.SqlQuery
 			return AnchorKind == anchor.AnchorKind && SqlExpression.Equals(anchor.SqlExpression);
 		}
 
-		public int   Precedence => SqlQuery.Precedence.Primary;
-		public Type? SystemType => SqlExpression.SystemType;
+		public override QueryElementType ElementType => QueryElementType.SqlAnchor;
 
-		#endregion
+		public override int   Precedence => SqlQuery.Precedence.Primary;
+		public override Type? SystemType => SqlExpression.SystemType;
 
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return this == other;
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SqlAnchor;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer.Append('$')
 				.Append(AnchorKind.ToString())
@@ -85,8 +52,5 @@ namespace LinqToDB.SqlQuery
 
 			return writer;
 		}
-
-		#endregion
 	}
-
 }
