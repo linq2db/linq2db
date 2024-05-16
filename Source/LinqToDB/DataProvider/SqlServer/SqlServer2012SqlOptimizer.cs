@@ -2,9 +2,9 @@
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 
 	class SqlServer2012SqlOptimizer : SqlServerSqlOptimizer
 	{

@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
 	sealed class SqlServer2008SqlOptimizer : SqlServerSqlOptimizer
 	{

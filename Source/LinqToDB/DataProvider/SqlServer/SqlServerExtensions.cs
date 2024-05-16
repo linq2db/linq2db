@@ -4,8 +4,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using LinqToDB.Linq;
-	using LinqToDB.Mapping;
+	using Linq;
+	using Mapping;
 
 	public interface ISqlServerExtensions
 	{

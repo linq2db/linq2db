@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.Sybase
 {
-	using LinqToDB.SqlQuery;
+	using SqlQuery;
 
 	partial class SybaseSqlBuilder
 	{

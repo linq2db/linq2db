@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using LinqToDB.Expressions;
+	using Expressions;
 
 	// old System.Data.SqlClient versions for .net core (< 4.5.0)
 	// miss UDT and BulkCopy support
