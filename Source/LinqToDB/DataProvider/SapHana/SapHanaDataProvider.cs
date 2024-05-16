@@ -11,10 +11,10 @@ namespace LinqToDB.DataProvider.SapHana
 	using Common;
 	using Data;
 	using Extensions;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
 	using Translation;
-	using Linq.Translation;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{

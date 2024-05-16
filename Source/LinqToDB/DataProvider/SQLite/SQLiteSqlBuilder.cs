@@ -4,11 +4,11 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Common;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
-	using Common;
+	using SqlQuery;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{

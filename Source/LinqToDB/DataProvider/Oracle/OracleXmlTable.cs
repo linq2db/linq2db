@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				var exp = methodCall.Arguments[1];
 
-				if (exp is LambdaExpression lambda && lambda.Parameters.Count == 0)
+				if (exp is LambdaExpression { Parameters: [] } lambda)
 					exp = lambda.Body;
 
 				var converted = converter(context, exp, null, null);
@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (i > 0)
 						columns.Value.Append(", ");
 
-					var  c= ed.Columns[i];
+					var c = ed.Columns[i];
 
 					columns.Value.AppendFormat(
 						CultureInfo.InvariantCulture,

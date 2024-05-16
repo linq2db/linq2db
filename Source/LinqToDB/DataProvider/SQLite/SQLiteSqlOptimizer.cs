@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SQLite
+﻿namespace LinqToDB.DataProvider.SQLite
 {
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
 	sealed class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{

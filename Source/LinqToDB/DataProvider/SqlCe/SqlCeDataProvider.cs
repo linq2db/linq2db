@@ -12,11 +12,11 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
 	using Translation;
-	using Linq.Translation;
 
 	public class SqlCeDataProvider : DynamicDataProviderBase<SqlCeProviderAdapter>
 	{

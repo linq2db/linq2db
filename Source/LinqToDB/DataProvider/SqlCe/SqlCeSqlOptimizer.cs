@@ -3,9 +3,9 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using SqlQuery;
-	using SqlProvider;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	sealed class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
@@ -197,10 +197,10 @@ namespace LinqToDB.DataProvider.SqlCe
 				if (e.ElementType == QueryElementType.IsTruePredicate)
 				{
 					var isTruePredicate = (SqlPredicate.IsTrue)e;
-					if (isTruePredicate.Expr1 is SelectQuery query && query.Select.Columns.Count == 1)
+					if (isTruePredicate.Expr1 is SelectQuery { Select.Columns: [var c] } query)
 					{
 						query.Select.Where.EnsureConjunction().Add(
-							new SqlPredicate.IsTrue(query.Select.Columns[0].Expression, isTruePredicate.TrueValue,
+							new SqlPredicate.IsTrue(c.Expression, isTruePredicate.TrueValue,
 								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot));
 						query.Select.Columns.Clear();
 

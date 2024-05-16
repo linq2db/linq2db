@@ -5,10 +5,10 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Mapping;
-	using SqlQuery;
-	using SqlProvider;
 	using Common;
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{

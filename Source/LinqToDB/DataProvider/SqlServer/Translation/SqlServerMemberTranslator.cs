@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 namespace LinqToDB.DataProvider.SqlServer.Translation
 {
 	using Common;
-	using SqlQuery;
 	using Linq.Translation;
+	using SqlQuery;
 
 	public class SqlServerMemberTranslator : ProviderMemberTranslatorDefault
 	{
