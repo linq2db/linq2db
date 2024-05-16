@@ -531,7 +531,6 @@ namespace LinqToDB.Data
 			return me.Expression;
 		}
 
-
 		static MethodInfo _throwErrorMethodInf = MemberHelper.MethodOfGeneric(() => ThrowError<int>(null, typeof(object)));
 
 		static T ThrowError<T>(object? code, Type onType)

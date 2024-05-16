@@ -76,7 +76,6 @@ namespace LinqToDB.Linq.Translation
 			if (translated != null)
 				return translated;
 
-
 			translated = Registration.ProvideReplacement(memberExpression);
 			if (translated != null)
 				return translated;

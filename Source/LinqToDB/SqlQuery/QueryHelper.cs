@@ -1660,6 +1660,5 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-
 	}
 }

@@ -754,7 +754,6 @@ namespace LinqToDB.Linq.Builder
 					return Visit(newNode);
 				}
 
-
 				if ((_buildFlags & BuildFlags.ForceAssignments) != 0 && _flags.IsSql())
 				{
 					var parsed = ParseGenericConstructor(node);

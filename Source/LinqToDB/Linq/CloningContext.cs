@@ -201,7 +201,6 @@ namespace LinqToDB.Linq
 			if (!ReferenceEquals(newElement, queryElement))
 				_queryElements[queryElement] = newElement;
 
-
 			return newElement;
 		}
 

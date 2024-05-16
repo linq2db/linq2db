@@ -51,7 +51,6 @@ namespace LinqToDB.Linq.Translation
 			_registration.RegisterMember(() => Sql.Types.DefaultNVarChar, ConvertDefaultNVarChar);
 		}
 
-
 		#region Convert functions
 
 		protected virtual Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)

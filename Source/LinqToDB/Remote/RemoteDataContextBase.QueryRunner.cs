@@ -60,7 +60,6 @@ namespace LinqToDB.Remote
 				using var sqlStringBuilder = Pools.StringBuilder.Allocate();
 				var cc                     = sqlBuilder.CommandCount(query.Statement);
 
-
 				for (var i = 0; i < cc; i++)
 				{
 					AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), query.Statement, query.Aliases, out var aliases);

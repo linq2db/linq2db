@@ -252,7 +252,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			SqlPlaceholderExpression? notNull = null;
 
-
 			if (expr is SqlPlaceholderExpression placeholder)
 			{
 				notNull = placeholder.MakeNullable();

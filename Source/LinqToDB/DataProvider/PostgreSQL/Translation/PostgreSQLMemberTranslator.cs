@@ -189,7 +189,6 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				ISqlExpression resultExpression;
 
-
 				hour   = hour   == null ? factory.Value(intDataType, 0) : factory.Cast(hour, intDataType);
 				minute = minute == null ? factory.Value(intDataType, 0) : factory.Cast(minute, intDataType);
 				second = second == null ? factory.Value(doubleDataType, 0.0) : factory.Cast(second, doubleDataType);

@@ -87,7 +87,6 @@ namespace LinqToDB.Linq.Builder
 				return new SqlSelectStatement(OuterQuery);
 			}
 
-
 			static IEnumerable<(Expression, SqlPlaceholderExpression)> EnumerateAssignments(Expression currentPath, Expression expr)
 			{
 				if (expr is SqlGenericConstructorExpression generic)

@@ -458,7 +458,6 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-
 		protected virtual SqlStatement CorrectUnionOrderBy(SqlStatement statement)
 		{
 			var queriesToWrap = new HashSet<SelectQuery>();

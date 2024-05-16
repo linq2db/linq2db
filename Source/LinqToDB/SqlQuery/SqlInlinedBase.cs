@@ -12,7 +12,6 @@ namespace LinqToDB.SqlQuery
 
 		public abstract ISqlExpression GetSqlExpression(EvaluationContext evaluationContext);
 
-
 		public SqlParameter   Parameter    { get; private set; }
 		public ISqlExpression InlinedValue { get; private set; }
 

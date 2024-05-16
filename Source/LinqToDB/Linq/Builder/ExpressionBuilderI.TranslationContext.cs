@@ -87,7 +87,6 @@ namespace LinqToDB.Linq.Builder
 			
 			public SelectQuery CurrentSelectQuery => CurrentContext?.SelectQuery ?? throw new InvalidOperationException();
 
-
 			public SqlPlaceholderExpression CreatePlaceholder(SelectQuery selectQuery, ISqlExpression sqlExpression, Expression basedOn)
 			{
 				return new SqlPlaceholderExpression(selectQuery, sqlExpression, basedOn);

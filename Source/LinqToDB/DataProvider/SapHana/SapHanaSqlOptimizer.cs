@@ -31,12 +31,10 @@ namespace LinqToDB.DataProvider.SapHana
 			return statement;
 		}
 
-
 		static void RemoveParametersFromLateralJoin(SqlStatement statement)
 		{
 			new LateralJoinParametersCorrector().Visit(statement);
 		}
-
 
 		class LateralJoinParametersCorrector : QueryElementVisitor
 		{

@@ -7,8 +7,6 @@ namespace LinqToDB.SqlQuery.Visitors
 	using Common;
 	using SqlQuery;
 
-
-
 	/// <summary>
 	/// This base visitor implements:
 	/// <list type="bullet">

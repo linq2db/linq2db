@@ -210,7 +210,6 @@ namespace LinqToDB.DataProvider.MySql.Translation
 			}
 		}
 
-
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();

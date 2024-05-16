@@ -3158,7 +3158,6 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-
 		#endregion
 
 		#region Helper functions
@@ -3404,7 +3403,6 @@ namespace LinqToDB.SqlQuery
 					throw CreateInvalidVisitModeException();
 			}
 		}
-
 
 		/// <summary>
 		/// Visits list of arrays of query elements.

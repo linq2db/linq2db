@@ -8,7 +8,6 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using Tools;
 
-
 	static partial class QueryRunner
 	{
 		public static class DropTable<T>

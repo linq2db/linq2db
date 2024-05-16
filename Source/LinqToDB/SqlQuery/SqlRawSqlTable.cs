@@ -63,7 +63,6 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-
 		#region IQueryElement Members
 
 		public string SqlText => this.ToDebugString();

@@ -25,7 +25,6 @@ namespace LinqToDB.SqlQuery
 			if (expr.CanBeEvaluated(false))
 				return false;
 
-
 			if (expr is ISqlExpression sqlExpression)
 			{
 				sqlExpression = UnwrapNullablity(sqlExpression);
@@ -479,7 +478,6 @@ namespace LinqToDB.SqlQuery
 
 					return false;
 				}
-
 
 				case QueryElementType.ExprPredicate      :
 				{

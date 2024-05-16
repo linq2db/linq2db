@@ -182,7 +182,6 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 				var monthString = PartExpression(month, 2);
 				var dayString   = PartExpression(day, 2);
 
-
 				var resultExpression = factory.Concat(
 					yearString, factory.Value(stringDataType, "-"),
 					monthString, factory.Value(stringDataType, "-"), dayString);

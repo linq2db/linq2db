@@ -395,7 +395,6 @@ namespace LinqToDB.Linq.Builder
 			return null != expression.Find(0, (_, e) => e is SqlErrorExpression);
 		}
 
-
 		public Expression ConvertExtension(Sql.ExpressionAttribute attr, IBuildContext context, Expression expr, ProjectFlags flags)
 		{
 			var rootContext     = context;
@@ -440,7 +439,6 @@ namespace LinqToDB.Linq.Builder
 
 			return expr;
 		}
-
 
 		public Expression HandleExtension(IBuildContext context, Expression expr, ProjectFlags flags)
 		{

@@ -1022,7 +1022,6 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-
 		#region Special fields helpers
 
 		public static MemberExpression CreateSpecialProperty(Expression obj, Type type, string name)

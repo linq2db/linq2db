@@ -521,7 +521,6 @@ namespace LinqToDB.Linq.Builder
 							resultParameters.Add(generic1.Parameters[i].WithExpression(mergedAssignment));
 						}
 
-
 						resultGeneric = resultGeneric.ReplaceParameters(resultParameters);
 					}
 

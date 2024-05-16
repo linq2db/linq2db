@@ -72,7 +72,6 @@ namespace LinqToDB.Linq.Builder
 				builder.RegisterCteContext(cteContext, methodCall);
 			}
 
-
 			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
 
 			return BuildSequenceResult.FromContext(cteTableContext);

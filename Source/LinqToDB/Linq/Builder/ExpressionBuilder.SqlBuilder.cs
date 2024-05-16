@@ -2027,7 +2027,6 @@ namespace LinqToDB.Linq.Builder
 			var leftExpr         = ConvertToSqlExpr(context, left,  keysFlag, columnDescriptor : columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, keysFlag, columnDescriptor : columnDescriptor);
 
-
 			var compareNullsAsValues = CompareNullsAsValues;
 
 			//SQLRow case when needs to add Single
@@ -2199,7 +2198,6 @@ namespace LinqToDB.Linq.Builder
 			var isEquality = op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual
 				? op == SqlPredicate.Operator.Equal
 				: (bool?)null;
-
 
 			// TODO: maybe remove
 			if (l is SqlSearchCondition lsc)
@@ -4420,7 +4418,6 @@ namespace LinqToDB.Linq.Builder
 			var shouldCache = null != path.Find(1, (_, e) => e is ContextRefExpression);
 
 			var key = new SqlCacheKey(path, null, null, null, flags);
-
 
 			Expression? expression;
 

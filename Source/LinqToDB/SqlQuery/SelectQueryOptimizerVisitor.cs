@@ -1433,7 +1433,6 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-
 			var nullability = NullabilityContext.GetContext(parentQuery);
 
 			// Check columns
@@ -1925,7 +1924,6 @@ namespace LinqToDB.SqlQuery
 					--i; // repeat again
 				}
 			}
-
 
 			// Removing subqueries which has no tables
 
@@ -2491,7 +2489,6 @@ namespace LinqToDB.SqlQuery
 									{
 										queryToReplace = joinQuery.Clone();
 									}
-
 
 									if (queryToReplace.Select.Columns.Count > 1)
 									{

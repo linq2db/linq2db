@@ -14,7 +14,6 @@ namespace LinqToDB.DataProvider.SapHana
 	using Translation;
 	using Linq.Translation;
 
-
 	public class SapHanaOdbcDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
 		public SapHanaOdbcDataProvider() : base(ProviderName.SapHanaOdbc, MappingSchemaInstance, OdbcProviderAdapter.GetInstance())
