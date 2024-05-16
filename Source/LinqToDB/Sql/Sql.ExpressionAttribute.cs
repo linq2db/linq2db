@@ -305,7 +305,7 @@ namespace LinqToDB
 										{
 											var paramAttribute = pi[i].GetAttributes<ExprParameterAttribute>().FirstOrDefault();
 
-											var converted      = converter(context, mc.Arguments[i], null, paramAttribute?.DoNotParametrize);
+											var converted      = converter(context, mc.Arguments[i], null, paramAttribute?.DoNotParameterize);
 											if (converted is SqlPlaceholderExpression placeholder)
 											{
 												var dbType = QueryHelper.GetDbDataType(placeholder.Sql, mappingSchema);
@@ -335,7 +335,7 @@ namespace LinqToDB
 										{
 											var paramAttribute = pi[i].GetAttributes<ExprParameterAttribute>().FirstOrDefault();
 
-											var converted = converter(context, mc.Arguments[i], null, paramAttribute?.DoNotParametrize);
+											var converted = converter(context, mc.Arguments[i], null, paramAttribute?.DoNotParameterize);
 											if (converted is SqlPlaceholderExpression placeholder)
 											{
 												var dbType = QueryHelper.GetDbDataType(placeholder.Sql, mappingSchema);
@@ -418,7 +418,7 @@ namespace LinqToDB
 								var (expression, parameter) = ctx.StaticValue.knownExpressions[argIdx];
 								if (expression != null)
 								{
-									var converted = ctx.StaticValue.converter(ctx.StaticValue.context, expression, null, parameter?.DoNotParametrize);
+									var converted = ctx.StaticValue.converter(ctx.StaticValue.context, expression, null, parameter?.DoNotParameterize);
 									if (converted is SqlPlaceholderExpression placeholder)
 									{
 										paramExpr = placeholder.Sql;
@@ -472,7 +472,7 @@ namespace LinqToDB
 									var (expression, parameter) = knownExpressions[argIdx];
 									if (expression != null)
 									{
-										var converted = converter(context, expression, null, parameter?.DoNotParametrize);
+										var converted = converter(context, expression, null, parameter?.DoNotParameterize);
 										if (converted is SqlPlaceholderExpression placeholder)
 										{
 											paramExpr = placeholder.Sql;
@@ -502,7 +502,7 @@ namespace LinqToDB
 									parms.Add(null);
 								else
 								{
-									var converted = converter(context, expression, null, parameter?.DoNotParametrize);
+									var converted = converter(context, expression, null, parameter?.DoNotParameterize);
 
 									if (converted is SqlPlaceholderExpression placeholder)
 										parms.Add(placeholder.Sql);

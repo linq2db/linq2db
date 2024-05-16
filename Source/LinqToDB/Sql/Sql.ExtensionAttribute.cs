@@ -31,9 +31,9 @@ namespace LinqToDB
 	[MeansImplicitUse]
 	public class ExprParameterAttribute : Attribute
 	{
-		public string?           Name             { get; set; }
-		public ExprParameterKind ParameterKind    { get; set; }
-		public bool              DoNotParametrize { get; set; }
+		public string?           Name              { get; set; }
+		public ExprParameterKind ParameterKind     { get; set; }
+		public bool              DoNotParameterize { get; set; }
 
 		public ExprParameterAttribute(string name)
 		{
@@ -724,7 +724,7 @@ namespace LinqToDB
 						var names = new HashSet<string>();
 						foreach (var a in param.GetAttributes<ExprParameterAttribute>())
 						{
-							if (a.DoNotParametrize)
+							if (a.DoNotParameterize)
 								inlineParameters = true;
 
 							names.Add(a.Name ?? param.Name!);

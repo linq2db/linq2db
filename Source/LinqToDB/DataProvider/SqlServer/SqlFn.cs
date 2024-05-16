@@ -1718,7 +1718,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="InvalidOperationException" />
 		/// <remarks>Only available on SQL Server 2016 or later, and compatibility mode for the database must be set to 130 or higher</remarks>
 		[Sql.TableExpression("OPENJSON({2}, {3}) {1}")]
-		public static IQueryable<JsonData> OpenJson(string? json, [ExprParameter(DoNotParametrize = true)] string path)
+		public static IQueryable<JsonData> OpenJson(string? json, [ExprParameter(DoNotParameterize = true)] string path)
 		{
 			throw new InvalidOperationException($"'{nameof(OpenJson)}' is a server side only function.");
 		}

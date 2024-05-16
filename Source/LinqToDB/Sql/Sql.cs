@@ -1065,7 +1065,7 @@ namespace LinqToDB
 				{
 					var pair      = knownExpressions[i];
 
-					var converted = converter(context, pair.expression!, null, pair.parameter?.DoNotParametrize);
+					var converted = converter(context, pair.expression!, null, pair.parameter?.DoNotParameterize);
 
 					if (converted is not SqlPlaceholderExpression placeholder)
 						return converted;
