@@ -133,9 +133,9 @@ namespace LinqToDB.DataProvider.Access
 
 				{
 					Name: PseudoFunctions.COALESCE,
-					Parameters: [var p0, .. var parms],
+					Parameters: [var p0, ..] parms,
 					SystemType: var type,
-				} => new SqlFunction(type, PseudoFunctions.COALESCE, p0, new SqlFunction(type, PseudoFunctions.COALESCE, parms)),
+				} => new SqlFunction(type, PseudoFunctions.COALESCE, p0, new SqlFunction(type, PseudoFunctions.COALESCE, GetSubArray(parms))),
 
 				{
 					Name: "CharIndex",
@@ -151,6 +151,13 @@ namespace LinqToDB.DataProvider.Access
 
 				_ => base.ConvertSqlFunction(func),
 			};
+
+			static ISqlExpression[] GetSubArray(ISqlExpression[] array)
+			{
+				var parms = new ISqlExpression[array.Length - 1];
+				Array.Copy(array, 1, parms, 0, parms.Length);
+				return parms;
+			}
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
