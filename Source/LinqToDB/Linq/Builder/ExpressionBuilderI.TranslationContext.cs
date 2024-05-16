@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using Linq.Translation;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
+	using Linq.Translation;
+	using LinqToDB.Expressions;
+	using Mapping;
+	using SqlQuery;
+
 	internal partial class ExpressionBuilder
 	{
 		class TranslationContext : ITranslationContext
