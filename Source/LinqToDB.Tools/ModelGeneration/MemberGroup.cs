@@ -5,6 +5,9 @@ using System.Linq;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IMemberGroup : IMemberBase
 	{
 		bool               IsCompact       { get; set; }
@@ -12,6 +15,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		List<IClassMember> Members         { get; set; }
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public abstract class MemberGroup<TMemberGroup> : MemberBase, IMemberGroup
 	where TMemberGroup : MemberGroup<TMemberGroup>
 	{

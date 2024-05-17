@@ -3,19 +3,25 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface INamespace : ITree
 	{
-		string ?        Name   { get; set; }
+		string?         Name   { get; set; }
 		List<ITypeBase> Types  { get; set; }
 		List<string>    Usings { get; set; }
 
 		void Render(ModelGenerator tt);
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public class Namespace<T> : INamespace
 		where T : Namespace<T>
 	{
-		public string ?        Name   { get; set; }
+		public string?         Name   { get; set; }
 		public List<ITypeBase> Types  { get; set; } = [];
 		public List<string>    Usings { get; set; } = [];
 

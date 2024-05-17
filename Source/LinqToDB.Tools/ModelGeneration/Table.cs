@@ -5,6 +5,9 @@ namespace LinqToDB.Tools.ModelGeneration
 {
 	using SchemaProvider;
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface ITable : IClass
 	{
 		TableSchema? TableSchema             { get; set; }

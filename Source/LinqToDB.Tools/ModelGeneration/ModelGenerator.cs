@@ -4,11 +4,11 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Tools.ModelGeneration
 {
-	[PublicAPI]
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public abstract partial class ModelGenerator
 	{
 		protected ModelGenerator(

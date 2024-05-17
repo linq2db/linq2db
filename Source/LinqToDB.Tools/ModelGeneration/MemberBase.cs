@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IMemberBase : IClassMember
 	{
 		string?          ID                   { get; set; }
@@ -28,6 +31,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		string? BuildType();
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public abstract class MemberBase : IMemberBase
 	{
 		public string?          ID                   { get; set; }

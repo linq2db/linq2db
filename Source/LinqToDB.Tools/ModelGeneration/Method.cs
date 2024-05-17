@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IMethod : IMemberBase
 	{
 		bool                            IsAbstract        { get; set; }
@@ -18,6 +21,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		IEnumerable<string> BuildBody();
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public class Method<T> : MemberBase, IMethod
 	where T : IMethod
 	{

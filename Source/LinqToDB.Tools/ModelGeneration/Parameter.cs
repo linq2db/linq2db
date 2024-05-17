@@ -2,6 +2,9 @@
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public class Parameter
 	{
 		public string? SchemaName    { get; set; }

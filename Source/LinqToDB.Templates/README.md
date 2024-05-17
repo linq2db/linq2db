@@ -333,6 +333,9 @@ Func<ForeignKey, string> GetAssociationExtensionSingularName
 // Defines method to generate name for "many" side of association
 Func<ForeignKey, string> GetAssociationExtensionPluralName
     = GetAssociationExtensionPluralNameDefault;
+
+// Enables generation of association columns using 'nameof' expression
+GenerateNameOf = true;
 ```
 
 ### Procedures and functions configuration

@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IClass : ITypeBase
 	{
 		string?            BaseClass        { get; set; }
@@ -13,6 +16,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		List<IClassMember> Members          { get; }
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public class Class<T> : TypeBase, IClass
 		where T : IClass
 	{

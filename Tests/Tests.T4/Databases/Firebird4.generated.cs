@@ -91,8 +91,8 @@ namespace Firebird4DataContext
 
 		public partial class OutRefEnumTestResult
 		{
-			[Column("INPUTOUTPUTSTR")] public string? Inputoutputstr { get; set; }
-			[Column("OUTPUTSTR")     ] public string? Outputstr      { get; set; }
+			public string? INPUTOUTPUTSTR { get; set; }
+			public string? OUTPUTSTR      { get; set; }
 		}
 
 		#endregion
@@ -111,10 +111,10 @@ namespace Firebird4DataContext
 
 		public partial class OutRefTestResult
 		{
-			[Column("INPUTOUTPUTID") ] public int?    Inputoutputid  { get; set; }
-			[Column("INPUTOUTPUTSTR")] public string? Inputoutputstr { get; set; }
-			[Column("OUTPUTID")      ] public int?    Outputid       { get; set; }
-			[Column("OUTPUTSTR")     ] public string? Outputstr      { get; set; }
+			public int?    INPUTOUTPUTID  { get; set; }
+			public string? INPUTOUTPUTSTR { get; set; }
+			public int?    OUTPUTID       { get; set; }
+			public string? OUTPUTSTR      { get; set; }
 		}
 
 		#endregion
@@ -129,12 +129,12 @@ namespace Firebird4DataContext
 
 		public partial class PatientSelectAllResult
 		{
-			[Column("PERSONID")  ] public int?    Personid   { get; set; }
-			[Column("FIRSTNAME") ] public string? Firstname  { get; set; }
-			[Column("LASTNAME")  ] public string? Lastname   { get; set; }
-			[Column("MIDDLENAME")] public string? Middlename { get; set; }
-			[Column("GENDER")    ] public string? Gender     { get; set; }
-			[Column("DIAGNOSIS") ] public string? Diagnosis  { get; set; }
+			public int?    PERSONID   { get; set; }
+			public string? FIRSTNAME  { get; set; }
+			public string? LASTNAME   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
+			public string? DIAGNOSIS  { get; set; }
 		}
 
 		#endregion
@@ -151,10 +151,10 @@ namespace Firebird4DataContext
 
 		public partial class PatientSelectByNameResult
 		{
-			[Column("PERSONID")  ] public int?    Personid   { get; set; }
-			[Column("MIDDLENAME")] public string? Middlename { get; set; }
-			[Column("GENDER")    ] public string? Gender     { get; set; }
-			[Column("DIAGNOSIS") ] public string? Diagnosis  { get; set; }
+			public int?    PERSONID   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
+			public string? DIAGNOSIS  { get; set; }
 		}
 
 		#endregion
@@ -173,7 +173,7 @@ namespace Firebird4DataContext
 
 		public partial class PersonInsertResult
 		{
-			[Column("PERSONID")] public int? Personid { get; set; }
+			public int? PERSONID { get; set; }
 		}
 
 		#endregion
@@ -192,7 +192,7 @@ namespace Firebird4DataContext
 
 		public partial class PersonInsertOutputParameterResult
 		{
-			[Column("PERSONID")] public int? Personid { get; set; }
+			public int? PERSONID { get; set; }
 		}
 
 		#endregion
@@ -207,11 +207,11 @@ namespace Firebird4DataContext
 
 		public partial class PersonSelectAllResult
 		{
-			[Column("PERSONID")  ] public int?    Personid   { get; set; }
-			[Column("FIRSTNAME") ] public string? Firstname  { get; set; }
-			[Column("LASTNAME")  ] public string? Lastname   { get; set; }
-			[Column("MIDDLENAME")] public string? Middlename { get; set; }
-			[Column("GENDER")    ] public string? Gender     { get; set; }
+			public int?    PERSONID   { get; set; }
+			public string? FIRSTNAME  { get; set; }
+			public string? LASTNAME   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
 		}
 
 		#endregion
@@ -227,11 +227,11 @@ namespace Firebird4DataContext
 
 		public partial class PersonSelectByKeyResult
 		{
-			[Column("PERSONID")  ] public int?    Personid   { get; set; }
-			[Column("FIRSTNAME") ] public string? Firstname  { get; set; }
-			[Column("LASTNAME")  ] public string? Lastname   { get; set; }
-			[Column("MIDDLENAME")] public string? Middlename { get; set; }
-			[Column("GENDER")    ] public string? Gender     { get; set; }
+			public int?    PERSONID   { get; set; }
+			public string? FIRSTNAME  { get; set; }
+			public string? LASTNAME   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
 		}
 
 		#endregion
@@ -248,11 +248,11 @@ namespace Firebird4DataContext
 
 		public partial class PersonSelectByNameResult
 		{
-			[Column("PERSONID")  ] public int?    Personid   { get; set; }
-			[Column("FIRSTNAME") ] public string? Firstname  { get; set; }
-			[Column("LASTNAME")  ] public string? Lastname   { get; set; }
-			[Column("MIDDLENAME")] public string? Middlename { get; set; }
-			[Column("GENDER")    ] public string? Gender     { get; set; }
+			public int?    PERSONID   { get; set; }
+			public string? FIRSTNAME  { get; set; }
+			public string? LASTNAME   { get; set; }
+			public string? MIDDLENAME { get; set; }
+			public string? GENDER     { get; set; }
 		}
 
 		#endregion
@@ -267,8 +267,8 @@ namespace Firebird4DataContext
 
 		public partial class ScalarDataReaderResult
 		{
-			[Column("INTFIELD")   ] public int?    Intfield    { get; set; }
-			[Column("STRINGFIELD")] public string? Stringfield { get; set; }
+			public int?    INTFIELD    { get; set; }
+			public string? STRINGFIELD { get; set; }
 		}
 
 		#endregion
@@ -283,8 +283,8 @@ namespace Firebird4DataContext
 
 		public partial class ScalarOutputParameterResult
 		{
-			[Column("OUTPUTINT")   ] public int?    Outputint    { get; set; }
-			[Column("OUTPUTSTRING")] public string? Outputstring { get; set; }
+			public int?    OUTPUTINT    { get; set; }
+			public string? OUTPUTSTRING { get; set; }
 		}
 
 		#endregion
@@ -409,11 +409,11 @@ namespace Firebird4DataContext
 	public partial class CamelCaseName
 	{
 		[Column(          DbType="integer",     DataType=LinqToDB.DataType.Int32),               PrimaryKey,  NotNull] public int     Id    { get; set; } // integer
-		[Column("NAME1",  DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? Name1 { get; set; } // varchar(20)
+		[Column(          DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? NAME1 { get; set; } // varchar(20)
 		[Column(          DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? Name2 { get; set; } // varchar(20)
-		[Column("NAME3",  DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? Name3 { get; set; } // varchar(20)
-		[Column("_NAME4", DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? Name4 { get; set; } // varchar(20)
-		[Column("NAME 5", DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? Name5 { get; set; } // varchar(20)
+		[Column(          DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? NAME3 { get; set; } // varchar(20)
+		[Column("_NAME4", DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? NAME4 { get; set; } // varchar(20)
+		[Column("NAME 5", DbType="varchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable         ] public string? NAME5 { get; set; } // varchar(20)
 	}
 
 	[Table("Child")]
@@ -469,7 +469,7 @@ namespace Firebird4DataContext
 		/// <summary>
 		/// FK_Doctor_Person (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -540,7 +540,7 @@ namespace Firebird4DataContext
 		/// <summary>
 		/// INTEG_1489 (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -560,14 +560,14 @@ namespace Firebird4DataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (SYSDBA.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// INTEG_1489_BackReference (SYSDBA.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
-		public Patient? Integ { get; set; }
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Patient.PersonID), CanBeNull=true)]
+		public Patient? INTEG { get; set; }
 
 		#endregion
 	}
@@ -791,20 +791,20 @@ namespace Firebird4DataContext
 
 	public static partial class SqlFunctions
 	{
-		#region Ltrim
+		#region LTRIM
 
 		[Sql.Function(Name="LTRIM", ServerSideOnly=true)]
-		public static string? Ltrim(string? par2)
+		public static string? LTRIM(string? par2)
 		{
 			throw new InvalidOperationException();
 		}
 
 		#endregion
 
-		#region Rtrim
+		#region RTRIM
 
 		[Sql.Function(Name="RTRIM", ServerSideOnly=true)]
-		public static string? Rtrim(string? par4)
+		public static string? RTRIM(string? par4)
 		{
 			throw new InvalidOperationException();
 		}

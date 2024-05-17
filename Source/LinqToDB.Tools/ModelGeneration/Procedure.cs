@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IProcedure<TTable> : IMethod
 		where TTable : class, ITable, new()
 	{

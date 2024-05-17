@@ -9,6 +9,9 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public partial class ModelGenerator
 	{
 		public Action BeforeGenerateLinqToDBModel { get; set; } = () => {};
@@ -35,6 +38,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public bool   PrefixTableMappingForDefaultSchema  { get; set; }
 		public string SchemaNameSuffix                    { get; set; } = "Schema";
 		public string SchemaDataContextTypeName           { get; set; } = "DataContext";
+		public bool   GenerateNameOf                      { get; set; } = true;
 
 		public Dictionary<string,string> SchemaNameMapping = new();
 
@@ -172,6 +176,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		}
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public partial class ModelGenerator<TTable,TProcedure>
 		where TTable     : class, ITable,      new()
 		where TProcedure : IProcedure<TTable>, new()
@@ -606,10 +613,40 @@ namespace LinqToDB.Tools.ModelGeneration
 							else
 								key.TypeBuilder = () => new ModelType(key.OtherTable!.TypePrefix + key.OtherTable.TypeName, true, key.CanBeNull).ToTypeName();
 
-							var aa = new TAttribute { Name = "Association" };
+							var aa = new TAttribute { Name = "Association", Tag = key};
 
-							aa.Parameters.Add("ThisKey="   + ToStringLiteral(string.Join(", ", (from c in key.ThisColumns  select c.MemberName).ToArray())));
-							aa.Parameters.Add("OtherKey="  + ToStringLiteral(string.Join(", ", (from c in key.OtherColumns select c.MemberName).ToArray())));
+							if (GenerateNameOf)
+							{
+								var thisSchema = "";
+
+								if (t.Schema is not null && !t.IsDefaultSchema && schemas.ContainsKey(t.Schema))
+									thisSchema = SchemaNameMapping.TryGetValue(t.Schema, out var sc) ? $"{sc}Schema." : t.Schema + ".";
+
+								aa.Parameters.Add("ThisKey=" + string.Join(" + \", \" + ",
+									key.ThisColumns
+										.Select(c => GenerateAssociationExtensions
+											? $"nameof({Model.Namespace.Name}.{thisSchema}{t.TypeName}.{c.MemberName})"
+											: $"nameof({c.MemberName})")
+										.ToArray()));
+
+								var otherSchema = "";
+
+								if (key.OtherTable?.Schema is not null && !key.OtherTable.IsDefaultSchema && schemas.ContainsKey(key.OtherTable.Schema))
+									otherSchema = SchemaNameMapping.TryGetValue(key.OtherTable.Schema, out var sc) ? $"{sc}Schema." : key.OtherTable.Schema + ".";
+
+								aa.Parameters.Add("OtherKey=" + string.Join(" + \", \" + ",
+									key.OtherColumns
+										.Select(c => GenerateAssociationExtensions
+											? $"nameof({Model.Namespace.Name}.{otherSchema}{key.OtherTable?.TypeName}.{c.MemberName})"
+											: $"nameof({otherSchema}{key.OtherTable?.TypeName}.{c.MemberName})")
+										.ToArray()));
+							}
+							else
+							{
+								aa.Parameters.Add("ThisKey="   + ToStringLiteral(string.Join(", ", (from c in key.ThisColumns  select c.MemberName).ToArray())));
+								aa.Parameters.Add("OtherKey="  + ToStringLiteral(string.Join(", ", (from c in key.OtherColumns select c.MemberName).ToArray())));
+							}
+
 							aa.Parameters.Add("CanBeNull=" + (key.CanBeNull ? "true" : "false"));
 
 							key.Attributes.Add(aa);

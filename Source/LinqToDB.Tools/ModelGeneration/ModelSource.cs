@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IModelSource : ITree
 	{
 		List<string>     Usings     { get; }
@@ -13,6 +16,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		void Render(ModelGenerator tt);
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public abstract class ModelSource<TModel,TNamespace> : IModelSource
 	where TModel     : ModelSource<TModel,TNamespace>
 	where TNamespace : Namespace<TNamespace>, new()

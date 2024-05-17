@@ -7,12 +7,18 @@ using System.Linq;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IEditableObjectProperty : IProperty
 	{
 		public bool   IsEditable  { get; set; }
 		public string IsDirtyText { get; set; }
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public partial class ModelGenerator
 	{
 		public void EditableObjectImplementation<TMemberGroup,TMethod,TProperty,TField>()

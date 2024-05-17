@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IProperty : IMemberBase
 	{
 		bool    IsAuto     { get; set; }
@@ -27,6 +30,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		IEnumerable<string> BuildSetBody();
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public class Property<T> : MemberBase, IProperty
 		where T : Property<T>
 	{

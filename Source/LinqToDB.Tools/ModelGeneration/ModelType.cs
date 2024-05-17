@@ -5,6 +5,9 @@ using System.Text;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public class ModelType
 	{
 		public static ModelType Create<TType>(bool referenceNullable)

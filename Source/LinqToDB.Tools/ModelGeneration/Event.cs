@@ -2,12 +2,18 @@
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IEvent : IMemberBase
 	{
 		bool IsStatic  { get; set; }
 		bool IsVirtual { get; set; }
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public class Event<T> : MemberBase, IEvent
 		where T : Event<T>
 	{

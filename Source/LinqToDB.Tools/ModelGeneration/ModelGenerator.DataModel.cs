@@ -15,6 +15,9 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public partial class ModelGenerator
 	{
 		public static string? BaseDataContextClass         { get; set; }
@@ -695,6 +698,9 @@ namespace LinqToDB.Tools.ModelGeneration
 
 				Procedures[p.key] = p.proc;
 			}
+
+//			Model.Namespace.Types.AddRange(Model.Types.Except(Model.Namespaces.SelectMany(t => t.Types)));
+//			Model.SetTree();
 		}
 
 		public TTable GetTable(string name)

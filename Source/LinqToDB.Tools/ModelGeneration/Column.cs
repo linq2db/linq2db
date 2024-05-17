@@ -3,6 +3,9 @@ using System.Data;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IColumn : IProperty
 	{
 		public string?    ColumnName         { get; set; } // Column name in database

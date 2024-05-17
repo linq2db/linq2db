@@ -51,6 +51,7 @@ bool   PrefixTableMappingWithSchema        { get { return ModelGenerator.PrefixT
 bool   PrefixTableMappingForDefaultSchema  { get { return ModelGenerator.PrefixTableMappingForDefaultSchema;  } set { ModelGenerator.PrefixTableMappingForDefaultSchema  = value; } }
 string SchemaNameSuffix                    { get { return ModelGenerator.SchemaNameSuffix;                    } set { ModelGenerator.SchemaNameSuffix                    = value; } }
 string SchemaDataContextTypeName           { get { return ModelGenerator.SchemaDataContextTypeName;           } set { ModelGenerator.SchemaDataContextTypeName           = value; } }
+bool   GenerateNameOf                      { get { return ModelGenerator.GenerateNameOf;                      } set { ModelGenerator.GenerateNameOf                      = value; } }
 
 public Dictionary<string,string>                              SchemaNameMapping     { get { return ModelGenerator.SchemaNameMapping;     } set { ModelGenerator.SchemaNameMapping     = value; } }
 public Func<string,string,Func<IMethod>,IEnumerable<IMethod>> GetConstructors       { get { return ModelGenerator.GetConstructors;       } set { ModelGenerator.GetConstructors       = value; } }

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IAttribute
 	{
 		string?      Name        { get; }
@@ -13,6 +16,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		void Render(ModelGenerator tt);
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public class Attribute<T> : IAttribute
 		where T : Attribute<T>
 	{
@@ -20,6 +26,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public List<string> Parameters  { get; set; } = [];
 		public string?      Conditional { get; set; }
 		public bool         IsSeparated { get; set; }
+		public object?      Tag         { get; set; }
 
 		public Attribute()
 		{

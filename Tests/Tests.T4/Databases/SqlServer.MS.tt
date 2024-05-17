@@ -48,5 +48,7 @@
 
 	AddReturnParameter("Issue1897");
 
+	GetTable("TestSchema.TestSchemaB").TypeName = "MySchemaB";
+
 	GenerateModel();
 #>

@@ -246,7 +246,7 @@ namespace OracleDataContext
 		/// <summary>
 		/// FK_Doctor_Person (TEST.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -333,7 +333,7 @@ namespace OracleDataContext
 		/// <summary>
 		/// FK_Patient_Person (TEST.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -353,13 +353,13 @@ namespace OracleDataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (TEST.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference (TEST.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -502,7 +502,7 @@ namespace OracleDataContext
 		/// <summary>
 		/// SYS_C009576_BackReference (TEST.t_test_user_contract)
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true)]
+		[Association(ThisKey=nameof(UserId), OtherKey=nameof(TTestUserContract.UserId), CanBeNull=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
 
 		#endregion
@@ -521,7 +521,7 @@ namespace OracleDataContext
 		/// <summary>
 		/// SYS_C009576 (TEST.t_test_user)
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false)]
+		[Association(ThisKey=nameof(UserId), OtherKey=nameof(TTestUser.UserId), CanBeNull=false)]
 		public TTestUser User { get; set; } = null!;
 
 		#endregion

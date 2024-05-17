@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface ITypeBase : IClassMember
 	{
 		AccessModifier   AccessModifier { get; set; }
@@ -16,6 +19,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		void Render(ModelGenerator tt);
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public abstract class TypeBase : ITypeBase
 	{
 		public AccessModifier   AccessModifier { get; set; } = AccessModifier.Public;

@@ -2,6 +2,9 @@
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public class TableContext<TTable,TProcedure>
 		where TTable     : class, ITable, new()
 		where TProcedure : IProcedure<TTable>, new()

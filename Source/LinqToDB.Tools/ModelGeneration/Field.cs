@@ -2,6 +2,9 @@
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IField : IMemberBase
 	{
 		bool    IsStatic   { get; set; }
@@ -9,6 +12,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		string? InitValue  { get; set; }
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public class Field<T> : MemberBase, IField
 		where T : Field<T>
 	{

@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public partial class ModelGenerator
 	{
 		public void NotifyDataErrorInfoImplementation<TMemberGroup,TMethod,TProperty,TField,TEvent,TAttribute>()

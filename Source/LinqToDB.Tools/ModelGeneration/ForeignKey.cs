@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public interface IForeignKey : IProperty
 	{
 		public string?         KeyName         { get; set; }
@@ -15,6 +18,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		public AssociationType AssociationType { get; set; }
 	}
 
+	/// <summary>
+	/// For internal use.
+	/// </summary>
 	public class ForeignKey<T> : Property<T>, IForeignKey
 		where T : ForeignKey<T>, new()
 	{
