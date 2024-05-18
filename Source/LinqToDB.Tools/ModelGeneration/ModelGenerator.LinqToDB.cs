@@ -599,10 +599,10 @@ namespace LinqToDB.Tools.ModelGeneration
 						{
 							string? otherTableName = null;
 
-							if (key.OtherTable?.TableSchema?.SchemaName != null)
+							if (key.OtherTable.TableSchema?.SchemaName != null)
 								otherTableName += key.OtherTable.TableSchema.SchemaName + ".";
 
-							otherTableName += key.OtherTable?.TableSchema?.TableName;
+							otherTableName += key.OtherTable.TableSchema?.TableName;
 
 							key.Comment.Add("/ <summary>");
 							key.Comment.Add($"/ {key.KeyName} ({otherTableName})");
@@ -619,8 +619,8 @@ namespace LinqToDB.Tools.ModelGeneration
 							{
 								var thisSchema = "";
 
-								if (t.Schema is not null && !t.IsDefaultSchema && schemas.ContainsKey(t.Schema))
-									thisSchema = SchemaNameMapping.TryGetValue(t.Schema, out var sc) ? $"{sc}Schema." : t.Schema + ".";
+								if (key.ThisTable.Schema is not null && !key.ThisTable.IsDefaultSchema && schemas.ContainsKey(key.ThisTable.Schema))
+									thisSchema = SchemaNameMapping.TryGetValue(key.ThisTable.Schema, out var sc) ? $"{sc}Schema." : t.Schema + ".";
 
 								aa.Parameters.Add("ThisKey=" + string.Join(" + \", \" + ",
 									key.ThisColumns
@@ -631,14 +631,12 @@ namespace LinqToDB.Tools.ModelGeneration
 
 								var otherSchema = "";
 
-								if (key.OtherTable?.Schema is not null && !key.OtherTable.IsDefaultSchema && schemas.ContainsKey(key.OtherTable.Schema))
+								if (key.OtherTable.Schema is not null && !key.OtherTable.IsDefaultSchema && schemas.ContainsKey(key.OtherTable.Schema))
 									otherSchema = SchemaNameMapping.TryGetValue(key.OtherTable.Schema, out var sc) ? $"{sc}Schema." : key.OtherTable.Schema + ".";
 
 								aa.Parameters.Add("OtherKey=" + string.Join(" + \", \" + ",
 									key.OtherColumns
-										.Select(c => GenerateAssociationExtensions
-											? $"nameof({Model.Namespace.Name}.{otherSchema}{key.OtherTable?.TypeName}.{c.MemberName})"
-											: $"nameof({otherSchema}{key.OtherTable?.TypeName}.{c.MemberName})")
+										.Select(c => $"nameof({Model.Namespace.Name}.{otherSchema}{key.OtherTable?.TypeName}.{c.MemberName})")
 										.ToArray()));
 							}
 							else
@@ -849,6 +847,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				var tabfs = new TMemberGroup { Region = "Table Functions" };
 
 				var currentContext = DataContextObject;
+
 				foreach (var p in Procedures.Values
 					.Where(proc =>
 						proc.IsLoaded ||

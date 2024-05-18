@@ -573,6 +573,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			(
 				from t in tables
 				from k in t.t.ForeignKeys
+				let thisTable  = t.table
 				let otherTable = tables.Where(tbl => tbl.t == k.OtherTable).Select(tbl => tbl.table).Single()
 				select new
 				{
@@ -582,6 +583,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					key = new TForeignKey
 					{
 						KeyName         = k.KeyName,
+						ThisTable       = thisTable,
 						OtherTable      = otherTable,
 						OtherColumns    = k.OtherColumns.Select(c => otherTable.Columns[c.ColumnName]).ToList(),
 						ThisColumns     = k.ThisColumns. Select(c => t.table.   Columns[c.ColumnName]).ToList(),
@@ -698,9 +700,6 @@ namespace LinqToDB.Tools.ModelGeneration
 
 				Procedures[p.key] = p.proc;
 			}
-
-//			Model.Namespace.Types.AddRange(Model.Types.Except(Model.Namespaces.SelectMany(t => t.Types)));
-//			Model.SetTree();
 		}
 
 		public TTable GetTable(string name)
@@ -812,6 +811,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			return ctx;
 		}
+
 		public void LoadMetadata<TClass,TForeignKey,TColumn>(DataConnection dataConnection)
 			where TClass      : Class     <TClass>,      new()
 			where TForeignKey : ForeignKey<TForeignKey>, new()
@@ -844,7 +844,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 				foreach (var fk in t.ForeignKeys.Values)
 				{
-					fk.MemberName = NormalizeName(fk.MemberName!, true);
+					fk.MemberName = NormalizeName(fk.MemberName, true);
 
 					if (fk.MemberName == t.TypeName)
 						fk.MemberName += "_FK";

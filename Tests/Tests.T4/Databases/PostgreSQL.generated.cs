@@ -263,7 +263,7 @@ namespace PostreSQLDataContext
 		/// <summary>
 		/// Doctor_PersonID_fkey (public.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQLDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -334,7 +334,7 @@ namespace PostreSQLDataContext
 		/// <summary>
 		/// Patient_PersonID_fkey (public.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQLDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -360,13 +360,13 @@ namespace PostreSQLDataContext
 		/// <summary>
 		/// Doctor_PersonID_fkey_BackReference (public.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQLDataContext.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? DoctorPersonIDfkey { get; set; }
 
 		/// <summary>
 		/// Patient_PersonID_fkey_BackReference (public.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQLDataContext.Patient.PersonID), CanBeNull=true)]
 		public Patient? PatientPersonIDfkey { get; set; }
 
 		#endregion
@@ -380,16 +380,16 @@ namespace PostreSQLDataContext
 		#region Associations
 
 		/// <summary>
-		/// same_name_BackReference (public.same_name1)
-		/// </summary>
-		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
-		public IEnumerable<SameName1> SameNameBackReferences { get; set; } = null!;
-
-		/// <summary>
 		/// same_name_BackReference (public.same_name2)
 		/// </summary>
-		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
-		public IEnumerable<SameName2> Samenames { get; set; } = null!;
+		[Association(ThisKey=nameof(Id), OtherKey=nameof(PostreSQLDataContext.SameName2.SameName), CanBeNull=true)]
+		public IEnumerable<SameName2> SameNameBackReferences { get; set; } = null!;
+
+		/// <summary>
+		/// same_name_BackReference (public.same_name1)
+		/// </summary>
+		[Association(ThisKey=nameof(Id), OtherKey=nameof(PostreSQLDataContext.SameName1.SameName), CanBeNull=true)]
+		public IEnumerable<SameName1> Samenames { get; set; } = null!;
 
 		#endregion
 	}
@@ -405,7 +405,7 @@ namespace PostreSQLDataContext
 		/// <summary>
 		/// same_name (public.same_name)
 		/// </summary>
-		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true)]
+		[Association(ThisKey=nameof(SameName), OtherKey=nameof(PostreSQLDataContext.SameName.Id), CanBeNull=true)]
 		public SameName? Samename { get; set; }
 
 		#endregion
@@ -422,7 +422,7 @@ namespace PostreSQLDataContext
 		/// <summary>
 		/// same_name (public.same_name)
 		/// </summary>
-		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true)]
+		[Association(ThisKey=nameof(SameName), OtherKey=nameof(PostreSQLDataContext.SameName.Id), CanBeNull=true)]
 		public SameName? Samename { get; set; }
 
 		#endregion

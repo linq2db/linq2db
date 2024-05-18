@@ -8,14 +8,15 @@ namespace LinqToDB.Tools.ModelGeneration
 	/// </summary>
 	public interface IForeignKey : IProperty
 	{
-		public string?         KeyName         { get; set; }
-		public ITable?         OtherTable      { get; set; }
-		public List<IColumn>   ThisColumns     { get; set; }
-		public List<IColumn>   OtherColumns    { get; set; }
-		public bool            CanBeNull       { get; set; }
-		public IForeignKey?    BackReference   { get; set; }
-		public string?         MemberName      { get; set; }
-		public AssociationType AssociationType { get; set; }
+		string          KeyName         { get; set; }
+		ITable          ThisTable       { get; set; }
+		ITable          OtherTable      { get; set; }
+		List<IColumn>   ThisColumns     { get; set; }
+		List<IColumn>   OtherColumns    { get; set; }
+		bool            CanBeNull       { get; set; }
+		IForeignKey?    BackReference   { get; set; }
+		string          MemberName      { get; set; }
+		AssociationType AssociationType { get; set; }
 	}
 
 	/// <summary>
@@ -24,16 +25,17 @@ namespace LinqToDB.Tools.ModelGeneration
 	public class ForeignKey<T> : Property<T>, IForeignKey
 		where T : ForeignKey<T>, new()
 	{
-		public string?       KeyName       { get; set; }
-		public ITable?       OtherTable    { get; set; }
+		public string        KeyName       { get; set; } = null!;
+		public ITable        ThisTable     { get; set; } = null!;
+		public ITable        OtherTable    { get; set; } = null!;
 		public List<IColumn> ThisColumns   { get; set; } = new();
 		public List<IColumn> OtherColumns  { get; set; } = new();
 		public bool          CanBeNull     { get; set; }
 		public IForeignKey?  BackReference { get; set; }
 
-		public string? MemberName
+		public string MemberName
 		{
-			get => Name;
+			get => Name!;
 			set => Name = value;
 		}
 

@@ -469,7 +469,7 @@ namespace Firebird4DataContext
 		/// <summary>
 		/// FK_Doctor_Person (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Firebird4DataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -540,7 +540,7 @@ namespace Firebird4DataContext
 		/// <summary>
 		/// INTEG_1489 (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Firebird4DataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -560,13 +560,13 @@ namespace Firebird4DataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (SYSDBA.Doctor)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Doctor.PersonID), CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Firebird4DataContext.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// INTEG_1489_BackReference (SYSDBA.Patient)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Patient.PersonID), CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Firebird4DataContext.Patient.PersonID), CanBeNull=true)]
 		public Patient? INTEG { get; set; }
 
 		#endregion
