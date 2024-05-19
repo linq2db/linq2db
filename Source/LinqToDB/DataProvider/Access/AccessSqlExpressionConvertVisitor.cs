@@ -121,8 +121,8 @@ namespace LinqToDB.DataProvider.Access
 		{
 			return func switch
 			{
-				{ Name: PseudoFunctions.TO_LOWER } => func.WithName("UCase"),
-				{ Name: PseudoFunctions.TO_UPPER } => func.WithName("LCase"),
+				{ Name: PseudoFunctions.TO_LOWER } => func.WithName("LCase"),
+				{ Name: PseudoFunctions.TO_UPPER } => func.WithName("UCase"),
 				{ Name: "Length" }                 => func.WithName("Len"),
 
 				{
