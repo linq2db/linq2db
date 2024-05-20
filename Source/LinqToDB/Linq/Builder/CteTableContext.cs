@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 					if (CteContext != null!)
 						_cteTable = new SqlCteTable(CteContext.CteClause, ObjectType);
 					else
-						throw new InvalidOperationException();
+						throw new InvalidOperationException("CteContext not initialized");
 				}
 
 				return _cteTable!;
@@ -82,8 +82,9 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		Dictionary<Expression, SqlPlaceholderExpression> _fieldsMap = new (ExpressionEqualityComparer.Instance);
-		SqlCteTable?                                     _cteTable;
+		readonly Dictionary<Expression, SqlPlaceholderExpression> _fieldsMap = new (ExpressionEqualityComparer.Instance);
+
+		SqlCteTable? _cteTable;
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
@@ -140,7 +141,7 @@ namespace LinqToDB.Linq.Builder
 					var field = QueryHelper.GetUnderlyingField(placeholder.Sql);
 
 					if (field == null)
-						throw new InvalidOperationException();
+						throw new InvalidOperationException($"Could not get field from SQL: {placeholder.Sql.DebugText}");
 
 					var newField = new SqlField(field);
 
