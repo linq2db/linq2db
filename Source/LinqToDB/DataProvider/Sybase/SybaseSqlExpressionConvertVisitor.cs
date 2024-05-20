@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.Sybase
 					],
 					SystemType: var type,
 					Precedence: var precedence,
-				} => new SqlFunction(
+				} when string.IsNullOrEmpty(@string) => new SqlFunction(
 						type,
 						"Stuff",
 						false,
