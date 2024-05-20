@@ -971,7 +971,7 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var query = ((Updatable<T>)source).Query;
+			var query = source.Query;
 
 			var currentQuery = ProcessSourceQueryable?.Invoke(query) ?? query;
 
@@ -993,7 +993,7 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var q = ((Updatable<T>)source).Query;
+			var q = source.Query;
 
 			var currentQuery = ProcessSourceQueryable?.Invoke(q) ?? q;
 
@@ -1077,7 +1077,7 @@ namespace LinqToDB
 				Query = query;
 			}
 
-			public IQueryable<T> Query;
+			public IQueryable<T> Query { get; }
 
 			public override string ToString()
 			{
@@ -1108,17 +1108,30 @@ namespace LinqToDB
 			return new Updatable<T>(query);
 		}
 
-		/// <summary>
-		/// Adds update field expression to query.
-		/// </summary>
+		private static IUpdatable<T> BuildSet<T, TV>(
+			IQueryable query,
+		    MethodInfo method,
+			Expression field,
+			Expression value)
+		{
+			return new Updatable<T>(
+				query.Provider.CreateQuery<T>(
+					Expression.Call(
+						null, 
+						method.MakeGenericMethod(typeof(T), typeof(TV)), 
+						query.Expression, 
+						Expression.Quote(field), 
+						value)));
+		}
+
+		/// <summary>Adds update field expression to query.</summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TV">Updated field type.</typeparam>
 		/// <param name="source">Source query with records to update.</param>
 		/// <param name="extract">Updated field selector expression.</param>
 		/// <param name="update">Updated field setter expression. Uses updated record as parameter.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
-		[LinqTunnel]
-		[Pure]
+		[LinqTunnel, Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			                this IQueryable<T>     source,
 			[InstantHandle] Expression<Func<T,TV>> extract,
@@ -1129,27 +1142,21 @@ namespace LinqToDB
 			if (update  == null) throw new ArgumentNullException(nameof(update));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
-
-			var query = currentSource.Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					Methods.LinqToDB.Update.SetQueryablePrev.MakeGenericMethod(typeof(T), typeof(TV)),
-					currentSource.Expression, Expression.Quote(extract), Expression.Quote(update)));
-
-			return new Updatable<T>(query);
+			return BuildSet<T, TV>(
+				currentSource, 
+				Methods.LinqToDB.Update.SetQueryablePrev,
+				extract, 
+				Expression.Quote(update));
 		}
 
-		/// <summary>
-		/// Adds update field expression to query.
-		/// </summary>
+		/// <summary>Adds update field expression to query.</summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TV">Updated field type.</typeparam>
 		/// <param name="source">Source query with records to update.</param>
 		/// <param name="extract">Updated field selector expression.</param>
 		/// <param name="update">Updated field setter expression. Uses updated record as parameter.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
-		[LinqTunnel]
-		[Pure]
+		[LinqTunnel, Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			                this IUpdatable<T>     source,
 			[InstantHandle] Expression<Func<T,TV>> extract,
@@ -1159,28 +1166,21 @@ namespace LinqToDB
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
 			if (update  == null) throw new ArgumentNullException(nameof(update));
 
-			var query = ((Updatable<T>)source).Query;
-
-			query = query.Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					Methods.LinqToDB.Update.SetUpdatablePrev.MakeGenericMethod(typeof(T), typeof(TV)),
-					query.Expression, Expression.Quote(extract), Expression.Quote(update)));
-
-			return new Updatable<T>(query);
+			return BuildSet<T, TV>(
+				source.Query, 
+				Methods.LinqToDB.Update.SetUpdatablePrev,
+				extract, 
+				Expression.Quote(update));
 		}
 
-		/// <summary>
-		/// Adds update field expression to query.
-		/// </summary>
+		/// <summary>Adds update field expression to query.</summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TV">Updated field type.</typeparam>
 		/// <param name="source">Source query with records to update.</param>
 		/// <param name="extract">Updated field selector expression.</param>
 		/// <param name="update">Updated field setter expression.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
-		[LinqTunnel]
-		[Pure]
+		[LinqTunnel, Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			                this IQueryable<T>     source,
 			[InstantHandle] Expression<Func<T,TV>> extract,
@@ -1190,26 +1190,22 @@ namespace LinqToDB
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
 			if (update  == null) throw new ArgumentNullException(nameof(update));
 
-			var query = source.Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					Methods.LinqToDB.Update.SetQueryableExpression.MakeGenericMethod(typeof(T), typeof(TV)),
-					source.Expression, Expression.Quote(extract), Expression.Quote(update)));
-
-			return new Updatable<T>(query);
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			return BuildSet<T, TV>(
+				currentSource, 
+				Methods.LinqToDB.Update.SetQueryableExpression,
+				extract, 
+				Expression.Quote(update));
 		}
 
-		/// <summary>
-		/// Adds update field expression to query.
-		/// </summary>
+		/// <summary>Adds update field expression to query.</summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TV">Updated field type.</typeparam>
 		/// <param name="source">Source query with records to update.</param>
 		/// <param name="extract">Updated field selector expression.</param>
 		/// <param name="update">Updated field setter expression.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
-		[LinqTunnel]
-		[Pure]
+		[LinqTunnel, Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			                this IUpdatable<T>     source,
 			[InstantHandle] Expression<Func<T,TV>> extract,
@@ -1219,28 +1215,138 @@ namespace LinqToDB
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
 			if (update  == null) throw new ArgumentNullException(nameof(update));
 
-			var query = ((Updatable<T>)source).Query;
-
-			query = query.Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					Methods.LinqToDB.Update.SetUpdatableExpression.MakeGenericMethod(typeof(T), typeof(TV)),
-					query.Expression, Expression.Quote(extract), Expression.Quote(update)));
-
-			return new Updatable<T>(query);
+			return BuildSet<T, TV>(
+				source.Query, 
+				Methods.LinqToDB.Update.SetUpdatableExpression,
+				extract, 
+				Expression.Quote(update));
 		}
 
-		/// <summary>
-		/// Adds update field expression to query.
-		/// </summary>
+		/// <summary>Adds update fields expressions to query.</summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="setters">An initializer expression "new T { Field = ... }" that sets one or multiple fields.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel, Pure]
+		public static IUpdatable<T> Set<T>(
+			                this IQueryable<T>     source,
+			[InstantHandle] Expression<Func<T, T>> setters)
+		{
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (setters == null) throw new ArgumentNullException(nameof(setters));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			return SetInitializer(currentSource, Methods.LinqToDB.Update.SetQueryablePrev, setters);
+		}
+
+		/// <summary>Adds update fields expressions to query.</summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="setters">An initializer expression "new T { Field = ... }" that sets one or multiple fields.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel, Pure]
+		public static IUpdatable<T> Set<T>(
+			                this IUpdatable<T>     source,
+			[InstantHandle] Expression<Func<T, T>> setters)
+		{
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (setters == null) throw new ArgumentNullException(nameof(setters));
+
+			return SetInitializer(source.Query, Methods.LinqToDB.Update.SetUpdatablePrev, setters);
+		}
+
+		[LinqTunnel, Pure]
+		private static IUpdatable<T> SetInitializer<T>(
+							IQueryable             query,
+							MethodInfo             method,
+			[InstantHandle] Expression<Func<T, T>> setters)
+		{
+			if (setters is not LambdaExpression { Body: MemberInitExpression init, Parameters: {} parameters })
+				throw new ArgumentException("setters must be an initializer expression", nameof(setters));
+			if (init.Bindings.Count == 0)
+				throw new ArgumentException("At least one initializer must be specified", nameof(setters));
+
+			var extractFrom = Expression.Parameter(typeof(T));
+			var oldRow = parameters[0];
+			foreach (var binding in init.Bindings)
+			{
+				if (binding is not MemberAssignment assign)
+					throw new ArgumentException("Only member assignments are supported", nameof(setters));
+
+				query = query.Provider.CreateQuery<T>(
+					Expression.Call(
+						null,
+						method.MakeGenericMethod(typeof(T), assign.Expression.Type),
+						query.Expression,
+						Expression.Quote(Expression.Lambda(
+							Expression.MakeMemberAccess(extractFrom, assign.Member),
+							extractFrom)),
+						Expression.Quote(Expression.Lambda(
+							assign.Expression,
+							oldRow))));
+
+				method = Methods.LinqToDB.Update.SetUpdatablePrev;
+			}
+			return new Updatable<T>((IQueryable<T>)query);
+		}
+
+		/// <summary>Adds update fields expressions to query.</summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="subSelect">A subquery that returns an initializer for updated fields "new T { Field = ... }".</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>This method only works with providers that support SQL Row Constructors in UPDATE setters.</remarks>
+		[LinqTunnel, Pure]
+		public static IUpdatable<T> Set<T>(
+							this IQueryable<T>                 source, 
+			[InstantHandle] Expression<Func<T, IQueryable<T>>> subSelect)
+		{
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (subSelect == null) throw new ArgumentNullException(nameof(subSelect));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			return SetSubQuery(currentSource, Methods.LinqToDB.Update.SetQueryableSubQuery, subSelect);
+		}
+
+		/// <summary>Adds update fields expressions to query.</summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="subSelect">A subquery that returns an initializer for updated fields "new T { Field = ... }".</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>This method only works with providers that support SQL Row Constructors in UPDATE setters.</remarks>
+		[LinqTunnel, Pure]
+		public static IUpdatable<T> Set<T>(
+							this IUpdatable<T>                 source, 
+			[InstantHandle] Expression<Func<T, IQueryable<T>>> subSelect)
+		{
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (subSelect == null) throw new ArgumentNullException(nameof(subSelect));
+
+			return SetSubQuery(source.Query, Methods.LinqToDB.Update.SetUpdatableSubQuery, subSelect);
+		}
+
+		private static IUpdatable<T> SetSubQuery<T>(
+			IQueryable query, 
+			MethodInfo method, 
+			Expression<Func<T, IQueryable<T>>> subQuery)
+		{
+			return new Updatable<T>(
+				query.Provider.CreateQuery<T>(
+					Expression.Call(
+						null,
+						method.MakeGenericMethod(typeof(T)),
+						query.Expression,
+						Expression.Quote(subQuery))));
+		}
+
+		/// <summary>Adds update field expression to query.</summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TV">Updated field type.</typeparam>
 		/// <param name="source">Source query with records to update.</param>
 		/// <param name="extract">Updated field selector expression.</param>
 		/// <param name="value">Value, assigned to updated field.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
-		[LinqTunnel]
-		[Pure]
+		[LinqTunnel, Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			                 this IQueryable<T>     source,
 			[InstantHandle]  Expression<Func<T,TV>> extract,
@@ -1250,27 +1356,21 @@ namespace LinqToDB
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
-
-			var query = currentSource.Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					Methods.LinqToDB.Update.SetQueryableValue.MakeGenericMethod(typeof(T), typeof(TV)),
-					currentSource.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV))));
-
-			return new Updatable<T>(query);
+			return BuildSet<T, TV>(
+				currentSource, 
+				Methods.LinqToDB.Update.SetQueryableValue,
+				extract, 
+				Expression.Constant(value, typeof(TV)));
 		}
 
-		/// <summary>
-		/// Adds update field expression to query.
-		/// </summary>
+		/// <summary>Adds update field expression to query.</summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TV">Updated field type.</typeparam>
 		/// <param name="source">Source query with records to update.</param>
 		/// <param name="extract">Updated field selector expression.</param>
 		/// <param name="value">Value, assigned to updated field.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
-		[LinqTunnel]
-		[Pure]
+		[LinqTunnel, Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			                 this IUpdatable<T>     source,
 			[InstantHandle]  Expression<Func<T,TV>> extract,
@@ -1279,20 +1379,14 @@ namespace LinqToDB
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
 
-			var query = ((Updatable<T>)source).Query;
-
-			query = query.Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					Methods.LinqToDB.Update.SetUpdatableValue.MakeGenericMethod(typeof(T), typeof(TV)),
-					query.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV))));
-
-			return new Updatable<T>(query);
+			return BuildSet<T, TV>(
+				source.Query, 
+				Methods.LinqToDB.Update.SetUpdatableValue,
+				extract, 
+				Expression.Constant(value, typeof(TV)));
 		}
 
-		/// <summary>
-		/// Adds update field expression to query. It can be any expression with string interpolation.
-		/// </summary>
+		/// <summary>Adds update field expression to query. It can be any expression with string interpolation.</summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <param name="source">Source query with records to update.</param>
 		/// <param name="setExpression">Custom update expression.</param>
@@ -1305,8 +1399,7 @@ namespace LinqToDB
 		///			.Update();
 		/// </code>
 		/// </example>
-		[LinqTunnel]
-		[Pure]
+		[LinqTunnel, Pure]
 		public static IUpdatable<T> Set<T>(
 			                this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,string>> setExpression)
@@ -1315,19 +1408,10 @@ namespace LinqToDB
 			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
-
-			var query = currentSource.Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					Methods.LinqToDB.Update.SetQueryableSetCustom.MakeGenericMethod(typeof(T)),
-					currentSource.Expression, Expression.Quote(setExpression)));
-
-			return new Updatable<T>(query);
+			return SetString(currentSource, Methods.LinqToDB.Update.SetQueryableSetCustom, setExpression);
 		}
 
-		/// <summary>
-		/// Adds update field expression to query. It can be any expression with string interpolation.
-		/// </summary>
+		/// <summary>Adds update field expression to query. It can be any expression with string interpolation.</summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <param name="source">Source query with records to update.</param>
 		/// <param name="setExpression">Custom update expression.</param>
@@ -1341,8 +1425,7 @@ namespace LinqToDB
 		///			.Update();
 		/// </code>
 		/// </example>
-		[LinqTunnel]
-		[Pure]
+		[LinqTunnel, Pure]
 		public static IUpdatable<T> Set<T>(
 			                this IUpdatable<T>         source,
 			[InstantHandle] Expression<Func<T,string>> setExpression)
@@ -1350,15 +1433,22 @@ namespace LinqToDB
 			if (source        == null) throw new ArgumentNullException(nameof(source));
 			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
 
-			var query = ((Updatable<T>)source).Query;
+			return SetString(source.Query, Methods.LinqToDB.Update.SetUpdatableSetCustom, setExpression);
+		}
 
-			query = query.Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					Methods.LinqToDB.Update.SetUpdatableSetCustom.MakeGenericMethod(typeof(T)),
-					query.Expression, Expression.Quote(setExpression)));
-
-			return new Updatable<T>(query);
+		[LinqTunnel, Pure]
+		private static IUpdatable<T> SetString<T>(
+							IQueryable                  query,
+							MethodInfo                  method,
+			[InstantHandle] Expression<Func<T, string>> setExpression)
+		{
+			return new Updatable<T>(
+				query.Provider.CreateQuery<T>(
+					Expression.Call(
+						null,
+						method.MakeGenericMethod(typeof(T)),
+						query.Expression, 
+						Expression.Quote(setExpression))));
 		}
 
 		#endregion

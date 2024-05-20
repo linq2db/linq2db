@@ -37,7 +37,7 @@ namespace LinqToDB.Linq
 		/// </summary>
 		public static IDataContext? GetDataContext<T>(IUpdatable<T> updatable)
 		{
-			return GetDataContext(((LinqExtensions.Updatable<T>)updatable).Query);
+			return GetDataContext(updatable.Query);
 		}
 
 		/// <summary>

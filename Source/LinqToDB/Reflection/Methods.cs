@@ -192,10 +192,12 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo SetQueryableExpression = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.Set(e => e.Value1, () => 1));
 				public static readonly MethodInfo SetQueryablePrev       = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.Set(e => e.Value1, prev => 1));
 				public static readonly MethodInfo SetQueryableValue      = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.Set(e => e.Value1, 1));
+				public static readonly MethodInfo SetQueryableSubQuery   = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.Set(e => (IQueryable<LW1>)null!));
 				public static readonly MethodInfo SetUpdatableSetCustom  = MemberHelper.MethodOfGeneric<IUpdatable<LW1>>(q => q.Set(e => string.Empty));
 				public static readonly MethodInfo SetUpdatableExpression = MemberHelper.MethodOfGeneric<IUpdatable<LW1>>(q => q.Set(e => e.Value1, () => 1));
 				public static readonly MethodInfo SetUpdatablePrev       = MemberHelper.MethodOfGeneric<IUpdatable<LW1>>(q => q.Set(e => e.Value1, prev => 1));
 				public static readonly MethodInfo SetUpdatableValue      = MemberHelper.MethodOfGeneric<IUpdatable<LW1>>(q => q.Set(e => e.Value1, 1));
+				public static readonly MethodInfo SetUpdatableSubQuery   = MemberHelper.MethodOfGeneric<IUpdatable<LW1>>(q => q.Set(e => (IQueryable<LW1>)null!));
 			}
 
 			public static class Insert

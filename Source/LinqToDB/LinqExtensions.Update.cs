@@ -1074,7 +1074,7 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var query = ((Updatable<T>)source).Query;
+			var query = source.Query;
 			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentSource.Provider.CreateQuery<UpdateOutput<T>>(
@@ -1104,7 +1104,7 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var query = ((Updatable<T>)source).Query;
+			var query = source.Query;
 			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentSource.Provider.CreateQuery<UpdateOutput<T>>(
@@ -1141,7 +1141,7 @@ namespace LinqToDB
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var query         = ((Updatable<T>)source).Query;
+			var query         = source.Query;
 			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentSource.Provider.CreateQuery<TOutput>(
@@ -1180,7 +1180,7 @@ namespace LinqToDB
 			if (source ==           null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var query = ((Updatable<T>)source).Query;
+			var query = source.Query;
 			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentSource.Provider.CreateQuery<TOutput>(
@@ -1213,7 +1213,7 @@ namespace LinqToDB
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			var query = ((Updatable<T>)source).Query;
+			var query = source.Query;
 			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentSource.Provider.Execute<int>(
@@ -1247,7 +1247,7 @@ namespace LinqToDB
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			var query = ((Updatable<T>)source).Query;
+			var query = source.Query;
 			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			var expr =
@@ -1290,7 +1290,7 @@ namespace LinqToDB
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var query = ((Updatable<T>)source).Query;
+			var query = source.Query;
 			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentSource.Provider.Execute<int>(
@@ -1331,7 +1331,7 @@ namespace LinqToDB
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var query = ((Updatable<T>)source).Query;
+			var query = source.Query;
 			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			var expr =
