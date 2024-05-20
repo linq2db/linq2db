@@ -141,7 +141,7 @@ namespace LinqToDB.Linq.Builder
 					var field = QueryHelper.GetUnderlyingField(placeholder.Sql);
 
 					if (field == null)
-						throw new InvalidOperationException($"Could not get field from SQL: {placeholder.Sql.DebugText}");
+						throw new InvalidOperationException($"Could not get field from SQL: {placeholder.Sql}");
 
 					var newField = new SqlField(field);
 
