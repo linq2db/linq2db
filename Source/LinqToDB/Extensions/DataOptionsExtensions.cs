@@ -15,8 +15,8 @@ namespace LinqToDB
 	using Data.RetryPolicy;
 	using DataProvider;
 	using Interceptors;
-	using Mapping;
 	using Linq.Translation;
+	using Mapping;
 
 	/// <summary>
 	/// Set of extensions for <see cref="DataOptions"/>.

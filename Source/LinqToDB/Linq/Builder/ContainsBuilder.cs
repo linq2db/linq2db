@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Mapping;
-	using SqlQuery;
 	using Extensions;
 	using LinqToDB.Expressions;
+	using Mapping;
+	using SqlQuery;
 
 	sealed class ContainsBuilder : MethodCallBuilder
 	{
@@ -68,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 			readonly MethodCallExpression _methodCall;
 
 			public ContainsContext(IBuildContext? parent, MethodCallExpression methodCall, SelectQuery outerQuery, IBuildContext innerSequence)
-				:base(innerSequence.Builder, typeof(bool), outerQuery)
+				: base(innerSequence.Builder, typeof(bool), outerQuery)
 			{
 				Parent            = parent;
 				OuterQuery        = outerQuery;

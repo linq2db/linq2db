@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
 
-using LinqToDB.Common.Internal;
-using LinqToDB.Expressions;
-
 namespace LinqToDB.Linq.Builder
 {
+	using Common.Internal;
+	using LinqToDB.Expressions;
+
 	public static class EvaluationHelper
 	{
 		public static object? EvaluateExpression(Expression? expression, IDataContext dataContext, object?[]? parameterValues)

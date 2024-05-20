@@ -2,8 +2,8 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
 	using LinqToDB.Expressions;
+	using SqlQuery;
 
 	sealed class AnchorContext : SequenceContextBase
 	{
@@ -30,12 +30,9 @@ namespace LinqToDB.Linq.Builder
 
 			converted = converted.Transform(this, static (ctx, e) =>
 			{
-				if (e is SqlPlaceholderExpression placeholder)
+				if (e is SqlPlaceholderExpression { Sql: not SqlAnchor } placeholder)
 				{
-					if (placeholder.Sql is not SqlAnchor)
-					{
-						return placeholder.WithSql(new SqlAnchor(placeholder.Sql, ctx.AnchorKind));
-					}
+					return placeholder.WithSql(new SqlAnchor(placeholder.Sql, ctx.AnchorKind));
 				}
 				return e;
 			});
@@ -48,5 +45,4 @@ namespace LinqToDB.Linq.Builder
 			return new AnchorContext(Parent, context.CloneContext(Sequence), AnchorKind);
 		}
 	}
-
 }

@@ -366,15 +366,15 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 		Expression ConvertIQueryable(Expression expression)
 		{
-			if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
+			if (expression.NodeType is ExpressionType.Call)
 			{
-				if (expression.NodeType == ExpressionType.Call)
-				{
-					var mc = (MethodCallExpression)expression;
-					if (mc.Method.DeclaringType != null && MappingSchema.HasAttribute<Sql.QueryExtensionAttribute>(mc.Method.DeclaringType, mc.Method))
-						return mc;
-				}
+				var mc = (MethodCallExpression)expression;
+				if (mc.Method.DeclaringType != null && MappingSchema.HasAttribute<Sql.QueryExtensionAttribute>(mc.Method.DeclaringType, mc.Method))
+					return mc;
+			}
 
+			if (expression.NodeType is ExpressionType.MemberAccess or ExpressionType.Call)
+			{
 				if (EvaluateExpression(expression) is not IQueryable newQuery)
 					return expression;
 

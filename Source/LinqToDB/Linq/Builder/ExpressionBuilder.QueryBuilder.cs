@@ -652,7 +652,7 @@ namespace LinqToDB.Linq.Builder
 				var mc = (MethodCallExpression)expr;
 				if (mc.IsQueryable(_singleElementMethods))
 				{
-					if (mc.Arguments.Count == 2)
+					if (mc.Arguments is [var a0, var a1])
 					{
 						Expression whereMethod;
 
@@ -660,7 +660,7 @@ namespace LinqToDB.Linq.Builder
 						if (mc.Method.DeclaringType == typeof(Queryable))
 						{
 							var methodInfo = Methods.Queryable.Where.MakeGenericMethod(typeArguments);
-							whereMethod = Expression.Call(methodInfo, mc.Arguments[0], mc.Arguments[1]);
+							whereMethod = Expression.Call(methodInfo, a0, a1);
 							var limitCall = Expression.Call(typeof(Queryable), mc.Method.Name, typeArguments, whereMethod);
 
 							newExpr = limitCall;
@@ -668,7 +668,7 @@ namespace LinqToDB.Linq.Builder
 						else
 						{
 							var methodInfo = Methods.Enumerable.Where.MakeGenericMethod(typeArguments);
-							whereMethod = Expression.Call(methodInfo, mc.Arguments[0], mc.Arguments[1]);
+							whereMethod = Expression.Call(methodInfo, a0, a1);
 							var limitCall = Expression.Call(typeof(Enumerable), mc.Method.Name, typeArguments, whereMethod);
 
 							newExpr = limitCall;
@@ -787,61 +787,62 @@ namespace LinqToDB.Linq.Builder
 			switch (expr.NodeType)
 			{
 				case ExpressionType.MemberAccess:
+				{
+					var pi = (MemberExpression)expr;
+					var l  = Expressions.ConvertMember(MappingSchema, pi.Expression?.Type, pi.Member);
+
+					if (l != null)
 					{
-						var pi = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, pi.Expression?.Type, pi.Member);
+						var info = l.Body.Unwrap();
 
-						if (l != null)
-						{
-							var info = l.Body.Unwrap();
+						if (l.Parameters.Count == 1 && pi.Expression != null)
+							info = info.Replace(l.Parameters[0], pi.Expression);
 
-							if (l.Parameters.Count == 1 && pi.Expression != null)
-								info = info.Replace(l.Parameters[0], pi.Expression);
-
-							return GetVisitor(enforceServerSide).Find(info) != null;
-						}
-
-						var attr = pi.Member.GetExpressionAttribute(MappingSchema);
-						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, false);
+						return GetVisitor(enforceServerSide).Find(info) != null;
 					}
+
+					var attr = pi.Member.GetExpressionAttribute(MappingSchema);
+					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, false);
+				}
 
 				case ExpressionType.Call:
-					{
-						var pi = (MethodCallExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
+				{
+					var pi = (MethodCallExpression)expr;
+					var l  = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
-						if (l != null)
-							return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
+					if (l != null)
+						return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
 
-						var attr = pi.Method.GetExpressionAttribute(MappingSchema);
-						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, false);
-					}
+					var attr = pi.Method.GetExpressionAttribute(MappingSchema);
+					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, false);
+				}
+
 				default:
+				{
+					if (expr is BinaryExpression binary)
 					{
-						if (expr is BinaryExpression binary)
+						var l = Expressions.ConvertBinary(MappingSchema, binary);
+						if (l != null)
 						{
-							var l = Expressions.ConvertBinary(MappingSchema, binary);
-							if (l != null)
+							var body = l.Body.Unwrap();
+							var newExpr = body.Transform((l, binary), static (context, wpi) =>
 							{
-								var body = l.Body.Unwrap();
-								var newExpr = body.Transform((l, binary), static (context, wpi) =>
+								if (wpi.NodeType == ExpressionType.Parameter)
 								{
-									if (wpi.NodeType == ExpressionType.Parameter)
-									{
-										if (context.l.Parameters[0] == wpi)
-											return context.binary.Left;
-										if (context.l.Parameters[1] == wpi)
-											return context.binary.Right;
-									}
+									if (context.l.Parameters[0] == wpi)
+										return context.binary.Left;
+									if (context.l.Parameters[1] == wpi)
+										return context.binary.Right;
+								}
 
-									return wpi;
-								});
+								return wpi;
+							});
 
-								return PreferServerSide(newExpr, enforceServerSide);
-							}
+							return PreferServerSide(newExpr, enforceServerSide);
 						}
-						break;
 					}
+					break;
+				}
 			}
 
 			return false;

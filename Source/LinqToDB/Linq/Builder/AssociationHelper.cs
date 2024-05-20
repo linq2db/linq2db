@@ -7,10 +7,10 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
+	using Interceptors;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
-	using Interceptors;
 
 	static class AssociationHelper
 	{

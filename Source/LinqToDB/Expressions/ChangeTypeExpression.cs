@@ -20,10 +20,7 @@ namespace LinqToDB.Expressions
 
 		public Expression Expression { get; private set; }
 
-		public override string ToString()
-		{
-			return "(" +  "(" + Type + ")" + Expression + ")";
-		}
+		public override string ToString() => $"(({Type}){Expression})";
 
 		bool Equals(ChangeTypeExpression other)
 		{

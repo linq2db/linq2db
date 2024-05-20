@@ -91,7 +91,8 @@ namespace LinqToDB.Linq.Builder
 
 			var builtRows = new List<ISqlExpression[]>(arrayExpression.Expressions.Count);
 
-			var columnsInfo = knownMembers.Select(m => (Member: m, Column: ed.Columns.FirstOrDefault(c => c.MemberInfo == m)))
+			var columnsInfo = knownMembers
+				.Select(m => (Member: m, Column: ed.Columns.FirstOrDefault(c => c.MemberInfo == m)))
 				.ToList();
 
 			foreach (var row in arrayExpression.Expressions)
@@ -146,8 +147,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (SequenceHelper.IsSpecialProperty(path, ElementType, "item"))
 			{
-				var newField    = BuildField(null, path);
-				return newField;
+				return BuildField(null, path);
 			}
 
 			foreach (var column in _entityDescriptor.Columns)
@@ -157,9 +157,7 @@ namespace LinqToDB.Linq.Builder
 					continue;
 				}
 
-				var newField = BuildField(column, path);
-
-				return newField;
+				return BuildField(column, path);
 			}
 
 			return null;

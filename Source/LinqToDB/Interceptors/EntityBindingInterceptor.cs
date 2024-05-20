@@ -2,8 +2,8 @@
 
 namespace LinqToDB.Interceptors.Internal
 {
-	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Expressions;
+	using Reflection;
 
 	public abstract class EntityBindingInterceptor : IEntityBindingInterceptor
 	{

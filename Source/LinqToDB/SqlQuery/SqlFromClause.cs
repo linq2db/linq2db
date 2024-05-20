@@ -165,11 +165,6 @@ namespace LinqToDB.SqlQuery
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			/*
-			if (writer.Length > 10240)
-				return writer;
-				*/
-
 			writer
 				.Append("FROM ");
 

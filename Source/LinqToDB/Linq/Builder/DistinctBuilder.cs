@@ -4,7 +4,6 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-
 	using Reflection;
 
 	sealed class DistinctBuilder : MethodCallBuilder

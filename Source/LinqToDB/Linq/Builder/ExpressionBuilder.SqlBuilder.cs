@@ -10,20 +10,18 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Common.Internal;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using Linq.Translation;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Linq.Translation;
 
 	partial class ExpressionBuilder
 	{
@@ -197,10 +195,10 @@ namespace LinqToDB.Linq.Builder
 		{
 			// We can convert only these expressions, so it is shortcut to do not allocate visitor
 
-			if (expression.NodeType == ExpressionType.Call         ||
-				expression.NodeType == ExpressionType.MemberAccess ||
-				expression.NodeType == ExpressionType.New          ||
-				expression is BinaryExpression)
+			if (expression.NodeType is ExpressionType.Call
+				                    or ExpressionType.MemberAccess
+				                    or ExpressionType.New
+				|| expression is BinaryExpression)
 			{
 				var result = ConvertExpression(expression);
 

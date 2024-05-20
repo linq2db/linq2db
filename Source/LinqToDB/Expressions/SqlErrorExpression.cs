@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using Linq;
 	using Common;
+	using Linq;
 
 	public class SqlErrorExpression : Expression
 	{

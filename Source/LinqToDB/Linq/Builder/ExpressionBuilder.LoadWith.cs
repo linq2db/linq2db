@@ -4,7 +4,6 @@ using System.Linq;
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
-
 	using LinqToDB.Reflection;
 
 	internal partial class ExpressionBuilder

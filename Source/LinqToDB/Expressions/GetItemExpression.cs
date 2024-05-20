@@ -3,9 +3,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Linq.Builder;
-	using LinqToDB.Mapping;
-	using LinqToDB.Reflection;
+	using Linq.Builder;
+	using Mapping;
+	using Reflection;
 
 	sealed class GetItemExpression : Expression
 	{

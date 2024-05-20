@@ -6,9 +6,7 @@ using System.Text;
 namespace LinqToDB.Extensions
 {
 	using Common;
-
-	using LinqToDB.Data;
-
+	using Data;
 	using Mapping;
 	using SqlQuery;
 

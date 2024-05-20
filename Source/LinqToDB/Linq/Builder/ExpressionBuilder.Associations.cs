@@ -7,12 +7,12 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Common;
-	using LinqToDB.Expressions;
 
 	partial class ExpressionBuilder
 	{
@@ -46,18 +46,18 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsAssociation(Expression expression, [NotNullWhen(true)] out MemberInfo? associationMember)
 		{
-			if (expression is MemberExpression memberExpression)
+			switch (expression)
 			{
-				return IsAssociationInRealization(memberExpression.Expression, memberExpression.Member, out associationMember);
-			}
+				case MemberExpression memberExpression:
+					return IsAssociationInRealization(memberExpression.Expression, memberExpression.Member, out associationMember);
 
-			if (expression is MethodCallExpression methodCall)
-			{
-				return IsAssociationInRealization(methodCall.Object, methodCall.Method, out associationMember);
-			}
+				case MethodCallExpression methodCall:
+					return IsAssociationInRealization(methodCall.Object, methodCall.Method, out associationMember);
 
-			associationMember = null;
-			return false;
+				default:
+					associationMember = null;
+					return false;
+			}
 		}
 
 		AssociationDescriptor? GetAssociationDescriptor(Expression expression, out AccessorMember? memberInfo, bool onlyCurrent = true)

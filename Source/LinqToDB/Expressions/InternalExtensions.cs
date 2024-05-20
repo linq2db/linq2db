@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace LinqToDB.Expressions
 {
@@ -81,14 +81,10 @@ namespace LinqToDB.Expressions
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
 					return ((UnaryExpression)ex).Operand.Unwrap();
-				case ExpressionType.Extension:
+				case ExpressionType.Extension
+					when ex is SqlAdjustTypeExpression adjustType:
 				{
-					if (ex is SqlAdjustTypeExpression adjustType)
-					{
-						return adjustType.Expression.Unwrap();
-					}
-
-					break;
+					return adjustType.Expression.Unwrap();
 				}
 			}
 
@@ -106,18 +102,15 @@ namespace LinqToDB.Expressions
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
 				{
-					if (((UnaryExpression)ex).Method == null)
-						return ((UnaryExpression)ex).Operand.UnwrapConvert();
+					var unaryExpression = (UnaryExpression)ex;
+					if (unaryExpression.Method == null)
+						return unaryExpression.Operand.UnwrapConvert();
 					break;
 				}
-				case ExpressionType.Extension:
+				case ExpressionType.Extension
+					when ex is SqlAdjustTypeExpression adjustType:
 				{
-					if (ex is SqlAdjustTypeExpression adjustType)
-					{
-						return adjustType.Expression.Unwrap();
-					}
-
-					break;
+					return adjustType.Expression.Unwrap();
 				}
 			}
 
@@ -302,7 +295,7 @@ namespace LinqToDB.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullValue(this Expression expr)
 		{
-			return (expr is ConstantExpression c && c.Value == null)
+			return (expr is ConstantExpression { Value: null })
 				|| (expr is DefaultExpression or DefaultValueExpression && expr.Type.IsNullableType());
 		}
 
@@ -470,6 +463,5 @@ namespace LinqToDB.Expressions
 
 			return expression;
 		}
-
 	}
 }

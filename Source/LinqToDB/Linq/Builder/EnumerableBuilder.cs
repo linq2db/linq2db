@@ -43,15 +43,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				case ExpressionType.MemberAccess:
 					return CanBuildMemberChain(((MemberExpression)expr).Expression);
-				case ExpressionType.Constant:
-					if (((ConstantExpression)expr).Value is not IEnumerable)
-						return false;
-					break;
+				case ExpressionType.Constant
+					when ((ConstantExpression)expr).Value is IEnumerable:
+						return true;
 				default:
 					return false;
 			}
-
-			return true;
 
 			static bool CanBuildMemberChain(Expression? expr)
 			{

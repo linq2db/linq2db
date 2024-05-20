@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.Interceptors
 {
-	using LinqToDB.Data;
+	using Data;
 
 	/// <summary>
 	/// Event arguments for <see cref="IConnectionInterceptor"/> events.

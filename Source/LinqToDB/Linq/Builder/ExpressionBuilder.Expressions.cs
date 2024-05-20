@@ -5,11 +5,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
+	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Extensions;
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
+	using Mapping;
+	using SqlQuery;
 
 	class ProjectionVisitor : ExpressionVisitorBase
 	{
@@ -153,20 +153,20 @@ namespace LinqToDB.Linq.Builder
 				if (HandleParametrized(node, out var parametrized))
 					return parametrized;
 
-				if (node.NodeType == ExpressionType.Conditional  ||
-				    node.NodeType == ExpressionType.Call         ||
-				    node.NodeType == ExpressionType.New          ||
-				    node.NodeType == ExpressionType.MemberInit   ||
-				    node.NodeType == ExpressionType.MemberAccess ||
-				    node.NodeType == ExpressionType.ListInit     ||
-				    node.NodeType == ExpressionType.Default      ||
-				    node.NodeType == ExpressionType.Convert      ||
-				    node.NodeType == ExpressionType.Constant     ||
-				    node.NodeType == ExpressionType.Parameter    ||
-				    node.NodeType == ExpressionType.Not          ||
-				    node is SqlGenericConstructorExpression      ||
-				    node is SqlEagerLoadExpression               ||
-					node is BinaryExpression)
+				if (node.NodeType is ExpressionType.Conditional
+								  or ExpressionType.Call
+								  or ExpressionType.New
+								  or ExpressionType.MemberInit
+								  or ExpressionType.MemberAccess
+								  or ExpressionType.ListInit
+								  or ExpressionType.Default
+								  or ExpressionType.Convert
+								  or ExpressionType.Constant
+								  or ExpressionType.Parameter
+								  or ExpressionType.Not
+					|| node is SqlGenericConstructorExpression
+							or SqlEagerLoadExpression
+							or BinaryExpression)
 				{
 					return base.Visit(node);
 				}

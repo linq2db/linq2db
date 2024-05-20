@@ -5,8 +5,7 @@ namespace LinqToDB
 {
 	using Data;
 	using Interceptors;
-
-	using LinqToDB.Interceptors.Internal;
+	using Interceptors.Internal;
 
 	/// <summary>
 	/// Contains extensions that add one-time interceptors to connection.

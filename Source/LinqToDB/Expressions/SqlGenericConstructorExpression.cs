@@ -8,8 +8,8 @@ using System.Reflection;
 namespace LinqToDB.Expressions
 {
 	using Extensions;
-	using Reflection;
 	using Mapping;
+	using Reflection;
 
 	public class SqlGenericConstructorExpression : Expression, IEquatable<SqlGenericConstructorExpression>
 	{

@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common.Internal;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
-	using Common;
-	using LinqToDB.Common.Internal;
-	using LinqToDB.Expressions;
 
 	sealed class AggregationBuilder : MethodCallBuilder
 	{
@@ -476,7 +474,19 @@ namespace LinqToDB.Linq.Builder
 					inputFilterLambda = methodCall.Arguments[1].UnwrapLambda();
 				}
 
-				if (GetSimplifiedAggregationInfo(aggregationType, returnType, buildInfo.Parent!, buildInfo, sequenceArgument, inputValueLambda, inputFilterLambda, out filterExpression, out var groupByContext, out valueExpression, out valueSqlExpression, out var isDistinct))
+				if (GetSimplifiedAggregationInfo(
+						aggregationType,
+						returnType,
+						buildInfo.Parent!,
+						buildInfo,
+						sequenceArgument,
+						inputValueLambda,
+						inputFilterLambda,
+						out filterExpression,
+						out var groupByContext,
+						out valueExpression,
+						out valueSqlExpression,
+						out var isDistinct))
 				{
 					isSimple = true;
 
@@ -759,13 +769,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				var newContext = new AggregationContext(null, context.CloneContext(Sequence), _aggregationType, _methodName, _returnType);
-
-				newContext.Placeholder          = context.CloneExpression(Placeholder);
-				newContext.OuterJoinParentQuery = context.CloneElement(OuterJoinParentQuery);
-				newContext._joinedTable         = context.CloneElement(_joinedTable);
-
-				return newContext;
+				return new AggregationContext(null, context.CloneContext(Sequence), _aggregationType, _methodName, _returnType)
+				{
+					Placeholder = context.CloneExpression(Placeholder),
+					OuterJoinParentQuery = context.CloneElement(OuterJoinParentQuery),
+					_joinedTable = context.CloneElement(_joinedTable),
+				};
 			}
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)

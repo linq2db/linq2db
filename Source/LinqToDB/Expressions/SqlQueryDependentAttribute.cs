@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Common;
+	using Common;
 
 	/// <summary>
 	/// Used for controlling query caching of custom SQL Functions.
@@ -34,7 +34,7 @@ namespace LinqToDB.Expressions
 			if (obj1 is RawSqlString str1 && obj2 is RawSqlString str2)
 				return str1.Format == str2.Format;
 
-			if (obj1 is not string && obj1 is IEnumerable list1 && obj2 is IEnumerable list2)
+			if (obj1 is not string and IEnumerable list1 && obj2 is IEnumerable list2)
 			{
 				var enum1 = list1.GetEnumerator();
 				var enum2 = list2.GetEnumerator();

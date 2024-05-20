@@ -157,20 +157,12 @@ namespace LinqToDB.SqlQuery
 				}
 				else
 				{
-					if (!selectQuery.GroupBy.IsEmpty)
+					foreach (var column in selectQuery.Select.Columns)
 					{
-						if (selectQuery.Select.Columns.Count == 1)
-							RegisterColumn(selectQuery.Select.Columns[0]);
-					}
-					else
-					{
-						foreach (var column in selectQuery.Select.Columns)
+						if (QueryHelper.ContainsAggregationOrWindowFunction(column.Expression))
 						{
-							if (QueryHelper.ContainsAggregationOrWindowFunction(column.Expression))
-							{
-								RegisterColumn(column);
-								break;
-							}
+							RegisterColumn(column);
+							break;
 						}
 					}
 				}

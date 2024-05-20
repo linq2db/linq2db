@@ -2,8 +2,8 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
 	using LinqToDB.Expressions;
+	using SqlQuery;
 
 	sealed class AsValueInsertableBuilder : MethodCallBuilder
 	{
@@ -17,8 +17,10 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			var insertContext = new InsertBuilder.InsertContext(sequence,
-				InsertBuilder.InsertContext.InsertTypeEnum.Insert, new SqlInsertStatement(sequence.SelectQuery), null);
-			insertContext.RequiresSetters = true;
+				InsertBuilder.InsertContext.InsertTypeEnum.Insert, new SqlInsertStatement(sequence.SelectQuery), null)
+			{
+				RequiresSetters = true
+			};
 
 			return BuildSequenceResult.FromContext(insertContext);
 		}
