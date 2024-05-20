@@ -147,7 +147,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (SequenceHelper.IsSpecialProperty(path, ElementType, "item"))
 			{
-				return BuildField(null, path);
+				var newField = BuildField(null, path);
+				return newField;
 			}
 
 			foreach (var column in _entityDescriptor.Columns)
@@ -157,7 +158,8 @@ namespace LinqToDB.Linq.Builder
 					continue;
 				}
 
-				return BuildField(column, path);
+				var newField = BuildField(column, path);
+				return newField;
 			}
 
 			return null;

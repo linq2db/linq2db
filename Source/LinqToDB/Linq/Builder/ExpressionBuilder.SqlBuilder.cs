@@ -1471,7 +1471,7 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlPredicate? CheckExpression(Expression expr, ref SqlErrorExpression? resultError)
 			{
-				if (expr is SqlPlaceholderExpression placheolder && placheolder.Sql is SqlSearchCondition sc)
+				if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
 					return sc;
 
 				resultError = SqlErrorExpression.EnsureError(context, expr);
@@ -1492,9 +1492,9 @@ namespace LinqToDB.Linq.Builder
 				if (arg.NodeType == ExpressionType.Constant || arg.NodeType == ExpressionType.Default)
 				{
 					var comparison = (StringComparison)(EvaluateExpression(arg) ?? throw new InvalidOperationException());
-					return new SqlValue(comparison == StringComparison.CurrentCulture   ||
-										comparison == StringComparison.InvariantCulture ||
-										comparison == StringComparison.Ordinal);
+					return new SqlValue(comparison is StringComparison.CurrentCulture
+										           or StringComparison.InvariantCulture
+										           or StringComparison.Ordinal);
 				}
 
 				var variable   = Expression.Variable(typeof(StringComparison), "c");
@@ -2735,37 +2735,47 @@ namespace LinqToDB.Linq.Builder
 				switch (e.ElementType)
 				{
 					case QueryElementType.SqlField:
-						{
-							var fld = (SqlField)e;
-							context.DataType     = fld.Type.DataType;
-							context.DbType       = fld.Type.DbType;
-							context.Length       = fld.Type.Length;
-							context.Precision    = fld.Type.Precision;
-							context.Scale        = fld.Type.Scale;
-							return true;
-						}
+					{
+						var fld = (SqlField)e;
+						context.DataType     = fld.Type.DataType;
+						context.DbType       = fld.Type.DbType;
+						context.Length       = fld.Type.Length;
+						context.Precision    = fld.Type.Precision;
+						context.Scale        = fld.Type.Scale;
+						return true;
+					}
 					case QueryElementType.SqlParameter:
-						context.DataType     = ((SqlParameter)e).Type.DataType;
-						context.DbType       = ((SqlParameter)e).Type.DbType;
-						context.Length       = ((SqlParameter)e).Type.Length;
-						context.Precision    = ((SqlParameter)e).Type.Precision;
-						context.Scale        = ((SqlParameter)e).Type.Scale;
+					{
+						var type             = ((SqlParameter)e).Type;
+						context.DataType     = type.DataType;
+						context.DbType       = type.DbType;
+						context.Length       = type.Length;
+						context.Precision    = type.Precision;
+						context.Scale        = type.Scale;
 						return true;
+					}
 					case QueryElementType.SqlDataType:
-						context.DataType     = ((SqlDataType)e).Type.DataType;
-						context.DbType       = ((SqlDataType)e).Type.DbType;
-						context.Length       = ((SqlDataType)e).Type.Length;
-						context.Precision    = ((SqlDataType)e).Type.Precision;
-						context.Scale        = ((SqlDataType)e).Type.Scale;
+					{
+						var type             = ((SqlDataType)e).Type;
+						context.DataType     = type.DataType;
+						context.DbType       = type.DbType;
+						context.Length       = type.Length;
+						context.Precision    = type.Precision;
+						context.Scale        = type.Scale;
 						return true;
+					}
 					case QueryElementType.SqlValue:
-						context.DataType     = ((SqlValue)e).ValueType.DataType;
-						context.DbType       = ((SqlValue)e).ValueType.DbType;
-						context.Length      = ((SqlValue)e).ValueType.Length;
-						context.Precision    = ((SqlValue)e).ValueType.Precision;
-						context.Scale        = ((SqlValue)e).ValueType.Scale;
+					{
+						var valueType        = ((SqlValue)e).ValueType;
+						context.DataType     = valueType.DataType;
+						context.DbType       = valueType.DbType;
+						context.Length       = valueType.Length;
+						context.Precision    = valueType.Precision;
+						context.Scale        = valueType.Scale;
 						return true;
+					}
 					default:
+					{
 						if (e is ISqlExpression expr)
 						{
 							var type = QueryHelper.GetDbDataType(expr, context.MappingSchema);
@@ -2777,6 +2787,7 @@ namespace LinqToDB.Linq.Builder
 							return true;
 						}
 						return false;
+					}
 				}
 			});
 
@@ -3198,65 +3209,66 @@ namespace LinqToDB.Linq.Builder
 			{
 				case ExpressionType.And     :
 				case ExpressionType.AndAlso :
+				{
+					var e           = (BinaryExpression)expression;
+					var andCondition = searchCondition.IsAnd ? searchCondition : new SqlSearchCondition(false);
+
+					if (!BuildSearchCondition(context, e.Left, flags, andCondition, out var leftError))
 					{
-						var e           = (BinaryExpression)expression;
-						var andCondition = searchCondition.IsAnd ? searchCondition : new SqlSearchCondition(false);
-
-						if (!BuildSearchCondition(context, e.Left, flags, andCondition, out var leftError))
-						{
-							error = leftError;
-							return false;
-						}
-
-						if (!BuildSearchCondition(context, e.Right, flags, andCondition, out var rightError))
-						{
-							error = rightError;
-							return false;
-						}
-
-						if (!searchCondition.IsAnd)
-							searchCondition.Add(andCondition);
-
-						break;
+						error = leftError;
+						return false;
 					}
+
+					if (!BuildSearchCondition(context, e.Right, flags, andCondition, out var rightError))
+					{
+						error = rightError;
+						return false;
+					}
+
+					if (!searchCondition.IsAnd)
+						searchCondition.Add(andCondition);
+
+					break;
+				}
 
 				case ExpressionType.Or     :
 				case ExpressionType.OrElse :
+				{
+					var e           = (BinaryExpression)expression;
+					var orCondition = searchCondition.IsOr ? searchCondition : new SqlSearchCondition(true);
+
+					if (!BuildSearchCondition(context, e.Left, flags, orCondition, out var leftError))
 					{
-						var e           = (BinaryExpression)expression;
-						var orCondition = searchCondition.IsOr ? searchCondition : new SqlSearchCondition(true);
-
-						if (!BuildSearchCondition(context, e.Left, flags, orCondition, out var leftError))
-						{
-							error = leftError;
-							return false;
-						}
-
-						if (!BuildSearchCondition(context, e.Right, flags, orCondition, out var rightError))
-						{
-							error = rightError;
-							return false;
-						}
-
-						if (!searchCondition.IsOr)
-							searchCondition.Add(orCondition);
-
-						break;
+						error = leftError;
+						return false;
 					}
 
-				case ExpressionType.Not    :
+					if (!BuildSearchCondition(context, e.Right, flags, orCondition, out var rightError))
 					{
-						var e            = (UnaryExpression)expression;
-						var notCondition = new SqlSearchCondition();
+						error = rightError;
+						return false;
+					}
 
-						if (!BuildSearchCondition(context, e.Operand, flags, notCondition, out error))
-							return false;
+					if (!searchCondition.IsOr)
+						searchCondition.Add(orCondition);
 
-						searchCondition.Add(notCondition.MakeNot());
+					break;
+				}
+
+				case ExpressionType.Not    :
+				{
+					var e            = (UnaryExpression)expression;
+					var notCondition = new SqlSearchCondition();
+
+					if (!BuildSearchCondition(context, e.Operand, flags, notCondition, out error))
+						return false;
+
+					searchCondition.Add(notCondition.MakeNot());
 					break;
 				}
 
 				default                    :
+				{
 					var predicate = ConvertPredicate(context, expression, flags, out error);
 
 					if (predicate == null)
@@ -3276,6 +3288,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					break;
+				}
 			}
 
 			error = null;
@@ -3284,9 +3297,9 @@ namespace LinqToDB.Linq.Builder
 
 		static bool NeedNullCheck(ISqlExpression expr)
 		{
-			if (null != expr.Find(QueryElementType.SelectClause))
-				return false;
-			return true;
+			if (expr.Find(QueryElementType.SelectClause) is null)
+				return true;
+			return false;
 		}
 
 		#endregion
@@ -3419,17 +3432,18 @@ namespace LinqToDB.Linq.Builder
 				return cond;
 			}
 
-			var doNotConvert = expr.NodeType == ExpressionType.Equal              ||
-							   expr.NodeType == ExpressionType.NotEqual           ||
-							   expr.NodeType == ExpressionType.GreaterThan        ||
-							   expr.NodeType == ExpressionType.GreaterThanOrEqual ||
-							   expr.NodeType == ExpressionType.LessThan           ||
-							   expr.NodeType == ExpressionType.LessThanOrEqual;
+			var doNotConvert = 
+				expr.NodeType is ExpressionType.Equal
+				              or ExpressionType.NotEqual
+				              or ExpressionType.GreaterThan
+				              or ExpressionType.GreaterThanOrEqual
+				              or ExpressionType.LessThan
+				              or ExpressionType.LessThanOrEqual;
 
 			if (!doNotConvert && toSql)
 			{
 				var sql = ConvertToSqlExpr(context, expr, flags);
-				if (sql is SqlPlaceholderExpression || sql is SqlGenericConstructorExpression)
+				if (sql is SqlPlaceholderExpression or SqlGenericConstructorExpression)
 					return sql;
 			}
 			return expr;
@@ -4435,7 +4449,7 @@ namespace LinqToDB.Linq.Builder
 
 			ContextRefExpression? rootContext = null;
 
-			if (path is MemberExpression memberExpression && memberExpression.Expression != null)
+			if (path is MemberExpression { Expression: not null } memberExpression)
 			{
 				var declaringType = memberExpression.Member.DeclaringType;
 				if (declaringType != null && declaringType != memberExpression.Expression.Type)
