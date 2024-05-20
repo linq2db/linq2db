@@ -1779,7 +1779,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ViaInterfaceAndExtension([DataSources] string context)
+		public void ViaInterfaceAndExtension([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var main = db.CreateLocalTable<MainEntity>();
@@ -1796,7 +1796,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ViaInterfaceOfType([DataSources] string context)
+		public void ViaInterfaceOfType([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var main = db.CreateLocalTable<MainEntity>();
@@ -1814,7 +1814,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("Not supported yet. Needs analysis.")]
 		[Test]
-		public void ViaInterfaceSelect([DataSources] string context)
+		public void ViaInterfaceSelect([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db   = GetDataContext(context);
 			using var main = db.CreateLocalTable<MainEntity>();
@@ -1829,7 +1829,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("Not supported yet. Needs analysis.")]
 		[Test]
-		public void ViaInterfaceLoadWith([DataSources] string context)
+		public void ViaInterfaceLoadWith([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db   = GetDataContext(context);
 			using var main = db.CreateLocalTable<MainEntity>();
