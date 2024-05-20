@@ -126,24 +126,27 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			return func switch
+			switch (func)
 			{
-				{ Name: "Coalesce", Parameters.Length: 2 } =>
-					ConvertCoalesceToBinaryFunc(func, "Nvl"),
+				case { Name: "Coalesce", Parameters.Length: 2 }:
+					return ConvertCoalesceToBinaryFunc(func, "Nvl");
 
-				{
+				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
 					SystemType: var type,
-				} => new SqlFunction(type, "InStr", p1, p0),
+				}:
+					return new SqlFunction(type, "InStr", p1, p0);
 
-				{
+				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					SystemType: var type,
-				} => new SqlFunction(type, "InStr", p1, p0, p2),
+				}:
+					return new SqlFunction(type, "InStr", p1, p0, p2);
 
-				_ => base.ConvertSqlFunction(func),
+				default:
+					return base.ConvertSqlFunction(func);
 			};
 		}
 

@@ -31,15 +31,17 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			return func switch
+			switch (func)
 			{
-				{
+				case {
 					Name: "Space",
 					Parameters: [var p0],
 					SystemType: var type,
-				} => new SqlFunction(type, "PadR", new SqlValue(" "), p0),
+				}:
+					return new SqlFunction(type, "PadR", new SqlValue(" "), p0);
 
-				_ => base.ConvertSqlFunction(func),
+				default:
+					return base.ConvertSqlFunction(func);
 			};
 		}
 

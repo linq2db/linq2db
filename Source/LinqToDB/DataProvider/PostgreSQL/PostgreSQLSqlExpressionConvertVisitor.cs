@@ -55,20 +55,21 @@
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			return func switch
+			switch (func)
 			{
-				{
+				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
 					SystemType: var type,
-				} => new SqlExpression(type, "Position({0} in {1})", Precedence.Primary, p0, p1),
+				}:
+					return new SqlExpression(type, "Position({0} in {1})", Precedence.Primary, p0, p1);
 
-				{
+				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					SystemType: var type,
-				} =>
-					Add<int>(
+				}:
+					return Add<int>(
 						new SqlExpression(type, "Position({0} in {1})", Precedence.Primary,
 							p0,
 							(ISqlExpression)Visit(
@@ -80,9 +81,10 @@
 											new SqlFunction(typeof(int), "Length", p1)),
 										p2))
 							)),
-						Sub(p2, 1)),
+						Sub(p2, 1));
 
-				_ => base.ConvertSqlFunction(func),
+				default:
+					return base.ConvertSqlFunction(func);
 			};
 		}
 

@@ -42,33 +42,36 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			return func switch
+			switch (func)
 			{
-				{ Name: PseudoFunctions.REPLACE } => func.WithName("Str_Replace"),
+				case { Name: PseudoFunctions.REPLACE }:
+					return func.WithName("Str_Replace");
 
-				{
+				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					SystemType: var type,
-				} => Add<int>(
+				}:
+					return Add<int>(
 						new SqlFunction(func.SystemType, "CharIndex",
 							p0,
 							new SqlFunction(typeof(string), "Substring",
 								p1,
 								p2,
 								new SqlFunction(typeof(int), "Len", p1))),
-						Sub(p2, 1)),
+						Sub(p2, 1));
 
-				{
+				case {
 					Name: "Stuff",
 					Parameters:
 					[
-						var p0, var p1, _, 
+						var p0, var p1, _,
 						SqlValue { Value: string @string, ValueType: var valueType }
 					],
 					SystemType: var type,
 					Precedence: var precedence,
-				} when string.IsNullOrEmpty(@string) => new SqlFunction(
+				} when string.IsNullOrEmpty(@string):
+					return new SqlFunction(
 						type,
 						"Stuff",
 						false,
@@ -76,9 +79,10 @@ namespace LinqToDB.DataProvider.Sybase
 						p0,
 						p1,
 						p1,
-						new SqlValue(valueType, null)),
+						new SqlValue(valueType, null));
 
-				_ => base.ConvertSqlFunction(func),
+				default:
+					return base.ConvertSqlFunction(func);
 			};
 		}
 	}

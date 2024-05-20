@@ -119,37 +119,45 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			return func switch
-			{
-				{ Name: PseudoFunctions.TO_LOWER } => func.WithName("LCase"),
-				{ Name: PseudoFunctions.TO_UPPER } => func.WithName("UCase"),
-				{ Name: "Length" }                 => func.WithName("Len"),
+			switch (func)
+			{ 
+				case { Name: PseudoFunctions.TO_LOWER }:
+					return func.WithName("LCase");
+				case { Name: PseudoFunctions.TO_UPPER }:
+					return func.WithName("UCase");
+				case { Name: "Length" }:
+					return func.WithName("Len");
 
-				{
+				case {
 					Name: PseudoFunctions.COALESCE,
 					Parameters: [var p0, var p1],
 					SystemType: var type,
-				} => new SqlFunction(type, "IIF", new SqlSearchCondition { Predicates = { new SqlPredicate.IsNull(p0, false) } }, p1, p0),
+				}:
+					return new SqlFunction(type, "IIF", new SqlSearchCondition { Predicates = { new SqlPredicate.IsNull(p0, false) } }, p1, p0);
 
-				{
+				case {
 					Name: PseudoFunctions.COALESCE,
 					Parameters: [var p0, ..] parms,
 					SystemType: var type,
-				} => new SqlFunction(type, PseudoFunctions.COALESCE, p0, new SqlFunction(type, PseudoFunctions.COALESCE, GetSubArray(parms))),
+				}:
+					return new SqlFunction(type, PseudoFunctions.COALESCE, p0, new SqlFunction(type, PseudoFunctions.COALESCE, GetSubArray(parms)));
 
-				{
+				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
 					SystemType: var type,
-				} => new SqlFunction(type, "InStr", new SqlValue(1), p1, p0, new SqlValue(1)),
+				}:
+					return new SqlFunction(type, "InStr", new SqlValue(1), p1, p0, new SqlValue(1));
 
-				{
+				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					SystemType: var type,
-				} => new SqlFunction(type, "InStr", p2, p1, p0, new SqlValue(1)),
+				}:
+					return new SqlFunction(type, "InStr", p2, p1, p0, new SqlValue(1));
 
-				_ => base.ConvertSqlFunction(func),
+				default:
+					return base.ConvertSqlFunction(func);
 			};
 
 			static ISqlExpression[] GetSubArray(ISqlExpression[] array)

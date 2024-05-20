@@ -333,35 +333,39 @@ namespace LinqToDB.SqlQuery
 
 		static DbDataType GetDbDataType(ISqlExpression? expr)
 		{
-			return expr switch
+			switch (expr)
 			{
-				null => DbDataType.Undefined,
-				SqlValue { ValueType: var vt } => vt,
+				case null: return DbDataType.Undefined;
+				case SqlValue { ValueType: var vt }: return vt;
 
-				SqlField            { Type: var t } => t,
-				SqlDataType         { Type: var t } => t,
-				SqlCastExpression   { Type: var t } => t,
-				SqlBinaryExpression { Type: var t } => t,
-				SqlFunction         { Type: var t } => t,        
+				case SqlField            { Type: var t }: return t;
+				case SqlDataType         { Type: var t }: return t;
+				case SqlCastExpression   { Type: var t }: return t;
+				case SqlBinaryExpression { Type: var t }: return t;
+				case SqlFunction         { Type: var t }: return t;        
 
-				SqlColumn                { Expression:    var e } => GetDbDataType(e),
-				SqlNullabilityExpression { SqlExpression: var e } => GetDbDataType(e),
+				case SqlColumn                { Expression:    var e }: return GetDbDataType(e);
+				case SqlNullabilityExpression { SqlExpression: var e }: return GetDbDataType(e);
 
-				SelectQuery selectQuery =>
-					selectQuery is { Select.Columns: [{ Expression: var e }] }
+				case SelectQuery selectQuery:
+				{
+					return selectQuery is { Select.Columns: [{ Expression: var e }] }
 						? GetDbDataType(e)
-						: DbDataType.Undefined,
+						: DbDataType.Undefined;
+				}
 
-				SqlExpression sqlExpression =>
-					sqlExpression is { Parameters: [var e], Expr: "{0}" }
+				case SqlExpression sqlExpression:
+				{
+					return sqlExpression is { Parameters: [var e], Expr: "{0}" }
 						? GetDbDataType(e)
-						: DbDataType.Undefined,
+						: DbDataType.Undefined;
+				}
 
-				SqlCaseExpression caseExpression           => GetCaseExpressionType(caseExpression),
-				SqlConditionExpression conditionExpression => GetConditionExpressionType(conditionExpression),
+				case SqlCaseExpression caseExpression          : return GetCaseExpressionType(caseExpression);
+				case SqlConditionExpression conditionExpression: return GetConditionExpressionType(conditionExpression);
 
-				{ SystemType: null }  => DbDataType.Undefined,
-				{ SystemType: var t } => new(t),
+				case { SystemType: null } : return DbDataType.Undefined;
+				case { SystemType: var t }: return new(t);
 			};
 
 			static DbDataType GetCaseExpressionType(SqlCaseExpression caseExpression)
@@ -1250,9 +1254,9 @@ namespace LinqToDB.SqlQuery
 		{
 			return expr switch
 			{
-				SqlFunction func => func.IsAggregate,
+				SqlFunction func         => func.IsAggregate,
 				SqlExpression expression => (expression.Flags & SqlFlags.IsAggregate) != 0,
-				_ => false,
+				_                        => false,
 			};
 		}
 
@@ -1438,15 +1442,17 @@ namespace LinqToDB.SqlQuery
 		[return: NotNullIfNotNull(nameof(sqlExpression))]
 		public static ISqlExpression? SimplifyColumnExpression(ISqlExpression? sqlExpression)
 		{
-			return sqlExpression switch
+			switch (sqlExpression)
 			{
-				SelectQuery
+				case SelectQuery
 				{
 					Select.Columns: [{ Expression: var expr }],
 					From.Tables: [],
-				} => SimplifyColumnExpression(expr),
+				}:
+					return SimplifyColumnExpression(expr);
 
-				_ => sqlExpression,
+				default:
+					return sqlExpression;
 			};
 		}
 
