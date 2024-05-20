@@ -5,12 +5,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
 	using Data.RetryPolicy;
 	using Extensions;
+	using Interceptors;
 	using Mapping;
 	using Tools;
-	using Interceptors;
 
 	public abstract class DynamicDataProviderBase<TProviderMappings> : DataProviderBase
 		where TProviderMappings : IDynamicProviderAdapter

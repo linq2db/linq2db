@@ -15,13 +15,9 @@ using System.Reflection;
 // ReSharper disable LoopCanBeConvertedToQuery
 namespace LinqToDB.Expressions
 {
-	using Common;
-
 	using Extensions;
-
 	using Linq;
-
-	using LinqToDB.Reflection;
+	using Reflection;
 
 	/// <summary>
 	///     This API supports the linq2db infrastructure and is not intended to be used
@@ -119,7 +115,8 @@ namespace LinqToDB.Expressions
 						var constantExpression = (ConstantExpression)obj;
 
 						if (constantExpression.Value != null
-							&& !(constantExpression.Value is IQueryable) && !(constantExpression.Value is not string && constantExpression.Value is IEnumerable))
+							&& constantExpression.Value is not IQueryable 
+							&& (constantExpression.Value is string or not IEnumerable))
 						{
 							hashCode += (hashCode * 397) ^ constantExpression.Value.GetHashCode();
 						}
@@ -478,10 +475,10 @@ namespace LinqToDB.Expressions
 
 			bool CompareSwitch(SwitchExpression a, SwitchExpression b)
 			{
-				if (! (Equals(a.SwitchValue, b.SwitchValue) &&
-				       Equals(a.DefaultBody, b.DefaultBody) &&
-				       Equals(a.Comparison, b.Comparison) &&
-					   a.Cases.Count != b.Cases.Count))
+				if (! (Equals(a.SwitchValue, b.SwitchValue)
+						&& Equals(a.DefaultBody, b.DefaultBody)
+						&& Equals(a.Comparison, b.Comparison)
+						&& a.Cases.Count != b.Cases.Count))
 				{
 					return false;
 				}

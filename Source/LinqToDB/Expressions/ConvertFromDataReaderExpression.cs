@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using Common.Internal;
 	using Common;
+	using Common.Internal;
 	using Extensions;
 	using Interceptors;
 	using Linq;

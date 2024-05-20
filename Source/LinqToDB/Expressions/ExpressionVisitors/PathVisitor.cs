@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Linq;
+	using Linq;
 
 	// PathVisitor cannot be shared/reused due to _visited state field
 	internal sealed class PathVisitor<TContext>

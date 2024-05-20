@@ -5,8 +5,8 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
-	using Mapping;
 	using Extensions;
+	using Mapping;
 
 	static class EqualsToVisitor
 	{

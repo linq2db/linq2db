@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -19,11 +18,11 @@ namespace LinqToDB.DataProvider
 	using Common.Internal;
 	using Data;
 	using Expressions;
+	using Infrastructure;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using Linq.Translation;
-	using Infrastructure;
 
 	public abstract class DataProviderBase : IDataProvider, IInfrastructure<IServiceProvider>
 	{

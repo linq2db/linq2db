@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Common;
+	using Common;
 
 	public class ValueTaskToTaskMapper : ICustomMapper
 	{

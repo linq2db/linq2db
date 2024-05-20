@@ -6,8 +6,8 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
-	using Extensions;
 	using Common;
+	using Extensions;
 
 	/// <summary>
 	/// Internal API.

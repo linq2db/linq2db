@@ -64,7 +64,9 @@ namespace LinqToDB.Expressions
 		{
 			unchecked
 			{
-				return ((_mappingSchema != null ? _mappingSchema.GetHashCode() : 0) * 397) ^ _type.GetHashCode();
+				var hashCode = _mappingSchema?.GetHashCode() ?? 0;
+				hashCode = (hashCode * 397) ^ _type.GetHashCode();
+				return hashCode;
 			}
 		}
 

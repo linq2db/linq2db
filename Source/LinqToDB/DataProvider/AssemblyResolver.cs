@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace LinqToDB.DataProvider
 {
-	using LinqToDB.Common;
+	using Common;
 
 	sealed class AssemblyResolver
 	{

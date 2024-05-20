@@ -305,19 +305,23 @@ namespace LinqToDB.Expressions
 			{
 				Visit(generic.Assignments.Select(a => a.Expression));
 				Visit(generic.Parameters.Select(p => p.Expression));
-			} else if (expr is SqlGenericParamAccessExpression paramAccess)
+			}
+			else if (expr is SqlGenericParamAccessExpression paramAccess)
 			{
 				Visit(paramAccess.Constructor);
-			} else if (expr is SqlReaderIsNullExpression isNullExpression)
+			}
+			else if (expr is SqlReaderIsNullExpression isNullExpression)
 			{
 				Visit(isNullExpression.Placeholder);
-			} else if (expr is SqlAdjustTypeExpression adjustType)
+			}
+			else if (expr is SqlAdjustTypeExpression adjustType)
 			{
 				Visit(adjustType.Expression);
 			}
 			else if (expr.CanReduce)
+			{
 				Visit(expr.Reduce());
+			}	
 		}
-
 	}
 }

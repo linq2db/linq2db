@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Data;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Common;
 
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
 		where T : notnull

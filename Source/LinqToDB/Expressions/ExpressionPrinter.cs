@@ -16,8 +16,6 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
-	using System.Globalization;
-
 	using Common;
 	using Infrastructure;
 
