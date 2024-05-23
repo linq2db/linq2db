@@ -3,8 +3,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
 	using Mapping;
+	using SqlQuery;
 
 	internal interface IBuildContext
 	{

@@ -60,26 +60,23 @@ namespace LinqToDB.Linq.Builder
 				--argumentCount;
 
 			var cardinality = SourceCardinality.One;
+			var isOptional  = false;
 			var methodKind  = GetMethodKind(methodCall.Method.Name);
 
 			switch (methodKind)
 			{
-				case MethodKind.First: break;
-				case MethodKind.FirstOrDefault:
-				{
-					cardinality |= SourceCardinality.Zero;
+				case MethodKind.First:
+				case MethodKind.Single: 
 					break;
-				}
-				case MethodKind.Single:
+
+				case MethodKind.FirstOrDefault:
 				case MethodKind.SingleOrDefault:
 				{
-					if (methodKind == MethodKind.SingleOrDefault)
-						cardinality |= SourceCardinality.Zero;
+					cardinality |= SourceCardinality.Zero;
+					isOptional   = true;
 					break;
 				}
 			}
-
-			var isOptional = (cardinality & SourceCardinality.Zero) != 0;
 
 			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, argument)
 			{
@@ -120,9 +117,12 @@ namespace LinqToDB.Linq.Builder
 				case MethodKind.SingleOrDefault :
 				{
 					if (!buildInfo.IsSubQuery)
-						if (buildInfo.SelectQuery.Select.TakeValue == null ||
-						    buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
+					{
+						if (buildInfo.SelectQuery.Select.TakeValue is null or SqlValue { Value: >= 2 })
+						{
 							take = 2;
+						}
+					}
 
 					break;
 				}

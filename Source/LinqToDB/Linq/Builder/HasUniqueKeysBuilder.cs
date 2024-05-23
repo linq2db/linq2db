@@ -17,6 +17,7 @@ namespace LinqToDB.Linq.Builder
 			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			if (buildResult.BuildContext == null)
 				return buildResult;
+				
 			var sequence = buildResult.BuildContext;
 
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();

@@ -52,10 +52,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			public override MappingSchema MappingSchema => Parent?.MappingSchema ?? Builder.MappingSchema;
 
-			public GroupJoinInnerContext(IBuildContext? parent, SelectQuery outerQuery, ExpressionBuilder builder, Type elementType,
+			public GroupJoinInnerContext(
+				IBuildContext? parent, SelectQuery outerQuery, ExpressionBuilder builder, Type elementType,
 				Expression outerKey, LambdaExpression innerKeyLambda,
-				Expression innerExpression)
-			:base(builder, elementType, outerQuery)
+				Expression innerExpression
+			) : base(builder, elementType, outerQuery)
 			{
 				Parent          = parent;
 				OuterKey        = outerKey;
@@ -74,8 +75,9 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (SequenceHelper.IsSameContext(path, this) && (flags.IsExpression() || flags.IsExtractProjection())
-				                                             && !path.Type.IsAssignableFrom(ElementType))
+				if (SequenceHelper.IsSameContext(path, this) 
+					&& (flags.IsExpression() || flags.IsExtractProjection())
+				    && !path.Type.IsAssignableFrom(ElementType))
 				{
 					var result = GetGroupJoinCall();
 					return result;

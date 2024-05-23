@@ -50,15 +50,14 @@ namespace LinqToDB.Linq.Builder
 
 			var insertStatement = insertContext.InsertStatement;
 
-			var insertType = InsertContext.InsertTypeEnum.Insert;
-
-			switch (methodCall.Method.Name)
+			var insertType = methodCall.Method.Name switch
 			{
-				case nameof(LinqExtensions.Insert)                : insertType = InsertContext.InsertTypeEnum.Insert;             break;
-				case nameof(LinqExtensions.InsertWithIdentity)    : insertType = InsertContext.InsertTypeEnum.InsertWithIdentity; break;
-				case nameof(LinqExtensions.InsertWithOutput)      : insertType = InsertContext.InsertTypeEnum.InsertOutput;       break;
-				case nameof(LinqExtensions.InsertWithOutputInto)  : insertType = InsertContext.InsertTypeEnum.InsertOutputInto;   break;
-			}
+				nameof(LinqExtensions.Insert)               => InsertContext.InsertTypeEnum.Insert,
+				nameof(LinqExtensions.InsertWithIdentity)   => InsertContext.InsertTypeEnum.InsertWithIdentity,
+				nameof(LinqExtensions.InsertWithOutput)     => InsertContext.InsertTypeEnum.InsertOutput,
+				nameof(LinqExtensions.InsertWithOutputInto) => InsertContext.InsertTypeEnum.InsertOutputInto,
+				_ => InsertContext.InsertTypeEnum.Insert,
+			};
 
 			insertContext.InsertType = insertType;
 
@@ -135,21 +134,21 @@ namespace LinqToDB.Linq.Builder
 					Expression setterExpr;
 					switch (arg)
 					{
+						case LambdaExpression lambda
+							when lambda.Parameters.Count != 0:
+						{
+							throw new NotImplementedException();
+						}
+
 						case LambdaExpression lambda:
 						{
-							if (lambda.Parameters.Count == 0)
-							{
-								setterExpr = lambda.Body;
-							}
-							else
-								throw new NotImplementedException();
-
+							setterExpr = lambda.Body;
 							break;
 						}
+
 						default:
 						{
 							setterExpr = builder.BuildFullEntityExpression(sequence.MappingSchema, arg, targetType, ProjectFlags.SQL, EntityConstructorBase.FullEntityPurpose.Insert);
-
 							break;
 						}
 					}
@@ -162,8 +161,10 @@ namespace LinqToDB.Linq.Builder
 
 					var sourceRef = new ContextRefExpression(sourceSequence.ElementType, sourceSequence);
 
-					var redirectedExpression = builder.BuildSqlExpression(sourceSequence, sourceRef, ProjectFlags.SQL,
-						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+					var redirectedExpression = builder.BuildSqlExpression(
+						sourceSequence, sourceRef, ProjectFlags.SQL,
+						buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments
+					);
 
 					insertContext.QuerySequence = sourceSequence;
 					insertContext.InsertStatement.SelectQuery = sourceSequence.SelectQuery;
@@ -174,7 +175,7 @@ namespace LinqToDB.Linq.Builder
 						insertContext.SetExpressions);
 				}
 
-				if (insertType == InsertContext.InsertTypeEnum.InsertOutput || insertType == InsertContext.InsertTypeEnum.InsertOutputInto)
+				if (insertType is InsertContext.InsertTypeEnum.InsertOutput or InsertContext.InsertTypeEnum.InsertOutputInto)
 				{
 					outputExpression =
 						methodCall.GetArgumentByName("outputExpression")?.UnwrapLambda()
@@ -200,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 					if (builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable)
 						insertStatement.Output.InsertedTable = insertedTable;
 
-					if (insertType == InsertContext.InsertTypeEnum.InsertOutputInto)
+					if (insertType is InsertContext.InsertTypeEnum.InsertOutputInto)
 					{
 						var outputTable = methodCall.GetArgumentByName("outputTable")!;
 						var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
@@ -225,7 +226,7 @@ namespace LinqToDB.Linq.Builder
 			insertContext.LastBuildInfo = buildInfo;
 			insertContext.FinalizeSetters();
 
-			insertStatement.Insert.WithIdentity = insertType == InsertContext.InsertTypeEnum.InsertWithIdentity;
+			insertStatement.Insert.WithIdentity = insertType is InsertContext.InsertTypeEnum.InsertWithIdentity;
 
 			return BuildSequenceResult.FromContext(insertContext);
 		}
@@ -425,9 +426,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				insertStatement = new SqlInsertStatement(sequence.SelectQuery);
-				insertContext = new InsertContext(sequence, InsertContext.InsertTypeEnum.Insert, insertStatement, null);
-				insertContext.Into = destinationSequence;
-				insertContext.LastBuildInfo = buildInfo;
+				insertContext = new InsertContext(sequence, InsertContext.InsertTypeEnum.Insert, insertStatement, null)
+				{
+					Into = destinationSequence,
+					LastBuildInfo = buildInfo
+				};
 
 				return BuildSequenceResult.FromContext(insertContext);
 			}

@@ -9,15 +9,15 @@ using System.Runtime.CompilerServices;
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
+	using Common.Internal;
 	using Extensions;
-	using Mapping;
-	using SqlQuery;
-	using Visitors;
-	using Tools;
-	using Translation;
 	using Infrastructure;
 	using LinqToDB.Expressions;
-	using LinqToDB.Common.Internal;
+	using Mapping;
+	using SqlQuery;
+	using Tools;
+	using Translation;
+	using Visitors;
 
 	internal sealed partial class ExpressionBuilder : IExpressionEvaluator
 	{
@@ -250,13 +250,12 @@ namespace LinqToDB.Linq.Builder
 			if (_sequenceExpressions.TryGetValue(sequence, out var expr))
 				return expr;
 
-			if (sequence is SubQueryContext sc)
-				return GetSequenceExpression(sc.SubQuery);
-
-			if (sequence is ScopeContext scoped)
-				return GetSequenceExpression(scoped.Context);
-
-			return null;
+			return sequence switch
+			{
+				SubQueryContext sc => GetSequenceExpression(sc.SubQuery),
+				ScopeContext sc => GetSequenceExpression(sc.Context),
+				_ => null,
+			};
 		}
 
 		public void RegisterSequenceExpression(IBuildContext sequence, Expression expression)
@@ -405,9 +404,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression ConvertExpressionTree(Expression expression)
 		{
-			var expr = expression;
-
-			expr = ExposeExpression(expression, DataContext, _optimizationContext, ParameterValues, optimizeConditions:false, compactBinary:true);
+			var expr = ExposeExpression(expression, DataContext, _optimizationContext, ParameterValues, optimizeConditions:false, compactBinary:true);
 
 			return expr;
 		}

@@ -14,10 +14,10 @@ namespace LinqToDB.Linq.Builder
 	using Async;
 	using Common;
 	using Extensions;
-	using Mapping;
-	using SqlQuery;
-	using Reflection;
 	using LinqToDB.Expressions;
+	using Mapping;
+	using Reflection;
+	using SqlQuery;
 
 	sealed class GroupByBuilder : MethodCallBuilder
 	{
@@ -110,6 +110,7 @@ namespace LinqToDB.Linq.Builder
 			var dataSequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceExpr));
 			if (dataSequenceResult.BuildContext == null)
 				return dataSequenceResult;
+
 			var dataSequence = dataSequenceResult.BuildContext;
 
 			var dataSubquery     = new SubQueryContext(dataSequence);
@@ -487,10 +488,12 @@ namespace LinqToDB.Linq.Builder
 					if (!IsGroupingGuardDisabled)
 					{
 						var ex = new LinqToDBException(
-							"You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.\n" +
-							"Set Configuration.Linq.GuardGrouping = false to disable this check.\n" +
-							"Additionally this guard exception can be disabled by extension GroupBy(...).DisableGuard().\n" +
-							"NOTE! By disabling this guard you accept Eager Loading for grouping query."
+							"""
+							You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.
+							Set Configuration.Linq.GuardGrouping = false to disable this check.
+							Additionally this guard exception can be disabled by extension GroupBy(...).DisableGuard().
+							NOTE! By disabling this guard you accept Eager Loading for grouping query.
+							"""
 						)
 						{
 							HelpLink = "https://github.com/linq2db/linq2db/issues/365"

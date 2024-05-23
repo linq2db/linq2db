@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.SqlQuery;
+	using SqlQuery;
 
 	public interface IToSqlConverter
 	{

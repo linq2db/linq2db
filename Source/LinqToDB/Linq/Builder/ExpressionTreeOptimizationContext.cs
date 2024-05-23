@@ -9,12 +9,11 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Data;
+	using Common.Internal;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
-	using LinqToDB.Common.Internal;
 
 	public class ExpressionTreeOptimizationContext
 	{
@@ -201,30 +200,27 @@ namespace LinqToDB.Linq.Builder
 		{
 			bool IsEqualConstants(Expression left, Expression right)
 			{
-				object? valueLeft;
-				object? valueRight;
+				var valueLeft = left switch
+				{
+					ConstantExpression leftConst                         => leftConst.Value,
+					SqlPlaceholderExpression { Sql: SqlValue leftConst } => leftConst.Value,
+					_ => MappingSchema.GetDefaultValue(left.Type),
+				};
 
-				if (left is ConstantExpression leftConst)
-					valueLeft = leftConst.Value;
-				else if (left is SqlPlaceholderExpression { Sql: SqlValue leftSqlValue })
-					valueLeft = leftSqlValue.Value;
-				else
-					valueLeft = MappingSchema.GetDefaultValue(left.Type);
-
-				if (right is ConstantExpression rightConst)
-					valueRight = rightConst.Value;
-				else if (right is SqlPlaceholderExpression { Sql: SqlValue rightSqlValue })
-					valueRight = rightSqlValue.Value;
-				else
-					valueRight = MappingSchema.GetDefaultValue(right.Type);
+				var valueRight = right switch
+				{
+					ConstantExpression rightConst                         => rightConst.Value,
+					SqlPlaceholderExpression { Sql: SqlValue rightConst } => rightConst.Value,
+					_ => MappingSchema.GetDefaultValue(right.Type),
+				};
 
 				return Equals(valueLeft, valueRight);
 			}
 
 			bool IsComparable(Expression testExpr)
 			{
-				return testExpr.NodeType == ExpressionType.Constant || testExpr.NodeType == ExpressionType.Default ||
-				       testExpr is DefaultValueExpression;
+				return testExpr.NodeType is ExpressionType.Constant or ExpressionType.Default 
+					|| testExpr is DefaultValueExpression;
 			}
 
 			bool IsEqualValues(Expression left, Expression right)
@@ -239,27 +235,21 @@ namespace LinqToDB.Linq.Builder
 
 			bool? IsNull(Expression testExpr)
 			{
-				if (testExpr.Type.IsValueType)
-					return null;
+				return testExpr switch
+				{
+					{ Type.IsValueType: true } => null,
 
-				if (testExpr.NodeType == ExpressionType.Constant)
-				{
-					return ((ConstantExpression)testExpr).Value == null;
-				}
-				if (testExpr.NodeType == ExpressionType.Default)
-				{
-					return true;
-				}
-				if (testExpr.NodeType == ExpressionType.New || testExpr.NodeType == ExpressionType.MemberInit || testExpr is SqlGenericConstructorExpression)
-				{
-					return false;
-				}
-				if (testExpr is DefaultValueExpression)
-				{
-					return true;
-				}
+					ConstantExpression { NodeType: ExpressionType.Constant, Value: var v } => v == null,
 
-				return null;
+					{ NodeType: ExpressionType.Default } => true,
+
+					{ NodeType: ExpressionType.New or ExpressionType.MemberInit }
+						or SqlGenericConstructorExpression => false,
+
+					DefaultValueExpression => true,
+
+					_ => null,
+				};
 			}
 
 			switch (expr.NodeType)
@@ -439,10 +429,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (newNode != null)
 				{
-					if (current != _isServerSideOnly)
-					{
+					//if (current != _isServerSideOnly)
+					//{ }
 
-					}
 					_serverSideOnlyTree.Add((newNode, _isServerSideOnly));
 				}
 
@@ -826,7 +815,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					Expression expr;
 
-					if (mi is MethodInfo method && method.IsGenericMethod)
+					if (mi is MethodInfo { IsGenericMethod: true } method)
 					{
 						var args  = method.GetGenericArguments();
 						var names = args.Select(t => (object)t.Name).ToArray();
@@ -933,61 +922,62 @@ namespace LinqToDB.Linq.Builder
 			switch (expr.NodeType)
 			{
 				case ExpressionType.MemberAccess:
+				{
+					var pi = (MemberExpression)expr;
+					var l  = Expressions.ConvertMember(MappingSchema, pi.Expression?.Type, pi.Member);
+
+					if (l != null)
 					{
-						var pi = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, pi.Expression?.Type, pi.Member);
+						var info = l.Body.Unwrap();
 
-						if (l != null)
-						{
-							var info = l.Body.Unwrap();
+						if (l.Parameters.Count == 1 && pi.Expression != null)
+							info = info.Replace(l.Parameters[0], pi.Expression);
 
-							if (l.Parameters.Count == 1 && pi.Expression != null)
-								info = info.Replace(l.Parameters[0], pi.Expression);
-
-							return GetVisitor(enforceServerSide).Find(info) != null;
-						}
-
-						var attr = pi.Member.GetExpressionAttribute(MappingSchema);
-						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, true);
+						return GetVisitor(enforceServerSide).Find(info) != null;
 					}
+
+					var attr = pi.Member.GetExpressionAttribute(MappingSchema);
+					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, true);
+				}
 
 				case ExpressionType.Call:
-					{
-						var pi = (MethodCallExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
+				{
+					var pi = (MethodCallExpression)expr;
+					var l  = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
-						if (l != null)
-							return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
+					if (l != null)
+						return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
 
-						var attr = pi.Method.GetExpressionAttribute(MappingSchema);
-						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, true);
-					}
+					var attr = pi.Method.GetExpressionAttribute(MappingSchema);
+					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, true);
+				}
+
 				default:
+				{
+					if (expr is BinaryExpression binary)
 					{
-						if (expr is BinaryExpression binary)
+						var l = Expressions.ConvertBinary(MappingSchema, binary);
+						if (l != null)
 						{
-							var l = Expressions.ConvertBinary(MappingSchema, binary);
-							if (l != null)
+							var body = l.Body.Unwrap();
+							var newExpr = body.Transform((l, binary), static (context, wpi) =>
 							{
-								var body = l.Body.Unwrap();
-								var newExpr = body.Transform((l, binary), static (context, wpi) =>
+								if (wpi.NodeType == ExpressionType.Parameter)
 								{
-									if (wpi.NodeType == ExpressionType.Parameter)
-									{
-										if (context.l.Parameters[0] == wpi)
-											return context.binary.Left;
-										if (context.l.Parameters[1] == wpi)
-											return context.binary.Right;
-									}
+									if (context.l.Parameters[0] == wpi)
+										return context.binary.Left;
+									if (context.l.Parameters[1] == wpi)
+										return context.binary.Right;
+								}
 
-									return wpi;
-								});
+								return wpi;
+							});
 
-								return PreferServerSide(newExpr, enforceServerSide);
-							}
+							return PreferServerSide(newExpr, enforceServerSide);
 						}
-						break;
 					}
+					break;
+				}
 			}
 
 			return false;

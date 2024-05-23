@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlQuery;
 
 	sealed class InsertOrUpdateBuilder : MethodCallBuilder
@@ -108,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 
 			public IBuildContext Context { get; }
 
-			public   SqlInsertOrUpdateStatement InsertOrUpdateStatement { get; }
+			public SqlInsertOrUpdateStatement InsertOrUpdateStatement { get; }
 
 			public InsertOrUpdateContext(ExpressionBuilder buider, IBuildContext sequence,
 				SqlInsertOrUpdateStatement insertOrUpdateStatement) : base(buider, typeof(object), sequence.SelectQuery)
