@@ -953,7 +953,7 @@ namespace LinqToDB.SqlProvider
 
 			var expr = predicate;
 
-			if ((expr.Operator == SqlPredicate.Operator.Equal || expr.Operator == SqlPredicate.Operator.NotEqual))
+			if (expr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
 				if (expr.WithNull == null)
 				{
@@ -1024,20 +1024,12 @@ namespace LinqToDB.SqlProvider
 
 			if (element.SearchCondition.IsOr)
 			{
-				SqlSearchCondition newSearchCondition;
-
-				if (element.SearchCondition.Predicates.Count == 0)
+				SqlSearchCondition newSearchCondition = element.SearchCondition.Predicates switch
 				{
-					newSearchCondition = new SqlSearchCondition(false);
-				}
-				else if (element.SearchCondition.Predicates.Count == 1)
-				{
-					newSearchCondition = new SqlSearchCondition(false, element.SearchCondition.Predicates[0]);
-				}
-				else
-				{
-					newSearchCondition = new SqlSearchCondition(false, element.SearchCondition);
-				}
+					[]       => new SqlSearchCondition(false),
+					[var p0] => new SqlSearchCondition(false, p0),
+					_        => new SqlSearchCondition(false, element.SearchCondition),
+				};
 
 				if (GetVisitMode(element) == VisitMode.Modify)
 				{
@@ -1059,11 +1051,9 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(optmimized, predicate))
 				return Visit(optmimized);
 
-			if (predicate.SubQuery.Where.SearchCondition.Predicates.Count == 1)
+			if (predicate.SubQuery.Where.SearchCondition.Predicates is [SqlPredicate.FalsePredicate firstPredicate])
 			{
-				var firstPredicate = predicate.SubQuery.Where.SearchCondition.Predicates[0];
-				if (firstPredicate is SqlPredicate.FalsePredicate)
-					return firstPredicate;
+				return firstPredicate;
 			}
 
 			return predicate;

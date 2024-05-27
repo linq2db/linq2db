@@ -52,22 +52,22 @@ namespace LinqToDB.Linq.Translation
 			if (translated != null)
 				return translated;
 
-			if (memberExpression is MethodCallExpression methodCallExpression)
+			if (memberExpression is MethodCallExpression { Method: { } method })
 			{
-				var translationFunc = Registration.GetTranslation(methodCallExpression.Method);
+				var translationFunc = Registration.GetTranslation(method);
 				if (translationFunc != null)
 					return translationFunc(translationContext, memberExpression, translationFlags);
 
 			}
-			else if (memberExpression is MemberExpression member)
+			else if (memberExpression is MemberExpression { Member: { } member })
 			{
-				var translationFunc = Registration.GetTranslation(member.Member);
+				var translationFunc = Registration.GetTranslation(member);
 				if (translationFunc != null)
 					return translationFunc(translationContext, memberExpression, translationFlags);
 			}
-			else if (memberExpression is NewExpression newExpression && newExpression.Constructor != null)
+			else if (memberExpression is NewExpression { Constructor: { } constructor })
 			{
-				var translationFunc = Registration.GetTranslation(newExpression.Constructor);
+				var translationFunc = Registration.GetTranslation(constructor);
 				if (translationFunc != null)
 					return translationFunc(translationContext, memberExpression, translationFlags);
 			}

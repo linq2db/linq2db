@@ -3,8 +3,8 @@
 namespace LinqToDB.Linq
 {
 	using Common;
-	using LinqToDB.Linq.Builder;
-	using LinqToDB.Mapping;
+	using Linq.Builder;
+	using Mapping;
 
 	internal static class Exceptions
 	{

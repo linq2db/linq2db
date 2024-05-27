@@ -74,10 +74,11 @@ namespace LinqToDB.SqlProvider
 		{
 			if (statement is SqlInsertStatement insertStatement)
 			{
+				var tables = insertStatement.SelectQuery.From.Tables;
 				var isSelfInsert =
-					insertStatement.SelectQuery.From.Tables.Count == 0 ||
-					insertStatement.SelectQuery.From.Tables.Count     == 1 &&
-					insertStatement.SelectQuery.From.Tables[0].Source == insertStatement.Insert.Into;
+					tables.Count     == 0 ||
+					tables.Count     == 1 &&
+					tables[0].Source == insertStatement.Insert.Into;
 
 				if (isSelfInsert)
 				{
@@ -145,8 +146,7 @@ namespace LinqToDB.SqlProvider
 
 		static bool IsCompatibleForUpdate(SqlJoinedTable joinedTable)
 		{
-			return joinedTable.JoinType == JoinType.Inner || joinedTable.JoinType == JoinType.Left ||
-				   joinedTable.JoinType == JoinType.Right;
+			return joinedTable.JoinType is JoinType.Inner or JoinType.Left or JoinType.Right;
 		}
 
 		static bool IsCompatibleForUpdate(List<IQueryElement> path)
@@ -156,11 +156,12 @@ namespace LinqToDB.SqlProvider
 
 			var result = path.All(e =>
 			{
-				if (e is SelectQuery sc)
-					return IsCompatibleForUpdate(sc);
-				if (e is SqlJoinedTable jt)
-					return IsCompatibleForUpdate(jt);
-				return true;
+				return e switch
+				{
+					SelectQuery sc    => IsCompatibleForUpdate(sc),
+					SqlJoinedTable jt => IsCompatibleForUpdate(jt),
+					_                 => true,
+				};
 			});
 
 			return result;
@@ -946,12 +947,12 @@ namespace LinqToDB.SqlProvider
 			replaceTree = new Dictionary<IQueryElement, IQueryElement>();
 			var clonedQuery = query.Clone(exceptTable, replaceTree, static (ut, e) =>
 			{
-				if ((e is SqlTable table && table == ut) || (e is SqlField field && field.Table == ut))
+				return e switch
 				{
-					return false;
-				}
-
-				return true;
+					SqlTable table when table       == ut => false,
+					SqlField field when field.Table == ut => false,
+					_ => true,
+				};
 			});
 
 			replaceTree = CorrectReplaceTree(replaceTree, exceptTable);
@@ -1317,11 +1318,9 @@ namespace LinqToDB.SqlProvider
 
 				if (item.Column is SqlRowExpression && item.Expression is SelectQuery subQuery)
 				{
-					if (subQuery.Select.Columns.Count == 1)
+					if (subQuery.Select.Columns is [var column])
 					{
-						var column = subQuery.Select.Columns[0];
-
-						if (column.Expression is SelectQuery columnQuery && columnQuery.From.Tables.Count == 0)
+						if (column.Expression is SelectQuery { From.Tables: [] } columnQuery)
 						{
 							subQuery.Select.Columns.Clear();
 							foreach (var c in columnQuery.Select.Columns)

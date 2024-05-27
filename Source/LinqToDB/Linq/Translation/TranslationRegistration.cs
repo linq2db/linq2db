@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Linq.Translation
 {
 	using Extensions;
-
 	using LinqToDB.Expressions;
+	using Mapping;
 
 	public class TranslationRegistration
 	{
@@ -113,7 +111,7 @@ namespace LinqToDB.Linq.Translation
 				memberInfo = memberExpression.Member;
 			else if (expression is MethodCallExpression methodCallExpression)
 				memberInfo = methodCallExpression.Method;
-			else if (expression is NewExpression newExpression && newExpression.Constructor != null)
+			else if (expression is NewExpression { Constructor: { } } newExpression)
 				memberInfo = newExpression.Constructor;
 			else
 				return null;

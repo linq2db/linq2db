@@ -14,8 +14,6 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlProvider
 {
-	using System.Linq.Expressions;
-
 	using Common;
 	using Common.Internal;
 	using DataProvider;

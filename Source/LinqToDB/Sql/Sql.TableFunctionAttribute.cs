@@ -6,9 +6,9 @@ using System.Linq.Expressions;
 namespace LinqToDB
 {
 	using Common.Internal;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
 	partial class Sql
 	{

@@ -13,12 +13,12 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Common;
+	using Common.Internal;
 	using Expressions;
 	using Extensions;
-	using Common.Internal;
+	using Linq.Builder;
 	using Mapping;
 	using SqlQuery;
-	using Linq.Builder;
 
 	public enum ExprParameterKind
 	{

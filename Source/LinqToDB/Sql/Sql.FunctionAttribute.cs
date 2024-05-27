@@ -7,10 +7,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Mapping;
-	using SqlQuery;
 	using Expressions;
 	using Linq.Builder;
+	using SqlQuery;
 
 	partial class Sql
 	{

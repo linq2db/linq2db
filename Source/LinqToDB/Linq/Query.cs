@@ -14,10 +14,9 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common;
 	using Common.Logging;
-	using Interceptors;
 	using Extensions;
+	using Interceptors;
 	using LinqToDB.Expressions;
-
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -634,10 +633,7 @@ namespace LinqToDB.Linq
 				{
 					if (!node.Value.GetType().IsScalar())
 					{
-						if (node.Value is Array)
-							return node;
-
-						if (node.Value is FormattableString)
+						if (node.Value is Array or FormattableString)
 							return node;
 
 						throw new InvalidOperationException($"Constant '{node}' is not replaced.");
@@ -675,8 +671,10 @@ namespace LinqToDB.Linq
 				if (!linqOptions.GenerateExpressionTest)
 				{
 					dataContext.WriteTraceLine(
-						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.\n" +
-						"Or specify LINQ options during 'DataContextOptions' building 'options.UseGenerateExpressionTest(true)'",
+						"""
+						To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.
+						Or specify LINQ options during 'DataContextOptions' building 'options.UseGenerateExpressionTest(true)'
+						""",
 						dataContext.GetTraceSwitch().DisplayName,
 						TraceLevel.Error);
 				}

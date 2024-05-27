@@ -20,13 +20,12 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
-	using Common;
-	using Extensions;
-	using LinqToDB.SqlQuery;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 	using DataProvider.Firebird;
+	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
+	using SqlQuery;
 
 	[PublicAPI]
 	public static class Expressions
@@ -129,7 +128,7 @@ namespace LinqToDB.Linq
 
 		static BinaryExpression GetBinaryNode(Expression expr)
 		{
-			while (expr.NodeType == ExpressionType.Convert || expr.NodeType == ExpressionType.ConvertChecked || expr.NodeType == ExpressionType.TypeAs)
+			while (expr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs)
 				expr = ((UnaryExpression)expr).Operand;
 
 			if (expr is BinaryExpression binary)

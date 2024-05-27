@@ -147,7 +147,7 @@ namespace LinqToDB.SqlProvider
 			if (join.SqlQueryExtensions?.Count > 0)
 				return false;
 
-			// some table extensions also could affect carinality
+			// some table extensions also could affect cardinality
 			// https://github.com/linq2db/linq2db/pull/4016
 			if (join.Table.Source is SqlTable { SqlQueryExtensions.Count: > 0 })
 				return false;

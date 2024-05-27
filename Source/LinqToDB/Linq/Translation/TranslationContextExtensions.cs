@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Linq.Translation
 {
+	using Common;
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
 	public static class TranslationContextExtensions
 	{
 		public static bool TryEvaluate<T>(this ITranslationContext translationContext, Expression expression, out T result)
@@ -37,14 +37,15 @@ namespace LinqToDB.Linq.Translation
 
 		public static bool TranslateToSqlExpression(this ITranslationContext translationContext, Expression expression, [NotNullWhen(true)] out ISqlExpression? translated)
 		{
-			translated = null;
 			var result = translationContext.Translate(expression, TranslationFlags.Sql);
 
 			if (result is not SqlPlaceholderExpression placeholder)
+			{
+				translated = null;
 				return false;
+			}
 
 			translated = placeholder.Sql;
-
 			return true;
 		}
 	}

@@ -6,8 +6,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using Mapping;
+	using SqlProvider;
 	using SqlQuery;
 
 	partial class Sql

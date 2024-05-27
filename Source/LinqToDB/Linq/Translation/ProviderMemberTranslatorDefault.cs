@@ -1,14 +1,13 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq.Expressions;
 
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Translation
 {
-	using System.Globalization;
-
-	using LinqToDB.Expressions;
 	using Common;
+	using Extensions;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	public abstract class ProviderMemberTranslatorDefault : MemberTranslatorBase
@@ -88,7 +87,10 @@ namespace LinqToDB.Linq.Translation
 				toType = translationContext.MappingSchema.GetDbDataType(typeof(string));
 			}
 
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, new SqlCastExpression(objPlaceholder.Sql, toType, null), methodCall);
+			return translationContext.CreatePlaceholder(
+				translationContext.CurrentSelectQuery, 
+				new SqlCastExpression(objPlaceholder.Sql, toType, null), 
+				methodCall);
 		}
 
 		protected bool ProcessToString(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, out Expression? translated)

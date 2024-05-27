@@ -275,9 +275,9 @@ namespace LinqToDB.SqlProvider
 						return false;
 
 					// ignore non searchable parts
-					if (e.ElementType == QueryElementType.SelectClause
-					   || e.ElementType == QueryElementType.GroupByClause
-					   || e.ElementType == QueryElementType.OrderByClause)
+					if (e.ElementType is QueryElementType.SelectClause
+									  or QueryElementType.GroupByClause
+									  or QueryElementType.OrderByClause)
 						return false;
 
 					if (e.ElementType == QueryElementType.JoinedTable)

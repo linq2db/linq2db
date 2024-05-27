@@ -12,10 +12,9 @@ namespace LinqToDB
 	using Common.Internal;
 	using Expressions;
 	using Extensions;
+	using Linq.Builder;
 	using Mapping;
 	using SqlQuery;
-	using Common;
-	using Linq.Builder;
 
 	partial class Sql
 	{

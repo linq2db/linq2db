@@ -193,7 +193,7 @@ namespace LinqToDB.Linq.Translation
 			return new SqlDataType(dbDataType);
 		}
 
-		#region Preicates
+		#region Predicates
 
 		public static ISqlPredicate Greater(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
 		{

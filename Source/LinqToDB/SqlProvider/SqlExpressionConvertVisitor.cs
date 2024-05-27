@@ -278,7 +278,7 @@ namespace LinqToDB.SqlProvider
 			if (predicate.Values.Count == 0)
 				return SqlPredicate.MakeBool(predicate.IsNot);
 
-			if (predicate.Values.Count == 1 && predicate.Values[0] is SqlParameter parameter)
+			if (predicate.Values is [SqlParameter parameter])
 			{
 				var paramValue = parameter.GetParameterValue(EvaluationContext.ParameterValues);
 

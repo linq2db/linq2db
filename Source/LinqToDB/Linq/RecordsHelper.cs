@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 
 	[Flags]
 	internal enum RecordType

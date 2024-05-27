@@ -5,10 +5,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	using SqlQuery;
-	using Linq.Builder;
-	using Mapping;
 	using Expressions;
+	using Linq.Builder;
+	using SqlQuery;
 
 	partial class Sql
 	{

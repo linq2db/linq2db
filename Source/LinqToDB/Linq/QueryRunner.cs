@@ -19,11 +19,11 @@ namespace LinqToDB.Linq
 	using Common.Logging;
 	using Data;
 	using Extensions;
+	using Interceptors;
 	using LinqToDB.Expressions;
 	using Reflection;
 	using SqlQuery;
 	using Tools;
-	using Interceptors;
 
 	static partial class QueryRunner
 	{
