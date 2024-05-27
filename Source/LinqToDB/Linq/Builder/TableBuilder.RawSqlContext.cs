@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlQuery;
 
 	partial class TableBuilder

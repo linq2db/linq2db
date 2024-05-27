@@ -142,15 +142,15 @@ namespace LinqToDB.Linq.Builder
 						else
 						{
 							var queryToUpdate = sequence.SelectQuery;
-							if (sequence is AsSubqueryContext subquery && sequence.SelectQuery.IsSimple)
+							if (sequence is AsSubqueryContext { SelectQuery.IsSimple: true } subquery)
 							{
 								queryToUpdate = subquery.SubQuery.SelectQuery;
 							}
 
 							if (!queryToUpdate.IsSimple)
 							{
-								sequence                         = new SubQueryContext(sequence);
-								queryToUpdate                    = sequence.SelectQuery;
+								sequence      = new SubQueryContext(sequence);
+								queryToUpdate = sequence.SelectQuery;
 							}
 
 							attr.ExtendSubQuery(queryToUpdate.SqlQueryExtensions ??= new(), list);

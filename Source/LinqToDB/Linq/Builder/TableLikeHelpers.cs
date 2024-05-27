@@ -29,13 +29,12 @@ namespace LinqToDB.Linq.Builder
 
 		public static string? GenerateColumnAlias(ISqlExpression sqlExpression)
 		{
-			if (sqlExpression is SqlField field)
-				return field.PhysicalName;
-
-			if (sqlExpression is SqlColumn column)
-				return column.RawAlias ?? GenerateColumnAlias(column.Expression);
-
-			return null;
+			return sqlExpression switch
+			{
+				SqlField field   => field.PhysicalName,
+				SqlColumn column => column.RawAlias ?? GenerateColumnAlias(column.Expression),
+				_                => null,
+			};
 		}
 
 		public static string? GenerateColumnAlias(Expression expr)

@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
 	using LinqToDB.Expressions;
+	using SqlQuery;
 
 	internal partial class MergeBuilder
 	{

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlQuery;
 
 	abstract class PassThroughContext : BuildContextBase

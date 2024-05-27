@@ -63,8 +63,8 @@ namespace LinqToDB.Linq.Builder
 
 				mergeContext.OutputContext = outputContext;
 
-				var selectQuery = outputContext.SelectQuery;
-				var actionFieldContext  = new SingleExpressionContext(builder, actionField, selectQuery);
+				var selectQuery        = outputContext.SelectQuery;
+				var actionFieldContext = new SingleExpressionContext(builder, actionField, selectQuery);
 
 				IBuildContext? sourceTableContext = null;
 

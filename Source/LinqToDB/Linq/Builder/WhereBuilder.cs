@@ -32,8 +32,9 @@ namespace LinqToDB.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 			}
 
-			var result = builder.BuildWhere(buildInfo.Parent, sequence, condition : condition,
-				checkForSubQuery : !isHaving, enforceHaving : isHaving, isTest : buildInfo.IsTest);
+			var result = builder.BuildWhere(
+				buildInfo.Parent, sequence, condition: condition,
+				checkForSubQuery: !isHaving, enforceHaving: isHaving, isTest: buildInfo.IsTest);
 
 			if (result == null)
 				return BuildSequenceResult.Error(methodCall);

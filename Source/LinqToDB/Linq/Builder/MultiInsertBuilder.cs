@@ -6,7 +6,7 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlQuery;
 
 	using Methods = Reflection.Methods.LinqToDB.MultiInsert;

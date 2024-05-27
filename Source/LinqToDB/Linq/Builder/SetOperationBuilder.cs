@@ -6,10 +6,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common.Internal;
 	using Extensions;
-	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
-
 	using SqlQuery;
 
 	internal sealed class SetOperationBuilder : MethodCallBuilder
@@ -53,10 +52,10 @@ namespace LinqToDB.Linq.Builder
 			var elementType = methodCall.Method.GetGenericArguments()[0];
 
 			var needsEmulation = !builder.DataContext.SqlProviderFlags.IsAllSetOperationsSupported &&
-			                     (setOperation == SetOperation.ExceptAll || setOperation == SetOperation.IntersectAll)
+			                     (setOperation is SetOperation.ExceptAll or SetOperation.IntersectAll)
 			                     ||
 			                     !builder.DataContext.SqlProviderFlags.IsDistinctSetOperationsSupported &&
-			                     (setOperation == SetOperation.Except || setOperation == SetOperation.Intersect);
+			                     (setOperation is SetOperation.Except or SetOperation.Intersect);
 
 			var set1 = new SubQueryContext(sequence1);
 			var set2 = new SubQueryContext(sequence2);
@@ -1184,12 +1183,12 @@ namespace LinqToDB.Linq.Builder
 
 				var sql = sequence.SelectQuery;
 
-				if (_setOperation == SetOperation.Except || _setOperation == SetOperation.Intersect)
+				if (_setOperation is SetOperation.Except or SetOperation.Intersect)
 					sql.Select.IsDistinct = true;
 
 				sql.Where.EnsureConjunction();
 
-				if (_setOperation == SetOperation.Except || _setOperation == SetOperation.ExceptAll)
+				if (_setOperation is SetOperation.Except or SetOperation.ExceptAll)
 					sql.Where.SearchCondition.AddNotExists(except);
 				else
 					sql.Where.SearchCondition.AddExists(except);

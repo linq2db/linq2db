@@ -8,9 +8,8 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
-	using Mapping;
-	using Common;
 	using LinqToDB.Reflection;
+	using Mapping;
 
 	sealed class LoadWithBuilder : MethodCallBuilder
 	{
@@ -85,15 +84,8 @@ namespace LinqToDB.Linq.Builder
 				// reset LoadWith sequence
 				if (methodCall.IsQueryable("LoadWith"))
 				{
-					for(;;)
-					{
-						if (sequence is LoadWithContext lw)
-						{
-							sequence = lw.Context;
-						}
-						else
-							break;
-					}
+					while (sequence is LoadWithContext lw)
+						sequence = lw.Context;
 				}
 				else
 				{
@@ -222,123 +214,123 @@ namespace LinqToDB.Linq.Builder
 				switch (expression.NodeType)
 				{
 					case ExpressionType.Parameter :
-						{
-							if (lastMember == null)
-								goto default;
-							stop = true;
-							break;
-						}
+					{
+						if (lastMember == null)
+							goto default;
+						stop = true;
+						break;
+					}
 
 					case ExpressionType.Call      :
+					{
+						var cexpr = (MethodCallExpression)expression;
+
+						if (cexpr.Method.IsSqlPropertyMethodEx())
 						{
-							var cexpr = (MethodCallExpression)expression;
+							var memberInfo   = MemberHelper.GetMemberInfo(cexpr);
+							var memberAccess = Expression.MakeMemberAccess(cexpr.Arguments[0], memberInfo);
+							expression = memberAccess;
 
-							if (cexpr.Method.IsSqlPropertyMethodEx())
-							{
-								var memberInfo   = MemberHelper.GetMemberInfo(cexpr);
-								var memberAccess = Expression.MakeMemberAccess(cexpr.Arguments[0], memberInfo);
-								expression = memberAccess;
-
-								continue;
-							}
-
-							if (lastMember == null)
-								goto default;
-
-							var expr  = cexpr.Object;
-
-							if (expr == null)
-							{
-								if (cexpr.Arguments.Count == 0)
-									goto default;
-
-								expr = cexpr.Arguments[0];
-							}
-
-							if (expr.NodeType != ExpressionType.MemberAccess)
-								goto default;
-
-							var member = ((MemberExpression)expr).Member;
-							var mtype  = member.GetMemberType();
-
-							if (lastMember.ReflectedType != mtype.GetItemType())
-								goto default;
-
-							expression = expr;
-
-							break;
+							continue;
 						}
+
+						if (lastMember == null)
+							goto default;
+
+						var expr  = cexpr.Object;
+
+						if (expr == null)
+						{
+							if (cexpr.Arguments.Count == 0)
+								goto default;
+
+							expr = cexpr.Arguments[0];
+						}
+
+						if (expr.NodeType != ExpressionType.MemberAccess)
+							goto default;
+
+						var member = ((MemberExpression)expr).Member;
+						var mtype  = member.GetMemberType();
+
+						if (lastMember.ReflectedType != mtype.GetItemType())
+							goto default;
+
+						expression = expr;
+
+						break;
+					}
 
 					case ExpressionType.MemberAccess :
+					{
+						expression = builder.MakeExpression(context, expression, ProjectFlags.Traverse);
+
+						if (expression.NodeType != ExpressionType.MemberAccess)
+							break;
+
+						var mexpr         = (MemberExpression)expression;
+						var member        = lastMember = mexpr.Member;
+						var isAssociation = builder.IsAssociation(expression, out _);
+
+						if (!isAssociation)
 						{
-							expression = builder.MakeExpression(context, expression, ProjectFlags.Traverse);
-
-							if (expression.NodeType != ExpressionType.MemberAccess)
-								break;
-
-							var mexpr         = (MemberExpression)expression;
-							var member        = lastMember = mexpr.Member;
-							var isAssociation = builder.IsAssociation(expression, out _);
-
-							if (!isAssociation)
-							{
-								var projected = builder.MakeExpression(context, expression, ProjectFlags.Traverse);
-								if (ExpressionEqualityComparer.Instance.Equals(projected, expression))
-									throw new LinqToDBException($"Member '{expression}' is not an association.");
-								expression = projected;
-								break;
-							}
-
-							members.Add(member);
-
-							expression = mexpr.Expression!;
-
+							var projected = builder.MakeExpression(context, expression, ProjectFlags.Traverse);
+							if (ExpressionEqualityComparer.Instance.Equals(projected, expression))
+								throw new LinqToDBException($"Member '{expression}' is not an association.");
+							expression = projected;
 							break;
 						}
+
+						members.Add(member);
+
+						expression = mexpr.Expression!;
+
+						break;
+					}
 
 					case ExpressionType.ArrayIndex   :
+					{
+						expression = ((BinaryExpression)expression).Left;
+						break;
+					}
+
+					case ExpressionType.Extension    :
+					{
+						if (expression is GetItemExpression getItemExpression)
 						{
-							expression = ((BinaryExpression)expression).Left;
+							expression = getItemExpression.Expression;
 							break;
 						}
 
-					case ExpressionType.Extension    :
+						if (expression is ContextRefExpression contextRef)
 						{
-							if (expression is GetItemExpression getItemExpression)
+							var newExpression = builder.MakeExpression(context, expression, ProjectFlags.Table);
+							if (!ReferenceEquals(newExpression, expression))
 							{
-								expression = getItemExpression.Expression;
-								break;
+								expression = newExpression;
+							}
+							else
+							{
+								stop    = true;
+								context = contextRef.BuildContext as ITableContext;
 							}
 
-							if (expression is ContextRefExpression contextRef)
-							{
-								var newExpression = builder.MakeExpression(context, expression, ProjectFlags.Table);
-								if (!ReferenceEquals(newExpression, expression))
-								{
-									expression = newExpression;
-								}
-								else
-								{
-									stop    = true;
-									context = contextRef.BuildContext as ITableContext;
-								}
+							break;
+						}
 
-								break;
-							}
-
-							goto default;
+						goto default;
 					}
 
 					case ExpressionType.Convert      :
-						{
-							expression = ((UnaryExpression)expression).Operand;
-							break;
-						}
+					{
+						expression = ((UnaryExpression)expression).Operand;
+						break;
+					}
 
 					default :
-						{
-							throw new LinqToDBException($"Expression '{expression}' is not an association.");
-						}
+					{
+						throw new LinqToDBException($"Expression '{expression}' is not an association.");
+					}
 				}
 			}
 

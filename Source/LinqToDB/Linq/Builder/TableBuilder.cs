@@ -5,10 +5,10 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
+	using Interceptors;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
-	using Interceptors;
 
 	sealed partial class TableBuilder : ISequenceBuilder
 	{
@@ -35,44 +35,43 @@ namespace LinqToDB.Linq.Builder
 			switch (expression.NodeType)
 			{
 				case ExpressionType.Call:
+				{
+					var mc = (MethodCallExpression)expression;
+
+					switch (mc.Method.Name)
 					{
-						var mc = (MethodCallExpression)expression;
-
-						switch (mc.Method.Name)
+						case "GetTable" 
+							when typeof(ITable<>).IsSameOrParentOf(expression.Type):
 						{
-							case "GetTable":
-								{
-									if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
-										return BuildContextType.GetTableMethod;
-									break;
-								}
-
-							case "TableFromExpression":
-							{
-								if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
-									return BuildContextType.TableFromExpression;
-								break;
-							}
-
-							case "AsCte":
-								return BuildContextType.AsCteMethod;
-
-							case "GetCte":
-								return BuildContextType.GetCteMethod;
-
-							case "FromSql":
-								return BuildContextType.FromSqlMethod;
-							case "FromSqlScalar":
-								return BuildContextType.FromSqlScalarMethod;
+							return BuildContextType.GetTableMethod;
 						}
 
-						var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema);
+						case "TableFromExpression"
+							when typeof(ITable<>).IsSameOrParentOf(expression.Type):
+						{
+							return BuildContextType.TableFromExpression;
+						}
 
-						if (attr != null)
-							return BuildContextType.TableFunctionAttribute;
+						case "AsCte":
+							return BuildContextType.AsCteMethod;
 
-						break;
+						case "GetCte":
+							return BuildContextType.GetCteMethod;
+
+						case "FromSql":
+							return BuildContextType.FromSqlMethod;
+
+						case "FromSqlScalar":
+							return BuildContextType.FromSqlScalarMethod;
 					}
+
+					var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema);
+
+					if (attr != null)
+						return BuildContextType.TableFunctionAttribute;
+
+					break;
+				}
 			}
 
 			return BuildContextType.None;
@@ -159,10 +158,8 @@ namespace LinqToDB.Linq.Builder
 			if (expression is SqlQueryRootExpression root)
 				return root.MappingSchema;
 
-			if (expression is NewExpression ne && ne.Arguments.Count > 0)
-			{
+			if (expression is NewExpression { Arguments.Count: > 0 } ne)
 				return GetRootMappingSchema(builder, ne.Arguments[0]);
-			}
 
 			var dc = builder.EvaluateExpression<IDataContext>(expression);
 
@@ -194,6 +191,7 @@ namespace LinqToDB.Linq.Builder
 			switch (type)
 			{
 				case BuildContextType.None                   : return BuildSequenceResult.NotSupported();
+
 				case BuildContextType.GetTableMethod         :
 				{
 					var mc = (MethodCallExpression)buildInfo.Expression;
@@ -201,13 +199,15 @@ namespace LinqToDB.Linq.Builder
 
 					return BuildTableWithAppliedFilters(builder, buildInfo, mappingSchema, buildInfo.Expression);
 				}
+
 				case BuildContextType.TableFunctionAttribute :
 				{
 					var mappingSchema = builder.MappingSchema;
 
 					return BuildSequenceResult.FromContext(new TableContext(builder, mappingSchema, buildInfo));
 				}
-				case BuildContextType.TableFromExpression :
+
+				case BuildContextType.TableFromExpression    :
 				{
 					var mappingSchema = builder.MappingSchema;
 

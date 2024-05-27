@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Common.Internal;
-	using LinqToDB.Expressions;
+	using Common.Internal;
 	using Extensions;
+	using LinqToDB.Expressions;
 
 	sealed class MethodChainBuilder : MethodCallBuilder
 	{
@@ -120,7 +120,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var sqlExpression = finalFunction.GetExpression((builder, context : placeholderSequence, forselect : placeholderSelect, flags: buildInfo.GetFlags()), 
+			var sqlExpression = finalFunction.GetExpression(
+				(builder, context: placeholderSequence, forselect: placeholderSelect, flags: buildInfo.GetFlags()), 
 				builder.DataContext, 
 				builder, 
 				placeholderSelect, 
@@ -180,8 +181,11 @@ namespace LinqToDB.Linq.Builder
 			static int CheckNullValue(bool isNull, object context)
 			{
 				if (isNull)
+				{
 					throw new InvalidOperationException(
 						$"Function '{context}' returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
+				}
+
 				return 0;
 			}
 

@@ -6,11 +6,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
-	using Common;
-	using LinqToDB.Expressions;
 
 	sealed class UpdateBuilder : MethodCallBuilder
 	{

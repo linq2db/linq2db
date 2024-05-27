@@ -4,8 +4,8 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Extensions;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

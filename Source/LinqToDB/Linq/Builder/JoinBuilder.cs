@@ -24,12 +24,11 @@ namespace LinqToDB.Linq.Builder
 			if (body.NodeType == ExpressionType.MemberInit)
 			{
 				var mi = (MemberInitExpression)body;
-				bool throwExpr;
 
-				if (mi.NewExpression.Arguments.Count > 0 || mi.Bindings.Count == 0)
-					throwExpr = true;
-				else
-					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
+				var throwExpr = 
+					mi.NewExpression.Arguments.Count > 0
+					|| mi.Bindings.Count == 0
+					|| mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
 
 				if (throwExpr)
 					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in join is not allowed.");

@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Mapping;
+	using Mapping;
 	using SqlQuery;
 
 	sealed class SingleExpressionContext : BuildContextBase

@@ -294,7 +294,8 @@ namespace LinqToDB.Linq.Builder
 							if (newExpr.ValueExpression.Type != typeof(DataParameter))
 							{
 								LambdaExpression? convertExpr = null;
-								if (buildParameterType == BuildParameterType.Default && !HasDbMapping(MappingSchema, newExpr.ValueExpression.Type, out convertExpr))
+								if (buildParameterType == BuildParameterType.Default
+									&& !HasDbMapping(MappingSchema, newExpr.ValueExpression.Type, out convertExpr))
 								{
 									if (!doNotCheckCompatibility)
 										return null;
@@ -350,7 +351,7 @@ namespace LinqToDB.Linq.Builder
 				(1, paramContext : this, register),
 				static (context, expr) =>
 				{
-					// !!! Code should be synched with ReplaceParameter !!!
+					// TODO: !!! Code should be synched with ReplaceParameter !!!
 					if (expr.NodeType == ExpressionType.ArrayIndex && ((BinaryExpression)expr).Left == ExpressionBuilder.ParametersParam)
 					{
 						return new TransformInfo(expr, true);
@@ -377,7 +378,7 @@ namespace LinqToDB.Linq.Builder
 				(1, paramContext : this),
 				(context, expr) =>
 				{
-					// !!! Code should be synched with ReplaceParameter !!!
+					// TODO: !!! Code should be synched with ReplaceParameter !!!
 					if (expr.NodeType == ExpressionType.ArrayIndex && ((BinaryExpression)expr).Left == ExpressionBuilder.ParametersParam)
 					{
 						return new TransformInfo(expr, true);
