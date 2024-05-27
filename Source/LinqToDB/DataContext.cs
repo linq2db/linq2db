@@ -376,7 +376,7 @@ namespace LinqToDB
 
 		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx) => DataProvider.IsDBNullAllowed(Options, reader, idx);
 
-		void IDisposable.Dispose()
+		public void Dispose()
 		{
 			Dispose(disposing: true);
 		}
@@ -390,7 +390,7 @@ namespace LinqToDB
 			((IDataContext)this).Close();
 		}
 
-		async ValueTask IAsyncDisposable.DisposeAsync()
+		public async ValueTask DisposeAsync()
 		{
 			await DisposeAsync(disposing: true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
