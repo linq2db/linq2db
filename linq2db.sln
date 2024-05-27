@@ -1,4 +1,3 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32002.185
@@ -82,6 +81,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811
 		Clean.cmd = Clean.cmd
 		Compile.cmd = Compile.cmd
 		CONTRIBUTING.md = CONTRIBUTING.md
+		global.json = global.json
 		linq2db.Benchmarks.slnf = linq2db.Benchmarks.slnf
 		linq2db.playground.slnf = linq2db.playground.slnf
 		MIT-LICENSE.txt = MIT-LICENSE.txt
