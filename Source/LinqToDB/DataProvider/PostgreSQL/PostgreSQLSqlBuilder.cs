@@ -165,7 +165,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.SequenceName         :
 					if (ProviderOptions.IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
-						// current logic limitations (hardly an issue as they кузкуыуте quite exotic cases):
+						// current logic limitations (hardly an issue as they represent quite exotic cases):
 						// - surrogate pairs/runes not handled
 						// - non-lowercase non-uppercase letters not handled
 						var quote =

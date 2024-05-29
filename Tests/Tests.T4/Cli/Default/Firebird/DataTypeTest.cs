@@ -18,7 +18,7 @@ namespace Cli.Default.Firebird
 	{
 		[Column("DataTypeID", IsPrimaryKey = true)] public int       DataTypeId { get; set; } // integer
 		[Column("Binary_"                        )] public byte[]?   Binary     { get; set; } // blob
-		[Column("Boolean_"                       )] public char?     Boolean    { get; set; } // char(1)
+		[Column("Boolean_"                       )] public bool?     Boolean    { get; set; } // boolean
 		[Column("Byte_"                          )] public short?    Byte       { get; set; } // smallint
 		[Column("Bytes_"                         )] public byte[]?   Bytes      { get; set; } // blob
 		[Column("CHAR_"                          )] public char?     Char       { get; set; } // char(1)

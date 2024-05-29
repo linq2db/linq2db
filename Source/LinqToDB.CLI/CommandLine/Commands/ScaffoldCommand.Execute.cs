@@ -6,12 +6,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
@@ -186,6 +186,7 @@ namespace LinqToDB.CommandLine
 				case ProviderName.Firebird          :
 					break;
 				case ProviderName.MySql             :
+					provider = "MySqlConnector";
 					break;
 				case ProviderName.Oracle            :
 					OracleTools.AutoDetectProvider = true;

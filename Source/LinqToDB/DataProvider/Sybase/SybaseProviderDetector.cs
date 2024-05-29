@@ -16,8 +16,8 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _sybaseNativeDataProvider  = DataConnection.CreateDataProvider<SybaseDataProviderNative>();
-		static readonly Lazy<IDataProvider> _sybaseManagedDataProvider = DataConnection.CreateDataProvider<SybaseDataProviderManaged>();
+		static readonly Lazy<IDataProvider> _sybaseNativeDataProvider  = CreateDataProvider<SybaseDataProviderNative>();
+		static readonly Lazy<IDataProvider> _sybaseManagedDataProvider = CreateDataProvider<SybaseDataProviderManaged>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{

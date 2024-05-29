@@ -89,8 +89,6 @@ namespace Cli.T4.MySql
 		[Column("timestampDataType"                                                                                    )] public DateTime? TimestampDataType   { get; set; } // timestamp
 		[Column("timeDataType"                                                                                         )] public TimeSpan? TimeDataType        { get; set; } // time
 		[Column("yearDataType"                                                                                         )] public int?      YearDataType        { get; set; } // year
-		[Column("year2DataType"                                                                                        )] public int?      Year2DataType       { get; set; } // year
-		[Column("year4DataType"                                                                                        )] public int?      Year4DataType       { get; set; } // year
 		[Column("charDataType"                                                                                         )] public char?     CharDataType        { get; set; } // char(1)
 		[Column("char20DataType"                                                                                       )] public string?   Char20DataType      { get; set; } // char(20)
 		[Column("varcharDataType"                                                                                      )] public string?   VarcharDataType     { get; set; } // varchar(20)
@@ -775,7 +773,7 @@ namespace Cli.T4.MySql
 		[Column("FieldNChar"                          )] public char?     FieldNChar      { get; set; } // char(1)
 		[Column("FieldFloat"                          )] public float?    FieldFloat      { get; set; } // float
 		[Column("FieldDouble"                         )] public double?   FieldDouble     { get; set; } // double
-		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime
+		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime(6)
 		[Column("FieldBinary"                         )] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column("FieldGuid"                           )] public string?   FieldGuid       { get; set; } // char(36)
 		[Column("FieldDecimal"                        )] public decimal?  FieldDecimal    { get; set; } // decimal(24,10)
@@ -802,7 +800,7 @@ namespace Cli.T4.MySql
 		[Column("FieldNChar"                          )] public char?     FieldNChar      { get; set; } // char(1)
 		[Column("FieldFloat"                          )] public float?    FieldFloat      { get; set; } // float
 		[Column("FieldDouble"                         )] public double?   FieldDouble     { get; set; } // double
-		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime
+		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime(6)
 		[Column("FieldBinary"                         )] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column("FieldGuid"                           )] public string?   FieldGuid       { get; set; } // char(36)
 		[Column("FieldDecimal"                        )] public decimal?  FieldDecimal    { get; set; } // decimal(24,10)

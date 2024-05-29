@@ -14,8 +14,8 @@ namespace LinqToDB.DataProvider.DB2
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _db2DataProviderzOS = DataConnection.CreateDataProvider<DB2zOSDataProvider>();
-		static readonly Lazy<IDataProvider> _db2DataProviderLUW = DataConnection.CreateDataProvider<DB2LUWDataProvider>();
+		static readonly Lazy<IDataProvider> _db2DataProviderzOS = CreateDataProvider<DB2zOSDataProvider>();
+		static readonly Lazy<IDataProvider> _db2DataProviderLUW = CreateDataProvider<DB2LUWDataProvider>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{

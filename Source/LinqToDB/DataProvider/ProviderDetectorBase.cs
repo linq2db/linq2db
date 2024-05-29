@@ -1,19 +1,31 @@
 ﻿using System;
+using System.Data;
 using System.Data.Common;
-
-using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider
 {
-	using System.Data;
-
 	using Common.Internal.Cache;
 	using Data;
+	using Tools;
 
 	abstract class ProviderDetectorBase<TProvider,TVersion>
 		where TProvider   : struct, Enum
 		where TVersion    : struct, Enum
 	{
+		/// <summary>
+		/// Creates provider instance factory with instance registration it in <see cref="DataConnection"/>.
+		/// </summary>
+		protected internal static Lazy<IDataProvider> CreateDataProvider<T>()
+			where T : IDataProvider, new()
+		{
+			return new(() =>
+			{
+				var provider = new T();
+				DataConnection.AddDataProvider(provider);
+				return provider;
+			}, true);
+		}
+
 		protected ProviderDetectorBase(TVersion autoDetectVersion, TVersion defaultVersion)
 		{
 			AutoDetectVersion = autoDetectVersion;
