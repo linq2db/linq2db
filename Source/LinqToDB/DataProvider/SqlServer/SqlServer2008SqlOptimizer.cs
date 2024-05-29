@@ -1,7 +1,6 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -11,7 +10,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
+		{
+			return new SqlServer2008SqlExpressionConvertVisitor(allowModify, SQLVersion);
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			//SQL Server 2008 supports ROW_NUMBER but not OFFSET/FETCH
 
@@ -20,12 +24,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			statement = ReplaceSkipWithRowNumber(statement);
 
 			return statement;
-		}
-
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func, false);
-			return base.ConvertFunction(func);
 		}
 	}
 }

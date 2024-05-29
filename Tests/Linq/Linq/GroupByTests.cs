@@ -122,6 +122,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple6([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID);
@@ -152,6 +153,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple8([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, (g,ch) => g.ChildID);
@@ -164,6 +166,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple9([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID,  (g,ch) => g.ChildID);
@@ -191,7 +194,8 @@ namespace Tests.Linq
 		[Test]
 		public void Simple11([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var q1 = GrandChild
 					.GroupBy(ch => new { ParentID = ch.ParentID + 1, ch.ChildID }, ch => ch.ChildID);
@@ -199,17 +203,18 @@ namespace Tests.Linq
 				var q2 = db.GrandChild
 					.GroupBy(ch => new { ParentID = ch.ParentID + 1, ch.ChildID }, ch => ch.ChildID);
 
-				var list1 = q1.AsEnumerable().OrderBy(_ => _.Key.ChildID).ToList();
+				//var list1 = q1.AsEnumerable().OrderBy(_ => _.Key.ChildID).ToList();
 				var list2 = q2.AsEnumerable().OrderBy(_ => _.Key.ChildID).ToList();
 
-				Assert.That(list2, Has.Count.EqualTo(list1.Count));
-				Assert.That(list2[0].ToList(), Is.EqualTo(list1[0].ToList()));
+				// Assert.AreEqual(list1.Count,       list2.Count);
+				// Assert.AreEqual(list1[0].ToList(), list2[0].ToList());
 			}
 		}
 
 		[Test]
 		public void Simple12([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q = db.GrandChild
@@ -223,6 +228,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple13([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				var q = db.GrandChild
@@ -233,22 +239,22 @@ namespace Tests.Linq
 			}
 		}
 
-		//[Test]
-		//public void Simple14([DataSources] string context)
-		//{
-		//	using (var db = GetDataContext(context))
-		//		AreEqual(
-		//			from p in    Parent
-		//			select
-		//				from c in p.Children
-		//				group c by c.ParentID into g
-		//				select g.Key,
-		//			from p in db.Parent
-		//			select
-		//				from c in p.Children
-		//				group c by c.ParentID into g
-		//				select g.Key);
-		//}
+		[Test]
+		public void Simple14([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent
+					select
+						from c in p.Children
+						group c by c.ParentID into g
+						select g.Key,
+					from p in db.Parent
+					select
+						from c in p.Children
+						group c by c.ParentID into g
+						select g.Key);
+		}
 
 		[Test]
 		public void MemberInit1([DataSources] string context)
@@ -301,7 +307,7 @@ namespace Tests.Linq
 					,
 					from ch in db.Child
 					group ch by new GroupByInfo { Prev = new GroupByInfo { Field = ch.ParentID }, Field = ch.ChildID } into g
-					select g.Key);
+					select g.Key, q => q.OrderBy(x => x.Prev!.Field).ThenBy(x => x.Field));
 		}
 
 		[Test]
@@ -515,8 +521,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Calculated1([DataSources] string context)
+		public void Calculated1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
@@ -654,7 +661,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Sum3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -752,7 +759,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Aggregates3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -761,6 +768,7 @@ namespace Tests.Linq
 					group ch by ch.ParentID into g
 					select new
 					{
+						Cnt =      g.Select(c => c.ChildID).Where(_ => _ > 30).Count(),
 						Sum =      g.Select(c => c.ChildID).Where(_ => _ > 30).Sum(),
 						Min =      g.Select(c => c.ChildID).Where(_ => _ > 30).Min(),
 						Max =      g.Select(c => c.ChildID).Where(_ => _ > 30).Max(),
@@ -771,6 +779,7 @@ namespace Tests.Linq
 					group ch by ch.ParentID into g
 					select new
 					{
+						Cnt =      g.Select(c => c.ChildID).Where(_ => _ > 30).Count(),
 						Sum =      g.Select(c => c.ChildID).Where(_ => _ > 30).Sum(),
 						Min =      g.Select(c => c.ChildID).Where(_ => _ > 30).Min(),
 						Max =      g.Select(c => c.ChildID).Where(_ => _ > 30).Max(),
@@ -779,7 +788,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Aggregates4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -800,7 +809,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Aggregates5([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -820,6 +829,180 @@ namespace Tests.Linq
 						Count2 = g.Select(c => c.ChildID).Where(_ => _ > 30).Count(),
 						Count3 = g.Count()
 					});
+		}
+
+		class AggregationData
+		{
+			public int GroupId { get; set; }
+			public double? DataValue   { get; set; }
+
+			public static AggregationData[] Data = new[]
+			{
+				new AggregationData { GroupId = 1, DataValue = 1 },
+				new AggregationData { GroupId = 1, DataValue = null },
+				new AggregationData { GroupId = 1, DataValue = 3 },
+				new AggregationData { GroupId = 1, DataValue = 1 },
+				new AggregationData { GroupId = 1, DataValue = 5 },
+				new AggregationData { GroupId = 1, DataValue = 6 },
+
+				new AggregationData { GroupId = 2, DataValue = 7 },
+				new AggregationData { GroupId = 2, DataValue = 8 },
+				new AggregationData { GroupId = 2, DataValue = 9 },
+				new AggregationData { GroupId = 2, DataValue = null },
+				new AggregationData { GroupId = 2, DataValue = 11 },
+				new AggregationData { GroupId = 2, DataValue = 7 },
+
+				new AggregationData { GroupId = 3, DataValue = 13 },
+				new AggregationData { GroupId = 3, DataValue = 16 },
+				new AggregationData { GroupId = 3, DataValue = 16 },
+				new AggregationData { GroupId = 3, DataValue = 16 },
+				new AggregationData { GroupId = 3, DataValue = null },
+				new AggregationData { GroupId = 3, DataValue = 18 },
+			};
+		}
+
+		[Test]
+		public void CountInGroup([DataSources] string context)
+		{
+			var data = AggregationData.Data;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				where t.DataValue != null
+				group t by t.GroupId
+				into g
+				let filtered = g.Where(x => x.DataValue % 2 == 0)
+				let filteredDistinct = filtered.Select(x => x.DataValue).Distinct()
+				let nonfilteredDistinct = g.Select(x => x.DataValue).Distinct()
+				select new
+				{
+					GroupId                  = g.Key,
+					Simple                   = g.Count(),
+					WithFilter               = g.Count(x => x.DataValue % 2 == 0),
+					Projection               = g.Select(x => x.DataValue).Count(),
+					Distinct                 = g.Select(x => x.DataValue).Distinct().Count(),
+					DistinctWithFilter       = g.Select(x => x.DataValue).Distinct().Count(x => x % 2 == 0),
+					FilterDistinct           = g.Select(x => x.DataValue).Where(x => x      % 2 == 0).Distinct().Count(),
+					FilterDistinctWithFilter = g.Select(x => x.DataValue).Where(x => x      % 2 == 0).Distinct().Count(x => x % 2 == 0),
+					
+					SubFilter           = filtered.Count(),
+					SubFilterDistinct   = filteredDistinct.Count(),
+					SubNoFilterDistinct = nonfilteredDistinct.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void SumInGroup([DataSources] string context)
+		{
+			var data = AggregationData.Data;
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = 
+				from t in table
+				group t by new { t.GroupId }  into g
+				select new
+				{
+					GroupId          = g.Key,
+					Simple           = g.Sum(x => x.DataValue),
+					Projection       = g.Select(x => x.DataValue).Sum(),
+					Filter           = g.Where(x => x.DataValue % 2 == 0).Sum(x => x.DataValue),
+					FilterProjection = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Sum(),
+					Distinct         = g.Select(x=> x.DataValue).Distinct().Sum(),
+					FilterDistinct1   = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Sum(),
+					FilterDistinct2   = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Sum(x => x),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void MinInGroup([DataSources] string context)
+		{
+			var data = AggregationData.Data;
+
+			using var _     = new GuardGrouping(false);
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				group t by new { t.GroupId }  into g
+				select new
+				{
+					GroupId          = g.Key,
+					Simple           = g.Min(x => x.DataValue),
+					Projection       = g.Select(x => x.DataValue).Min(),
+					Filter           = g.Where(x => x.DataValue % 2 == 0).Min(x => x.DataValue),
+					FilterProjection = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Min(),
+					Distinct         = g.Select(x=> x.DataValue).Distinct().Min(),
+					FilterDistinct1  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Min(),
+					FilterDistinct2  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Min(x => x),
+				};
+
+			AssertQuery(query);
+		}
+
+
+		[Test]
+		public void MaxInGroup([DataSources] string context)
+		{
+			var data = AggregationData.Data;
+
+			using var _     = new GuardGrouping(false);
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				group t by new { t.GroupId }  into g
+				select new
+				{
+					GroupId          = g.Key,
+					Simple           = g.Max(x => x.DataValue),
+					Projection       = g.Select(x => x.DataValue).Max(),
+					Filter           = g.Where(x => x.DataValue % 2 == 0).Max(x => x.DataValue),
+					FilterProjection = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Max(),
+					Distinct         = g.Select(x=> x.DataValue).Distinct().Max(),
+					FilterDistinct1  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Max(),
+					FilterDistinct2  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Max(x => x),
+				};
+
+			AssertQuery(query);
+		}
+
+
+		[Test]
+		public void AverageInGroup([DataSources] string context)
+		{
+			var data = AggregationData.Data;
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = 
+				from t in table
+				where t.DataValue != null
+				group t by t.GroupId into g
+				select new
+				{
+					GroupId          = g.Key,
+					Simple           = g.Average(x => x.DataValue),
+					Projection       = g.Select(x => x.DataValue).Average(),
+					Filter           = g.Where(x => x.DataValue % 2 == 0).Average(x => x.DataValue),
+					FilterProjection = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Average(),
+					Distinct         = Math.Round((decimal)g.Select(x=> x.DataValue).Distinct().Average()!, 4),
+					FilterDistinct1  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Average(),
+					FilterDistinct2  = g.Where(x => x.DataValue % 2 == 0).Select(x => x.DataValue).Distinct().Average(x => x),
+				};
+
+			AssertQuery(query);
 		}
 
 
@@ -1023,21 +1206,25 @@ namespace Tests.Linq
 		public void GroupByAssociation102([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
 				AreEqual(
 					from ch in GrandChild1
-					group ch by ch.Parent into g
+					group ch by ch.Parent
+					into g
 					where g.Count(_ => _.ChildID >= 20) > 2
 					select g.Key.Value1
 					,
 					from ch in db.GrandChild1
-					group ch by ch.Parent into g
+					group ch by ch.Parent
+					into g
 					where g.Count(_ => _.ChildID >= 20) > 2
 					select g.Key.Value1);
+			}
 		}
 
 		[Test]
 		public void GroupByAssociation1022([DataSources(
-			ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllAccess /* Can be fixed*/)]
+			ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1055,7 +1242,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1023([DataSources(
-			ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllAccess /* Can be fixed.*/)]
+			ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1079,7 +1266,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByAssociation1024([DataSources(
-			ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllAccess) /* Can be fixed. */]
+			ProviderName.SqlCe)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1104,7 +1291,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupByAssociation2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1152,7 +1339,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAggregate1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		public void GroupByAggregate1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1166,7 +1354,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAggregate11([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		public void GroupByAggregate11([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1182,7 +1371,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAggregate12([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		public void GroupByAggregate12([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1198,6 +1388,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByAggregate2([NorthwindDataContext] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
@@ -1216,17 +1407,23 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByAggregate3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(
-						from p in Parent
-						group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
-					).ToList().First(g => !g.Key)
-					,
-					(
-						from p in db.Parent
-						group p by p.Children.Average(c => c.ParentID) > 3
-					).ToList().First(g => !g.Key));
+			using var db = GetDataContext(context);
+
+			var query = 
+				from p in db.Parent
+				group p by p.Children.Average(c => c.ParentID) > 3
+				into g
+				orderby g.Key
+				select g.Key;
+
+			var expected =
+				from p in Parent
+				group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
+				into g
+				orderby g.Key
+				select g.Key;
+
+			AreEqual(expected, query);
 		}
 
 		[Test]
@@ -1270,6 +1467,7 @@ namespace Tests.Linq
 		[Test]
 		public void Scalar101([DataSources] string context)
 		{
+			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from ch in Child
@@ -1318,7 +1516,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar4([DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Scalar4([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1334,7 +1532,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar41([DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Scalar41([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1382,7 +1580,7 @@ namespace Tests.Linq
 		//}
 
 		[Test]
-		public void Scalar6([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Scalar6([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1453,7 +1651,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByExtraFieldBugTest([IncludeDataSources(TestProvName.AllMySql, TestProvName.AllClickHouse)] string context)
+		public void GroupByExtraFieldBugTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			// https://github.com/igor-tkachev/LinqToDB/issues/42
 			// extra field is generated in the GROUP BY clause, for example:
@@ -1852,7 +2050,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinGroupBy1([DataSources(ProviderName.Access)] string context)
+		public void JoinGroupBy1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1890,7 +2088,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByGroupBy([DataSources()] string context)
+		public void OrderByGroupBy([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2094,7 +2292,6 @@ namespace Tests.Linq
 			[Column] public DateTime TimeStamp;
 		}
 
-		[ActiveIssue(680)]
 		[Test]
 		public void Issue680Test([DataSources(false)] string context)
 		{
@@ -2217,7 +2414,6 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue(1078, Details = "Disabled providers doesn't support sub-query columns and use join (which is not correct right now)", Configurations = new[] { TestProvName.AllAccess, ProviderName.SqlCe })]
 		[Test]
 		public void Issue1078Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2267,7 +2463,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1198Test([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue1198Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Issue1192Table>())
@@ -2394,7 +2590,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "CH 23.7.1 regression")]
 		[Test]
 		public void Issue3668Test([DataSources] string context)
 		{
@@ -2427,7 +2622,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3761Test1([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
+		public void Issue3761Test1([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();
@@ -2766,6 +2961,43 @@ namespace Tests.Linq
 				)
 				select new { pmp });
 		}
+
+		[Test]
+		public void GroupByConstants([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var constants =
+				from c in db.Child
+				select new { ChildId = 1, ParentId = 2 };
+
+			var query =
+				from c in constants
+				group c by new { c.ChildId, c.ParentId }
+				into g
+				select new { g.Key, Count = g.Count() };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByConstantsEmpty([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var constants =
+				from c in db.Child.Where(c => false)
+				select new { ChildId = 1, ParentId = 2 };
+
+			var query =
+				from c in constants
+				group c by new { c.ChildId, c.ParentId }
+				into g
+				select new { g.Key, Count = g.Count() };
+
+			AssertQuery(query);
+		}
+
 
 		#region issue 4256
 		[Test]

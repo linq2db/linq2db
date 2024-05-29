@@ -111,9 +111,14 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
-			var table = deleteStatement.Table != null ?
-				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
-				deleteStatement.SelectQuery.From.Tables[0];
+			ISqlTableSource? table = null;
+
+			if (deleteStatement.Table != null)
+			{
+				table = deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table);
+			}
+
+			table ??= deleteStatement.SelectQuery.From.Tables[0];
 
 			AppendIndent()
 				.Append("DELETE");
@@ -121,7 +126,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			BuildSkipFirst(deleteStatement.SelectQuery);
 
 			StringBuilder.Append(' ');
-			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
+
+			var alias = GetTableAlias(table);
+			if (alias == null)
+			{
+				throw new InvalidOperationException();
+			}
+
+			Convert(StringBuilder, alias, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
 			BuildOutputSubclause(deleteStatement.GetOutputClause());
 		}
@@ -136,22 +148,22 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildOutputSubclause(output);
 		}
 
-		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
+			SqlUpdateClause                                    updateClause)
 		{
 			base.BuildUpdateClause(statement, selectQuery, updateClause);
 			BuildOutputSubclause(statement.GetOutputClause());
 		}
 
-		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateTableName(SelectQuery selectQuery,
+			SqlUpdateClause                                      updateClause)
 		{
-			var table = updateClause.Table != null ?
-				(selectQuery.From.FindTableSource(updateClause.Table) ?? updateClause.Table) :
-				selectQuery.From.Tables[0];
-
-			if (table is SqlTable)
-				BuildPhysicalTable(table, null);
+			if (updateClause.TableSource != null)
+				Convert(StringBuilder, GetTableAlias(updateClause.TableSource)!, ConvertType.NameToQueryTableAlias);
+			else if (updateClause.Table != null)
+				BuildPhysicalTable(updateClause.Table, null);
 			else
-				Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
+				throw new InvalidOperationException();
 		}
 
 		private static string GetTablePhysicalName(string tableName, TableOptions tableOptions)
@@ -277,6 +289,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			var table = dropTable.Table!;
 
 			BuildTag(dropTable);
@@ -288,28 +302,28 @@ namespace LinqToDB.DataProvider.SqlServer
 						"tempdb" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, alias: null, defaultDatabaseName: defaultDatabaseName);
+				BuildPhysicalTable(table, alias : null, defaultDatabaseName : defaultDatabaseName);
 				StringBuilder.AppendLine("', N'U') IS NOT NULL)");
 				Indent++;
 			}
 
 			AppendIndent().Append("DROP TABLE ");
-			BuildPhysicalTable(table, alias: null);
+			BuildPhysicalTable(table, alias : null);
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 				Indent--;
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
 				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.NVarChar  :
-					if (type.Type.Length is null or > 4000 or < 1)
+					if (type.Length is null or > 4000 or < 1)
 					{
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}(Max)");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}(Max)");
 						return;
 					}
 
@@ -317,9 +331,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				case DataType.VarChar   :
 				case DataType.VarBinary :
-					if (type.Type.Length is null or > 8000 or < 1)
+					if (type.Length is null or > 8000 or < 1)
 					{
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}(Max)");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}(Max)");
 						return;
 					}
 
@@ -328,12 +342,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.DateTime2:
 				case DataType.DateTimeOffset:
 				case DataType.Time:
-					StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}");
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}");
 					// Default precision for all three types is 7.
 					// For all other non-null values (including 0) precision must be specified.
-					if (type.Type.Precision != null && type.Type.Precision != 7)
+					if (type.Precision != null && type.Precision != 7)
 					{
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
 					}
 					return;
 			}
@@ -385,7 +399,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				StringBuilder.Append("DELETE FROM ");
 		}
 
-		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
+		protected void BuildIdentityInsert(NullabilityContext nullability, SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);
@@ -394,6 +408,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				var table = createTable.Table;
@@ -440,7 +456,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				switch (extensionBuilder)
 				{
 					case ISqlQueryExtensionBuilder queryExtensionBuilder:
-						queryExtensionBuilder.Build(this, StringBuilder, ext);
+						queryExtensionBuilder.Build(NullabilityContext, this, StringBuilder, ext);
 						break;
 					default:
 						throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlQueryExtensionBuilder).FullName}' interface.");
@@ -460,7 +476,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					switch (join.JoinType)
 					{
-						case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
+						case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Predicates.IsNullOrEmpty() :
 						                           StringBuilder.Append(CultureInfo.InvariantCulture, $"CROSS {h} JOIN "); return false;
 						case JoinType.Inner      : StringBuilder.Append(CultureInfo.InvariantCulture, $"INNER {h} JOIN "); return true;
 						case JoinType.Left       : StringBuilder.Append(CultureInfo.InvariantCulture, $"LEFT {h} JOIN ");  return true;

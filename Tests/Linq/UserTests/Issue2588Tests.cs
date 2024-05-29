@@ -17,6 +17,7 @@ namespace Tests.UserTests
 			[Column] public int Value { get; set; }
 		}
 
+		[ActiveIssue("Looks like ClickHouse processes query wrong", Configurations = [TestProvName.AllClickHouse])]
 		[Test]
 		public async Task AggregationWithNull([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -37,8 +38,8 @@ namespace Tests.UserTests
 
 				var value2 = await db.GetTable<TestClass>()
 					.Where(x => x.Id == 0)
-					.Select(x => x.Value)
-					.DefaultIfEmpty()
+					.Select(x => (int?)x.Value)
+					.DefaultIfEmpty(0)
 					.MaxAsync();
 
 				Assert.That(value2, Is.EqualTo(0));

@@ -108,7 +108,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))

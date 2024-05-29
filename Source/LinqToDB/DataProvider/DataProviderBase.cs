@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -19,11 +18,13 @@ namespace LinqToDB.DataProvider
 	using Common.Internal;
 	using Data;
 	using Expressions;
+	using Infrastructure;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
 
-	public abstract class DataProviderBase : IDataProvider
+	public abstract class DataProviderBase : IDataProvider, IInfrastructure<IServiceProvider>
 	{
 		#region .ctor
 
@@ -34,7 +35,6 @@ namespace LinqToDB.DataProvider
 			// set default flags values explicitly even for default values
 			SqlProviderFlags = new SqlProviderFlags()
 			{
-				IsSybaseBuggyGroupBy                 = false,
 				IsParameterOrderDependent            = false,
 				AcceptsTakeAsParameter               = true,
 				AcceptsTakeAsParameterIfSkip         = false,
@@ -43,6 +43,9 @@ namespace LinqToDB.DataProvider
 				IsSkipSupportedIfTake                = false,
 				TakeHintsSupported                   = null,
 				IsSubQueryTakeSupported              = true,
+				IsCorrelatedSubQueryTakeSupported    = true,
+				IsSupportsJoinWithoutCondition       = true,
+				IsSubQuerySkipSupported              = true,
 				IsSubQueryColumnSupported            = true,
 				IsSubQueryOrderBySupported           = false,
 				IsCountSubQuerySupported             = true,
@@ -51,23 +54,22 @@ namespace LinqToDB.DataProvider
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
-				IsUpdateSetTableAliasSupported       = true,
 				OutputDeleteUseSpecialTable          = false,
 				OutputInsertUseSpecialTable          = false,
 				OutputUpdateUseSpecialTables         = false,
-				IsGroupByColumnRequred               = false,
 				IsCrossJoinSupported                 = true,
-				IsInnerJoinAsCrossSupported          = true,
 				IsCommonTableExpressionsSupported    = false,
-				IsDistinctOrderBySupported           = true,
 				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
-				IsCountDistinctSupported             = false,
+				IsCountDistinctSupported             = true,
+				IsAggregationDistinctSupported       = true,
 				AcceptsOuterExpressionInAggregate    = true,
 				IsUpdateFromSupported                = true,
 				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,
 				RowConstructorSupport                = RowFeature.None,
+				IsWindowFunctionsSupported           = true,
+				IsDerivedTableOrderBySupported       = true,
 			};
 
 			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));
@@ -216,6 +218,11 @@ namespace LinqToDB.DataProvider
 		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
+		}
+
+		protected void SetProviderField<TP, T>(Type providerFieldType, Expression<Func<TP, int, T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = providerFieldType }] = expr;
 		}
 
 		protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr)
@@ -496,5 +503,39 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		public virtual IQueryParametersNormalizer GetQueryParameterNormalizer() => new UniqueParametersNormalizer();
+
+		protected abstract IMemberTranslator  CreateMemberTranslator();
+		protected virtual  IIdentifierService CreateIdentifierService() => new IdentifierServiceSimple(128);
+
+		protected virtual void InitServiceProvider(SimpleServiceProvider serviceProvider)
+		{
+			serviceProvider.AddService(CreateMemberTranslator());
+			serviceProvider.AddService(CreateIdentifierService());
+		}
+
+		SimpleServiceProvider? _serviceProvider;
+		readonly object        _guard = new();
+
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance
+		{
+			get
+			{
+				if (_serviceProvider == null)
+				{
+					lock (_guard)
+					{
+						if (_serviceProvider == null)
+						{
+							var serviceProvider = new SimpleServiceProvider();
+							InitServiceProvider(serviceProvider);
+							_serviceProvider = serviceProvider;
+						}
+					}
+				}
+
+				return _serviceProvider;
+			}
+		}
+
 	}
 }

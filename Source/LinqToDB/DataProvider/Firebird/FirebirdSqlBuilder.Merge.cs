@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
@@ -48,34 +47,8 @@ namespace LinqToDB.DataProvider.Firebird
 				&& ConvertElement(rows[row][column]) is SqlValue sqlValue && sqlValue.Value != null;
 		}
 
-		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
-		{
-			if (dataType.Type.DbType == null && dataType.Type.DataType == DataType.NVarChar)
-			{
-				var length = 0;
-				var typeRequired = false;
-				if (value is SqlValue sqlValue && sqlValue.Value is string stringValue)
-				{
-					typeRequired = true;
-					length = Encoding.UTF8.GetByteCount(stringValue);
-					if (length == 0)
-						length = 1;
-				}
-
-				if (typeRequired)
-					StringBuilder.Append("CAST(");
-
-				BuildExpression(value);
-
-				if (typeRequired)
-					StringBuilder.Append(CultureInfo.InvariantCulture, $" AS VARCHAR({length}))");
-			}
-			else
-				base.BuildTypedExpression(dataType, value);
-		}
-
 		// available since FB5
-		protected override void BuildMergeOperationDeleteBySource(SqlMergeOperationClause operation)
+		protected override void BuildMergeOperationDeleteBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			StringBuilder
 				.AppendLine()
@@ -91,7 +64,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		// available since FB5
-		protected override void BuildMergeOperationUpdateBySource(SqlMergeOperationClause operation)
+		protected override void BuildMergeOperationUpdateBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			StringBuilder
 				.AppendLine()

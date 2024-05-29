@@ -13,15 +13,13 @@ namespace Tests.Linq
 	[TestFixture]
 	public class EnumerableSourceTests : TestBase
 	{
-		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void ApplyJoinArray(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllPostgreSQL93Plus,
 				TestProvName.AllOracle12Plus,
-				TestProvName.AllMySqlWithApply,
-				TestProvName.AllSapHana)]
+				TestProvName.AllMySqlWithApply)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";
@@ -382,6 +380,44 @@ namespace Tests.Linq
 
 				AreEqual(expected, result);
 			}
+		}
+
+		[Test]
+		public void OuterApplyJoinClassArray(
+			[IncludeDataSources(
+				TestProvName.AllSqlServer2008Plus,
+				TestProvName.AllPostgreSQL93Plus,
+				TestProvName.AllOracle12Plus)]
+			string context, [Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			var cacheMiss = Query<Person>.CacheMissCount;
+
+			var q =
+				from p in db.Person
+				from n in new Person[]
+				{
+					new() { ID = 1, LastName = "Janet", FirstName = p.FirstName },
+					new() { ID = 2, LastName = "Doe", },
+				}.Where(n => p.LastName == n.LastName).DefaultIfEmpty()
+				select p;
+
+			var result = q.ToList();
+
+			if (iteration > 1)
+				Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+
+			var expected =
+				from p in Person
+				from n in new Person[]
+				{
+					new() { ID = 1, LastName = "Janet", FirstName = p.FirstName },
+					new() { ID = 2, LastName = "Doe", },
+				}.Where(n => p.LastName == n.LastName).DefaultIfEmpty()
+				select p;
+
+			AreEqual(expected, result);
 		}
 
 		[Test]

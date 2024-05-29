@@ -59,6 +59,7 @@ namespace LinqToDB.Linq
 
 				var sqlQuery = new SelectQuery();
 				var updateStatement = new SqlUpdateStatement(sqlQuery);
+				updateStatement.Update.Table = sqlTable;
 
 				sqlQuery.From.Table(sqlTable);
 
@@ -67,7 +68,7 @@ namespace LinqToDB.Linq
 					Queries = { new QueryInfo { Statement = updateStatement, } }
 				};
 
-				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
+				var keys = (sqlTable.GetKeys(true) ?? Enumerable.Empty<ISqlExpression>()).Cast<SqlField>().ToList();
 				var fields = sqlTable.Fields
 					.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update) && (columnFilter == null || columnFilter(obj, f.ColumnDescriptor)))
 					.Except(keys);
@@ -101,7 +102,7 @@ namespace LinqToDB.Linq
 
 					ei.Queries[0].AddParameterAccessor(param);
 
-					sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
+					sqlQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, false);
 
 					if (field.CanBeNull)
 						sqlQuery.IsParameterDependent = true;

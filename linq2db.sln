@@ -1,7 +1,6 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.0.31912.275
+VisualStudioVersion = 17.0.32002.185
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
@@ -82,6 +81,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811
 		Clean.cmd = Clean.cmd
 		Compile.cmd = Compile.cmd
 		CONTRIBUTING.md = CONTRIBUTING.md
+		global.json = global.json
 		linq2db.Benchmarks.slnf = linq2db.Benchmarks.slnf
 		linq2db.playground.slnf = linq2db.playground.slnf
 		MIT-LICENSE.txt = MIT-LICENSE.txt
@@ -99,6 +99,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
 		NuGet\linq2db.Extensions.nuspec = NuGet\linq2db.Extensions.nuspec
 		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
+		NuGet\linq2db.FSharp.nuspec = NuGet\linq2db.FSharp.nuspec
 		NuGet\linq2db.Informix.Core.nuspec = NuGet\linq2db.Informix.Core.nuspec
 		NuGet\linq2db.Informix.nuspec = NuGet\linq2db.Informix.nuspec
 		NuGet\linq2db.MySql.nuspec = NuGet\linq2db.MySql.nuspec
@@ -121,6 +122,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.Tools.nuspec = NuGet\linq2db.Tools.nuspec
 		NuGet\Pack.cmd = NuGet\Pack.cmd
 		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
+		NuGet\README.FSharp.md = NuGet\README.FSharp.md
 		NuGet\README.Extensions.md = NuGet\README.Extensions.md
 		NuGet\README.linq2db.md = NuGet\README.linq2db.md
 		NuGet\README.md = NuGet\README.md
@@ -377,8 +379,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554
 		Build\Azure\net60\access.ace.json = Build\Azure\net60\access.ace.json
 		Build\Azure\net60\access.ace.x64.json = Build\Azure\net60\access.ace.x64.json
 		Build\Azure\net60\access.mdb.json = Build\Azure\net60\access.mdb.json
-		Build\Azure\net60\clickhouse.json = Build\Azure\net60\clickhouse.json
-		Build\Azure\net60\clickhouse_client.json = Build\Azure\net60\clickhouse_client.json
+		Build\Azure\net60\clickhouse.client.json = Build\Azure\net60\clickhouse.client.json
+		Build\Azure\net60\clickhouse.mysql.json = Build\Azure\net60\clickhouse.mysql.json
+		Build\Azure\net60\clickhouse.octonica.json = Build\Azure\net60\clickhouse.octonica.json
 		Build\Azure\net60\db2.json = Build\Azure\net60\db2.json
 		Build\Azure\net60\firebird25.json = Build\Azure\net60\firebird25.json
 		Build\Azure\net60\firebird3.json = Build\Azure\net60\firebird3.json
@@ -477,7 +480,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local", "Local", "{6CB875B4
 		Data\Setup Scripts\sqlserver2022.cmd = Data\Setup Scripts\sqlserver2022.cmd
 		Data\Setup Scripts\sybase-ase.cmd = Data\Setup Scripts\sybase-ase.cmd
 		Data\Setup Scripts\sybase-db.sql = Data\Setup Scripts\sybase-db.sql
-		Data\Setup Scripts\sybase-fix.sh = Data\Setup Scripts\sybase-fix.sh
 		Data\Setup Scripts\sybase-utf8.sql = Data\Setup Scripts\sybase-utf8.sql
 		Data\Setup Scripts\UserDataProviders.json = Data\Setup Scripts\UserDataProviders.json
 		Data\Setup Scripts\wait-err.cmd = Data\Setup Scripts\wait-err.cmd
@@ -489,8 +491,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net80", "net80", "{1ED95A47
 		Build\Azure\net80\access.ace.json = Build\Azure\net80\access.ace.json
 		Build\Azure\net80\access.ace.x64.json = Build\Azure\net80\access.ace.x64.json
 		Build\Azure\net80\access.mdb.json = Build\Azure\net80\access.mdb.json
-		Build\Azure\net80\clickhouse.json = Build\Azure\net80\clickhouse.json
-		Build\Azure\net80\clickhouse_client.json = Build\Azure\net80\clickhouse_client.json
+		Build\Azure\net80\clickhouse.client.json = Build\Azure\net80\clickhouse.client.json
+		Build\Azure\net80\clickhouse.mysql.json = Build\Azure\net80\clickhouse.mysql.json
+		Build\Azure\net80\clickhouse.octonica.json = Build\Azure\net80\clickhouse.octonica.json
 		Build\Azure\net80\db2.json = Build\Azure\net80\db2.json
 		Build\Azure\net80\firebird25.json = Build\Azure\net80\firebird25.json
 		Build\Azure\net80\firebird3.json = Build\Azure\net80\firebird3.json
@@ -529,6 +532,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net80", "net80", "{1ED95A47
 		Build\Azure\net80\sqlserver.fts.2019.json = Build\Azure\net80\sqlserver.fts.2019.json
 		Build\Azure\net80\sybase.json = Build\Azure\net80\sybase.json
 	EndProjectSection
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "LinqToDB.FSharp", "Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj", "{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -620,6 +625,12 @@ Global
 		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B}.Azure|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B}.Azure|Any CPU.Build.0 = Debug|Any CPU
+		{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -667,6 +678,7 @@ Global
 		{6152B55A-E7B0-4E7A-8E26-922FD91C6A95} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{6CB875B4-1799-4760-A734-091F34888A60} = {885042E3-18EA-4927-B1CF-5E0E3DBD1C00}
 		{1ED95A47-B11F-4EA1-8916-B7BD2951417B} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
+		{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

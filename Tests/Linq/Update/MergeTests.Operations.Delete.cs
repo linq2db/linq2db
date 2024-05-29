@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Linq;
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -127,8 +127,8 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Field2 == 4)
 					.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message,  Does.EndWith(".Field2' cannot be converted to SQL."));
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -219,8 +219,8 @@ namespace Tests.xUpdate
 					.DeleteWhenMatched()
 					.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -437,8 +437,8 @@ namespace Tests.xUpdate
 						.DeleteWhenMatched()
 						.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message, Does.EndWith(".Id' cannot be converted to SQL."));
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception.Message, Does.EndWith(".Id' could not be converted to SQL."));
 			}
 		}
 	}

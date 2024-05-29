@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 using Tests.Model;
 
@@ -431,13 +436,11 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource(false)] string context)
+		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource(false, ProviderName.DB2)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = (DataConnection)GetDataConnection(context))
 			{
 				PrepareData(db);
-
-				var table = GetTarget(db);
 
 				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
 							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
@@ -455,26 +458,34 @@ namespace Tests.xUpdate
 
 				var results = source.ToList();
 
-				// 5 commas after selected columns and 1 comma in join
-				var explicitJoin = db.LastQuery!.Contains("JOIN");
-				Assert.Multiple(() =>
-				{
-					Assert.That(db.LastQuery!.Count(c => c == ','), Is.EqualTo(explicitJoin ? 5 : 6));
+				var selectQuery = source.GetSelectQuery();
+				selectQuery.Select.Columns.Count.Should().Be(6);
 
-					Assert.That(results, Has.Count.EqualTo(16));
-				});
+				if (db.DataProvider.SqlProviderFlags.IsCrossJoinSupported)
+				{
+					selectQuery.Select.From.Tables.Should().HaveCount(1);
+					selectQuery.Select.From.Tables[0].Joins.Should().HaveCount(1);
+					selectQuery.Select.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Cross);
+				}
+				else
+				{
+					selectQuery.Select.From.Tables.Should().HaveCount(2);
+					selectQuery.Select.From.Tables[0].Joins.Should().HaveCount(0);
+					selectQuery.Select.From.Tables[1].Joins.Should().HaveCount(0);
+				}
+
+				results.Should().HaveCount(16);
 			}
 		}
 
-		[ActiveIssue(896, Details = "Selects 10 columns instead of 6. Also see InsertFromCrossJoinedSourceQuery2Workaround for workaround")]
+		// Probably wrong test
+		[ActiveIssue]
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2([MergeDataContextSource(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
-
-				var table = GetTarget(db);
 
 				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
 							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
@@ -491,13 +502,10 @@ namespace Tests.xUpdate
 
 				var results = source.ToList();
 
-				Assert.Multiple(() =>
-				{
-					// 5 commas after selected columns and 1 comma in join
-					Assert.That(db.LastQuery!.Count(c => c == ','), Is.EqualTo(6));
+				var selectQuery = source.GetSelectQuery();
+				selectQuery.Select.Columns.Count.Should().Be(6);
 
-					Assert.That(results, Has.Count.EqualTo(16));
-				});
+				results.Should().HaveCount(16);
 			}
 		}
 
@@ -712,8 +720,8 @@ namespace Tests.xUpdate
 						.InsertWhenNotMatched()
 						.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message, Is.EqualTo("'s.Field2' cannot be converted to SQL."));
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception.Message,  Does.EndWith("'source.Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -738,9 +746,9 @@ namespace Tests.xUpdate
 						})
 						.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message, Is.EqualTo("'s.Field3' cannot be converted to SQL."));
-				//Assert.AreEqual("Column Field3 doesn't exist in source", exception.Message);
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+
+				Assert.That(exception.Message,  Does.EndWith("s.Field3' could not be converted to SQL."));
 			}
 		}
 		#endregion
@@ -1155,8 +1163,8 @@ namespace Tests.xUpdate
 						})
 					.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message, Is.EqualTo("'_.Field2' cannot be converted to SQL."));
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
 		#endregion

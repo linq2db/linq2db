@@ -120,7 +120,6 @@ namespace LinqToDB.DataProvider.DB2
 			SetDbType = dbTypeBuilder.BuildSetter<DbParameter>();
 			GetDbType = dbTypeBuilder.BuildGetter<DbParameter>();
 
-
 			BulkCopy = new BulkCopyAdapter(
 				typeMapper.BuildWrappedFactory((DbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)(object)connection, options)),
 				typeMapper.BuildWrappedFactory((int source, string destination) => new DB2BulkCopyColumnMapping(source, destination)));

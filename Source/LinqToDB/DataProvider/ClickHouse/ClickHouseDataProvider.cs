@@ -15,10 +15,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using Reflection;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
 
 	sealed class ClickHouseOctonicaDataProvider : ClickHouseDataProvider { public ClickHouseOctonicaDataProvider() : base(ProviderName.ClickHouseOctonica, ClickHouseProvider.Octonica        ) { } }
 	sealed class ClickHouseClientDataProvider   : ClickHouseDataProvider { public ClickHouseClientDataProvider  () : base(ProviderName.ClickHouseClient  , ClickHouseProvider.ClickHouseClient) { } }
@@ -43,15 +45,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// as emulation doesn't work properly due to missing rowcount functionality
 			SqlProviderFlags.IsInsertOrUpdateSupported         = true;
 
-			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsCountDistinctSupported          = true;
 			SqlProviderFlags.DoesNotSupportCorrelatedSubquery  = true;
-
-			if (this is ClickHouseOctonicaDataProvider or ClickHouseMySqlDataProvider)
-				SqlProviderFlags.IsProjectionBoolSupported = false;
+			SqlProviderFlags.IsAllSetOperationsSupported       = true;
+			SqlProviderFlags.IsNestedJoinsSupported            = false;
 
 			// unconfigured flags
 			// 1. ClickHouse doesn't support correlated subqueries at all so this flag's value doesn't make difference
@@ -92,7 +91,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 					var indexParameter      = Expression.Parameter(typeof(int), "i");
 
-					// rd.GetMySqlDecimal(i).ToString(0
+					// rd.GetMySqlDecimal(i).ToString()
 					var body = Expression.Call(
 						Expression.Call(
 							dataReaderParameter,
@@ -112,6 +111,19 @@ namespace LinqToDB.DataProvider.ClickHouse
 					}]                    = Expression.Lambda(body, dataReaderParameter, indexParameter);
 				}
 			}
+
+			if (Provider == ClickHouseProvider.ClickHouseClient && Adapter.ClientDecimalType != null && Adapter.HasFaultyClientDecimalType)
+			{
+				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (int  )rd.GetDecimal(idx));
+				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (uint )rd.GetDecimal(idx));
+				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (long )rd.GetDecimal(idx));
+				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (ulong)rd.GetDecimal(idx));
+			}
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new ClickHouseMemberTranslator();
 		}
 
 		public ClickHouseProvider Provider { get; }

@@ -63,6 +63,9 @@ namespace Tests.Linq
 				else
 				{
 					var sql = query.ToString()!;
+
+					TestContext.WriteLine(sql);
+
 					Assert.That(sql, Does.Contain("[r].[FTS5_TABLE] MATCH 'something'"));
 				}
 			}
@@ -73,8 +76,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, SetupFtsMapping(type)))
 			{
-				var subquery = db.GetTable<FtsTable>().Where(r => Sql.Ext.SQLite().Match(r, "something"));
-				var query = db.GetTable<FtsTable>().Where(r => subquery.Select(_ => Sql.Ext.SQLite().RowId(_)).Contains(Sql.Ext.SQLite().RowId(r)));
+				var subquery = db.GetTable<FtsTable>()
+					.Where(r => Sql.Ext.SQLite().Match(r, "something"));
+
+				var query = db.GetTable<FtsTable>()
+					.Where(r => subquery.Select(_ => Sql.Ext.SQLite().RowId(_)).Contains(Sql.Ext.SQLite().RowId(r)));
 
 				var results = query.ToList();
 				Assert.That(results, Has.Count.EqualTo(1));

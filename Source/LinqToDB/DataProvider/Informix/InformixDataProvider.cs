@@ -10,8 +10,10 @@ namespace LinqToDB.DataProvider.Informix
 	using Common;
 	using Data;
 	using Linq.Internal;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
 
 	sealed class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix,    InformixProvider.Informix) {} }
 	sealed class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2, InformixProvider.DB2     ) {} }
@@ -24,12 +26,9 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
-			SqlProviderFlags.IsCrossJoinSupported              = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.IsGroupByColumnRequred            = true;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
 			SqlProviderFlags.IsExistsPreferableForContains     = true;
 
@@ -55,6 +54,11 @@ namespace LinqToDB.DataProvider.Informix
 											  SetProviderField(Adapter.DecimalType , typeof(decimal) , Adapter.GetDecimalReaderMethod!, dataReaderType: Adapter.DataReaderType);
 			if (Adapter.DateTimeType != null) SetProviderField(Adapter.DateTimeType, typeof(DateTime), Adapter.GetDateTimeReaderMethod, dataReaderType: Adapter.DataReaderType);
 			if (Adapter.TimeSpanType != null) SetProviderField(Adapter.TimeSpanType, typeof(TimeSpan), Adapter.GetTimeSpanReaderMethod, dataReaderType: Adapter.DataReaderType);
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new InformixMemberTranslator();
 		}
 
 		[ColumnReader(1)]

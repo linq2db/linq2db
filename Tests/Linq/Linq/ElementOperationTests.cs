@@ -87,9 +87,9 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child.FirstOrDefault()!.ChildID);
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void NestedFirstOrDefaultScalar2([DataSources(
+			TestProvName.AllAccess,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
 			TestProvName.AllClickHouse,
@@ -126,7 +126,6 @@ namespace Tests.Linq
 					});
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void NestedFirstOrDefault1([DataSources] string context)
 		{
@@ -136,7 +135,6 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child.FirstOrDefault());
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void NestedFirstOrDefault2([DataSources] string context)
 		{
@@ -156,7 +154,6 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Select(c => c.ParentID).Distinct().FirstOrDefault());
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void NestedFirstOrDefault4([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL9)] string context)
 		{
@@ -166,19 +163,18 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Where(c => c.ParentID > 0).Distinct().OrderBy(_ => _.ChildID).FirstOrDefault());
 		}
 
-		//TODO: Access has nonstandard join, we have to improve it
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void NestedFirstOrDefault5([DataSources(TestProvName.AllAccess)] string context)
+		public void NestedFirstOrDefault5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in GrandChild 
-					where p.ChildID > 0
-					select p.Child!.Parent!.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
-					from p in db.GrandChild
-					where p.ChildID > 0
-					select p.Child!.Parent!.Children.OrderBy(c => c.ChildID).FirstOrDefault());
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from p in GrandChild
+				where p.ChildID > 0
+				select p.Child!.Parent!.Children.OrderBy(c => c.ChildID).FirstOrDefault(),
+				from p in db.GrandChild
+				where p.ChildID > 0
+				select p.Child!.Parent!.Children.OrderBy(c => c.ChildID).FirstOrDefault());
 		}
 
 		[Test]

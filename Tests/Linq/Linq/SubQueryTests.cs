@@ -89,7 +89,7 @@ namespace Tests.Linq
 						Count2 = Child.Where(p => p.ParentID == id && p.ParentID == _testValue).Count(),
 					});
 
-				var rids   = db.Parent
+				var rids = db.Parent
 					.Where(p => ids.Contains(p.ParentID))
 					.Select(p => p.Value1 == null ? p.ParentID : p.ParentID + 1)
 					.Distinct();
@@ -189,7 +189,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ObjectCompare([DataSources(ProviderName.Access)] string context)
+		public void ObjectCompare([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -256,11 +256,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub1([DataSources(
-			TestProvName.AllClickHouse,
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			TestProvName.AllOracle)]
-			string context)
+		public void SubSub1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -390,12 +386,7 @@ namespace Tests.Linq
 		//}
 
 		[Test]
-		public void SubSub21([DataSources(
-			ProviderName.SqlCe, ProviderName.DB2,
-			TestProvName.AllClickHouse,
-			TestProvName.AllOracle,
-			ProviderName.Access)]
-			string context)
+		public void SubSub21([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -438,11 +429,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub211([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			TestProvName.AllClickHouse,
-			TestProvName.AllOracle)]
-			string context)
+		public void SubSub211([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -487,11 +474,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub212([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.DB2,
-			TestProvName.AllClickHouse,
-			TestProvName.AllOracle)]
-			string context)
+		public void SubSub212([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

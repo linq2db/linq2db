@@ -488,7 +488,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue("generates CROSS APPLY", Configuration = TestProvName.AllFirebird5Plus)]
 		[Test]
 		public void OtherSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{

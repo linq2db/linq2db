@@ -1241,13 +1241,15 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var p1    = Child;
-				var qry1  = p1.GroupBy(x => x.ParentID).Select(x => x.Max(y => y.ChildID));
-				var qry12 = p1.Where(x => qry1.Contains(x.ChildID));
-
 				var p2    = db.Child;
 				var qry2  = p2.GroupBy(x => x.ParentID).Select(x => x.Max(y => y.ChildID));
 				var qry22 = p2.Where(x => qry2.Contains(x.ChildID));
+
+				var xx = qry22.ToArray();
+
+				var p1    = Child;
+				var qry1  = p1.GroupBy(x => x.ParentID).Select(x => x.Max(y => y.ChildID));
+				var qry12 = p1.Where(x => qry1.Contains(x.ChildID));
 
 				AreEqual(qry12, qry22);
 			}
@@ -1620,6 +1622,8 @@ namespace Tests.Linq
 
 				var sql = results.ToString()!;
 
+				TestContext.WriteLine(sql);
+
 				AreEqual(
 					from c in db.Parent.AsEnumerable()
 					where c.ParentID == id
@@ -1801,6 +1805,8 @@ namespace Tests.Linq
 		[Test]
 		public void BooleanSubquery([DataSources] string context)
 		{
+			//TODO: Store in SelectQuery IsSingleRecord information, to allow optimizer moving CrossApply to SubQuery Column
+
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<WhereWithBool>(new List<WhereWithBool>(){new WhereWithBool()
 			{

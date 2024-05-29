@@ -215,12 +215,12 @@ namespace Tests.Linq
 			GC.Collect();
 			Assert.That(ctxRef.TryGetTarget(out _), Is.False);
 
-			WeakReference<IDataContext> ExecuteQuery(string context)
+			WeakReference<IDataContext> ExecuteQuery(string ctx)
 			{
 				Query<Person>.ClearCache();
-				using var db = GetDataContext(context);
+				using var db = GetDataContext(ctx);
 
-				db.Person.FirstOrDefault();
+				_ = db.Person.FirstOrDefault();
 
 				return new WeakReference<IDataContext>(db);
 			}

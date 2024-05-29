@@ -8,6 +8,8 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SQLite.Translation;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlProvider;
@@ -283,6 +285,8 @@ namespace Tests
 
 	public class TestNoopProvider : DynamicDataProviderBase<TestNoopProviderAdapter>
 	{
+
+
 		public TestNoopProvider()
 			: base(TestProvName.NoopProvider, new MappingSchema(), new TestNoopProviderAdapter())
 		{
@@ -298,10 +302,12 @@ namespace Tests
 			// Just for triggering of static constructor
 		}
 
-		public override ISqlBuilder     CreateSqlBuilder (MappingSchema mappingSchema, DataOptions dataOptions) => new TestNoopSqlBuilder(this, MappingSchema, dataOptions);
-		public override ISchemaProvider GetSchemaProvider()   => throw new NotImplementedException();
-		public override ISqlOptimizer   GetSqlOptimizer  (DataOptions dataOptions) => TestNoopSqlOptimizer.Instance;
-		public override TableOptions    SupportedTableOptions => TableOptions.None;
+		public override    ISqlBuilder       CreateSqlBuilder (MappingSchema mappingSchema, DataOptions dataOptions) => new TestNoopSqlBuilder(this, MappingSchema, dataOptions);
+		public override    ISchemaProvider   GetSchemaProvider()      => throw new NotImplementedException();
+		protected override IMemberTranslator CreateMemberTranslator() => new SQLiteMemberTranslator();
+
+		public override    ISqlOptimizer     GetSqlOptimizer  (DataOptions dataOptions) => TestNoopSqlOptimizer.Instance;
+		public override    TableOptions      SupportedTableOptions                      => TableOptions.None;
 	}
 
 	internal sealed class TestNoopSqlBuilder : BasicSqlBuilder
@@ -327,5 +333,21 @@ namespace Tests
 			: base(new SqlProviderFlags())
 		{
 		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			switch (statement.QueryType)
+			{
+				case QueryType.Update :
+				{
+					CorrectUpdateSetters((SqlUpdateStatement)statement);
+
+					break;
+				}
+			}
+
+			return statement;
+		}
 	}
+
 }

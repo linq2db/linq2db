@@ -5,7 +5,6 @@ using LinqToDB;
 
 using NUnit.Framework;
 
-
 namespace Tests.Linq
 {
 	using Model;
@@ -109,8 +108,6 @@ namespace Tests.Linq
 			}
 		}
 
-		//Instance property or field with name Key not found on type System.Collections.Generic.IEnumerable`1[Tests.VisualBasic.VBTests+Activity649]
-		[ActiveIssue(649)]
 		[Test]
 		public void Issue649Test1([DataSources] string context)
 		{
@@ -144,8 +141,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// Instance property or field with name Key not found on type System.Collections.Generic.IEnumerable`1[Tests.Model.Child]
-		[ActiveIssue(649)]
 		[Test]
 		public void Issue649Test4([DataSources] string context)
 		{

@@ -117,7 +117,7 @@ namespace Tests.Linq
 				Assert.Multiple(() =>
 				{
 					Assert.That(sq1.GetTableSource().Joins, Has.Count.EqualTo(1));
-					Assert.That(sq1.GetWhere().Conditions, Is.Empty);
+					Assert.That(sq1.GetWhere().Predicates, Is.Empty);
 				});
 
 				var proj2 = q.Select(v => v.OrderDate);
@@ -126,11 +126,10 @@ namespace Tests.Linq
 				Assert.Multiple(() =>
 				{
 					Assert.That(sq2.GetTableSource().Joins, Has.Count.EqualTo(1));
-					Assert.That(sq2.GetWhere().Conditions, Is.Empty);
+					Assert.That(sq2.GetWhere().Predicates, Is.Empty);
 				});
 			}
 		}
-
 
 		[Test]
 		public void InnerJoinFalse([NorthwindDataContext] string context)
@@ -372,8 +371,8 @@ namespace Tests.Linq
 				Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(1));
 				Assert.Multiple(() =>
 				{
-					Assert.That(sql.GetTableSource().Joins.First().Condition.Conditions, Has.Count.EqualTo(2));
-					Assert.That(sql.GetWhere().Conditions, Is.Empty);
+					Assert.That(sql.GetTableSource().Joins.First().Condition.Predicates, Has.Count.EqualTo(2));
+					Assert.That(sql.GetWhere().Predicates, Is.Empty);
 				});
 
 				var proj1 = q.Select(v => v.OrderID);
@@ -381,7 +380,7 @@ namespace Tests.Linq
 				Assert.Multiple(() =>
 				{
 					Assert.That(sql1.GetTableSource().Joins, Has.Count.EqualTo(1));
-					Assert.That(sql1.GetWhere().Conditions, Is.Empty);
+					Assert.That(sql1.GetWhere().Predicates, Is.Empty);
 				});
 			}
 		}

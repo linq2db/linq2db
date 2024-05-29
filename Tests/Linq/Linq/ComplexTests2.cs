@@ -238,12 +238,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLoadWithWithCast([DataSources] string context)
+		public void TestLoadWithWithCast([DataSources(false)] string context)
 		{
 			var ms = SetMappings();
 
 			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
-			using (var db = GetDataContext(context, ms))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
 			using (db.CreateLocalTable<Test>())
@@ -255,12 +255,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNestedLoadWithWithCast([DataSources] string context)
+		public void TestNestedLoadWithWithCast([DataSources(false)] string context)
 		{
 			var ms = SetMappings();
 
 			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
-			using (var db = GetDataContext(context, ms))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
 			using (db.CreateLocalTable<Test>())
@@ -304,12 +304,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStringAndConverterEnums([DataSources] string context)
+		public void TestStringAndConverterEnums([DataSources(false)] string context)
 		{
 			var ms = SetMappings();
 
 			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
-			using (var db = GetDataContext(context, ms))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
 			using (db.CreateLocalTable<Test>())

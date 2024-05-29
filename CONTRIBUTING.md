@@ -16,6 +16,7 @@ uid: contributing
 |.\Source\LinqToDB| LINQ to DB source code|
 |.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
 |.\Source\LinqToDB.CLI| LINQ to DB CLI scaffold tool source code|
+|.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
 |.\Source\LinqToDB.Remote.Grpc| LINQ to DB Remote Context GRPC client/server source code|
 |.\Source\LinqToDB.Remote.Wcf| LINQ to DB Remote Context WCF client/server source code|
 |.\Source\LinqToDB.Templates| LINQ to DB t4models source code|
@@ -38,9 +39,12 @@ uid: contributing
 
 #### Source projects
 
+Custom feature symbols:
+
+* `SUPPORTS_COMPOSITE_FORMAT`: for code that use `System.Text.CompositeFormat` class
+
 Custom debugging symbols:
 
-* `TRACK_BUILD` - ???
 * `OVERRIDETOSTRING` - enables `ToString()` overrides for AST model (must be enabled in LinqToDB.csproj by renaming existing `OVERRIDETOSTRING1` define)
 
 #### Test projects

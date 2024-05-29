@@ -6,7 +6,6 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Configuration;
 	using Data;
 
 	[PublicAPI]

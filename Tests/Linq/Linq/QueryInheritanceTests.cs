@@ -27,9 +27,24 @@ namespace Tests.Linq
 
 			var connection = (DataConnection) dataContext;
 
-			var sqlBuilder = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema, connection.Options);
-			var sb         = new StringBuilder();
-			sqlBuilder.BuildSql(0, query, sb, new OptimizationContext(new EvaluationContext(), new AliasesContext(), false, connection.DataProvider.GetQueryParameterNormalizer));
+			var sqlBuilder   = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema, connection.Options);
+			var sqlOptimizer = connection.DataProvider.GetSqlOptimizer(dataContext.Options);
+			var sb           = new StringBuilder();
+
+			sqlBuilder.BuildSql(0, query, sb,
+				new OptimizationContext(
+					evaluationContext : new EvaluationContext(),
+					dataOptions : dataContext.Options,
+					sqlProviderFlags : dataContext.SqlProviderFlags,
+					mappingSchema : dataContext.MappingSchema,
+					optimizerVisitor : sqlOptimizer.CreateOptimizerVisitor(false),
+					convertVisitor : sqlOptimizer.CreateConvertVisitor(false),
+					isParameterOrderDepended : false,
+					isAlreadyOptimizedAndConverted : false,
+					parametersNormalizerFactory : connection.DataProvider.GetQueryParameterNormalizer
+				),
+				aliases: new AliasesContext()
+			);
 
 			return connection.Query<T>(sb.ToString());
 		}

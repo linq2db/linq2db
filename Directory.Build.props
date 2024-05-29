@@ -18,7 +18,7 @@
 		<!--1591: missing xmldoc-->
 		<NoWarn>1573;1591</NoWarn>
 		<Features>strict</Features>
-		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
 		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -66,7 +66,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net6.0' ">
 		<PackageReference Include="PolySharp" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
 		<PackageReference Include="Meziantou.Analyzer" />

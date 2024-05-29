@@ -190,10 +190,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		// no idea wether it should work, but now it throws (due to bad expression rewrite?)
-		// InvalidOperationException : variable 'x' of type 'Tests.Model.Child' referenced from scope '', but it is not defined
-		[Test, ActiveIssue]
-		public void TestDefaultExpression_08([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
+		// Test requires OUTER/LATERAL APPLY support from Provider
+		[Test]
+		public void TestDefaultExpression_08([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -235,23 +234,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		// some databases require EXISTS
-		[Test, ActiveIssue(
-			Configurations = new[]
-			{
-				TestProvName.AllClickHouse,
-				TestProvName.AllAccess,
-				ProviderName.DB2,
-				TestProvName.AllFirebird,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSapHana,
-				ProviderName.SqlCe,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase
-			})]
-		public void TestDefaultExpression_09([DataSources(TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
+		// Test requires OUTER/LATERAL APPLY support from Provider
+		[Test]
+		public void TestDefaultExpression_09([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -283,6 +268,38 @@ namespace Tests.UserTests
 					query1 = query1.Provider.CreateQuery<Child>(Restore(query1.Expression));
 					query2 = query2.Provider.CreateQuery<Child>(Restore(query2.Expression));
 				}
+
+				query1.ToArray();
+				var cacheMiss = Query<Child>.CacheMissCount;
+				query2.ToArray();
+				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(cacheMiss));
+			}
+		}
+
+		// Test requires OUTER/LATERAL APPLY or ROW_NUMBER Window function support from Provider
+		[Test]
+		public void TestDefaultExpression_10([IncludeDataSources(true, ProviderName.SQLiteClassic, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = db.Child
+					.Where(x => x.GrandChildren.FirstOrDefault() != x
+						            .GrandChildren
+						            .FirstOrDefault()!
+					            &&
+					            x.ParentID != x
+						            .Parent!.Children
+						            .Select(p => p.ChildID)
+						            .FirstOrDefault());
+				var query2 = db.Child
+					.Where(x => x.GrandChildren.FirstOrDefault() != x
+						            .GrandChildren
+						            .FirstOrDefault()!
+					            &&
+					            x.ParentID != x
+						            .Parent!.Children
+						            .Select(p => p.ChildID)
+						            .FirstOrDefault());
 
 				query1.ToArray();
 				var cacheMiss = Query<Child>.CacheMissCount;
@@ -292,7 +309,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_10([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context, [Values] bool withDefault)
+		public void TestTruncateDrop([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context, [Values] bool withDefault)
 		{
 			using (var db = new TestDataConnection(context))
 			using (var tb = db.CreateLocalTable<TestTable>())

@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Async;
 
 namespace LinqToDB.Common
 {
+	using Async;
+
 	public static class EnumerableHelper
 	{
 		internal static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)

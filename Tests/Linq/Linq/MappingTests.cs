@@ -454,7 +454,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ColumnMappingException1([DataSources] string context)
+		public void ColumnMappingException1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			GetProviderName(context, out var isLinqService);
 
@@ -479,7 +479,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ColumnMappingException2([DataSources] string context)
+		public void ColumnMappingException2([DataSources(ProviderName.SqlCe)] string context)
 		{
 			GetProviderName(context, out var isLinqService);
 

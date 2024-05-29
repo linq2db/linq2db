@@ -54,7 +54,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void Test2([DataSources(TestProvName.AllSybase, TestProvName.AllAccess)] string context)
 		{
@@ -76,7 +75,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void Test3([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{

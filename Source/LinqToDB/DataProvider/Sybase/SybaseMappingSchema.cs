@@ -26,6 +26,8 @@ namespace LinqToDB.DataProvider.Sybase
 			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+
+			SetDefaultValue(typeof(DateTime), new DateTime(1753, 1, 1));
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

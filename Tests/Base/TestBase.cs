@@ -1,21 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
+using System.Data.Common;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Xml;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.Informix;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
@@ -26,6 +28,8 @@ using NUnit.Framework.Internal;
 
 namespace Tests
 {
+	using LinqToDB.FSharp;
+
 	using Model;
 	using Remote.ServerContainer;
 	using Tools;
@@ -82,61 +86,61 @@ namespace Tests
 
 			try
 			{
-			TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
+				TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
 
-			TestContext.WriteLine("CLR Version: {0}...", Environment.Version);
+				TestContext.WriteLine("CLR Version: {0}...", Environment.Version);
 
-			var traceCount = 0;
+				var traceCount = 0;
 
-			DataConnection.TurnTraceSwitchOn();
-			DataConnection.WriteTraceLine = (message, name, level) =>
-			{
-				if (message?.StartsWith("BeforeExecute") == true)
-					LastQuery = message;
-
-				var ctx   = CustomTestContext.Get();
-
-				if (ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED) != true)
+				DataConnection.TurnTraceSwitchOn();
+				DataConnection.WriteTraceLine = (message, name, level) =>
 				{
 					if (message?.StartsWith("BeforeExecute") == true)
+						LastQuery = message;
+
+					var ctx = CustomTestContext.Get();
+
+					if (ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED) != true)
 					{
-						var baseline = ctx.Get<StringBuilder>(CustomTestContext.BASELINE);
-						if (baseline == null)
+						if (message?.StartsWith("BeforeExecute") == true)
 						{
-							baseline = new StringBuilder();
-							ctx.Set(CustomTestContext.BASELINE, baseline);
+							var baseline = ctx.Get<StringBuilder>(CustomTestContext.BASELINE);
+							if (baseline == null)
+							{
+								baseline = new StringBuilder();
+								ctx.Set(CustomTestContext.BASELINE, baseline);
+							}
+
+							baseline.AppendLine(message);
+						}
+					}
+
+					if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
+					{
+						var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+						if (trace == null)
+						{
+							trace = new StringBuilder();
+							ctx.Set(CustomTestContext.TRACE, trace);
 						}
 
-						baseline.AppendLine(message);
+						lock (trace)
+							trace.AppendLine($"{name}: {message}");
+
+						if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
+						{
+							ctx.Set(CustomTestContext.LIMITED, true);
+							TestContext.WriteLine("{0}: {1}", name, message);
+							Debug.WriteLine(message, name);
+						}
+
+						traceCount++;
 					}
-				}
+				};
 
-				if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
-				{
-					var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-					if (trace == null)
-					{
-						trace = new StringBuilder();
-						ctx.Set(CustomTestContext.TRACE, trace);
-					}
-
-					lock (trace)
-						trace.AppendLine($"{name}: {message}");
-
-					if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
-					{
-						ctx.Set(CustomTestContext.LIMITED, true);
-						TestContext.WriteLine("{0}: {1}", name, message);
-						Debug.WriteLine(message, name);
-					}
-
-					traceCount++;
-				}
-			};
-
-			Configuration.Linq.TraceMapperExpression = false;
-			// Configuration.Linq.GenerateExpressionTest  = true;
-			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
+				Configuration.Linq.TraceMapperExpression = false;
+				// Configuration.Linq.GenerateExpressionTest  = true;
+				var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 
 #if NETFRAMEWORK
 			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
@@ -150,19 +154,19 @@ namespace Tests
 			}
 #endif
 
-			Environment.CurrentDirectory = assemblyPath;
+				Environment.CurrentDirectory = assemblyPath;
 
-			TestExternals.Log($"CurrentDirectory          : {Environment.CurrentDirectory}");
+				TestExternals.Log($"CurrentDirectory          : {Environment.CurrentDirectory}");
 
-			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json")!;
-			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json")!;
+				var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json")!;
+				var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json")!;
 
-			TestExternals.Log($"dataProvidersJsonFile     : {dataProvidersJsonFile}");
-			TestExternals.Log($"userDataProvidersJsonFile : {userDataProvidersJsonFile}");
+				TestExternals.Log($"dataProvidersJsonFile     : {dataProvidersJsonFile}");
+				TestExternals.Log($"userDataProvidersJsonFile : {userDataProvidersJsonFile}");
 
-			var dataProvidersJson     = File.ReadAllText(dataProvidersJsonFile);
-			var userDataProvidersJson =
-				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
+				var dataProvidersJson = File.ReadAllText(dataProvidersJsonFile);
+				var userDataProvidersJson =
+					File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
 				var configName = TestUtils.GetConfigName();
 
@@ -172,50 +176,50 @@ namespace Tests
 #endif
 
 #if !DEBUG
-			Console.WriteLine("UserDataProviders.json:");
-			Console.WriteLine(userDataProvidersJson);
+				Console.WriteLine("UserDataProviders.json:");
+				Console.WriteLine(userDataProvidersJson);
 #endif
 
-			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
+				var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
 
-			testSettings.Connections ??= new();
+				testSettings.Connections ??= new();
 
-			CopyDatabases();
+				CopyDatabases();
 
-			DisableRemoteContext = testSettings.DisableRemoteContext == true;
-			UserProviders        = new HashSet<string>(testSettings.Providers ?? [], StringComparer.OrdinalIgnoreCase);
-			SkipCategories       = new HashSet<string>(testSettings.Skip      ?? [], StringComparer.OrdinalIgnoreCase);
+				DisableRemoteContext = testSettings.DisableRemoteContext == true;
+				UserProviders        = new HashSet<string>(testSettings.Providers ?? [], StringComparer.OrdinalIgnoreCase);
+				SkipCategories       = new HashSet<string>(testSettings.Skip      ?? [], StringComparer.OrdinalIgnoreCase);
 
-			var logLevel = testSettings.TraceLevel;
-			var traceLevel = TraceLevel.Info;
+				var logLevel   = testSettings.TraceLevel;
+				var traceLevel = TraceLevel.Info;
 
-			if (!string.IsNullOrEmpty(logLevel))
-				if (!Enum.TryParse(logLevel, true, out traceLevel))
-					traceLevel = TraceLevel.Info;
+				if (!string.IsNullOrEmpty(logLevel))
+					if (!Enum.TryParse(logLevel, true, out traceLevel))
+						traceLevel = TraceLevel.Info;
 
-			if (!string.IsNullOrEmpty(testSettings.NoLinqService))
-				DataSourcesBaseAttribute.NoLinqService = ConvertTo<bool>.From(testSettings.NoLinqService);
+				if (!string.IsNullOrEmpty(testSettings.NoLinqService))
+					DataSourcesBaseAttribute.NoLinqService = ConvertTo<bool>.From(testSettings.NoLinqService);
 
-			DataConnection.TurnTraceSwitchOn(traceLevel);
+				DataConnection.TurnTraceSwitchOn(traceLevel);
 
-			TestContext.WriteLine("Connection strings:");
-			TestExternals.Log("Connection strings:");
+				TestContext.WriteLine("Connection strings:");
+				TestExternals.Log("Connection strings:");
 
 #if !NETFRAMEWORK
-			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
+				TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
-			foreach (var provider in testSettings.Connections/*.Where(c => UserProviders.Contains(c.Key))*/)
-			{
-				if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
-					throw new InvalidOperationException("ConnectionString should be provided");
+				foreach (var provider in testSettings.Connections/*.Where(c => UserProviders.Contains(c.Key))*/)
+				{
+					if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
+						throw new InvalidOperationException($"Provider: {provider.Key}. ConnectionString should be provided.");
 
-				TestContext.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+					TestContext.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
-				TxtSettings.Instance.AddConnectionString(
-					provider.Key, provider.Value.Provider ?? "", provider.Value.ConnectionString);
-			}
+					TxtSettings.Instance.AddConnectionString(
+						provider.Key, provider.Value.Provider ?? "", provider.Value.ConnectionString);
+				}
 
-			DataConnection.DefaultSettings = TxtSettings.Instance;
+				DataConnection.DefaultSettings = TxtSettings.Instance;
 #else
 			foreach (var provider in testSettings.Connections)
 			{
@@ -234,24 +238,24 @@ namespace Tests
 			}
 #endif
 
-			TestContext.WriteLine("Providers:");
-			TestExternals.Log("Providers:");
+				TestContext.WriteLine("Providers:");
+				TestExternals.Log("Providers:");
 
-			foreach (var userProvider in UserProviders)
-			{
-				TestContext.WriteLine($"\t{userProvider}");
-				TestExternals.Log($"\t{userProvider}");
-			}
+				foreach (var userProvider in UserProviders)
+				{
+					TestContext.WriteLine($"\t{userProvider}");
+					TestExternals.Log($"\t{userProvider}");
+				}
 
-			DefaultProvider = testSettings.DefaultConfiguration;
+				DefaultProvider = testSettings.DefaultConfiguration;
 
-			if (!string.IsNullOrEmpty(DefaultProvider))
-			{
-				DataConnection.DefaultConfiguration = DefaultProvider;
+				if (!string.IsNullOrEmpty(DefaultProvider))
+				{
+					DataConnection.DefaultConfiguration = DefaultProvider;
 #if !NETFRAMEWORK
-				TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
+					TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
-			}
+				}
 
 #if NETFRAMEWORK
 			LinqToDB.Remote.LinqService.TypeResolver = str =>
@@ -265,12 +269,12 @@ namespace Tests
 			};
 #endif
 
-			// baselines
-			if (!string.IsNullOrWhiteSpace(testSettings.BaselinesPath))
-			{
-				var baselinesPath = Path.GetFullPath(testSettings.BaselinesPath);
+				// baselines
+				if (!string.IsNullOrWhiteSpace(testSettings.BaselinesPath))
+				{
+					var baselinesPath = Path.GetFullPath(testSettings.BaselinesPath);
 
-				if (Directory.Exists(baselinesPath))
+					if (Directory.Exists(baselinesPath))
 					{
 						BaselinesPath = baselinesPath;
 						StoreMetrics  = testSettings.StoreMetrics;
@@ -421,7 +425,7 @@ namespace Tests
 			}
 
 			var str = configuration.StripRemote();
-			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str, null);
+			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str, opt => opt.UseFSharp());
 		}
 
 		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
@@ -432,7 +436,7 @@ namespace Tests
 			}
 
 			var str = configuration.StripRemote();
-			return _serverContainer.Prepare(null, null, false, str, dbOptionsBuilder);
+			return _serverContainer.Prepare(null, null, false, str, opt => dbOptionsBuilder(opt).UseFSharp());
 		}
 
 		protected TestDataConnection GetDataConnection(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
@@ -454,7 +458,7 @@ namespace Tests
 				options = options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, _sequentialAccessSchema));
 			}
 
-			options = dbOptionsBuilder(options);
+			options = dbOptionsBuilder(options).UseFSharp();
 
 			var res = new TestDataConnection(options);
 
@@ -508,6 +512,7 @@ namespace Tests
 			if (retryPolicy != null)
 				options = options.UseRetryPolicy(retryPolicy);
 
+			options = options.UseFSharp();
 			return new TestDataConnection(options);
 		}
 
@@ -518,6 +523,7 @@ namespace Tests
 
 			Debug.WriteLine(options.ConnectionOptions.ConfigurationString, "Provider ");
 
+			options = options.UseFSharp();
 			var res = new TestDataConnection(options);
 
 			return res;
@@ -610,6 +616,30 @@ namespace Tests
 
 		protected internal const int MaxPersonID = 4;
 
+
+		void InitPatientPerson()
+		{
+			if (_patient == null || _person == null)
+			{
+				using (new DisableLogging())
+				using (new DisableBaseline("Default Database"))
+				using (var db = new TestDataConnection())
+				{
+					var persons  = db.Person.ToList();
+					var patients = db.Patient.ToList();
+
+					foreach (var p in persons)
+						p.Patient = patients.SingleOrDefault(ps => p.ID == ps.PersonID);
+
+					foreach (var p in patients)
+						p.Person = persons.Single(ps => ps.ID == p.PersonID);
+
+					_patient = patients;
+					_person  = persons;
+				}
+			}
+		}
+
 		private   List<Person>?       _person;
 		protected IEnumerable<Person>  Person
 		{
@@ -617,16 +647,10 @@ namespace Tests
 			{
 				if (_person == null)
 				{
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-						_person = db.Person.ToList();
-
-					foreach (var p in _person)
-						p.Patient = Patient.SingleOrDefault(ps => p.ID == ps.PersonID);
+					InitPatientPerson();
 				}
 
-				return _person;
+				return _person!;
 			}
 		}
 
@@ -637,16 +661,10 @@ namespace Tests
 			{
 				if (_patient == null)
 				{
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-						_patient = db.Patient.ToList();
-
-					foreach (var p in _patient)
-						p.Person = Person.Single(ps => ps.ID == p.PersonID);
+					InitPatientPerson();
 				}
 
-				return _patient;
+				return _patient!;
 			}
 		}
 
@@ -1199,9 +1217,9 @@ namespace Tests
 			AreEqual(t => t, expected, result, ComparerBuilder.GetEqualityComparer<T>(memberPredicate));
 		}
 
-		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
+		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
 		{
-			AreEqual(t => t, expected, result, comparer);
+			AreEqual(t => t, expected, result, comparer, allowEmpty);
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, Func<IEnumerable<T>, IEnumerable<T>> sort)
@@ -1312,69 +1330,8 @@ namespace Tests
 			Assert.That(b, Is.True);
 		}
 
-		protected T[] AssertQuery<T>(IQueryable<T> query)
-		{
-			var loaded  = new Dictionary<Type, Expression>();
-			var actual  = query.ToArray();
-			var expr    = query.Expression.Transform(
-				query,
-				static (ctx, e) => e is ConstantExpression { Value : null } ce && ce.Type == typeof(IDataContext)
-					? Expression.Constant(Internals.GetDataContext(ctx), typeof(IDataContext))
-					: e);
-			var lastQuery = LastQuery;
-
-			var newExpr = expr.Transform(loaded, static (loaded, e) =>
-			{
-				if (e.NodeType == ExpressionType.Call)
-				{
-					var mc = (MethodCallExpression)e;
-
-					if (mc.Method.IsGenericMethod && mc.Method.GetGenericMethodDefinition() == Methods.LinqToDB.AsSubQuery)
-						return mc.Arguments[0];
-
-					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))
-					{
-						var entityType = mc.Method.ReturnType.GetGenericArguments()[0];
-
-						if (entityType != null)
-						{
-							if (!loaded.TryGetValue(entityType, out var itemsExpression))
-							{
-								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
-								using (new DisableLogging())
-								using (new DisableBaseline("test infrastructure"))
-								{
-									var items = newCall.EvaluateExpression();
-									itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
-									loaded.Add(entityType, itemsExpression);
-								}
-							}
-							var queryCall =
-								LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
-									itemsExpression);
-							return queryCall;
-						}
-					}
-				}
-
-				return e;
-			})!;
-
-			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
-			T[]? expected;
-
-			expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
-
-			if (actual.Length > 0 || expected.Length > 0)
-				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
-
-			LastQuery = lastQuery;
-
-			return actual;
-		}
-
-		private static readonly char[] _newlineSeparators = new char[] { '\r', '\n' };
-
+		static readonly char[] _newlineSeparators = new char[] { '\r', '\n' };
+		
 		protected void CompareSql(string expected, string result)
 		{
 			Assert.That(normalize(result), Is.EqualTo(normalize(expected)));
@@ -1551,6 +1508,113 @@ namespace Tests
 
 			return options;
 		}
+
+		private static readonly JsonSerializerOptions _dumpObjectOptions = new JsonSerializerOptions { WriteIndented = true };
+		protected virtual void DumpObject(object? obj)
+		{
+			if (obj == null)
+				return;
+
+			TestContext.WriteLine(JsonSerializer.Serialize(obj, _dumpObjectOptions));
+		}
+
+		[SuppressMessage("ReSharper", "AccessToDisposedClosure")]
+		protected void ConcurrentRunner<TParam, TResult>(DataConnection dc, string context, int threadsPerParam, Func<DataConnection, TParam, TResult> queryFunc,
+			Action<TResult, TParam> checkAction, params TParam[] parameters)
+		{
+			var threadCount = threadsPerParam * parameters.Length;
+			if (threadCount <= 0)
+				throw new InvalidOperationException();
+
+			// maximum Provider pool count
+			const int poolCount = 10;
+
+			using var semaphore = new Semaphore(0, poolCount);
+
+			var threads = new Thread[threadCount];
+			var results = new Tuple<TParam, TResult, string, DbParameter[], Exception?>[threadCount];
+
+			for (var i = 0; i < threadCount; i++)
+			{
+				var param = parameters[i % parameters.Length];
+				var n = i;
+				threads[i] = new Thread(() =>
+				{
+					semaphore.WaitOne();
+					try
+					{
+						try
+						{
+							using (var threadDb = (DataConnection)GetDataContext(context))
+							{
+								var commandInterceptor = new SaveCommandInterceptor();
+								threadDb.AddInterceptor(commandInterceptor);
+
+								var result = queryFunc(threadDb, param);
+								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, (Exception?)null);
+							}
+						}
+						catch (Exception e)
+						{
+							results[n] = Tuple.Create(param, default(TResult), "", (DbParameter[]?)null, e)!;
+						}
+
+					}
+					finally
+					{
+						semaphore.Release();
+					}
+				});
+			}
+
+			for (int i = 0; i < threads.Length; i++)
+			{
+				threads[i].Start();
+			}
+
+			semaphore.Release(poolCount);
+
+			for (int i = 0; i < threads.Length; i++)
+			{
+				threads[i].Join();
+			}
+
+			for (int i = 0; i < threads.Length; i++)
+			{
+				var result = results[i];
+				if (result.Item5 != null)
+				{
+					TestContext.WriteLine($"Exception in query ({result.Item1}):\n\n{result.Item5}");
+					throw result.Item5;
+				}
+				try
+				{
+					checkAction(result.Item2, result.Item1);
+				}
+				catch
+				{
+					var testResult = queryFunc(dc, result!.Item1);
+
+					TestContext.WriteLine($"Failed query ({result.Item1}):\n");
+					if (result.Item4 != null)
+					{
+						var sb = new StringBuilder();
+						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
+						TestContext.WriteLine(sb);
+					}
+					TestContext.WriteLine();
+					TestContext.WriteLine(result.Item3);
+
+					DumpObject(result.Item2);
+
+					DumpObject(testResult);
+
+
+					throw;
+				}
+			}
+		}
+
 	}
 
 	static class DataCache<T>

@@ -15,7 +15,9 @@ namespace LinqToDB.Remote
 	using Mapping;
 	using SqlQuery;
 	using Tools;
-
+	using Infrastructure;
+	using Linq.Translation;
+	using Interceptors;
 
 	public class LinqService : ILinqService
 	{
@@ -76,13 +78,16 @@ namespace LinqToDB.Remote
 		{
 			using var ctx = CreateDataContext(configuration);
 
+			var serviceProvider = ((IInfrastructure<IServiceProvider>)ctx.DataProvider).Instance;
+
 			return new LinqServiceInfo
 			{
-				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
-				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
-				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
-				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
+				MappingSchemaType        = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
+				MethodCallTranslatorType = serviceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
+				SqlBuilderType           = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
+				SqlOptimizerType         = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
+				SqlProviderFlags         = ctx.DataProvider.SqlProviderFlags,
+				SupportedTableOptions    = ctx.DataProvider.SupportedTableOptions
 			};
 		}
 
@@ -90,13 +95,16 @@ namespace LinqToDB.Remote
 		{
 			using var ctx = CreateDataContext(configuration);
 
+			var serviceProvider = ((IInfrastructure<IServiceProvider>)ctx.DataProvider).Instance;
+
 			return Task.FromResult(new LinqServiceInfo()
 			{
-				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
-				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
-				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
-				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
+				MappingSchemaType        = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
+				MethodCallTranslatorType = serviceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
+				SqlBuilderType           = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
+				SqlOptimizerType         = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
+				SqlProviderFlags         = ctx.DataProvider.SqlProviderFlags,
+				SupportedTableOptions    = ctx.DataProvider.SupportedTableOptions
 			});
 		}
 
@@ -110,13 +118,17 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				using var db = CreateDataContext(configuration);
+#pragma warning disable CA2007
+				await using var db = CreateDataContext(configuration);
+#pragma warning restore CA2007
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var _  = db.DataProvider.ExecuteScope(db);
+#pragma warning disable CA2007
+				await using var _ = db.DataProvider.ExecuteScope(db);
+#pragma warning restore CA2007
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -170,13 +182,17 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				using var db = CreateDataContext(configuration);
+#pragma warning disable CA2007
+				await using var db = CreateDataContext(configuration);
+#pragma warning restore CA2007
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var _  = db.DataProvider.ExecuteScope(db);
+#pragma warning disable CA2007
+				await using var _ = db.DataProvider.ExecuteScope(db);
+#pragma warning restore CA2007
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -267,17 +283,18 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				using var db = CreateDataContext(configuration);
+#pragma warning disable CA2007
+				await using var db = CreateDataContext(configuration);
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var _  = db.DataProvider.ExecuteScope(db);
+				await using var _ = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
-				using var rd = await DataConnection.QueryRunner.ExecuteReaderAsync(
+				await using var rd = await DataConnection.QueryRunner.ExecuteReaderAsync(
 					db,
 					new QueryContext(query.Statement, query.DataOptions),
 					SqlParameterValues.Empty,
@@ -287,6 +304,7 @@ namespace LinqToDB.Remote
 				var ret = ProcessDataReaderWrapper(query, db, rd);
 
 				return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
+#pragma warning restore CA2007
 			}
 			catch (Exception exception)
 			{
@@ -327,7 +345,7 @@ namespace LinqToDB.Remote
 		{
 			DbDataReader reader;
 
-			if (((IDataContext)db).UnwrapDataObjectInterceptor is {} interceptor)
+			if (db is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 			{
 				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 					reader = interceptor.UnwrapDataReader(db, rd.DataReader!);
@@ -387,7 +405,6 @@ namespace LinqToDB.Remote
 				// async compiled query support
 				if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
 					fieldType = fieldType.GetGenericArguments()[0];
-
 
 				if (fieldType.IsEnum || fieldType.IsNullable() && fieldType.ToNullableUnderlying().IsEnum)
 				{
@@ -477,7 +494,9 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				using var db = CreateDataContext(configuration);
+#pragma warning disable CA2007
+				await using var db = CreateDataContext(configuration);
+#pragma warning restore CA2007
 
 				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, r)).ToArray();
@@ -485,7 +504,9 @@ namespace LinqToDB.Remote
 				foreach (var query in queries)
 					ValidateQuery(query);
 
-				using var _  = db.DataProvider.ExecuteScope(db);
+#pragma warning disable CA2007
+				await using var _ = db.DataProvider.ExecuteScope(db);
+#pragma warning restore CA2007
 
 				await db.BeginTransactionAsync(cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -516,11 +537,12 @@ namespace LinqToDB.Remote
 
 		sealed class QueryContext(SqlStatement statement, DataOptions dataOptions) : IQueryContext
 		{
-			public SqlStatement    Statement   { get; } = statement;
-			public object?         Context     { get; set; }
-			public SqlParameter[]? Parameters  { get; set; }
-			public AliasesContext? Aliases     { get; set; }
-			public DataOptions     DataOptions { get; } = dataOptions;
+			public SqlStatement    Statement       { get; } = statement;
+			public object?         Context         { get; set; }
+			public bool            IsContinuousRun { get; set; }
+			public SqlParameter[]? Parameters      { get; set; }
+			public AliasesContext? Aliases         { get; set; }
+			public DataOptions     DataOptions     { get; } = dataOptions;
 		}
 
 		#endregion

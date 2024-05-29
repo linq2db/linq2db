@@ -607,7 +607,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithAndFilteredProperty([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void LoadWithAndFilteredProperty([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse, TestProvName.AllSqlServer)] string context)
 		{
 			var testData = GenerateTestData();
 

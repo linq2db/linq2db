@@ -10,7 +10,6 @@ namespace LinqToDB.SchemaProvider
 	using Common;
 	using Common.Internal;
 	using Data;
-	using SqlProvider;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{

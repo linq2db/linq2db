@@ -247,10 +247,10 @@ namespace Tests
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
 			where T : notnull
 		{
-			var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
-
 			using (new DisableLogging())
 			{
+				var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
+
 				if (db is DataConnection dc)
 				{
 					// apply transaction only on insert, as not all dbs support DDL within transaction
@@ -265,9 +265,9 @@ namespace Tests
 				else
 					foreach (var item in items)
 						db.Insert(item, table.TableName);
-			}
 
-			return table;
+				return table;
+			}
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items, bool insertInTransaction = false)

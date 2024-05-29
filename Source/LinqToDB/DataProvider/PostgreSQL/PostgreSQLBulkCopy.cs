@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Data;
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	sealed class PostgreSQLBulkCopy : BasicBulkCopy
 	{
@@ -119,7 +120,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				if (npgsqlType == null)
 				{
 					var sb = new System.Text.StringBuilder();
-					sqlBuilder.BuildTypeName(sb, new SqlQuery.SqlDataType(columnTypes[i]));
+					sqlBuilder.BuildTypeName(sb, columnTypes[i]);
 					npgsqlType = _provider.GetNativeType(sb.ToString(), true);
 				}
 

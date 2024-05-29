@@ -74,11 +74,16 @@ namespace Tests.Linq
 #pragma warning disable CS0618 // Type or member is obsolete
 					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(1));
 					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
-#pragma warning restore CS0618 // Type or member is obsolete
 				});
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter1(
 			[DataSources(
@@ -86,7 +91,6 @@ namespace Tests.Linq
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllInformix,
-				ProviderName.DB2,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -99,6 +103,11 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter2(
 			[DataSources(
@@ -106,7 +115,6 @@ namespace Tests.Linq
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllInformix,
-				ProviderName.DB2,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -119,13 +127,17 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter3(
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllInformix,
-				ProviderName.DB2,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -150,12 +162,16 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter5(
 			[DataSources(
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllInformix,
-				ProviderName.DB2)]
+				TestProvName.AllInformix)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -178,7 +194,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -193,7 +209,7 @@ namespace Tests.Linq
 
 		// DB2: see DB2SqlOptimizer.SetQueryParameter - binary parameters inlined for DB2
 		[Test]
-		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlBinaryParameter([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -320,8 +336,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// sequence evaluation fails in GetChildrenFiltered2
-		[ActiveIssue("Unable to cast object of type 'System.Linq.Expressions.FieldExpression' to type 'System.Linq.Expressions.LambdaExpression'.")]
 		[Test]
 		public void TestQueryableCallWithParametersWorkaround2([DataSources] string context)
 		{
@@ -422,42 +436,34 @@ namespace Tests.Linq
 				{
 					Issue404? usage = null;
 					var allUsages = !usage.HasValue;
-					var res1 = Test();
-					Assert.That(res1, Is.Not.Null);
-					Assert.That(res1.Values, Is.Not.Null);
+					var res1 = Test()!;
 					Assert.Multiple(() =>
 					{
 						Assert.That(res1.Id, Is.EqualTo(1));
-						Assert.That(res1.Values, Has.Count.EqualTo(3));
-						Assert.That(res1.Values.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(3));
+						Assert.That(res1.Values!, Has.Count.EqualTo(3));
+						Assert.That(res1.Values!.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(3));
 					});
 
 					usage = Issue404.Value1;
 					allUsages = false;
-					var res2 = Test();
-					Assert.That(res2, Is.Not.Null);
-					Assert.That(res2.Values, Is.Not.Null);
-
+					var res2 = Test()!;
 					Assert.Multiple(() =>
 					{
 						Assert.That(res2.Id, Is.EqualTo(1));
-						Assert.That(res2.Values, Has.Count.EqualTo(2));
-						Assert.That(res2.Values.Where(v => v.Usage == usage).Count(), Is.EqualTo(2));
-						Assert.That(res2.Values.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(2));
+						Assert.That(res2.Values!, Has.Count.EqualTo(2));
+						Assert.That(res2.Values!.Where(v => v.Usage == usage).Count(), Is.EqualTo(2));
+						Assert.That(res2.Values!.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(2));
 					});
 
 					usage = Issue404.Value2;
 					allUsages = false;
-					var res3 = Test();
-
-					Assert.That(res3, Is.Not.Null);
-					Assert.That(res3.Values, Is.Not.Null);
+					var res3 = Test()!;
 					Assert.Multiple(() =>
 					{
 						Assert.That(res2.Id, Is.EqualTo(1));
-						Assert.That(res3.Values, Has.Count.EqualTo(1));
-						Assert.That(res3.Values.Where(v => v.Usage == usage).Count(), Is.EqualTo(1));
-						Assert.That(res3.Values.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(1));
+						Assert.That(res3.Values!, Has.Count.EqualTo(1));
+						Assert.That(res3.Values!.Where(v => v.Usage == usage).Count(), Is.EqualTo(1));
+						Assert.That(res3.Values!.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(1));
 					});
 
 					FirstTable? Test()
@@ -488,7 +494,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Issue1189Test([DataSources] string context)
 		{
@@ -1283,7 +1288,7 @@ namespace Tests.Linq
 					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
 					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 					Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
-					Assert.That(_cnt1, Is.EqualTo(3));
+					Assert.That(_cnt1, Is.EqualTo(1));
 					Assert.That(_cnt2, Is.EqualTo(1));
 					Assert.That(_cnt3, Is.EqualTo(1));
 				});
@@ -1299,8 +1304,8 @@ namespace Tests.Linq
 				{
 					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
-					Assert.That(_cnt1, Is.EqualTo(5));
-					Assert.That(_cnt2, Is.EqualTo(3));
+					Assert.That(_cnt1, Is.EqualTo(1));
+					Assert.That(_cnt2, Is.EqualTo(1));
 					Assert.That(_cnt3, Is.EqualTo(1));
 				});
 
@@ -1314,9 +1319,9 @@ namespace Tests.Linq
 				Assert.Multiple(() =>
 				{
 					Assert.That(persons[0].ID, Is.EqualTo(1));
-					Assert.That(_cnt1, Is.EqualTo(4));
-					Assert.That(_cnt2, Is.EqualTo(2));
-					Assert.That(_cnt3, Is.EqualTo(2));
+					Assert.That(_cnt1, Is.EqualTo(1));
+					Assert.That(_cnt2, Is.EqualTo(1));
+					Assert.That(_cnt3, Is.EqualTo(1));
 				});
 
 				_cnt1   = 0;
@@ -1330,9 +1335,9 @@ namespace Tests.Linq
 				{
 					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
-					Assert.That(_cnt1, Is.EqualTo(2));
-					Assert.That(_cnt2, Is.EqualTo(2));
-					Assert.That(_cnt3, Is.EqualTo(2));
+					Assert.That(_cnt1, Is.EqualTo(1));
+					Assert.That(_cnt2, Is.EqualTo(1));
+					Assert.That(_cnt3, Is.EqualTo(1));
 				});
 
 				_cnt1   = 0;
@@ -1347,9 +1352,9 @@ namespace Tests.Linq
 					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
 					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 					Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
-					Assert.That(_cnt1, Is.EqualTo(4));
-					Assert.That(_cnt2, Is.EqualTo(3));
-					Assert.That(_cnt3, Is.EqualTo(2));
+					Assert.That(_cnt1, Is.EqualTo(1));
+					Assert.That(_cnt2, Is.EqualTo(1));
+					Assert.That(_cnt3, Is.EqualTo(1));
 				});
 			}
 
@@ -1629,11 +1634,39 @@ namespace Tests.Linq
 						  select c).ToList();
 		}
 
+
+		int GetId(int id, int increment)
+		{
+			return id + increment;
+		}
+
+		/// <summary>
+		/// Tests that we do not have cache hit for similar parameters
+		/// </summary>
+		/// <param name="context"></param>
+		[Test]
+		public void Caching([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+
+				var query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
+				AssertQuery(query1);
+
+				id = 2;
+
+				var query2  = db.Parent.Where(x => x.ParentID == GetId(id, 1) || x.ParentID == GetId(id, 0));
+				AssertQuery(query2);
+			}
+		}
+
+
 #if NET6_0_OR_GREATER
 		[Table]
 		public sealed class Issue4371Table2
 		{
-			[Column(DataType = DataType.VarChar)] public DateOnly? ColumnDO { get; set; }
+			[Column(DataType = DataType.VarChar)] public DateOnly?       ColumnDO  { get; set; }
 		}
 
 		[Test]

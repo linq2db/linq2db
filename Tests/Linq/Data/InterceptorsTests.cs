@@ -82,232 +82,6 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void CommandInitializedOnDataConnectionCloningTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				var triggered1 = false;
-				var triggered2 = false;
-				var triggered3 = false;
-				var interceptor1 = new TestCommandInterceptor();
-				var interceptor2 = new TestCommandInterceptor();
-				var interceptor3 = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor1);
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered1 = true;
-					return command;
-				});
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered2 = true;
-					return command;
-				});
-				db.AddInterceptor(interceptor2);
-
-				using (var clonedDb = (DataConnection)db.Clone())
-				{
-					// add after cloning
-					db.OnNextCommandInitialized((args, command) =>
-					{
-						triggered3 = true;
-						return command;
-					});
-					db.AddInterceptor(interceptor3);
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
-						Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
-						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
-						Assert.That(triggered1, Is.False);
-						Assert.That(triggered2, Is.False);
-						Assert.That(triggered3, Is.False);
-					});
-
-					db.Child.ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor3.CommandInitializedTriggered, Is.True);
-						Assert.That(triggered1, Is.True);
-						Assert.That(triggered2, Is.True);
-						Assert.That(triggered3, Is.True);
-					});
-
-					triggered1 = false;
-					triggered2 = false;
-					triggered3 = false;
-					interceptor1.CommandInitializedTriggered = false;
-					interceptor2.CommandInitializedTriggered = false;
-					interceptor3.CommandInitializedTriggered = false;
-
-					db.Person.ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor3.CommandInitializedTriggered, Is.True);
-						Assert.That(triggered1, Is.False);
-						Assert.That(triggered2, Is.False);
-						Assert.That(triggered3, Is.False);
-					});
-
-					// test that cloned connection still preserve non-fired one-time interceptors
-					interceptor1.CommandInitializedTriggered = false;
-					interceptor2.CommandInitializedTriggered = false;
-					interceptor3.CommandInitializedTriggered = false;
-
-					clonedDb.GetTable<Child>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
-						Assert.That(triggered1, Is.True);
-						Assert.That(triggered2, Is.True);
-						Assert.That(triggered3, Is.False);
-					});
-
-					triggered1 = false;
-					triggered2 = false;
-					interceptor1.CommandInitializedTriggered = false;
-					interceptor2.CommandInitializedTriggered = false;
-
-					clonedDb.GetTable<Person>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
-						Assert.That(triggered1, Is.False);
-						Assert.That(triggered2, Is.False);
-						Assert.That(triggered3, Is.False);
-					});
-				}
-			}
-		}
-
-		[Test]
-		public void CommandInitializedOnDataContextCloningTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
-		{
-			using (var db = new DataContext(context))
-			{
-				db.CloseAfterUse = closeAfterUse;
-
-				var triggered1 = false;
-				var triggered2 = false;
-				var triggered3 = false;
-				var interceptor1 = new TestCommandInterceptor();
-				var interceptor2 = new TestCommandInterceptor();
-				var interceptor3 = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor1);
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered1 = true;
-					return command;
-				});
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered2 = true;
-					return command;
-				});
-				db.AddInterceptor(interceptor2);
-
-				using (var clonedDb = (DataContext)((IDataContext)db).Clone(true))
-				{
-					// add after cloning
-					db.OnNextCommandInitialized((args, command) =>
-					{
-						triggered3 = true;
-						return command;
-					});
-					db.AddInterceptor(interceptor3);
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
-						Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
-						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
-						Assert.That(triggered1, Is.False);
-						Assert.That(triggered2, Is.False);
-						Assert.That(triggered3, Is.False);
-					});
-
-					_ = db.GetTable<Child>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor3.CommandInitializedTriggered, Is.True);
-						Assert.That(triggered1, Is.True);
-						Assert.That(triggered2, Is.True);
-						Assert.That(triggered3, Is.True);
-					});
-
-					triggered1 = false;
-					triggered2 = false;
-					triggered3 = false;
-					interceptor1.CommandInitializedTriggered = false;
-					interceptor2.CommandInitializedTriggered = false;
-					interceptor3.CommandInitializedTriggered = false;
-
-					_ = db.GetTable<Person>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor3.CommandInitializedTriggered, Is.True);
-						Assert.That(triggered1, Is.False);
-						Assert.That(triggered2, Is.False);
-						Assert.That(triggered3, Is.False);
-					});
-
-					// test that cloned connection still preserve non-fired one-time interceptors
-					interceptor1.CommandInitializedTriggered = false;
-					interceptor2.CommandInitializedTriggered = false;
-					interceptor3.CommandInitializedTriggered = false;
-
-					_ = clonedDb.GetTable<Child>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
-						Assert.That(triggered1, Is.True);
-						Assert.That(triggered2, Is.True);
-						Assert.That(triggered3, Is.False);
-					});
-
-					triggered1 = false;
-					triggered2 = false;
-					interceptor1.CommandInitializedTriggered = false;
-					interceptor2.CommandInitializedTriggered = false;
-
-					_ = clonedDb.GetTable<Person>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-						Assert.That(interceptor3.CommandInitializedTriggered, Is.False);
-						Assert.That(triggered1, Is.False);
-						Assert.That(triggered2, Is.False);
-						Assert.That(triggered3, Is.False);
-					});
-				}
-			}
-		}
-
 		// test interceptors registration using fluent options builder
 		[Test]
 		public void CommandInitializedOnDataConnectionTest_OptionsBuilder([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1099,132 +873,6 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void ConnectionOpenOnDataConnectionCloningTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				var interceptor1 = new TestConnectionInterceptor();
-				var interceptor2 = new TestConnectionInterceptor();
-				db.AddInterceptor(interceptor1);
-
-				using (var clonedDb = (DataConnection)db.Clone())
-				{
-					// test interceptor not propagaded to cloned connection after clone
-					db.AddInterceptor(interceptor2);
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.False);
-						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.False);
-						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
-					});
-
-					db.Child.ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.True);
-						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.True);
-						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.True);
-						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.True);
-						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
-					});
-
-					interceptor1.ConnectionOpenedTriggered = false;
-					interceptor1.ConnectionOpeningTriggered = false;
-					interceptor2.ConnectionOpenedTriggered = false;
-					interceptor2.ConnectionOpeningTriggered = false;
-
-					clonedDb.GetTable<Child>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.True);
-						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.True);
-						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
-					});
-				}
-			}
-		}
-
-		[Test]
-		public void ConnectionOpenOnDataContextCloningTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
-		{
-			using (var db = new DataContext(context))
-			{
-				db.CloseAfterUse = closeAfterUse;
-
-				var interceptor1 = new TestConnectionInterceptor();
-				var interceptor2 = new TestConnectionInterceptor();
-				db.AddInterceptor(interceptor1);
-
-				using (var clonedDb = (DataContext)((IDataContext)db).Clone(true))
-				{
-					// test interceptor not propagaded to cloned connection after clone
-					db.AddInterceptor(interceptor2);
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.False);
-						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.False);
-						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
-					});
-
-					db.GetTable<Child>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.True);
-						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.True);
-						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.True);
-						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.True);
-						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
-					});
-
-					interceptor1.ConnectionOpenedTriggered = false;
-					interceptor1.ConnectionOpeningTriggered = false;
-					interceptor2.ConnectionOpenedTriggered = false;
-					interceptor2.ConnectionOpeningTriggered = false;
-
-					clonedDb.GetTable<Child>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.ConnectionOpenedTriggered, Is.True);
-						Assert.That(interceptor1.ConnectionOpeningTriggered, Is.True);
-						Assert.That(interceptor1.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor1.ConnectionOpeningAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpenedTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpeningTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpenedAsyncTriggered, Is.False);
-						Assert.That(interceptor2.ConnectionOpeningAsyncTriggered, Is.False);
-					});
-				}
-			}
-		}
-
-		[Test]
 		public void ConnectionOpenOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			using (var db = new DataContext(context))
@@ -1369,21 +1017,6 @@ namespace Tests.Data
 
 				Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
 				Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == db), Is.True);
-				interceptor1.EntityCreatedContexts.Clear();
-
-				using (var clonedDb = (IDataContext)((IDataContext)db).Clone(true))
-				{
-					clonedDb.AddInterceptor(interceptor2);
-					_ = clonedDb.GetTable<Person>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
-						Assert.That(interceptor2.EntityCreatedContexts, Has.Count.EqualTo(count));
-					});
-					Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb), Is.True);
-					Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb), Is.True);
-				}
 			}
 		}
 
@@ -1401,22 +1034,6 @@ namespace Tests.Data
 
 				Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
 				Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == db), Is.True);
-
-				interceptor1.EntityCreatedContexts.Clear();
-
-				using (var clonedDb = (IDataContext)((IDataContext)db).Clone(true))
-				{
-					clonedDb.AddInterceptor(interceptor2);
-					clonedDb.GetTable<Person>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
-						Assert.That(interceptor2.EntityCreatedContexts, Has.Count.EqualTo(count));
-					});
-					Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb), Is.True);
-					Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == clonedDb), Is.True);
-				}
 			}
 		}
 
@@ -1426,515 +1043,181 @@ namespace Tests.Data
 		[Test]
 		public void CloseEvents_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var interceptor1 = new TestDataContextInterceptor();
-			var interceptor2 = new TestDataContextInterceptor();
+			var interceptor = new TestDataContextInterceptor();
 
 			IDataContext main;
-			IDataContext cloned;
 
 			using (var db = main = GetDataContext(context))
 			{
-				db.AddInterceptor(interceptor1);
+				db.AddInterceptor(interceptor);
 
 				db.GetTable<Person>().ToList();
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(interceptor1.OnClosedContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosingContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
-				});
-
-				using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
-				{
-					clonedDb.AddInterceptor(interceptor2);
-					clonedDb.GetTable<Person>().ToList();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.OnClosedContexts, Is.Empty);
-						Assert.That(interceptor1.OnClosingContexts, Is.Empty);
-						Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
-						Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
-
-						Assert.That(interceptor2.OnClosedContexts, Is.Empty);
-						Assert.That(interceptor2.OnClosingContexts, Is.Empty);
-						Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
-						Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
-					});
-				}
-
-				Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor1.OnClosedContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor1.OnClosedContexts[cloned], Is.EqualTo(1));
-					Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor1.OnClosingContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor1.OnClosingContexts[cloned], Is.EqualTo(1));
-					Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
-
-					Assert.That(interceptor2.OnClosedContexts, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor2.OnClosedContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor2.OnClosedContexts[cloned], Is.EqualTo(1));
-					Assert.That(interceptor2.OnClosingContexts, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor2.OnClosingContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor2.OnClosingContexts[cloned], Is.EqualTo(1));
-					Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
-					Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
+					Assert.That(interceptor.OnClosedContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingContexts, Is.Empty);
+					Assert.That(interceptor.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingAsyncContexts, Is.Empty);
 				});
 			}
 
-			Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(2));
+			Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(1));
 			Assert.Multiple(() =>
 			{
-				Assert.That(interceptor1.OnClosedContexts.ContainsKey(main), Is.True);
-				Assert.That(interceptor1.OnClosedContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor1.OnClosedContexts[main], Is.EqualTo(1));
-				Assert.That(interceptor1.OnClosedContexts[cloned], Is.EqualTo(1));
+				Assert.That(interceptor.OnClosedContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosedContexts[main], Is.EqualTo(1));
 
-				Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(2));
+				Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(1));
 			});
 			Assert.Multiple(() =>
 			{
-				Assert.That(interceptor1.OnClosingContexts.ContainsKey(main), Is.True);
-				Assert.That(interceptor1.OnClosingContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor1.OnClosingContexts[main], Is.EqualTo(1));
-				Assert.That(interceptor1.OnClosingContexts[cloned], Is.EqualTo(1));
+				Assert.That(interceptor.OnClosingContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosingContexts[main], Is.EqualTo(1));
 
-				Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
-				Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
-
-				Assert.That(interceptor2.OnClosedContexts, Has.Count.EqualTo(1));
-			});
-			Assert.Multiple(() =>
-			{
-				Assert.That(interceptor2.OnClosedContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor2.OnClosedContexts[cloned], Is.EqualTo(1));
-				Assert.That(interceptor2.OnClosingContexts, Has.Count.EqualTo(1));
-			});
-			Assert.Multiple(() =>
-			{
-				Assert.That(interceptor2.OnClosingContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor2.OnClosingContexts[cloned], Is.EqualTo(1));
-				Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
-				Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
+				Assert.That(interceptor.OnClosedAsyncContexts, Is.Empty);
+				Assert.That(interceptor.OnClosingAsyncContexts, Is.Empty);
 			});
 		}
 
 		[Test]
 		public void CloseEvents_DataContext([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var interceptor1 = new TestDataContextInterceptor();
-			var interceptor2 = new TestDataContextInterceptor();
+			var interceptor = new TestDataContextInterceptor();
 
 			IDataContext main;
-			IDataContext cloned;
 
 			using (var db = main = new DataContext(context))
 			{
-				db.AddInterceptor(interceptor1);
+				db.AddInterceptor(interceptor);
 
 				_ = db.GetTable<Person>().ToList();
 
-				Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(1));
+				Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(1));
 				Assert.Multiple(() =>
 				{
-					Assert.That(interceptor1.OnClosedContexts.Keys.Single() is DataConnection, Is.True);
-					Assert.That(interceptor1.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
-					Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(1));
+					Assert.That(interceptor.OnClosedContexts.Keys.Single() is DataConnection, Is.True);
+					Assert.That(interceptor.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(interceptor1.OnClosingContexts.Keys.Single() is DataConnection, Is.True);
-					Assert.That(interceptor1.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
-					Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
-				});
-
-				using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
-				{
-					clonedDb.AddInterceptor(interceptor2);
-					_ = clonedDb.GetTable<Person>().ToList();
-
-					Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(2));
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.OnClosedContexts.Keys.All(_ => _ is DataConnection), Is.True);
-						Assert.That(interceptor1.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
-						Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(2));
-					});
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.OnClosingContexts.Keys.All(_ => _ is DataConnection), Is.True);
-						Assert.That(interceptor1.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
-						Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
-						Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
-
-						Assert.That(interceptor2.OnClosedContexts, Has.Count.EqualTo(1));
-					});
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor2.OnClosedContexts.Keys.Single() is DataConnection, Is.True);
-						Assert.That(interceptor2.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
-						Assert.That(interceptor2.OnClosingContexts, Has.Count.EqualTo(1));
-					});
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor2.OnClosingContexts.Keys.Single() is DataConnection, Is.True);
-						Assert.That(interceptor2.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
-						Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
-						Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
-					});
-				}
-
-				Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(3));
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor1.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
-					Assert.That(interceptor1.OnClosedContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor1.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
-					Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(3));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor1.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
-					Assert.That(interceptor1.OnClosingContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor1.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
-					Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
-
-					Assert.That(interceptor2.OnClosedContexts, Has.Count.EqualTo(2));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor2.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
-					Assert.That(interceptor2.OnClosedContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor2.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
-					Assert.That(interceptor2.OnClosingContexts, Has.Count.EqualTo(2));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor2.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
-					Assert.That(interceptor2.OnClosingContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor2.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
-					Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
-					Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingContexts.Keys.Single() is DataConnection, Is.True);
+					Assert.That(interceptor.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingAsyncContexts, Is.Empty);
 				});
 			}
 
-			Assert.That(interceptor1.OnClosedContexts, Has.Count.EqualTo(4));
+			Assert.That(interceptor.OnClosedContexts, Has.Count.EqualTo(2));
 			Assert.Multiple(() =>
 			{
-				Assert.That(interceptor1.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
-				Assert.That(interceptor1.OnClosedContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor1.OnClosedContexts.ContainsKey(main), Is.True);
-				Assert.That(interceptor1.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
-				Assert.That(interceptor1.OnClosingContexts, Has.Count.EqualTo(4));
+				Assert.That(interceptor.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+				Assert.That(interceptor.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
+				Assert.That(interceptor.OnClosingContexts, Has.Count.EqualTo(2));
 			});
 			Assert.Multiple(() =>
 			{
-				Assert.That(interceptor1.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
-				Assert.That(interceptor1.OnClosingContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor1.OnClosingContexts.ContainsKey(main), Is.True);
-				Assert.That(interceptor1.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
-				Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
-				Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
-
-				Assert.That(interceptor2.OnClosedContexts, Has.Count.EqualTo(2));
-			});
-			Assert.Multiple(() =>
-			{
-				Assert.That(interceptor2.OnClosedContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
-				Assert.That(interceptor2.OnClosedContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor2.OnClosedContexts.Values.All(_ => _ == 1), Is.True);
-				Assert.That(interceptor2.OnClosingContexts, Has.Count.EqualTo(2));
-			});
-			Assert.Multiple(() =>
-			{
-				Assert.That(interceptor2.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
-				Assert.That(interceptor2.OnClosingContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor2.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
-				Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
-				Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
+				Assert.That(interceptor.OnClosingContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+				Assert.That(interceptor.OnClosingContexts.Values.All(_ => _ == 1), Is.True);
+				Assert.That(interceptor.OnClosedAsyncContexts, Is.Empty);
+				Assert.That(interceptor.OnClosingAsyncContexts, Is.Empty);
 			});
 		}
 
 		[Test]
 		public async Task CloseEvents_DataConnection_Or_RemoteContext_Async([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var interceptor1 = new TestDataContextInterceptor();
-			var interceptor2 = new TestDataContextInterceptor();
+			var interceptor = new TestDataContextInterceptor();
 
 			IDataContext main;
-			IDataContext cloned;
 
 			await using (var db = main = GetDataContext(context))
 			{
-				db.AddInterceptor(interceptor1);
+				db.AddInterceptor(interceptor);
 
 				await db.GetTable<Person>().ToListAsync();
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(interceptor1.OnClosedContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosingContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
-				});
-
-				await using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
-				{
-					clonedDb.AddInterceptor(interceptor2);
-					await clonedDb.GetTable<Person>().ToListAsync();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.OnClosedContexts, Is.Empty);
-						Assert.That(interceptor1.OnClosingContexts, Is.Empty);
-						Assert.That(interceptor1.OnClosedAsyncContexts, Is.Empty);
-						Assert.That(interceptor1.OnClosingAsyncContexts, Is.Empty);
-
-						Assert.That(interceptor2.OnClosedContexts, Is.Empty);
-						Assert.That(interceptor2.OnClosingContexts, Is.Empty);
-						Assert.That(interceptor2.OnClosedAsyncContexts, Is.Empty);
-						Assert.That(interceptor2.OnClosingAsyncContexts, Is.Empty);
-					});
-				}
-
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor1.OnClosedContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosingContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor1.OnClosedAsyncContexts[cloned], Is.EqualTo(1));
-					Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor1.OnClosingAsyncContexts[cloned], Is.EqualTo(1));
-
-					Assert.That(interceptor2.OnClosedContexts, Is.Empty);
-					Assert.That(interceptor2.OnClosingContexts, Is.Empty);
-					Assert.That(interceptor2.OnClosedAsyncContexts, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor2.OnClosedAsyncContexts[cloned], Is.EqualTo(1));
-					Assert.That(interceptor2.OnClosingAsyncContexts, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor2.OnClosingAsyncContexts[cloned], Is.EqualTo(1));
+					Assert.That(interceptor.OnClosedContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingContexts, Is.Empty);
+					Assert.That(interceptor.OnClosedAsyncContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingAsyncContexts, Is.Empty);
 				});
 			}
 
 			Assert.Multiple(() =>
 			{
-				Assert.That(interceptor1.OnClosedContexts, Is.Empty);
-				Assert.That(interceptor1.OnClosingContexts, Is.Empty);
+				Assert.That(interceptor.OnClosedContexts, Is.Empty);
+				Assert.That(interceptor.OnClosingContexts, Is.Empty);
 
-				Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(2));
+				Assert.That(interceptor.OnClosedAsyncContexts, Has.Count.EqualTo(1));
 			});
 			Assert.Multiple(() =>
 			{
-				Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(main), Is.True);
-				Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor1.OnClosedAsyncContexts[main], Is.EqualTo(1));
-				Assert.That(interceptor1.OnClosedAsyncContexts[cloned], Is.EqualTo(1));
+				Assert.That(interceptor.OnClosedAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosedAsyncContexts[main], Is.EqualTo(1));
 
-				Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(2));
+				Assert.That(interceptor.OnClosingAsyncContexts, Has.Count.EqualTo(1));
 			});
 			Assert.Multiple(() =>
 			{
-				Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(main), Is.True);
-				Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor1.OnClosingAsyncContexts[main], Is.EqualTo(1));
-				Assert.That(interceptor1.OnClosingAsyncContexts[cloned], Is.EqualTo(1));
-
-				Assert.That(interceptor2.OnClosedContexts, Is.Empty);
-				Assert.That(interceptor2.OnClosingContexts, Is.Empty);
-				Assert.That(interceptor2.OnClosedAsyncContexts, Has.Count.EqualTo(1));
-			});
-			Assert.Multiple(() =>
-			{
-				Assert.That(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor2.OnClosedAsyncContexts[cloned], Is.EqualTo(1));
-				Assert.That(interceptor2.OnClosingAsyncContexts, Has.Count.EqualTo(1));
-			});
-			Assert.Multiple(() =>
-			{
-				Assert.That(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor2.OnClosingAsyncContexts[cloned], Is.EqualTo(1));
+				Assert.That(interceptor.OnClosingAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosingAsyncContexts[main], Is.EqualTo(1));
 			});
 		}
 
 		[Test]
 		public async Task CloseEvents_DataContext_Async([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var interceptor1 = new TestDataContextInterceptor();
-			var interceptor2 = new TestDataContextInterceptor();
+			var interceptor = new TestDataContextInterceptor();
 
 			IDataContext main;
-			IDataContext cloned;
 
 			await using (var db = main = new DataContext(context))
 			{
-				db.AddInterceptor(interceptor1);
+				db.AddInterceptor(interceptor);
 
 				await db.GetTable<Person>().ToListAsync();
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(interceptor1.OnClosedContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosingContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(1));
+					Assert.That(interceptor.OnClosedContexts, Is.Empty);
+					Assert.That(interceptor.OnClosingContexts, Is.Empty);
+					Assert.That(interceptor.OnClosedAsyncContexts, Has.Count.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(interceptor1.OnClosedAsyncContexts.Keys.Single() is DataConnection, Is.True);
-					Assert.That(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
-					Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(1));
+					Assert.That(interceptor.OnClosedAsyncContexts.Keys.Single() is DataConnection, Is.True);
+					Assert.That(interceptor.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosingAsyncContexts, Has.Count.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(interceptor1.OnClosingAsyncContexts.Keys.Single() is DataConnection, Is.True);
-					Assert.That(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
-				});
-
-
-				await using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
-				{
-					clonedDb.AddInterceptor(interceptor2);
-					await clonedDb.GetTable<Person>().ToListAsync();
-
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.OnClosedContexts, Is.Empty);
-						Assert.That(interceptor1.OnClosingContexts, Is.Empty);
-						Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(2));
-					});
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.OnClosedAsyncContexts.Keys.All(_ => _ is DataConnection), Is.True);
-						Assert.That(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
-						Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(2));
-					});
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor1.OnClosingAsyncContexts.Keys.All(_ => _ is DataConnection), Is.True);
-						Assert.That(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
-
-						Assert.That(interceptor2.OnClosedContexts, Is.Empty);
-						Assert.That(interceptor2.OnClosingContexts, Is.Empty);
-						Assert.That(interceptor2.OnClosedAsyncContexts, Has.Count.EqualTo(1));
-					});
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor2.OnClosedAsyncContexts.Keys.Single() is DataConnection, Is.True);
-						Assert.That(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
-						Assert.That(interceptor2.OnClosingAsyncContexts, Has.Count.EqualTo(1));
-					});
-					Assert.Multiple(() =>
-					{
-						Assert.That(interceptor2.OnClosingAsyncContexts.Keys.Single() is DataConnection, Is.True);
-						Assert.That(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
-					});
-				}
-
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor1.OnClosedContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosingContexts, Is.Empty);
-					Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(3));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor1.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
-					Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
-					Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(3));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor1.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
-					Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
-
-					Assert.That(interceptor2.OnClosedContexts, Is.Empty);
-					Assert.That(interceptor2.OnClosingContexts, Is.Empty);
-					Assert.That(interceptor2.OnClosedAsyncContexts, Has.Count.EqualTo(2));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor2.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
-					Assert.That(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
-					Assert.That(interceptor2.OnClosingAsyncContexts, Has.Count.EqualTo(2));
-				});
-				Assert.Multiple(() =>
-				{
-					Assert.That(interceptor2.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
-					Assert.That(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
-					Assert.That(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
+					Assert.That(interceptor.OnClosingAsyncContexts.Keys.Single() is DataConnection, Is.True);
+					Assert.That(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
 				});
 			}
 
 			Assert.Multiple(() =>
 			{
-				Assert.That(interceptor1.OnClosedContexts, Is.Empty);
-				Assert.That(interceptor1.OnClosingContexts, Is.Empty);
-				Assert.That(interceptor1.OnClosedAsyncContexts, Has.Count.EqualTo(4));
+				Assert.That(interceptor.OnClosedContexts, Is.Empty);
+				Assert.That(interceptor.OnClosingContexts, Is.Empty);
+				Assert.That(interceptor.OnClosedAsyncContexts, Has.Count.EqualTo(2));
 			});
 			Assert.Multiple(() =>
 			{
-				Assert.That(interceptor1.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
-				Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor1.OnClosedAsyncContexts.ContainsKey(main), Is.True);
-				Assert.That(interceptor1.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
-				Assert.That(interceptor1.OnClosingAsyncContexts, Has.Count.EqualTo(4));
+				Assert.That(interceptor.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+				Assert.That(interceptor.OnClosedAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
+				Assert.That(interceptor.OnClosingAsyncContexts, Has.Count.EqualTo(2));
 			});
 			Assert.Multiple(() =>
 			{
-				Assert.That(interceptor1.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(2));
-				Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor1.OnClosingAsyncContexts.ContainsKey(main), Is.True);
-				Assert.That(interceptor1.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
-
-				Assert.That(interceptor2.OnClosedContexts, Is.Empty);
-				Assert.That(interceptor2.OnClosingContexts, Is.Empty);
-				Assert.That(interceptor2.OnClosedAsyncContexts, Has.Count.EqualTo(2));
-			});
-			Assert.Multiple(() =>
-			{
-				Assert.That(interceptor2.OnClosedAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
-				Assert.That(interceptor2.OnClosedAsyncContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor2.OnClosedAsyncContexts.Values.All(_ => _ == 1), Is.True);
-				Assert.That(interceptor2.OnClosingAsyncContexts, Has.Count.EqualTo(2));
-			});
-			Assert.Multiple(() =>
-			{
-				Assert.That(interceptor2.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
-				Assert.That(interceptor2.OnClosingAsyncContexts.ContainsKey(cloned), Is.True);
-				Assert.That(interceptor2.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
+				Assert.That(interceptor.OnClosingAsyncContexts.Keys.Count(_ => _ is DataConnection), Is.EqualTo(1));
+				Assert.That(interceptor.OnClosingAsyncContexts.ContainsKey(main), Is.True);
+				Assert.That(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1), Is.True);
 			});
 		}
 

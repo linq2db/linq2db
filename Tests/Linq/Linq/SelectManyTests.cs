@@ -84,7 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic62([DataSources(TestProvName.AllAccess)] string context)
+		public void Basic62([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -111,7 +111,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic9([DataSources] string context)
+		public void Basic9([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -190,7 +190,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test31([DataSources] string context)
+		public void Test31([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -206,7 +206,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test32([DataSources] string context)
+		public void Test32([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -495,7 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test7([DataSources(ProviderName.Access)] string context)
+		public void Test7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -515,7 +515,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test8([DataSources(ProviderName.Access)] string context)
+		public void Test8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -57,7 +56,6 @@ namespace LinqToDB.DataProvider.Access
 					MethodHelper.GetMethodInfo(SubQueryHint, source, hint),
 					currentSource.Expression, Expression.Constant(hint))));
 		}
-
 
 		#endregion
 	}

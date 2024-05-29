@@ -11,8 +11,10 @@ namespace LinqToDB.DataProvider.SapHana
 	using Common;
 	using Data;
 	using Extensions;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{
@@ -24,15 +26,19 @@ namespace LinqToDB.DataProvider.SapHana
 			//when expression returns more than 1 row
 			//mark this as supported, it's better to throw exception
 			//instead of replace with left join, in which case returns incorrect data
-			SqlProviderFlags.IsSubQueryColumnSupported         = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsSubQueryTakeSupported           = false;
+			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 			SqlProviderFlags.IsApplyJoinSupported              = true;
+			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = true;
+			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = true;
 
 			_sqlOptimizer = new SapHanaNativeSqlOptimizer(SqlProviderFlags);
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new SapHanaMemberTranslator();
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

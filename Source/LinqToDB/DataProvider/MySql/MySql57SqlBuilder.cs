@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-
-namespace LinqToDB.DataProvider.MySql
+﻿namespace LinqToDB.DataProvider.MySql
 {
-	using Extensions;
+	using Common;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -42,12 +35,12 @@ namespace LinqToDB.DataProvider.MySql
 				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			// FLOAT/DOUBLE support in CAST added only in v8.0.17
-			if (!forCreateTable && type.Type.DataType is DataType.Double or DataType.Single)
+			if (!forCreateTable && type.DataType is DataType.Double or DataType.Single)
 			{
-				base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable, canBeNull);
+				base.BuildDataTypeFromDataType(SqlDataType.Decimal.Type, forCreateTable, canBeNull);
 			}
 			else
 			{

@@ -3,19 +3,21 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
 	using Data;
 	using Extensions;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
 
 	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase,        SybaseProvider.Unmanaged ) {} }
 	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged, SybaseProvider.DataAction) {} }
@@ -36,10 +38,15 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.IsSkipSupported                  = false;
 			SqlProviderFlags.IsSubQueryTakeSupported          = false;
 			SqlProviderFlags.CanCombineParameters             = false;
-			SqlProviderFlags.IsSybaseBuggyGroupBy             = true;
 			SqlProviderFlags.IsCrossJoinSupported             = false;
-			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
+			SqlProviderFlags.IsWindowFunctionsSupported       = false;
+			SqlProviderFlags.IsDerivedTableOrderBySupported   = false;
+			SqlProviderFlags.IsUpdateTakeSupported            = true;
+
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
+			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported            = false;
+			SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid            = true;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -90,6 +97,11 @@ namespace LinqToDB.DataProvider.Sybase
 			TableOptions.IsGlobalTemporaryData      |
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new SybaseMemberTranslator();
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{

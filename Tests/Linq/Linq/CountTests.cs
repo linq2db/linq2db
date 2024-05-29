@@ -662,11 +662,10 @@ namespace Tests.Linq
 		[Test]
 		public void Count9([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				Assert.That(
-					db.GetTable<Child2>().Select(ch => ch.Parent!.ParentID).Count(p => p == 1), Is.EqualTo(db.GetTable<Child2>().Select(ch => ch.Parent!.ParentID).ToList().Count(p => p == 1)));
-			}
+			using var db = GetDataContext(context);
+
+			Assert.That(
+				db.GetTable<Child2>().Select(ch => ch.Parent!.ParentID).Count(p => p == 1), Is.EqualTo(db.GetTable<Child2>().Select(ch => ch.Parent!.ParentID).ToList().Count(p => p == 1)));
 		}
 	}
 }

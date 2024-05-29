@@ -57,7 +57,7 @@ namespace Tests.Linq
 				found = found.Where(f => f.Types.Any(t => t != null)).ToList();
 
 			if (found.Count == 0)
-				throw new InvalidOperationException("Can not deduce pattern for types sequence: " +
+				throw new InvalidOperationException("Cannot deduce pattern for types sequence: " +
 				                                    string.Join(", ", current.Select(t => t.Name)));
 
 			if (found.Count > 1)

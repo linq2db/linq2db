@@ -13,8 +13,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
 
 	sealed class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
 	sealed class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
@@ -34,12 +36,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			Version = version;
 
 			SqlProviderFlags.IsApplyJoinSupported              = version != PostgreSQLVersion.v92;
+			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = true;
+			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = version is not PostgreSQLVersion.v92 and not PostgreSQLVersion.v93;
-			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
+			SqlProviderFlags.SupportsBooleanComparison         = true;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
 			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |
@@ -58,6 +61,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 
 			ConfigureTypes();
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new PostgreSQLMemberTranslator();
 		}
 
 		private void ConfigureTypes()

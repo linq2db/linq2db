@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
@@ -12,7 +13,7 @@ namespace Tests.Linq
 	public class ConvertExpressionTests : TestBase
 	{
 		[Test]
-		public void Select1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Select1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -25,7 +26,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Select2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -40,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select3([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Select3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -55,7 +56,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select4([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Select4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -211,9 +212,8 @@ namespace Tests.Linq
 		//				.Any()));
 		//}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -231,7 +231,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest2([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
+		public void LetTest2([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -248,7 +248,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest3([DataSources(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
@@ -265,7 +264,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -296,7 +294,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -327,7 +324,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
@@ -358,7 +354,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
@@ -402,7 +397,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
@@ -447,7 +441,6 @@ namespace Tests.Linq
 		}
 
 		// PostgreSQL92 Uses 3 queries and we join results in wrong order. See LetTest71 with explicit sort
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -470,7 +463,7 @@ namespace Tests.Linq
 					(
 						from p in db.Parent
 						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
+						let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 						select new
 						{
 							p.ParentID,
@@ -482,7 +475,6 @@ namespace Tests.Linq
 					).Where(t => t.ParentID > 0).Take(5000));
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
@@ -504,8 +496,8 @@ namespace Tests.Linq
 					,
 					(
 						from p in db.Parent
-						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
+						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
+						let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 						select new
 						{
 							p.ParentID,
@@ -517,7 +509,6 @@ namespace Tests.Linq
 					).Where(t => t.ParentID > 0).Take(5000));
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -548,7 +539,6 @@ namespace Tests.Linq
 					});
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest9([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -596,7 +586,6 @@ namespace Tests.Linq
 				));
 		}
 
-		[ActiveIssue("IsApplyJoinSupported=true handling bug", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void LetTest11([DataSources] string context)
 		{
@@ -654,7 +643,7 @@ namespace Tests.Linq
 		enum EnumUInt64 : ulong  { TestValue = 4 }
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -700,7 +689,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeSByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeSByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -746,7 +735,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -792,7 +781,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeUInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeUInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -838,7 +827,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -884,7 +873,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeUInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeUInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -930,7 +919,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
@@ -976,7 +965,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConversionRemovedForEnumOfTypeUInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestConversionRemovedForEnumOfTypeUInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())

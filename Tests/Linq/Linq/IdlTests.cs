@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Extensions;
 
@@ -277,8 +278,10 @@ namespace Tests.Linq
 		[Test]
 		public void TestForGroupBy([IdlProviders] string context)
 		{
+			using var guard = new GuardGrouping(false);
 			using (var db = GetDataContext(context))
 			{
+
 				/* no error in first call */
 				getData(db, new List<int?> { 2 }, new List<int?> { 211, 212, 221, 222 });
 
@@ -625,19 +628,19 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataConnection(context))
 			{
-				var q = from p in db.Person
+				var query1 = from p in db.Person
 							where p.ID < 0
 							select new { Rank = 0, FirstName = (string?)null, LastName = (string?)null };
-				var q2 =
-					q.Concat(
+				var query2 =
+					query1.Concat(
 						from p in db.Person
 						select new { Rank = p.ID, p.FirstName, p.LastName });
 
-				var resultquery = (from x in q2 orderby x.Rank, x.FirstName, x.LastName select x).ToString()!;
+				var resultquery = (from x in query2 orderby x.Rank, x.FirstName, x.LastName select x).ToString()!;
 				
 				TestContext.WriteLine(resultquery);
 
-				var rqr = resultquery.LastIndexOf("ORDER BY", System.StringComparison.OrdinalIgnoreCase);
+				var rqr = resultquery.LastIndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
 				var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
 
 				Assert.That(rqp, Has.Length.EqualTo(3));

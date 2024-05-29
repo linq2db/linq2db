@@ -224,7 +224,7 @@ namespace Tests.Linq
 		[ActiveIssue("ClickHouse performs slow leading to timeout with specified provider", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MultipleSelect11([IncludeDataSources(
-			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
+			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSqlServer2019, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var dt = DateTime.Now;
@@ -307,7 +307,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MutiplySelect12([DataSources(false)] string context)
+		public void MutiplySelect12([DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -427,6 +427,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider does not support CROSS/OUTER/LATERAL joins.")]
 		public void Coalesce4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -484,14 +485,25 @@ namespace Tests.Linq
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				db.Parent.Select(f =>
-					new ListViewItem(new[] { "", f.ParentID.ToString()!, f.Value1.ToString()! })
-					{
-						Checked    = true,
-						ImageIndex = 0,
-						Tag        = f.ParentID
-					}).ToList();
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Select(f =>
+				new ListViewItem(new[] { "", f.ParentID.ToString()!, f.Value1.ToString()! })
+				{
+					Checked    = true,
+					ImageIndex = 0,
+					Tag        = f.ParentID
+				}).ToList();
+
+			var expected = Parent.Select(f =>
+				new ListViewItem(new[] { "", f.ParentID.ToString()!, f.Value1.ToString()! })
+				{
+					Checked    = true,
+					ImageIndex = 0,
+					Tag        = f.ParentID
+				}).ToList();
+
+			AreEqual(expected, query, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
 		static string ConvertString(string s, int? i, bool b, int n)
@@ -745,7 +757,11 @@ namespace Tests.Linq
 					var en = new LinqDataTypes2() { ID = 1000, BoolValue = false };
 					db.Insert(en);
 
-					var e  = new LinqDataTypes()  { ID = 1000, BoolValue = false };
+					DateTime defaultDate = default;
+					if (db.MappingSchema.GetDefaultValue(typeof(DateTime)) is DateTime dateTime)
+						defaultDate = dateTime;
+
+					var e = new LinqDataTypes() { ID = 1000, BoolValue = false, DateTimeValue = defaultDate };
 
 					var e2 = db.Types.First(_ => _.ID == 1000);
 
@@ -785,7 +801,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query1 = from p in db.Parent
-					from c in db.Child.InnerJoin(c => c.ParentID == p.ParentID)
+					from c in db.Child.LoadWith(c => c.Parent).Where(c => c.ParentID == p.ParentID)
 					select new
 					{
 						Info1 = p != null ? new { p.ParentID, p.Value1 } : null,
@@ -799,15 +815,20 @@ namespace Tests.Linq
 							? null
 							: new
 							{
-								ParentID = q.Info1 != null ? (int?)q.Info1.ParentID : (int?)null,
+								ParentID = q.Info1 != null ? q.Info1.ParentID : (int?)null,
 								q.Info1!.Value1,
 								Value2 = q.Info2.Value1
 							}
 					};
 
-				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0 );
+				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0);
 
-				var _ = query3.ToArray();
+				query3 = query3
+					.OrderBy(q => q.InfoAll.ParentID)
+					.ThenBy(q => q.InfoAll.Value1)
+					.ThenBy(q => q.InfoAll.Value2);
+
+				AssertQuery(query3);
 			}
 		}
 
@@ -960,7 +981,7 @@ namespace Tests.Linq
 		{
 		}
 
-		[Test, Explicit("Fails")]
+		[Test]
 		public void SelectLocalTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1310,7 +1331,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Currently linq2db do not support such queries")]
 		[Test]
 		public void TestComplexMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -1379,9 +1399,8 @@ namespace Tests.Linq
 			}
 		}
 
-		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
 		// IFX: Informix needs type hint for NULL value
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		[Test]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
@@ -1394,9 +1413,8 @@ namespace Tests.Linq
 			}
 		}
 
-		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
 		// IFX: Informix needs type hint for NULL value
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		[Test]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
@@ -1409,10 +1427,9 @@ namespace Tests.Linq
 			}
 		}
 
-		// INFORMIX and DB2 need type hint in select
-		// CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
+		// INFORMIX needs type hint in select
 		[Test]
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
@@ -1424,10 +1441,9 @@ namespace Tests.Linq
 			}
 		}
 
-		// INFORMIX and DB2 need type hint in select
-		// CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
+		// INFORMIX needs type hint in select
 		[Test]
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
@@ -1439,31 +1455,50 @@ namespace Tests.Linq
 			}
 		}
 
-		[Table("Parent")]
-		public class Parent1788
+		public class Table1788
 		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
 			[Column]
-			public int Value1 { get; }
+			public int Value1 { get; set; }
+
+			public static Table1788[] Seed()
+			{
+				return new Table1788[]
+				{
+					new () { Id = 1, Value1 = 11 }, 
+					new () { Id = 2, Value1 = 22 }, 
+					new () { Id = 3, Value1 = 33 }
+				};
+			}
 		}
 
 		[Test]
 		public void Issue1788Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Table1788.Seed()))
 			{
-				var results = from p in db.GetTable<Parent1788>()
-							   select new
-							   {
-								   f1 = Sql.ToNullable(p.Value1).HasValue,
-								   f2 = Sql.ToNullable(p.Value1)
-							   };
-
-				AreEqual(
-					from p in db.Parent.AsEnumerable()
+				var results =
+					from p in table
+					from l in table.LeftJoin(l => l.Id == p.Id + 1)
 					select new
 					{
-						f1 = p.Value1.HasValue,
-						f2 = p.Value1
+						f1 = Sql.ToNullable(l.Value1).HasValue, 
+						f2 = Sql.ToNullable(l.Value1)
+					};
+
+				var tableEnumerable = table.ToList();
+
+				AreEqual(
+					from p in tableEnumerable
+					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+					from l in gj.DefaultIfEmpty()
+					select new
+					{
+						f1 = (l?.Value1).HasValue,
+						f2 = l?.Value1
 					},
 					results);
 			}
@@ -1473,45 +1508,60 @@ namespace Tests.Linq
 		public void Issue1788Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Table1788.Seed()))
 			{
-				var results = from p in db.GetTable<Parent1788>()
-							  select new
-							  {
-								  f1 = Sql.ToNullable(p.Value1) != null,
-								  f2 = Sql.ToNullable(p.Value1)
-							  };
+				var results =
+					from p in table
+					from l in table.LeftJoin(l => l.Id == p.Id + 1)
+					select new 
+					{ 
+						f1 = Sql.ToNullable(l.Value1) != null, 
+						f2 = Sql.ToNullable(l.Value1)
+					};
+
+				var tableEnumerable = table.ToList();
 
 				AreEqual(
-					from p in db.Parent.AsEnumerable()
+					from p in tableEnumerable
+					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+					from l in gj.DefaultIfEmpty()
 					select new
 					{
-						f1 = p.Value1 != null,
-						f2 = p.Value1
+						f1 = l?.Value1 != null,
+						f2 = l?.Value1
 					},
 					results);
 			}
 		}
 
+		
 		[Test]
 		public void Issue1788Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Table1788.Seed()))
 			{
-				var results = from p in db.GetTable<Parent1788>()
-							  select new
-							  {
+				var results =
+					from p in table
+					from l in table.LeftJoin(l => l.Id == p.Id + 1)
+					select new 
+					{ 
 #pragma warning disable CS0472 // comparison of non-null int? with null
-								  f1 = ((int?)p.Value1) != null,
+						f1 = ((int?)l.Value1) != null,
 #pragma warning restore CS0472
-								  f2 = (int?)p.Value1
-							  };
+						f2 = (int?)l.Value1
+					};
+
+				var tableEnumerable = table.ToList();
 
 				AreEqual(
-					from p in db.Parent.AsEnumerable()
+					from p in tableEnumerable
+					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+					from l in gj.DefaultIfEmpty()
 					select new
 					{
-						f1 = p.Value1 != null,
-						f2 = p.Value1
+						f1 = l?.Value1 != null,
+						f2 = l?.Value1
 					},
 					results);
 			}
@@ -1521,27 +1571,33 @@ namespace Tests.Linq
 		public void Issue1788Test4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Table1788.Seed()))
 			{
-				var results = from p in db.GetTable<Parent1788>()
-							  select new
-							  {
-								  f1 = ((int?)p.Value1).HasValue,
-								  f2 = (int?)p.Value1
-							  };
+				var results =
+					from p in table
+					from l in table.LeftJoin(l => l.Id == p.Id + 1)
+					select new 
+					{ 
+						f1 = ((int?)l.Value1).HasValue,
+						f2 = (int?)l.Value1
+					};
+
+				var tableEnumerable = table.ToList();
 
 				AreEqual(
-					from p in db.Parent.AsEnumerable()
+					from p in tableEnumerable
+					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+					from l in gj.DefaultIfEmpty()
 					select new
 					{
-						f1 = p.Value1 != null,
-						f2 = p.Value1
+						f1 = l?.Value1 != null,
+						f2 = l?.Value1
 					},
 					results);
 			}
 		}
+		
 
-		// TODO: disable parameters in lateral sub-queries
-		[ActiveIssue("HanaException : feature not supported: parameter in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void OuterApplyTest(
 			[IncludeDataSources(
@@ -1549,6 +1605,7 @@ namespace Tests.Linq
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllOracle12Plus,
 				TestProvName.AllMySqlWithApply,
+				TestProvName.AllSQLite,
 				TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1799,6 +1856,40 @@ namespace Tests.Linq
 				q.ToArray();
 			}
 		}
+
+		#region Caching Tests
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]
+		public void CachedObjectRefence([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var reference = new Parent() { ParentID = 1001 };
+
+			var query = db.Person
+				.Select(p => new
+				{
+					p,
+					Reference = reference
+				});
+
+			var p1 = query.ToList();
+
+			p1.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
+
+			reference = new Parent() { ParentID = 1002 };
+			var cacheMissCount = Query<Person>.CacheMissCount;
+
+			var p2 = query.ToList();
+
+			p2.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
+
+			Query<Person>.CacheMissCount.Should().Be(cacheMissCount);
+
+		}
+		
+
+		#endregion
 
 		#region SequentialAccess (#2116)
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]

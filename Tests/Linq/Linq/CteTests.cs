@@ -122,6 +122,52 @@ namespace Tests.Linq
 			}
 		}
 
+		// MariaDB allows CTE ordering but do not respect it
+		[Test]
+		public void WithOrderBy([CteContextSource(TestProvName.AllMariaDB)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent
+					.OrderByDescending(p => p.ParentID)
+					.AsCte();
+
+				if (!db.SqlProviderFlags.IsCTESupportsOrdering)
+					FluentActions.Enumerating(() => query).Should().NotThrow();
+				else
+				{
+					var result = query.ToList();
+
+					var expected = Parent
+						.OrderByDescending(p => p.ParentID)
+						.ToList();
+
+					AreSame(expected, result);
+				}
+			}
+		}
+
+		[Test]
+		public void WithLimitedOrderBy([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent
+					.OrderByDescending(p => p.ParentID)
+					.Take(3)
+					.AsCte();
+
+				var result = query.ToList();
+
+				var expected = Parent
+					.OrderByDescending(p => p.ParentID)
+					.Take(3)
+					.ToList();
+
+				AreSame(expected, result);
+			}
+		}
+
 		static IQueryable<TSource> RemoveCte<TSource>(IQueryable<TSource> source)
 		{
 			var newExpr = source.Expression.Transform<object?>(null, static (_, e) =>
@@ -271,7 +317,7 @@ namespace Tests.Linq
 						e.EmployeeID,
 						e.LastName,
 						e.FirstName,
-						NumberOfSubordinates = db.Employee.Where(e2 => e2.ReportsTo == e.ReportsTo).Count(),
+						NumberOfSubordinates = db.Employee.Where(e2 => e2.ReportsTo == e.ReportsTo && e2.ReportsTo != null).Count(),
 						e.ReportsTo
 					};
 
@@ -522,6 +568,9 @@ namespace Tests.Linq
 
 				var query = cte.Where(t => t.ChildID == var3 || var3 == null);
 				var str = query.ToString()!;
+
+				TestContext.WriteLine(str);
+
 				Assert.That(str.Contains("WITH"), Is.EqualTo(true));
 			}
 		}
@@ -991,9 +1040,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Scalar recursive CTE are not working: SQL logic error near *: syntax error")]
 		[Test]
-		public void TestRecursiveScalar([CteContextSource] string context)
+		public void TestRecursiveScalar([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1028,9 +1076,8 @@ namespace Tests.Linq
 			public string? GroupName { get; set; }
 		}
 
-		[ActiveIssue(1644, Details = "Expression 'parent.OrgGroup' is not a Field.")]
 		[Test]
-		public void TestRecursiveObjects([CteContextSource] string context)
+		public void TestRecursiveObjects([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllMySqlWithCTE)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<OrgGroup>())
@@ -1248,7 +1295,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordClass([CteContextSource(ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void Issue3357_RecordClass([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1268,28 +1315,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordClass_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var query = db.GetCte<Issue3357RecordClass>(cte =>
-			{
-				return db.Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))
-				.Concat(
-					from p in cte
-					from r in db.Person
-					where p.FirstName == r.LastName
-					select new Issue3357RecordClass(r.ID, r.FirstName, r.LastName)
-					);
-			});
-
-			AreEqual(
-				Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName)),
-				query.ToArray());
-		}
-
-		[Test(Description = "record type support")]
-		public void Issue3357_RecordLikeClass([CteContextSource(ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void Issue3357_RecordLikeClass([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1299,27 +1325,6 @@ namespace Tests.Linq
 				.Concat(
 					from p in cte
 					join r in db.Person on p.FirstName equals r.LastName
-					select new Issue3357RecordLike(r.ID, r.FirstName, r.LastName)
-					);
-			});
-
-			AreEqualWithComparer(
-				Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName)),
-				query.ToArray());
-		}
-
-		[Test(Description = "record type support")]
-		public void Issue3357_RecordLikeClass_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var query = db.GetCte<Issue3357RecordLike>(cte =>
-			{
-				return db.Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))
-				.Concat(
-					from p in cte
-					from r in db.Person
-					where p.FirstName == r.LastName
 					select new Issue3357RecordLike(r.ID, r.FirstName, r.LastName)
 					);
 			});
@@ -1349,9 +1354,8 @@ namespace Tests.Linq
 			public TestFolder? Parent { get; set; }
 		}
 
-		[ActiveIssue(2264)]
 		[Test(Description = "Recursive common table expression 'CTE' does not contain a top-level UNION ALL operator.")]
-		public void Issue2264([CteContextSource] string context)
+		public void Issue2264([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TestFolder>();

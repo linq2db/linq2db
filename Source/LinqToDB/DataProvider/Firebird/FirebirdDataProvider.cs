@@ -8,8 +8,10 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
 
 	sealed class FirebirdDataProvider25 : FirebirdDataProvider { public FirebirdDataProvider25() : base(ProviderName.Firebird25, FirebirdVersion.v25) { } }
 	sealed class FirebirdDataProvider3  : FirebirdDataProvider { public FirebirdDataProvider3()  : base(ProviderName.Firebird3,  FirebirdVersion.v3 ) { } }
@@ -30,9 +32,16 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
 			SqlProviderFlags.IsExistsPreferableForContains     = true;
+			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= FirebirdVersion.v3;
 			SqlProviderFlags.IsApplyJoinSupported              = Version >= FirebirdVersion.v4;
+			// CROSS - doesn't support, OUTER - supports conditions
+			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = Version >= FirebirdVersion.v4;
+			SqlProviderFlags.SupportsBooleanComparison         = Version >= FirebirdVersion.v3;
 
 			SqlProviderFlags.MaxInListValuesCount = Version >= FirebirdVersion.v5 ? 65535 : 1500;
+
+			SqlProviderFlags.IsUpdateTakeSupported     = true;
+			SqlProviderFlags.IsUpdateSkipTakeSupported = true;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
@@ -40,7 +49,9 @@ namespace LinqToDB.DataProvider.Firebird
 			SetProviderField<DbDataReader, TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<DbDataReader, DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
 
-			_sqlOptimizer = new FirebirdSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = Version >= FirebirdVersion.v3
+				? new Firebird3SqlOptimizer(SqlProviderFlags)
+				: new FirebirdSqlOptimizer(SqlProviderFlags);
 		}
 
 		static DateTime GetDateTime(DateTime value)
@@ -60,6 +71,11 @@ namespace LinqToDB.DataProvider.Firebird
 			TableOptions.IsTransactionTemporaryData |
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return Version == FirebirdVersion.v5 ? new Firebird5MemberTranslator() : new FirebirdMemberTranslator();
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
@@ -91,13 +107,6 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			// TODO: remove and enable conversion to DataParameter in mapping schema
-			if (value is bool boolVal && (dataType.DataType == DataType.Char || Version == FirebirdVersion.v25))
-			{
-				value = boolVal ? "1" : "0";
-				dataType = dataType.WithDataType(DataType.Char);
-			}
-
 #if NET6_0_OR_GREATER
 			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
 			{

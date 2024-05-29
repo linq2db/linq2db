@@ -36,6 +36,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess)]
 			string context)
 		{
+			using var _ = context.IsAnyOf(TestProvName.AllSapHana) ? new DisableBaseline("Client-side Guid generation") : null;
 			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
@@ -79,6 +80,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess)]
 			string context)
 		{
+			using var _ = context.IsAnyOf(TestProvName.AllSapHana) ? new DisableBaseline("Client-side Guid generation") : null;
 			using (var db = GetDataContext(context))
 			{
 				try
@@ -1548,7 +1550,7 @@ namespace Tests.xUpdate
 						Assert.That(db.Person
 											.Insert(() => new Person
 											{
-												FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).FirstOrDefault(),
+							FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).SingleOrDefault(),
 												LastName = "Shepard",
 												Gender = Gender.Male
 											}), Is.EqualTo(1));

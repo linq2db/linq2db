@@ -11,28 +11,37 @@ namespace LinqToDB.DataProvider.Access
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
 
 	public class AccessODBCDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
 		public AccessODBCDataProvider() : base(ProviderName.AccessOdbc, _mappingSchemaInstance, OdbcProviderAdapter.GetInstance())
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter           = false;
-			SqlProviderFlags.IsSkipSupported                  = false;
-			SqlProviderFlags.IsCountSubQuerySupported         = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported        = false;
-			SqlProviderFlags.TakeHintsSupported               = TakeHints.Percent;
-			SqlProviderFlags.IsCrossJoinSupported             = false;
-			SqlProviderFlags.IsInnerJoinAsCrossSupported      = false;
-			SqlProviderFlags.IsDistinctOrderBySupported       = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
-			SqlProviderFlags.IsParameterOrderDependent        = true;
-			SqlProviderFlags.IsUpdateFromSupported            = false;
-			SqlProviderFlags.DefaultMultiQueryIsolationLevel  = IsolationLevel.Unspecified;
+			SqlProviderFlags.AcceptsTakeAsParameter                       = false;
+			SqlProviderFlags.IsSkipSupported                              = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported                    = false;
+			SqlProviderFlags.IsSubQuerySkipSupported                      = false;
+			SqlProviderFlags.IsSupportsJoinWithoutCondition               = false;
+			SqlProviderFlags.TakeHintsSupported                           = TakeHints.Percent;
+			SqlProviderFlags.IsCrossJoinSupported                         = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported             = false;
+			SqlProviderFlags.IsParameterOrderDependent                    = true;
+			SqlProviderFlags.IsUpdateFromSupported                        = false;
+			SqlProviderFlags.IsWindowFunctionsSupported                   = false;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel              = IsolationLevel.Unspecified;
+			SqlProviderFlags.IsOuterJoinSupportsInnerJoin                 = false;
+			SqlProviderFlags.IsMultiTablesSupportsJoins                   = false;
+			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability     = true;
 
-			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
+			SqlProviderFlags.IsCountDistinctSupported       = false;
+			SqlProviderFlags.IsAggregationDistinctSupported = false;
+
+			SetCharField("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
 			SetToType<DbDataReader, sbyte , int>  ("INTEGER" , (r, i) => unchecked((sbyte )r.GetInt32(i)));
@@ -45,6 +54,11 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new AccessMemberTranslator();
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{

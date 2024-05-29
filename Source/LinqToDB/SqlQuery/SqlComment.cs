@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	public class SqlComment : IQueryElement
 	{
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.Comment;
 
 		public List<string> Lines { get; }
@@ -19,13 +21,13 @@ namespace LinqToDB.SqlQuery
 			Lines = lines;
 		}
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			foreach (var part in Lines)
-				sb
+				writer
 					.Append("-- ")
 					.AppendLine(part);
-			return sb;
+			return writer;
 		}
 	}
 }

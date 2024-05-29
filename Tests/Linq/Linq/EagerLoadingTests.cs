@@ -7,7 +7,9 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Interceptors;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
@@ -175,6 +177,7 @@ namespace Tests.Linq
 					};
 
 				var result = query.ToList();
+
 				var expected = expectedQuery.ToList();
 
 				foreach (var item in result.Concat(expected))
@@ -350,25 +353,21 @@ FROM
 		[Test]
 		public void TestLoadWithToString2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var sql = db.Person.LoadWith(p => p.Patient).ToString()!;
+			using var db = GetDataContext(context);
 
-				Assert.That(sql, Does.Not.Contain("LoadWithQueryable"));
+			var query = db.Person.LoadWith(p => p.Patient).AsQueryable();
+			var sql   = query.ToString()!;
+			TestContext.WriteLine(sql);
+
+			sql.Should().NotContain("LoadWithQueryable");
+
+			var select = query.GetSelectQuery();
 
 				// one query with join generated
-				CompareSql(@"SELECT
-	[t1].[FirstName],
-	[t1].[PersonID],
-	[t1].[LastName],
-	[t1].[MiddleName],
-	[t1].[Gender],
-	[a_Patient].[PersonID],
-	[a_Patient].[Diagnosis]
-FROM
-	[Person] [t1]
-		LEFT JOIN [Patient] [a_Patient] ON [t1].[PersonID] = [a_Patient].[PersonID]", sql);
-			}
+
+			select.From.Tables.Should().HaveCount(1);
+			select.From.Tables[0].Joins.Should().HaveCount(1);
+			select.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Left);
 		}
 
 		[Test]
@@ -746,7 +745,7 @@ FROM
 
 		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
@@ -764,7 +763,7 @@ FROM
 						Detail = dd,
 						DetailAssociated = dd.SubDetails,
 						DetailAssociatedFiltered = dd.SubDetails.OrderBy(sd => sd.SubDetailValue).Take(10).ToArray(),
-						Masters = master.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+						Masters = master.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
 				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
@@ -776,7 +775,7 @@ FROM
 						Detail = dd,
 						DetailAssociated = subDetailRecords.Where(sd => sd.DetailId == dd.DetailId).ToArray(),
 						DetailAssociatedFiltered = subDetailRecords.OrderBy(sd => sd.SubDetailValue).Where(sd => sd.DetailId == dd.DetailId).Take(10).ToArray(),
-						Masters = masterRecords.Where(mm => m.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+						Masters = masterRecords.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
 					};
 
 				var result   = query.ToArray();
@@ -1122,6 +1121,80 @@ FROM
 				await FluentActions.Awaiting(() => query.FirstOrDefaultAsync(x => x.Id1 == 1)).Should().NotThrowAsync();
 				await FluentActions.Awaiting(() => query.FirstAsync(x => x.Id1          == 1)).Should().NotThrowAsync();
 				await FluentActions.Awaiting(() => query.SingleAsync(x => x.Id1         == 1)).Should().NotThrowAsync();
+			}
+		}
+
+		[Test]
+		public void TestSkipTake([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					select new
+					{
+						m,
+						details = m.Details.OrderBy(d => d.DetailId).Skip(1).Take(2).ToList()
+					};
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
+		public void TestAggregate([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					select new
+					{
+						Sum = m.Details.Select(x => x.DetailId)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(5)
+							.Sum(),
+
+						Count = m.Details.Select(x => x.DetailValue)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(2)
+							.Count()
+					};
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		public void TestAggregateAverage([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					where m.Details.Count() > 1
+					select new
+					{
+						Average = m.Details.Select(x => x.DetailId)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(5)
+							.Average(x => (double)x),
+					};
+
+				AssertQuery(query);
 			}
 		}
 
@@ -1809,6 +1882,1042 @@ FROM
 				.Concat(db.Person.Where(p => p.ID == 3))
 				.LoadWith(p => p.Patient)
 				.ToList();
+		}
+
+		abstract class EntityBase
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public int? FK { get; set; }
+		}
+
+		[Table]
+		class EntityA : EntityBase
+		{
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(Id), CanBeNull = false)]
+			public EntityB ObjectB { get; private set; } = null!;
+
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(Id), CanBeNull = true)]
+			public EntityB? ObjectBOptional { get; private set; } = null!;
+
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(Id), CanBeNull = false)]
+			public EntityB ObjectBRO => throw new NotImplementedException();
+
+			public static EntityA[] Data =
+			[
+				new () { Id = 10, FK = 20 },
+				new () { Id = 11, FK = 21 },
+				new () { Id = 12, FK = 22 },
+				new () { Id = 13, FK = 20 },
+				new () { Id = 14, FK = null },
+				new () { Id = 15, FK = null },
+				new () { Id = 16, FK = 25 },
+				new () { Id = 17, FK = 26 },
+				new () { Id = 18, FK = 29 },
+			];
+		}
+
+		[Table]
+		class EntityB : EntityBase
+		{
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(Id), CanBeNull = true)]
+			public EntityC? ObjectC { get; private set; }
+
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(Id), CanBeNull = false)]
+			public EntityC ObjectCRequired { get; private set; } = null!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(FK), CanBeNull = true)]
+			public EntityD[]? ObjectsD { get; private set; }
+
+			public static EntityB[] Data =
+			[
+				new () { Id = 20, FK = 30 },
+				new () { Id = 21, FK = 31 },
+				new () { Id = 22, FK = 30 },
+				new () { Id = 23, FK = 31 },
+				new () { Id = 24, FK = 31 },
+				new () { Id = 25, FK = null },
+				new () { Id = 26, FK = null },
+				new () { Id = 27, FK = null },
+				new () { Id = 28, FK = 39 },
+			];
+		}
+
+		[Table]
+		class EntityC : EntityBase
+		{
+			public static EntityC[] Data =
+			[
+				new () { Id = 30 },
+				new () { Id = 31 },
+				new () { Id = 32 },
+				new () { Id = 33 },
+				new () { Id = 34 },
+			];
+		}
+
+		[Table]
+		class EntityD : EntityBase
+		{
+			public static EntityD[] Data =
+			[
+				new () { Id = 40, FK = 20 },
+				new () { Id = 41, FK = 21 },
+				new () { Id = 42, FK = 21 },
+				new () { Id = 43, FK = 21 },
+				new () { Id = 44, FK = 25 },
+				new () { Id = 45, FK = 26 },
+				new () { Id = 46, FK = 26 },
+				new () { Id = 47, FK = null },
+				new () { Id = 48, FK = null },
+				new () { Id = 401, FK = 29 },
+			];
+		}
+
+		[Table]
+		class EntityMA : EntityBase
+		{
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(FK), CanBeNull = false)]
+			public EntityMB[] ObjectsB { get; private set; } = null!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(FK), CanBeNull = true)]
+			public EntityMB[] ObjectsBOptional { get; private set; } = null!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(FK), CanBeNull = false)]
+			public EntityMB[] ObjectsBRO => throw new NotImplementedException();
+
+			public static EntityMA[] Data =
+			[
+				new () { Id = 10 },
+				new () { Id = 11 },
+				new () { Id = 12 },
+				new () { Id = 13 },
+			];
+		}
+
+		[Table]
+		class EntityMB : EntityBase
+		{
+			[Column] public int? FKD { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(FK), CanBeNull = true)]
+			public EntityMC[] ObjectsC { get; private set; } = null!;
+
+			[Association(ThisKey = nameof(FKD), OtherKey = nameof(Id), CanBeNull = true)]
+			public EntityMD? ObjectD { get; private set; }
+
+			public static EntityMB[] Data =
+			[
+				new () { Id = 20, FK = 10, FKD = 40 },
+				new () { Id = 21, FK = 11, FKD = null },
+				new () { Id = 22, FK = 11, FKD = 40 },
+				new () { Id = 23, FK = 19, FKD = 49 },
+				new () { Id = 24, FK = 19, FKD = null },
+				new () { Id = 25, FK = null, FKD = 49 },
+				new () { Id = 26, FK = null, FKD = 40 },
+				new () { Id = 27, FK = 19, FKD = 41 },
+				new () { Id = 28, FK = 10, FKD = null },
+			];
+		}
+
+		[Table]
+		class EntityMC : EntityBase
+		{
+			public static EntityMC[] Data =
+			[
+				new () { Id = 30, FK = 20 },
+				new () { Id = 31, FK = 24 },
+				new () { Id = 32, FK = 21 },
+				new () { Id = 33, FK = 21 },
+				new () { Id = 34, FK = 23 },
+				new () { Id = 35, FK = null },
+				new () { Id = 36, FK = null },
+				new () { Id = 37, FK = 29 },
+			];
+		}
+
+		[Table]
+		class EntityMD : EntityBase
+		{
+			public static EntityMD[] Data =
+			[
+				new () { Id = 40 },
+				new () { Id = 41 },
+				new () { Id = 42 },
+			];
+		}
+
+		[Test]
+		public void TestReadOnlyAssociationSingle([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityA.Data);
+			using var tb = db.CreateLocalTable(EntityB.Data);
+			using var tc = db.CreateLocalTable(EntityC.Data);
+			using var td = db.CreateLocalTable(EntityD.Data);
+
+			var query = db.GetTable<EntityA>().LoadWith(e => e.ObjectBRO.ObjectC).LoadWith(e => e.ObjectBRO.ObjectsD);
+
+			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityA'. Following members are not assignable: ObjectBRO."));
+		}
+
+		[Test]
+		public void TestReadOnlyAssociationMany([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityMA.Data);
+			using var tb = db.CreateLocalTable(EntityMB.Data);
+			using var tc = db.CreateLocalTable(EntityMC.Data);
+			using var td = db.CreateLocalTable(EntityMD.Data);
+
+			var query = db.GetTable<EntityMA>()
+				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectsC)
+				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectD);
+
+			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityMA'. Following members are not assignable: ObjectsBRO."));
+		}
+
+		[Test]
+		public void TestReadOnlyAssociationSingleNoData([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable<EntityA>();
+			using var tb = db.CreateLocalTable<EntityB>();
+			using var tc = db.CreateLocalTable<EntityC>();
+			using var td = db.CreateLocalTable<EntityD>();
+
+			var query = db.GetTable<EntityA>().LoadWith(e => e.ObjectBRO.ObjectC).LoadWith(e => e.ObjectBRO.ObjectsD);
+
+			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityA'. Following members are not assignable: ObjectBRO."));
+		}
+
+		[Test]
+		public void TestReadOnlyAssociationManyNoData([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable<EntityMA>();
+			using var tb = db.CreateLocalTable<EntityMB>();
+			using var tc = db.CreateLocalTable<EntityMC>();
+			using var td = db.CreateLocalTable<EntityMD>();
+
+			var query = db.GetTable<EntityMA>()
+				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectsC)
+				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectD);
+
+			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityMA'. Following members are not assignable: ObjectsBRO."));
+		}
+
+		[Test]
+		public void TestCardinalityEagerLoad1([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityA.Data);
+			using var tb = db.CreateLocalTable(EntityB.Data);
+			using var tc = db.CreateLocalTable(EntityC.Data);
+			using var td = db.CreateLocalTable(EntityD.Data);
+
+			var result = testCase == 1
+				? db.GetTable<EntityA>().LoadWith(e => e.ObjectB.ObjectC).ToList()
+				: testCase == 2
+					? db.GetTable<EntityA>().LoadWith(e => e.ObjectB.ObjectsD).ToList()
+					: db.GetTable<EntityA>().LoadWith(e => e.ObjectB.ObjectC).LoadWith(e => e.ObjectB.ObjectsD).ToList();
+
+			var expected = new int?[][]
+			{
+				[10, 20, 30],
+				[11, 21, 31],
+				[12, 22, 30],
+				[13, 20, 30],
+				[16, 25, null],
+				[17, 26, null],
+			};
+
+			var expectedD = new Dictionary<int, HashSet<int>>()
+			{
+				{ 20, [40] },
+				{ 21, [41,42,43] },
+				{ 22, [] },
+				{ 25, [44] },
+				{ 26, [45,46] },
+			};
+
+			Assert.That(result, Has.Count.EqualTo(expected.Length));
+
+			foreach (var set in expected)
+			{
+				var obj = result.SingleOrDefault(o => o.Id == set[0]);
+				Assert.That(obj, Is.Not.Null);
+				Assert.That(obj.ObjectB.Id, Is.EqualTo(set[1]));
+
+				if (testCase is 1 or 3)
+				{
+					if (set[2] is null)
+					{
+						Assert.That(obj.ObjectB.ObjectC, Is.Null);
+					}
+					else
+					{
+						Assert.That(obj.ObjectB.ObjectC, Is.Not.Null);
+						Assert.That(obj.ObjectB.ObjectC.Id, Is.EqualTo(set[2]));
+					}
+				}
+				else
+				{
+					Assert.That(obj.ObjectB.ObjectC, Is.Null);
+				}
+
+				if (testCase is 2 or 3)
+				{
+					Assert.That(obj.ObjectB.ObjectsD, Is.Not.Null);
+
+					var ids = expectedD[obj.ObjectB.Id];
+					Assert.That(obj.ObjectB.ObjectsD, Has.Length.EqualTo(ids.Count));
+					foreach (var id in ids)
+					{
+						var recordD = obj.ObjectB.ObjectsD.SingleOrDefault(r => r.Id == id);
+						Assert.That(recordD, Is.Not.Null);
+					}
+
+				}
+				else
+				{
+					Assert.That(obj.ObjectB.ObjectsD, Is.Null);
+				}
+			}
+		}
+
+		[Test]
+		public void TestCardinalityProjected1([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityA.Data);
+			using var tb = db.CreateLocalTable(EntityB.Data);
+			using var tc = db.CreateLocalTable(EntityC.Data);
+			using var td = db.CreateLocalTable(EntityD.Data);
+
+			var result = testCase == 1
+				? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectB = new { e.ObjectB.Id, e.ObjectB.ObjectC, ObjectsD = (EntityD[]?)null } }).ToList()
+				: testCase == 2
+					? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectB = new { e.ObjectB.Id, ObjectC = (EntityC?)null, e.ObjectB.ObjectsD } }).ToList()
+					: db.GetTable<EntityA>().Select(e => new { e.Id, ObjectB = new { e.ObjectB.Id, e.ObjectB.ObjectC, e.ObjectB.ObjectsD } }).ToList();
+
+			var expected = new int?[][]
+			{
+				[10, 20, 30],
+				[11, 21, 31],
+				[12, 22, 30],
+				[13, 20, 30],
+				[16, 25, null],
+				[17, 26, null],
+			};
+
+			var expectedD = new Dictionary<int, HashSet<int>>()
+			{
+				{ 20, [40] },
+				{ 21, [41,42,43] },
+				{ 22, [] },
+				{ 25, [44] },
+				{ 26, [45,46] },
+			};
+
+			Assert.That(result, Has.Count.EqualTo(expected.Length));
+
+			foreach (var set in expected)
+			{
+				var obj = result.SingleOrDefault(o => o.Id == set[0]);
+				Assert.That(obj, Is.Not.Null);
+				Assert.That(obj.ObjectB.Id, Is.EqualTo(set[1]));
+
+				if (testCase is 1 or 3)
+				{
+					if (set[2] is null)
+					{
+						Assert.That(obj.ObjectB.ObjectC, Is.Null);
+					}
+					else
+					{
+						Assert.That(obj.ObjectB.ObjectC, Is.Not.Null);
+						Assert.That(obj.ObjectB.ObjectC.Id, Is.EqualTo(set[2]));
+					}
+				}
+				else
+				{
+					Assert.That(obj.ObjectB.ObjectC, Is.Null);
+				}
+
+				if (testCase is 2 or 3)
+				{
+					Assert.That(obj.ObjectB.ObjectsD, Is.Not.Null);
+
+					var ids = expectedD[obj.ObjectB.Id];
+					Assert.That(obj.ObjectB.ObjectsD, Has.Length.EqualTo(ids.Count));
+					foreach (var id in ids)
+					{
+						var recordD = obj.ObjectB.ObjectsD.SingleOrDefault(r => r.Id == id);
+						Assert.That(recordD, Is.Not.Null);
+					}
+				}
+				else
+				{
+					Assert.That(obj.ObjectB.ObjectsD, Is.Null);
+				}
+			}
+		}
+
+		[Test]
+		public void TestCardinalityEagerLoad2([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityMA.Data);
+			using var tb = db.CreateLocalTable(EntityMB.Data);
+			using var tc = db.CreateLocalTable(EntityMC.Data);
+			using var td = db.CreateLocalTable(EntityMD.Data);
+
+			var result = testCase == 1
+				? db.GetTable<EntityMA>().LoadWith(e => e.ObjectsB).ThenLoad(e => e.ObjectsC).ToList()
+				: testCase == 2
+					? db.GetTable<EntityMA>().LoadWith(e => e.ObjectsB).ThenLoad(e => e.ObjectD).ToList()
+					: db.GetTable<EntityMA>().LoadWith(e => e.ObjectsB).ThenLoad(e => e.ObjectsC).LoadWith(e => e.ObjectsB).ThenLoad(e => e.ObjectD).ToList();
+
+			var expected = new Dictionary<int, Dictionary<int, (int? IdD, HashSet<int> IdsC)>>()
+			{
+				{ 10, new Dictionary<int, (int?, HashSet<int>)>()
+					{
+						{ 20, (40, [ 30 ]) },
+						{ 28, (null, []) }
+					}
+				},
+				{ 11, new Dictionary<int, (int?, HashSet<int>)>()
+					{
+						{ 21, (null, [ 32, 33 ]) },
+						{ 22, (40, []) }
+					}
+				},
+				{ 12, [] },
+				{ 13, [] }
+			};
+
+			Assert.That(result, Has.Count.EqualTo(expected.Count));
+
+			foreach (var kvp in expected)
+			{
+				var obj = result.SingleOrDefault(o => o.Id == kvp.Key);
+				Assert.That(obj, Is.Not.Null);
+				Assert.That(obj.ObjectsB, Has.Length.EqualTo(kvp.Value.Count));
+
+				foreach (var kvp2 in kvp.Value)
+				{
+					var objB = obj.ObjectsB.SingleOrDefault(o => o.Id == kvp2.Key);
+					Assert.That(objB, Is.Not.Null);
+
+					if (testCase is 1 or 3)
+					{
+						Assert.That(objB.ObjectsC, Has.Length.EqualTo(kvp2.Value.IdsC.Count));
+
+						foreach (var id in kvp2.Value.IdsC)
+						{
+							var objC = objB.ObjectsC.SingleOrDefault(o => o.Id == id);
+							Assert.That(objC, Is.Not.Null);
+						}
+					}
+					else
+					{
+						Assert.That(objB.ObjectsC, Is.Null);
+					}
+
+					if (testCase is 2 or 3 && kvp2.Value.IdD != null)
+					{
+						Assert.That(objB.ObjectD, Is.Not.Null);
+						Assert.That(objB.ObjectD.Id, Is.EqualTo(kvp2.Value.IdD));
+					}
+					else
+					{
+						Assert.That(objB.ObjectD, Is.Null);
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestCardinalityProjected2([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityMA.Data);
+			using var tb = db.CreateLocalTable(EntityMB.Data);
+			using var tc = db.CreateLocalTable(EntityMC.Data);
+			using var td = db.CreateLocalTable(EntityMD.Data);
+
+			var result = testCase switch
+			{
+				1 => db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsB = e.ObjectsB.Select(e => new { e.Id, e.ObjectsC, ObjectD = (EntityMD?)null }).ToArray() }).ToList(),
+				2 => db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsB = e.ObjectsB.Select(e => new { e.Id, ObjectsC            = (EntityMC[])null!, e.ObjectD }).ToArray() }).ToList(),
+				_ => db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsB = e.ObjectsB.Select(e => new { e.Id, e.ObjectsC, e.ObjectD }).ToArray() }).ToList()
+			};
+
+			var expected = new Dictionary<int, Dictionary<int, (int? IdD, HashSet<int> IdsC)>>()
+			{
+				{ 10, new Dictionary<int, (int?, HashSet<int>)>()
+					{
+						{ 20, (40, [ 30 ]) },
+						{ 28, (null, []) }
+					}
+				},
+				{ 11, new Dictionary<int, (int?, HashSet<int>)>()
+					{
+						{ 21, (null, [ 32, 33 ]) },
+						{ 22, (40, []) }
+					}
+				},
+				{ 12, [] },
+				{ 13, [] }
+			};
+
+			Assert.That(result, Has.Count.EqualTo(expected.Count));
+
+			foreach (var kvp in expected)
+			{
+				var obj = result.SingleOrDefault(o => o.Id == kvp.Key);
+				Assert.That(obj, Is.Not.Null);
+				Assert.That(obj.ObjectsB, Has.Length.EqualTo(kvp.Value.Count));
+
+				foreach (var kvp2 in kvp.Value)
+				{
+					var objB = obj.ObjectsB.SingleOrDefault(o => o.Id == kvp2.Key);
+					Assert.That(objB, Is.Not.Null);
+
+					if (testCase is 1 or 3)
+					{
+						Assert.That(objB.ObjectsC, Has.Length.EqualTo(kvp2.Value.IdsC.Count));
+
+						foreach (var id in kvp2.Value.IdsC)
+						{
+							var objC = objB.ObjectsC.SingleOrDefault(o => o.Id == id);
+							Assert.That(objC, Is.Not.Null);
+						}
+					}
+					else
+					{
+						Assert.That(objB.ObjectsC, Is.Null);
+					}
+
+					if (testCase is 2 or 3 && kvp2.Value.IdD != null)
+					{
+						Assert.That(objB.ObjectD, Is.Not.Null);
+						Assert.That(objB.ObjectD.Id, Is.EqualTo(kvp2.Value.IdD));
+					}
+					else
+					{
+						Assert.That(objB.ObjectD, Is.Null);
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestCardinalityEagerLoadOptional1([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityA.Data);
+			using var tb = db.CreateLocalTable(EntityB.Data);
+			using var tc = db.CreateLocalTable(EntityC.Data);
+			using var td = db.CreateLocalTable(EntityD.Data);
+
+			var result = testCase == 1
+				? db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectC).ToList()
+				: testCase == 2
+					? db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectsD).ToList()
+					: db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectC).LoadWith(e => e.ObjectBOptional!.ObjectsD).ToList();
+
+			var expected = new int?[][]
+			{
+				[10, 20, 30],
+				[11, 21, 31],
+				[12, 22, 30],
+				[13, 20, 30],
+				[14, null, null],
+				[15, null, null],
+				[16, 25, null],
+				[17, 26, null],
+				[18, null, null],
+			};
+
+			var expectedD = new Dictionary<int, HashSet<int>>()
+			{
+				{ 20, [40] },
+				{ 21, [41,42,43] },
+				{ 22, [] },
+				{ 25, [44] },
+				{ 26, [45,46] },
+			};
+
+			Assert.That(result, Has.Count.EqualTo(expected.Length));
+
+			foreach (var set in expected)
+			{
+				var obj = result.SingleOrDefault(o => o.Id == set[0]);
+				Assert.That(obj, Is.Not.Null);
+				if (set[1] is null)
+				{
+					Assert.That(obj.ObjectBOptional, Is.Null);
+				}
+				else
+				{
+					Assert.That(obj.ObjectBOptional, Is.Not.Null);
+					Assert.That(obj.ObjectBOptional.Id, Is.EqualTo(set[1]));
+
+					if (testCase is 1 or 3)
+					{
+						if (set[2] is null)
+						{
+							Assert.That(obj.ObjectBOptional.ObjectC, Is.Null);
+						}
+						else
+						{
+							Assert.That(obj.ObjectBOptional.ObjectC, Is.Not.Null);
+							Assert.That(obj.ObjectBOptional.ObjectC.Id, Is.EqualTo(set[2]));
+						}
+					}
+					else
+					{
+						Assert.That(obj.ObjectBOptional.ObjectC, Is.Null);
+					}
+
+					if (testCase is 2 or 3)
+					{
+						Assert.That(obj.ObjectBOptional.ObjectsD, Is.Not.Null);
+
+						var ids = expectedD[obj.ObjectBOptional.Id];
+						Assert.That(obj.ObjectBOptional.ObjectsD, Has.Length.EqualTo(ids.Count));
+						foreach (var id in ids)
+						{
+							var recordD = obj.ObjectBOptional.ObjectsD.SingleOrDefault(r => r.Id == id);
+							Assert.That(recordD, Is.Not.Null);
+						}
+					}
+					else
+					{
+						Assert.That(obj.ObjectBOptional.ObjectsD, Is.Null);
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestCardinalityProjectedOptional1([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityA.Data);
+			using var tb = db.CreateLocalTable(EntityB.Data);
+			using var tc = db.CreateLocalTable(EntityC.Data);
+			using var td = db.CreateLocalTable(EntityD.Data);
+
+			var result = testCase == 1
+				? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectC, ObjectsD = (EntityD[]?)null } }).ToList()
+				: testCase == 2
+					? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, ObjectC = (EntityC?)null, e.ObjectBOptional.ObjectsD } }).ToList()
+					: db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectC, e.ObjectBOptional.ObjectsD } }).ToList();
+
+			var expected = new int?[][]
+			{
+				[10, 20, 30],
+				[11, 21, 31],
+				[12, 22, 30],
+				[13, 20, 30],
+				[14, null, null],
+				[15, null, null],
+				[16, 25, null],
+				[17, 26, null],
+				[18, null, null],
+			};
+
+			var expectedD = new Dictionary<int, HashSet<int>>()
+			{
+				{ 20, [40] },
+				{ 21, [41,42,43] },
+				{ 22, [] },
+				{ 25, [44] },
+				{ 26, [45,46] },
+			};
+
+			Assert.That(result, Has.Count.EqualTo(expected.Length));
+
+			foreach (var set in expected)
+			{
+				var obj = result.SingleOrDefault(o => o.Id == set[0]);
+				Assert.That(obj, Is.Not.Null);
+				if (set[1] is null)
+				{
+					Assert.That(obj.ObjectBOptional, Is.Null);
+				}
+				else
+				{
+					Assert.That(obj.ObjectBOptional, Is.Not.Null);
+					Assert.That(obj.ObjectBOptional.Id, Is.EqualTo(set[1]));
+
+					if (testCase is 1 or 3)
+					{
+						if (set[2] is null)
+						{
+							Assert.That(obj.ObjectBOptional.ObjectC, Is.Null);
+						}
+						else
+						{
+							Assert.That(obj.ObjectBOptional.ObjectC, Is.Not.Null);
+							Assert.That(obj.ObjectBOptional.ObjectC.Id, Is.EqualTo(set[2]));
+						}
+					}
+					else
+					{
+						Assert.That(obj.ObjectBOptional.ObjectC, Is.Null);
+					}
+
+					if (testCase is 2 or 3)
+					{
+						Assert.That(obj.ObjectBOptional.ObjectsD, Is.Not.Null);
+
+						var ids = expectedD[obj.ObjectBOptional.Id];
+						Assert.That(obj.ObjectBOptional.ObjectsD, Has.Length.EqualTo(ids.Count));
+						foreach (var id in ids)
+						{
+							var recordD = obj.ObjectBOptional.ObjectsD.SingleOrDefault(r => r.Id == id);
+							Assert.That(recordD, Is.Not.Null);
+						}
+					}
+					else
+					{
+						Assert.That(obj.ObjectBOptional.ObjectsD, Is.Null);
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestCardinalityEagerLoadOptional2([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityMA.Data);
+			using var tb = db.CreateLocalTable(EntityMB.Data);
+			using var tc = db.CreateLocalTable(EntityMC.Data);
+			using var td = db.CreateLocalTable(EntityMD.Data);
+
+			var result = testCase == 1
+				? db.GetTable<EntityMA>().LoadWith(e => e.ObjectsBOptional).ThenLoad(e => e.ObjectsC).ToList()
+				: testCase == 2
+					? db.GetTable<EntityMA>().LoadWith(e => e.ObjectsBOptional).ThenLoad(e => e.ObjectD).ToList()
+					: db.GetTable<EntityMA>().LoadWith(e => e.ObjectsBOptional).ThenLoad(e => e.ObjectsC).LoadWith(e => e.ObjectsBOptional).ThenLoad(e => e.ObjectD).ToList();
+
+			var expected = new Dictionary<int, Dictionary<int, (int? IdD, HashSet<int> IdsC)>>()
+			{
+				{ 10, new Dictionary<int, (int?, HashSet<int>)>()
+					{
+						{ 20, (40, [ 30 ]) },
+						{ 28, (null, []) }
+					}
+				},
+				{ 11, new Dictionary<int, (int?, HashSet<int>)>()
+					{
+						{ 21, (null, [ 32, 33 ]) },
+						{ 22, (40, []) }
+					}
+				},
+				{ 12, [] },
+				{ 13, [] }
+			};
+
+			Assert.That(result, Has.Count.EqualTo(expected.Count));
+
+			foreach (var kvp in expected)
+			{
+				var obj = result.SingleOrDefault(o => o.Id == kvp.Key);
+				Assert.That(obj, Is.Not.Null);
+				Assert.That(obj.ObjectsBOptional, Has.Length.EqualTo(kvp.Value.Count));
+
+				foreach (var kvp2 in kvp.Value)
+				{
+					var objB = obj.ObjectsBOptional.SingleOrDefault(o => o.Id == kvp2.Key);
+					Assert.That(objB, Is.Not.Null);
+
+					if (testCase is 1 or 3)
+					{
+						Assert.That(objB.ObjectsC, Has.Length.EqualTo(kvp2.Value.IdsC.Count));
+
+						foreach (var id in kvp2.Value.IdsC)
+						{
+							var objC = objB.ObjectsC.SingleOrDefault(o => o.Id == id);
+							Assert.That(objC, Is.Not.Null);
+						}
+					}
+					else
+					{
+						Assert.That(objB.ObjectsC, Is.Null);
+					}
+
+					if (testCase is 2 or 3 && kvp2.Value.IdD != null)
+					{
+						Assert.That(objB.ObjectD, Is.Not.Null);
+						Assert.That(objB.ObjectD.Id, Is.EqualTo(kvp2.Value.IdD));
+					}
+					else
+					{
+						Assert.That(objB.ObjectD, Is.Null);
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestCardinalityProjectedOptional2([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityMA.Data);
+			using var tb = db.CreateLocalTable(EntityMB.Data);
+			using var tc = db.CreateLocalTable(EntityMC.Data);
+			using var td = db.CreateLocalTable(EntityMD.Data);
+
+			var result = testCase == 1
+				? db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsBOptional = e.ObjectsBOptional.Select(e => new { e.Id, e.ObjectsC, ObjectD = (EntityMD?)null }).ToArray() }).ToList()
+				: testCase == 2
+					? db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsBOptional = e.ObjectsBOptional.Select(e => new { e.Id, ObjectsC = (EntityMC[])null!, e.ObjectD }).ToArray() }).ToList()
+					: db.GetTable<EntityMA>().Select(e => new { e.Id, ObjectsBOptional = e.ObjectsBOptional.Select(e => new { e.Id, e.ObjectsC, e.ObjectD }).ToArray() }).ToList();
+
+			var expected = new Dictionary<int, Dictionary<int, (int? IdD, HashSet<int> IdsC)>>()
+			{
+				{ 10, new Dictionary<int, (int?, HashSet<int>)>()
+					{
+						{ 20, (40, [ 30 ]) },
+						{ 28, (null, []) }
+					}
+				},
+				{ 11, new Dictionary<int, (int?, HashSet<int>)>()
+					{
+						{ 21, (null, [ 32, 33 ]) },
+						{ 22, (40, []) }
+					}
+				},
+				{ 12, [] },
+				{ 13, [] }
+			};
+
+			Assert.That(result, Has.Count.EqualTo(expected.Count));
+
+			foreach (var kvp in expected)
+			{
+				var obj = result.SingleOrDefault(o => o.Id == kvp.Key);
+				Assert.That(obj, Is.Not.Null);
+				Assert.That(obj.ObjectsBOptional, Has.Length.EqualTo(kvp.Value.Count));
+
+				foreach (var kvp2 in kvp.Value)
+				{
+					var objB = obj.ObjectsBOptional.SingleOrDefault(o => o.Id == kvp2.Key);
+					Assert.That(objB, Is.Not.Null);
+
+					if (testCase is 1 or 3)
+					{
+						Assert.That(objB.ObjectsC, Has.Length.EqualTo(kvp2.Value.IdsC.Count));
+
+						foreach (var id in kvp2.Value.IdsC)
+						{
+							var objC = objB.ObjectsC.SingleOrDefault(o => o.Id == id);
+							Assert.That(objC, Is.Not.Null);
+						}
+					}
+					else
+					{
+						Assert.That(objB.ObjectsC, Is.Null);
+					}
+
+					if (testCase is 2 or 3 && kvp2.Value.IdD != null)
+					{
+						Assert.That(objB.ObjectD, Is.Not.Null);
+						Assert.That(objB.ObjectD.Id, Is.EqualTo(kvp2.Value.IdD));
+					}
+					else
+					{
+						Assert.That(objB.ObjectD, Is.Null);
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestCardinalityEagerLoadOptional3([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityA.Data);
+			using var tb = db.CreateLocalTable(EntityB.Data);
+			using var tc = db.CreateLocalTable(EntityC.Data);
+			using var td = db.CreateLocalTable(EntityD.Data);
+
+			var query = testCase switch
+			{
+				1 => db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectCRequired).AsQueryable(),
+				2 => db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectsD),
+				_ => db.GetTable<EntityA>().LoadWith(e => e.ObjectBOptional!.ObjectCRequired).LoadWith(e => e.ObjectBOptional!.ObjectsD)
+			};
+
+			var result = query.ToList();
+
+			var expected = new int?[][]
+			{
+				[10, 20, 30],
+				[11, 21, 31],
+				[12, 22, 30],
+				[13, 20, 30],
+				[14, null, null],
+				[15, null, null],
+				[16, 25, null],
+				[17, 26, null],
+				[18, null, null],
+			};
+
+			var expectedD = new Dictionary<int, HashSet<int>>()
+			{
+				{ 20, [40] },
+				{ 21, [41,42,43] },
+				{ 22, [] },
+				{ 25, [44] },
+				{ 26, [45,46] },
+			};
+
+			Assert.That(result, Has.Count.EqualTo(expected.Length));
+
+			for (var index = 0; index < expected.Length; index++)
+			{
+				var set = expected[index];
+				var obj = result.SingleOrDefault(o => o.Id == set[0]);
+				Assert.That(obj, Is.Not.Null);
+				if (set[1] is null)
+				{
+					Assert.That(obj.ObjectBOptional, Is.Null);
+				}
+				else
+				{
+					Assert.That(obj.ObjectBOptional, Is.Not.Null);
+					Assert.That(obj.ObjectBOptional.Id, Is.EqualTo(set[1]));
+
+					if (testCase is 1 or 3)
+					{
+						if (set[2] is null)
+						{
+							Assert.That(obj.ObjectBOptional.ObjectCRequired, Is.Null);
+						}
+						else
+						{
+							Assert.That(obj.ObjectBOptional.ObjectCRequired, Is.Not.Null);
+							Assert.That(obj.ObjectBOptional.ObjectCRequired.Id, Is.EqualTo(set[2]));
+						}
+					}
+					else
+					{
+						Assert.That(obj.ObjectBOptional.ObjectCRequired, Is.Null);
+					}
+
+					if (testCase is 2 or 3)
+					{
+						Assert.That(obj.ObjectBOptional.ObjectsD, Is.Not.Null);
+
+						var ids = expectedD[obj.ObjectBOptional.Id];
+						Assert.That(obj.ObjectBOptional.ObjectsD, Has.Length.EqualTo(ids.Count));
+						foreach (var id in ids)
+						{
+							var recordD = obj.ObjectBOptional.ObjectsD.SingleOrDefault(r => r.Id == id);
+							Assert.That(recordD, Is.Not.Null);
+						}
+					}
+					else
+					{
+						Assert.That(obj.ObjectBOptional.ObjectsD, Is.Null);
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestCardinalityProjectedOptional3([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable(EntityA.Data);
+			using var tb = db.CreateLocalTable(EntityB.Data);
+			using var tc = db.CreateLocalTable(EntityC.Data);
+			using var td = db.CreateLocalTable(EntityD.Data);
+
+			var result = testCase == 1
+				? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectCRequired, ObjectsD = (EntityD[]?)null } }).ToList()
+				: testCase == 2
+					? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, ObjectCRequired = (EntityC)null!, e.ObjectBOptional.ObjectsD } }).ToList()
+					: db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectCRequired, e.ObjectBOptional.ObjectsD } }).ToList();
+
+			var expected = new int?[][]
+			{
+				[10, 20, 30],
+				[11, 21, 31],
+				[12, 22, 30],
+				[13, 20, 30],
+				[14, null, null],
+				[15, null, null],
+				[16, 25, null],
+				[17, 26, null],
+				[18, null, null],
+			};
+
+			var expectedD = new Dictionary<int, HashSet<int>>()
+			{
+				{ 20, [40] },
+				{ 21, [41,42,43] },
+				{ 22, [] },
+				{ 25, [44] },
+				{ 26, [45,46] },
+			};
+
+			Assert.That(result, Has.Count.EqualTo(expected.Length));
+
+			foreach (var set in expected)
+			{
+				var obj = result.SingleOrDefault(o => o.Id == set[0]);
+				Assert.That(obj, Is.Not.Null);
+				if (set[1] is null)
+				{
+					Assert.That(obj.ObjectBOptional, Is.Null);
+				}
+				else
+				{
+					Assert.That(obj.ObjectBOptional, Is.Not.Null);
+					Assert.That(obj.ObjectBOptional.Id, Is.EqualTo(set[1]));
+
+					if (testCase is 1 or 3)
+					{
+						if (set[2] is null)
+						{
+							Assert.That(obj.ObjectBOptional.ObjectCRequired, Is.Null);
+						}
+						else
+						{
+							Assert.That(obj.ObjectBOptional.ObjectCRequired, Is.Not.Null);
+							Assert.That(obj.ObjectBOptional.ObjectCRequired.Id, Is.EqualTo(set[2]));
+						}
+					}
+					else
+					{
+						Assert.That(obj.ObjectBOptional.ObjectCRequired, Is.Null);
+					}
+
+					if (testCase is 2 or 3)
+					{
+						Assert.That(obj.ObjectBOptional.ObjectsD, Is.Not.Null);
+
+						var ids = expectedD[obj.ObjectBOptional.Id];
+						Assert.That(obj.ObjectBOptional.ObjectsD, Has.Length.EqualTo(ids.Count));
+						foreach (var id in ids)
+						{
+							var recordD = obj.ObjectBOptional.ObjectsD.SingleOrDefault(r => r.Id == id);
+							Assert.That(recordD, Is.Not.Null);
+						}
+					}
+					else
+					{
+						Assert.That(obj.ObjectBOptional.ObjectsD, Is.Null);
+					}
+				}
+			}
 		}
 	}
 }

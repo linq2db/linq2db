@@ -23,10 +23,10 @@ namespace LinqToDB.Async
 	[PublicAPI]
 	public static class AsyncFactory
 	{
-		private static readonly Type?[] _noTokenParams         = new Type?[] { null };
+		private static readonly Type?[] _noTokenParams         = [null];
 
-		private static readonly Type[] _tokenParams            = new Type[] { typeof(CancellationToken) };
-		private static readonly Type[] _beginTransactionParams = new Type[] { typeof(IsolationLevel)   , typeof(CancellationToken) };
+		private static readonly Type[] _tokenParams            = [typeof(CancellationToken)];
+		private static readonly Type[] _beginTransactionParams = [typeof(IsolationLevel)   , typeof(CancellationToken)];
 
 		private static readonly ConcurrentDictionary<Type, Func<DbConnection, IAsyncDbConnection>> _connectionFactories = new ();
 
@@ -197,7 +197,6 @@ namespace LinqToDB.Async
 			// - MySqlConnector 0.57+
 									   ?? CreateDelegate<Func<DbConnection, ValueTask>, DbConnection>(type, "DisposeAsync", [], [], [], false, true);
 
-
 			if (beginTransactionAsync      != null
 				|| beginTransactionIlAsync != null
 				|| openAsync               != null
@@ -293,7 +292,6 @@ namespace LinqToDB.Async
 		{
 			// taskType = typeof(Task<TResult>);
 			var taskType = body.Type;
-
 
 			// dataType = typeof(TResult);
 			var dataType = taskType.GenericTypeArguments[0];

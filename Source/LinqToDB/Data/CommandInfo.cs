@@ -22,11 +22,12 @@ using JetBrains.Annotations;
 namespace LinqToDB.Data
 {
 	using Async;
-	using Common;
-	using Common.Internal;
 	using Common.Internal.Cache;
+	using Common.Internal;
+	using Common;
 	using Expressions;
 	using Extensions;
+	using Interceptors;
 	using Linq;
 	using Mapping;
 	using Reflection;
@@ -360,7 +361,7 @@ namespace LinqToDB.Data
 
 						DbDataReader reader;
 
-						if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+						if (DataConnection is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: {} interceptor })
 						{
 							using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 								reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
@@ -475,7 +476,7 @@ namespace LinqToDB.Data
 
 						DbDataReader reader;
 
-						if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+						if (DataConnection is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 						{
 							using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 								reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
@@ -541,7 +542,19 @@ namespace LinqToDB.Data
 						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
 							var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-							var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
+
+							DbDataReader reader;
+
+							if (DataConnection is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
+							{
+								using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+									reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
+							}
+							else
+							{
+								reader = rd.DataReader!;
+							}
+
 							var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
 							var isFaulted     = false;
 
@@ -740,7 +753,7 @@ namespace LinqToDB.Data
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsList<int>(null!)).GetGenericMethodDefinition();
 
 		static readonly MethodInfo _readSingletMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingle<int>(null!)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadFirstOrDefault<string>(null!)).GetGenericMethodDefinition();
 
 		T[] ReadAsArray<T>(DataReaderWrapper rd)
 		{
@@ -752,7 +765,7 @@ namespace LinqToDB.Data
 			return ReadEnumerator<T>(rd, null, false).ToList();
 		}
 
-		T? ReadSingle<T>(DataReaderWrapper rd)
+		T? ReadFirstOrDefault<T>(DataReaderWrapper rd)
 		{
 			return ReadEnumerator<T>(rd, null, false).FirstOrDefault();
 		}
@@ -807,7 +820,7 @@ namespace LinqToDB.Data
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsListAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		static readonly MethodInfo _readSingletAsyncMethodInfo =
-			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingleAsync<int>(null!, default)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadFirstOrDefaultAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		sealed class ReaderAsyncEnumerable<T> : IAsyncEnumerable<T>
 		{
@@ -894,7 +907,7 @@ namespace LinqToDB.Data
 			return new ReaderAsyncEnumerable<T>(this, rd).ToListAsync(cancellationToken: cancellationToken);
 		}
 
-		Task<T> ReadSingleAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		Task<T?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
 			return new ReaderAsyncEnumerable<T>(this, rd).FirstOrDefaultAsync(cancellationToken: cancellationToken);
 		}
@@ -1125,7 +1138,7 @@ namespace LinqToDB.Data
 
 					DbDataReader reader;
 
-					if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+					if (DataConnection is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 					{
 						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 							reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
@@ -1715,18 +1728,21 @@ namespace LinqToDB.Data
 					//
 					return CreateDynamicObjectReader<T>(context.dataConnection, context.dataReader,
 						(dc, dr, type, idx, dataReaderExpr) =>
-							new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+							new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, canBeNull: (bool?)null).Reduce(dc, dr));
 				}
 
 				return CreateObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr, conv) =>
-					new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr).Reduce(dc, dr));
+					new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr, canBeNull: (bool?)null).Reduce(dc, dr));
 			});
 
 			return (Func<DbDataReader,T>)func;
 		}
 
-		static Func<DbDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, DbDataReader dataReader,
-			string sql, string? additionalKey)
+		static Func<DbDataReader,T> GetObjectReader2<T>(
+			DataConnection dataConnection,
+			DbDataReader   dataReader,
+			string         sql,
+			string?        additionalKey)
 		{
 			var key = new QueryKey(typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1, dataReader.FieldCount == 1 ? dataReader.GetFieldType(0) : null);
 
@@ -1737,12 +1753,12 @@ namespace LinqToDB.Data
 				// dynamic case
 				//
 				func = CreateDynamicObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, slowMode: true));
+				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, canBeNull: true).Reduce(dc, slowMode: true));
 			}
 			else
 			{
 				func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr, conv) =>
-				new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr).Reduce(dc, slowMode: true));
+				new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr, canBeNull: true).Reduce(dc, slowMode: true));
 			}
 
 			_objectReaders.Set(key, func,

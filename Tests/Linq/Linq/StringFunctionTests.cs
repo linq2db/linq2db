@@ -195,7 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Stuff2()
+		public void Stuff2Fail()
 		{
 			var expression = Enumerable.Empty<string>();
 			Assert.Throws<NotImplementedException>(() => Sql.Stuff(expression, 1, 1, "")); // ServerSideOnly
@@ -1229,7 +1229,7 @@ namespace Tests.Linq
 		}
 
 		// for disabled providers see notes on implementation at
-		// EXpressions.TrimLeft/TrimRight
+		// Expressions.TrimLeft/TrimRight
 		[Test]
 		public void TrimLeftCharacters([DataSources(
 			TestProvName.AllFirebird,
@@ -1264,6 +1264,46 @@ namespace Tests.Linq
 				where p.ID == 1
 				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
 				where pp.Name.TrimEnd(' ', 'n') == "  Joh"
+				select pp;
+			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
+		}
+
+		// for disabled providers see notes on implementation at
+		// Expressions.TrimLeft/TrimRight
+		[Test]
+		public void TrimLeftCharacter([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimStart(' ') == "John "
+				select pp;
+			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void TrimRightCharacter([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimEnd(' ') == "  John"
 				select pp;
 			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 		}

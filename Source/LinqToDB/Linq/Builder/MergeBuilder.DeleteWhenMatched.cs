@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 				return methodCall.IsSameGenericMethod(DeleteWhenMatchedAndMethodInfo);
 			}
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -27,11 +27,15 @@ namespace LinqToDB.Linq.Builder
 				var predicate = methodCall.Arguments[1];
 				if (!predicate.IsNullValue())
 				{
-					var condition   = (LambdaExpression)predicate.Unwrap();
-					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, condition);
+					var condition   = predicate.UnwrapLambda();
+					var conditionExpression = mergeContext.SourceContext.PrepareTargetSource(condition);
+
+					operation.Where = new SqlSearchCondition();
+
+					builder.BuildSearchCondition(mergeContext.SourceContext, conditionExpression, buildInfo.GetFlags(ProjectFlags.ForceOuterAssociation), operation.Where);
 				}
 
-				return mergeContext;
+				return BuildSequenceResult.FromContext(mergeContext);
 			}
 		}
 	}

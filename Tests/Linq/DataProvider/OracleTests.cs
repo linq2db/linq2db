@@ -351,9 +351,10 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<DateTime>("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.EqualTo(default(DateTime)));
 					Assert.That(conn.Execute<DateTime?>("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.EqualTo(default(DateTime?)));
 
-					Assert.That(conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).ToString(), Is.EqualTo(dto.ToString(DateTimeFormatInfo.InvariantInfo)));
-					Assert.That(conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto, DataType.DateTimeOffset)).ToString(), Is.EqualTo(dto.ToString(DateTimeFormatInfo.InvariantInfo)));
 				});
+
+				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).Should().Be(dto);
+				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto, DataType.DateTimeOffset)).Should().Be(dto);
 			}
 		}
 
@@ -957,7 +958,7 @@ namespace Tests.DataProvider
 
 				_ = query.FirstOrDefault();
 
-				Assert.That(parameters, Has.Length.EqualTo(2));
+				parameters.Should().HaveCount(1);
 
 				if (context.IsAnyOf(TestProvName.AllOracleDevart))
 					// another case of sloppy implementation by devart...
@@ -987,7 +988,7 @@ namespace Tests.DataProvider
 
 				_ = query.FirstOrDefault();
 
-				Assert.That(parameters, Has.Length.EqualTo(2));
+				parameters.Should().HaveCount(1);
 
 				if (context.IsAnyOf(TestProvName.AllOracleDevart))
 					// another case of sloppy implementation by devart...

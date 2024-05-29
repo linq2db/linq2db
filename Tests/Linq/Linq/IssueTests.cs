@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -46,7 +48,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var t1 = db.Types2.Where(r => r.ID == 1).First();
+				var saved = db.Types2.First(r => r.ID == 1);
+
+				var t1 = db.Types2.First(r => r.ID == 1);
 
 				t1.BoolValue = !t1.BoolValue;
 
@@ -59,6 +63,11 @@ namespace Tests.Linq
 				t1.BoolValue = !t1.BoolValue;
 
 				db.Update(t1);
+
+				var current = db.Types2.First(r => r.ID == 1);
+
+				// If this test fails, Data for MathFunctionsTests will be corrupted.
+				current.Should().Be(saved);
 			}
 		}
 
@@ -187,37 +196,25 @@ namespace Tests.Linq
 		[Test]
 		public void Issue424Test1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderBy(_ => _.ParentID).Take(1),
-					db.Parent.Distinct().OrderBy(_ => _.ParentID).Take(1)
-					);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Take(1));
 		}
 
 		[Test]
 		public void Issue424Test2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1),
-					db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1)
-					);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1));
 		}
 
 		[Test]
 		public void Issue424Test3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1),
-					db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1)
-				);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1));
 		}
 
 		// https://github.com/linq2db/linq2db/issues/498

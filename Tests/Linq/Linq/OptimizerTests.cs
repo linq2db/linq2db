@@ -447,7 +447,8 @@ namespace Tests.Linq
 						F2 = f2,
 					};
 
-				TestContext.WriteLine(query.ToString());
+				var sqlString = query.ToString();
+				TestContext.WriteLine(sqlString);
 
 				var selectQuery = query.EnumQueries().First();
 				var table = selectQuery.From.Tables[0];

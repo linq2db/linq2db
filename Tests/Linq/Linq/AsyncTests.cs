@@ -83,7 +83,12 @@ namespace Tests.Linq
 			{
 				conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
+				var sql = conn.Person
+					.Where(p => p.ID == 1)
+					.Select(p => p.FirstName)
+					.Take(1)
+					.ToString()!;
+
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("--")));
 
@@ -100,7 +105,12 @@ namespace Tests.Linq
 			{
 				conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
+				var sql = conn.Person
+					.Where(p => p.ID == 1)
+					.Select(p => p.FirstName)
+					.Take(1)
+					.ToString()!;
+
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("--")));
 
@@ -122,7 +132,12 @@ namespace Tests.Linq
 			{
 				conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
+				var sql = conn.Person
+					.Where(p => p.ID == 1)
+					.Select(p => p.FirstName)
+					.Take(1)
+					.ToString()!;
+
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("--")));
 
@@ -260,41 +275,31 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async ValueTask CancellableAsyncEnumerableTest([DataSources] string context)
+		public void CancellableAsyncEnumerableTest([DataSources] string context)
 		{
 			using var cts = new CancellationTokenSource();
 			var cancellationToken = cts.Token;
 			cts.Cancel();
+
 			using var db = GetDataContext(context);
+
 			var resultQuery = db.Parent.AsAsyncEnumerable().WithCancellation(cancellationToken);
-			if (!context.IsAnyOf(TestProvName.AllMySqlData) || context.IsRemote())
+
+			Assert.ThrowsAsync<OperationCanceledException>(async () =>
 			{
-				Assert.ThrowsAsync<OperationCanceledException>(async () =>
+				try
 				{
-					try
-					{
-						await foreach (var row in resultQuery)
-						{ }
-					}
-					catch (OperationCanceledException)
-					{
-						// this casts any exception that inherits from OperationCanceledException
-						//   to a OperationCanceledException to pass the assert check above
-						//   (needed for TaskCanceledException)
-						throw new OperationCanceledException();
-					}
-				});
-			}
-			else
-			{
-				// pre-open connection to avoid cancellation triggered by async open (which actually works)
-				db.Parent.ToList();
-				// if it fails:
-				// 1. someone died at oracle office
-				// 2. this code should be removed
-				await foreach (var row in resultQuery)
-				{ }
-			}
+					await foreach (var row in resultQuery)
+					{ }
+				}
+				catch (OperationCanceledException)
+				{
+					// this casts any exception that inherits from OperationCanceledException
+					//   to a OperationCanceledException to pass the assert check above
+					//   (needed for TaskCanceledException)
+					throw new OperationCanceledException();
+				}
+			});
 		}
 	}
 }

@@ -35,8 +35,8 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("*** t1 ***"));
-			Assert.That(LastQuery, Contains.Substring("*** p.t1 ***"));
+			Assert.That(LastQuery, Contains.Substring("*** p ***"));
+			Assert.That(LastQuery, Contains.Substring("*** p_1.p ***"));
 			Assert.That(LastQuery,
 				Contains.Substring("*** \"Parent\" ***")
 					.Or.Contains("*** Parent ***")

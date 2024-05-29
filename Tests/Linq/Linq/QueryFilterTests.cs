@@ -193,6 +193,7 @@ namespace Tests.Linq
 
 				var query =
 					from m in db.GetTable<MasterClass>()
+					from d in db.GetTable<MasterClass>().Where(d => d.Id == m.Id) // for ensuring that we do not cache two dynamic filters comparators. See ParametersContext.RegisterDynamicExpressionAccessor
 					select m;
 
 				((DcParams)db.Params).IsSoftDeleteFilterEnabled = filtered;

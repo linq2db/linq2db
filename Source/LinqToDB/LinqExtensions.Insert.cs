@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -161,7 +160,7 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
 					query.Expression, Expression.Constant(obj)));
 
-			return items.AsAsyncEnumerable().FirstOrDefaultAsync(token);
+			return items.AsAsyncEnumerable().SingleAsync(token);
 		}
 
 		/// <summary>
@@ -402,7 +401,6 @@ namespace LinqToDB
 
 			return ((IQueryProviderAsync)query).ExecuteAsync<int>(expr, token);
 		}
-
 
 		#region Many records
 

@@ -35,15 +35,13 @@ namespace LinqToDB
 				return Type == other.Type && ID == other.ID;
 			}
 
-
 			public override int GetHashCode()
 			{
 				return (int)Type | (ID.GetHashCode() >> 3);
 			}
 
-			public ISqlExpression ToSql(Expression expression)
+			public ISqlExpression ToSql(object value)
 			{
-				var value = expression.EvaluateExpression();
 				return new SqlValue(typeof(SqlID), value);
 			}
 

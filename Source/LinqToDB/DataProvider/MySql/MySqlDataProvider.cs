@@ -9,8 +9,10 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
 
 	sealed class MySql57DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql57MySqlData,        MySqlVersion.MySql57,   MySqlProvider.MySqlData     ) { }
 	sealed class MySql57DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql57MySqlConnector,   MySqlVersion.MySql57,   MySqlProvider.MySqlConnector) { }
@@ -27,7 +29,6 @@ namespace LinqToDB.DataProvider.MySql
 			Provider = provider;
 			Version  = version;
 
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = version > MySqlVersion.MySql57;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
@@ -38,7 +39,15 @@ namespace LinqToDB.DataProvider.MySql
 			// https://jira.mariadb.org/browse/MDEV-6373
 			// https://jira.mariadb.org/browse/MDEV-19078
 			SqlProviderFlags.IsApplyJoinSupported              = version == MySqlVersion.MySql80;
+			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = version == MySqlVersion.MySql80;
+			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = version == MySqlVersion.MySql80;
+			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= MySqlVersion.MySql80;
+
+			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
+
+			SqlProviderFlags.IsUpdateTakeSupported     = true;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 
@@ -71,6 +80,11 @@ namespace LinqToDB.DataProvider.MySql
 
 		public MySqlVersion  Version  { get; }
 		public MySqlProvider Provider { get; }
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new MySqlMemberTranslator();
+		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{

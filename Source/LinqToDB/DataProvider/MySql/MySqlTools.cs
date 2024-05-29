@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Data;
 using System.Data.Common;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Data;
 	using Data;
 
 	public static partial class MySqlTools

@@ -184,10 +184,13 @@ namespace Tests.Linq
 		public void GroupBy2([DataSources] string context)
 		{
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			{
+				using var db = GetDataContext(context);
+
 				AreEqual(
 					(from ch in    Child group ch by ch.Parent1).ToList().Select(g => g.Key),
 					(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
+			}
 		}
 
 		[Test]
@@ -295,10 +298,11 @@ namespace Tests.Linq
 		[Test]
 		public void DoubleJoin([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from g in    GrandChild where g.Child!.Parent!.Value1 == 1 select g,
-					from g in db.GrandChild where g.Child!.Parent!.Value1 == 1 select g);
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from g in    GrandChild where g.Child!.Parent!.Value1 == 1 select g,
+				from g in db.GrandChild where g.Child!.Parent!.Value1 == 1 select g);
 		}
 
 		[Test]
@@ -566,15 +570,15 @@ namespace Tests.Linq
 					select new
 					{
 						n.ParentID,
-						Children = n.Children.ToList(),
-						//Children = n.Children//.Select(t => t).ToList(),
-						//Children = n.Children.Where(t => 1 == 1).ToList().ToList(),
+						Children1 = n.Children.ToList(),
+						Children2 = n.Children.Select(t => t).ToList(),
+						Children3 = n.Children.Where(t => 1 == 1).ToList().ToList(),
 					};
 
 				var list = q.ToList();
 
 				Assert.That(list,       Is.Not.Empty);
-				Assert.That(list[0].Children, Is.Not.Null);
+				Assert.That(list[0].Children1, Is.Not.Null);
 			}
 		}
 
@@ -1443,12 +1447,12 @@ namespace Tests.Linq
 		public void Issue2981Test([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable<Issue2981Entity>(new[]
+			using var t1 = db.CreateLocalTable(new[]
 			{
 				new Issue2981Entity {OwnerId = 1},
 				new Issue2981Entity {OwnerId = 2}
 			});
-			using var t2 = db.CreateLocalTable<Issue2981OwnerEntity>(new[] {new Issue2981OwnerEntity {Id = 1}});
+			using var t2 = db.CreateLocalTable(new[] {new Issue2981OwnerEntity {Id = 1}});
 
 
 			var res = t1.Select(r => new {r.OwnerId, Id = (int?)r.Owner!.Id})
@@ -1509,7 +1513,6 @@ namespace Tests.Linq
 
 		#endregion
 
-		[ActiveIssue(2966)]
 		[Test(Description = "association over set query")]
 		public void Issue2966([DataSources] string context)
 		{
@@ -1683,6 +1686,7 @@ namespace Tests.Linq
 					})
 				}
 			}).Where(a => a.ParentTest == null || a.ParentTest.Children.Any(a => a.ChildID == 11)).ToArray();
+
 			var expected = Parent.Select(a => new
 			{
 				a.ParentID,
@@ -1708,7 +1712,7 @@ namespace Tests.Linq
 			[Column    ] public int? ID2 { get; set; }
 
 			[Association(ThisKey = nameof(ID2), OtherKey = nameof(AssociationTests.Table2.ID))]
-			public Table2? Table2 => throw new InvalidOperationException();
+			public Table2? Table2 { get; set; }
 
 			public static readonly Table1[] Data = new[]
 			{
@@ -1724,7 +1728,7 @@ namespace Tests.Linq
 			[Column    ] public int? ID3 { get; set; }
 
 			[Association(ThisKey = nameof(ID3), OtherKey = nameof(AssociationTests.Table3.ID))]
-			public Table3? Table3 => throw new InvalidOperationException();
+			public Table3? Table3 { get; set; }
 
 			public static readonly Table2[] Data = new[]
 			{
@@ -1738,7 +1742,7 @@ namespace Tests.Linq
 			[PrimaryKey] public int ID { get; set; }
 
 			[Association(ThisKey = nameof(ID), OtherKey = nameof(AssociationTests.Table4.ID3))]
-			public IEnumerable<Table4> Table4 => throw new InvalidOperationException();
+			public IEnumerable<Table4> Table4 { get; set; } = null!;
 
 			public static readonly Table3[] Data = new[]
 			{
@@ -1768,14 +1772,37 @@ namespace Tests.Linq
 			using var t3 = db.CreateLocalTable(Table3.Data);
 			using var t4 = db.CreateLocalTable(Table4.Data);
 
+			var query = t1
+				.LoadWith(r => r.Table2!.Table3!.Table4)
+				.AsQueryable();
+
+			query = query.Where(r => r.Table2!.Table3!.Table4.Select(u => u.ID).Any(id => id == r.ID));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void OptionalAssociationNonNullCorrelationWithProjection([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Table1.Data);
+			using var t2 = db.CreateLocalTable(Table2.Data);
+			using var t3 = db.CreateLocalTable(Table3.Data);
+			using var t4 = db.CreateLocalTable(Table4.Data);
+
 			var results = t1
 				.Where(r => r.Table2!.Table3!.Table4.Select(u => u.ID).Any(id => id == r.ID))
+				.Select(r => new
+					{
+						r.Table2,
+						r.Table2!.Table3,
+					} 
+				)
 				.ToList();
 
 			Assert.That(results, Has.Count.EqualTo(1));
-			Assert.That(results[0].ID, Is.EqualTo(1));
+			Assert.That(results[0].Table2!.ID, Is.EqualTo(1));
 		}
-
 		#endregion
 	}
 

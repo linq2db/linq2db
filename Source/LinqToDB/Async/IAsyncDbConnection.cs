@@ -3,7 +3,6 @@ using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB.Async
@@ -24,11 +23,6 @@ namespace LinqToDB.Async
 		/// Gets underlying connection instance.
 		/// </summary>
 		DbConnection Connection { get; }
-
-		/// <summary>
-		/// Returns cloned connection instance, if underlying provider supports cloning or null otherwise.
-		/// </summary>
-		DbConnection? TryClone();
 
 		/// <inheritdoc cref="DbConnection.ConnectionString"/>
 		string ConnectionString { get; set; }

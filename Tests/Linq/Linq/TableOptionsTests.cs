@@ -9,8 +9,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Org.BouncyCastle.Asn1.X509;
-
 namespace Tests.Linq
 {
 	[TestFixture]

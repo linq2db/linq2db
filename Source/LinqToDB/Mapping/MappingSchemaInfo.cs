@@ -206,7 +206,7 @@ namespace LinqToDB.Mapping
 		{
 			if (_dataTypes != null)
 			{
-				if (_dataTypes.TryGetValue(type.UnwrapNullableType(), out var dataType))
+				if (_dataTypes.TryGetValue(type, out var dataType))
 					return Option<SqlDataType>.Some(dataType);
 			}
 
@@ -224,8 +224,11 @@ namespace LinqToDB.Mapping
 				lock (_syncRoot)
 					_dataTypes ??= new ();
 
-			type = type.UnwrapNullableType();
 			_dataTypes[type] = dataType;
+
+			var nullableType = type.MakeNullable();
+			if (nullableType != type)
+				_dataTypes[nullableType] = new SqlDataType(dataType.Type.WithSystemType(dataType.Type.SystemType.MakeNullable()));
 
 			ResetID();
 		}

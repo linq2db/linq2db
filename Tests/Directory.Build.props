@@ -15,6 +15,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
 
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\BannedSymbols.txt" />
 	</ItemGroup>

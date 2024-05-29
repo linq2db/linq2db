@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
 	using Common;
 	using Data;
-	using LinqToDB.SqlQuery;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -25,10 +24,10 @@ namespace LinqToDB.DataProvider
 		SqlProviderFlags SqlProviderFlags      { get; }
 		TableOptions     SupportedTableOptions { get; }
 		bool             TransactionsSupported { get; }
-		void             InitContext           (IDataContext  dataContext);
-		DbConnection     CreateConnection      (string        connectionString);
+		void             InitContext           (IDataContext dataContext);
+		DbConnection     CreateConnection      (string       connectionString);
 		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema, DataOptions dataOptions);
-		ISqlOptimizer    GetSqlOptimizer       (DataOptions   dataOptions);
+		ISqlOptimizer    GetSqlOptimizer       (DataOptions  dataOptions);
 		/// <summary>
 		/// Initializes <see cref="DataConnection"/> command object.
 		/// </summary>

@@ -134,10 +134,11 @@ namespace Tests.Linq
 				Assert.Multiple(() =>
 				{
 					Assert.That(GetColumnValue(0), Is.EqualTo("[database].[schema].[table_name]"));
-					Assert.That(GetColumnValue(1), Is.EqualTo("[table_name]"));
-					Assert.That(GetColumnValue(2), Is.EqualTo("table_name"));
-					Assert.That(GetColumnValue(3), Is.EqualTo("[schema].[table_name]"));
-					Assert.That(GetColumnValue(4), Is.EqualTo("[database]..[table_name]"));
+					Assert.That(GetColumnValue(1), Is.EqualTo("[database].[schema].[table_name]"));
+					Assert.That(GetColumnValue(2), Is.EqualTo("[table_name]"));
+					Assert.That(GetColumnValue(3), Is.EqualTo("table_name"));
+					Assert.That(GetColumnValue(4), Is.EqualTo("[schema].[table_name]"));
+					Assert.That(GetColumnValue(5), Is.EqualTo("[database]..[table_name]"));
 				});
 			}
 		}
@@ -205,10 +206,11 @@ namespace Tests.Linq
 				Assert.Multiple(() =>
 				{
 					Assert.That(GetColumnValue(0), Is.EqualTo("[database].[schema].[table_name]"));
-					Assert.That(GetColumnValue(1), Is.EqualTo("[table_name]"));
-					Assert.That(GetColumnValue(2), Is.EqualTo("table_name"));
-					Assert.That(GetColumnValue(3), Is.EqualTo("[schema].[table_name]"));
-					Assert.That(GetColumnValue(4), Is.EqualTo("[database]..[table_name]"));
+					Assert.That(GetColumnValue(1), Is.EqualTo("[database].[schema].[table_name]"));
+					Assert.That(GetColumnValue(2), Is.EqualTo("[table_name]"));
+					Assert.That(GetColumnValue(3), Is.EqualTo("table_name"));
+					Assert.That(GetColumnValue(4), Is.EqualTo("[schema].[table_name]"));
+					Assert.That(GetColumnValue(5), Is.EqualTo("[database]..[table_name]"));
 				});
 			}
 		}

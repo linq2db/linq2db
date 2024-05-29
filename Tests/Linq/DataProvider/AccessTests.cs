@@ -572,6 +572,68 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public void TestParametersWrapping(
+			[IncludeDataSources(ProviderName.AccessOdbc)] string context,
+			[Values] bool hasDistinct,
+			[Values] bool hasFrom,
+			[Values] bool hasValue,
+			[Values] bool isParameter)
+		{
+			var needsWrap = hasDistinct && hasFrom
+				// should be parameter or NULL literal
+				&& (isParameter || !hasValue);
+
+			using var db = GetDataConnection(context);
+
+			int? value = hasValue ? 5 : null;
+
+			if (hasFrom)
+			{
+				var query = isParameter
+					? db.Person.Select(r => new { Value = value })
+					: hasValue
+						? db.Person.Select(r => new { Value = (int?)5 })
+						: db.Person.Select(r => new { Value = (int?)null });
+
+				if (hasDistinct)
+					query = query.Distinct();
+
+				query.ToList();
+
+				if (isParameter)
+					Assert.That(db.LastQuery, needsWrap ? Does.Contain("CVar") : Does.Not.Contain("CVar"));
+				else
+					Assert.That(db.LastQuery, needsWrap ? Does.Contain("IIF(False") : Does.Not.Contain("IIF(False"));
+			}
+			else
+			{
+				// all those should pass as we don't have FROM clause
+				if (!hasDistinct)
+				{
+					db.Select(() => new { Value = value });
+
+					Assert.That(db.LastQuery, Does.Not.Contain("CVar"));
+				}
+				else if (isParameter)
+				{
+					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT ?", new DataParameter() { Value = value }));
+					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT CVar(?)", new DataParameter() { Value = value }));
+				}
+				else if (hasValue)
+				{
+					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT 3"));
+					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT CVar(3)"));
+
+				}
+				else
+				{
+					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT NULL"));
+					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT CVar(NULL)"));
+				}
+			}
+		}
+
 		#region Issue 1906
 		public class CtqResultModel
 		{

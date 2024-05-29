@@ -37,10 +37,21 @@ namespace Tests.Samples
 				return clone;
 			}
 
+			static SqlTable? GetUpdateTable(SqlUpdateStatement updateStatement)
+			{
+				var tableToUpdate = updateStatement.Update.Table;
+
+				tableToUpdate ??= QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery)
+					.OfType<SqlTable>()
+					.FirstOrDefault();
+
+				return tableToUpdate;
+			}
+
 			static SqlTable? GetUpdateTable(SqlStatement statement)
 			{
 				if (statement is SqlUpdateStatement update)
-					return QueryHelper.GetUpdateTable(update);
+					return GetUpdateTable(update);
 
 				if (statement.SelectQuery == null)
 					return null;

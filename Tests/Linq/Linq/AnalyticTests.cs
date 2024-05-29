@@ -1,4 +1,6 @@
-﻿using Tests.Model;
+﻿using FluentAssertions;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -482,7 +484,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values(Sql.Nulls.Ignore, Sql.Nulls.None)] Sql.Nulls nulls, [Values(1, 2)]int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -491,13 +493,18 @@ namespace Tests.Linq
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						FirstValue1     = Sql.Ext.FirstValue(p.Value1, Sql.Nulls.Ignore).Over().ToValue(),
+						FirstValue1     = Sql.Ext.FirstValue(p.Value1, nulls).Over().ToValue(),
 						FirstValue2     = Sql.Ext.FirstValue(p.Value1, Sql.Nulls.None).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
-						FirstValue3     = Sql.Ext.FirstValue(p.Value1, Sql.Nulls.Respect).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						FirstValue3     = Sql.Ext.FirstValue(p.Value1, nulls).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 						FirstValue4     = Sql.Ext.FirstValue(p.Value1, Sql.Nulls.Respect).Over().OrderBy(p.Value1).ToValue(),
 						FirstValue5     = Sql.Ext.FirstValue(p.Value1, Sql.Nulls.Respect).Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
+
+				var save = q.GetCacheMissCount();
 				Assert.That(q.ToArray(), Is.Not.Empty);
+
+				if (iteration > 1)
+					q.GetCacheMissCount().Should().Be(save);
 			}
 		}
 

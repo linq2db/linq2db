@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Data;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Text;
@@ -51,7 +51,6 @@ namespace LinqToDB.DataProvider.MySql
 		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
 
 #endregion
-
 
 		public MySqlProvider ProviderType    { get; protected set; }
 		public MappingSchema MappingSchema   { get; protected set; } = null!;

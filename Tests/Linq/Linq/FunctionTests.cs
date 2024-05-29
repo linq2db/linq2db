@@ -425,6 +425,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -455,6 +456,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -644,12 +646,14 @@ namespace Tests.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				if (!(builder.GetExpression("src") is SqlField field))
-					throw new InvalidOperationException("Can not get table");
+				var srcExpr = builder.GetExpression("src");
+				if (srcExpr == null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
-				var sqlTable = (SqlTable)field.Table!;
-
-				var newField = new SqlField(sqlTable, sqlTable.TableName.Name);
+				var newField = new SqlAnchor(srcExpr, SqlAnchor.AnchorKindEnum.TableAsSelfColumn);
 
 				builder.AddParameter("table_field", newField);
 			}
