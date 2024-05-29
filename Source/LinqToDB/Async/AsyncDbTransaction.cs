@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using AsyncDisposableWrapper = LinqToDB.Tools.ActivityService.AsyncDisposableWrapper;
+
 namespace LinqToDB.Async
 {
 	using Tools;
@@ -37,7 +39,7 @@ namespace LinqToDB.Async
 
 		public virtual Task CommitAsync(CancellationToken cancellationToken)
 		{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionCommitAsync);
 
 			if (a is null)
@@ -45,7 +47,7 @@ namespace LinqToDB.Async
 
 			return CallAwaitUsing(a, Transaction, cancellationToken);
 
-			static async Task CallAwaitUsing(AsyncConfigured activity, DbTransaction transaction, CancellationToken token)
+			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DbTransaction transaction, CancellationToken token)
 			{
 				await using (activity)
 					await transaction.CommitAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -54,13 +56,13 @@ namespace LinqToDB.Async
 			using var a = ActivityService.Start(ActivityID.TransactionCommitAsync);
 
 			Transaction.Commit();
-			return TaskEx.CompletedTask;
+			return Task.CompletedTask;
 #endif
 		}
 
 		public virtual Task RollbackAsync(CancellationToken cancellationToken)
 		{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionRollbackAsync);
 
 			if (a is null)
@@ -68,7 +70,7 @@ namespace LinqToDB.Async
 
 			return CallAwaitUsing(a, Transaction, cancellationToken);
 
-			static async Task CallAwaitUsing(AsyncConfigured activity, DbTransaction transaction, CancellationToken token)
+			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DbTransaction transaction, CancellationToken token)
 			{
 				await using (activity)
 					await transaction.RollbackAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -76,8 +78,8 @@ namespace LinqToDB.Async
 #else
 			using var a = ActivityService.Start(ActivityID.TransactionRollbackAsync);
 
-			Rollback();
-			return TaskEx.CompletedTask;
+			Transaction.Rollback();
+			return Task.CompletedTask;
 #endif
 		}
 
@@ -92,15 +94,6 @@ namespace LinqToDB.Async
 		#endregion
 
 		#region IAsyncDisposable
-#if !NATIVE_ASYNC
-		public virtual Task DisposeAsync()
-		{
-			using var _ = ActivityService.Start(ActivityID.TransactionDisposeAsync);
-
-			Transaction.Dispose();
-			return TaskEx.CompletedTask;
-		}
-#else
 		public virtual ValueTask DisposeAsync()
 		{
 			if (Transaction is IAsyncDisposable asyncDisposable)
@@ -112,7 +105,7 @@ namespace LinqToDB.Async
 
 				return CallAwaitUsing(a, asyncDisposable);
 
-				static async ValueTask CallAwaitUsing(AsyncConfigured activity, IAsyncDisposable disposable)
+				static async ValueTask CallAwaitUsing(AsyncDisposableWrapper activity, IAsyncDisposable disposable)
 				{
 					await using (activity)
 						await disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -124,7 +117,6 @@ namespace LinqToDB.Async
 			Transaction.Dispose();
 			return default;
 		}
-#endif
 		#endregion
 	}
 }

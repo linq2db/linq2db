@@ -226,6 +226,10 @@ namespace LinqToDB.Mapping
 
 			_dataTypes[type] = dataType;
 
+			var nullableType = type.MakeNullable();
+			if (nullableType != type)
+				_dataTypes[nullableType] = new SqlDataType(dataType.Type.WithSystemType(dataType.Type.SystemType.MakeNullable()));
+
 			ResetID();
 		}
 
@@ -280,7 +284,7 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
-		public IEnumerable<Type> GetRegisteredTypes() => MetadataReader?.GetRegisteredTypes() ?? Array<Type>.Empty;
+		public IEnumerable<Type> GetRegisteredTypes() => MetadataReader?.GetRegisteredTypes() ?? [];
 
 		#endregion
 

@@ -62,11 +62,11 @@ namespace LinqToDB.SqlQuery
 		public bool TryGetValue(SqlParameter parameter, [NotNullWhen(true)] out SqlParameterValue? value)
 		{
 			value = null;
-			if (_valuesByParameter?.TryGetValue(parameter, out value) == false 
+			if (_valuesByParameter?.TryGetValue(parameter, out value) == false
 			    && parameter.AccessorId != null && _valuesByAccessor?.TryGetValue(parameter.AccessorId.Value, out value) == false)
 			{
 				return false;
-			}			
+			}
 
 			return value != null;
 		}

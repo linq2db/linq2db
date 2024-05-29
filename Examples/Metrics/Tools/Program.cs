@@ -5,6 +5,7 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Activity;
@@ -15,7 +16,7 @@ namespace ToolsExample
 {
 	static class Program
 	{
-		static readonly DataOptions _options = new DataOptions().UseSQLiteMicrosoft("Data Source=Northwind.MS.sqlite");
+		static readonly DataOptions _options = new DataOptions().UseSQLite("Data Source=Northwind.MS.sqlite", SQLiteProvider.Microsoft);
 
 		static void Main()
 		{

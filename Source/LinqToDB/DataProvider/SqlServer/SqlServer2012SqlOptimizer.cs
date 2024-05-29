@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
 
@@ -15,7 +16,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
+		{
+			return new SqlServer2012SqlExpressionConvertVisitor(allowModify, SQLVersion);
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			// SQL Server 2012 supports OFFSET/FETCH providing there is an ORDER BY
 			// UPDATE queries do not directly support ORDER BY, TOP, OFFSET, or FETCH, but they are supported in subqueries
@@ -38,9 +44,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (element.ElementType == QueryElementType.OrderByClause)
 				{
 					var orderByClause = (SqlOrderByClause)element;
-					if (orderByClause.OrderBy.IsEmpty && orderByClause.SelectQuery.Select.SkipValue != null)
+					// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+					if (orderByClause.SelectQuery != null && orderByClause.OrderBy.IsEmpty && orderByClause.SelectQuery.Select.SkipValue != null)
 					{
-						return new SqlOrderByClause(new[] { new SqlOrderByItem(new SqlValue(typeof(int), 1), false) });
+						return new SqlOrderByClause(new[] { new SqlOrderByItem(new SqlValue(typeof(int), 1), false, false) });
 					}
 				}
 				return element;
@@ -48,47 +55,5 @@ namespace LinqToDB.DataProvider.SqlServer
 			return statement;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func, false);
-
-			switch (func.Name)
-			{
-				case PseudoFunctions.TRY_CONVERT:
-					return new SqlFunction(func.SystemType, "TRY_CONVERT", false, true, func.Parameters[0], func.Parameters[2]) { CanBeNull = true };
-
-				case "CASE"     :
-
-					if (func.Parameters.Length <= 5)
-						func = ConvertCase(func.CanBeNull, func.SystemType, func.Parameters, 0);
-
-					break;
-			}
-
-			return base.ConvertFunction(func);
-		}
-
-		static SqlFunction ConvertCase(bool canBeNull, Type systemType, ISqlExpression[] parameters, int start)
-		{
-			var len  = parameters.Length - start;
-			var name = start == 0 ? "IIF" : "CASE";
-			var cond = parameters[start];
-
-			if (start == 0 && SqlExpression.NeedsEqual(cond))
-			{
-				cond = new SqlSearchCondition(
-					new SqlCondition(
-						false,
-						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1), null)));
-			}
-
-			if (len == 3)
-				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]) { CanBeNull = canBeNull };
-
-			return new SqlFunction(systemType, name,
-				cond,
-				parameters[start + 1],
-				ConvertCase(canBeNull, systemType, parameters, start + 2)) { CanBeNull = canBeNull };
-		}
 	}
 }

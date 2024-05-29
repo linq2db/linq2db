@@ -1,16 +1,25 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Mapping
 {
 	using Common.Internal;
 
 	/// <summary>
-	/// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(Func{IQueryable{T},IDataContext,IQueryable{T}})"/>
+	/// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(Expression{Func{T, IDataContext, bool}})"/>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 	public class QueryFilterAttribute : MappingAttribute
 	{
+		/// <summary>
+		/// Filter LambdaExpression. <code>Expression&lt;Func&lt;TEntity, IDataContext, bool&gt;&gt;</code>
+		/// <para>
+		/// For example (e, db) => e.IsDeleted == false "/>
+		/// </para>
+		/// </summary>
+		public LambdaExpression? FilterLambda { get; set; }
+
 		// we cannot use
 		// <see cref="System.Func{System.Linq.IQueryable{T},LinqToDB.IDataContext,System.Linq.IQueryable{T}}"/>
 		// as it produce compiler/documentation errors due https://github.com/dotnet/csharplang/issues/401
@@ -25,7 +34,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return IdentifierBuilder.GetObjectID(FilterFunc?.Method);
+			return FormattableString.Invariant($"{IdentifierBuilder.GetObjectID(FilterLambda)}{IdentifierBuilder.GetObjectID(FilterFunc?.Method)}");
 		}
 	}
 }

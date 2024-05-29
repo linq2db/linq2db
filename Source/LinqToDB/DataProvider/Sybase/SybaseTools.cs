@@ -1,133 +1,54 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Data;
-	using Common;
-	using Configuration;
 
 	public static class SybaseTools
 	{
-#if NETFRAMEWORK
-		static readonly Lazy<IDataProvider> _sybaseNativeDataProvider  = DataConnection.CreateDataProvider<SybaseDataProviderNative>();
-#endif
-		static readonly Lazy<IDataProvider> _sybaseManagedDataProvider = DataConnection.CreateDataProvider<SybaseDataProviderManaged>();
+		internal static SybaseProviderDetector ProviderDetector = new();
 
-		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
+		public static bool AutoDetectProvider
 		{
-			switch (options.ProviderName)
-			{
-				case SybaseProviderAdapter.ManagedClientNamespace:
-				case ProviderName.SybaseManaged                  : return _sybaseManagedDataProvider.Value;
-#if NETFRAMEWORK
-				case "Sybase.Native"                             :
-				case SybaseProviderAdapter.NativeClientNamespace :
-				case SybaseProviderAdapter.NativeAssemblyName    : return _sybaseNativeDataProvider.Value;
-#endif
-				case ""                                          :
-				case null                                        :
-					if (options.ConfigurationString?.Contains("Sybase") == true)
-						goto case ProviderName.Sybase;
-					break;
-				case ProviderName.Sybase                         :
-					if (options.ConfigurationString?.Contains("Managed") == true)
-						return _sybaseManagedDataProvider.Value;
-#if NETFRAMEWORK
-					if (options.ConfigurationString?.Contains("Native") == true)
-						return _sybaseNativeDataProvider.Value;
-#endif
-					return GetDataProvider();
-			}
-
-			return null;
+			get => ProviderDetector.AutoDetectProvider;
+			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		private static string? _detectedProviderName;
-		public  static string  DetectedProviderName =>
-			_detectedProviderName ??= DetectProviderName();
-
-		private static string DetectProviderName()
+		public static IDataProvider GetDataProvider(SybaseProvider provider = SybaseProvider.AutoDetect, string? connectionString = null)
 		{
-			var path = typeof(SybaseTools).Assembly.GetPath();
-
-			if (File.Exists(Path.Combine(path, $"{SybaseProviderAdapter.ManagedAssemblyName}.dll")))
-				return ProviderName.SybaseManaged;
-
-			return ProviderName.Sybase;
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
 		}
 
-		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
+		public static void ResolveSybase(string path, string? assemblyName = null)
 		{
-#if NETFRAMEWORK
-			if (assemblyName == SybaseProviderAdapter.NativeAssemblyName)  return _sybaseNativeDataProvider.Value;
-			if (assemblyName == SybaseProviderAdapter.ManagedAssemblyName) return _sybaseManagedDataProvider.Value;
-
-			switch (providerName)
-			{
-				case ProviderName.Sybase       : return _sybaseNativeDataProvider.Value;
-				case ProviderName.SybaseManaged: return _sybaseManagedDataProvider.Value;
-			}
-
-			if (DetectedProviderName == ProviderName.Sybase)
-				return _sybaseNativeDataProvider.Value;
-#endif
-
-			return _sybaseManagedDataProvider.Value;
-		}
-
-		public static void ResolveSybase(string path)
-		{
-			new AssemblyResolver(
-				path,
-				DetectedProviderName == ProviderName.Sybase
-					? SybaseProviderAdapter.NativeAssemblyName
-					: SybaseProviderAdapter.ManagedAssemblyName);
+			_ = new AssemblyResolver(path, assemblyName ?? SybaseProviderAdapter.ManagedAssemblyName);
 		}
 
 		public static void ResolveSybase(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName!);
+			_ = new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
+		public static DataConnection CreateDataConnection(string connectionString, SybaseProvider provider = SybaseProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(providerName), connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, SybaseProvider provider = SybaseProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(providerName), connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
 		}
 
-		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, SybaseProvider provider = SybaseProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(providerName), transaction);
-		}
-
-		#endregion
-
-		#region BulkCopy
-
-		// don't set ProviderSpecific as default type while SAP not fix incorrect bit field value
-		// insert for first record
-		/// <summary>
-		/// Using <see cref="BulkCopyType.ProviderSpecific"/> mode with bit and identity fields could lead to following errors:
-		/// - bit: <c>false</c> inserted into bit field for first record even if <c>true</c> provided;
-		/// - identity: bulk copy operation fail with exception: "Bulk insert failed. Null value is not allowed in not null column.".
-		/// Those are provider bugs and could be fixed in latest versions.
-		/// </summary>
-		[Obsolete("Use SybaseOptions.Default.BulkCopyType instead.")]
-		public static BulkCopyType DefaultBulkCopyType
-		{
-			get => SybaseOptions.Default.BulkCopyType;
-			set => SybaseOptions.Default = SybaseOptions.Default with { BulkCopyType = value };
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
 		}
 
 		#endregion
+
 	}
 }

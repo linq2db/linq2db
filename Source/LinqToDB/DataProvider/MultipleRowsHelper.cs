@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Data;
 	using Extensions;
 	using Mapping;
@@ -41,9 +42,10 @@ namespace LinqToDB.DataProvider
 			Columns         = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.BulkCopyOptions.KeepIdentity == true)
 				.ToArray();
-			ColumnTypes     = Columns.Select(c => new SqlDataType(c)).ToArray();
-			ParameterName   = "p";
-			BatchSize       = Math.Max(10, Options.BulkCopyOptions.MaxBatchSize ?? 1000);
+			//TODO: check how to remove SqlDataType here
+			ColumnTypes   = Columns.Select(c => new SqlDataType(c).Type).ToArray();
+			ParameterName = "p";
+			BatchSize     = Math.Max(10, Options.BulkCopyOptions.MaxBatchSize ?? 1000);
 		}
 
 		public readonly ISqlBuilder         SqlBuilder;
@@ -53,7 +55,7 @@ namespace LinqToDB.DataProvider
 		public readonly DataOptions         Options;
 		public readonly EntityDescriptor    Descriptor;
 		public readonly ColumnDescriptor[]  Columns;
-		public readonly SqlDataType[]       ColumnTypes;
+		public readonly DbDataType[]        ColumnTypes;
 		public          string?             TableName;
 		public readonly string              ParameterName;
 
@@ -132,7 +134,7 @@ namespace LinqToDB.DataProvider
 			StringBuilder.Length--;
 		}
 
-		private void AddValueCasted(string sql, SqlDataType type)
+		private void AddValueCasted(string sql, DbDataType type)
 		{
 			StringBuilder.Append("CAST(");
 			StringBuilder.Append(sql);

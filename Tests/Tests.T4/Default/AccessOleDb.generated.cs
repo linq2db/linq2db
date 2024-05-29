@@ -65,6 +65,13 @@ namespace Default.Access.OleDb
 			InitMappingSchema();
 		}
 
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 	}

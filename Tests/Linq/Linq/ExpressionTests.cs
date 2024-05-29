@@ -3,6 +3,7 @@ using System.Linq;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -83,8 +84,8 @@ namespace Tests.Linq
 			using (var db = (DataConnection)GetDataContext(context))
 			using (db.CreateLocalTable<ExpressionTestClass>())
 			{
-				Assert.Throws<InvalidOperationException>(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())));
-				Assert.Throws<InvalidOperationException>(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())));
+				Assert.Throws<LinqException>(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())));
+				Assert.Throws<LinqException>(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())));
 			}
 		}
 

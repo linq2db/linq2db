@@ -2,7 +2,7 @@ ECHO OFF
 
 SET VERSION=%1
 SET SNUPKG=%2
-IF [%1] EQU [] (SET VERSION=3.0.0-local1)
+IF [%1] EQU [] (SET VERSION=6.0.0-local.1)
 IF [%2] EQU [] (SET SNUPKG=)
 
 WHERE nuget.exe >nul 2>&1
@@ -16,5 +16,5 @@ cd ..
 call Build.cmd
 cd NuGet
 
-powershell ..\Build\BuildNuspecs.ps1 -path *.nuspec -buildPath ..\BuiltNuGet -version %VERSION%
+powershell ..\Build\BuildNuspecs.ps1 -path *.nuspec -buildPath ..\.build\nuspecs -version %VERSION%
 call Pack.cmd %SNUPKG%

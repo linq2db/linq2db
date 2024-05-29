@@ -13,7 +13,17 @@ namespace LinqToDB.Tools
 			}
 			catch (Exception ex)
 			{
-				Console.Error.WriteLine($"Unhandled exception: {ex.Message}{Environment.NewLine}{ex.StackTrace}");
+				Console.Error.WriteLine($"Unhandled exception: {ex.Message}");
+
+				var iex = ex.InnerException;
+				while (iex != null)
+				{
+					Console.Error.WriteLine($"\t{iex.Message}");
+					iex = iex.InnerException;
+				}
+
+				Console.Error.WriteLine($"{ex.StackTrace}");
+				
 				return StatusCodes.INTERNAL_ERROR;
 			}
 		}

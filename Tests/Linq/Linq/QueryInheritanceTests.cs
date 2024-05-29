@@ -27,9 +27,24 @@ namespace Tests.Linq
 
 			var connection = (DataConnection) dataContext;
 
-			var sqlBuilder = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema, connection.Options);
-			var sb         = new StringBuilder();
-			sqlBuilder.BuildSql(0, query, sb, new OptimizationContext(new EvaluationContext(), new AliasesContext(), false, connection.DataProvider.GetQueryParameterNormalizer));
+			var sqlBuilder   = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema, connection.Options);
+			var sqlOptimizer = connection.DataProvider.GetSqlOptimizer(dataContext.Options);
+			var sb           = new StringBuilder();
+
+			sqlBuilder.BuildSql(0, query, sb,
+				new OptimizationContext(
+					evaluationContext : new EvaluationContext(),
+					dataOptions : dataContext.Options,
+					sqlProviderFlags : dataContext.SqlProviderFlags,
+					mappingSchema : dataContext.MappingSchema,
+					optimizerVisitor : sqlOptimizer.CreateOptimizerVisitor(false),
+					convertVisitor : sqlOptimizer.CreateConvertVisitor(false),
+					isParameterOrderDepended : false,
+					isAlreadyOptimizedAndConverted : false,
+					parametersNormalizerFactory : connection.DataProvider.GetQueryParameterNormalizer
+				),
+				aliases: new AliasesContext()
+			);
 
 			return connection.Query<T>(sb.ToString());
 		}
@@ -198,9 +213,8 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				Assert.AreEqual(
-					dd.DiscontinuedProduct.FirstOrDefault()!.ProductID,
-					QueryTable<Northwind.DiscontinuedProduct>(db).Where(p => p.Discontinued).FirstOrDefault()!.ProductID);
+				Assert.That(
+					QueryTable<Northwind.DiscontinuedProduct>(db).Where(p => p.Discontinued).FirstOrDefault()!.ProductID, Is.EqualTo(dd.DiscontinuedProduct.FirstOrDefault()!.ProductID));
 			}
 		}
 
@@ -242,7 +256,7 @@ namespace Tests.Linq
 		public void SimpleTest()
 		{
 			using (var db = new DataConnection())
-				Assert.AreEqual(1, QueryTable<PersonEx>(db).Where(_ => _.FirstName == "John").Select(_ => _.ID).Single());
+				Assert.That(QueryTable<PersonEx>(db).Where(_ => _.FirstName == "John").Select(_ => _.ID).Single(), Is.EqualTo(1));
 		}
 
 		[Test]
@@ -255,9 +269,9 @@ namespace Tests.Linq
 
 				var list = result.ToList();
 
-				Assert.Greater(list.Count, 0);
-				Assert.AreEqual(expected.Count(), list.Count);
-				Assert.IsTrue(list.Except(expected).Count() == 0);
+				Assert.That(list, Is.Not.Empty);
+				Assert.That(list, Has.Count.EqualTo(expected.Count()));
+				Assert.That(list.Except(expected).Count(), Is.EqualTo(0));
 			}
 		}
 

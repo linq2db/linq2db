@@ -2,7 +2,7 @@
   "solution": {
     "path": "linq2db.sln",
     "projects": [
-      "Source\\LinqToDB.AspNet\\LinqToDB.AspNet.csproj",
+      "Source\\LinqToDB.Extensions\\LinqToDB.Extensions.csproj",
       "Source\\LinqToDB.Remote.Grpc\\LinqToDB.Remote.Grpc.csproj",
       "Source\\LinqToDB.Remote.Wcf\\LinqToDB.Remote.Wcf.csproj",
       "Source\\LinqToDB.Tools\\LinqToDB.Tools.csproj",

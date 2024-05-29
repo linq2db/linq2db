@@ -29,29 +29,35 @@ namespace Tests.Tools.EntityServices
 				var p2 = db.Person.First(p => p.ID == 1);
 				var p3 = db.Person.First(p => p.ID == 2);
 
-				Assert.AreSame(p1, p2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(p2, Is.SameAs(p1));
 
-				Assert.That(
-					map.GetEntityEntries<Person>().Select(ee => new { ee.Entity, StoreCount = ee.DBCount, ee.CacheCount }),
-					Is.EquivalentTo(new[]
-					{
+					Assert.That(
+						map.GetEntityEntries<Person>().Select(ee => new { ee.Entity, StoreCount = ee.DBCount, ee.CacheCount }),
+						Is.EquivalentTo(new[]
+						{
 						new { Entity = p1, StoreCount = 2, CacheCount = 0 },
 						new { Entity = p3, StoreCount = 1, CacheCount = 0 },
-					}));
+						}));
+				});
 
 				var c1 = db.Child.First(p => p.ParentID == 1 && p.ChildID == 11);
 				var c2 = db.Child.First(p => p.ParentID == 1 && p.ChildID == 11);
 				var c3 = db.Child.First(p => p.ParentID == 2 && p.ChildID == 21);
 
-				Assert.AreSame(c1, c2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(c2, Is.SameAs(c1));
 
-				Assert.That(
-					map.GetEntityMap<Child>().Entities?.Select(ee => new { ee.Value.Entity, StoreCount = ee.Value.DBCount, ee.Value.CacheCount }),
-					Is.EquivalentTo(new[]
-					{
+					Assert.That(
+						map.GetEntityMap<Child>().Entities?.Select(ee => new { ee.Value.Entity, StoreCount = ee.Value.DBCount, ee.Value.CacheCount }),
+						Is.EquivalentTo(new[]
+						{
 						new { Entity = c1, StoreCount = 2, CacheCount = 0 },
 						new { Entity = c3, StoreCount = 1, CacheCount = 0 },
-					}));
+						}));
+				});
 			}
 		}
 
@@ -65,8 +71,11 @@ namespace Tests.Tools.EntityServices
 				var p2 = map.GetEntity<Person>(1);
 				var p3 = map.GetEntity<Person>(new { ID = 1 });
 
-				Assert.AreSame(p1, p2);
-				Assert.AreSame(p1, p3);
+				Assert.Multiple(() =>
+				{
+					Assert.That(p2, Is.SameAs(p1));
+					Assert.That(p3, Is.SameAs(p1));
+				});
 
 				var p4 = map.GetEntity<Person>(2)!;
 				var p5 = map.GetEntity<Person>(new { ID = 3L })!;
@@ -112,7 +121,7 @@ namespace Tests.Tools.EntityServices
 			var result1 = await query(db, default);
 			var result2 = await query(db, default);
 
-			Assert.AreSame(result1[0], result2[0]);
+			Assert.That(result1[0], Is.SameAs(result2[0]));
 		}
 	}
 }

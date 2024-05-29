@@ -21,7 +21,7 @@ using LinqToDB.Mapping;
 
 namespace SybaseDataContext
 {
-	public partial class TestDataDB : LinqToDB.Data.DataConnection
+	public partial class TestDataCoreDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
@@ -42,27 +42,27 @@ namespace SybaseDataContext
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestMergeIdentity> TestMergeIdentities { get { return this.GetTable<TestMergeIdentity>(); } }
 
-		public TestDataDB()
+		public TestDataCoreDB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestDataDB(string configuration)
+		public TestDataCoreDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestDataDB(DataOptions options)
+		public TestDataCoreDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestDataDB(DataOptions<TestDataDB> options)
+		public TestDataCoreDB(DataOptions<TestDataCoreDB> options)
 			: base(options.Options)
 		{
 			InitDataContext();
@@ -358,7 +358,7 @@ namespace SybaseDataContext
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this TestDataDB dataConnection, out int? returnValue)
+		public static int AddIssue792Record(this TestDataCoreDB dataConnection, out int? returnValue)
 		{
 			var parameters = new []
 			{
@@ -380,7 +380,7 @@ namespace SybaseDataContext
 
 		#region PersonSelectAll
 
-		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataDB dataConnection, out int? returnValue)
+		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataCoreDB dataConnection, out int? returnValue)
 		{
 			var parameters = new []
 			{

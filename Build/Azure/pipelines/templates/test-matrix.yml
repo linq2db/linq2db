@@ -39,20 +39,19 @@ parameters:
 # - x86             (true/false string, optional) : windows-only, install dotnet sdk x86
 # - is_experimental (true/false string, required) : experimental pipeline switch, when true - testrun enabled only for experimental pipeline,
 #                                                   when false - only for test-all/default pipelines
-                    #                               switch used to debug testruns without running other testruns
+#                                                   switch used to debug testruns without running other testruns
 # - enabled (true/false string, required)         : enables/disables test matrix entry completely for current run
 
 
 # OPERATION SYSTEM SELECTORS
 # - enable_os_windows  (true/false string) : enables testrun for windows 2022 image (windows-2022)
 # - enable_os_ubuntu   (true/false string) : enables testrun for Ubuntu 22.04 image (ubuntu-22.04)
-# - enable_os_macos    (true/false string) : enables testrun for Mac OS image (macOS-10.15)
+# - enable_os_macos    (true/false string) : enables testrun for Mac OS image (macOS-13)
 
 # TARGET FRAMEWORK SELECTORS
-# - enable_fw_net472    (true/false string) : enables testrun against .net framework 4.7.2
-# - enable_fw_netcore31 (true/false string) : enables testrun against .net core 3.1
-# - enable_fw_net60     (true/false string) : enables testrun against .net 6.0
-# - enable_fw_net70     (true/false string) : enables testrun against .net 7.0
+# - enable_fw_netfx    (true/false string) : enables testrun against .net framework 4.6.2
+# - enable_fw_net60    (true/false string) : enables testrun against .net 6.0
+# - enable_fw_net80    (true/false string) : enables testrun against .net 8.0
 
 # TEST CONFIG SELECTOR
 # - config_win   (string) : contains name of test config json file for windows runs (without extension)
@@ -92,12 +91,11 @@ jobs:
           config_linux: sqlite
           config_macos: sqlite
           enable_os_windows: true
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false
-          enable_fw_net70: true
+          enable_os_ubuntu: false # netfx-only
+          enable_os_macos: false # netfx-only
+          enable_fw_netfx: true
+          enable_fw_net60: false # see SQLite_2
+          enable_fw_net80: false # see SQLite_2
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -112,10 +110,9 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
+          enable_fw_netfx: false # see SQLite_2
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -128,12 +125,11 @@ jobs:
           config_linux: sqlite.extras
           config_macos: sqlite.extras
           enable_os_windows: true
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false
-          enable_fw_net70: true
+          enable_os_ubuntu: false  # netfx-only
+          enable_os_macos: false  # netfx-only
+          enable_fw_netfx: true
+          enable_fw_net60: false # see SQLiteExtras_2
+          enable_fw_net80: false # see SQLiteExtras_2
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -148,10 +144,9 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false # reduce test time
+          enable_fw_netfx: false # see SQLiteExtras_1
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -165,10 +160,9 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false
-          enable_fw_net70: true
+          enable_fw_netfx: true
+          enable_fw_net60: false # see Access_MDB_2
+          enable_fw_net80: false # see Access_MDB_3
           is_experimental: false
           x86: true
           extra: --arch x86
@@ -183,10 +177,26 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_net472: false
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
+          enable_fw_netfx: false # see Access_MDB_1
+          enable_fw_net60: true
+          enable_fw_net80: false # see Access_MDB_3
+          is_experimental: false
+          x86: true
+          extra: --arch x86
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+            enabled: false
+
+        - name: Access_MDB_3
+          title: Access MDB (Jet/ODBC)
+          config_win: access.mdb
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: false # see Access_MDB_1
+          enable_fw_net60: false # see Access_MDB_2
+          enable_fw_net80: true
           is_experimental: false
           x86: true
           extra: --arch x86
@@ -202,10 +212,9 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false
-          enable_fw_net70: true
+          enable_fw_netfx: true
+          enable_fw_net60: false # see Access_ACE_2
+          enable_fw_net80: false # see Access_ACE_3
           is_experimental: false
           x86: true
           extra: --arch x86
@@ -221,10 +230,27 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_net472: false
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
+          enable_fw_netfx: false # see Access_ACE_1
+          enable_fw_net60: true
+          enable_fw_net80: false # see Access_ACE_3
+          is_experimental: false
+          x86: true
+          extra: --arch x86
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+            enabled: false
+
+        - name: Access_ACE_3
+          title: Access ACE (OLEDB/ODBC) x86
+          config_win: access.ace
+          psscript_win_global: access.ace.ps1
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: false # see Access_ACE_1
+          enable_fw_net60: false # see Access_ACE_2
+          enable_fw_net80: true
           is_experimental: false
           x86: true
           extra: --arch x86
@@ -240,10 +266,9 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
+          enable_fw_netfx: true
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           extra: --arch x64
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
@@ -259,10 +284,9 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
+          enable_fw_netfx: true
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]')) }}:
             enabled: true
@@ -272,38 +296,36 @@ jobs:
 # MySql/MariaDB
         - name: MySQL
           title: MySQL 8 (both providers)
-          config_linux: mysql
-          config_macos: mysql
-          script_linux_global: mysql.sh
-          script_macos_global: mac.mysql.sh
+          config_linux: mysql80
+          config_macos: mysql80
+          script_linux_global: mysql80.sh
+          script_macos_global: mac.mysql80.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
             enabled: false
 
-        - name: MySQL55
-          title: MySQL 5.5 (both providers)
-          config_linux: mysql55
-          config_macos: mysql55
-          script_linux_global: mysql55.sh
-          script_macos_global: mac.mysql55.sh
+        - name: MySQL57
+          title: MySQL 5.7 (both providers)
+          config_linux: mysql57
+          config_macos: mysql57
+          script_linux_global: mysql57.sh
+          script_macos_global: mac.mysql57.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
@@ -311,20 +333,18 @@ jobs:
             enabled: false
 
         - name: MariaDB
-          title: MariaDB
-          config_win: mariadb
-          config_linux: mariadb
-          config_macos: mariadb
-          script_linux_global: mariadb.sh
-          script_macos_global: mac.mariadb.sh
+          title: MariaDB 11
+          config_linux: mariadb11
+          config_macos: mariadb11
+          script_linux_global: mariadb11.sh
+          script_macos_global: mac.mariadb11.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
@@ -342,10 +362,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -362,10 +381,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -382,10 +400,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -402,10 +419,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -422,10 +438,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -442,10 +457,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -453,136 +467,64 @@ jobs:
             enabled: false
 
 # SQL Server
-        - name: SqlServer2005_1
+        - name: SqlServer2005
           title: SQL Server 2005
           config_win: sqlserver.2005
           script_win_global: sqlserver.2005.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false
-          enable_fw_net70: true
+          enable_fw_netfx: true
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2005_2
-          title: SQL Server 2005
-          config_win: sqlserver.2005
-          script_win_global: sqlserver.2005.cmd
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: false
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
-        - name: SqlServer2008_1
+        - name: SqlServer2008
           title: SQL Server 2008
           config_win: sqlserver.2008
           script_win_global: sqlserver.2008.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false
-          enable_fw_net70: true
+          enable_fw_netfx: true
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2008_2
-          title: SQL Server 2008
-          config_win: sqlserver.2008
-          script_win_global: sqlserver.2008.cmd
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: false
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
-        - name: SqlServer2012_1
+        - name: SqlServer2012
           title: SQL Server 2012
           config_win: sqlserver.2012
           script_win_global: sqlserver.2012.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false
-          enable_fw_net70: true
+          enable_fw_netfx: true
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2012_2
-          title: SQL Server 2012
-          config_win: sqlserver.2012
-          script_win_global: sqlserver.2012.cmd
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: false
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
-        - name: SqlServer2014_1
+        - name: SqlServer2014
           title: SQL Server 2014
           config_win: sqlserver.2014
           script_win_global: sqlserver.2014.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
-        - name: SqlServer2014_2
-          title: SQL Server 2014
-          config_win: sqlserver.2014
-          script_win_global: sqlserver.2014.cmd
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: false
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
+          enable_fw_netfx: true
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -596,10 +538,9 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
+          enable_fw_netfx: true
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -618,32 +559,9 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false
-          enable_fw_net70: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
-        - name: SqlServer2017_2
-          title: SQL Server 2017
-          config_win: sqlserver.2017
-          config_linux: sqlserver.2017
-          config_macos: sqlserver.2017
-          script_win_global: sqlserver.2017.cmd
-          script_linux_global: sqlserver.2017.sh
-          script_macos_global: sqlserver.2017.sh
-          install_docker_macos: true
-          enable_os_windows: true
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
+          enable_fw_netfx: true
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -660,12 +578,11 @@ jobs:
           script_macos_global: sqlserver.2019.sh
           install_docker_macos: true
           enable_os_windows: true
-          enable_os_ubuntu: true
-          enable_os_macos:  true
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false
-          enable_fw_net70: true
+          enable_os_ubuntu: false # netfx-only
+          enable_os_macos:  false # netfx-only
+          enable_fw_netfx: true
+          enable_fw_net60: false # see SqlServer2019_2
+          enable_fw_net80: false # see SqlServer2019_3
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
@@ -684,10 +601,30 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: true
           enable_os_macos:  true
-          enable_fw_net472: false
-          enable_fw_netcore31: false # reduce test time
+          enable_fw_netfx: false # see SqlServer2019_1
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: false # see SqlServer2019_3
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
+            enabled: false
+
+        - name: SqlServer2019_3
+          title: SQL Server 2019
+          config_win: sqlserver.2019
+          config_linux: sqlserver.fts.2019
+          config_macos: sqlserver.fts.2019
+          script_win_global: sqlserver.2019.cmd
+          script_linux_global: sqlserver.2019.sh
+          script_macos_global: sqlserver.2019.sh
+          install_docker_macos: true
+          enable_os_windows: true
+          enable_os_ubuntu: true
+          enable_os_macos:  true
+          enable_fw_netfx: false # see SqlServer2019_1
+          enable_fw_net60: false # see SqlServer2019_2
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
@@ -698,15 +635,18 @@ jobs:
         - name: SqlServer2019Extras_1
           title: SQL Server EXTRAS
           config_win: sqlserver.extras
+          config_linux: sqlserver.extras
+          config_macos: sqlserver.extras
           script_win_global: sqlserver.extras.cmd
+          script_linux_global: sqlserver.extras.sh
+          script_macos_global: sqlserver.extras.sh
           install_docker_macos: true
           enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos:  false
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false
-          enable_fw_net70: true
+          enable_os_ubuntu: false # netfx-only
+          enable_os_macos:  false # netfx-only
+          enable_fw_netfx: true
+          enable_fw_net60: false # see SqlServer2019Extras_2
+          enable_fw_net80: false # see SqlServer2019Extras_3
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
@@ -716,15 +656,39 @@ jobs:
         - name: SqlServer2019Extras_2
           title: SQL Server EXTRAS
           config_win: sqlserver.extras
+          config_linux: sqlserver.extras
+          config_macos: sqlserver.extras
           script_win_global: sqlserver.extras.cmd
+          script_linux_global: sqlserver.extras.sh
+          script_macos_global: sqlserver.extras.sh
           install_docker_macos: true
           enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos:  false
-          enable_fw_net472: false
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
+          enable_os_ubuntu: true
+          enable_os_macos:  true
+          enable_fw_netfx: false # see SqlServer2019Extras_1
+          enable_fw_net60: true
+          enable_fw_net80: false # see SqlServer2019Extras_3
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
+            enabled: false
+
+        - name: SqlServer2019Extras_3
+          title: SQL Server EXTRAS
+          config_win: sqlserver.extras
+          config_linux: sqlserver.extras
+          config_macos: sqlserver.extras
+          script_win_global: sqlserver.extras.cmd
+          script_linux_global: sqlserver.extras.sh
+          script_macos_global: sqlserver.extras.sh
+          install_docker_macos: true
+          enable_os_windows: true
+          enable_os_ubuntu: true
+          enable_os_macos:  true
+          enable_fw_netfx: false # see SqlServer2019Extras_1
+          enable_fw_net60: false # see SqlServer2019Extras_2
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
@@ -743,10 +707,9 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: true
           enable_os_macos:  true
-          enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
+          enable_fw_netfx: true
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if and(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2022]')), not(contains(parameters.db_filter, '[metrics]'))) }}:
             enabled: true
@@ -766,9 +729,8 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos:  true
           enable_fw_net472: true
-          enable_fw_netcore31: false # reduce test time
-          enable_fw_net60: false # reduce test time
-          enable_fw_net70: true
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if contains(parameters.db_filter, '[metrics]') }}:
             enabled: true
@@ -786,10 +748,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]')) }}:
             enabled: true
@@ -807,10 +768,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
@@ -827,10 +787,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
@@ -847,10 +806,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
@@ -867,10 +825,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
@@ -887,10 +844,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
-          enable_fw_net60: false
-          enable_fw_net70: true
+          enable_fw_netfx: false
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
@@ -907,10 +863,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
@@ -928,10 +883,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
@@ -948,10 +902,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
@@ -968,10 +921,28 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
+            enabled: false
+
+        - name: Firebird5
+          title: Firebird 5.0
+          config_linux: firebird5
+          config_macos: firebird5
+          script_linux_global: firebird5.sh
+          script_macos_global: firebird5.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
@@ -991,10 +962,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]')) }}:
             enabled: true
@@ -1014,10 +984,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
@@ -1035,10 +1004,9 @@ jobs:
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: false # start takes 'forever'
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
           is_experimental: false
           docker_login: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
@@ -1047,20 +1015,57 @@ jobs:
             enabled: false
 
 # ClickHouse
-        - name: ClickHouse
-          title: ClickHouse
-          config_linux: clickhouse
-          config_macos: clickhouse
+        - name: ClickHouse Client
+          title: ClickHouse Client
+          config_linux: clickhouse.client
+          config_macos: clickhouse.client
           script_linux_global: clickhouse.sh
           script_macos_global: clickhouse.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_net472: false
-          enable_fw_netcore31: false
+          enable_fw_netfx: false
           enable_fw_net60: true
-          enable_fw_net70: true
+          enable_fw_net80: true
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
+            enabled: false
+
+        - name: ClickHouse MySql
+          title: ClickHouse MySql
+          config_linux: clickhouse.mysql
+          config_macos: clickhouse.mysql
+          script_linux_global: clickhouse.sh
+          script_macos_global: clickhouse.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net60: true
+          enable_fw_net80: true
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
+            enabled: false
+
+        - name: ClickHouse Octonica
+          title: ClickHouse Octonica
+          config_linux: clickhouse.octonica
+          config_macos: clickhouse.octonica
+          script_linux_global: clickhouse.sh
+          script_macos_global: clickhouse.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net60: true
+          enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
             enabled: true

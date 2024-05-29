@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -28,35 +29,38 @@ namespace Tests.xUpdate
 
 				AssertRowCount(4, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
-				Assert.AreEqual(1, result[0].Id);
-				Assert.IsNull(result[0].Field1);
-				Assert.AreEqual(3, result[0].Field2);
-				Assert.IsNull(result[0].Field3);
-				Assert.IsNull(result[0].Field4);
-				Assert.IsNull(result[0].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Id, Is.EqualTo(1));
+					Assert.That(result[0].Field1, Is.Null);
+					Assert.That(result[0].Field2, Is.EqualTo(3));
+					Assert.That(result[0].Field3, Is.Null);
+					Assert.That(result[0].Field4, Is.Null);
+					Assert.That(result[0].Field5, Is.Null);
 
-				Assert.AreEqual(2, result[1].Id);
-				Assert.IsNull(result[1].Field1);
-				Assert.AreEqual(3, result[1].Field2);
-				Assert.IsNull(result[1].Field3);
-				Assert.IsNull(result[1].Field4);
-				Assert.IsNull(result[1].Field5);
+					Assert.That(result[1].Id, Is.EqualTo(2));
+					Assert.That(result[1].Field1, Is.Null);
+					Assert.That(result[1].Field2, Is.EqualTo(3));
+					Assert.That(result[1].Field3, Is.Null);
+					Assert.That(result[1].Field4, Is.Null);
+					Assert.That(result[1].Field5, Is.Null);
 
-				Assert.AreEqual(3, result[2].Id);
-				Assert.IsNull(result[2].Field1);
-				Assert.AreEqual(3, result[2].Field2);
-				Assert.IsNull(result[2].Field3);
-				Assert.AreEqual(203, result[2].Field4);
-				Assert.IsNull(result[2].Field5);
+					Assert.That(result[2].Id, Is.EqualTo(3));
+					Assert.That(result[2].Field1, Is.Null);
+					Assert.That(result[2].Field2, Is.EqualTo(3));
+					Assert.That(result[2].Field3, Is.Null);
+					Assert.That(result[2].Field4, Is.EqualTo(203));
+					Assert.That(result[2].Field5, Is.Null);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.IsNull(result[3].Field1);
-				Assert.AreEqual(3, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.IsNull(result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.Null);
+					Assert.That(result[3].Field2, Is.EqualTo(3));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.Null);
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
@@ -87,41 +91,44 @@ namespace Tests.xUpdate
 
 				AssertRowCount(4, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
-				Assert.AreEqual(1, result[0].Id);
-				Assert.IsNull(result[0].Field1);
-				Assert.AreEqual(3, result[0].Field2);
-				Assert.IsNull(result[0].Field3);
-				Assert.IsNull(result[0].Field4);
-				Assert.IsNull(result[0].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Id, Is.EqualTo(1));
+					Assert.That(result[0].Field1, Is.Null);
+					Assert.That(result[0].Field2, Is.EqualTo(3));
+					Assert.That(result[0].Field3, Is.Null);
+					Assert.That(result[0].Field4, Is.Null);
+					Assert.That(result[0].Field5, Is.Null);
 
-				Assert.AreEqual(2, result[1].Id);
-				Assert.IsNull(result[1].Field1);
-				Assert.AreEqual(3, result[1].Field2);
-				Assert.IsNull(result[1].Field3);
-				Assert.IsNull(result[1].Field4);
-				Assert.IsNull(result[1].Field5);
+					Assert.That(result[1].Id, Is.EqualTo(2));
+					Assert.That(result[1].Field1, Is.Null);
+					Assert.That(result[1].Field2, Is.EqualTo(3));
+					Assert.That(result[1].Field3, Is.Null);
+					Assert.That(result[1].Field4, Is.Null);
+					Assert.That(result[1].Field5, Is.Null);
 
-				Assert.AreEqual(3, result[2].Id);
-				Assert.IsNull(result[2].Field1);
-				Assert.AreEqual(3, result[2].Field2);
-				Assert.IsNull(result[2].Field3);
-				Assert.AreEqual(203, result[2].Field4);
-				Assert.IsNull(result[2].Field5);
+					Assert.That(result[2].Id, Is.EqualTo(3));
+					Assert.That(result[2].Field1, Is.Null);
+					Assert.That(result[2].Field2, Is.EqualTo(3));
+					Assert.That(result[2].Field3, Is.Null);
+					Assert.That(result[2].Field4, Is.EqualTo(203));
+					Assert.That(result[2].Field5, Is.Null);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.IsNull(result[3].Field1);
-				Assert.AreEqual(3, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.IsNull(result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.Null);
+					Assert.That(result[3].Field2, Is.EqualTo(3));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.Null);
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
 		[Test]
 		public void SameSourceUpdateWithPredicate([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -141,18 +148,21 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.AreEqual(5, result[3].Field1);
-				Assert.AreEqual(7, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.IsNull(result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.EqualTo(5));
+					Assert.That(result[3].Field2, Is.EqualTo(7));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.Null);
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
@@ -160,7 +170,7 @@ namespace Tests.xUpdate
 		// Firebird: update of match key leads to incorrect update
 		[Test]
 		public void SameSourceUpdateWithUpdate([MergeDataContextSource(
-			TestProvName.AllOracle, ProviderName.Firebird)]
+			TestProvName.AllOracle, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -188,24 +198,27 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 
-				Assert.AreEqual(6, result[2].Id);
-				Assert.IsNull(result[2].Field1);
-				Assert.AreEqual(6, result[2].Field2);
-				Assert.IsNull(result[2].Field3);
-				Assert.IsNull(result[2].Field4);
-				Assert.IsNull(result[2].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[2].Id, Is.EqualTo(6));
+					Assert.That(result[2].Field1, Is.Null);
+					Assert.That(result[2].Field2, Is.EqualTo(6));
+					Assert.That(result[2].Field3, Is.Null);
+					Assert.That(result[2].Field4, Is.Null);
+					Assert.That(result[2].Field5, Is.Null);
 
-				Assert.AreEqual(8, result[3].Id);
-				Assert.AreEqual(10, result[3].Field1);
-				Assert.AreEqual(13, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.IsNull(result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+					Assert.That(result[3].Id, Is.EqualTo(8));
+					Assert.That(result[3].Field1, Is.EqualTo(10));
+					Assert.That(result[3].Field2, Is.EqualTo(13));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.Null);
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
@@ -236,24 +249,27 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 
-				Assert.AreEqual(3, result[2].Id);
-				Assert.IsNull(result[2].Field1);
-				Assert.AreEqual(6, result[2].Field2);
-				Assert.IsNull(result[2].Field3);
-				Assert.IsNull(result[2].Field4);
-				Assert.IsNull(result[2].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[2].Id, Is.EqualTo(3));
+					Assert.That(result[2].Field1, Is.Null);
+					Assert.That(result[2].Field2, Is.EqualTo(6));
+					Assert.That(result[2].Field3, Is.Null);
+					Assert.That(result[2].Field4, Is.Null);
+					Assert.That(result[2].Field5, Is.Null);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.AreEqual(10, result[3].Field1);
-				Assert.AreEqual(13, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.IsNull(result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.EqualTo(10));
+					Assert.That(result[3].Field2, Is.EqualTo(13));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.Null);
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
@@ -287,24 +303,27 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 
-				Assert.AreEqual(3, result[2].Id);
-				Assert.IsNull(result[2].Field1);
-				Assert.AreEqual(10, result[2].Field2);
-				Assert.IsNull(result[2].Field3);
-				Assert.IsNull(result[2].Field4);
-				Assert.IsNull(result[2].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[2].Id, Is.EqualTo(3));
+					Assert.That(result[2].Field1, Is.Null);
+					Assert.That(result[2].Field2, Is.EqualTo(10));
+					Assert.That(result[2].Field3, Is.Null);
+					Assert.That(result[2].Field4, Is.Null);
+					Assert.That(result[2].Field5, Is.Null);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.AreEqual(10, result[3].Field1);
-				Assert.AreEqual(10, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.IsNull(result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.EqualTo(10));
+					Assert.That(result[3].Field2, Is.EqualTo(10));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.Null);
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
@@ -331,30 +350,33 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 
-				Assert.AreEqual(3, result[2].Id);
-				Assert.IsNull(result[2].Field1);
-				Assert.AreEqual(3, result[2].Field2);
-				Assert.IsNull(result[2].Field3);
-				Assert.AreEqual(203, result[2].Field4);
-				Assert.IsNull(result[2].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[2].Id, Is.EqualTo(3));
+					Assert.That(result[2].Field1, Is.Null);
+					Assert.That(result[2].Field2, Is.EqualTo(3));
+					Assert.That(result[2].Field3, Is.Null);
+					Assert.That(result[2].Field4, Is.EqualTo(203));
+					Assert.That(result[2].Field5, Is.Null);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.AreEqual(10, result[3].Field1);
-				Assert.AreEqual(6, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.IsNull(result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.EqualTo(10));
+					Assert.That(result[3].Field2, Is.EqualTo(6));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.Null);
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
 		[Test]
 		public void SameSourceUpdateWithPredicateAndUpdate([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -383,17 +405,20 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 
-				Assert.AreEqual(3, result[2].Id);
-				Assert.IsNull(result[2].Field1);
-				Assert.IsNull(result[2].Field2);
-				Assert.IsNull(result[2].Field3);
-				Assert.AreEqual(206, result[2].Field4);
-				Assert.IsNull(result[2].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[2].Id, Is.EqualTo(3));
+					Assert.That(result[2].Field1, Is.Null);
+					Assert.That(result[2].Field2, Is.Null);
+					Assert.That(result[2].Field3, Is.Null);
+					Assert.That(result[2].Field4, Is.EqualTo(206));
+					Assert.That(result[2].Field5, Is.Null);
+				});
 
 				AssertRow(InitialTargetData[3], result[3], null, null);
 			}
@@ -401,7 +426,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithPredicatePartialSourceProjection_UnknownFieldInCondition([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -423,8 +448,8 @@ namespace Tests.xUpdate
 						})
 					.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -455,30 +480,33 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 
-				Assert.AreEqual(3, result[2].Id);
-				Assert.IsNull(result[2].Field1);
-				Assert.AreEqual(3, result[2].Field2);
-				Assert.IsNull(result[2].Field3);
-				Assert.IsNull(result[2].Field4);
-				Assert.IsNull(result[2].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[2].Id, Is.EqualTo(3));
+					Assert.That(result[2].Field1, Is.Null);
+					Assert.That(result[2].Field2, Is.EqualTo(3));
+					Assert.That(result[2].Field3, Is.Null);
+					Assert.That(result[2].Field4, Is.Null);
+					Assert.That(result[2].Field5, Is.Null);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.AreEqual(5, result[3].Field1);
-				Assert.AreEqual(7, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.AreEqual(214, result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.EqualTo(5));
+					Assert.That(result[3].Field2, Is.EqualTo(7));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.EqualTo(214));
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
 		[Test]
 		public void OtherSourceUpdateWithPredicate([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -507,24 +535,27 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.AreEqual(5, result[3].Field1);
-				Assert.AreEqual(7, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.AreEqual(214, result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.EqualTo(5));
+					Assert.That(result[3].Field2, Is.EqualTo(7));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.EqualTo(214));
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
 		[Test]
 		public void UpdatePartialSourceProjection_KnownFieldInCondition([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -555,24 +586,27 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.AreEqual(5, result[3].Field1);
-				Assert.AreEqual(6, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.IsNull(result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.EqualTo(5));
+					Assert.That(result[3].Field2, Is.EqualTo(6));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.Null);
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
 		[Test]
 		public void AnonymousSourceUpdateWithPredicate([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -609,24 +643,27 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.AreEqual(5, result[3].Field1);
-				Assert.AreEqual(7, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.AreEqual(214, result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.EqualTo(5));
+					Assert.That(result[3].Field2, Is.EqualTo(7));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.EqualTo(214));
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
 		[Test]
 		public void AnonymousListSourceUpdateWithPredicate([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -663,25 +700,28 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				if (!context.IsAnyOf(ProviderName.Sybase))
 					AssertRow(InitialTargetData[2], result[2], null, 203);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.AreEqual(5, result[3].Field1);
-				Assert.AreEqual(7, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.AreEqual(214, result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.EqualTo(5));
+					Assert.That(result[3].Field2, Is.EqualTo(7));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.EqualTo(214));
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
 		[Test]
 		public void UpdateReservedAndCaseNames([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -718,24 +758,27 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.AreEqual(5, result[3].Field1);
-				Assert.AreEqual(7, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.AreEqual(214, result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.EqualTo(5));
+					Assert.That(result[3].Field2, Is.EqualTo(7));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.EqualTo(214));
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
 		[Test]
 		public void UpdateReservedAndCaseNamesFromList([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird, ProviderName.Sybase)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25, ProviderName.Sybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -773,18 +816,21 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 
-				Assert.AreEqual(4, result[3].Id);
-				Assert.AreEqual(5, result[3].Field1);
-				Assert.AreEqual(7, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.AreEqual(214, result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].Id, Is.EqualTo(4));
+					Assert.That(result[3].Field1, Is.EqualTo(5));
+					Assert.That(result[3].Field2, Is.EqualTo(7));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.EqualTo(214));
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
@@ -805,8 +851,8 @@ namespace Tests.xUpdate
 						.UpdateWhenMatched()
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception.Message,  Does.EndWith("'source.Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -831,8 +877,8 @@ namespace Tests.xUpdate
 						})
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception.Message,  Does.EndWith("s.Field2' could not be converted to SQL."));
 			}
 		}
 	}

@@ -87,22 +87,19 @@ namespace Tests.Linq
 					db.Parent.Where(p => p.Children.Any(c => c.GrandChildren.Any(g => g.ParentID > 3))));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Any6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Any(c => c.ParentID > 3),
-					db.Child.Any(c => c.ParentID > 3));
+				Assert.That(
+					db.Child.Any(c => c.ParentID > 3), Is.EqualTo(Child.Any(c => c.ParentID > 3)));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Any7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(Child.Any(), db.Child.Any());
+				Assert.That(db.Child.Any(), Is.EqualTo(Child.Any()));
 		}
 
 		[Test]
@@ -215,36 +212,30 @@ namespace Tests.Linq
 					db.Parent.Where(p => p.Children.All(c => c.GrandChildren.All(g => g.ParentID > 3))));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void All4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.All(c => c.ParentID > 3),
-					db.Child.All(c => c.ParentID > 3));
+				Assert.That(
+					db.Child.All(c => c.ParentID > 3), Is.EqualTo(Child.All(c => c.ParentID > 3)));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task All4Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-							 Child.All     (c => c.ParentID > 3),
-					await db.Child.AllAsync(c => c.ParentID > 3));
+				Assert.That(
+					await db.Child.AllAsync(c => c.ParentID > 3), Is.EqualTo(Child.All     (c => c.ParentID > 3)));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void All5([DataSources] string context)
 		{
 			int n = 3;
 
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.All(c => c.ParentID > n),
-					db.Child.All(c => c.ParentID > n));
+				Assert.That(
+					db.Child.All(c => c.ParentID > n), Is.EqualTo(Child.All(c => c.ParentID > n)));
 		}
 
 		[Test]
@@ -295,7 +286,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void StackOverflowRegressionTest([DataSources] string context)
 		{
@@ -321,8 +311,8 @@ namespace Tests.Linq
 
 			var res = db.Person.Where(x => filter.NamesProp!.Any(y => y == x.FirstName)).ToArray();
 
-			Assert.AreEqual(1, res.Length);
-			Assert.AreEqual(1, res[0].ID);
+			Assert.That(res, Has.Length.EqualTo(1));
+			Assert.That(res[0].ID, Is.EqualTo(1));
 		}
 	}
 }

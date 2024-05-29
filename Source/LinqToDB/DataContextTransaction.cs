@@ -2,7 +2,6 @@
 using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -11,12 +10,7 @@ namespace LinqToDB
 	/// Explicit data context <see cref="DataContext"/> transaction wrapper.
 	/// </summary>
 	[PublicAPI]
-	public class DataContextTransaction : IDisposable
-#if NATIVE_ASYNC
-		, IAsyncDisposable
-#else
-		, Async.IAsyncDisposable
-#endif
+	public class DataContextTransaction : IDisposable, IAsyncDisposable
 	{
 		/// <summary>
 		/// Creates new transaction wrapper.
@@ -211,11 +205,7 @@ namespace LinqToDB
 		}
 
 		/// <inheritdoc cref="Dispose"/>
-#if NATIVE_ASYNC
 		async ValueTask IAsyncDisposable.DisposeAsync()
-#else
-		async Task Async.IAsyncDisposable.DisposeAsync()
-#endif
 		{
 			if (_transactionCounter > 0)
 			{

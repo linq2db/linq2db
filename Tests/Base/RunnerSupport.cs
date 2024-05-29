@@ -10,7 +10,7 @@ namespace Tests
 			var (context, isRemote) = NUnitUtils.GetContext(test);
 			switch (context)
 			{
-				case "SQLite.Default"   : context = "Default";        break;
+				case "SQLite.MS"   : context = "Default";        break;
 			}
 
 			return context;

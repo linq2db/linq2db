@@ -20,6 +20,10 @@ echo ========== Firebird 4.x ==========
 
 call firebird40.cmd
 
+echo ========== Firebird 5.x ==========
+
+call firebird50.cmd
+
 echo ========== Informix ==========
 
 call informix.cmd
@@ -28,9 +32,9 @@ echo ========== MariaDB ==========
 
 call mariadb.cmd
 
-echo ========== MySql 5.5 ==========
+echo ========== MySql 5.7 ==========
 
-call mysql55.cmd
+call mysql57.cmd
 
 echo ========== MySql ==========
 

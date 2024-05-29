@@ -1,8 +1,8 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
-	using SqlQuery;
 
 	sealed class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{
@@ -22,9 +22,9 @@
 
 		protected override bool IsValuesSyntaxSupported => false;
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.DateTimeOffset :
 				case DataType.DateTime2      :

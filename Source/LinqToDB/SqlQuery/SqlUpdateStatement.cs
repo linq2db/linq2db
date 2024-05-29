@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -22,54 +20,48 @@ namespace LinqToDB.SqlQuery
 
 		internal bool HasUpdate => _update != null;
 
-		public SqlUpdateStatement(SelectQuery selectQuery) : base(selectQuery)
+		public SqlUpdateStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			sb.AppendLine("UPDATE");
+			writer
+				.AppendTag(Tag)
+				.AppendElement(With)
+				.AppendLine("UPDATE")
+				.AppendElement(Update)
+				.AppendLine()
+				.AppendElement(SelectQuery)
+				.AppendElement(Output);
 
-			((IQueryElement)Update).ToString(sb, dic);
-
-			sb.AppendLine();
-
-			SelectQuery.ToString(sb, dic);
-
-			return sb;
+			return writer;
 		}
 
-		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			With?.Walk(options, context, func);
-			((ISqlExpressionWalkable?)_update)?.Walk(options, context, func);
-			((ISqlExpressionWalkable?)Output)?.Walk(options, context, func);
-
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
-
-			return base.Walk(options, context, func);
-		}
-
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
 			var result = SelectQuery.GetTableSource(table);
+			noAlias = false;
 
 			if (result != null)
 				return result;
 
-			if (_update != null && table == _update.Table)
-				return table;
+			if (ReferenceEquals(Update.TableSource?.Source, table))
+				return Update.TableSource;
 
-			if (Update != null)
+			if (ReferenceEquals(table, Update.Table))
 			{
-				foreach (var item in Update.Items)
+				noAlias = true;
+				return table;
+			}
+
+			foreach (var item in Update.Items)
+			{
+				if (item.Expression is SelectQuery q)
 				{
-					if (item.Expression is SelectQuery q)
-					{
-						result = q.GetTableSource(table);
-						if (result != null)
-							return result;
-					}
+					result = q.GetTableSource(table);
+					if (result != null)
+						return result;
 				}
 			}
 
@@ -93,44 +85,5 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public void AfterSetAliases()
-		{
-			if (Output?.OutputColumns != null)
-			{
-				var columnAliases = new Dictionary<string,string?>();
-
-				foreach (var item in Update.Items)
-				{
-					switch (item.Column)
-					{
-						case SqlColumn { Expression : SqlField field } col :
-							columnAliases.Add(field.PhysicalName, col.Alias);
-							break;
-						case SqlField field :
-							columnAliases.Add(field.PhysicalName, field.Alias);
-							break;
-					}
-				}
-
-				foreach (var column in Output.OutputColumns)
-				{
-					switch (column)
-					{
-						case SqlColumn { Expression : SqlField field } col:
-						{
-							if (columnAliases.TryGetValue(field.Name, out var alias) && alias != null && alias != col.Alias)
-								col.Alias = alias;
-							break;
-						}
-						case SqlField field:
-						{
-							if (columnAliases.TryGetValue(field.Name, out var alias) && alias != null && alias != field.Alias)
-								field.PhysicalName = alias;
-							break;
-						}
-					}
-				}
-			}
-		}
 	}
 }

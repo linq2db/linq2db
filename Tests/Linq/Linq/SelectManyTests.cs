@@ -84,7 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic62([DataSources(TestProvName.AllAccess)] string context)
+		public void Basic62([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -111,7 +111,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic9([DataSources] string context)
+		public void Basic9([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -190,7 +190,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test31([DataSources] string context)
+		public void Test31([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -206,7 +206,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test32([DataSources] string context)
+		public void Test32([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -223,12 +223,15 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.AreEqual(1, list.Count);
+				Assert.That(list, Has.Count.EqualTo(1));
 
 				var person = list[0].p;
 
-				Assert.AreEqual(1,      person.ID);
-				Assert.AreEqual("John", person.FirstName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(person.ID, Is.EqualTo(1));
+					Assert.That(person.FirstName, Is.EqualTo("John"));
+				});
 			}
 		}
 
@@ -248,7 +251,7 @@ namespace Tests.Linq
 			}
 		}
 
-		public void SubQuery2(ITestDataContext db)
+		private void SubQuery2(ITestDataContext db)
 		{
 			var q1 = from p in db.Person where p.ID == 1 || p.ID == 2 select p;
 			var q2 = from p in db.Person where !(p.ID == 2) select p;
@@ -261,8 +264,11 @@ namespace Tests.Linq
 
 			foreach (var person in q)
 			{
-				Assert.AreEqual(1,      person.ID);
-				Assert.AreEqual("John", person.FirstName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(person.ID, Is.EqualTo(1));
+					Assert.That(person.FirstName, Is.EqualTo("John"));
+				});
 			}
 		}
 
@@ -336,13 +342,12 @@ namespace Tests.Linq
 		public void SelectManyLeftJoin1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					(from p in Parent
-					from c in p.Children.Select(o => new { o.ChildID, p.ParentID }).DefaultIfEmpty()
-					select new { p.Value1, o = c }).Count(),
+				Assert.That(
 					(from p in db.Parent
 					from c in p.Children.Select(o => new { o.ChildID, p.ParentID }).DefaultIfEmpty()
-					select new { p.Value1, o = c }).AsEnumerable().Count());
+					select new { p.Value1, o = c }).AsEnumerable().Count(), Is.EqualTo((from p in Parent
+					from c in p.Children.Select(o => new { o.ChildID, p.ParentID }).DefaultIfEmpty()
+					select new { p.Value1, o = c }).Count()));
 		}
 
 		[Test]
@@ -397,11 +402,10 @@ namespace Tests.Linq
 				select new { p.Value1, o = c };
 
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					expected.Count(),
+				Assert.That(
 					(from p in db.Parent
 					from c in p.Children.Select(o => new { o.ChildID, p.ParentID }).DefaultIfEmpty()
-					select new { p.Value1, n = c.ChildID + 1, o = c }).Count());
+					select new { p.Value1, n = c.ChildID + 1, o = c }).Count(), Is.EqualTo(expected.Count()));
 		}
 
 		[Test]
@@ -431,35 +435,32 @@ namespace Tests.Linq
 		public void Test3([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					(from p in Parent
-					 from g in p.GrandChildren
-					 from t in Person
-					 let c = g.Child
-					 select c).Count(),
+				Assert.That(
 					(from p in db.Parent
 					 from g in p.GrandChildren
 					 from t in db.Person
 					 let c = g.Child
-					 select c).Count());
+					 select c).Count(), Is.EqualTo((from p in Parent
+					 from g in p.GrandChildren
+					 from t in Person
+					 let c = g.Child
+					 select c).Count()));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					(from p in Parent
-					from g in p.GrandChildren
-					join c in db.Child on g.ChildID equals c.ChildID
-					join t in db.Types on c.ParentID equals t.ID
-					select c).Count(),
+				Assert.That(
 					(from p in db.Parent
 					from g in p.GrandChildren
 					join c in db.Child on g.ChildID equals c.ChildID
 					join t in db.Types on c.ParentID equals t.ID
-					select c).Count());
+					select c).Count(), Is.EqualTo((from p in Parent
+					from g in p.GrandChildren
+					join c in Child on g.ChildID equals c.ChildID
+					join t in Types on c.ParentID equals t.ID
+					select c).Count()));
 		}
 
 		[Test]
@@ -494,7 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test7([DataSources(ProviderName.Access)] string context)
+		public void Test7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -514,7 +515,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test8([DataSources(ProviderName.Access)] string context)
+		public void Test8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -612,19 +613,19 @@ namespace Tests.Linq
 		}
 
 		/////[Test]
-		public void Test92([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					db.Parent
-						.SelectMany(c => c.Children, (c, p) => new { c, p, })
-						.Select(_ => new { _.c, p = new Child { ParentID = _.c.ParentID, ChildID = _.p.ChildID } })
-						.SelectMany(ch => ch.p.GrandChildren, (ch, t) => new { t, ch }),
-					db.Parent
-						.SelectMany(c => c.Children, (c, p) => new { c, p, })
-						.Select(_ => new { _.c, p = new Child { ParentID = _.c.ParentID, ChildID = _.p.ChildID } })
-						.SelectMany(ch => ch.p.GrandChildren, (ch, t) => new { t, ch }));
-		}
+		//public void Test92([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			db.Parent
+		//				.SelectMany(c => c.Children, (c, p) => new { c, p, })
+		//				.Select(_ => new { _.c, p = new Child { ParentID = _.c.ParentID, ChildID = _.p.ChildID } })
+		//				.SelectMany(ch => ch.p.GrandChildren, (ch, t) => new { t, ch }),
+		//			db.Parent
+		//				.SelectMany(c => c.Children, (c, p) => new { c, p, })
+		//				.Select(_ => new { _.c, p = new Child { ParentID = _.c.ParentID, ChildID = _.p.ChildID } })
+		//				.SelectMany(ch => ch.p.GrandChildren, (ch, t) => new { t, ch }));
+		//}
 
 		[Test]
 		public void Test157_1([NorthwindDataContext] string context)

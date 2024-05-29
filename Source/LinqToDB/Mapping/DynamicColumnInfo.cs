@@ -5,13 +5,13 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
+	using Reflection;
 
 	/// <inheritdoc />
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
 	/// </summary>
-	public class DynamicColumnInfo : PropertyInfo, IEquatable<DynamicColumnInfo>
+	public class DynamicColumnInfo : VirtualPropertyInfoBase, IEquatable<DynamicColumnInfo>
 	{
 		private static readonly MethodInfo _dummyGetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummyGetter), BindingFlags.Instance | BindingFlags.NonPublic)!;
 		private static readonly MethodInfo _dummySetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummySetter), BindingFlags.Instance | BindingFlags.NonPublic)!;
@@ -91,17 +91,15 @@ namespace LinqToDB.Mapping
 			=> !a?.Equals(b) ?? !ReferenceEquals(b, null);
 
 #pragma warning disable RS0030 // Do not used banned APIs
-		public override object[] GetCustomAttributes(bool inherit)
+		public override object[] GetCustomAttributes(bool inherit) => [];
 #pragma warning restore RS0030 // Do not used banned APIs
-			=> Array<object>.Empty;
 
 #pragma warning disable RS0030 // Do not used banned APIs
-		public override object[] GetCustomAttributes(Type attributeType, bool inherit)
+		// must return Attibute[] as some runtimes doesn't follow their own contract
+		public override object[] GetCustomAttributes(Type attributeType, bool inherit) => Array.Empty<Attribute>();
 #pragma warning restore RS0030 // Do not used banned APIs
-			=> Array<Attribute>.Empty;
 
-		public override IList<CustomAttributeData> GetCustomAttributesData()
-			=> Array<CustomAttributeData>.Empty;
+		public override IList<CustomAttributeData> GetCustomAttributesData() => [];
 
 		public override bool IsDefined(Type attributeType, bool inherit)
 			=> false;
@@ -120,12 +118,11 @@ namespace LinqToDB.Mapping
 			// we're returning dummy method, so the rest of the stack can inspect it and correctly build expressions
 			=> _typedDummySetter;
 
-		public override ParameterInfo[] GetIndexParameters()
-			=> Array<ParameterInfo>.Empty;
+		public override ParameterInfo[] GetIndexParameters() => [];
 
 		public override object GetValue(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture)
 			=> throw new InvalidOperationException("SetValue on dynamic column is not to be called.");
-		
+
 		private T DummyGetter<T>()
 			=> throw new InvalidOperationException("Dynamic column getter is not to be called.");
 

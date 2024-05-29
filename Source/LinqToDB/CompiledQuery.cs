@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Common;
 	using Expressions;
 	using Extensions;
 	using Linq;
-
-	using LinqToDB.Common;
+	using Linq.Builder;
 
 	/// <summary>
 	/// Provides API for compilation and caching of queries for reuse.
@@ -69,7 +70,7 @@ namespace LinqToDB
 
 		static Func<object?[],object?[]?,object?> CompileQuery(LambdaExpression query)
 		{
-			var ps        = Expression.Parameter(typeof(object[]), "ps");
+			var ps        = ExpressionBuilder.ParametersParam;
 			var preambles = Expression.Parameter(typeof(object[]), "preambles");
 
 			var info = query.Body.Transform((query, ps, preambles), static (context, pi) =>
@@ -85,7 +86,15 @@ namespace LinqToDB
 
 							break;
 						}
+				}
 
+				return pi;
+			});
+
+			info = info.Transform((query, ps, preambles), static (context, pi) =>
+			{
+				switch (pi.NodeType)
+				{
 					case ExpressionType.Call :
 						{
 							var expr = (MethodCallExpression)pi;

@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 
 using NUnit.Framework;
@@ -47,28 +49,34 @@ namespace Tests.Linq
 					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = p.Value1 }).Distinct());
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
-		public void Distinct5([DataSources] string context)
+		public void Distinct5([DataSources(TestProvName.AllInformix)] string context, [Values(0, 1)] int iteration, [Values(2, 3)] int id)
 		{
-			var id = 2;
+			using var db = GetDataContext(context);
 
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from p in    Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = id + 1 }).Distinct(),
-					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = id + 1 }).Distinct());
+			var query = (from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = id + 1 }).Distinct();
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			AssertQuery(query);
+
+			if (iteration > 0)
+				query.GetCacheMissCount().Should().Be(cacheMissCount);
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
-		public void Distinct6([DataSources(TestProvName.AllInformix)] string context)
+		public void Distinct6([DataSources(TestProvName.AllInformix)] string context, [Values(0, 1)] int iteration, [Values(2, 3)] int id)
 		{
-			var id = 2;
+			using var db = GetDataContext(context);
 
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from p in    Parent select new Parent { ParentID = p.Value1 ?? p.ParentID + id % 2, Value1 = id + 1 }).Distinct(),
-					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID + id % 2, Value1 = id + 1 }).Distinct());
+			var query = (from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID + id % 2, Value1 = id + 1 }).Distinct();
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			AssertQuery(query);
+
+			if (iteration > 0)
+				query.GetCacheMissCount().Should().Be(cacheMissCount);
 		}
 
 		[Test]
@@ -88,7 +96,7 @@ namespace Tests.Linq
 					where c.ChildID > 20
 					select p;
 
-				Assert.AreEqual(expected.Distinct().Count(), result.Distinct().Count());
+				Assert.That(result.Distinct().Count(), Is.EqualTo(expected.Distinct().Count()));
 			}
 		}
 
@@ -109,7 +117,7 @@ namespace Tests.Linq
 					where c.ChildID > 20
 					select p;
 
-				Assert.AreEqual(expected.Distinct().Max(p => p.ParentID), result.Distinct().Max(p => p.ParentID));
+				Assert.That(result.Distinct().Max(p => p.ParentID), Is.EqualTo(expected.Distinct().Max(p => p.ParentID)));
 			}
 		}
 
@@ -131,7 +139,6 @@ namespace Tests.Linq
 					db.Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DistinctJoin([DataSources] string context)
 		{

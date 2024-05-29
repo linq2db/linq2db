@@ -15,7 +15,7 @@ namespace LinqToDB.Metadata
 			{
 				var res = source.GetAttributes<MappingAttribute>(inherit: false);
 				// API returns object[] for old frameworks and typed array for new
-				return res.Length == 0 ? Array<MappingAttribute>.Empty : res is MappingAttribute[] attrRes ? attrRes : res.Cast<MappingAttribute>().ToArray();
+				return res.Length == 0 ? [] : res is MappingAttribute[] attrRes ? attrRes : res.Cast<MappingAttribute>().ToArray();
 			});
 
 		public MappingAttribute[] GetAttributes(Type type)
@@ -25,7 +25,7 @@ namespace LinqToDB.Metadata
 			=> _cache.GetMappingAttributes<MappingAttribute>(type, memberInfo);
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
+		public MemberInfo[] GetDynamicColumns(Type type) => [];
 
 		public string GetObjectID() => $".{nameof(AttributeReader)}.";
 	}

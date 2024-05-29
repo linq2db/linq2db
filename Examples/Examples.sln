@@ -15,16 +15,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Wcf", "Wcf", "{1825BB74-264
 		Remote\Wcf\README.md = Remote\Wcf\README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Remote\Grpc\Client\Client.csproj", "{D0274057-7196-4C66-9D54-D6F1FFC6F11B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcClient", "Remote\Grpc\GrpcClient\GrpcClient.csproj", "{D0274057-7196-4C66-9D54-D6F1FFC6F11B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "Remote\Grpc\Server\Server.csproj", "{8D06EAAE-23F0-44C5-8A2C-8DDD68173BB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcServer", "Remote\Grpc\GrpcServer\GrpcServer.csproj", "{8D06EAAE-23F0-44C5-8A2C-8DDD68173BB9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Remote\Wcf\Client\Client.csproj", "{27C50F33-400B-414D-BDF6-B8E1F43A5CC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WcfClient", "Remote\Wcf\WcfClient\WcfClient.csproj", "{27C50F33-400B-414D-BDF6-B8E1F43A5CC6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Host", "Remote\Wcf\Host\Host.csproj", "{F6BF5912-40EA-4EA0-BEAA-5FCC5BCEDE8F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WcfHost", "Remote\Wcf\WcfHost\WcfHost.csproj", "{F6BF5912-40EA-4EA0-BEAA-5FCC5BCEDE8F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{64E5C3A3-6945-4422-91EC-0821E4D76D19}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		Compile.cmd = Compile.cmd
 		Directory.Build.props = Directory.Build.props
 		..\Directory.Packages.props = ..\Directory.Packages.props

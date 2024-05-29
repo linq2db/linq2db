@@ -8,8 +8,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net;
-using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Xml;
@@ -185,9 +183,9 @@ namespace LinqToDB.Mapping
 		/// - value SQL type descriptor;
 		/// - value.
 		/// </param>
-		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
+		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder, SqlDataType, object> converter)
 		{
-			ValueToSqlConverter.SetConverter(type, (sb,dt,_,v) => converter(sb, dt, v));
+			ValueToSqlConverter.SetConverter(type, (sb, dt, _, v) => converter(sb, new SqlDataType(dt), v));
 			return this;
 		}
 
@@ -202,7 +200,7 @@ namespace LinqToDB.Mapping
 		/// </param>
 		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,DataOptions,object> converter)
 		{
-			ValueToSqlConverter.SetConverter(type, converter);
+			ValueToSqlConverter.SetConverter(type, (sb, t, options, value) => converter(sb, new SqlDataType(t), options, value));
 			return this;
 		}
 
@@ -499,7 +497,6 @@ namespace LinqToDB.Mapping
 			return li == null ? null : (LambdaExpression)ReduceDefaultValue(checkNull ? li.CheckNullLambda : li.Lambda);
 		}
 
-
 		/// <summary>
 		/// Returns conversion delegate for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
 		/// </summary>
@@ -768,6 +765,13 @@ namespace LinqToDB.Mapping
 					new DefaultValueExpression(this, type));
 			}
 
+			if (body.Type != type)
+			{
+				var convertExpr = GetConvertExpression(body.Type, type);
+				if (convertExpr != null)
+					body = InternalExtensions.ApplyLambdaToExpression(convertExpr, body);
+			}
+
 			var expr = Expression.Lambda(body, param);
 			return expr;
 		}
@@ -787,7 +791,6 @@ namespace LinqToDB.Mapping
 			valueExpr = InternalExtensions.ApplyLambdaToExpression(convertLambda, valueExpr);
 			return valueExpr;
 		}
-
 
 		static bool Simplify(ref DbDataType type)
 		{
@@ -844,8 +847,8 @@ namespace LinqToDB.Mapping
 
 			if (isFromGeneric || isToGeneric)
 			{
-				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArguments() : Array<Type>.Empty;
-				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArguments() : Array<Type>.Empty;
+				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArguments() : [];
+				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArguments() : [];
 
 				var args = fromGenericArgs.SequenceEqual(toGenericArgs)
 					? fromGenericArgs
@@ -1102,7 +1105,7 @@ namespace LinqToDB.Mapping
 		private T[] GetAllAttributes<T>(Type type)
 			where T : MappingAttribute
 		{
-			return Schemas[0].MetadataReader?.GetAttributes<T>(type) ?? Array<T>.Empty;
+			return Schemas[0].MetadataReader?.GetAttributes<T>(type) ?? [];
 		}
 
 		/// <summary>
@@ -1115,7 +1118,7 @@ namespace LinqToDB.Mapping
 		private T[] GetAllAttributes<T>(Type type, MemberInfo memberInfo)
 			where T : MappingAttribute
 		{
-			return Schemas[0].MetadataReader?.GetAttributes<T>(type, memberInfo) ?? Array<T>.Empty;
+			return Schemas[0].MetadataReader?.GetAttributes<T>(type, memberInfo) ?? [];
 		}
 
 		private (MappingAttributesCache cache, MappingAttributesCache firstOnlyCache) CreateAttributeCaches()
@@ -1143,7 +1146,7 @@ namespace LinqToDB.Mapping
 						if (string.IsNullOrEmpty(attribute.Configuration))
 							(list ??= new()).Add(attribute);
 
-					return list == null ? Array<MappingAttribute>.Empty : list.ToArray();
+					return list == null ? [] : list.ToArray();
 				});
 
 			var firstOnlyCache = new MappingAttributesCache(
@@ -1171,7 +1174,7 @@ namespace LinqToDB.Mapping
 						if (string.IsNullOrEmpty(attribute.Configuration))
 							(list ??= new()).Add(attribute);
 
-					return list == null ? Array<MappingAttribute>.Empty : list.ToArray();
+					return list == null ? [] : list.ToArray();
 				});
 
 			return (cache, firstOnlyCache);
@@ -1198,7 +1201,7 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attributes owner member.</param>
-		/// <param name="forFirstConfiguration">If <c>true</c> - returns only atributes for first configuration with attributes from <see cref="ConfigurationList"/>.</param>
+		/// <param name="forFirstConfiguration">If <c>true</c> - returns only attributes for first configuration with attributes from <see cref="ConfigurationList"/>.</param>
 		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool forFirstConfiguration = false)
 			where T : MappingAttribute
@@ -1269,7 +1272,7 @@ namespace LinqToDB.Mapping
 		/// <returns>All dynamic columns defined on given type.</returns>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
-			return Schemas[0].MetadataReader?.GetDynamicColumns(type) ?? Array<MemberInfo>.Empty;
+			return Schemas[0].MetadataReader?.GetDynamicColumns(type) ?? [];
 		}
 
 		#endregion
@@ -1520,16 +1523,12 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="type">Type to configure.</param>
 		/// <param name="dataType">Optional scalar data type.</param>
-		/// <param name="withNullable">Also register <see cref="Nullable{T}"/> type.</param>
-		public void AddScalarType(Type type, DataType dataType = DataType.Undefined, bool withNullable = true)
+		public void AddScalarType(Type type, DataType dataType = DataType.Undefined)
 		{
 			SetScalarType(type);
 
 			if (dataType != DataType.Undefined)
 				SetDataType(type, dataType);
-
-			if (withNullable && type.IsValueType && !type.IsNullable())
-				AddScalarType(type.AsNullable(), dataType, false);
 		}
 
 		/// <summary>
@@ -1537,18 +1536,11 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="type">Type to configure.</param>
 		/// <param name="dataType">Database data type.</param>
-		/// <param name="withNullable">Also register <see cref="Nullable{T}"/> type.</param>
-		public void AddScalarType(Type type, SqlDataType dataType, bool withNullable = true)
+		public void AddScalarType(Type type, SqlDataType dataType)
 		{
 			SetScalarType(type);
 
 			SetDataType(type, dataType);
-
-			if (withNullable && type.IsValueType && !type.IsNullable())
-			{
-				var nullableType = type.AsNullable();
-				AddScalarType(nullableType, new SqlDataType(dataType.Type.WithSystemType(nullableType)), false);
-			}
 		}
 
 		#endregion
@@ -1570,6 +1562,16 @@ namespace LinqToDB.Mapping
 			}
 
 			return SqlDataType.Undefined;
+		}
+
+		/// <summary>
+		/// Returns database type mapping information for specified type.
+		/// </summary>
+		/// <param name="type">Mapped type.</param>
+		/// <returns>Database type information.</returns>
+		public DbDataType GetDbDataType(Type type)
+		{
+			return GetDataType(type).Type;
 		}
 
 		/// <summary>
@@ -1679,7 +1681,6 @@ namespace LinqToDB.Mapping
 
 			return SqlDataType.Undefined;
 		}
-
 
 		#endregion
 

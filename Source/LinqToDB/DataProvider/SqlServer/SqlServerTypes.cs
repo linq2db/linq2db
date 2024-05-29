@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			catch { }
 
-			return Array<TypeInfo>.Empty;
+			return [];
 		}, true);
 
 		public static bool UpdateTypes()
