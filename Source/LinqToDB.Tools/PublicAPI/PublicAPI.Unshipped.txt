@@ -1,3 +1,1 @@
 ﻿#nullable enable
-*REMOVED*static LinqToDB.CodeModel.WellKnownTypes.PropertyOrField<TObject, TProperty>(System.Linq.Expressions.Expression<System.Func<TObject, TProperty>!>! accessor, bool forceNullable) -> LinqToDB.CodeModel.CodeReference!
-static LinqToDB.CodeModel.WellKnownTypes.PropertyOrField<TObject, TProperty>(System.Linq.Expressions.Expression<System.Func<TObject, TProperty>!>! accessor) -> LinqToDB.CodeModel.CodeReference!

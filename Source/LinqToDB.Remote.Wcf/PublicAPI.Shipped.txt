@@ -18,6 +18,5 @@ LinqToDB.Remote.Wcf.WcfDataContext.WcfDataContext(string! endpointConfigurationN
 LinqToDB.Remote.Wcf.WcfDataContext.WcfDataContext(System.ServiceModel.Channels.Binding! binding, System.ServiceModel.EndpointAddress! endpointAddress, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
 LinqToDB.Remote.Wcf.WcfLinqService
 LinqToDB.Remote.Wcf.WcfLinqService.WcfLinqService(LinqToDB.Remote.ILinqService! linqService, bool transferInternalExceptionToClient) -> void
-override LinqToDB.Remote.Wcf.WcfDataContext.Clone() -> LinqToDB.IDataContext!
 override LinqToDB.Remote.Wcf.WcfDataContext.ContextIDPrefix.get -> string!
 override LinqToDB.Remote.Wcf.WcfDataContext.GetClient() -> LinqToDB.Remote.ILinqService!

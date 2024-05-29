@@ -109,6 +109,7 @@ steps:
     testRunner: VsTest
     testResultsFiles: '**/*.trx'
     testRunTitle: 'Mac / $(title)'
+    failTaskOnMissingResultsFile: true
 
 - task: PowerShell@2
   inputs:

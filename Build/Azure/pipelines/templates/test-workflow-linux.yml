@@ -83,6 +83,7 @@ steps:
     testRunner: VsTest
     testResultsFiles: '**/*.trx'
     testRunTitle: 'Linux / $(title)'
+    failTaskOnMissingResultsFile: true
 
 - task: PowerShell@2
   inputs:

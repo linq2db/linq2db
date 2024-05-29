@@ -1,5 +1,4 @@
 ﻿#nullable enable
-LinqToDB.Tools.EntityServices.EntityMap<T>.Entities.get -> System.Collections.Generic.IReadOnlyDictionary<T!, LinqToDB.Tools.EntityServices.EntityMapEntry<T!>!>!
 override LinqToDB.Schema.AggregateFunction.<Clone>$() -> LinqToDB.Schema.AggregateFunction!
 override LinqToDB.Schema.ScalarFunction.<Clone>$() -> LinqToDB.Schema.ScalarFunction!
 override LinqToDB.Schema.ScalarResult.<Clone>$() -> LinqToDB.Schema.ScalarResult!

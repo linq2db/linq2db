@@ -72,7 +72,7 @@ namespace LinqToDB.Metadata
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
 			if (_dynamicColumns.TryGetValue(type, out var dynamicColumns))
-					return dynamicColumns;
+				return dynamicColumns;
 
 			return [];
 		}

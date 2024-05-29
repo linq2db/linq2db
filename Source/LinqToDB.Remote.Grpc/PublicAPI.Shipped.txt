@@ -37,7 +37,6 @@ LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteScalar(LinqToDB.Remote.Grpc.Dto.Grp
 LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteScalarAsync(LinqToDB.Remote.Grpc.Dto.GrpcConfigurationQuery! caq, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> System.Threading.Tasks.Task<LinqToDB.Remote.Grpc.Dto.GrpcString!>!
 LinqToDB.Remote.Grpc.IGrpcLinqService.GetInfo(LinqToDB.Remote.Grpc.Dto.GrpcConfiguration! configuration, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> LinqToDB.Remote.LinqServiceInfo!
 LinqToDB.Remote.Grpc.IGrpcLinqService.GetInfoAsync(LinqToDB.Remote.Grpc.Dto.GrpcConfiguration! configuration, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> System.Threading.Tasks.Task<LinqToDB.Remote.LinqServiceInfo!>!
-override LinqToDB.Remote.Grpc.GrpcDataContext.Clone() -> LinqToDB.IDataContext!
 override LinqToDB.Remote.Grpc.GrpcDataContext.ContextIDPrefix.get -> string!
 override LinqToDB.Remote.Grpc.GrpcDataContext.GetClient() -> LinqToDB.Remote.ILinqService!
 static LinqToDB.Remote.Grpc.Dto.GrpcInt.implicit operator int(LinqToDB.Remote.Grpc.Dto.GrpcInt! a) -> int

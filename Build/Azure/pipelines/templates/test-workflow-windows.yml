@@ -203,6 +203,7 @@ steps:
     testRunner: VsTest
     testResultsFiles: '**/*.trx'
     testRunTitle: 'Windows / $(title)'
+    failTaskOnMissingResultsFile: true
 
 - task: PowerShell@2
   inputs:

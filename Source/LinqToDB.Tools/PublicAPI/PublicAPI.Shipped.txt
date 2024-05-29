@@ -986,11 +986,9 @@ LinqToDB.DataModel.StoredProcedureModel.StoredProcedureModel(LinqToDB.SqlQuery.S
 LinqToDB.DataModel.TableFunctionModel
 LinqToDB.DataModel.TableFunctionModel.Metadata.get -> LinqToDB.Metadata.TableFunctionMetadata!
 LinqToDB.DataModel.TableFunctionModel.Metadata.set -> void
-LinqToDB.DataModel.TableFunctionModel.MethodInfoFieldName.get -> string!
-LinqToDB.DataModel.TableFunctionModel.MethodInfoFieldName.set -> void
 LinqToDB.DataModel.TableFunctionModel.Result.get -> LinqToDB.DataModel.FunctionResult?
 LinqToDB.DataModel.TableFunctionModel.Result.set -> void
-LinqToDB.DataModel.TableFunctionModel.TableFunctionModel(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method, LinqToDB.Metadata.TableFunctionMetadata! metadata, string! methodInfoFieldName) -> void
+LinqToDB.DataModel.TableFunctionModel.TableFunctionModel(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method, LinqToDB.Metadata.TableFunctionMetadata! metadata) -> void
 LinqToDB.DataModel.TableFunctionModelBase
 LinqToDB.DataModel.TableFunctionModelBase.Error.get -> string?
 LinqToDB.DataModel.TableFunctionModelBase.Error.set -> void
@@ -1314,8 +1312,6 @@ LinqToDB.Scaffold.DataModelOptions.SkipProceduresWithSchemaErrors.get -> bool
 LinqToDB.Scaffold.DataModelOptions.SkipProceduresWithSchemaErrors.set -> void
 LinqToDB.Scaffold.DataModelOptions.SourceAssociationPropertyNameOptions.get -> LinqToDB.Naming.NormalizationOptions!
 LinqToDB.Scaffold.DataModelOptions.SourceAssociationPropertyNameOptions.set -> void
-LinqToDB.Scaffold.DataModelOptions.TableFunctionMethodInfoFieldNameOptions.get -> LinqToDB.Naming.NormalizationOptions!
-LinqToDB.Scaffold.DataModelOptions.TableFunctionMethodInfoFieldNameOptions.set -> void
 LinqToDB.Scaffold.DataModelOptions.TableFunctionReturnsTable.get -> bool
 LinqToDB.Scaffold.DataModelOptions.TableFunctionReturnsTable.set -> void
 LinqToDB.Scaffold.DataModelOptions.TargetMultipleAssociationPropertyNameOptions.get -> LinqToDB.Naming.NormalizationOptions!
@@ -1640,6 +1636,11 @@ LinqToDB.Schema.View.View(LinqToDB.SqlQuery.SqlObjectName Name, string? Descript
 LinqToDB.Schema.VoidResult
 LinqToDB.Schema.VoidResult.Equals(LinqToDB.Schema.VoidResult? other) -> bool
 LinqToDB.Schema.VoidResult.VoidResult() -> void
+LinqToDB.Tools.Activity.ActivityHierarchy
+LinqToDB.Tools.Activity.ActivityHierarchy.ActivityHierarchy(LinqToDB.Tools.ActivityID activityID, System.Action<string!>! pushReport) -> void
+LinqToDB.Tools.Activity.ActivityHierarchy.Indent.get -> string!
+LinqToDB.Tools.Activity.ActivityHierarchy.Indent.set -> void
+LinqToDB.Tools.Activity.ActivityStatistics
 LinqToDB.Tools.Comparers.ComparerBuilder
 LinqToDB.Tools.Comparers.IgnoreComparisonAttribute
 LinqToDB.Tools.Comparers.IgnoreComparisonAttribute.IgnoreComparisonAttribute() -> void
@@ -10851,6 +10852,7 @@ LinqToDB.Tools.DataProvider.SqlServer.Schemas.XmlSchema.XmlSchemaWildcardNamespa
 LinqToDB.Tools.DataProvider.SqlServer.Schemas.XmlSchema.XmlSchemaWildcardNamespace.XmlComponentID.set -> void
 LinqToDB.Tools.DataProvider.SqlServer.Schemas.XmlSchema.XmlSchemaWildcardNamespace.XmlSchemaWildcardNamespace() -> void
 LinqToDB.Tools.EntityServices.EntityMap<T>
+LinqToDB.Tools.EntityServices.EntityMap<T>.Entities.get -> System.Collections.Generic.IReadOnlyDictionary<T!, LinqToDB.Tools.EntityServices.EntityMapEntry<T!>!>!
 LinqToDB.Tools.EntityServices.EntityMap<T>.EntityMap(LinqToDB.IDataContext! dataContext) -> void
 LinqToDB.Tools.EntityServices.EntityMap<T>.GetEntity(LinqToDB.IDataContext! context, object! key) -> T?
 LinqToDB.Tools.EntityServices.EntityMapEntry<T>
@@ -11098,6 +11100,7 @@ override LinqToDB.Schema.View.ToString() -> string!
 override LinqToDB.Schema.VoidResult.Equals(object? obj) -> bool
 override LinqToDB.Schema.VoidResult.GetHashCode() -> int
 override LinqToDB.Schema.VoidResult.ToString() -> string!
+override LinqToDB.Tools.Activity.ActivityHierarchy.Dispose() -> void
 override LinqToDB.Tools.EntityServices.IdentityMap.EntityCreated(LinqToDB.Interceptors.EntityCreatedEventData eventData, object! entity) -> object!
 override sealed LinqToDB.Schema.AggregateFunction.Equals(LinqToDB.Schema.CallableObject? other) -> bool
 override sealed LinqToDB.Schema.ScalarFunction.Equals(LinqToDB.Schema.CallableObject? other) -> bool
@@ -11144,6 +11147,8 @@ static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataParameter_Size.get ->
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataParameter_Value.get -> LinqToDB.CodeModel.CodeReference!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataExtensions.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataExtensions_GetTable.get -> LinqToDB.CodeModel.CodeIdentifier!
+static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataExtensions_QueryFromExpression.get -> LinqToDB.CodeModel.CodeIdentifier!
+static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataExtensions_TableFromExpression.get -> LinqToDB.CodeModel.CodeIdentifier!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataType.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Expressions.MemberHelper.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Expressions.MemberHelper_MethodOf.get -> LinqToDB.CodeModel.CodeIdentifier!
@@ -11218,7 +11223,7 @@ static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Ser
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Tools.Comparers.ComparerBuilder.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Tools.Comparers.ComparerBuilder_GetEqualityComparer.get -> LinqToDB.CodeModel.CodeIdentifier!
 static LinqToDB.CodeModel.WellKnownTypes.Microsoft.SqlServer.Types.SqlHierarchyId.get -> LinqToDB.CodeModel.IType!
-static LinqToDB.CodeModel.WellKnownTypes.PropertyOrField<TObject, TProperty>(System.Linq.Expressions.Expression<System.Func<TObject, TProperty>!>! accessor, bool forceNullable) -> LinqToDB.CodeModel.CodeReference!
+static LinqToDB.CodeModel.WellKnownTypes.PropertyOrField<TObject, TProperty>(System.Linq.Expressions.Expression<System.Func<TObject, TProperty>!>! accessor) -> LinqToDB.CodeModel.CodeReference!
 static LinqToDB.CodeModel.WellKnownTypes.System.Action.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.System.Boolean.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.System.Collections.Generic.IEnumerable(LinqToDB.CodeModel.IType! elementType) -> LinqToDB.CodeModel.IType!
@@ -11327,6 +11332,8 @@ static LinqToDB.Schema.View.operator !=(LinqToDB.Schema.View? left, LinqToDB.Sch
 static LinqToDB.Schema.View.operator ==(LinqToDB.Schema.View? left, LinqToDB.Schema.View? right) -> bool
 static LinqToDB.Schema.VoidResult.operator !=(LinqToDB.Schema.VoidResult? left, LinqToDB.Schema.VoidResult? right) -> bool
 static LinqToDB.Schema.VoidResult.operator ==(LinqToDB.Schema.VoidResult? left, LinqToDB.Schema.VoidResult? right) -> bool
+static LinqToDB.Tools.Activity.ActivityStatistics.Factory(LinqToDB.Tools.ActivityID activityID) -> LinqToDB.Tools.IActivity!
+static LinqToDB.Tools.Activity.ActivityStatistics.GetReport(bool includeAll = false) -> string!
 static LinqToDB.Tools.Comparers.ComparerBuilder.GetEqualityComparer(System.Type! type) -> System.Collections.IEqualityComparer!
 static LinqToDB.Tools.Comparers.ComparerBuilder.GetEqualityComparer<T>() -> System.Collections.Generic.IEqualityComparer<T>!
 static LinqToDB.Tools.Comparers.ComparerBuilder.GetEqualityComparer<T>(params System.Linq.Expressions.Expression<System.Func<T, object?>!>![]! membersToCompare) -> System.Collections.Generic.IEqualityComparer<T>!
@@ -11451,11 +11458,3 @@ virtual LinqToDB.Schema.Result.PrintMembers(System.Text.StringBuilder! builder) 
 virtual LinqToDB.Schema.TableLikeObject.EqualityContract.get -> System.Type!
 virtual LinqToDB.Schema.TableLikeObject.Equals(LinqToDB.Schema.TableLikeObject? other) -> bool
 virtual LinqToDB.Schema.TableLikeObject.PrintMembers(System.Text.StringBuilder! builder) -> bool
-LinqToDB.Tools.Activity.ActivityHierarchy
-LinqToDB.Tools.Activity.ActivityHierarchy.ActivityHierarchy(LinqToDB.Tools.ActivityID activityID, System.Action<string!>! pushReport) -> void
-LinqToDB.Tools.Activity.ActivityHierarchy.Indent.get -> string!
-LinqToDB.Tools.Activity.ActivityHierarchy.Indent.set -> void
-LinqToDB.Tools.Activity.ActivityStatistics
-override LinqToDB.Tools.Activity.ActivityHierarchy.Dispose() -> void
-static LinqToDB.Tools.Activity.ActivityStatistics.Factory(LinqToDB.Tools.ActivityID activityID) -> LinqToDB.Tools.IActivity!
-static LinqToDB.Tools.Activity.ActivityStatistics.GetReport(bool includeAll = false) -> string!

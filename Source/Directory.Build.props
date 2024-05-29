@@ -12,7 +12,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" /> -->
+		<PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" />
 
 		<PackageReference Include="Microsoft.SourceLink.GitHub">
 			<PrivateAssets>all</PrivateAssets>

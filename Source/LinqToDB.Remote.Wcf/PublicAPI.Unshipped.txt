@@ -1,2 +1,1 @@
 ﻿#nullable enable
-*REMOVED*override LinqToDB.Remote.Wcf.WcfDataContext.Clone() -> LinqToDB.IDataContext!
