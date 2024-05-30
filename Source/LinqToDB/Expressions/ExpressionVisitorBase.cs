@@ -124,5 +124,10 @@ namespace LinqToDB.Expressions
 		{
 			return node;
 		}
+
+		public virtual Expression VisitConstantPlaceholder(ConstantPlaceholderExpression node)
+		{
+			return node;
+		}
 	}
 }
