@@ -3081,29 +3081,29 @@ namespace Tests.Linq
 				.GroupJoin(
 					inner: db
 						.Types
-						.GroupBy(_ => _.GuidValue)
-						.Select(_ => new
+						.GroupBy(r => r.GuidValue)
+						.Select(g => new
 						{
-							Key = _.Key,
-							Count = _.Count(d => d.BoolValue)
+							Id = g.Key,
+							Count = g.Count(d => d.BoolValue)
 						}),
-					outerKeySelector: _ => (Guid?)_.GuidValue,
-					innerKeySelector: _ => _.Key,
-					resultSelector: (d, t) => new
+					outerKeySelector: l => (Guid?)l.GuidValue,
+					innerKeySelector: r => r.Id,
+					resultSelector: (left, right) => new
 					{
-						Outer = d,
-						Inner = t
+						Outer = left,
+						Inner = right
 					})
 				.SelectMany(
-					collectionSelector: _ => _.Inner.DefaultIfEmpty(),
-					resultSelector: (p, l) => new
+					collectionSelector: r => r.Inner.DefaultIfEmpty(),
+					resultSelector: (r, l) => new
 					{
-						Design = p.Outer,
+						Design = r.Outer,
 						Inner = l
 					})
 				.Select(_ => new
 				{
-					ActivePublishes = _.Inner!.Count
+					Result = _.Inner!.Count
 				});
 
 			_ = query.ToArray();
