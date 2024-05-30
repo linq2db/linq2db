@@ -3101,9 +3101,9 @@ namespace Tests.Linq
 						Design = r.Outer,
 						Inner = l
 					})
-				.Select(_ => new
+				.Select(r => new
 				{
-					Result = _.Inner!.Count
+					Result = r.Inner!.Count
 				});
 
 			_ = query.ToArray();
