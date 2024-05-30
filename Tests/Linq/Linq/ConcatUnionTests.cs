@@ -954,6 +954,19 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void ConcatInAny([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Parent.Select(p => p.ParentID)
+					.Concat(db.Parent.Select(p => p.ParentID))
+					.Any();
+
+				result.Should().BeTrue();
+			}
+		}
+
 		[Table("ConcatTest")]
 		[InheritanceMapping(Code = 0, Type = typeof(BaseEntity), IsDefault = true)]
 		[InheritanceMapping(Code = 1, Type = typeof(DerivedEntity))]
