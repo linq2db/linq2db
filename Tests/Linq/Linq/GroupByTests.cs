@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 using FluentAssertions;
 
@@ -3068,5 +3070,43 @@ namespace Tests.Linq
 					.Select(it   => it.Key));
 		}
 		#endregion
+
+		[Test]
+		public void NoGuardException([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db
+				.Types
+				.GroupJoin(
+					inner: db
+						.Types
+						.GroupBy(_ => _.GuidValue)
+						.Select(_ => new
+						{
+							Key = _.Key,
+							Count = _.Count(d => d.BoolValue)
+						}),
+					outerKeySelector: _ => (Guid?)_.GuidValue,
+					innerKeySelector: _ => _.Key,
+					resultSelector: (d, t) => new
+					{
+						Outer = d,
+						Inner = t
+					})
+				.SelectMany(
+					collectionSelector: _ => _.Inner.DefaultIfEmpty(),
+					resultSelector: (p, l) => new
+					{
+						Design = p.Outer,
+						Inner = l
+					})
+				.Select(_ => new
+				{
+					ActivePublishes = _.Inner!.Count
+				});
+
+			_ = query.ToArray();
+		}
 	}
 }
