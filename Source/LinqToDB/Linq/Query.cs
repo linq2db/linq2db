@@ -563,7 +563,7 @@ namespace LinqToDB.Linq
 
 			if (useCache && !query.DoNotCache)
 			{
-				// All non-value type expression and parametrized expressions will be transformed to ConstantPlaceholderExpression. It prevents from caching big reference classes in cache.
+				// All non-value type expressions and parametrized expressions will be transformed to ConstantPlaceholderExpression. It prevents from caching big reference classes in cache.
 				//
 				query.PrepareForCaching();
 
