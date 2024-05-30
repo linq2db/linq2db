@@ -329,6 +329,8 @@ namespace LinqToDB.SqlProvider
 									break;
 
 								element.Predicates.RemoveAt(i);
+								if (element.Predicates.Count == 0)
+									element.Predicates.Add(SqlPredicate.False);
 
 								continue;
 							}
