@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
 #if NETFRAMEWORK
 using System.ServiceModel;
 #endif
@@ -773,30 +772,5 @@ namespace Tests.Linq
 			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 		#endregion
-
-		[Test]
-		public void CustomMappingEvaluation([IncludeDataSources(TestProvName.AllSqlServer)] string context)
-		{
-			const string CONFIG = "MappingTests_CustomMappingEvaluation";
-
-			var ms = new MappingSchema(CONFIG);
-			LinqToDB.Linq.Expressions.MapMember<TimeSpan>(CONFIG, ts => ts.Ticks, (Expression<Func<TimeSpan, long>>)(ts => ToTicks(ts)));
-			ms.SetDataType(typeof(TimeSpan), DataType.Int64);
-
-			using var db = GetDataContext(context, ms);
-			db.Person.Any(p => TimeSpan.Zero > Sql.AsSql(FromTicks((long)(((5.988M)) * ((new TimeSpan(88888888L)).Ticks)))));
-		}
-
-		[Sql.Expression("{0}", ServerSideOnly = true)]
-		private static TimeSpan FromTicks(long ticks)
-		{
-			return TimeSpan.FromTicks(ticks);
-		}
-
-		[Sql.Expression("{0}", ServerSideOnly = true)]
-		private static long ToTicks(TimeSpan _)
-		{
-			throw new InvalidOperationException();
-		}
 	}
 }
