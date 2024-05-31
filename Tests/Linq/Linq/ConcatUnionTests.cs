@@ -954,6 +954,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			"Requires wrapping into derived-table expression optimization: https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc32300.1570/html/sqlug/sqlug428.htm",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
 		{
