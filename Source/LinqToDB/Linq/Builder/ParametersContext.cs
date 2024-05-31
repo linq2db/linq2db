@@ -149,7 +149,7 @@ namespace LinqToDB.Linq.Builder
 								return accessor;
 							}
 
-							if (paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true, null)))
+							if (paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true)))
 							{
 								found = accessor;
 								break;

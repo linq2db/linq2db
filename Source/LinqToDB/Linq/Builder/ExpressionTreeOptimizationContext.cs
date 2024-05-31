@@ -36,12 +36,12 @@ namespace LinqToDB.Linq.Builder
 
 		private EqualsToVisitor.EqualsToInfo? _equalsToContextFalse;
 		private EqualsToVisitor.EqualsToInfo? _equalsToContextTrue;
-		internal EqualsToVisitor.EqualsToInfo GetSimpleEqualsToContext(bool compareConstantValues, List<Expression>? parametrized)
+		internal EqualsToVisitor.EqualsToInfo GetSimpleEqualsToContext(bool compareConstantValues)
 		{
 			if (compareConstantValues)
 			{
 				if (_equalsToContextTrue == null)
-					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, parametrized, compareConstantValues : compareConstantValues);
+					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues : compareConstantValues);
 				else
 					_equalsToContextTrue.Reset();
 				return _equalsToContextTrue;
@@ -49,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				if (_equalsToContextFalse == null)
-					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, parametrized, compareConstantValues : compareConstantValues);
+					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues : compareConstantValues);
 				else
 					_equalsToContextFalse.Reset();
 				return _equalsToContextFalse;
@@ -167,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var queryable = (IQueryable)mc.EvaluateExpression()!;
 
-					if (!queryable.Expression.EqualsTo(mc, GetSimpleEqualsToContext(compareConstantValues: true, null)))
+					if (!queryable.Expression.EqualsTo(mc, GetSimpleEqualsToContext(compareConstantValues: true)))
 						return new TransformInfo(queryable.Expression, false, true);
 				}
 			}

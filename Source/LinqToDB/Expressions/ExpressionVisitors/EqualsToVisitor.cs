@@ -14,12 +14,11 @@ namespace LinqToDB.Expressions
 			this Expression                                                                                                                      expr1,
 			Expression                                                                                                                           expr2,
 			IDataContext                                                                                                                         dataContext,
-			List<Expression>?                                                                                                                    parametrizedExpressions,
 			List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? parametersDuplicates,
 			List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>?                    dynamicAccessors,
 			bool                                                                                                                                 compareConstantValues = false)
 		{
-			var equalsInfo = PrepareEqualsInfo(dataContext, parametrizedExpressions, compareConstantValues);
+			var equalsInfo = PrepareEqualsInfo(dataContext, compareConstantValues);
 			var result     = EqualsTo(expr1, expr2, equalsInfo);
 
 			if (result && parametersDuplicates != null)
@@ -54,33 +53,23 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		internal static EqualsToInfo PrepareEqualsInfo(
 			IDataContext      dataContext,
-			List<Expression>? parametrizedExpressions,
 			bool              compareConstantValues = false)
 		{
-			return new EqualsToInfo(dataContext, parametrizedExpressions, compareConstantValues);
+			return new EqualsToInfo(dataContext, compareConstantValues);
 		}
 
 		internal sealed class EqualsToInfo
 		{
 			public EqualsToInfo(
 				IDataContext      dataContext,
-				List<Expression>? parametrizedExpressions,
 				bool              compareConstantValues)
 			{
 				DataContext                = dataContext;
-				ParametrizedExpressions    = parametrizedExpressions;
 				CompareConstantValues      = compareConstantValues;
 			}
 
 			public readonly IDataContext                                              DataContext;
-			public readonly List<Expression>?                                         ParametrizedExpressions;
 			public readonly bool                                                      CompareConstantValues;
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public bool IsParametrized(Expression expr)
-			{
-				return ParametrizedExpressions?.Contains(expr) == true;
-			}
 
 			public void Reset()
 			{
@@ -94,8 +83,19 @@ namespace LinqToDB.Expressions
 				return true;
 			}
 
-			if (expr1 == null || expr2 == null || expr1.NodeType != expr2.NodeType || expr1.Type != expr2.Type)
+			if (expr1 == null || expr2 == null || expr1.Type != expr2.Type)
 				return false;
+
+			if (expr1.NodeType != expr2.NodeType)
+			{
+				// special cache case
+				if (expr1.NodeType == ExpressionType.Extension && expr2.NodeType == ExpressionType.Constant && expr1 is ConstantPlaceholderExpression)
+				{
+					return true;
+				}
+
+				return false;
+			}
 
 			switch (expr1.NodeType)
 			{
@@ -176,11 +176,16 @@ namespace LinqToDB.Expressions
 						((ChangeTypeExpression)expr1).Expression.EqualsTo(((ChangeTypeExpression)expr2).Expression, info);
 
 				case ExpressionType.Extension:
-					return expr1.Equals(expr2);
+					return EqualsExtensions(expr1, expr2);
 
 				default:
 					throw new NotImplementedException($"Unhandled expression type: {expr1.NodeType}");
 			}
+		}
+
+		static bool EqualsExtensions(Expression expr1, Expression expr2)
+		{
+			return expr1.Equals(expr2);
 		}
 
 		static bool EqualsToX(BlockExpression expr1, BlockExpression expr2, EqualsToInfo info)
@@ -368,9 +373,6 @@ namespace LinqToDB.Expressions
 
 		static bool EqualsToX(ConstantExpression expr1, ConstantExpression expr2, EqualsToInfo info)
 		{
-			if (info.IsParametrized(expr1))
-				return true;
-
 			if (expr1.Value == null && expr2.Value == null)
 				return true;
 
@@ -407,7 +409,7 @@ namespace LinqToDB.Expressions
 
 					if (dependentAttribute != null)
 					{
-						if (!info.IsParametrized(arg1))
+						if (arg1 is not ConstantPlaceholderExpression)
 						{
 							if (!dependentAttribute.ExpressionsEqual(info, arg1, arg2, static (info, e1, e2) => e1.EqualsTo(e2, info)))
 								return false;
