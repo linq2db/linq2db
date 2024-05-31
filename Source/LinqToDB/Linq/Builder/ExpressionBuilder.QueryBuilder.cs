@@ -476,7 +476,7 @@ namespace LinqToDB.Linq.Builder
 
 			}
 
-			// Extensions may have instance reference. Try to register them as parametrized to disallow caching objects in Expression Tree
+			// Extensions may have instance reference. Try to register them as parameterized to disallow caching objects in Expression Tree
 			//
 			if (expression is MemberExpression { Expression: not null } me)
 			{

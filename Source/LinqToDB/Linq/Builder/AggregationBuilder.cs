@@ -532,10 +532,17 @@ namespace LinqToDB.Linq.Builder
 				{
 					var sqlExpr = builder.ConvertToSqlExpr(placeholderSequence, filterExpression, buildInfo.GetFlags());
 
-					if (sqlExpr is not SqlPlaceholderExpression { Sql: SqlSearchCondition searchCondition })
+					if (sqlExpr is not SqlPlaceholderExpression placeholer)
 						return BuildSequenceResult.Error(filterExpression);
 
-					filterSqlExpression = searchCondition;
+					if (placeholer.Sql is SqlSearchCondition searchCondition)
+					{
+						filterSqlExpression = searchCondition;
+					}
+					else
+					{
+						filterSqlExpression = new SqlSearchCondition().Add(new SqlPredicate.Expr(placeholer.Sql));
+					}
 				}
 
 				switch (aggregationType)

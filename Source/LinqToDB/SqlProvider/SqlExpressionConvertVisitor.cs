@@ -99,11 +99,6 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		protected override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
-		{
-			return base.VisitSqlValuesTable(element);
-		}
-
 		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
 		{
 			var newElement = base.VisitSqlConditionExpression(element);
@@ -143,6 +138,38 @@ namespace LinqToDB.SqlProvider
 
 			IsForPredicate = saveIsForPredicate;
 			return result;
+		}
+
+		protected override IQueryElement VisitSqlFieldReference(SqlField element)
+		{
+			var newElement = base.VisitSqlFieldReference(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			if (element.SystemType?.ToUnderlying() == typeof(bool))
+			{
+				if (ReferenceEquals(element, IsForPredicate))
+					return ConvertToBooleanSearchCondition(element);
+			}
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
+		{
+			var newElement = base.VisitSqlColumnReference(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			if (element.SystemType?.ToUnderlying() == typeof(bool))
+			{
+				if (ReferenceEquals(element, IsForPredicate))
+					return ConvertToBooleanSearchCondition(element);
+			}
+
+			return element;
 		}
 
 		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)

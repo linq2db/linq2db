@@ -110,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 			if (newAccessor == null)
 				return null;
 
-			// do replacing again for registering parametrized constants
+			// do replacing again for registering parameterized constants
 			ApplyAccessors(expr, true);
 
 			if (!forceNew && !ReferenceEquals(newExpr.ValueExpression, expr))
@@ -590,9 +590,9 @@ namespace LinqToDB.Linq.Builder
 			return accessorExpression;
 		}
 
-		List<Expression>? _parametrized;
+		List<Expression>? _parameterized;
 
-		public List<Expression>?                   GetParametrized()  => _parametrized;
+		public List<Expression>?                   GetParameterized()  => _parameterized;
 
 		public List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? GetParameterDuplicates() 
 			=> _parametersDuplicateCheck;
@@ -601,16 +601,16 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBeConstant(Expression expr)
 		{
-			if (_parametrized != null && _parametrized.Contains(expr))
+			if (_parameterized != null && _parameterized.Contains(expr))
 				return false;
 			return true;
 		}
 
-		public void AddAsParametrized(Expression expression)
+		public void AddAsParameterized(Expression expression)
 		{
-			_parametrized ??= new ();
-			if (!_parametrized.Contains(expression))
-				_parametrized.Add(expression);
+			_parameterized ??= new ();
+			if (!_parameterized.Contains(expression))
+				_parameterized.Add(expression);
 		}
 
 		public bool GetAccessorExpression(Expression expression, [NotNullWhen(true)] out Expression? accessor, bool register)
@@ -618,7 +618,7 @@ namespace LinqToDB.Linq.Builder
 			if (_expressionAccessors.TryGetValue(expression, out accessor))
 			{
 				if (register)
-					AddAsParametrized(expression);
+					AddAsParameterized(expression);
 
 				return true;
 			}
