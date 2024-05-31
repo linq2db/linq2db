@@ -69,19 +69,19 @@ namespace LinqToDB.Linq
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
 				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
-				Expression!.EqualsTo(expr, dataContext, _parametrized, _parametersDuplicates, _dynamicAccessors);
+				Expression!.EqualsTo(expr, dataContext, _parametersDuplicates, _dynamicAccessors);
 		}
 
-		List<Expression>?                                _parametrized;
+		List<Expression>? _parameterized;
 
 		List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? _parametersDuplicates;
 		List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>?                    _dynamicAccessors;
 
 		internal bool IsFastCacheable => _dynamicAccessors == null;
 
-		internal void SetParametrized(List<Expression>? parametrized)
+		internal void SetParameterized(List<Expression>? parameterized)
 		{
-			_parametrized = parametrized;
+			_parameterized = parameterized;
 		}
 
 		internal void SetParametersDuplicates(List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? parametersDuplicates)
@@ -94,38 +94,37 @@ namespace LinqToDB.Linq
 			_dynamicAccessors = dynamicAccessors;
 		}
 
-		public bool IsParametrized(Expression expr)
-		{
-			return _parametrized?.Contains(expr) == true;
-		}
-
 		public Expression? GetExpression() => Expression;
 
-		protected Expression ReplaceParametrized(Expression expression, List<Expression> newParametrized)
+		protected Expression ReplaceParameterizedAndClosures(Expression expression, List<Expression>? newParameterized)
 		{
-			var result = expression.Transform((parametrized: _parametrized!, newParametrized), static (ctx, e) =>
+			var result = expression.Transform((parameterized: _parameterized, newParameterized), static (ctx, e) =>
 			{
-				var idx = ctx.parametrized.IndexOf(e);
-				if (idx >= 0)
+				if (ctx.parameterized != null)
 				{
-					var newValue = ctx.newParametrized[idx];
-
+					var idx = ctx.parameterized.IndexOf(e);
+					if (idx >= 0)
 					{
-						var replace = newValue.NodeType != ExpressionType.Constant;
+						var newValue = ctx.newParameterized![idx];
 
-						if (!replace)
+						if (newValue is not ConstantPlaceholderExpression)
 						{
-							if (!newValue.Type.IsValueType && newValue is not ConstantExpression { Value: null })
-								replace = true;
-						}
-
-						if (replace)
-						{
-							newValue                 = Expression.Constant(null, e.Type);
-							ctx.newParametrized[idx] = newValue;
+							newValue                 = new ConstantPlaceholderExpression(e.Type);
+							ctx.newParameterized[idx] = newValue;
 						}
 
 						return new TransformInfo(newValue);
+					}
+				}
+
+				if (e.NodeType == ExpressionType.Constant)
+				{
+					var c = (ConstantExpression)e;
+
+					if (ExpressionCacheHelpers.ShouldRemoveConstantFromCache(c))
+					{
+						var replacement = new ConstantPlaceholderExpression(e.Type);
+						return new TransformInfo(replacement);
 					}
 				}
 
@@ -140,33 +139,18 @@ namespace LinqToDB.Linq
 		/// </summary>
 		protected void PrepareForCaching()
 		{
-			List<Expression>? newParametrized = null;
+			List<Expression>? newParameterized = null;
 
-			if (Expression != null && _parametrized != null)
+			if (Expression != null)
 			{
-				newParametrized = _parametrized.ToList();
+				newParameterized = _parameterized?.ToList();
 
-				var result = ReplaceParametrized(Expression, newParametrized);
+				var result = ReplaceParameterizedAndClosures(Expression, newParameterized);
 				Expression = result;
 			}
 
-			/*if (_dynamicAccessors != null && _parametrized != null)
-			{
-				newParametrized ??= _parametrized.ToList();
-
-				for (var i = 0; i < _dynamicAccessors.Count; i++)
-				{
-					var (used, mappingSchema, accessorFunc) = _dynamicAccessors[i];
-					var newUsed = ReplaceParametrized(used, newParametrized);
-					if (!ReferenceEquals(newUsed, used))
-					{
-						_dynamicAccessors[i] = (newUsed, mappingSchema, accessorFunc);
-					}
-				}
-			}*/
-
-			if (newParametrized != null)
-				_parametrized = newParametrized;
+			if (newParameterized != null)
+				_parameterized = newParameterized;
 		}
 
 		internal void ClearDynamicQueryableInfo()
@@ -579,71 +563,15 @@ namespace LinqToDB.Linq
 
 			if (useCache && !query.DoNotCache)
 			{
-				// All non-value type parametrized expression will be transformed to constant. It prevents from caching big reference classes in cache.
+				// All non-value type expressions and parameterized expressions will be transformed to ConstantPlaceholderExpression. It prevents from caching big reference classes in cache.
 				//
 				query.PrepareForCaching();
-
-#if DEBUG
-				// Checking at least in Debug that we clear ar references correctly
-				//
-				CheckCachedExpression(query.Expression);
-#endif
 
 				_queryCache.TryAdd(dataContext, query, expr, queryFlags, dataOptions);
 			}
 
 			return query;
 		}
-
-#if DEBUG
-		static void CheckCachedExpression(Expression? expression)
-		{
-			if (expression == null)
-				return;
-
-			var visitor = new CachedConstantsCheckVisitor();
-			visitor.Visit(expression);
-		}
-
-		class CachedConstantsCheckVisitor : ExpressionVisitorBase
-		{
-			protected override Expression VisitMethodCall(MethodCallExpression node)
-			{
-				var dependedParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(node.Method);
-				if (dependedParameters == null)
-					return base.VisitMethodCall(node);
-
-				Visit(node.Object);
-
-				for (var index = 0; index < dependedParameters.Count; index++)
-				{
-					var dependedParameter = dependedParameters[index];
-					if (dependedParameter == null)
-					{
-						Visit(node.Arguments[index]);
-					}
-				}
-
-				return node;
-			}
-
-			protected override Expression VisitConstant(ConstantExpression node)
-			{
-				if (!node.Type.IsScalar() && node.Value != null)
-				{
-					if (!node.Value.GetType().IsScalar())
-					{
-						if (node.Value is Array or FormattableString)
-							return node;
-
-						throw new InvalidOperationException($"Constant '{node}' is not replaced.");
-					}
-				}
-
-				return base.VisitConstant(node);
-			}
-		}
-#endif
 
 		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)
 		{

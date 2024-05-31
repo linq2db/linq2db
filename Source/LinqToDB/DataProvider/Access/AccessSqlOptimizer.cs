@@ -161,6 +161,12 @@ namespace LinqToDB.DataProvider.Access
 							if (underlying is SqlPredicate.FuncLike { Function.Name: "EXISTS" } funcLike)
 							{
 								var existsQuery = (SelectQuery)funcLike.Function.Parameters[0];
+
+								// note that it still will not work as we need to rewrite union queries
+								// see ConcatInAny test
+								if (existsQuery.HasSetOperators)
+									return e;
+
 								existsQuery.Select.Columns.Clear();
 
 								var newSearch = new SqlSearchCondition();

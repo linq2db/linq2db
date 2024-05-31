@@ -1926,5 +1926,18 @@ namespace Tests.xUpdate
 				Assert.That(ex.Message, Is.EqualTo("Update query has no setters defined."));
 			}
 		}
+
+		[Test]
+		public void UpdateWithNullableValue([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			decimal? value = 1.1M;
+
+			db.Types
+				.Where(r => r.ID == -1)
+				.Set(r => r.MoneyValue, value)
+				.Update();
+		}
 	}
 }

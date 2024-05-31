@@ -4655,7 +4655,7 @@ namespace LinqToDB.Linq.Builder
 				var unary      = (UnaryExpression)path;
 
 				expression   = MakeExpression(currentContext, unary.Operand, flags);
-				if (expression.Type != path.Type)
+				if (!flags.IsTable() && expression.Type != path.Type)
 					expression = Expression.Convert(expression, path.Type);
 				doNotProcess = true;
 			}

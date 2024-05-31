@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 			ISqlExpression expr;
 
             var linqOptions = builder.DataContext.Options.LinqOptions;
-			var parametrize = !buildInfo.IsSubQuery && linqOptions.ParameterizeTakeSkip;
+			var parameterize = !buildInfo.IsSubQuery && linqOptions.ParameterizeTakeSkip;
 
 			if (arg.NodeType == ExpressionType.Lambda)
 			{
@@ -46,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null, forceConstant : true, forceNew : true)!.SqlParameter;
 					param.Name             = methodCall.Method.Name == "Take" ? "take" : "skip";
-					param.IsQueryParameter = param.IsQueryParameter && parametrize;
+					param.IsQueryParameter = param.IsQueryParameter && parameterize;
 					expr                   = param;
 				}
 			}

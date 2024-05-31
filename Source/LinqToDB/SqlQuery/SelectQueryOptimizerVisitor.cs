@@ -1253,12 +1253,23 @@ namespace LinqToDB.SqlQuery
 					new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>
 						.Default);
 
-				for (var i = 0; i < parentQuery.Select.Columns.Count; i++)
+				if (parentQuery.Select.Columns.Count == 0)
 				{
-					var scol = parentQuery.Select.Columns[i];
+					for (var i = 0; i < subQuery.Select.Columns.Count; i++)
+					{
+						var scol = subQuery.Select.Columns[i];
+						newIndexes[scol] = i;
+					}
+				}
+				else
+				{
+					for (var i = 0; i < parentQuery.Select.Columns.Count; i++)
+					{
+						var scol = parentQuery.Select.Columns[i];
 
-					if (!newIndexes.ContainsKey(scol.Expression))
-						newIndexes[scol.Expression] = i;
+						if (!newIndexes.ContainsKey(scol.Expression))
+							newIndexes[scol.Expression] = i;
+					}
 				}
 
 				var operation = subQuery.SetOperators[0].Operation;
@@ -1319,7 +1330,7 @@ namespace LinqToDB.SqlQuery
 				NotifyReplaced(column.Expression, column);
 			}
 
-			if (parentQuery.Select.Columns.Count == 0 && subQuery.Select.IsDistinct)
+			if (parentQuery.Select.Columns.Count == 0 && (subQuery.Select.IsDistinct || parentQuery.HasSetOperators))
 			{
 				foreach (var column in subQuery.Select.Columns)
 				{
@@ -2547,7 +2558,7 @@ namespace LinqToDB.SqlQuery
 					sq.Select.IsDistinct = false;
 				}
 
-				if (sq.GroupBy.IsEmpty)
+				if (sq.GroupBy.IsEmpty && !sq.HasSetOperators)
 				{
 					// non aggregation columns can be removed
 					for (int i = sq.Select.Columns.Count - 1; i >= 0; i--)
