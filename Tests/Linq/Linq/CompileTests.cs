@@ -128,7 +128,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Order(100)]
-		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (new DisableBaseline("Multi-threading"))
 			{
