@@ -47,6 +47,18 @@ namespace LinqToDB.DataProvider.Sybase
 				case { Name: PseudoFunctions.REPLACE }:
 					return func.WithName("Str_Replace");
 
+				case { Name: "EXISTS", Parameters: [var sql] }
+					when sql is SelectQuery selectQuery:
+				{
+					if (selectQuery.HasSetOperators)
+					{
+						var query = new SelectQuery() {DoNotRemove = true};
+						query.From.Table(selectQuery);
+						return func.WithParameters([query]);
+					}
+					return func;
+				}
+
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],

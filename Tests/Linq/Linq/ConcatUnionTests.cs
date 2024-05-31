@@ -954,6 +954,20 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("UNION in subquery not supported by Access. We should transform it if we want to support such cases", Configuration = TestProvName.AllAccess)]
+		[Test]
+		public void ConcatInAny([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Parent.Select(p => p.ParentID)
+					.Concat(db.Parent.Select(p => p.ParentID))
+					.Any();
+
+				result.Should().BeTrue();
+			}
+		}
+
 		[Table("ConcatTest")]
 		[InheritanceMapping(Code = 0, Type = typeof(BaseEntity), IsDefault = true)]
 		[InheritanceMapping(Code = 1, Type = typeof(DerivedEntity))]
