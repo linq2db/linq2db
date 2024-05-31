@@ -3,8 +3,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Common.Internal;
-	using LinqToDB.Mapping;
+	using Common.Internal;
+	using Mapping;
 
 	public class SqlQueryRootExpression : Expression, IEquatable<SqlQueryRootExpression>
 	{
@@ -94,6 +94,8 @@ namespace LinqToDB.Expressions
 		{
 			return !Equals(left, right);
 		}
+
+		protected override Expression VisitChildren(ExpressionVisitor visitor) => this;
 
 		protected override Expression Accept(ExpressionVisitor visitor)
 		{
