@@ -1005,35 +1005,35 @@ namespace Tests.DataProvider
 		[Test]
 		public void SequenceInsert([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
-				db.Insert(new OracleSpecific.SequenceTest { Value = "SeqValue" });
+			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
+			using var db = GetDataContext(context);
 
-				var id = db.GetTable<OracleSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
+			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+			db.Insert(new OracleSpecific.SequenceTest { Value = "SeqValue" });
 
-				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.ID == id).Delete();
+			var id = db.GetTable<OracleSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
 
-				Assert.That(db.GetTable<OracleSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
-			}
+			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.ID == id).Delete();
+
+			Assert.That(db.GetTable<OracleSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
 		}
 
 		[Test]
 		public void SequenceInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
+			using var db = GetDataContext(context);
 
-				var id1 = Convert.ToInt32(db.InsertWithIdentity(new OracleSpecific.SequenceTest { Value = "SeqValue" }));
-				var id2 = db.GetTable<OracleSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
+			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 
-				Assert.That(id2, Is.EqualTo(id1));
+			var id1 = Convert.ToInt32(db.InsertWithIdentity(new OracleSpecific.SequenceTest { Value = "SeqValue" }));
+			var id2 = db.GetTable<OracleSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
 
-				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.ID == id1).Delete();
+			Assert.That(id2, Is.EqualTo(id1));
 
-				Assert.That(db.GetTable<OracleSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
-			}
+			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.ID == id1).Delete();
+
+			Assert.That(db.GetTable<OracleSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
 		}
 
 #endregion

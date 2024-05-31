@@ -36,10 +36,6 @@ namespace Tests.OrmBattle
 		List<Northwind.Employee>? Employees;
 		List<Northwind.Order>?    Order;
 		List<Northwind.Product>?  Products;
-//		List<Northwind.Category> Categories;
-//		List<Northwind.Supplier> Suppliers;
-//		List<Northwind.Product> DiscontinuedProducts;
-//		List<Northwind.OrderDetail> OrderDetails;
 
 		[MemberNotNull(nameof(Customers), nameof(Employees), nameof(Order), nameof(Products))]
 		private NorthwindDB Setup(string context)
