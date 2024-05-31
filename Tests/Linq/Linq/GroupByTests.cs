@@ -3076,37 +3076,26 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var query = db
-				.Types
-				.GroupJoin(
-					inner: db
-						.Types
-						.GroupBy(r => r.GuidValue)
-						.Select(g => new
+			var query =
+				from outer in db.Types
+				join innerGroup in
+					(
+						from r in db.Types
+						group r by r.GuidValue into g
+						select new
 						{
-							Id = g.Key,
+							Id    = g.Key,
 							Count = g.Count(d => d.BoolValue)
-						}),
-					outerKeySelector: l => (Guid?)l.GuidValue,
-					innerKeySelector: r => r.Id,
-					resultSelector: (left, right) => new
-					{
-						Outer = left,
-						Inner = right
-					})
-				.SelectMany(
-					collectionSelector: r => r.Inner.DefaultIfEmpty(),
-					resultSelector: (r, l) => new
-					{
-						Design = r.Outer,
-						Inner = l
-					})
-				.Select(r => new
+						}
+					)
+					on outer.GuidValue equals innerGroup.Id into rightGroup
+				from inner in rightGroup.DefaultIfEmpty()
+				select new
 				{
-					Result = r.Inner!.Count
-				});
+					Result = (int?)inner.Count ?? 0
+				};
 
-			_ = query.ToArray();
+			AssertQuery(query);
 		}
 	}
 }
