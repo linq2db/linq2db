@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace LinqToDB.SqlQuery
@@ -25,7 +24,29 @@ namespace LinqToDB.SqlQuery
 		{
 			if (expr.CanBeEvaluated(false))
 				return false;
-			return expr.CanBeEvaluated(true);
+
+			if (expr is ISqlExpression sqlExpression)
+			{
+				sqlExpression = UnwrapNullablity(sqlExpression);
+				if (sqlExpression is SqlParameter)
+					return true;
+			}
+
+			var isMutable = false;
+			expr.VisitParentFirst(a =>
+			{
+				if (a is SqlBinaryExpression binary)
+				{
+					var expr1 = UnwrapNullablity(binary.Expr1);
+					var expr2 = UnwrapNullablity(binary.Expr2);
+					if ((expr1 is SqlParameter || expr1.CanBeEvaluated(false)) && (expr2 is SqlParameter || expr2.CanBeEvaluated(false)))
+						isMutable = true;
+				}
+
+				return !isMutable;
+			});
+
+			return isMutable;
 		}
 
 		public static bool CanBeEvaluated(this IQueryElement expr, bool withParameters)
@@ -38,7 +59,7 @@ namespace LinqToDB.SqlQuery
 			return expr.TryEvaluateExpression(context, out _);
 		}
 
-		internal static (object? value, bool success) TryEvaluateExpression(this IQueryElement expr, EvaluationContext context)
+		static (object? value, bool success) TryEvaluateExpression(this IQueryElement expr, EvaluationContext context)
 		{
 			if (!context.TryGetValue(expr, out var info))
 			{
@@ -68,6 +89,7 @@ namespace LinqToDB.SqlQuery
 					result = sqlValue.Value;
 					return true;
 				}
+
 				case QueryElementType.SqlParameter       :
 				{
 					var sqlParameter = (SqlParameter)expr;
@@ -82,6 +104,7 @@ namespace LinqToDB.SqlQuery
 					result = parameterValue.ProviderValue;
 					return true;
 				}
+
 				case QueryElementType.IsNullPredicate:
 				{
 					var isNullPredicate = (SqlPredicate.IsNull)expr;
@@ -90,12 +113,15 @@ namespace LinqToDB.SqlQuery
 					result = isNullPredicate.IsNot == (value != null);
 					return true;
 				}
+
 				case QueryElementType.ExprExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)expr;
-					var reduced = exprExpr.Reduce(context);
+					/*
+					var reduced = exprExpr.Reduce(context, TODO);
 					if (!ReferenceEquals(reduced, expr))
 						return TryEvaluateExpression(reduced, context, out result);
+						*/
 
 					if (!exprExpr.Expr1.TryEvaluateExpression(context, out var value1) ||
 					    !exprExpr.Expr2.TryEvaluateExpression(context, out var value2))
@@ -174,6 +200,31 @@ namespace LinqToDB.SqlQuery
 
 					return true;
 				}
+
+				case QueryElementType.NotPredicate:
+				{
+					var notPredicate = (SqlPredicate.Not)expr;
+					if (notPredicate.Predicate.TryEvaluateExpression(context, out var value) && value is bool boolValue)
+					{
+						result = !boolValue;
+						return true;
+					}
+
+					return false;
+				}
+
+				case QueryElementType.TruePredicate:
+				{
+					result = true;
+					return true;
+				}
+
+				case QueryElementType.FalsePredicate:
+				{
+					result = false;
+					return true;
+				}
+
 				case QueryElementType.IsTruePredicate:
 				{
 					var isTruePredicate = (SqlPredicate.IsTrue)expr;
@@ -182,7 +233,10 @@ namespace LinqToDB.SqlQuery
 
 					if (value == null)
 					{
-						result = false;
+						if (isTruePredicate.WithNull != null)
+							result = isTruePredicate.WithNull;
+						else
+							result = false;
 						return true;
 					}
 
@@ -194,6 +248,66 @@ namespace LinqToDB.SqlQuery
 
 					return false;
 				}
+
+				case QueryElementType.SqlCast:
+				{
+					var cast = (SqlCastExpression)expr;
+					if (!cast.Expression.TryEvaluateExpression(context, out var value))
+						return false;
+
+					result = value;
+
+					if (result != null)
+					{
+						if (cast.SystemType == typeof(string))
+						{
+							if (result.GetType().IsNumeric())
+							{
+								if (result is int intValue)
+									result = intValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is long longValue)
+									result = longValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is short shortValue)
+									result = shortValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is byte byteValue)
+									result = byteValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is uint uintValue)
+									result = uintValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is ulong ulongValue)
+									result = ulongValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is ushort ushortValue)
+									result = ushortValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is sbyte sbyteValue)
+									result = sbyteValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is char charValue)
+									result = charValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is decimal decimalValue)
+									result = decimalValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is float floatValue)
+									result = floatValue.ToString(CultureInfo.InvariantCulture);
+								else if (result is double doubleValue)
+									result = doubleValue.ToString(CultureInfo.InvariantCulture);
+							}
+						}
+						else
+						{
+							if (result.GetType() != cast.SystemType)
+							{
+								try
+								{
+									result = Convert.ChangeType(result, cast.SystemType, CultureInfo.InvariantCulture);
+								}
+								catch (InvalidCastException)
+								{
+									return false;
+								}
+							}
+						}
+					}
+
+					return true;
+				}
+
 				case QueryElementType.SqlBinaryExpression:
 				{
 					var binary = (SqlBinaryExpression)expr;
@@ -204,56 +318,41 @@ namespace LinqToDB.SqlQuery
 					dynamic? left  = leftEvaluated;
 					dynamic? right = rightEvaluated;
 					if (left == null || right == null)
-						return true;
-					switch (binary.Operation)
+						return false;
+
+					try
 					{
-						case "+" : result = left + right; break;
-						case "-" : result = left - right; break;
-						case "*" : result = left * right; break;
-						case "/" : result = left / right; break;
-						case "%" : result = left % right; break;
-						case "^" : result = left ^ right; break;
-						case "&" : result = left & right; break;
-						case "<" : result = left < right; break;
-						case ">" : result = left > right; break;
-						case "<=": result = left <= right; break;
-						case ">=": result = left >= right; break;
-						default:
-							return false;
+						switch (binary.Operation)
+						{
+							case "+":  result = left + right; break;
+							case "-":  result = left - right; break;
+							case "*":  result = left * right; break;
+							case "/":  result = left / right; break;
+							case "%":  result = left % right; break;
+							case "^":  result = left ^ right; break;
+							case "&":  result = left & right; break;
+							case "<":  result = left < right; break;
+							case ">":  result = left > right; break;
+							case "<=": result = left <= right; break;
+							case ">=": result = left >= right; break;
+							default:
+								return false;
+						}
+					}
+					catch
+					{
+						return false;
 					}
 
 					return true;
 				}
+
 				case QueryElementType.SqlFunction        :
 				{
 					var function = (SqlFunction)expr;
 
 					switch (function.Name)
 					{
-						case "CASE":
-						{
-							if (function.Parameters.Length != 3)
-							{
-								return false;
-							}
-
-							if (!function.Parameters[0]
-								.TryEvaluateExpression(context, out var cond))
-								return false;
-
-							if (!(cond is bool))
-							{
-								return false;
-							}
-
-							if ((bool)cond!)
-								return function.Parameters[1]
-									.TryEvaluateExpression(context, out result);
-							else
-								return function.Parameters[2]
-									.TryEvaluateExpression(context, out result);
-						}
-
 						case "Length":
 						{
 							if (function.Parameters[0]
@@ -312,36 +411,82 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SearchCondition    :
 				{
-					var cond     = (SqlSearchCondition)expr;
+					var cond = (SqlSearchCondition)expr;
 
-					if (cond.Conditions.Count == 0)
+					if (cond.Predicates.Count == 0)
 					{
 						result = true;
 						return true;
 					}
 
-					for (var i = 0; i < cond.Conditions.Count; i++)
+					for (var i = 0; i < cond.Predicates.Count; i++)
 					{
-						var condition = cond.Conditions[i];
-						if (condition.TryEvaluateExpression(context, out var evaluated))
+						var predicate = cond.Predicates[i];
+						if (predicate.TryEvaluateExpression(context, out var evaluated))
 						{
 							if (evaluated is bool boolValue)
 							{
-								if (i == cond.Conditions.Count - 1 || condition.IsOr == boolValue)
+								if (boolValue)
 								{
-									result = boolValue;
-									return true;
+									if (cond.IsOr)
+									{
+										result = true;
+										return true;
+									}
 								}
-							}
-							else if (!condition.IsOr)
-							{
-								return false;
+								else
+								{
+									if (!cond.IsOr)
+									{
+										result = false;
+										return true;
+									}
+								}
 							}
 						}
 					}
 
 					return false;
 				}
+
+				case QueryElementType.SqlCase:
+				{
+					var caseExpr = (SqlCaseExpression)expr;
+
+					foreach (var caseItem in caseExpr.Cases)
+					{
+						if (caseItem.Condition.TryEvaluateExpression(context, out var evaluatedCondition) && evaluatedCondition is bool boolValue)
+						{
+							if (boolValue)
+							{
+								if (caseItem.ResultExpression.TryEvaluateExpression(context, out var resultValue))
+								{
+									result = resultValue;
+									return true;
+								}
+							}
+						}
+						else
+						{
+							return false;
+						}
+					}
+
+					if (caseExpr.ElseExpression == null)
+					{
+						result = null;
+						return true;
+					}
+
+					if (caseExpr.ElseExpression.TryEvaluateExpression(context, out var elseValue))
+					{
+						result = elseValue;
+						return true;
+					}
+
+					return false;
+				}
+
 				case QueryElementType.ExprPredicate      :
 				{
 					var predicate = (SqlPredicate.Expr)expr;
@@ -351,19 +496,77 @@ namespace LinqToDB.SqlQuery
 					result = value;
 					return true;
 				}
-				case QueryElementType.Condition          :
+
+				case QueryElementType.SqlNullabilityExpression:
 				{
-					var cond = (SqlCondition)expr;
-					if (cond.Predicate.TryEvaluateExpression(context, out var evaluated))
+					var nullability = (SqlNullabilityExpression)expr;
+					if (nullability.SqlExpression.TryEvaluateExpression(context, out var evaluated))
 					{
-						if (evaluated is bool boolValue)
+						result = evaluated;
+						return true;
+					}
+
+					return false;
+				}
+
+				case QueryElementType.SqlExpression:
+				{
+					var sqlExpression = (SqlExpression)expr;
+
+					if (sqlExpression is { Expr: "{0}", Parameters: [var p] })
+					{
+						if (p.TryEvaluateExpression(context, out var evaluated))
 						{
-							result = cond.IsNot ? !boolValue : boolValue;
+							result = evaluated;
 							return true;
+						} 
+					}
+
+					return false;
+				}
+
+				case QueryElementType.CompareTo:
+				{
+					var compareTo = (SqlCompareToExpression)expr;
+					if (!compareTo.Expression1.TryEvaluateExpression(context, out var value1) || !compareTo.Expression2.TryEvaluateExpression(context, out var value2))
+						return false;
+
+					if (value1 == null || value2 == null)
+					{
+						result = false;
+						return true;
+					}
+
+					if (value1 is IComparable comp1 && value2 is IComparable comp2)
+					{
+						result = comp1.CompareTo(comp2);
+						return true;
+					}
+
+					return false;
+				}
+
+				case QueryElementType.SqlCondition:
+				{
+					var compareTo = (SqlConditionExpression)expr;
+
+					if (compareTo.Condition.TryEvaluateExpression(context, out var conditionValue) && conditionValue is bool boolCondition)
+					{
+						if (boolCondition)
+						{
+							if (compareTo.TrueValue.TryEvaluateExpression(context, out var trueValue))
+							{
+								result = trueValue;
+								return true;
+							}
 						}
 						else
 						{
-							return false;
+							if (compareTo.FalseValue.TryEvaluateExpression(context, out var falseValue))
+							{
+								result = falseValue;
+								return true;
+							}
 						}
 					}
 
@@ -394,6 +597,18 @@ namespace LinqToDB.SqlQuery
 				return boolValue;
 
 			return defaultValue;
+		}
+
+		public static void ExtractPredicate(ISqlPredicate predicate, out ISqlPredicate underlying, out bool isNot)
+		{
+			underlying = predicate;
+			isNot      = false;
+
+			if (predicate is SqlPredicate.Not notPredicate)
+			{
+				underlying = notPredicate.Predicate;
+				isNot      = true;
+			}
 		}
 	}
 }

@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public static class TemporalTable
+		internal static class TemporalTable
 		{
 			public const string All         = "ALL";
 			public const string AsOf        = "AS OF";
@@ -163,9 +163,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class WithForceSeekExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
-				var value = (SqlValue)      sqlQueryExtension.Arguments["indexName"];
+				var value = (SqlValue)sqlQueryExtension.Arguments["indexName"];
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["columns.Count"]).Value!;
 
 				if (count == 0)
@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class ParamsExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["values.Count"]).Value!;
 
@@ -285,7 +285,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class TableParamsExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["values.Count"]).Value!;
 
@@ -842,7 +842,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class TemporalTableExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var expression = (string)((SqlValue)sqlQueryExtension.Arguments["expression"]).Value!;
 
@@ -971,6 +971,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return table.TemporalTableHint(TemporalTable.All);
 		}
+
 		static Expression<Func<ISqlServerSpecificTable<TSource>,ISqlServerSpecificTable<TSource>>> TemporalTableAllImpl<TSource>()
 			where TSource : notnull
 		{

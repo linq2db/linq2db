@@ -86,14 +86,17 @@ namespace Tests.UserTests
 				.OrderBy (i => i.Id)
 				.ToList();
 
-			Assert.That(items.Select(r => new { r.Id }), Is.EquivalentTo(data1.Select(r => new { r.Id })));
-			Assert.That(items[0].PipeLineChains.Select(r => new { r.LineId, r.ChainId }), Is.EquivalentTo(data2.Take(1).Select(r => new { r.LineId, r.ChainId })));
-			Assert.That(items[1].PipeLineChains.Select(r => new { r.LineId, r.ChainId }), Is.EquivalentTo(data2.Skip(1).Select(r => new { r.LineId, r.ChainId })));
-			Assert.That(items[0].PipeLineChains.Select(c => new { c.Chain.Id }),          Is.EquivalentTo(data3.Take(1).Select(r => new { r.Id })));
-			Assert.That(items[1].PipeLineChains.Select(c => new { c.Chain.Id }),          Is.EquivalentTo(data3.Skip(1).Select(r => new { r.Id })));
+			Assert.Multiple(() =>
+			{
+				Assert.That(items.Select(r => new { r.Id }), Is.EquivalentTo(data1.Select(r => new { r.Id })));
+				Assert.That(items[0].PipeLineChains.Select(r => new { r.LineId, r.ChainId }), Is.EquivalentTo(data2.Take(1).Select(r => new { r.LineId, r.ChainId })));
+				Assert.That(items[1].PipeLineChains.Select(r => new { r.LineId, r.ChainId }), Is.EquivalentTo(data2.Skip(1).Select(r => new { r.LineId, r.ChainId })));
+				Assert.That(items[0].PipeLineChains.Select(c => new { c.Chain.Id }), Is.EquivalentTo(data3.Take(1).Select(r => new { r.Id })));
+				Assert.That(items[1].PipeLineChains.Select(c => new { c.Chain.Id }), Is.EquivalentTo(data3.Skip(1).Select(r => new { r.Id })));
 
-			Assert.That(items[0].PipeLineChains.SelectMany(c => c.Chain.ChainPoints!).Select(c => new { c.ElementId }), Is.EquivalentTo(data4.Take(1).Select(r => new { r.ElementId })));
-			Assert.That(items[1].PipeLineChains.SelectMany(c => c.Chain.ChainPoints!).Select(c => new { c.ElementId }), Is.EquivalentTo(data4.Skip(1).Select(r => new { r.ElementId })));
+				Assert.That(items[0].PipeLineChains.SelectMany(c => c.Chain.ChainPoints!).Select(c => new { c.ElementId }), Is.EquivalentTo(data4.Take(1).Select(r => new { r.ElementId })));
+				Assert.That(items[1].PipeLineChains.SelectMany(c => c.Chain.ChainPoints!).Select(c => new { c.ElementId }), Is.EquivalentTo(data4.Skip(1).Select(r => new { r.ElementId })));
+			});
 		}
 	}
 }

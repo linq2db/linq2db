@@ -53,6 +53,15 @@ namespace LinqToDB.SqlQuery
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
+		public static bool HasSomeModifiers(this SqlSelectClause select, bool ignoreSkip, bool ignoreTake)
+		{
+			return select.IsDistinct || (!ignoreSkip && select.SkipValue != null) || (!ignoreTake && select.TakeValue != null);
+		}
+
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlField? GetIdentityField(this SqlStatement statement)
 		{
 			return statement.GetInsertClause()?.Into!.GetIdentityField();

@@ -37,7 +37,7 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery.Clean(), Contains.Substring("FROM(SELECT /* PARENT */".Clean()).Or.Contains("FROM(SELECT /*+ QB_NAME(PARENT) */".Clean()).Or.Contains("--Access"));
-			Assert.That(LastQuery.Clean(), Contains.Substring(",(SELECT /* CHILD */".    Clean()).Or.Contains(",(SELECT /*+ QB_NAME(CHILD) */".    Clean()).Or.Contains("--Access"));
+			Assert.That(LastQuery.Clean(), Contains.Substring("SELECT /* CHILD */".    Clean()).Or.Contains("SELECT /*+ QB_NAME(CHILD) */".    Clean()).Or.Contains("--Access").Or.Contains("CROSS JOIN (SELECT /* CHILD */".Clean()));
 		}
 
 		[Test]

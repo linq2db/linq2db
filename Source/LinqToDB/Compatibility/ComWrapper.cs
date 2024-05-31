@@ -5,10 +5,11 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
-using LinqToDB.Common;
 
 namespace LinqToDB
 {
+	using Common;
+
 	// implementation based on code from https://github.com/dotnet/runtime/issues/12587
 	/// <summary>
 	/// This class is used as COM object wrapper instead of dynamic keyword, as dynamic for COM is not supported on .net core till v5.
@@ -57,7 +58,7 @@ namespace LinqToDB
 
 		public override bool TryGetMember(GetMemberBinder binder, out object? result)
 		{
-			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.GetProperty, Type.DefaultBinder, _instance, Array<object?>.Empty, null, CultureInfo.InvariantCulture, null);
+			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.GetProperty, Type.DefaultBinder, _instance, [], null, CultureInfo.InvariantCulture, null);
 
 			return true;
 		}

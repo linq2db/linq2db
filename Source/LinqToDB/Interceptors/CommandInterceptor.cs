@@ -24,6 +24,6 @@ namespace LinqToDB.Interceptors
 		public virtual Task<Option<object?>>      ExecuteScalarAsync      (CommandEventData eventData, DbCommand command, Option<object?> result, CancellationToken cancellationToken) => Task.FromResult(result);
 
 		public virtual void                       BeforeReaderDispose     (CommandEventData eventData, DbCommand? command, DbDataReader dataReader) { }
-		public virtual Task                       BeforeReaderDisposeAsync(CommandEventData eventData, DbCommand? command, DbDataReader dataReader) => TaskEx.CompletedTask;
+		public virtual Task                       BeforeReaderDisposeAsync(CommandEventData eventData, DbCommand? command, DbDataReader dataReader) => Task.CompletedTask;
 	}
 }

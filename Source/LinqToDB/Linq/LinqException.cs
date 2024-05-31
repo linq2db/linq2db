@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Runtime.Serialization;
 
@@ -25,6 +25,17 @@ namespace LinqToDB.Linq
 		/// </remarks>
 		public LinqException()
 			: base("A LinqToDB Linq error has occurred.")
+		{
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="LinqException"/> class
+		/// with the specified error message.
+		/// </summary>
+		/// <param name="message">The message to display to the client when the exception is thrown.</param>
+		/// <seealso cref="Exception.Message"/>
+		public LinqException(string message)
+			: base(message)
 		{
 		}
 
@@ -64,21 +75,5 @@ namespace LinqToDB.Linq
 			: base(innerException.Message, innerException)
 		{
 		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqException"/> class
-		/// with serialized data.
-		/// </summary>
-		/// <param name="info">The object that holds the serialized object data.</param>
-		/// <param name="context">The contextual information about the source or destination.</param>
-		/// <remarks>
-		/// This constructor is called during deserialization to
-		/// reconstitute the exception object transmitted over a stream.
-		/// </remarks>
-		protected LinqException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
-		{
-		}
 	}
 }
-

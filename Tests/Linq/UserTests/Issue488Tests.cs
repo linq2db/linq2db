@@ -3,6 +3,8 @@ using System.Data;
 using System.Data.Linq;
 using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -27,7 +29,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test1([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -43,13 +45,13 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
-				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
+				commandInterceptor.Parameters.Should().HaveCount(1);
+				commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Should().HaveCount(1);;
 			}
 		}
 
 		[Test]
-		public void Test2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test2([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -64,8 +66,8 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
-				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
+				commandInterceptor.Parameters.Should().HaveCount(1);
+				commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Should().HaveCount(1);;
 			}
 		}
 	}

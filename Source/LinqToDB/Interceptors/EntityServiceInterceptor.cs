@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace LinqToDB.Interceptors
+﻿namespace LinqToDB.Interceptors
 {
 	public abstract class EntityServiceInterceptor : IEntityServiceInterceptor
 	{

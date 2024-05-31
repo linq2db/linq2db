@@ -8,14 +8,12 @@
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using Oracle.ManagedDataAccess.Types;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -86,12 +84,10 @@ namespace Cli.T4.Oracle
 
 		#region Table Functions
 		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
-
 		[Sql.TableFunction("TEST_TABLE_FUNCTION", Schema = "MANAGED")]
 		public ITable<TestTableFunctionResult> TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction, i);
+			return this.TableFromExpression<TestTableFunctionResult>(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFunctionResult
@@ -101,12 +97,10 @@ namespace Cli.T4.Oracle
 		#endregion
 
 		#region TestPackage1TestTableFunction
-		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage1TestTableFunction(default));
-
 		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_PACKAGE1", Schema = "MANAGED")]
 		public ITable<TestPackage1TestTableFunctionResult> TestPackage1TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestPackage1TestTableFunctionResult>(this, _testTableFunction1, i);
+			return this.TableFromExpression<TestPackage1TestTableFunctionResult>(() => TestPackage1TestTableFunction(i));
 		}
 
 		public partial class TestPackage1TestTableFunctionResult
@@ -116,12 +110,10 @@ namespace Cli.T4.Oracle
 		#endregion
 
 		#region TestPackage2TestTableFunction
-		private static readonly MethodInfo _testTableFunction2 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage2TestTableFunction(default));
-
 		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_PACKAGE2", Schema = "MANAGED")]
 		public ITable<TestPackage2TestTableFunctionResult> TestPackage2TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestPackage2TestTableFunctionResult>(this, _testTableFunction2, i);
+			return this.TableFromExpression<TestPackage2TestTableFunctionResult>(() => TestPackage2TestTableFunction(i));
 		}
 
 		public partial class TestPackage2TestTableFunctionResult
@@ -853,7 +845,7 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C007192 backreference
+		/// SYS_C007123 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(UserId), OtherKey = nameof(TTestUserContract.UserId))]
 		public IEnumerable<TTestUserContract> TTestUserContracts { get; set; } = null!;
@@ -870,7 +862,7 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C007192
+		/// SYS_C007123
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(UserId), OtherKey = nameof(TTestUser.UserId))]
 		public TTestUser User { get; set; } = null!;

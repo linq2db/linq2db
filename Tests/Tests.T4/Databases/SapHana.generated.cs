@@ -85,8 +85,7 @@ namespace SapHanaDataContext
 		[Sql.TableFunction(Schema="TESTDB", Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? iD)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				iD);
+			return this.TableFromExpression(() => GetParentByID(iD));
 		}
 
 		#endregion
@@ -96,8 +95,7 @@ namespace SapHanaDataContext
 		[Sql.TableFunction(Schema="TESTDB", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult> TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				i);
+			return this.TableFromExpression(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult
@@ -912,6 +910,29 @@ namespace SapHanaDataContext
 
 		#endregion
 
+		#region PrdGlobalEccCvMARAproc
+
+		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this SYSTEMDBDB dataConnection)
+		{
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new PrdGlobalEccCvMARAprocResult
+				{
+					Id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
+				},
+				"\"TESTDB\".\"prd.global.ecc/CV_MARAproc\"");
+		}
+
+		public partial class PrdGlobalEccCvMARAprocResult
+		{
+			[Column("id")] public int?    Id      { get; set; }
+			[Column("id")] public string? Column2 { get; set; }
+		}
+
+		#endregion
+
 		#region SelectImplicitColumn
 
 		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this SYSTEMDBDB dataConnection)
@@ -951,29 +972,6 @@ namespace SapHanaDataContext
 		public partial class TestPROCEDUREResult
 		{
 			[Column("")] public int? Column1 { get; set; }
-		}
-
-		#endregion
-
-		#region PrdGlobalEccCvMARAproc
-
-		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this SYSTEMDBDB dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new PrdGlobalEccCvMARAprocResult
-				{
-					Id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
-				},
-				"\"TESTDB\".\"prd.global.ecc/CV_MARAproc\"");
-		}
-
-		public partial class PrdGlobalEccCvMARAprocResult
-		{
-			[Column("id")] public int?    Id      { get; set; }
-			[Column("id")] public string? Column2 { get; set; }
 		}
 
 		#endregion

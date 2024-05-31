@@ -99,15 +99,15 @@ CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastNam
 
 					var list = data.ToList(); // <=THROWS EXCEPTION
 
-					Assert.AreEqual(0, list.Count);
+					Assert.That(list, Is.Empty);
 
 					db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "JohnTheRipper" });
 					db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "DoeJohn"       });
 
 					list = data.ToList(); // <=THROWS EXCEPTION
 
-					Assert.AreEqual(1, list.Count);
-					Assert.AreEqual("JohnTheRipper", list[0].FirstName);
+					Assert.That(list, Has.Count.EqualTo(1));
+					Assert.That(list[0].FirstName, Is.EqualTo("JohnTheRipper"));
 				}
 				finally
 				{

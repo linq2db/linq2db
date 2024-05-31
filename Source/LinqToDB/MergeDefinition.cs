@@ -1,12 +1,13 @@
-﻿using LinqToDB.Common;
-using LinqToDB.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB
 {
+	using Common;
+	using Linq;
+
 	public enum MergeOperationType
 	{
 		Insert,
@@ -67,7 +68,7 @@ namespace LinqToDB
 			SourceKey        = sourceKey;
 			KeyType          = keyType;
 
-			Operations       = operations ?? Array<Operation>.Empty;
+			Operations       = operations ?? [];
 		}
 
 		public IEnumerable<TSource>?                     EnumerableSource { get; }
@@ -103,7 +104,7 @@ namespace LinqToDB
 				TargetKey,
 				SourceKey,
 				KeyType,
-				(Operations ?? Array<Operation>.Empty).Concat(new[] { operation }).ToArray());
+				(Operations ?? []).Concat(new[] { operation }).ToArray());
 		}
 
 		public MergeDefinition<TTarget, TSource> AddOnPredicate(Expression<Func<TTarget, TSource, bool>> matchPredicate)
@@ -159,7 +160,6 @@ namespace LinqToDB
 				UpdateExpression         = update;
 				UpdateBySourceExpression = updateBySource;
 			}
-
 
 			public bool HasCondition
 			{

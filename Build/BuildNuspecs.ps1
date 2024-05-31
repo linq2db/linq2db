@@ -72,7 +72,7 @@ if ($version) {
 
 		$child = $xml.CreateElement('file', $nsUri)
 		$attr = $xml.CreateAttribute('src')
-		$attr.Value = '..\MIT-LICENSE.txt'
+		$attr.Value = '..\..\MIT-LICENSE.txt'
 		$child.Attributes.Append($attr)
 		$xml.package.files.AppendChild($child)
 
@@ -87,7 +87,7 @@ if ($version) {
 
 		$child = $xml.CreateElement('file', $nsUri)
 		$attr = $xml.CreateAttribute('src')
-		$attr.Value = '..\NuGet\icon.png'
+		$attr.Value = '..\..\NuGet\icon.png'
 		$child.Attributes.Append($attr)
 		$attr = $xml.CreateAttribute('target')
 		$attr.Value = 'images\icon.png'

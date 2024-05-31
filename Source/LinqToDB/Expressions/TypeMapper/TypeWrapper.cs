@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
+	using Common;
+
 	/// <summary>
 	/// Implements base class for typed wrappers over provider-specific type.
 	/// </summary>
@@ -47,7 +48,7 @@ namespace LinqToDB.Expressions
 		protected TypeWrapper(object instance, Delegate[]? wrappers)
 		{
 			instance_        = instance;
-			CompiledWrappers = wrappers ?? Array<Delegate>.Empty;
+			CompiledWrappers = wrappers ?? [];
 		}
 
 		/// <summary>

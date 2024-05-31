@@ -8,10 +8,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-#if !NATIVE_ASYNC
-	using Async;
-#endif
-
 	sealed class PersistentTable<T> : ITable<T>
 		where T : notnull
 	{

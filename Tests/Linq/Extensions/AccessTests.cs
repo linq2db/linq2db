@@ -39,6 +39,7 @@ namespace Tests.Extensions
 					from p in db.Parent
 					select p
 				)
+				.AsSubQuery()
 				.AsAccess()
 					.WithOwnerAccessOption()
 				.AsSubQuery()

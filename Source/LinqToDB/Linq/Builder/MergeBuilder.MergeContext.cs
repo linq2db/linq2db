@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -9,93 +10,95 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-		private sealed class MergeContext : SequenceContextBase
+        sealed class MergeContext : SequenceContextBase
 		{
-			private readonly ISet<Expression> _sourceParameters = new HashSet<Expression>();
-			private readonly ISet<Expression> _targetParameters = new HashSet<Expression>();
-
-			public void AddSourceParameter(Expression param)
-			{
-				_sourceParameters.Add(param);
-			}
-
-			public void AddTargetParameter(Expression param)
-			{
-				_targetParameters.Add(param);
-			}
-
 			public MergeContext(SqlMergeStatement merge, IBuildContext target)
 				: base(null, target, null)
 			{
-				Statement = merge;
+				Merge = merge;
 			}
 
 			public MergeContext(SqlMergeStatement merge, IBuildContext target, TableLikeQueryContext source)
 				: base(null, new[] { target, source }, null)
 			{
-				Statement    = merge;
-				merge.Source = source.Source;
+				Merge        = merge;
+				Merge.Source = source.Source;
 			}
 
-			public SqlMergeStatement Merge => (SqlMergeStatement)Statement!;
+			public SqlMergeStatement Merge { get; }
 
-			public IBuildContext           TargetContext => Sequence;
+			public ITableContext         TargetContext => (ITableContext)Sequence;
 			public TableLikeQueryContext SourceContext => (TableLikeQueryContext)Sequences[1];
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public MergeKind    Kind             { get; set; }
+			public Expression?  OutputExpression { get; set; }
+			public IBuildContext? OutputContext  { get; set; }
+
+			public override SqlStatement GetResultStatement()
 			{
-				QueryRunner.SetNonQueryQuery(query);
+				return Merge;
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				if (expression != null)
+				switch(Kind)
 				{
-					switch (flags)
+					case MergeKind.Merge:
+					case MergeKind.MergeWithOutputInto:
+					case MergeKind.MergeWithOutputIntoSource:
 					{
-						case ConvertFlags.Field:
-							{
-								var root = Builder.GetRootObject(expression);
-
-								if (root.NodeType == ExpressionType.Parameter)
-								{
-									if (_sourceParameters.Contains(root))
-										return SourceContext.ConvertToSql(expression, level, flags);
-
-									return TargetContext.ConvertToSql(expression, level, flags);
-								}
-
-								if (root is ContextRefExpression contextRef)
-								{
-									return contextRef.BuildContext.ConvertToSql(expression, level, flags);
-								}
-
-								break;
-							}
+						QueryRunner.SetNonQueryQuery(query);
+						break;
 					}
+					case MergeKind.MergeWithOutput:
+					case MergeKind.MergeWithOutputSource:
+					{
+						var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
+						QueryRunner.SetRunQuery(query, mapper);
+						break;
+					}
+					default:
+						throw new ArgumentOutOfRangeException(Kind.ToString());
 				}
-
-				throw new LinqException("'{0}' cannot be converted to SQL.", expression);
 			}
 
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this) && flags.IsExpression() &&
+				    (Kind == MergeKind.MergeWithOutput || Kind == MergeKind.MergeWithOutputSource))
+				{
+					if (OutputExpression == null || OutputContext == null)
+						throw new InvalidOperationException();
+
+					var selectContext = new SelectContext(Parent, OutputExpression, OutputContext, false);
+					var outputRef     = new ContextRefExpression(OutputExpression.Type, selectContext);
+
+					var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+
+					var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef, ProjectFlags.SQL);
+					if (sqlExpr is SqlPlaceholderExpression)
+						outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr, false));
+					else
+						UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
+
+					var setItems = new List<SqlSetExpression>();
+					UpdateBuilder.InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);
+
+					Merge.Output!.OutputColumns = setItems.Select(c => c.Expression!).ToList();
+
+					return sqlExpr;
+				}
+				return path;
+			}
+
+			public override IBuildContext Clone(CloningContext context)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
-				return SourceContext.IsExpression(expression, level, requestFlag);
+				return null;
 			}
 		}
 	}

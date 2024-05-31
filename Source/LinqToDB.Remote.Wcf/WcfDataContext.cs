@@ -68,19 +68,6 @@ namespace LinqToDB.Remote.Wcf
 			return new WcfLinqServiceClient(_endpointConfigurationName!);
 		}
 
-		protected override IDataContext Clone()
-		{
-			return new WcfDataContext()
-			{
-				MappingSchema              = MappingSchema,
-				ConfigurationString        = ConfigurationString,
-				Binding                    = Binding,
-				_endpointConfigurationName = _endpointConfigurationName,
-				_remoteAddress             = _remoteAddress,
-				_endpointAddress           = _endpointAddress
-			};
-		}
-
 		protected override string ContextIDPrefix => "WcfRemoteLinqService";
 
 		#endregion

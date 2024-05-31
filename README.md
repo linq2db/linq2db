@@ -64,6 +64,7 @@ Unmantained projects:
 You can simply pass connection string into `DataConnection` or `DataContext` constructor using [`DataOptions`](https://linq2db.github.io/api/LinqToDB.DataOptions.html) class.
 
 Minimal configuration example:
+
 ```cs
 var db = new DataConnection(
   new DataOptions()
@@ -148,7 +149,7 @@ And later just set on program startup before the first query is done (Startup.cs
 DataConnection.DefaultSettings = new MySettings();
 ```
 
-### Use with ASP.NET Core
+### Use with ASP.NET Core and Dependency Injection
 
 See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
 

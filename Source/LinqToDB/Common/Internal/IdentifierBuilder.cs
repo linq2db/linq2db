@@ -107,10 +107,15 @@ namespace LinqToDB.Common.Internal
 			return this;
 		}
 
-		public IdentifierBuilder AddRange(IEnumerable items)
+		public IdentifierBuilder AddRange(IEnumerable? items)
 		{
-			foreach (var item in items)
-				Add(GetObjectID(item));
+			if (items == null)
+				Add(string.Empty);
+			else
+			{
+				foreach (var item in items)
+					Add(GetObjectID(item));
+			}
 			return this;
 		}
 

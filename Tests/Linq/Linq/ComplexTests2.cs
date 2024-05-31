@@ -164,7 +164,9 @@ namespace Tests.Linq
 
 			ms.SetConverter<AnimalType, string>       (obj => obj.ToString());
 			ms.SetConverter<AnimalType, DataParameter>(obj => new DataParameter { Value = obj.ToString() });
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			ms.SetConverter<string, AnimalType>       (txt => (AnimalType)Enum.Parse(typeof(AnimalType), txt, true));
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 
 			ms.SetDefaultFromEnumType(typeof(AnimalType2), typeof(string));
 
@@ -231,34 +233,34 @@ namespace Tests.Linq
 			{
 				InsertData(db);
 				var data =  db.GetTable<Animal>().OrderBy(_ => _.Id).ToList();
-				Assert.Null(((Dog)data.First()).Bla);
+				Assert.That(((Dog)data.First()).Bla, Is.Null);
 			}
 		}
 
 		[Test]
-		public void TestLoadWithWithCast([DataSources] string context)
+		public void TestLoadWithWithCast([DataSources(false)] string context)
 		{
 			var ms = SetMappings();
 
 			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
-			using (var db = GetDataContext(context, ms))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
 			using (db.CreateLocalTable<Test>())
 			{
 				InsertData(db);
 				var data = db.GetTable<Animal>().LoadWith(x => ((Dog)x).Bla).OrderBy(_ => _.Id).ToList();
-				Assert.NotNull(((Dog)data.First()).Bla);
+				Assert.That(((Dog)data.First()).Bla, Is.Not.Null);
 			}
 		}
 
 		[Test]
-		public void TestNestedLoadWithWithCast([DataSources] string context)
+		public void TestNestedLoadWithWithCast([DataSources(false)] string context)
 		{
 			var ms = SetMappings();
 
 			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
-			using (var db = GetDataContext(context, ms))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
 			using (db.CreateLocalTable<Test>())
@@ -269,10 +271,13 @@ namespace Tests.Linq
 					.OrderBy(x => x.Id)
 					.ToList();
 
-				Assert.Null(data.First().TestAnimal);
-				Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal!).Bla);
-				Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal!).DogName!.First);
-				Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal!).DogName!.Second);
+				Assert.Multiple(() =>
+				{
+					Assert.That(data.First().TestAnimal, Is.Null);
+					Assert.That(((Dog)data.Skip(1).First().TestAnimal!).Bla, Is.Not.Null);
+					Assert.That(((Dog)data.Skip(1).First().TestAnimal!).DogName!.First, Is.Not.Null);
+					Assert.That(((Dog)data.Skip(1).First().TestAnimal!).DogName!.Second, Is.Not.Null);
+				});
 			}
 		}
 
@@ -290,18 +295,21 @@ namespace Tests.Linq
 				InsertData(db);
 				var data = db.GetTable<Dog>().ToList();
 
-				Assert.NotNull(data[0].DogName!.First);
-				Assert.NotNull(data[0].DogName!.Second);
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].DogName!.First, Is.Not.Null);
+					Assert.That(data[0].DogName!.Second, Is.Not.Null);
+				});
 			}
 		}
 
 		[Test]
-		public void TestStringAndConverterEnums([DataSources] string context)
+		public void TestStringAndConverterEnums([DataSources(false)] string context)
 		{
 			var ms = SetMappings();
 
 			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
-			using (var db = GetDataContext(context, ms))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
 			using (db.CreateLocalTable<Test>())
@@ -309,15 +317,18 @@ namespace Tests.Linq
 				InsertData(db);
 				var d = new Dog() { AnimalType = AnimalType.Big, AnimalType2 = AnimalType2.Big };
 
-				Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big));
-				Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType == d.AnimalType));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big), Is.Not.Null);
+					Assert.That(db.GetTable<Dog>().First(x => x.AnimalType == d.AnimalType), Is.Not.Null);
 
-				Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType2 == AnimalType2.Big));
-				Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType2 == d.AnimalType2));
+					Assert.That(db.GetTable<Dog>().First(x => x.AnimalType2 == AnimalType2.Big), Is.Not.Null);
+					Assert.That(db.GetTable<Dog>().First(x => x.AnimalType2 == d.AnimalType2), Is.Not.Null);
 
-				Assert.NotNull(db.GetTable<Animal>().First(x => x is SuperWildAnimal));
+					Assert.That(db.GetTable<Animal>().First(x => x is SuperWildAnimal), Is.Not.Null);
 
-				Assert.NotNull(db.GetTable<Test>().First(x => x.TestAnimal is Dog && ((Dog)x.TestAnimal).EyeId == 1));
+					Assert.That(db.GetTable<Test>().First(x => x.TestAnimal is Dog && ((Dog)x.TestAnimal).EyeId == 1), Is.Not.Null);
+				});
 			}
 		}
 
@@ -386,12 +397,15 @@ namespace Tests.Linq
 				void Validate()
 				{
 					var data = db.GetTable<Person>().FirstOrDefault(_ => _.FirstName == "test_inherited_insert")!;
-					Assert.IsNotNull(data);
-					Assert.AreEqual(person.ID        , data.ID);
-					Assert.AreEqual(person.FirstName , data.FirstName);
-					Assert.AreEqual(person.LastName  , data.LastName);
-					Assert.AreEqual(person.MiddleName, data.MiddleName);
-					Assert.AreEqual(person.Gender    , data.Gender);
+					Assert.That(data, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(data.ID, Is.EqualTo(person.ID));
+						Assert.That(data.FirstName, Is.EqualTo(person.FirstName));
+						Assert.That(data.LastName, Is.EqualTo(person.LastName));
+						Assert.That(data.MiddleName, Is.EqualTo(person.MiddleName));
+						Assert.That(data.Gender, Is.EqualTo(person.Gender));
+					});
 				}
 			}
 		}
@@ -429,14 +443,17 @@ namespace Tests.Linq
 				void Validate(bool insertOrReplace)
 				{
 					if (insertOrReplace && context.IsAnyOf(TestProvName.AllOracleNative))
-						Assert.AreEqual(-1, cnt);
+						Assert.That(cnt, Is.EqualTo(-1));
 					else
-						Assert.AreEqual(1, cnt);
+						Assert.That(cnt, Is.EqualTo(1));
 
 					var data = db.GetTable<Eye>().Where(_ => _.Id == 123).FirstOrDefault()!;
-					Assert.IsNotNull(data);
-					Assert.AreEqual(eye.Id, data.Id);
-					Assert.AreEqual(eye.Xy, data.Xy);
+					Assert.That(data, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(data.Id, Is.EqualTo(eye.Id));
+						Assert.That(data.Xy, Is.EqualTo(eye.Xy));
+					});
 				}
 			}
 		}
@@ -482,19 +499,22 @@ namespace Tests.Linq
 				void Validate(bool insertOrReplace)
 				{
 					if (insertOrReplace && context.IsAnyOf(TestProvName.AllOracleNative))
-						Assert.AreEqual(-1, cnt);
+						Assert.That(cnt, Is.EqualTo(-1));
 					else
-						Assert.AreEqual(1, cnt);
+						Assert.That(cnt, Is.EqualTo(1));
 
 					var data = db.GetTable<Dog>().Where(_ => _.Id == 666).FirstOrDefault()!;
-					Assert.IsNotNull(data);
-					Assert.AreEqual(dog.Id            , data.Id);
-					Assert.AreEqual(dog.AnimalType    , data.AnimalType);
-					Assert.AreEqual(dog.AnimalType2   , data.AnimalType2);
-					Assert.AreEqual(dog.Name          , data.Name);
-					Assert.AreEqual(dog.DogName.First , data.DogName!.First);
-					Assert.AreEqual(dog.DogName.Second, data.DogName!.Second);
-					Assert.AreEqual(dog.EyeId         , data.EyeId);
+					Assert.That(data, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(data.Id, Is.EqualTo(dog.Id));
+						Assert.That(data.AnimalType, Is.EqualTo(dog.AnimalType));
+						Assert.That(data.AnimalType2, Is.EqualTo(dog.AnimalType2));
+						Assert.That(data.Name, Is.EqualTo(dog.Name));
+						Assert.That(data.DogName!.First, Is.EqualTo(dog.DogName.First));
+						Assert.That(data.DogName!.Second, Is.EqualTo(dog.DogName.Second));
+						Assert.That(data.EyeId, Is.EqualTo(dog.EyeId));
+					});
 				}
 			}
 		}

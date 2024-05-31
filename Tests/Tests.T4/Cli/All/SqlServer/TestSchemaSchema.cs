@@ -8,7 +8,6 @@
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 using System;
@@ -16,7 +15,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -42,12 +40,10 @@ namespace Cli.All.SqlServer
 
 			#region Table Functions
 			#region SchemaTableFunction
-			private static readonly MethodInfo _schemaTableFunction = MemberHelper.MethodOf<DataContext>(ctx => ctx.SchemaTableFunction(default));
-
 			[Sql.TableFunction("SchemaTableFunction", Schema = "TestSchema")]
 			public IQueryable<Parent> SchemaTableFunction(SqlInt32? id)
 			{
-				return _dataContext.GetTable<Parent>(this, _schemaTableFunction, id);
+				return _dataContext.QueryFromExpression<Parent>(() => SchemaTableFunction(id));
 			}
 			#endregion
 			#endregion

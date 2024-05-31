@@ -8,14 +8,12 @@
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using Microsoft.SqlServer.Types;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -92,18 +90,14 @@ namespace Cli.T4.SqlServer
 
 		#region Table Functions
 		#region SchemaTableFunction
-		private static readonly MethodInfo _schemaTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.SchemaTableFunction(default));
-
 		[Sql.TableFunction("SchemaTableFunction", Schema = "TestSchema")]
 		public ITable<Parent> SchemaTableFunction(int? id)
 		{
-			return this.GetTable<Parent>(this, _schemaTableFunction, id);
+			return this.TableFromExpression<Parent>(() => SchemaTableFunction(id));
 		}
 		#endregion
 
 		#region GetParentById
-		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.GetParentById(default));
-
 		/// <summary>
 		/// This is &lt;test&gt; table function!
 		/// </summary>
@@ -113,17 +107,15 @@ namespace Cli.T4.SqlServer
 		[Sql.TableFunction("GetParentByID", Schema = "dbo")]
 		public ITable<Parent> GetParentById(int? id)
 		{
-			return this.GetTable<Parent>(this, _getParentById, id);
+			return this.TableFromExpression<Parent>(() => GetParentById(id));
 		}
 		#endregion
 
 		#region Issue1921
-		private static readonly MethodInfo _issue1921 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.Issue1921());
-
 		[Sql.TableFunction("Issue1921", Schema = "dbo")]
 		public ITable<Issue1921Result> Issue1921()
 		{
-			return this.GetTable<Issue1921Result>(this, _issue1921);
+			return this.TableFromExpression<Issue1921Result>(() => Issue1921());
 		}
 
 		public partial class Issue1921Result

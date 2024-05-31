@@ -24,7 +24,7 @@ namespace LinqToDB.CodeModel
 		{
 			Name           = name;
 			ReturnType     = returnType;
-			_typeArguments = new (typeParameters ?? Array<CodeTypeToken>.Empty);
+			_typeArguments = new (typeParameters ?? []);
 
 			Name.OnChange += _ => ChangeHandler?.Invoke(this);
 			if (ReturnType != null)

@@ -93,8 +93,11 @@ namespace Tests.Scaffold
 				transformation,
 				defaultSchemas);
 
-			Assert.AreEqual(expectedSourceName, sourceSideAssociationName);
-			Assert.AreEqual(expectedTargetName, targetSideAssociationName);
+			Assert.Multiple(() =>
+			{
+				Assert.That(sourceSideAssociationName, Is.EqualTo(expectedSourceName));
+				Assert.That(targetSideAssociationName, Is.EqualTo(expectedTargetName));
+			});
 		}
 	}
 }
