@@ -319,21 +319,29 @@ namespace LinqToDB.SqlQuery
 					dynamic? right = rightEvaluated;
 					if (left == null || right == null)
 						return false;
-					switch (binary.Operation)
+
+					try
 					{
-						case "+" : result = left + right; break;
-						case "-" : result = left - right; break;
-						case "*" : result = left * right; break;
-						case "/" : result = left / right; break;
-						case "%" : result = left % right; break;
-						case "^" : result = left ^ right; break;
-						case "&" : result = left & right; break;
-						case "<" : result = left < right; break;
-						case ">" : result = left > right; break;
-						case "<=": result = left <= right; break;
-						case ">=": result = left >= right; break;
-						default:
-							return false;
+						switch (binary.Operation)
+						{
+							case "+":  result = left + right; break;
+							case "-":  result = left - right; break;
+							case "*":  result = left * right; break;
+							case "/":  result = left / right; break;
+							case "%":  result = left % right; break;
+							case "^":  result = left ^ right; break;
+							case "&":  result = left & right; break;
+							case "<":  result = left < right; break;
+							case ">":  result = left > right; break;
+							case "<=": result = left <= right; break;
+							case ">=": result = left >= right; break;
+							default:
+								return false;
+						}
+					}
+					catch
+					{
+						return false;
 					}
 
 					return true;

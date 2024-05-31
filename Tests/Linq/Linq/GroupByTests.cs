@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 using FluentAssertions;
 
@@ -3068,5 +3070,32 @@ namespace Tests.Linq
 					.Select(it   => it.Key));
 		}
 		#endregion
+
+		[Test]
+		public void NoGuardException([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from outer in db.Types
+				join innerGroup in
+					(
+						from r in db.Types
+						group r by r.GuidValue into g
+						select new
+						{
+							Id    = g.Key,
+							Count = g.Count(d => d.BoolValue)
+						}
+					)
+					on outer.GuidValue equals innerGroup.Id into rightGroup
+				from inner in rightGroup.DefaultIfEmpty()
+				select new
+				{
+					Result = (int?)inner.Count ?? 0
+				};
+
+			AssertQuery(query);
+		}
 	}
 }
