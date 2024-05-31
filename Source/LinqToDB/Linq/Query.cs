@@ -72,16 +72,16 @@ namespace LinqToDB.Linq
 				Expression!.EqualsTo(expr, dataContext, _parametersDuplicates, _dynamicAccessors);
 		}
 
-		List<Expression>? _parametrized;
+		List<Expression>? _parameterized;
 
 		List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? _parametersDuplicates;
 		List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>?                    _dynamicAccessors;
 
 		internal bool IsFastCacheable => _dynamicAccessors == null;
 
-		internal void SetParametrized(List<Expression>? parametrized)
+		internal void SetParameterized(List<Expression>? parameterized)
 		{
-			_parametrized = parametrized;
+			_parameterized = parameterized;
 		}
 
 		internal void SetParametersDuplicates(List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? parametersDuplicates)
@@ -96,21 +96,21 @@ namespace LinqToDB.Linq
 
 		public Expression? GetExpression() => Expression;
 
-		protected Expression ReplaceParametrizedAndClosures(Expression expression, List<Expression>? newParametrized)
+		protected Expression ReplaceParameterizedAndClosures(Expression expression, List<Expression>? newParameterized)
 		{
-			var result = expression.Transform((parametrized: _parametrized, newParametrized), static (ctx, e) =>
+			var result = expression.Transform((parameterized: _parameterized, newParameterized), static (ctx, e) =>
 			{
-				if (ctx.parametrized != null)
+				if (ctx.parameterized != null)
 				{
-					var idx = ctx.parametrized.IndexOf(e);
+					var idx = ctx.parameterized.IndexOf(e);
 					if (idx >= 0)
 					{
-						var newValue = ctx.newParametrized![idx];
+						var newValue = ctx.newParameterized![idx];
 
 						if (newValue is not ConstantPlaceholderExpression)
 						{
 							newValue                 = new ConstantPlaceholderExpression(e.Type);
-							ctx.newParametrized[idx] = newValue;
+							ctx.newParameterized[idx] = newValue;
 						}
 
 						return new TransformInfo(newValue);
@@ -139,18 +139,18 @@ namespace LinqToDB.Linq
 		/// </summary>
 		protected void PrepareForCaching()
 		{
-			List<Expression>? newParametrized = null;
+			List<Expression>? newParameterized = null;
 
 			if (Expression != null)
 			{
-				newParametrized = _parametrized?.ToList();
+				newParameterized = _parameterized?.ToList();
 
-				var result = ReplaceParametrizedAndClosures(Expression, newParametrized);
+				var result = ReplaceParameterizedAndClosures(Expression, newParameterized);
 				Expression = result;
 			}
 
-			if (newParametrized != null)
-				_parametrized = newParametrized;
+			if (newParameterized != null)
+				_parameterized = newParameterized;
 		}
 
 		internal void ClearDynamicQueryableInfo()
@@ -563,7 +563,7 @@ namespace LinqToDB.Linq
 
 			if (useCache && !query.DoNotCache)
 			{
-				// All non-value type expressions and parametrized expressions will be transformed to ConstantPlaceholderExpression. It prevents from caching big reference classes in cache.
+				// All non-value type expressions and parameterized expressions will be transformed to ConstantPlaceholderExpression. It prevents from caching big reference classes in cache.
 				//
 				query.PrepareForCaching();
 

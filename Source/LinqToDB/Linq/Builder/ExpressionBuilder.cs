@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			_query.SetPreambles(preambles);
-			_query.SetParametrized(_parametersContext.GetParametrized());
+			_query.SetParameterized(_parametersContext.GetParameterized());
 			_query.SetParametersDuplicates(_parametersContext.GetParameterDuplicates());
 			_query.SetDynamicAccessors(_parametersContext.GetDynamicAccessors());
 
