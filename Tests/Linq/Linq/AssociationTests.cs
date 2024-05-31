@@ -1870,7 +1870,6 @@ namespace Tests.Linq
 			var result = query.ToArray();
 		}
 
-		[ActiveIssue("Not supported yet. Needs analysis.")]
 		[Test]
 		public void ViaInterfaceSelect([DataSources(TestProvName.AllClickHouse)] string context)
 		{
