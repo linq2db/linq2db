@@ -150,8 +150,8 @@ namespace LinqToDB.Linq.Builder
 				if (node is SqlPlaceholderExpression)
 					return node;
 
-				if (HandleParametrized(node, out var parametrized))
-					return parametrized;
+				if (HandleParameterized(node, out var parameterized))
+					return parameterized;
 
 				if (node.NodeType is ExpressionType.Conditional
 								  or ExpressionType.Call
@@ -789,7 +789,7 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
-			bool HandleParametrized(Expression expr, [NotNullWhen(true)] out Expression? transformed)
+			bool HandleParameterized(Expression expr, [NotNullWhen(true)] out Expression? transformed)
 			{
 				if (expr is PlaceholderExpression { PlaceholderType: PlaceholderType.Closure })
 				{
