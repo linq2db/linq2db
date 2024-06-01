@@ -17,10 +17,6 @@
 				<dependency id="linq2db"                version="6.0.0"  />
 				<dependency id="Microsoft.Data.Sqlite"  version="6.0.31" />
 			</group>
-			<group targetFramework="net7.0">
-				<dependency id="linq2db"                version="6.0.0"  />
-				<dependency id="Microsoft.Data.Sqlite"  version="7.0.20" />
-			</group>
 			<group targetFramework="net8.0">
 				<dependency id="linq2db"                version="6.0.0"  />
 				<dependency id="Microsoft.Data.Sqlite"  version="8.0.6"  />
