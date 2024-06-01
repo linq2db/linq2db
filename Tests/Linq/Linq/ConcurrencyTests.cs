@@ -466,6 +466,7 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<byte[]>>()
 					.HasTableName("ConcurrencyGuidBinary")
 					.Property(e => e.Stamp)
+						.HasDataType(DataType.Binary)
 						.HasLength(16)
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
