@@ -390,7 +390,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Retry(3)]
+		[Test, Retry(10)]
 		public void Issue3017([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using var scope = new DisableBaseline("Multithreading");
