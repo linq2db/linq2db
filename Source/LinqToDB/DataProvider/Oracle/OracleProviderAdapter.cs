@@ -1442,7 +1442,13 @@ namespace LinqToDB.DataProvider.Oracle
 				// Oracle 21c
 				Json         = 135,
 				ArrayAsJson  = 136,
-				ObjectAsJson = 137
+				ObjectAsJson = 137,
+
+				// Oracle 23
+				Vector         = 138,
+				Vector_Int8    = 139,
+				Vector_Float32 = 140,
+				Vector_Float64 = 141
 			}
 
 			[Wrapper]

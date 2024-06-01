@@ -187,10 +187,14 @@ namespace Tests.xUpdate
 				}
 				catch (OperationCanceledException)
 				{
-					if (context.IsAnyOf(TestProvName.AllMySqlData))
+					if (context.IsAnyOf(TestProvName.AllMySqlData, TestProvName.AllOracleManaged))
 					{
-						Assert.Fail("Update test. MySql.Data developers evolved");
+						Assert.Fail("Update test. Oracle developers evolved");
 					}
+				}
+				catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
+				{
+					// ~Aliens~ Oracle
 				}
 
 				var tableExists = true;
@@ -240,10 +244,14 @@ namespace Tests.xUpdate
 				}
 				catch (OperationCanceledException)
 				{
-					if (context.IsAnyOf(TestProvName.AllMySqlData))
+					if (context.IsAnyOf(TestProvName.AllMySqlData, TestProvName.AllOracleManaged))
 					{
-						Assert.Fail("oracle fixed something, update test code");
+						Assert.Fail("Update test. Oracle developers evolved");
 					}
+				}
+				catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
+				{
+					// ~Aliens~ Oracle
 				}
 
 				var tableExists = true;

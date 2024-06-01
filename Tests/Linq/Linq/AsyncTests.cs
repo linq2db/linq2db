@@ -294,9 +294,19 @@ namespace Tests.Linq
 				}
 				catch (OperationCanceledException)
 				{
+					if (context.IsAnyOf(TestProvName.AllOracleManaged) && !context.IsRemote())
+					{
+						Assert.Fail("Update test. Oracle developers evolved");
+					}
+
 					// this casts any exception that inherits from OperationCanceledException
 					//   to a OperationCanceledException to pass the assert check above
 					//   (needed for TaskCanceledException)
+					throw new OperationCanceledException();
+				}
+				catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
+				{
+					// ~Aliens~ Oracle
 					throw new OperationCanceledException();
 				}
 			});

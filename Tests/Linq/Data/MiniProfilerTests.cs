@@ -1610,21 +1610,30 @@ namespace Tests.Data
 				// dbcommand properties
 				db.DisposeCommand();
 
+				// starting from v23 those properties available only on non-disposed command
+				void assertCommand(DbCommand command)
+				{
+					dynamic cmd = type == ConnectionType.Raw ? command : ((dynamic)command).WrappedCommand;
+
+					if (unmapped)
+					{
+						Assert.That(cmd.BindByName, Is.False);
+						Assert.That(cmd.InitialLONGFetchSize, Is.Zero);
+						Assert.That(cmd.ArrayBindCount, Is.Zero);
+					}
+					else
+					{
+						Assert.That(cmd.BindByName, Is.True);
+						Assert.That(cmd.InitialLONGFetchSize, Is.EqualTo(-1));
+						Assert.That(cmd.ArrayBindCount, Is.Zero);
+					}
+				}
+
+				commandInterceptor.OnCommandSet += assertCommand;
+
 				db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 
-				dynamic cmd = commandInterceptor.Command!;
-				if (unmapped)
-				{
-					Assert.That(cmd.BindByName, Is.False);
-					Assert.That(cmd.InitialLONGFetchSize, Is.Zero);
-					Assert.That(cmd.ArrayBindCount, Is.Zero);
-				}
-				else
-				{
-					Assert.That(cmd.BindByName, Is.True);
-					Assert.That(cmd.InitialLONGFetchSize, Is.EqualTo(-1));
-					Assert.That(cmd.ArrayBindCount, Is.Zero);
-				}
+				commandInterceptor.OnCommandSet -= assertCommand;
 
 				void TestBulkCopy()
 				{

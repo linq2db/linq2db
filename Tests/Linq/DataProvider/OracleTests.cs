@@ -325,20 +325,25 @@ namespace Tests.DataProvider
 				Assert.Multiple(() =>
 				{
 					Assert.That(conn.Execute<DateTimeOffset>(
-									"SELECT timestamp '2012-12-12 12:12:12.012' FROM sys.dual"),
-									Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
+						"SELECT timestamp '2012-12-12 12:12:12.012' FROM sys.dual"),
+						Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
 
 					Assert.That(conn.Execute<DateTimeOffset?>(
 						"SELECT timestamp '2012-12-12 12:12:12.012' FROM sys.dual"),
 						Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
 
+					// no idea how/why it works that way. In any case it is not a good idea to map TS to DT
+					var expected = context.IsAnyOf(TestProvName.AllOracleManaged)
+						? new DateTime(2012, 12, 12, 17, 12, 12, 12)
+						: new DateTime(2012, 12, 12, 12, 12, 12, 12);
+
 					Assert.That(conn.Execute<DateTime>(
 						"SELECT timestamp '2012-12-12 12:12:12.012 -04:00' FROM sys.dual"),
-						Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+						Is.EqualTo(expected));
 
 					Assert.That(conn.Execute<DateTime?>(
 						"SELECT timestamp '2012-12-12 12:12:12.012 -04:00' FROM sys.dual"),
-						Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+						Is.EqualTo(expected));
 
 					Assert.That(conn.Execute<DateTimeOffset>(
 						"SELECT timestamp '2012-12-12 12:12:12.012 +05:00' FROM sys.dual"),
@@ -350,7 +355,6 @@ namespace Tests.DataProvider
 
 					Assert.That(conn.Execute<DateTime>("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.EqualTo(default(DateTime)));
 					Assert.That(conn.Execute<DateTime?>("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.EqualTo(default(DateTime?)));
-
 				});
 
 				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).Should().Be(dto);
