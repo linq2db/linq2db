@@ -3909,7 +3909,6 @@ LinqToDB.Linq.NoLinqCache
 LinqToDB.Linq.Query
 LinqToDB.Linq.Query.GetExpression() -> System.Linq.Expressions.Expression?
 LinqToDB.Linq.Query.GetQueries() -> System.Collections.Generic.IReadOnlyCollection<LinqToDB.Linq.QueryInfo!>!
-LinqToDB.Linq.Query.IsParametrized(System.Linq.Expressions.Expression! expr) -> bool
 LinqToDB.Linq.Query.SetDynamicAccessors(System.Collections.Generic.List<(System.Linq.Expressions.Expression! used, LinqToDB.Mapping.MappingSchema! mappingSchema, System.Func<LinqToDB.IDataContext!, LinqToDB.Mapping.MappingSchema!, System.Linq.Expressions.Expression!>! accessorFunc)>? dynamicAccessors) -> void
 LinqToDB.Linq.Query<T>
 LinqToDB.Linq.QueryInfo
@@ -8013,7 +8012,6 @@ override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitSqlOutputClause(L
 override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitSqlQuery(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitSqlSetExpression(LinqToDB.SqlQuery.SqlSetExpression! element) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitSqlValue(LinqToDB.SqlQuery.SqlValue! element) -> LinqToDB.SqlQuery.IQueryElement!
-override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitSqlValuesTable(LinqToDB.SqlQuery.SqlValuesTable! element) -> LinqToDB.SqlQuery.IQueryElement!
 override LinqToDB.SqlProvider.SqlExpressionOptimizerVisitor.Cleanup() -> void
 override LinqToDB.SqlProvider.SqlExpressionOptimizerVisitor.Visit(LinqToDB.SqlQuery.IQueryElement? element) -> LinqToDB.SqlQuery.IQueryElement?
 override LinqToDB.SqlProvider.SqlExpressionOptimizerVisitor.VisitCaseItem(LinqToDB.SqlQuery.SqlCaseExpression.CaseItem! element) -> LinqToDB.SqlQuery.SqlCaseExpression.CaseItem!
@@ -12448,3 +12446,17 @@ virtual LinqToDB.UpdateColumnFilter<T>.Invoke(T entity, LinqToDB.Mapping.ColumnD
 ~static LinqToDB.Sql.SqlRow<T1>.operator >=(LinqToDB.Sql.SqlRow<T1> x, LinqToDB.Sql.SqlRow<T1> y) -> bool
 ~static readonly LinqToDB.Sql.SqlRow.Types -> System.Type[]
 ~virtual LinqToDB.DataProvider.DataProviderOptions<T>.Equals(LinqToDB.DataProvider.DataProviderOptions<T>? other) -> bool
+LinqToDB.Expressions.ConstantPlaceholderExpression
+LinqToDB.Expressions.ConstantPlaceholderExpression.ConstantPlaceholderExpression(System.Type! constantType) -> void
+LinqToDB.Expressions.ConstantPlaceholderExpression.ConstantType.get -> System.Type!
+override LinqToDB.Expressions.ConstantPlaceholderExpression.CanReduce.get -> bool
+override LinqToDB.Expressions.ConstantPlaceholderExpression.Equals(object? obj) -> bool
+override LinqToDB.Expressions.ConstantPlaceholderExpression.GetHashCode() -> int
+override LinqToDB.Expressions.ConstantPlaceholderExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Expressions.ConstantPlaceholderExpression.Reduce() -> System.Linq.Expressions.Expression!
+override LinqToDB.Expressions.ConstantPlaceholderExpression.ToString() -> string!
+override LinqToDB.Expressions.ConstantPlaceholderExpression.Type.get -> System.Type!
+override LinqToDB.Expressions.SqlQueryRootExpression.VisitChildren(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitSqlColumnReference(LinqToDB.SqlQuery.SqlColumn! element) -> LinqToDB.SqlQuery.IQueryElement!
+override LinqToDB.SqlProvider.SqlExpressionConvertVisitor.VisitSqlFieldReference(LinqToDB.SqlQuery.SqlField! element) -> LinqToDB.SqlQuery.IQueryElement!
+virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitConstantPlaceholder(LinqToDB.Expressions.ConstantPlaceholderExpression! node) -> System.Linq.Expressions.Expression!
