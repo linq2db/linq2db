@@ -1448,7 +1448,7 @@ namespace LinqToDB.DataProvider.Oracle
 				Vector         = 138,
 				Vector_Int8    = 139,
 				Vector_Float32 = 140,
-				Vector_Float64 = 141
+				Vector_Float64 = 141,
 			}
 
 			[Wrapper]
