@@ -136,7 +136,7 @@ namespace LinqToDB.SqlQuery
 			return writer.ToString();
 
 #else
-			if (Expression is SqlField)
+			if (Expression is SqlField or SqlColumn)
 				return this.ToDebugString();
 
 			return base.ToString()!;
