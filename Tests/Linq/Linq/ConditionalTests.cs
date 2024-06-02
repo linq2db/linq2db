@@ -205,5 +205,18 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void CrossToOuterApply([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from p in db.Parent
+						select p.ParentID == 2
+							// this must be promoted to outer join
+							? p.Children.OrderBy(c => c.ChildID).First()
+							: p.Children.OrderBy(c => c.ChildID).FirstOrDefault();
+
+			AssertQuery(query);
+		}
 	}
 }
