@@ -854,5 +854,17 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void DropOrderByFromNonLimitedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Where(p => db.Child.Where(c => c.ParentID == p.ParentID)
+					.Any(c => db.GrandChild.Select(gc => gc.ChildID).OrderBy(id => id).Contains(c.ChildID)));
+
+			AssertQuery(query);
+		}
+
 	}
 }
