@@ -1829,5 +1829,75 @@ namespace Tests.Linq
 				Assert.That(lags, Is.EqualTo(new string?[] { null, "One", "Two", "Three" }).AsCollection);
 			}
 		}
+
+		[Sql.Expression("COUNT(*) OVER()", IsWindowFunction = true, IsAggregate = true)]
+		private static int Count1(IGrouping<int, Child> group) => group.Count();
+		[Sql.Expression("COUNT(*) OVER()", IsWindowFunction = true, IsAggregate = false)]
+		private static int Count2(IGrouping<int, Child> group) => group.Count();
+
+		[Test]
+		public void WindowFunctionWithAggregate1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => new
+				{
+					key = g.Key,
+					aggregates = new
+					{
+						aggregate = g.Count(),
+						window = Count1(g)
+					}
+				})
+				.OrderByDescending(_ => _.key)
+				.Take(100);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void WindowFunctionWithAggregate2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => new
+				{
+					key = g.Key,
+					aggregates = new
+					{
+						aggregate = g.Count(),
+						window = Count2(g)
+					}
+				})
+				.OrderByDescending(_ => _.key)
+				.Take(100);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void WindowFunctionWithAggregate3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => new
+				{
+					key = g.Key,
+					aggregates = new
+					{
+						aggregate      = g.Count(),
+						window = Sql.Ext.Count().Over().ToValue(),
+					}
+				})
+				.OrderByDescending(_ => _.key)
+				.Take(100)
+				.ToList();
+		}
 	}
 }
