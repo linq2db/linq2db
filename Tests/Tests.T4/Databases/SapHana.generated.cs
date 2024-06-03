@@ -204,7 +204,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// FK_Doctor_Person (TESTDB.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(SapHanaDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -231,7 +231,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference (TESTDB.IndexTable2)
 		/// </summary>
-		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=true)]
+		[Association(ThisKey=nameof(PKField1) + ", " + nameof(PKField2), OtherKey=nameof(SapHanaDataContext.IndexTable2.PKField1) + ", " + nameof(SapHanaDataContext.IndexTable2.PKField2), CanBeNull=true)]
 		public IndexTable2? Patient { get; set; }
 
 		#endregion
@@ -248,7 +248,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// FK_Patient2_IndexTable (TESTDB.IndexTable)
 		/// </summary>
-		[Association(ThisKey="PKField1, PKField2", OtherKey="PKField1, PKField2", CanBeNull=false)]
+		[Association(ThisKey=nameof(PKField1) + ", " + nameof(PKField2), OtherKey=nameof(SapHanaDataContext.IndexTable.PKField1) + ", " + nameof(SapHanaDataContext.IndexTable.PKField2), CanBeNull=false)]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
 
 		#endregion
@@ -320,7 +320,7 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// FK_Patient_Person (TESTDB.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(SapHanaDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -340,13 +340,13 @@ namespace SapHanaDataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (TESTDB.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(SapHanaDataContext.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference (TESTDB.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(SapHanaDataContext.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion

@@ -140,13 +140,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers_BackReference (dbo.CustomerCustomerDemo)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Customer.CustomerID), OtherKey=nameof(DataModel.CustomerCustomerDemo.CustomerID), CanBeNull=true)]
 		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Orders_Customers_BackReference (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Customer.CustomerID), OtherKey=nameof(DataModel.Order.CustomerID), CanBeNull=true)]
 		public List<Order> Orders { get; set; } = null!;
 
 		#endregion
@@ -172,13 +172,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers (dbo.Customers)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.CustomerCustomerDemo.CustomerID), OtherKey=nameof(DataModel.Customer.CustomerID), CanBeNull=false)]
 		public Customer Customer { get; set; } = null!;
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo (dbo.CustomerDemographics)
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.CustomerCustomerDemo.CustomerTypeID), OtherKey=nameof(DataModel.CustomerDemographic.CustomerTypeID), CanBeNull=false)]
 		public CustomerDemographic CustomerType { get; set; } = null!;
 
 		#endregion
@@ -195,7 +195,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_BackReference (dbo.CustomerCustomerDemo)
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.CustomerDemographic.CustomerTypeID), OtherKey=nameof(DataModel.CustomerCustomerDemo.CustomerTypeID), CanBeNull=true)]
 		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
 
 		#endregion
@@ -228,25 +228,25 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees_BackReference (dbo.EmployeeTerritories)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Employee.EmployeeID), OtherKey=nameof(DataModel.EmployeeTerritory.EmployeeID), CanBeNull=true)]
 		public List<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Employees_Employees (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Employee.ReportsTo), OtherKey=nameof(DataModel.Employee.EmployeeID), CanBeNull=true)]
 		public Employee? FkEmployeesEmployee { get; set; }
 
 		/// <summary>
 		/// FK_Employees_Employees_BackReference (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Employee.EmployeeID), OtherKey=nameof(DataModel.Employee.ReportsTo), CanBeNull=true)]
 		public List<Employee> FkEmployeesEmployeesBackReferences { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Orders_Employees_BackReference (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Employee.EmployeeID), OtherKey=nameof(DataModel.Order.EmployeeID), CanBeNull=true)]
 		public List<Order> Orders { get; set; } = null!;
 
 		#endregion
@@ -263,13 +263,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.EmployeeTerritory.EmployeeID), OtherKey=nameof(DataModel.Employee.EmployeeID), CanBeNull=false)]
 		public Employee Employee { get; set; } = null!;
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories (dbo.Territories)
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.EmployeeTerritory.TerritoryID), OtherKey=nameof(DataModel.Territory.TerritoryID), CanBeNull=false)]
 		public Territory Territory { get; set; } = null!;
 
 		#endregion
@@ -329,25 +329,25 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers (dbo.Customers)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Order.CustomerID), OtherKey=nameof(DataModel.Customer.CustomerID), CanBeNull=true)]
 		public Customer? Customer { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Order.EmployeeID), OtherKey=nameof(DataModel.Employee.EmployeeID), CanBeNull=true)]
 		public Employee? Employee { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Orders_BackReference (dbo.Order Details)
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Order.OrderID), OtherKey=nameof(DataModel.OrderDetail.ID), CanBeNull=true)]
 		public List<OrderDetail> OrderDetails { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Orders_Shippers (dbo.Shippers)
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Order.ShipVia), OtherKey=nameof(DataModel.Shipper.ShipperID), CanBeNull=true)]
 		public Shipper? Shipper { get; set; }
 
 		#endregion
@@ -367,7 +367,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.OrderDetail.ID), OtherKey=nameof(DataModel.Order.OrderID), CanBeNull=false)]
 		public Order Order { get; set; } = null!;
 
 		#endregion
@@ -467,7 +467,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region_BackReference (dbo.Territories)
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Region.RegionID), OtherKey=nameof(DataModel.Territory.RegionID), CanBeNull=true)]
 		public List<Territory> Territories { get; set; } = null!;
 
 		#endregion
@@ -503,7 +503,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Shippers_BackReference (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Shipper.ShipperID), OtherKey=nameof(DataModel.Order.ShipVia), CanBeNull=true)]
 		public List<Order> Orders { get; set; } = null!;
 
 		#endregion
@@ -554,13 +554,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories_BackReference (dbo.EmployeeTerritories)
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Territory.TerritoryID), OtherKey=nameof(DataModel.EmployeeTerritory.TerritoryID), CanBeNull=true)]
 		public List<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Territories_Region (dbo.Region)
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.Territory.RegionID), OtherKey=nameof(DataModel.Region.RegionID), CanBeNull=false)]
 		public Region Region { get; set; } = null!;
 
 		#endregion
@@ -814,7 +814,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Customer.CustomerID), OtherKey=nameof(DataModel.CustomerCustomerDemo.CustomerID), CanBeNull=true)]
 		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID);
@@ -823,7 +823,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Customer.CustomerID), OtherKey=nameof(DataModel.Order.CustomerID), CanBeNull=true)]
 		public static IQueryable<Order> Orders(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID);
@@ -836,7 +836,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.CustomerCustomerDemo.CustomerID), OtherKey=nameof(DataModel.Customer.CustomerID), CanBeNull=false)]
 		public static IQueryable<Customer> Customers(this CustomerCustomerDemo obj, IDataContext db)
 		{
 			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
@@ -845,7 +845,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.CustomerCustomerDemo.CustomerID), OtherKey=nameof(DataModel.Customer.CustomerID), CanBeNull=false)]
 		public static CustomerCustomerDemo Customer(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID).First();
@@ -854,7 +854,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.CustomerCustomerDemo.CustomerTypeID), OtherKey=nameof(DataModel.CustomerDemographic.CustomerTypeID), CanBeNull=false)]
 		public static IQueryable<CustomerDemographic> CustomerTypes(this CustomerCustomerDemo obj, IDataContext db)
 		{
 			return db.GetTable<CustomerDemographic>().Where(c => c.CustomerTypeID == obj.CustomerTypeID);
@@ -863,7 +863,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.CustomerCustomerDemo.CustomerTypeID), OtherKey=nameof(DataModel.CustomerDemographic.CustomerTypeID), CanBeNull=false)]
 		public static CustomerCustomerDemo CustomerType(this CustomerDemographic obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerTypeID == obj.CustomerTypeID).First();
@@ -876,7 +876,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.CustomerDemographic.CustomerTypeID), OtherKey=nameof(DataModel.CustomerCustomerDemo.CustomerTypeID), CanBeNull=true)]
 		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes0(this CustomerDemographic obj, IDataContext db)
 		{
 			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerTypeID == obj.CustomerTypeID);
@@ -889,7 +889,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Employee.EmployeeID), OtherKey=nameof(DataModel.EmployeeTerritory.EmployeeID), CanBeNull=true)]
 		public static IQueryable<EmployeeTerritory> EmployeeTerritories(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<EmployeeTerritory>().Where(c => c.EmployeeID == obj.EmployeeID);
@@ -898,7 +898,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Employee.ReportsTo), OtherKey=nameof(DataModel.Employee.EmployeeID), CanBeNull=true)]
 		public static IQueryable<Employee> FkEmployeesEmployees(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.ReportsTo);
@@ -907,7 +907,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Employee.ReportsTo), OtherKey=nameof(DataModel.Employee.EmployeeID), CanBeNull=true)]
 		public static Employee? FkEmployeesEmployee(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.ReportsTo == obj.EmployeeID).FirstOrDefault();
@@ -916,7 +916,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Employees_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Employee.EmployeeID), OtherKey=nameof(DataModel.Employee.ReportsTo), CanBeNull=true)]
 		public static IQueryable<Employee> FkEmployeesEmployeesBackReferences(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.ReportsTo == obj.EmployeeID);
@@ -925,7 +925,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Employee.EmployeeID), OtherKey=nameof(DataModel.Order.EmployeeID), CanBeNull=true)]
 		public static IQueryable<Order> Orders0(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.EmployeeID == obj.EmployeeID);
@@ -938,7 +938,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.EmployeeTerritory.EmployeeID), OtherKey=nameof(DataModel.Employee.EmployeeID), CanBeNull=false)]
 		public static IQueryable<Employee> Employees(this EmployeeTerritory obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.EmployeeID);
@@ -947,7 +947,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.EmployeeTerritory.EmployeeID), OtherKey=nameof(DataModel.Employee.EmployeeID), CanBeNull=false)]
 		public static EmployeeTerritory Employee(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<EmployeeTerritory>().Where(c => c.EmployeeID == obj.EmployeeID).First();
@@ -956,7 +956,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.EmployeeTerritory.TerritoryID), OtherKey=nameof(DataModel.Territory.TerritoryID), CanBeNull=false)]
 		public static IQueryable<Territory> Territories(this EmployeeTerritory obj, IDataContext db)
 		{
 			return db.GetTable<Territory>().Where(c => c.TerritoryID == obj.TerritoryID);
@@ -965,7 +965,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.EmployeeTerritory.TerritoryID), OtherKey=nameof(DataModel.Territory.TerritoryID), CanBeNull=false)]
 		public static EmployeeTerritory Territory(this Territory obj, IDataContext db)
 		{
 			return db.GetTable<EmployeeTerritory>().Where(c => c.TerritoryID == obj.TerritoryID).First();
@@ -978,7 +978,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Order.CustomerID), OtherKey=nameof(DataModel.Customer.CustomerID), CanBeNull=true)]
 		public static IQueryable<Customer> Customers0(this Order obj, IDataContext db)
 		{
 			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
@@ -987,7 +987,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Order.CustomerID), OtherKey=nameof(DataModel.Customer.CustomerID), CanBeNull=true)]
 		public static Order? Customer0(this Customer obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID).FirstOrDefault();
@@ -996,7 +996,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Order.EmployeeID), OtherKey=nameof(DataModel.Employee.EmployeeID), CanBeNull=true)]
 		public static IQueryable<Employee> Employees0(this Order obj, IDataContext db)
 		{
 			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.EmployeeID);
@@ -1005,7 +1005,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Order.EmployeeID), OtherKey=nameof(DataModel.Employee.EmployeeID), CanBeNull=true)]
 		public static Order? Employee0(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.EmployeeID == obj.EmployeeID).FirstOrDefault();
@@ -1014,7 +1014,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders_BackReference
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Order.OrderID), OtherKey=nameof(DataModel.OrderDetail.ID), CanBeNull=true)]
 		public static IQueryable<OrderDetail> OrderDetails(this Order obj, IDataContext db)
 		{
 			return db.GetTable<OrderDetail>().Where(c => c.ID == obj.OrderID);
@@ -1023,7 +1023,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Shippers
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Order.ShipVia), OtherKey=nameof(DataModel.Shipper.ShipperID), CanBeNull=true)]
 		public static IQueryable<Shipper> Shippers(this Order obj, IDataContext db)
 		{
 			return db.GetTable<Shipper>().Where(c => c.ShipperID == obj.ShipVia);
@@ -1032,7 +1032,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Shippers
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Order.ShipVia), OtherKey=nameof(DataModel.Shipper.ShipperID), CanBeNull=true)]
 		public static Order? Shipper(this Shipper obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.ShipVia == obj.ShipperID).FirstOrDefault();
@@ -1045,7 +1045,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.OrderDetail.ID), OtherKey=nameof(DataModel.Order.OrderID), CanBeNull=false)]
 		public static IQueryable<Order> Orders1(this OrderDetail obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.OrderID == obj.ID);
@@ -1054,7 +1054,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.OrderDetail.ID), OtherKey=nameof(DataModel.Order.OrderID), CanBeNull=false)]
 		public static OrderDetail Order(this Order obj, IDataContext db)
 		{
 			return db.GetTable<OrderDetail>().Where(c => c.ID == obj.OrderID).First();
@@ -1067,7 +1067,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region_BackReference
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Region.RegionID), OtherKey=nameof(DataModel.Territory.RegionID), CanBeNull=true)]
 		public static IQueryable<Territory> Territories0(this Region obj, IDataContext db)
 		{
 			return db.GetTable<Territory>().Where(c => c.RegionID == obj.RegionID);
@@ -1080,7 +1080,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Shippers_BackReference
 		/// </summary>
-		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Shipper.ShipperID), OtherKey=nameof(DataModel.Order.ShipVia), CanBeNull=true)]
 		public static IQueryable<Order> Orders2(this Shipper obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(c => c.ShipVia == obj.ShipperID);
@@ -1093,7 +1093,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories_BackReference
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Territory.TerritoryID), OtherKey=nameof(DataModel.EmployeeTerritory.TerritoryID), CanBeNull=true)]
 		public static IQueryable<EmployeeTerritory> EmployeeTerritories0(this Territory obj, IDataContext db)
 		{
 			return db.GetTable<EmployeeTerritory>().Where(c => c.TerritoryID == obj.TerritoryID);
@@ -1102,7 +1102,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.Territory.RegionID), OtherKey=nameof(DataModel.Region.RegionID), CanBeNull=false)]
 		public static IQueryable<Region> Regions(this Territory obj, IDataContext db)
 		{
 			return db.GetTable<Region>().Where(c => c.RegionID == obj.RegionID);
@@ -1111,7 +1111,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.Territory.RegionID), OtherKey=nameof(DataModel.Region.RegionID), CanBeNull=false)]
 		public static Territory Region(this Region obj, IDataContext db)
 		{
 			return db.GetTable<Territory>().Where(c => c.RegionID == obj.RegionID).First();
@@ -1358,7 +1358,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference (dbo.IndexTable2)
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.IndexTable.PKField2) + ", " + nameof(DataModel.IndexTable.PKField1), OtherKey=nameof(DataModel.IndexTable2.PKField2) + ", " + nameof(DataModel.IndexTable2.PKField1), CanBeNull=true)]
 		public IndexTable2? Patient { get; set; }
 
 		#endregion
@@ -1375,7 +1375,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable (dbo.IndexTable)
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.IndexTable2.PKField2) + ", " + nameof(DataModel.IndexTable2.PKField1), OtherKey=nameof(DataModel.IndexTable.PKField2) + ", " + nameof(DataModel.IndexTable.PKField1), CanBeNull=false)]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
 
 		#endregion
@@ -1441,7 +1441,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Provider_Member_BackReference (dbo.Provider)
 		/// </summary>
-		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Member.MemberId), OtherKey=nameof(DataModel.Provider.ProviderId), CanBeNull=true)]
 		public Provider? Provider { get; set; }
 
 		#endregion
@@ -1498,7 +1498,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Provider_Member (dbo.Member)
 		/// </summary>
-		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.Provider.ProviderId), OtherKey=nameof(DataModel.Member.MemberId), CanBeNull=false)]
 		public Member Member { get; set; } = null!;
 
 		#endregion
@@ -1603,19 +1603,19 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaX.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaY.TestSchemaXID), CanBeNull=true)]
 		public List<TestSchemaY> TestSchemaY { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_OtherID_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaX.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaY.TestSchemaXID), CanBeNull=true)]
 		public List<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaX.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaY.ParentTestSchemaXID), CanBeNull=true)]
 		public List<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -1633,19 +1633,19 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaY.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaX.TestSchemaXID), CanBeNull=false)]
 		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaY.ParentTestSchemaXID), OtherKey=nameof(DataModel.TestSchemaX.TestSchemaXID), CanBeNull=false)]
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaY.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaX.TestSchemaXID), CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -2452,7 +2452,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.IndexTable.PKField2) + ", " + nameof(DataModel.IndexTable.PKField1), OtherKey=nameof(DataModel.IndexTable2.PKField2) + ", " + nameof(DataModel.IndexTable2.PKField1), CanBeNull=true)]
 		public static IQueryable<IndexTable2> Patients(this IndexTable obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable2>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1);
@@ -2461,7 +2461,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.IndexTable.PKField2) + ", " + nameof(DataModel.IndexTable.PKField1), OtherKey=nameof(DataModel.IndexTable2.PKField2) + ", " + nameof(DataModel.IndexTable2.PKField1), CanBeNull=true)]
 		public static IndexTable? Patient(this IndexTable2 obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).FirstOrDefault();
@@ -2474,7 +2474,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.IndexTable2.PKField2) + ", " + nameof(DataModel.IndexTable2.PKField1), OtherKey=nameof(DataModel.IndexTable.PKField2) + ", " + nameof(DataModel.IndexTable.PKField1), CanBeNull=false)]
 		public static IQueryable<IndexTable> Patient2IndexTables(this IndexTable2 obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1);
@@ -2483,7 +2483,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.IndexTable2.PKField2) + ", " + nameof(DataModel.IndexTable2.PKField1), OtherKey=nameof(DataModel.IndexTable.PKField2) + ", " + nameof(DataModel.IndexTable.PKField1), CanBeNull=false)]
 		public static IndexTable2 Patient2IndexTable(this IndexTable obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable2>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).First();
@@ -2496,7 +2496,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Provider_Member_BackReference
 		/// </summary>
-		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Member.MemberId), OtherKey=nameof(DataModel.Provider.ProviderId), CanBeNull=true)]
 		public static IQueryable<Provider> Providers(this Member obj, IDataContext db)
 		{
 			return db.GetTable<Provider>().Where(c => c.ProviderId == obj.MemberId);
@@ -2505,7 +2505,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Provider_Member_BackReference
 		/// </summary>
-		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.Member.MemberId), OtherKey=nameof(DataModel.Provider.ProviderId), CanBeNull=true)]
 		public static Member? Provider(this Provider obj, IDataContext db)
 		{
 			return db.GetTable<Member>().Where(c => c.MemberId == obj.ProviderId).FirstOrDefault();
@@ -2518,7 +2518,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Provider_Member
 		/// </summary>
-		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.Provider.ProviderId), OtherKey=nameof(DataModel.Member.MemberId), CanBeNull=false)]
 		public static IQueryable<Member> Members(this Provider obj, IDataContext db)
 		{
 			return db.GetTable<Member>().Where(c => c.MemberId == obj.ProviderId);
@@ -2527,7 +2527,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Provider_Member
 		/// </summary>
-		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.Provider.ProviderId), OtherKey=nameof(DataModel.Member.MemberId), CanBeNull=false)]
 		public static Provider Member(this Member obj, IDataContext db)
 		{
 			return db.GetTable<Provider>().Where(c => c.ProviderId == obj.MemberId).First();
@@ -2540,7 +2540,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaB.TargetTestSchemaAId), CanBeNull=true)]
 		public static IQueryable<MySchemaSchema.TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAId == obj.TestSchemaAID);
@@ -2549,7 +2549,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaB.OriginTestSchemaAID), CanBeNull=true)]
 		public static IQueryable<MySchemaSchema.TestSchemaB> TestSchemaBYOriginTestSchemaA(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.OriginTestSchemaAID == obj.TestSchemaAID);
@@ -2558,7 +2558,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaB.TargetTestSchemaAID), CanBeNull=true)]
 		public static IQueryable<MySchemaSchema.TestSchemaB> TestSchemaBYTargetTestSchemaA(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAID == obj.TestSchemaAID);
@@ -2571,7 +2571,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaB.TargetTestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), CanBeNull=false)]
 		public static IQueryable<MySchemaSchema.TestSchemaA> FKTargetTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TargetTestSchemaAID);
@@ -2580,7 +2580,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaB.TargetTestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), CanBeNull=false)]
 		public static MySchemaSchema.TestSchemaB FKTargetTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAID == obj.TestSchemaAID).First();
@@ -2589,7 +2589,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
 		/// </summary>
-		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaB.OriginTestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), CanBeNull=false)]
 		public static IQueryable<MySchemaSchema.TestSchemaA> OriginTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.OriginTestSchemaAID);
@@ -2598,7 +2598,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
 		/// </summary>
-		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaB.OriginTestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), CanBeNull=false)]
 		public static MySchemaSchema.TestSchemaB OriginTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.OriginTestSchemaAID == obj.TestSchemaAID).First();
@@ -2607,7 +2607,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaB.TargetTestSchemaAId), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), CanBeNull=false)]
 		public static IQueryable<MySchemaSchema.TestSchemaA> TargetTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TargetTestSchemaAId);
@@ -2616,7 +2616,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaB.TargetTestSchemaAId), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), CanBeNull=false)]
 		public static MySchemaSchema.TestSchemaB TargetTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAId == obj.TestSchemaAID).First();
@@ -2629,7 +2629,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaX.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaY.TestSchemaXID), CanBeNull=true)]
 		public static IQueryable<TestSchemaY> TestSchemaY(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
@@ -2638,7 +2638,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_OtherID_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaX.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaY.TestSchemaXID), CanBeNull=true)]
 		public static IQueryable<TestSchemaY> TestSchemaYOtherIds(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
@@ -2647,7 +2647,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaX.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaY.ParentTestSchemaXID), CanBeNull=true)]
 		public static IQueryable<TestSchemaY> TestSchemaYParentTestSchemaX(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.ParentTestSchemaXID == obj.TestSchemaXID);
@@ -2660,7 +2660,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_OtherID
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaY.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaX.TestSchemaXID), CanBeNull=false)]
 		public static IQueryable<TestSchemaX> FkTestSchemaYOtherIds(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
@@ -2669,7 +2669,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_OtherID
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaY.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaX.TestSchemaXID), CanBeNull=false)]
 		public static TestSchemaY FkTestSchemaYOtherID(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
@@ -2678,7 +2678,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaY.ParentTestSchemaXID), OtherKey=nameof(DataModel.TestSchemaX.TestSchemaXID), CanBeNull=false)]
 		public static IQueryable<TestSchemaX> ParentTestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.ParentTestSchemaXID);
@@ -2687,7 +2687,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaY.ParentTestSchemaXID), OtherKey=nameof(DataModel.TestSchemaX.TestSchemaXID), CanBeNull=false)]
 		public static TestSchemaY ParentTestSchemaX0(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.ParentTestSchemaXID == obj.TestSchemaXID).First();
@@ -2696,7 +2696,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaY.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaX.TestSchemaXID), CanBeNull=false)]
 		public static IQueryable<TestSchemaX> TestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
@@ -2705,7 +2705,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
+		[Association(ThisKey=nameof(DataModel.TestSchemaY.TestSchemaXID), OtherKey=nameof(DataModel.TestSchemaX.TestSchemaXID), CanBeNull=false)]
 		public static TestSchemaY TestSchemaX0(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
@@ -2764,19 +2764,19 @@ namespace DataModel
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference (TestSchema.TestSchemaB)
 			/// </summary>
-			[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true)]
+			[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaB.TargetTestSchemaAId), CanBeNull=true)]
 			public List<MySchemaSchema.TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; } = null!;
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference (TestSchema.TestSchemaB)
 			/// </summary>
-			[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true)]
+			[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaB.OriginTestSchemaAID), CanBeNull=true)]
 			public List<MySchemaSchema.TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; } = null!;
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference (TestSchema.TestSchemaB)
 			/// </summary>
-			[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true)]
+			[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaB.TargetTestSchemaAID), CanBeNull=true)]
 			public List<MySchemaSchema.TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; } = null!;
 
 			#endregion
@@ -2795,19 +2795,19 @@ namespace DataModel
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA (TestSchema.TestSchemaA)
 			/// </summary>
-			[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
+			[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaB.TargetTestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), CanBeNull=false)]
 			public MySchemaSchema.TestSchemaA FKTargetTestSchemaA { get; set; } = null!;
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA (TestSchema.TestSchemaA)
 			/// </summary>
-			[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false)]
+			[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaB.OriginTestSchemaAID), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), CanBeNull=false)]
 			public MySchemaSchema.TestSchemaA OriginTestSchemaA { get; set; } = null!;
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 (TestSchema.TestSchemaA)
 			/// </summary>
-			[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false)]
+			[Association(ThisKey=nameof(DataModel.MySchemaSchema.TestSchemaB.TargetTestSchemaAId), OtherKey=nameof(DataModel.MySchemaSchema.TestSchemaA.TestSchemaAID), CanBeNull=false)]
 			public MySchemaSchema.TestSchemaA TargetTestSchemaA { get; set; } = null!;
 
 			#endregion
