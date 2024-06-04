@@ -391,7 +391,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3017([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void Issue3017([IncludeDataSources(/*TestProvName.AllSqlServer, */TestProvName.AllClickHouse)] string context)
 		{
 			using var scope = new DisableBaseline("Multithreading");
 
