@@ -3,6 +3,8 @@ using System.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using FluentAssertions;
+
+using LinqToDB;
 using LinqToDB.Linq;
 
 namespace Tests.Linq
@@ -210,7 +212,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var query = from p in db.Parent
+			var query = from p in db.Parent.LoadWith(p => p.Children)
 						select p.ParentID == 2
 							// this must be promoted to outer join
 							? p.Children.OrderBy(c => c.ChildID).First()

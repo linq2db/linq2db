@@ -400,18 +400,15 @@ namespace LinqToDB.Linq.Builder
 			var rootContext     = context;
 			var rootSelectQuery = context.SelectQuery;
 
-			if (attr.IsAggregate)
+			var root = GetRootContext(context.Parent, new ContextRefExpression(context.ElementType, context), true);
+			if (root != null)
 			{
-				var root = GetRootContext(context.Parent, new ContextRefExpression(context.ElementType, context), true);
-				if (root != null)
-				{
-					rootContext = root.BuildContext;
-				}
+				rootContext = root.BuildContext;
+			}
 
-				if (rootContext is GroupByBuilder.GroupByContext groupBy)
-				{
-					rootSelectQuery = groupBy.SubQuery.SelectQuery;
-				}
+			if (rootContext is GroupByBuilder.GroupByContext groupBy)
+			{
+				rootSelectQuery = groupBy.SubQuery.SelectQuery;
 			}
 
 			var transformed = attr.GetExpression((builder: this, context: rootContext, flags),

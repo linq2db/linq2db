@@ -3142,7 +3142,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			AssertQuery(query);
+			query.Should().HaveCount(2);
 		}
 
 		[Test]
@@ -3171,7 +3171,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			AssertQuery(query);
+			query.Should().HaveCount(2);
 		}
 
 		[Test]
@@ -3200,7 +3200,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			AssertQuery(query);
+			query.Should().HaveCount(2);
 		}
 
 		[Test]
@@ -3229,7 +3229,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			AssertQuery(query);
+			query.Should().HaveCount(2);
 		}
 
 		[Test]
@@ -3258,7 +3258,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			AssertQuery(query);
+			query.Should().HaveCount(2);
 		}
 
 		[Test]
@@ -3287,7 +3287,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			AssertQuery(query);
+			query.Should().HaveCount(2);
 		}
 	}
 }

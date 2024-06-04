@@ -59,9 +59,15 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.IsAsyncExtension(MethodNamesAsync))
 				--argumentCount;
 
-			var cardinality = SourceCardinality.One;
-			var isOptional  = false;
-			var methodKind  = GetMethodKind(methodCall.Method.Name);
+			var cardinality = buildInfo.SourceCardinality;
+
+			if (buildInfo.SourceCardinality != SourceCardinality.Unknown)
+			{
+				cardinality &= ~SourceCardinality.Many;
+			}
+
+			cardinality |= SourceCardinality.One;
+			var methodKind = GetMethodKind(methodCall.Method.Name);
 
 			switch (methodKind)
 			{
@@ -73,14 +79,13 @@ namespace LinqToDB.Linq.Builder
 				case MethodKind.SingleOrDefault:
 				{
 					cardinality |= SourceCardinality.Zero;
-					isOptional   = true;
 					break;
 				}
 			}
 
 			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, argument)
 			{
-				SourceCardinality = isOptional ? SourceCardinality.ZeroOrMany : SourceCardinality.Many
+				SourceCardinality = cardinality
 			});
 
 			if (buildResult.BuildContext == null)
@@ -136,7 +141,7 @@ namespace LinqToDB.Linq.Builder
 
 			var canBeWeak = false;
 
-			if (buildInfo.Parent != null && isOptional)
+			if (buildInfo.Parent != null && (cardinality & SourceCardinality.Zero) != 0)
 			{
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, allowNullField: true);
 				canBeWeak = true;

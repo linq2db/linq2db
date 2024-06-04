@@ -36,6 +36,14 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
+		public override Expression MakeExpression(Expression path, ProjectFlags flags)
+		{
+			if (flags.IsRoot() || flags.IsAggregationRoot())
+				return path;
+
+			return base.MakeExpression(path, flags);
+		}
+
 		public override IBuildContext Clone(CloningContext context)
 		{
 			var selectQuery = context.CloneElement(SelectQuery);

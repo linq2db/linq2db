@@ -150,5 +150,13 @@ namespace LinqToDB.Linq.Builder
 			return (flags & ProjectFlags.ForExtension) != 0;
 		}
 
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsForceOuter(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags. ForceOuterAssociation) != 0;
+		}
+
+
 	}
 }

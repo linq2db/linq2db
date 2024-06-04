@@ -877,8 +877,14 @@ namespace LinqToDB.Linq.Builder
 				var test           = Visit(node.Test);
 				_columnDescriptor  = saveDescriptor;
 
+				var saveFlags = _flags;
+
+				_flags |= ProjectFlags.ForceOuterAssociation;
+
 				var ifTrue  = Visit(node.IfTrue);
 				var ifFalse = Visit(node.IfFalse);
+
+				_flags = saveFlags;
 
 				if (test is ConstantExpression { Value: bool boolValue })
 				{
