@@ -118,7 +118,7 @@ steps:
                   Write-Output: $output
                   exit 1
               }
-              Write-Host "${output}"
+              Write-Output: $output
               exit 1
           }
           Write-Host "Push baselines to server"
