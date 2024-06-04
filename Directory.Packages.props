@@ -9,7 +9,7 @@
 	over dependencies like linq2db.cli
 	-->
 	<ItemGroup Label="Build: Analyzers and Tools">
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.154"               />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.155"               />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.11.0-beta1.24216.2"  />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="9.0.0-preview.24216.2" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="3.11.0-beta1.24216.2"  />
