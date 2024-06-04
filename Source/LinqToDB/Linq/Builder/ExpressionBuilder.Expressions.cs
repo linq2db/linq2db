@@ -733,7 +733,7 @@ namespace LinqToDB.Linq.Builder
 						return converted;
 					}
 
-					if (attr.ServerSideOnly || _flags.IsSql() || attr.PreferServerSide)
+					if (attr.ServerSideOnly || _flags.IsSql() || attr.PreferServerSide || attr.IsWindowFunction || attr.IsAggregate)
 					{
 						var converted = Builder.ConvertExtension(attr, _context, node, _flags.SqlFlag());
 						if (!ReferenceEquals(converted, node))

@@ -1831,12 +1831,12 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("COUNT(*) OVER()", IsWindowFunction = true, IsAggregate = true)]
-		private static int Count1(IGrouping<int, Child> group) => group.Count();
+		private static int Count1(IGrouping<int, Child> group, int windowCount) => windowCount;
 		[Sql.Expression("COUNT(*) OVER()", IsWindowFunction = true, IsAggregate = false)]
-		private static int Count2(IGrouping<int, Child> group) => group.Count();
+		private static int Count2(IGrouping<int, Child> group, int windowCount) => windowCount;
 
 		[Test]
-		public void WindowFunctionWithAggregate1([DataSources] string context)
+		public void WindowFunctionWithAggregate1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1848,7 +1848,7 @@ namespace Tests.Linq
 					aggregates = new
 					{
 						aggregate = g.Count(),
-						window = Count1(g)
+						window = Count1(g, 6)
 					}
 				})
 				.OrderByDescending(_ => _.key)
@@ -1858,7 +1858,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WindowFunctionWithAggregate2([DataSources] string context)
+		public void WindowFunctionWithAggregate2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1870,7 +1870,7 @@ namespace Tests.Linq
 					aggregates = new
 					{
 						aggregate = g.Count(),
-						window = Count2(g)
+						window = Count2(g, 6)
 					}
 				})
 				.OrderByDescending(_ => _.key)
@@ -1880,7 +1880,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WindowFunctionWithAggregate3([DataSources] string context)
+		public void WindowFunctionWithAggregate3([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1891,7 +1891,7 @@ namespace Tests.Linq
 					key = g.Key,
 					aggregates = new
 					{
-						aggregate      = g.Count(),
+						aggregate = g.Count(),
 						window = Sql.Ext.Count().Over().ToValue(),
 					}
 				})
