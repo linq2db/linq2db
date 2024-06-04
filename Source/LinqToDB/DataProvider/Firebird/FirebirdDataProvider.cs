@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Data.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -46,8 +47,11 @@ namespace LinqToDB.DataProvider.Firebird
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
-			SetProviderField<DbDataReader, TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
-			SetProviderField<DbDataReader, DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
+			SetProviderField<DbDataReader, TimeSpan, DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
+			SetProviderField<DbDataReader, DateTime, DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
+
+			SetToType<DbDataReader, byte[], string>("VARCHAR", (r, i) => r.GetFieldValue<byte[]>(i));
+			SetToType<DbDataReader, Binary, string>("VARCHAR", (r, i) => new Binary(r.GetFieldValue<byte[]>(i)));
 
 			_sqlOptimizer = Version >= FirebirdVersion.v3
 				? new Firebird3SqlOptimizer(SqlProviderFlags)
