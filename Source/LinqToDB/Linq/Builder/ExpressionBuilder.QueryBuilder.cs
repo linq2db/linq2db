@@ -571,22 +571,75 @@ namespace LinqToDB.Linq.Builder
 			return expression as ContextRefExpression;
 		}
 
-		Dictionary<Expression, SubQueryContextInfo>? _buildContextCache;
-		Dictionary<Expression, SubQueryContextInfo>? _testbuildContextCache;
+		class SubqueryCacheKey
+		{
+			public SubqueryCacheKey(IBuildContext buildContext, Expression expression)
+			{
+				BuildContext = buildContext;
+				Expression   = expression;
+			}
+
+			public IBuildContext BuildContext { get; }
+			public Expression Expression { get; }
+
+			sealed class BuildContextExpressionEqualityComparer : IEqualityComparer<SubqueryCacheKey>
+			{
+				public bool Equals(SubqueryCacheKey? x, SubqueryCacheKey? y)
+				{
+					if (ReferenceEquals(x, y))
+					{
+						return true;
+					}
+
+					if (ReferenceEquals(x, null))
+					{
+						return false;
+					}
+
+					if (ReferenceEquals(y, null))
+					{
+						return false;
+					}
+
+					if (x.GetType() != y.GetType())
+					{
+						return false;
+					}
+
+					return x.BuildContext.Equals(y.BuildContext) && ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression);
+				}
+
+				public int GetHashCode(SubqueryCacheKey obj)
+				{
+					unchecked
+					{
+						var hashCode = obj.BuildContext.GetHashCode();
+						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
+						return hashCode;
+					}
+				}
+			}
+
+			public static IEqualityComparer<SubqueryCacheKey> Comparer { get; } = new BuildContextExpressionEqualityComparer();
+		}
+
+		Dictionary<SubqueryCacheKey, SubQueryContextInfo>? _buildContextCache;
+		Dictionary<SubqueryCacheKey, SubQueryContextInfo>? _testBuildContextCache;
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext inContext, ref IBuildContext context, Expression expr, ProjectFlags flags)
 		{
 			context   = inContext;
 			var testExpression = CorrectRoot(context, expr);
+			var cacheKey            = new SubqueryCacheKey(context, testExpression);
 
 			var shouldCache = flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsRoot();
 
-			if (shouldCache && _buildContextCache?.TryGetValue(testExpression, out var item) == true)
+			if (shouldCache && _buildContextCache?.TryGetValue(cacheKey, out var item) == true)
 				return item;
 
 			if (flags.IsTest())
 			{
-				if (_testbuildContextCache?.TryGetValue(testExpression, out var testItem) == true)
+				if (_testBuildContextCache?.TryGetValue(cacheKey, out var testItem) == true)
 					return testItem;
 			}
 
@@ -607,13 +660,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (flags.IsTest())
 				{
-					_testbuildContextCache ??= new(ExpressionEqualityComparer.Instance);
-					_testbuildContextCache[testExpression] = info;
+					_testBuildContextCache           ??= new(SubqueryCacheKey.Comparer);
+					_testBuildContextCache[cacheKey] =   info;
 				}
 				else
 				{
-					_buildContextCache ??= new(ExpressionEqualityComparer.Instance);
-					_buildContextCache[testExpression] = info;
+					_buildContextCache           ??= new(SubqueryCacheKey.Comparer);
+					_buildContextCache[cacheKey] =   info;
 				}
 			}
 
