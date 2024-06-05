@@ -103,6 +103,7 @@ namespace LinqToDB.Linq.Builder
 				var childParam  = Expression.Parameter(objectType, association.GenerateAlias());
 
 				var parentAccessor = TypeAccessor.GetAccessor(parentType);
+				var parentOriginalAccessor = TypeAccessor.GetAccessor(parentOriginalType);
 				var childAccessor  = TypeAccessor.GetAccessor(objectType);
 
 				Expression? predicate = null;
@@ -110,6 +111,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					var parentName   = association.ThisKey[i];
 					var parentMember = parentAccessor.Members.Find(m => m.MemberInfo.Name == parentName);
+					var currentParentParam = (Expression)parentParam;
+
+					if (parentMember == null)
+					{
+						parentMember = parentOriginalAccessor.Members.Find(m => m.MemberInfo.Name == parentName);
+						currentParentParam = Expression.Convert(currentParentParam, parentOriginalType);
+					}
 
 					if (parentMember == null)
 						throw new LinqException("Association key '{0}' not found for type '{1}.", parentName,
@@ -123,7 +131,7 @@ namespace LinqToDB.Linq.Builder
 							objectType);
 
 					var current = ExpressionBuilder.Equal(builder.MappingSchema,
-						Expression.MakeMemberAccess(parentParam, parentMember.MemberInfo),
+						Expression.MakeMemberAccess(currentParentParam, parentMember.MemberInfo),
 						Expression.MakeMemberAccess(childParam, childMember.MemberInfo));
 
 					predicate = predicate == null ? current : Expression.AndAlso(predicate, current);
