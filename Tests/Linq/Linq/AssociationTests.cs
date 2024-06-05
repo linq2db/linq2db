@@ -1804,6 +1804,103 @@ namespace Tests.Linq
 			Assert.That(results[0].Table2!.ID, Is.EqualTo(1));
 		}
 		#endregion
+
+		#region ViaInterface
+
+		public class MainEntity : IHasSubentities
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubEntity.MainEntityId))]
+			public ICollection<SubEntity> SubEntities { get; set; } = null!;
+		}
+
+		public interface IHasSubentities
+		{
+			ICollection<SubEntity> SubEntities { get; }
+		}
+
+		public class SubEntity
+		{
+			public int Id { get; set; }
+
+			public int MainEntityId { get; set; }
+
+			public MainEntity MainEntity { get; set; } = null!;
+		}
+
+		static IQueryable<T> OnlyWithSubEntities<T>(IQueryable<T> query)
+			where T : IHasSubentities
+		{
+			return query.Where(x => x.SubEntities.Any());
+		}
+
+		[Test]
+		public void ViaInterfaceAndExtension([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var main = db.CreateLocalTable<MainEntity>();
+			using var sub = db.CreateLocalTable<SubEntity>();
+			
+			var query = OnlyWithSubEntities(db.GetTable<MainEntity>())
+				.Select(x => new
+				{
+					x.Id,
+					x.SubEntities.Count
+				});
+
+			var result = query.ToArray();
+		}
+
+		[Test]
+		public void ViaInterfaceOfType([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var main = db.CreateLocalTable<MainEntity>();
+			using var sub = db.CreateLocalTable<SubEntity>();
+			
+			var query = db.GetTable<MainEntity>()
+				.OfType<IHasSubentities>()
+				.Select(x => new
+				{
+					x.SubEntities.Count
+				});
+
+			var result = query.ToArray();
+		}
+
+		[Test]
+		public void ViaInterfaceSelect([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db   = GetDataContext(context);
+			using var main = db.CreateLocalTable<MainEntity>();
+			using var sub  = db.CreateLocalTable<SubEntity>();
+
+			var query = db.GetTable<MainEntity>()
+				.OfType<IHasSubentities>()
+				.Select(x => new { x.SubEntities });
+
+			var result = query.ToArray();
+		}
+
+		[ActiveIssue("Not supported yet. Needs analysis.")]
+		[Test]
+		public void ViaInterfaceLoadWith([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db   = GetDataContext(context);
+			using var main = db.CreateLocalTable<MainEntity>();
+			using var sub  = db.CreateLocalTable<SubEntity>();
+
+			var query = db.GetTable<MainEntity>()
+				.OfType<IHasSubentities>()
+				.LoadWith(x => x.SubEntities);
+
+			var result = query.ToArray();
+		}
+
+		#endregion
+
 	}
 
 	public static class AssociationExtension
