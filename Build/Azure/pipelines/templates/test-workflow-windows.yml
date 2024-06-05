@@ -235,10 +235,10 @@ steps:
               $output = git diff ORIG_HEAD FETCH_HEAD
               if ($LASTEXITCODE -ne 0) {
                   Write-Host "Failed to render diff. Error code ${LASTEXITCODE}, output:"
-                  Write-Output: $output
+                  Write-Output $output
                   exit 1
               }
-              Write-Output: $output
+              Write-Output $output
               exit 1
           }
           Write-Host "Push baselines to server"
