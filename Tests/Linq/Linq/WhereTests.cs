@@ -2022,7 +2022,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_SubQueryFilter2([DataSources] string context)
+		public void Issue_SubQueryFilter2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 

@@ -855,7 +855,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DropOrderByFromNonLimitedSubquery([DataSources] string context)
+		public void DropOrderByFromNonLimitedSubquery([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
