@@ -471,6 +471,7 @@ namespace Tests.Linq
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
 
+			using var _   = new DisableBaseline("guid used");
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<byte[]>>();
 

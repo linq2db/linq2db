@@ -57,9 +57,9 @@ namespace Tests
 			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
 			public static readonly Guid     Guid2                         = new ("a948600d-de21-4f74-8ac2-9516b287076e");
 			public static readonly Guid     Guid3                         = new ("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
-			public static readonly Guid     Guid4                         = new("76b1c875-2287-4b82-a23b-7967c5eafed8");
-			public static readonly Guid     Guid5                         = new("656606a4-6e36-4431-add6-85f886a1c7c2");
-			public static readonly Guid     Guid6                         = new("66aa9df9-260f-4a2b-ac50-9ca8ce7ad725");
+			public static readonly Guid     Guid4                         = new ("76b1c875-2287-4b82-a23b-7967c5eafed8");
+			public static readonly Guid     Guid5                         = new ("656606a4-6e36-4431-add6-85f886a1c7c2");
+			public static readonly Guid     Guid6                         = new ("66aa9df9-260f-4a2b-ac50-9ca8ce7ad725");
 
 			public static byte[] Binary(int size)
 			{
