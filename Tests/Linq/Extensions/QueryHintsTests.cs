@@ -88,17 +88,19 @@ namespace Tests.Extensions
 				await query.ToListAsync();
 				if (db is DataConnection dc) sql = dc.LastQuery!;
 
-				Assert.True(sql!.Contains(sharedHint), $"(1) expected {sharedHint}. Has alien hint: {sql.Contains("many")}");
-				Assert.True(sql.Contains(oneTimeHint), $"(1) expected {oneTimeHint}. Has alien hint: {sql.Contains("once")}");
+				Assert.That(sql, Is.Not.Null);
+				Assert.That(sql, Does.Contain(sharedHint), $"(1) expected {sharedHint}. Has alien hint: {sql.Contains("many")}");
+				Assert.That(sql, Does.Contain(oneTimeHint), $"(1) expected {oneTimeHint}. Has alien hint: {sql.Contains("once")}");
 
 				query = db.Parent.Where(r => r.ParentID == 11);
 				sql = db is DataConnection ? null : query.ToString();
 				await query.ToListAsync();
 				if (db is DataConnection dc2) sql = dc2.LastQuery!;
 
-				Assert.True(sql!.Contains(sharedHint), $"(2) expected {sharedHint}. Has alien hint: {sql.Contains("many")}");
-				Assert.False(sql.Contains(oneTimeHint), $"(2) expected no {oneTimeHint}");
-				Assert.False(sql.Contains("once"), $"(2) alien one-time hint found");
+				Assert.That(sql, Is.Not.Null);
+				Assert.That(sql, Does.Contain(sharedHint), $"(2) expected {sharedHint}. Has alien hint: {sql.Contains("many")}");
+				Assert.That(sql, Does.Not.Contain(oneTimeHint), $"(2) expected no {oneTimeHint}");
+				Assert.That(sql, Does.Not.Contain("once"), $"(2) alien one-time hint found");
 			}
 		}
 	}

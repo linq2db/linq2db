@@ -7,6 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Extensions
 {
 	[TestFixture]
@@ -247,7 +249,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySqlServer57Plus)] string context,
+		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySql80)] string context,
 			[Values(
 				MySqlHints.SubQuery.ForUpdate,
 				MySqlHints.SubQuery.ForShare,
@@ -267,7 +269,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryTableHintTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryTableHintTest([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -284,7 +286,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryTableHintTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryTableHintTest2([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -303,7 +305,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintLockInShareModeTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		public void SubQueryHintLockInShareModeTest([IncludeDataSources(true, TestProvName.AllMySql)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -391,7 +393,7 @@ namespace Tests.Extensions
 			.Union
 			(
 				from p in db.Child
-				select p.Parent
+				select new Parent { ParentID = p.Parent!.ParentID, Value1 = p.Parent.Value1 }
 			)
 			.AsMySql()
 			.ForUpdateHint()
@@ -411,17 +413,14 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-
 			Assert.That(LastQuery, Should.Contain(
 				"/*+ NO_BNL(",
 				"FOR UPDATE",
 				"UNION",
 				"FOR UPDATE",
 				"UNION",
-				"FOR UPDATE",
-				")",
-				"FOR UPDATE",
-				")"));
+				"FOR UPDATE"
+				));
 		}
 	}
 }

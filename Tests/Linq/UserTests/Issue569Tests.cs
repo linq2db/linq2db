@@ -154,7 +154,7 @@ namespace Tests.UserTests
 						s
 					};
 
-				Assert.AreEqual(rq.Count(), q.Count());
+				Assert.That(q.Count(), Is.EqualTo(rq.Count()));
 			}
 		}
 
@@ -203,7 +203,7 @@ namespace Tests.UserTests
 						s
 					};
 
-				Assert.AreEqual(rq.Count(), q.Count());
+				Assert.That(q.Count(), Is.EqualTo(rq.Count()));
 			}
 		}
 	}

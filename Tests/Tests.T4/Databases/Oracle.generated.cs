@@ -93,11 +93,10 @@ namespace OracleDataContext
 
 		#region TestPACKAGE1TestTableFunction
 
-		[Sql.TableFunction(Schema="TEST", Package="TEST_PACKAGE1", Name="TEST_TABLE_FUNCTION")]
+		[Sql.TableFunction(Schema="MANAGED", Package="TEST_PACKAGE1", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult> TestPACKAGE1TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				i);
+			return this.TableFromExpression(() => TestPACKAGE1TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult
@@ -109,11 +108,10 @@ namespace OracleDataContext
 
 		#region TestPACKAGE2TestTableFunction
 
-		[Sql.TableFunction(Schema="TEST", Package="TEST_PACKAGE2", Name="TEST_TABLE_FUNCTION")]
+		[Sql.TableFunction(Schema="MANAGED", Package="TEST_PACKAGE2", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult0> TestPACKAGE2TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				i);
+			return this.TableFromExpression(() => TestPACKAGE2TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult0
@@ -125,11 +123,10 @@ namespace OracleDataContext
 
 		#region TestTableFunction
 
-		[Sql.TableFunction(Schema="TEST", Name="TEST_TABLE_FUNCTION")]
+		[Sql.TableFunction(Schema="MANAGED", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult1> TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult1>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				i);
+			return this.TableFromExpression(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult1
@@ -142,7 +139,7 @@ namespace OracleDataContext
 		#endregion
 	}
 
-	[Table(Schema="TEST", Name="AllTypes")]
+	[Table(Schema="MANAGED", Name="AllTypes")]
 	public partial class AllType
 	{
 		[Column(                          DbType="NUMBER",                            DataType=LinqToDB.DataType.Decimal,        Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal         ID                     { get; set; } // NUMBER
@@ -175,7 +172,7 @@ namespace OracleDataContext
 		[Column("xmlDataType",            DbType="XMLTYPE",                           DataType=LinqToDB.DataType.Xml,            Length=2000),                         Nullable         ] public string?         XmlDataType            { get; set; } // XMLTYPE
 	}
 
-	[Table(Schema="TEST", Name="BINARYDATA")]
+	[Table(Schema="MANAGED", Name="BINARYDATA")]
 	public partial class BINARYDATA
 	{
 		[Column(DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal,   Length=22),          PrimaryKey, NotNull] public decimal  BINARYDATAID { get; set; } // NUMBER
@@ -183,14 +180,14 @@ namespace OracleDataContext
 		[Column(DbType="BLOB",         DataType=LinqToDB.DataType.Blob,      Length=4000),                    NotNull] public byte[]   DATA         { get; set; } = null!; // BLOB
 	}
 
-	[Table(Schema="TEST", Name="Child")]
+	[Table(Schema="MANAGED", Name="Child")]
 	public partial class Child
 	{
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ParentID { get; set; } // NUMBER
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ChildID  { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TEST", Name="CollatedTable")]
+	[Table(Schema="MANAGED", Name="CollatedTable")]
 	public partial class CollatedTable
 	{
 		[Column(DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), NotNull] public decimal Id              { get; set; } // NUMBER
@@ -198,7 +195,7 @@ namespace OracleDataContext
 		[Column(DbType="VARCHAR2(20)", DataType=LinqToDB.DataType.VarChar, Length=20),          NotNull] public string  CaseInsensitive { get; set; } = null!; // VARCHAR2(20)
 	}
 
-	[Table(Schema="TEST", Name="DataTypeTest")]
+	[Table(Schema="MANAGED", Name="DataTypeTest")]
 	public partial class DataTypeTest
 	{
 		[Column(             DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal   DataTypeID { get; set; } // NUMBER
@@ -225,7 +222,7 @@ namespace OracleDataContext
 		[Column("Xml_",      DbType="XMLTYPE",       DataType=LinqToDB.DataType.Xml,      Length=2000),                         Nullable         ] public string?   Xml        { get; set; } // XMLTYPE
 	}
 
-	[Table(Schema="TEST", Name="DecimalOverflow")]
+	[Table(Schema="MANAGED", Name="DecimalOverflow")]
 	public partial class DecimalOverflow
 	{
 		[Column(DbType="NUMBER (38,20)", DataType=LinqToDB.DataType.Decimal, Length=22, Precision=38, Scale=20), Nullable] public decimal? Decimal1 { get; set; } // NUMBER (38,20)
@@ -235,7 +232,7 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER (38,38)", DataType=LinqToDB.DataType.Decimal, Length=22, Precision=38, Scale=38), Nullable] public decimal? Decimal5 { get; set; } // NUMBER (38,38)
 	}
 
-	[Table(Schema="TEST", Name="Doctor")]
+	[Table(Schema="MANAGED", Name="Doctor")]
 	public partial class Doctor
 	{
 		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22), PrimaryKey, NotNull] public decimal PersonID { get; set; } // NUMBER
@@ -244,15 +241,15 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person (TEST.Person)
+		/// Fk_Doctor_Person (MANAGED.Person)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
 
-	[Table(Schema="TEST", Name="GrandChild")]
+	[Table(Schema="MANAGED", Name="GrandChild")]
 	public partial class GrandChild
 	{
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ParentID     { get; set; } // NUMBER
@@ -260,7 +257,7 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? GrandChildID { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TEST", Name="InheritanceChild")]
+	[Table(Schema="MANAGED", Name="InheritanceChild")]
 	public partial class InheritanceChild
 	{
 		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22), PrimaryKey,  NotNull] public decimal  InheritanceChildId  { get; set; } // NUMBER
@@ -269,7 +266,7 @@ namespace OracleDataContext
 		[Column(DbType="NVARCHAR2(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),    Nullable         ] public string?  Name                { get; set; } // NVARCHAR2(50)
 	}
 
-	[Table(Schema="TEST", Name="InheritanceParent")]
+	[Table(Schema="MANAGED", Name="InheritanceParent")]
 	public partial class InheritanceParent
 	{
 		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22), PrimaryKey,  NotNull] public decimal  InheritanceParentId { get; set; } // NUMBER
@@ -277,7 +274,7 @@ namespace OracleDataContext
 		[Column(DbType="NVARCHAR2(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),    Nullable         ] public string?  Name                { get; set; } // NVARCHAR2(50)
 	}
 
-	[Table(Schema="TEST", Name="LinqDataTypes")]
+	[Table(Schema="MANAGED", Name="LinqDataTypes")]
 	public partial class LinqDataType
 	{
 		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  ID             { get; set; } // NUMBER
@@ -293,7 +290,7 @@ namespace OracleDataContext
 		[Column(DbType="VARCHAR2(50)",  DataType=LinqToDB.DataType.VarChar,   Length=50),                        Nullable] public string?   StringValue    { get; set; } // VARCHAR2(50)
 	}
 
-	[Table(Schema="TEST", Name="LINQDATATYPESBC")]
+	[Table(Schema="MANAGED", Name="LINQDATATYPESBC")]
 	public partial class LINQDATATYPESBC
 	{
 		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),               Nullable] public decimal?  ID             { get; set; } // NUMBER
@@ -308,21 +305,21 @@ namespace OracleDataContext
 		[Column(DbType="VARCHAR2(50)",  DataType=LinqToDB.DataType.VarChar,   Length=50),                        Nullable] public string?   STRINGVALUE    { get; set; } // VARCHAR2(50)
 	}
 
-	[Table(Schema="TEST", Name="LongRawTable")]
+	[Table(Schema="MANAGED", Name="LongRawTable")]
 	public partial class LongRawTable
 	{
 		[Column(                   DbType="NUMBER",   DataType=LinqToDB.DataType.Decimal, Length=22), PrimaryKey,  NotNull] public decimal ID              { get; set; } // NUMBER
 		[Column("longRawDataType", DbType="LONG RAW", DataType=LinqToDB.DataType.LongRaw, Length=0),     Nullable         ] public byte[]? LongRawDataType { get; set; } // LONG RAW
 	}
 
-	[Table(Schema="TEST", Name="Parent")]
+	[Table(Schema="MANAGED", Name="Parent")]
 	public partial class Parent
 	{
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ParentID { get; set; } // NUMBER
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? Value1   { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TEST", Name="Patient")]
+	[Table(Schema="MANAGED", Name="Patient")]
 	public partial class Patient
 	{
 		[Column(DbType="NUMBER",         DataType=LinqToDB.DataType.Decimal,  Length=22),  PrimaryKey, NotNull] public decimal PersonID  { get; set; } // NUMBER
@@ -331,15 +328,15 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person (TEST.Person)
+		/// Fk_Patient_Person (MANAGED.Person)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
 	}
 
-	[Table(Schema="TEST", Name="Person")]
+	[Table(Schema="MANAGED", Name="Person")]
 	public partial class Person
 	{
 		[Column(DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal, Length=22), PrimaryKey,  NotNull] public decimal PersonID   { get; set; } // NUMBER
@@ -351,16 +348,16 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference (TEST.Doctor)
+		/// Fk_Doctor_Person_BackReference (MANAGED.Doctor)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Doctor.PersonID), CanBeNull=true)]
-		public Doctor? Doctor { get; set; }
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		public Doctor? FkDoctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference (TEST.Patient)
+		/// Fk_Patient_Person_BackReference (MANAGED.Patient)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Patient.PersonID), CanBeNull=true)]
-		public Patient? Patient { get; set; }
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		public Patient? FkPatient { get; set; }
 
 		#endregion
 	}
@@ -368,7 +365,7 @@ namespace OracleDataContext
 	/// <summary>
 	/// This is matview
 	/// </summary>
-	[Table(Schema="TEST", Name="SchemaTestMatView", IsView=true)]
+	[Table(Schema="MANAGED", Name="SchemaTestMatView", IsView=true)]
 	public partial class SchemaTestMatView
 	{
 		/// <summary>
@@ -380,7 +377,7 @@ namespace OracleDataContext
 	/// <summary>
 	/// This is table
 	/// </summary>
-	[Table(Schema="TEST", Name="SchemaTestTable")]
+	[Table(Schema="MANAGED", Name="SchemaTestTable")]
 	public partial class SchemaTestTable
 	{
 		/// <summary>
@@ -389,7 +386,7 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal Id { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TEST", Name="SchemaTestView", IsView=true)]
+	[Table(Schema="MANAGED", Name="SchemaTestView", IsView=true)]
 	public partial class SchemaTestView
 	{
 		/// <summary>
@@ -398,14 +395,14 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22), NotNull] public decimal Id { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TEST", Name="SEQUENCETEST")]
+	[Table(Schema="MANAGED", Name="SEQUENCETEST")]
 	public partial class SEQUENCETEST
 	{
 		[Column(DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID    { get; set; } // NUMBER
 		[Column(DbType="VARCHAR2(50)", DataType=LinqToDB.DataType.VarChar, Length=50),                      NotNull] public string  VALUE { get; set; } = null!; // VARCHAR2(50)
 	}
 
-	[Table(Schema="TEST", Name="STG_TRADE_INFORMATION")]
+	[Table(Schema="MANAGED", Name="STG_TRADE_INFORMATION")]
 	public partial class StgTradeInformation
 	{
 		[Column("STG_TRADE_ID",          DbType="NUMBER",         DataType=LinqToDB.DataType.Decimal,  Length=22),   NotNull    ] public decimal   StgTradeId          { get; set; } // NUMBER
@@ -417,7 +414,7 @@ namespace OracleDataContext
 		[Column("VALUE_AS_DATE",         DbType="DATE",           DataType=LinqToDB.DataType.DateTime, Length=7),       Nullable] public DateTime? ValueAsDate         { get; set; } // DATE
 	}
 
-	[Table(Schema="TEST", Name="StringTest")]
+	[Table(Schema="MANAGED", Name="StringTest")]
 	public partial class StringTest
 	{
 		[Column(DbType="VARCHAR2(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable] public string? StringValue1 { get; set; } // VARCHAR2(50)
@@ -425,7 +422,7 @@ namespace OracleDataContext
 		[Column(DbType="VARCHAR2(50)", DataType=LinqToDB.DataType.VarChar, Length=50), NotNull    ] public string  KeyValue     { get; set; } = null!; // VARCHAR2(50)
 	}
 
-	[Table(Schema="TEST", Name="t_entity")]
+	[Table(Schema="MANAGED", Name="t_entity")]
 	public partial class TEntity
 	{
 		[Column("entity_id", DbType="NUMBER",                       DataType=LinqToDB.DataType.Decimal,  Length=22, Scale=0),              PrimaryKey,  NotNull] public decimal   EntityId { get; set; } // NUMBER
@@ -433,13 +430,13 @@ namespace OracleDataContext
 		[Column("duration",  DbType="INTERVAL DAY(3) TO SECOND(2)", DataType=LinqToDB.DataType.Time,     Length=11, Precision=3, Scale=2),    Nullable         ] public TimeSpan? Duration { get; set; } // INTERVAL DAY(3) TO SECOND(2)
 	}
 
-	[Table(Schema="TEST", Name="TestIdentity")]
+	[Table(Schema="MANAGED", Name="TestIdentity")]
 	public partial class TestIdentity
 	{
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal ID { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TEST", Name="TestMerge1")]
+	[Table(Schema="MANAGED", Name="TestMerge1")]
 	public partial class TestMerge1
 	{
 		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                         PrimaryKey,  NotNull] public decimal         Id              { get; set; } // NUMBER
@@ -465,7 +462,7 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FieldEnumNumber { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TEST", Name="TestMerge2")]
+	[Table(Schema="MANAGED", Name="TestMerge2")]
 	public partial class TestMerge2
 	{
 		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                         PrimaryKey,  NotNull] public decimal         Id              { get; set; } // NUMBER
@@ -491,7 +488,7 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FieldEnumNumber { get; set; } // NUMBER
 	}
 
-	[Table(Schema="TEST", Name="t_test_user")]
+	[Table(Schema="MANAGED", Name="t_test_user")]
 	public partial class TTestUser
 	{
 		[Column("user_id", DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal, Length=22),  PrimaryKey, NotNull] public decimal UserId { get; set; } // NUMBER
@@ -500,15 +497,15 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C009576_BackReference (TEST.t_test_user_contract)
+		/// SYS_C007123_BackReference (MANAGED.t_test_user_contract)
 		/// </summary>
-		[Association(ThisKey=nameof(UserId), OtherKey=nameof(TTestUserContract.UserId), CanBeNull=true)]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
 
 		#endregion
 	}
 
-	[Table(Schema="TEST", Name="t_test_user_contract")]
+	[Table(Schema="MANAGED", Name="t_test_user_contract")]
 	public partial class TTestUserContract
 	{
 		[Column("user_contract_id", DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal, Length=22),  PrimaryKey, NotNull] public decimal UserContractId { get; set; } // NUMBER
@@ -519,9 +516,9 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C009576 (TEST.t_test_user)
+		/// SYS_C007123 (MANAGED.t_test_user)
 		/// </summary>
-		[Association(ThisKey=nameof(UserId), OtherKey=nameof(TTestUser.UserId), CanBeNull=false)]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false)]
 		public TTestUser User { get; set; } = null!;
 
 		#endregion
@@ -533,32 +530,32 @@ namespace OracleDataContext
 
 		public static int ADDISSUE792RECORD(this XeDB dataConnection)
 		{
-			return dataConnection.ExecuteProc("TEST.ADDISSUE792RECORD");
+			return dataConnection.ExecuteProc("MANAGED.ADDISSUE792RECORD");
 		}
 
 		#endregion
 
 		#region OUTREFENUMTEST
 
-		public static int OUTREFENUMTEST(this XeDB dataConnection, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
+		public static int OUTREFENUMTEST(this XeDB dataConnection, string? pSTR, out string? pOUTPUTSTR, ref string? pINPUTOUTPUTSTR)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PSTR",            pstr,            LinqToDB.DataType.NVarChar),
+				new DataParameter("PSTR",            pSTR,            LinqToDB.DataType.NVarChar),
 				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.Output
 				},
-				new DataParameter("PINPUTOUTPUTSTR", pinputoutputstr, LinqToDB.DataType.NVarChar)
+				new DataParameter("PINPUTOUTPUTSTR", pINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.InputOutput
 				}
 			};
 
-			var ret = dataConnection.ExecuteProc("TEST.OUTREFENUMTEST", parameters);
+			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST", parameters);
 
-			poutputstr      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
-			pinputoutputstr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
+			pOUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			pINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
 
 			return ret;
 		}
@@ -567,11 +564,11 @@ namespace OracleDataContext
 
 		#region OUTREFTEST
 
-		public static int OUTREFTEST(this XeDB dataConnection, decimal? pid, out decimal? poutputid, ref decimal? pinputoutputid, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
+		public static int OUTREFTEST(this XeDB dataConnection, decimal? pID, out decimal? pOUTPUTID, ref decimal? pINPUTOUTPUTID, string? pSTR, out string? pOUTPUTSTR, ref string? pINPUTOUTPUTSTR)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PID",             pid,             LinqToDB.DataType.Decimal)
+				new DataParameter("PID",             pID,             LinqToDB.DataType.Decimal)
 				{
 					Size = 22
 				},
@@ -580,28 +577,28 @@ namespace OracleDataContext
 					Direction = ParameterDirection.Output,
 					Size      = 22
 				},
-				new DataParameter("PINPUTOUTPUTID",  pinputoutputid,  LinqToDB.DataType.Decimal)
+				new DataParameter("PINPUTOUTPUTID",  pINPUTOUTPUTID,  LinqToDB.DataType.Decimal)
 				{
 					Direction = ParameterDirection.InputOutput,
 					Size      = 22
 				},
-				new DataParameter("PSTR",            pstr,            LinqToDB.DataType.NVarChar),
+				new DataParameter("PSTR",            pSTR,            LinqToDB.DataType.NVarChar),
 				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.Output
 				},
-				new DataParameter("PINPUTOUTPUTSTR", pinputoutputstr, LinqToDB.DataType.NVarChar)
+				new DataParameter("PINPUTOUTPUTSTR", pINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.InputOutput
 				}
 			};
 
-			var ret = dataConnection.ExecuteProc("TEST.OUTREFTEST", parameters);
+			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST", parameters);
 
-			poutputid       = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-			pinputoutputid  = Converter.ChangeTypeTo<decimal?>(parameters[2].Value);
-			poutputstr      = Converter.ChangeTypeTo<string?> (parameters[4].Value);
-			pinputoutputstr = Converter.ChangeTypeTo<string?> (parameters[5].Value);
+			pOUTPUTID       = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			pINPUTOUTPUTID  = Converter.ChangeTypeTo<decimal?>(parameters[2].Value);
+			pOUTPUTSTR      = Converter.ChangeTypeTo<string?> (parameters[4].Value);
+			pINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?> (parameters[5].Value);
 
 			return ret;
 		}
@@ -610,45 +607,45 @@ namespace OracleDataContext
 
 		#region PersonDelete
 
-		public static int PersonDelete(this XeDB dataConnection, decimal? ppersonid)
+		public static int PersonDelete(this XeDB dataConnection, decimal? pPERSONID)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PPERSONID", ppersonid, LinqToDB.DataType.Decimal)
+				new DataParameter("PPERSONID", pPERSONID, LinqToDB.DataType.Decimal)
 				{
 					Size = 22
 				}
 			};
 
-			return dataConnection.ExecuteProc("TEST.PERSON_DELETE", parameters);
+			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE", parameters);
 		}
 
 		#endregion
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this XeDB dataConnection, decimal? ppersonid, string? pfirstname, string? plastname, string? pmiddlename, string? pgender)
+		public static int PersonUpdate(this XeDB dataConnection, decimal? pPERSONID, string? pFIRSTNAME, string? pLASTNAME, string? pMIDDLENAME, string? pGENDER)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PPERSONID",   ppersonid,   LinqToDB.DataType.Decimal)
+				new DataParameter("PPERSONID",   pPERSONID,   LinqToDB.DataType.Decimal)
 				{
 					Size = 22
 				},
-				new DataParameter("PFIRSTNAME",  pfirstname,  LinqToDB.DataType.NVarChar),
-				new DataParameter("PLASTNAME",   plastname,   LinqToDB.DataType.NVarChar),
-				new DataParameter("PMIDDLENAME", pmiddlename, LinqToDB.DataType.NVarChar),
-				new DataParameter("PGENDER",     pgender,     LinqToDB.DataType.Char)
+				new DataParameter("PFIRSTNAME",  pFIRSTNAME,  LinqToDB.DataType.NVarChar),
+				new DataParameter("PLASTNAME",   pLASTNAME,   LinqToDB.DataType.NVarChar),
+				new DataParameter("PMIDDLENAME", pMIDDLENAME, LinqToDB.DataType.NVarChar),
+				new DataParameter("PGENDER",     pGENDER,     LinqToDB.DataType.Char)
 			};
 
-			return dataConnection.ExecuteProc("TEST.PERSON_UPDATE", parameters);
+			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE", parameters);
 		}
 
 		#endregion
 
 		#region RESULTSETTEST
 
-		public static IEnumerable<RESULTSETTESTResult> RESULTSETTEST(this XeDB dataConnection, out object? mr, out object? sr)
+		public static IEnumerable<RESULTSETTESTResult> RESULTSETTEST(this XeDB dataConnection, out object? mR, out object? sR)
 		{
 			var parameters = new []
 			{
@@ -662,10 +659,10 @@ namespace OracleDataContext
 				}
 			};
 
-			var ret = dataConnection.QueryProc<RESULTSETTESTResult>("TEST.RESULTSETTEST", parameters).ToList();
+			var ret = dataConnection.QueryProc<RESULTSETTESTResult>("MANAGED.RESULTSETTEST", parameters).ToList();
 
-			mr = Converter.ChangeTypeTo<object?>(parameters[0].Value);
-			sr = Converter.ChangeTypeTo<object?>(parameters[1].Value);
+			mR = Converter.ChangeTypeTo<object?>(parameters[0].Value);
+			sR = Converter.ChangeTypeTo<object?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -694,7 +691,7 @@ namespace OracleDataContext
 				}
 			};
 
-			var ret = dataConnection.ExecuteProc("TEST.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
 
 			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
 
@@ -720,7 +717,7 @@ namespace OracleDataContext
 				}
 			};
 
-			var ret = dataConnection.ExecuteProc("TEST.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
 
 			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
 
@@ -746,7 +743,7 @@ namespace OracleDataContext
 				}
 			};
 
-			var ret = dataConnection.ExecuteProc("TEST.TEST_PROCEDURE", parameters);
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PROCEDURE", parameters);
 
 			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
 
@@ -760,7 +757,7 @@ namespace OracleDataContext
 	{
 		#region PatientSelectall
 
-		[Sql.Function(Name="TEST.PATIENT_SELECTALL", ServerSideOnly=true)]
+		[Sql.Function(Name="MANAGED.PATIENT_SELECTALL", ServerSideOnly=true)]
 		public static object? PatientSelectall()
 		{
 			throw new InvalidOperationException();
@@ -770,8 +767,8 @@ namespace OracleDataContext
 
 		#region PatientSelectbyname
 
-		[Sql.Function(Name="TEST.PATIENT_SELECTBYNAME", ServerSideOnly=true)]
-		public static object? PatientSelectbyname(string? pfirstname, string? plastname)
+		[Sql.Function(Name="MANAGED.PATIENT_SELECTBYNAME", ServerSideOnly=true)]
+		public static object? PatientSelectbyname(string? pFIRSTNAME, string? pLASTNAME)
 		{
 			throw new InvalidOperationException();
 		}
@@ -780,8 +777,8 @@ namespace OracleDataContext
 
 		#region PersonInsert
 
-		[Sql.Function(Name="TEST.PERSON_INSERT", ServerSideOnly=true)]
-		public static object? PersonInsert(string? pfirstname, string? plastname, string? pmiddlename, string? pgender)
+		[Sql.Function(Name="MANAGED.PERSON_INSERT", ServerSideOnly=true)]
+		public static object? PersonInsert(string? pFIRSTNAME, string? pLASTNAME, string? pMIDDLENAME, string? pGENDER)
 		{
 			throw new InvalidOperationException();
 		}
@@ -790,7 +787,7 @@ namespace OracleDataContext
 
 		#region PersonSelectall
 
-		[Sql.Function(Name="TEST.PERSON_SELECTALL", ServerSideOnly=true)]
+		[Sql.Function(Name="MANAGED.PERSON_SELECTALL", ServerSideOnly=true)]
 		public static object? PersonSelectall()
 		{
 			throw new InvalidOperationException();
@@ -800,8 +797,8 @@ namespace OracleDataContext
 
 		#region PersonSelectallbygender
 
-		[Sql.Function(Name="TEST.PERSON_SELECTALLBYGENDER", ServerSideOnly=true)]
-		public static object? PersonSelectallbygender(string? pgender)
+		[Sql.Function(Name="MANAGED.PERSON_SELECTALLBYGENDER", ServerSideOnly=true)]
+		public static object? PersonSelectallbygender(string? pGENDER)
 		{
 			throw new InvalidOperationException();
 		}
@@ -810,8 +807,8 @@ namespace OracleDataContext
 
 		#region PersonSelectbykey
 
-		[Sql.Function(Name="TEST.PERSON_SELECTBYKEY", ServerSideOnly=true)]
-		public static object? PersonSelectbykey(decimal? pid)
+		[Sql.Function(Name="MANAGED.PERSON_SELECTBYKEY", ServerSideOnly=true)]
+		public static object? PersonSelectbykey(decimal? pID)
 		{
 			throw new InvalidOperationException();
 		}
@@ -820,8 +817,8 @@ namespace OracleDataContext
 
 		#region PersonSelectbyname
 
-		[Sql.Function(Name="TEST.PERSON_SELECTBYNAME", ServerSideOnly=true)]
-		public static object? PersonSelectbyname(string? pfirstname, string? plastname)
+		[Sql.Function(Name="MANAGED.PERSON_SELECTBYNAME", ServerSideOnly=true)]
+		public static object? PersonSelectbyname(string? pFIRSTNAME, string? pLASTNAME)
 		{
 			throw new InvalidOperationException();
 		}
@@ -830,8 +827,8 @@ namespace OracleDataContext
 
 		#region PersonSelectlistbyname
 
-		[Sql.Function(Name="TEST.PERSON_SELECTLISTBYNAME", ServerSideOnly=true)]
-		public static object? PersonSelectlistbyname(string? pfirstname, string? plastname)
+		[Sql.Function(Name="MANAGED.PERSON_SELECTLISTBYNAME", ServerSideOnly=true)]
+		public static object? PersonSelectlistbyname(string? pFIRSTNAME, string? pLASTNAME)
 		{
 			throw new InvalidOperationException();
 		}
@@ -840,7 +837,7 @@ namespace OracleDataContext
 
 		#region ScalarDatareader
 
-		[Sql.Function(Name="TEST.SCALAR_DATAREADER", ServerSideOnly=true)]
+		[Sql.Function(Name="MANAGED.SCALAR_DATAREADER", ServerSideOnly=true)]
 		public static object? ScalarDatareader()
 		{
 			throw new InvalidOperationException();
@@ -850,7 +847,7 @@ namespace OracleDataContext
 
 		#region ScalarReturnparameter
 
-		[Sql.Function(Name="TEST.SCALAR_RETURNPARAMETER", ServerSideOnly=true)]
+		[Sql.Function(Name="MANAGED.SCALAR_RETURNPARAMETER", ServerSideOnly=true)]
 		public static int? ScalarReturnparameter()
 		{
 			throw new InvalidOperationException();
@@ -860,7 +857,7 @@ namespace OracleDataContext
 
 		#region TestFunction
 
-		[Sql.Function(Name="TEST.TEST_FUNCTION", ServerSideOnly=true)]
+		[Sql.Function(Name="MANAGED.TEST_FUNCTION", ServerSideOnly=true)]
 		public static decimal? TestFunction(decimal? i)
 		{
 			throw new InvalidOperationException();
@@ -870,7 +867,7 @@ namespace OracleDataContext
 
 		#region TestPACKAGE1TestFunction
 
-		[Sql.Function(Name="TEST.TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly=true)]
+		[Sql.Function(Name="MANAGED.TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly=true)]
 		public static decimal? TestPACKAGE1TestFunction(decimal? i)
 		{
 			throw new InvalidOperationException();
@@ -880,7 +877,7 @@ namespace OracleDataContext
 
 		#region TestPACKAGE2TestFunction
 
-		[Sql.Function(Name="TEST.TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly=true)]
+		[Sql.Function(Name="MANAGED.TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly=true)]
 		public static decimal? TestPACKAGE2TestFunction(decimal? i)
 		{
 			throw new InvalidOperationException();

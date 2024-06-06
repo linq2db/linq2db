@@ -28,7 +28,7 @@ namespace Tests.UserTests
 				db.Execute("SELECT * FROM CLONECODE");
 
 				// all returned primary keys are defined on system/access tables
-				Assert.True(schema.Tables.Any(t => t.Columns.Any(c => c.IsPrimaryKey)));
+				Assert.That(schema.Tables.Any(t => t.Columns.Any(c => c.IsPrimaryKey)), Is.True);
 			}
 		}
 

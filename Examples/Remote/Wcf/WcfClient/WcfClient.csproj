@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net462</TargetFramework>
+		<OutputType>Exe</OutputType>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\..\Program.cs" Link="Program.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="System.ServiceModel" />
+
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj" />
+
+		<PackageReference Include="linq2db.t4models" />
+
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Northwind.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Northwind.generated.cs</LastGenOutput>
+		</Content>
+
+		<Compile Update="Northwind.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Northwind.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+</Project>

@@ -24,7 +24,7 @@ namespace Tests.Mapping
 			[PrimaryKey]
 			public int     ID   { get; set; }
 			[Column(Length = 50)]
-			public string? Data { get; set; }
+			public required string Data { get; set; }
 		}
 
 		[Test]
@@ -52,7 +52,7 @@ namespace Tests.Mapping
 					new { ID = 2, Data = "HHH" },
 					new { ID = 3, Data = "VVV" }
 				],
-				t.OrderBy(r => r.ID).Select(r => new { r.ID, r.Data}));
+				t.OrderBy(r => r.ID).Select(r => new { r.ID, r.Data }));
 
 			using var db1 = GetDataContext(context);
 

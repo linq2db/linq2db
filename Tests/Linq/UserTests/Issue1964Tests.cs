@@ -59,7 +59,7 @@ namespace Tests.UserTests
 			[Column,     NotNull ] public int      BranchType       { get; set; } // int
 		}
 
-		public IQueryable<BranchInfoEntity> NotDeletedBranchInfo(IDataContext dc)
+		private IQueryable<BranchInfoEntity> NotDeletedBranchInfo(IDataContext dc)
 		{
 			return dc.GetTable<BranchInfoEntity>().Where(m => m.Status == 0); 
 		}

@@ -14,9 +14,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	sealed class PostgreSQLMappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat DATE_FORMAT       = CompositeFormat.Parse("'{0:yyyy-MM-dd}'::{1}");
+		private static readonly CompositeFormat TIMESTAMP0_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss}'::{1}");
+		private static readonly CompositeFormat TIMESTAMP3_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}");
+#else
 		private const string DATE_FORMAT       = "'{0:yyyy-MM-dd}'::{1}";
 		private const string TIMESTAMP0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
 		private const string TIMESTAMP3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
+#endif
 
 		PostgreSQLMappingSchema() : base(ProviderName.PostgreSQL)
 		{
@@ -75,7 +81,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
 			string dbType;
+#if SUPPORTS_COMPOSITE_FORMAT
+			CompositeFormat format;
+#else
 			string format;
+#endif
 
 			if (value.Millisecond == 0)
 			{

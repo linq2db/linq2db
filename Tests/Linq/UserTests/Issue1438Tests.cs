@@ -45,8 +45,11 @@ namespace Tests.UserTests
 
 					var record = tbl.Where(_ => _.Id == id).Single();
 
-					Assert.AreEqual(id, record.Id);
-					Assert.True(record.Has);
+					Assert.Multiple(() =>
+					{
+						Assert.That(record.Id, Is.EqualTo(id));
+						Assert.That(record.Has, Is.True);
+					});
 				}
 			}
 		}
@@ -79,8 +82,11 @@ namespace Tests.UserTests
 
 					var record = tbl.Where(_ => _.Id == id).Single();
 
-					Assert.AreEqual(id, record.Id);
-					Assert.True(record.Has);
+					Assert.Multiple(() =>
+					{
+						Assert.That(record.Id, Is.EqualTo(id));
+						Assert.That(record.Has, Is.True);
+					});
 				}
 			}
 		}

@@ -110,8 +110,7 @@ namespace Default.SqlServer
 		[Sql.TableFunction(Schema="dbo", Name="GetParentByID")]
 		public ITable<TheParent> GetParentByID(int? @id)
 		{
-			return this.GetTable<TheParent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				@id);
+			return this.TableFromExpression(() => GetParentByID(@id));
 		}
 
 		#endregion
@@ -121,7 +120,7 @@ namespace Default.SqlServer
 		[Sql.TableFunction(Schema="dbo", Name="Issue1921")]
 		public ITable<Issue1921Result> Issue1921()
 		{
-			return this.GetTable<Issue1921Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => Issue1921());
 		}
 
 		public partial class Issue1921Result
@@ -137,8 +136,7 @@ namespace Default.SqlServer
 		[Sql.TableFunction(Schema="TestSchema", Name="SchemaTableFunction")]
 		public ITable<TheParent> SchemaTableFunction(int? @id)
 		{
-			return this.GetTable<TheParent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				@id);
+			return this.TableFromExpression(() => SchemaTableFunction(@id));
 		}
 
 		#endregion

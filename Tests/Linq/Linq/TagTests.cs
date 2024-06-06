@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -28,7 +29,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
@@ -48,12 +49,12 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
 		[Test]
-		public void Test_FromVariable([DataSources(NOT_SUPPORTED)] string context, [Values("one", null, "two")] string tag)
+		public void Test_FromVariable([DataSources(NOT_SUPPORTED)] string context, [Values("one", null, "two")] string? tag)
 		{
 			var expected = $"/* {tag} */{Environment.NewLine}";
 
@@ -68,9 +69,9 @@ namespace Tests.Linq
 				var commandSql = GetCurrentBaselines();
 
 				if (tag != null)
-					Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+					commandSql.Should().Contain(expected);
 				else
-					Assert.That(commandSql.IndexOf(expected), Is.EqualTo(-1));
+					commandSql.Should().NotContain(expected);
 			}
 		}
 
@@ -90,7 +91,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
@@ -125,7 +126,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
@@ -148,7 +149,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
@@ -167,7 +168,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(tag), Is.EqualTo(-1));
+				commandSql.Should().NotContain(tag);
 			}
 		}
 
@@ -184,7 +185,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
@@ -206,7 +207,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
@@ -223,7 +224,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
@@ -240,7 +241,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
@@ -257,7 +258,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
@@ -274,7 +275,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
@@ -291,7 +292,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 
@@ -308,7 +309,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				Assert.That(commandSql.IndexOf(expected), Is.Not.EqualTo(-1));
+				commandSql.Should().Contain(expected);
 			}
 		}
 

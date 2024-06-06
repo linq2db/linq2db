@@ -119,16 +119,16 @@ if ($version) {
 		$xml.package.files.AppendChild($xml.CreateSignificantWhitespace("`n`t`t"))
 		$child = $xml.CreateElement('file', $nsUri)
 		$attr = $xml.CreateAttribute('src')
-		$attr.Value = '..\MIT-LICENSE.txt'
+		$attr.Value = '..\..\MIT-LICENSE.txt'
 		$child.Attributes.Append($attr)
 		$xml.package.files.AppendChild($child)
 
 		if ($isT4 -eq $true) {
-			Set-File -src '..\NuGet\readme.T4.txt' -target 'readme.txt'
-			Set-File -src '..\NuGet\README.T4.md'  -target 'README.md'
+			Set-File -src '..\..\NuGet\readme.T4.txt' -target 'readme.txt'
+			Set-File -src '..\..\NuGet\README.T4.md'  -target 'README.md'
 		}
 
-		Set-File -src '..\NuGet\icon.png' -target 'images\icon.png'
+		Set-File -src '..\..\NuGet\icon.png' -target 'images\icon.png'
 
 		$xml.package.metadata.AppendChild($xml.CreateSignificantWhitespace("`n`t"))
 		$xml.package.files.AppendChild($xml.CreateSignificantWhitespace("`n`t"))

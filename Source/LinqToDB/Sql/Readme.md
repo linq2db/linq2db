@@ -74,7 +74,7 @@ namespace MyProject
 - `PreferServerSide` : This will tell linq2db that you would prefer for the expression to be evaluated on the server if possible.
 - `ServerSideOnly` : This will tell linq2db that if the expression cannot be executed on the server (For example, it is inside a another method call that cannot be translated) that an exception should be thrown. This is useful when attempting to guarantee that filtering is done on the server (avoiding transferring large amounts of data.)
 - `InlineParameters` : Normally linq2db will parametetrize any variables passed into the expression. If this is set to true however, the values will instead be passed as (escaped) literals. Please note scalar values passed in will always be inlined, regardless of this parameter.
-- `IsPredicate` : In the case of expressions that are boolean, linq2db will normally add a `= 1` when the server requires it (such as SqlServer). If this is set to `true`, linq2db will not add this.  
+- `IsPredicate` : In the case of expressions that are boolean, linq2db will normally add a `= 1` when the server requires it (such as SqlServer). If this is set to `true`, linq2db will not add this.
 
 ## `Sql.FunctionAttribute`
 

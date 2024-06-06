@@ -6,16 +6,6 @@
 <#@ import namespace="Microsoft.Win32.SafeHandles"                 #>
 <#+
 #nullable enable
-	string GetConnectionString(string config)
-	{
-		var settings = Tests.Tools.SettingsReader.Deserialize(
-			"NET472",
-			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\DataProviders.json")),
-			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\UserDataProviders.json")));
-
-		return settings.Connections![config].ConnectionString!;
-	}
-
 	void RunCliTool(
 		string  providerName,
 		string? connectionStringName,

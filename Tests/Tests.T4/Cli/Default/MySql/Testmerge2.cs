@@ -30,7 +30,7 @@ namespace Cli.Default.MySql
 		[Column("FieldNChar"                          )] public char?     FieldNChar      { get; set; } // char(1)
 		[Column("FieldFloat"                          )] public float?    FieldFloat      { get; set; } // float
 		[Column("FieldDouble"                         )] public double?   FieldDouble     { get; set; } // double
-		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime
+		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime(6)
 		[Column("FieldBinary"                         )] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column("FieldGuid"                           )] public string?   FieldGuid       { get; set; } // char(36)
 		[Column("FieldDecimal"                        )] public decimal?  FieldDecimal    { get; set; } // decimal(24,10)

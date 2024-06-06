@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Data.Linq;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
@@ -74,7 +74,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// conversions to DateTimeOffset
 			SetConvertExpression((DateTime v) => new DateTimeOffset(v.Ticks, default));
 #if NET6_0_OR_GREATER
-			SetConvertExpression((DateOnly v) => new DateTimeOffset(v.ToDateTime(TimeOnly.MinValue), default));
+			SetConvertExpression((DateOnly       v) => new DateTimeOffset(v.ToDateTime(TimeOnly.MinValue), default));
+			SetConvertExpression((DateTimeOffset v) => new DateOnly(v.Year, v.Month, v.Day));
 #endif
 
 			// IPAddress <=> uint (IPv4)
@@ -594,6 +595,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				case DataType.Single   : BuildFloatLiteral(sb, checked((float)value)); return;
 				case DataType.Undefined:
+				case DataType.Int32:
 				case DataType.Double   : BuildDoubleLiteral(sb, value); return;
 			}
 
@@ -740,7 +742,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static void BuildInt32Literal(StringBuilder sb, int value)
 		{
-			sb.AppendFormat(CultureInfo.InvariantCulture, "toInt32({0})", value);
+			sb.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
 		}
 
 		private static void BuildUInt32Literal(StringBuilder sb, uint value)

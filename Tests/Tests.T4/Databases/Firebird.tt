@@ -11,6 +11,6 @@
 	GenerateDbTypes          = true;
 	ConvertUpperNamesToLower = false;
 
-	LoadFirebirdMetadata(GetConnectionString("Firebird"));
+	LoadFirebirdMetadata(GetConnectionString("Firebird.2.5"));
 	GenerateModel();
 #>

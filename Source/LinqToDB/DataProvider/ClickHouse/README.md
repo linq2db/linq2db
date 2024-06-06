@@ -33,14 +33,14 @@ Legend:
 |Decimal64(scale)|Decimal64|1. decimal<br>2. string<br>3. ClickHouseDecimal|scale (default: 10)||
 |Decimal128(scale)|Decimal128|1. decimal (default)<br>2. string<br>3. ClickHouseDecimal|scale (default: 10)|1. Octonica provider [doesn't support](https://github.com/Octonica/ClickHouseClient/issues/28) values outside .net decimal type range|
 |Decimal256(scale)|Decimal256|1. decimal<br>2. string<br>3. ClickHouseDecimal (default)|scale (default: 10)|1. Octonica provider [doesn't support](https://github.com/Octonica/ClickHouseClient/issues/28) values outside .net decimal type range|
-|Bool|Boolean|bool (default)||1. Octonica Provider [doesn't support](https://github.com/Octonica/ClickHouseClient/issues/56) Bool (use `DataType.Byte` instead)<br>2. MySqlConnector provider [doesn't support](https://github.com/ClickHouse/ClickHouse/issues/37999) non-nullable Bool type|
+|Bool|Boolean|bool (default)|||
 |String|NVarChar<br>VarChar<br>VarBinary<br>|1. string (default)<br>2. byte[] (default)<br>3. Binary<br>4. Guid (DataType.VarChar or DataType.NVarChar)<br>5. Enum mapped to strings with different lengths (default)||1. ClickHouse.Client provider [doesn't support](https://github.com/DarkWanderer/ClickHouse.Client/issues/138) binary data<br>2. MySqlConnector provider [doesn't support](https://github.com/ClickHouse/ClickHouse/issues/38790) binary data|
 |FixedString(length)|NChar<br>Char<br>Binary|1. string<br>2. byte[]<br>3. Binary (default)<br>4. Guid (DataType.Char or DataType.NChar, Lenght = 36)<br>5. Enum mapped to strings with same length (default)|length (default: 100)|1. ClickHouse.Client provider [doesn't support](https://github.com/DarkWanderer/ClickHouse.Client/issues/138) binary data<br>2. MySqlConnector provider [doesn't support](https://github.com/ClickHouse/ClickHouse/issues/38790) binary data<br>3. LinqToDB doesn't trim trailing `\x00` bytes|
 |UUID|Guid|Guid (default)|||
-|Date|Date|1. DateTime<br>2. DateOnly<br>3. DateTimeOffset||Octonica provider [cannot read](https://github.com/Octonica/ClickHouseClient/issues/60) min value (1970-01-01)|
-|Date32|Date32|1. DateTime<br>2. DateOnly (default)<br>3. DateTimeOffset||Octonica provider [cannot read](https://github.com/Octonica/ClickHouseClient/issues/60) min value (1925-01-01)|
-|DateTime|DateTime|1. DateTime<br>2. DateTimeOffset||Octonica provider [cannot read](https://github.com/Octonica/ClickHouseClient/issues/60) min value (1970-01-01 00:00:00)|
-|DateTime64(precision)|DateTime64|1. DateTime (default)<br>2. DateTimeOffset (default)|precision (default: 7)|1. Octonica provider [cannot read](https://github.com/Octonica/ClickHouseClient/issues/60) min value (1925-01-01 00:00:00)<br>2. Octonica provider [crashes](https://github.com/Octonica/ClickHouseClient/issues/62) when reading values less than 1970-01-01 00:00:00|
+|Date|Date|1. DateTime<br>2. DateOnly<br>3. DateTimeOffset|||
+|Date32|Date32|1. DateTime<br>2. DateOnly (default)<br>3. DateTimeOffset|||
+|DateTime|DateTime|1. DateTime<br>2. DateTimeOffset|||
+|DateTime64(precision)|DateTime64|1. DateTime (default)<br>2. DateTimeOffset (default)|precision (default: 7)||
 |Enum8|Enum8|Enum||Table creation requires full database type specified for column in mapping|
 |Enum16|Enum16|Enum||Table creation requires full database type specified for column in mapping|
 |JSON|Json|string||Type is still in experimental status in ClickHouse and mostly unusable:<br>1. ClickHouse.Client provider doesn't support JSON type<br>2. Octonica provider doesn't support JSON type<br>3. MySqlConnector returns non-json data from server|

@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class TableAttributeBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = new[]
+		static readonly string[] MethodNames =
 		{
 			nameof(LinqExtensions.TableName),
 			nameof(LinqExtensions.ServerName),
@@ -22,13 +22,13 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(MethodNames);
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var table    = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
-			var value    = methodCall.Arguments.Count == 1 && methodCall.Method.Name == nameof(TableExtensions.IsTemporary) ?
-				true :
-				methodCall.Arguments[1].EvaluateExpression(builder.DataContext);
+			var value = methodCall.Arguments.Count == 1 && methodCall.Method.Name == nameof(TableExtensions.IsTemporary)
+				? true
+				: builder.EvaluateExpression(methodCall.Arguments[1]);
 
 			switch (methodCall.Method.Name)
 			{
@@ -37,11 +37,11 @@ namespace LinqToDB.Linq.Builder
 				case nameof(LinqExtensions.DatabaseName)  : table.SqlTable.TableName = table.SqlTable.TableName with { Database = (string?)value }; break;
 				case nameof(LinqExtensions.SchemaName)    : table.SqlTable.TableName = table.SqlTable.TableName with { Schema   = (string?)value }; break;
 				case nameof(TableExtensions.TableOptions) : table.SqlTable.TableOptions  = (TableOptions)value!; break;
-				case nameof(TableExtensions.IsTemporary)  : table.SqlTable.Set((bool)value!, TableOptions.IsTemporary); break;
 				case nameof(LinqExtensions.TableID)       : table.SqlTable.ID            = (string?)     value;  break;
+				case nameof(TableExtensions.IsTemporary)  : table.SqlTable.Set((bool)value!, TableOptions.IsTemporary); break;
 			}
 
-			return sequence;
+			return BuildSequenceResult.FromContext(sequence);
 		}
 	}
 }

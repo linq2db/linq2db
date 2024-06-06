@@ -8,7 +8,6 @@ namespace LinqToDB.Async
 	/// </summary>
 	internal static class SafeAwaiter
 	{
-#if NATIVE_ASYNC
 		public static T Run<T>(Func<ValueTask<T>> task)
 		{
 			// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
@@ -31,6 +30,5 @@ namespace LinqToDB.Async
 		{
 			Task.Run(async () => await task().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)).Wait();
 		}
-#endif
 	}
 }

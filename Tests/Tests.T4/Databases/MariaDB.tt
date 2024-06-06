@@ -6,6 +6,6 @@
 <#
 	NamespaceName = "MariaDBDataContext";
 
-	LoadMySqlMetadata(GetConnectionString("MariaDB"));
+	LoadMySqlMetadata(GetConnectionString("MariaDB.11"));
 	GenerateModel();
 #>

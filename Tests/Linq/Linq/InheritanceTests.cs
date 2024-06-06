@@ -129,17 +129,17 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void Test13([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    ParentInheritance4
-					join c in    Child on p.ParentID equals c.ParentID
-					select p,
-					from p in db.ParentInheritance4
-					join c in db.Child on p.ParentID equals c.ParentID
-					select p);
-		}
+		//public void Test13([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			from p in    ParentInheritance4
+		//			join c in    Child on p.ParentID equals c.ParentID
+		//			select p,
+		//			from p in db.ParentInheritance4
+		//			join c in db.Child on p.ParentID equals c.ParentID
+		//			select p);
+		//}
 
 		[Test]
 		public void TestGetBaseClass([DataSources] string context)
@@ -149,7 +149,7 @@ namespace Tests.Linq
 				var q = db.GetTable<ParentInheritanceBase3>()
 					.Where(x => x is ParentInheritance13)
 					.ToList();
-				Assert.AreEqual(2, q.Count);
+				Assert.That(q, Has.Count.EqualTo(2));
 			}
 		}
 
@@ -207,9 +207,8 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				Assert.AreEqual(
-					dd.DiscontinuedProduct.FirstOrDefault()!.ProductID,
-					db.DiscontinuedProduct.FirstOrDefault()!.ProductID);
+				Assert.That(
+					db.DiscontinuedProduct.FirstOrDefault()!.ProductID, Is.EqualTo(dd.DiscontinuedProduct.FirstOrDefault()!.ProductID));
 			}
 		}
 
@@ -260,7 +259,7 @@ namespace Tests.Linq
 		public void SimplTest()
 		{
 			using (var db = new DataConnection())
-				Assert.AreEqual(1, db.GetTable<PersonEx>().Where(_ => _.FirstName == "John").Select(_ => _.ID).Single());
+				Assert.That(db.GetTable<PersonEx>().Where(_ => _.FirstName == "John").Select(_ => _.ID).Single(), Is.EqualTo(1));
 		}
 
 		[InheritanceMapping(Code = 1, Type = typeof(Parent222))]
@@ -291,7 +290,7 @@ namespace Tests.Linq
 				var q  = q1.Where(_ => _.Value.ID == 1);
 
 				var sql = ((IExpressionQuery<Parent222>)q).SqlText;
-				Assert.IsNotEmpty(sql);
+				Assert.That(sql, Is.Not.Empty);
 			}
 		}
 
@@ -319,7 +318,7 @@ namespace Tests.Linq
 					.OrderBy(x => x)
 					.ToList();
 
-				Assert.IsTrue(childIDs.SequenceEqual(new [] {11, 21} ), "{0}: {1}, {2}", childIDs.Count, childIDs[0], childIDs[1]);
+				Assert.That(childIDs.SequenceEqual(new [] {11, 21} ), Is.True, $"{childIDs.Count}: {childIDs[0]}, {childIDs[1]}");
 			}
 		}
 
@@ -335,16 +334,19 @@ namespace Tests.Linq
 
 				var list = result.ToList();
 
-				Assert.AreEqual(330, list.Count);
+				Assert.That(list, Has.Count.EqualTo(330));
 
 				foreach (var item in list)
 				{
-					Assert.IsNotNull(item);
-					Assert.IsNotNull(item.Order);
-					Assert.IsNotNull(item.Product);
-					Assert.IsTrue(
+					Assert.That(item, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(item.Order, Is.Not.Null);
+						Assert.That(item.Product, Is.Not.Null);
+					});
+					Assert.That(
 						 item.Product.Discontinued && item.Product is Northwind.DiscontinuedProduct ||
-						!item.Product.Discontinued && item.Product is Northwind.ActiveProduct);
+						!item.Product.Discontinued && item.Product is Northwind.ActiveProduct, Is.True);
 				}
 			}
 		}
@@ -357,9 +359,12 @@ namespace Tests.Linq
 				var result   = db.Product.         Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
 				var expected = db.Product.ToList().Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
 
-				Assert.That(result.Count,                    Is.GreaterThan(0));
-				Assert.That(expected.Count,                  Is.EqualTo(result.Count));
-				Assert.That(result.Contains(null),           Is.True);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result, Is.Not.Empty);
+					Assert.That(expected, Has.Count.EqualTo(result.Count));
+				});
+				Assert.That(result, Does.Contain(null));
 				Assert.That(result.Select(x => x == null ? (int?)null : x.ProductID).Except(expected.Select(x => x == null ? (int?)null : x.ProductID)).Count(), Is.EqualTo(0));
 			}
 		}
@@ -374,9 +379,9 @@ namespace Tests.Linq
 
 				var list = result.ToList();
 
-				Assert.Greater(list.Count, 0);
-				Assert.AreEqual(expected.Count(), list.Count);
-				Assert.IsTrue(list.Except(expected).Count() == 0);
+				Assert.That(list, Is.Not.Empty);
+				Assert.That(list, Has.Count.EqualTo(expected.Count()));
+				Assert.That(list.Except(expected).Count(), Is.EqualTo(0));
 			}
 		}
 
@@ -390,8 +395,11 @@ namespace Tests.Linq
 				var result   = db.Product.Where(x => x is Northwind.DiscontinuedProduct).ToList();
 				var expected = dd.Product.Where(x => x is Northwind.DiscontinuedProduct).ToList();
 
-				Assert.Greater(result.Count, 0);
-				Assert.AreEqual(result.Count, expected.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result, Is.Not.Empty);
+					Assert.That(expected, Has.Count.EqualTo(result.Count));
+				});
 			}
 		}
 
@@ -437,7 +445,7 @@ namespace Tests.Linq
 				var result   = db.DiscontinuedProduct.Select(p => p).ToList();
 				var expected = dd.DiscontinuedProduct.Select(p => p).ToList();
 
-				Assert.That(result.Count, Is.Not.EqualTo(0).And.EqualTo(expected.Count));
+				Assert.That(result, Has.Count.EqualTo(expected.Count));
 			}
 		}
 
@@ -451,7 +459,7 @@ namespace Tests.Linq
 				var result   = db.DiscontinuedProduct.ToList();
 				var expected = dd.DiscontinuedProduct.ToList();
 
-				Assert.That(result.Count, Is.Not.EqualTo(0).And.EqualTo(expected.Count));
+				Assert.That(result, Has.Count.EqualTo(expected.Count));
 			}
 		}
 
@@ -556,7 +564,7 @@ namespace Tests.Linq
 			{
 				var db = (TestDataConnection)context;
 				db.GetTable<Test17Person>().OfType<Test17John>().ToList();
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("lastname"), "Why select LastName field??");
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("lastname"), "Why select LastName field??");
 			}
 		}
 
@@ -629,7 +637,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void InheritanceAssociationTest([DataSources] string context)
 		{
@@ -719,12 +726,18 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(BaseTable.Data))
 			{
 					var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
-					Assert.AreEqual(1, baseTableRecordById?.Id);
-					Assert.AreEqual(100, baseTableRecordById?.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecordById?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecordById?.Value, Is.EqualTo(100));
+				});
 
-					var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.Value == 100);
-					Assert.AreEqual(1, baseTableRecordWithValuePredicate?.Id);
-					Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value);
+				var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.Value == 100);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecordWithValuePredicate?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecordWithValuePredicate?.Value, Is.EqualTo(100));
+				});
 			}
 		}
 
@@ -735,12 +748,18 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(BaseTable.Data))
 			{
 				var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
-				Assert.AreEqual(1, baseTableRecordById?.Id);
-				Assert.AreEqual(100, baseTableRecordById?.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecordById?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecordById?.Value, Is.EqualTo(100));
+				});
 
 				var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == 100);
-				Assert.AreEqual(1, baseTableRecordWithValuePredicate?.Id);
-				Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecordWithValuePredicate?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecordWithValuePredicate?.Value, Is.EqualTo(100));
+				});
 			}
 		}
 
@@ -755,11 +774,14 @@ namespace Tests.Linq
 				//var derivedTableRecord = db.GetTable<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == (100 * -1 ));
 				var derivedTableRecord = db.GetTable<BaseTable2>().OfType<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == (100 * -1 ));
 
-				Assert.AreEqual(1, baseTableRecord?.Id);
-				Assert.AreEqual(100, baseTableRecord?.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecord?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecord?.Value, Is.EqualTo(100));
 
-				Assert.AreEqual(1, derivedTableRecord?.Id);
-				Assert.AreEqual(100, derivedTableRecord?.Value * -1);
+					Assert.That(derivedTableRecord?.Id, Is.EqualTo(1));
+					Assert.That(derivedTableRecord?.Value * -1, Is.EqualTo(100));
+				});
 			}
 		}
 
@@ -774,11 +796,14 @@ namespace Tests.Linq
 				//var derivedTableRecord = db.GetTable<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == (100 * -1 ));
 				var derivedTableRecord = db.GetTable<BaseTable2>().OfType<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == (100 * -1 ));
 
-				Assert.AreEqual(1, baseTableRecord?.Id);
-				Assert.AreEqual(100, baseTableRecord?.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecord?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecord?.Value, Is.EqualTo(100));
 
-				Assert.AreEqual(1, derivedTableRecord?.Id);
-				Assert.AreEqual(100, derivedTableRecord?.Value * -1);
+					Assert.That(derivedTableRecord?.Id, Is.EqualTo(1));
+					Assert.That(derivedTableRecord?.Value * -1, Is.EqualTo(100));
+				});
 			}
 		}
 		#endregion
@@ -822,12 +847,18 @@ namespace Tests.Linq
 
 			var data = tb.OrderBy(r => r.Id).ToArray();
 
-			Assert.AreEqual(2          , data.Length);
-			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
-			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
-			Assert.AreEqual("Disp00001", data[0].SerialNumber);
-			Assert.AreEqual("TV00001"  , data[1].SerialNumber);
-			Assert.AreEqual("Something", ((Issue4280T2)data[1]).Location);
+			Assert.That(data, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
+				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00001"));
+				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00001"));
+				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Something"));
+			});
 
 			displayDevice.SerialNumber = "Disp00002";
 			tvDevice.SerialNumber      = "TV00002";
@@ -838,12 +869,18 @@ namespace Tests.Linq
 
 			data = tb.OrderBy(r => r.Id).ToArray();
 
-			Assert.AreEqual(2          , data.Length);
-			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
-			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
-			Assert.AreEqual("Disp00002", data[0].SerialNumber);
-			Assert.AreEqual("TV00002"  , data[1].SerialNumber);
-			Assert.AreEqual("Anything" , ((Issue4280T2)data[1]).Location);
+			Assert.That(data, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
+				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00002"));
+				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00002"));
+				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Anything"));
+			});
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4280")]
@@ -860,12 +897,18 @@ namespace Tests.Linq
 
 			var data = tb.OrderBy(r => r.Id).ToArray();
 
-			Assert.AreEqual(2          , data.Length);
-			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
-			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
-			Assert.AreEqual("Disp00001", data[0].SerialNumber);
-			Assert.AreEqual("TV00001"  , data[1].SerialNumber);
-			Assert.AreEqual("Something", ((Issue4280T2)data[1]).Location);
+			Assert.That(data, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
+				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00001"));
+				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00001"));
+				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Something"));
+			});
 
 			displayDevice.SerialNumber = "Disp00002";
 			tvDevice.SerialNumber      = "TV00002";
@@ -876,12 +919,18 @@ namespace Tests.Linq
 
 			data = tb.OrderBy(r => r.Id).ToArray();
 
-			Assert.AreEqual(2          , data.Length);
-			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
-			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
-			Assert.AreEqual("Disp00002", data[0].SerialNumber);
-			Assert.AreEqual("TV00002"  , data[1].SerialNumber);
-			Assert.AreEqual("Anything" , ((Issue4280T2)data[1]).Location);
+			Assert.That(data, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
+				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00002"));
+				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00002"));
+				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Anything"));
+			});
 		}
 		#endregion
 	}

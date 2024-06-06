@@ -8,6 +8,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using System.Collections.Generic;
 
 namespace Tests.DataProvider
 {
@@ -122,7 +123,7 @@ namespace Tests.DataProvider
 
 				db.OnNextCommandInitialized((_, cmd) =>
 				{
-					Assert.AreEqual(2, cmd.Parameters.Count);
+					Assert.That(cmd.Parameters, Has.Count.EqualTo(2));
 					return cmd;
 				});
 
@@ -134,7 +135,7 @@ namespace Tests.DataProvider
 				db.InlineParameters = true;
 				db.OnNextCommandInitialized((_, cmd) =>
 				{
-					Assert.AreEqual(0, cmd.Parameters.Count);
+					Assert.That(cmd.Parameters, Is.Empty);
 					return cmd;
 				});
 
@@ -165,13 +166,6 @@ namespace Tests.DataProvider
 			await table.DeleteAsync();
 			await db.BulkCopyAsync(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
-
-#if NATIVE_ASYNC
-			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
-			await table.DeleteAsync();
-			await db.BulkCopyAsync(options, data);
-			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
-#endif
 		}
 
 		/// <summary>
@@ -216,22 +210,12 @@ namespace Tests.DataProvider
 							: table.ToArray();
 
 			// assert data
-			Assert.AreEqual(1, records.Length);
+			Assert.That(records, Has.Length.EqualTo(1));
 
 			var record = records[0];
-			Assert.AreEqual(getExpectedValue != null ? getExpectedValue(value) : value, record.Column);
+			Assert.That(record.Column, Is.EqualTo(getExpectedValue != null ? getExpectedValue(value) : value));
 			if (!skipNullable)
-				Assert.AreEqual(getExpectedNullableValue != null ? getExpectedNullableValue(nullableValue) : nullableValue, record.ColumnNullable);
+				Assert.That(record.ColumnNullable, Is.EqualTo(getExpectedNullableValue != null ? getExpectedNullableValue(nullableValue) : nullableValue));
 		}
-
-#if NATIVE_ASYNC
-		private static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(IEnumerable<T> enumerable)
-		{
-			foreach (var item in enumerable)
-			{
-				yield return await Task.FromResult(item);
-			}
-		}
-#endif
 	}
 }

@@ -9,18 +9,8 @@
 		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net45">
-				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="4.0.14" />
-			</group>
-			<group targetFramework="net461">
-				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="4.1.13" />
-			</group>
-			<group targetFramework="netstandard2.0">
-				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="7.0.7"  />
-			</group>
+			<dependency id="linq2db" version="6.0.0"  />
+			<dependency id="Npgsql"  version="8.0.3"  />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
@@ -37,8 +27,8 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.HashCode.dll"                    target="tools"                                   />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Extensions.Logging.Abstractions.dll" target="tools"                                   />
 
-		<file src="..\NuGet\PostgreSQL\linq2db.PostgreSQL.props"                                 target="build"                                   />
-		<file src="..\NuGet\PostgreSQL\*.*"                                 exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
-		<file src="..\NuGet\PostgreSQL\*.*"                                 exclude="**\*.props" target="content\LinqToDB.Templates"              />
+		<file src="..\..\NuGet\PostgreSQL\linq2db.PostgreSQL.props"                                 target="build"                                   />
+		<file src="..\..\NuGet\PostgreSQL\*.*"                                 exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="..\..\NuGet\PostgreSQL\*.*"                                 exclude="**\*.props" target="content\LinqToDB.Templates"              />
 	</files>
 </package>

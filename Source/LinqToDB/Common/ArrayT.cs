@@ -10,15 +10,6 @@ namespace LinqToDB.Common
 	[PublicAPI]
 	public static class Array<T>
 	{
-		/// <summary>
-		/// Static instance of empty array of specific type.
-		/// </summary>
-#if NET45
-		public static readonly T[] Empty = new T[0];
-#else
-		public static readonly T[] Empty = Array.Empty<T>();
-#endif
-
 		internal static T[] Append(T[] array, T newElement)
 		{
 			var oldSize = array.Length;

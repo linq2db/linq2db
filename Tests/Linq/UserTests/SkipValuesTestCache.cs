@@ -28,34 +28,34 @@ namespace Tests.UserTests
 					var count = db.Insert(new TestTable() { Id = 1, Name = "John", Age = value });
 
 					if (!context.IsAnyOf(TestProvName.AllClickHouse))
-						Assert.Greater(count, 0);
+						Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.IsNotNull(r);
+					Assert.That(r, Is.Not.Null);
 					if (value == 2)
 					{
-						Assert.AreEqual(r.Age, 2);
+						Assert.That(r.Age, Is.EqualTo(2));
 					}
 					else
 					{
-						Assert.IsNull(r.Age);
+						Assert.That(r.Age, Is.Null);
 					}
 
 					r.Age = value;
 					count = db.Update(r);
 
 					if (!context.IsAnyOf(TestProvName.AllClickHouse))
-						Assert.Greater(count, 0);
+						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
-					Assert.IsNotNull(r);
+					Assert.That(r, Is.Not.Null);
 					if (value == 2)
 					{
-						Assert.AreEqual(r.Age, 2);
+						Assert.That(r.Age, Is.EqualTo(2));
 					}
 					else
 					{
-						Assert.IsNull(r.Age);
+						Assert.That(r.Age, Is.Null);
 					}
 				}
 			}
@@ -72,33 +72,33 @@ namespace Tests.UserTests
 				{
 					var count = db.InsertOrReplace(new TestTable() { Id = 1, Name = "John", Age = value });
 
-					Assert.Greater(count, 0);
+					Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.IsNotNull(r);
+					Assert.That(r, Is.Not.Null);
 					if (value == 2)
 					{
-						Assert.AreEqual(r.Age, 2);
+						Assert.That(r.Age, Is.EqualTo(2));
 					}
 					else
 					{
-						Assert.IsNull(r.Age);
+						Assert.That(r.Age, Is.Null);
 					}
 
 					r.Age = value;
 					count = db.InsertOrReplace(r);
 
-					Assert.Greater(count, 0);
+					Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
-					Assert.IsNotNull(r);
+					Assert.That(r, Is.Not.Null);
 					if (value == 2)
 					{
-						Assert.AreEqual(r.Age, 2);
+						Assert.That(r.Age, Is.EqualTo(2));
 					}
 					else
 					{
-						Assert.IsNull(r.Age);
+						Assert.That(r.Age, Is.Null);
 					}
 				}
 			}

@@ -75,20 +75,6 @@ namespace LinqToDB
 			}
 		}
 
-		public int Pack()
-		{
-			return
-				(EnableConstantExpressionInOrderBy ? 0b01 : 0b00) |
-				(GenerateFinalAliases              ? 0b10 : 0b00);
-		}
-
-		public SqlOptions Unpack(int n)
-		{
-			return new SqlOptions(
-				EnableConstantExpressionInOrderBy : (n & 0b01) != 0,
-				GenerateFinalAliases              : (n & 0b10) != 0);
-		}
-
 		#region IEquatable implementation
 
 		public bool Equals(SqlOptions? other)

@@ -79,11 +79,9 @@ namespace FirebirdDataContext
 		#region OutRefEnumTest
 
 		[Sql.TableFunction(Name="OutRefEnumTest")]
-		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? str, string? inInputoutputstr)
+		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? sTR, string? inInputoutputstr)
 		{
-			return this.GetTable<OutRefEnumTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				str,
-				inInputoutputstr);
+			return this.TableFromExpression(() => OutRefEnumTest(sTR, inInputoutputstr));
 		}
 
 		public partial class OutRefEnumTestResult
@@ -97,13 +95,9 @@ namespace FirebirdDataContext
 		#region OutRefTest
 
 		[Sql.TableFunction(Name="OutRefTest")]
-		public ITable<OutRefTestResult> OutRefTest(int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
+		public ITable<OutRefTestResult> OutRefTest(int? iD, int? inInputoutputid, string? sTR, string? inInputoutputstr)
 		{
-			return this.GetTable<OutRefTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				id,
-				inInputoutputid,
-				str,
-				inInputoutputstr);
+			return this.TableFromExpression(() => OutRefTest(iD, inInputoutputid, sTR, inInputoutputstr));
 		}
 
 		public partial class OutRefTestResult
@@ -121,7 +115,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Patient_SelectAll")]
 		public ITable<PatientSelectAllResult> PatientSelectAll()
 		{
-			return this.GetTable<PatientSelectAllResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => PatientSelectAll());
 		}
 
 		public partial class PatientSelectAllResult
@@ -139,11 +133,9 @@ namespace FirebirdDataContext
 		#region PatientSelectByName
 
 		[Sql.TableFunction(Name="Patient_SelectByName")]
-		public ITable<PatientSelectByNameResult> PatientSelectByName(string? firstname, string? lastname)
+		public ITable<PatientSelectByNameResult> PatientSelectByName(string? fIRSTNAME, string? lASTNAME)
 		{
-			return this.GetTable<PatientSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				firstname,
-				lastname);
+			return this.TableFromExpression(() => PatientSelectByName(fIRSTNAME, lASTNAME));
 		}
 
 		public partial class PatientSelectByNameResult
@@ -159,13 +151,9 @@ namespace FirebirdDataContext
 		#region PersonInsert
 
 		[Sql.TableFunction(Name="Person_Insert")]
-		public ITable<PersonInsertResult> PersonInsert(string? firstname, string? lastname, string? middlename, char? gender)
+		public ITable<PersonInsertResult> PersonInsert(string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
 		{
-			return this.GetTable<PersonInsertResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				firstname,
-				lastname,
-				middlename,
-				gender);
+			return this.TableFromExpression(() => PersonInsert(fIRSTNAME, lASTNAME, mIDDLENAME, gENDER));
 		}
 
 		public partial class PersonInsertResult
@@ -178,13 +166,9 @@ namespace FirebirdDataContext
 		#region PersonInsertOutputParameter
 
 		[Sql.TableFunction(Name="Person_Insert_OutputParameter")]
-		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? firstname, string? lastname, string? middlename, char? gender)
+		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
 		{
-			return this.GetTable<PersonInsertOutputParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				firstname,
-				lastname,
-				middlename,
-				gender);
+			return this.TableFromExpression(() => PersonInsertOutputParameter(fIRSTNAME, lASTNAME, mIDDLENAME, gENDER));
 		}
 
 		public partial class PersonInsertOutputParameterResult
@@ -199,7 +183,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Person_SelectAll")]
 		public ITable<PersonSelectAllResult> PersonSelectAll()
 		{
-			return this.GetTable<PersonSelectAllResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => PersonSelectAll());
 		}
 
 		public partial class PersonSelectAllResult
@@ -216,10 +200,9 @@ namespace FirebirdDataContext
 		#region PersonSelectByKey
 
 		[Sql.TableFunction(Name="Person_SelectByKey")]
-		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? id)
+		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? iD)
 		{
-			return this.GetTable<PersonSelectByKeyResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				id);
+			return this.TableFromExpression(() => PersonSelectByKey(iD));
 		}
 
 		public partial class PersonSelectByKeyResult
@@ -238,9 +221,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Person_SelectByName")]
 		public ITable<PersonSelectByNameResult> PersonSelectByName(string? inFirstname, string? inLastname)
 		{
-			return this.GetTable<PersonSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				inFirstname,
-				inLastname);
+			return this.TableFromExpression(() => PersonSelectByName(inFirstname, inLastname));
 		}
 
 		public partial class PersonSelectByNameResult
@@ -259,7 +240,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Scalar_DataReader")]
 		public ITable<ScalarDataReaderResult> ScalarDataReader()
 		{
-			return this.GetTable<ScalarDataReaderResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => ScalarDataReader());
 		}
 
 		public partial class ScalarDataReaderResult
@@ -275,7 +256,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Scalar_OutputParameter")]
 		public ITable<ScalarOutputParameterResult> ScalarOutputParameter()
 		{
-			return this.GetTable<ScalarOutputParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => ScalarOutputParameter());
 		}
 
 		public partial class ScalarOutputParameterResult
@@ -291,7 +272,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Scalar_ReturnParameter")]
 		public ITable<ScalarReturnParameterResult> ScalarReturnParameter()
 		{
-			return this.GetTable<ScalarReturnParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => ScalarReturnParameter());
 		}
 
 		public partial class ScalarReturnParameterResult
@@ -389,7 +370,7 @@ namespace FirebirdDataContext
 		/// <summary>
 		/// FK_Doctor_Person (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -458,9 +439,9 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_2101 (SYSDBA.Person)
+		/// INTEG_18 (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -480,13 +461,13 @@ namespace FirebirdDataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (SYSDBA.Doctor)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Doctor.PersonID), CanBeNull=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_2101_BackReference (SYSDBA.Patient)
+		/// INTEG_18_BackReference (SYSDBA.Patient)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Patient.PersonID), CanBeNull=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? INTEG { get; set; }
 
 		#endregion
@@ -582,11 +563,11 @@ namespace FirebirdDataContext
 
 		#region PersonDelete
 
-		public static int PersonDelete(this Testdb25DB dataConnection, int? personID)
+		public static int PersonDelete(this Testdb25DB dataConnection, int? pERSONID)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PersonID", personID, LinqToDB.DataType.Int32)
+				new DataParameter("PERSONID", pERSONID, LinqToDB.DataType.Int32)
 				{
 					Size = 4
 				}
@@ -599,27 +580,27 @@ namespace FirebirdDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this Testdb25DB dataConnection, int? personid, string? firstname, string? lastname, string? middlename, char? gender)
+		public static int PersonUpdate(this Testdb25DB dataConnection, int? pERSONID, string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID",   personid,   LinqToDB.DataType.Int32)
+				new DataParameter("PERSONID",   pERSONID,   LinqToDB.DataType.Int32)
 				{
 					Size = 4
 				},
-				new DataParameter("FIRSTNAME",  firstname,  LinqToDB.DataType.NVarChar)
+				new DataParameter("FIRSTNAME",  fIRSTNAME,  LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("LASTNAME",   lastname,   LinqToDB.DataType.NVarChar)
+				new DataParameter("LASTNAME",   lASTNAME,   LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("MIDDLENAME", middlename, LinqToDB.DataType.NVarChar)
+				new DataParameter("MIDDLENAME", mIDDLENAME, LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("GENDER",     gender,     LinqToDB.DataType.NChar)
+				new DataParameter("GENDER",     gENDER,     LinqToDB.DataType.NChar)
 				{
 					Size = 1
 				}

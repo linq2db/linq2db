@@ -7,12 +7,7 @@ namespace LinqToDB.Data
 	/// <summary>
 	/// Data connection transaction controller.
 	/// </summary>
-	public class DataConnectionTransaction : IDisposable,
-#if NATIVE_ASYNC
-		IAsyncDisposable
-#else
-		Async.IAsyncDisposable
-#endif
+	public class DataConnectionTransaction : IDisposable, IAsyncDisposable
 	{
 		/// <summary>
 		/// Creates new transaction controller for data connection.
@@ -78,10 +73,6 @@ namespace LinqToDB.Data
 				DataConnection.DisposeTransaction();
 		}
 
-#if NATIVE_ASYNC
 		public ValueTask DisposeAsync() => new (DataConnection.DisposeTransactionAsync());
-#else
-		public Task DisposeAsync() => DataConnection.DisposeTransactionAsync();
-#endif
 	}
 }

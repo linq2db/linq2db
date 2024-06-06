@@ -4,10 +4,14 @@
 		<AssemblyName>linq2db.Remote.Wcf</AssemblyName>
 		<RootNamespace>LinqToDB.Remote.Wcf</RootNamespace>
 
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.wcf.xml</DocumentationFile>
-		<TargetFrameworks>net45</TargetFrameworks>
+		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+		<TargetFrameworks>net462</TargetFrameworks>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>

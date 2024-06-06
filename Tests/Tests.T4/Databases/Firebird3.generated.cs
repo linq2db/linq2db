@@ -81,9 +81,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="OutRefEnumTest")]
 		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? STR, string? IN_INPUTOUTPUTSTR)
 		{
-			return this.GetTable<OutRefEnumTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				STR,
-				IN_INPUTOUTPUTSTR);
+			return this.TableFromExpression(() => OutRefEnumTest(STR, IN_INPUTOUTPUTSTR));
 		}
 
 		public partial class OutRefEnumTestResult
@@ -99,11 +97,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="OutRefTest")]
 		public ITable<OutRefTestResult> OutRefTest(int? ID, int? IN_INPUTOUTPUTID, string? STR, string? IN_INPUTOUTPUTSTR)
 		{
-			return this.GetTable<OutRefTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				ID,
-				IN_INPUTOUTPUTID,
-				STR,
-				IN_INPUTOUTPUTSTR);
+			return this.TableFromExpression(() => OutRefTest(ID, IN_INPUTOUTPUTID, STR, IN_INPUTOUTPUTSTR));
 		}
 
 		public partial class OutRefTestResult
@@ -121,7 +115,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="Patient_SelectAll")]
 		public ITable<PatientSelectAllResult> PatientSelectAll()
 		{
-			return this.GetTable<PatientSelectAllResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => PatientSelectAll());
 		}
 
 		public partial class PatientSelectAllResult
@@ -141,9 +135,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="Patient_SelectByName")]
 		public ITable<PatientSelectByNameResult> PatientSelectByName(string? FIRSTNAME, string? LASTNAME)
 		{
-			return this.GetTable<PatientSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				FIRSTNAME,
-				LASTNAME);
+			return this.TableFromExpression(() => PatientSelectByName(FIRSTNAME, LASTNAME));
 		}
 
 		public partial class PatientSelectByNameResult
@@ -161,11 +153,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="Person_Insert")]
 		public ITable<PersonInsertResult> PersonInsert(string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return this.GetTable<PersonInsertResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				FIRSTNAME,
-				LASTNAME,
-				MIDDLENAME,
-				GENDER);
+			return this.TableFromExpression(() => PersonInsert(FIRSTNAME, LASTNAME, MIDDLENAME, GENDER));
 		}
 
 		public partial class PersonInsertResult
@@ -180,11 +168,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="Person_Insert_OutputParameter")]
 		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
 		{
-			return this.GetTable<PersonInsertOutputParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				FIRSTNAME,
-				LASTNAME,
-				MIDDLENAME,
-				GENDER);
+			return this.TableFromExpression(() => PersonInsertOutputParameter(FIRSTNAME, LASTNAME, MIDDLENAME, GENDER));
 		}
 
 		public partial class PersonInsertOutputParameterResult
@@ -199,7 +183,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="Person_SelectAll")]
 		public ITable<PersonSelectAllResult> PersonSelectAll()
 		{
-			return this.GetTable<PersonSelectAllResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => PersonSelectAll());
 		}
 
 		public partial class PersonSelectAllResult
@@ -218,8 +202,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="Person_SelectByKey")]
 		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? ID)
 		{
-			return this.GetTable<PersonSelectByKeyResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				ID);
+			return this.TableFromExpression(() => PersonSelectByKey(ID));
 		}
 
 		public partial class PersonSelectByKeyResult
@@ -238,9 +221,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="Person_SelectByName")]
 		public ITable<PersonSelectByNameResult> PersonSelectByName(string? IN_FIRSTNAME, string? IN_LASTNAME)
 		{
-			return this.GetTable<PersonSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				IN_FIRSTNAME,
-				IN_LASTNAME);
+			return this.TableFromExpression(() => PersonSelectByName(IN_FIRSTNAME, IN_LASTNAME));
 		}
 
 		public partial class PersonSelectByNameResult
@@ -259,7 +240,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="Scalar_DataReader")]
 		public ITable<ScalarDataReaderResult> ScalarDataReader()
 		{
-			return this.GetTable<ScalarDataReaderResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => ScalarDataReader());
 		}
 
 		public partial class ScalarDataReaderResult
@@ -275,7 +256,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="Scalar_OutputParameter")]
 		public ITable<ScalarOutputParameterResult> ScalarOutputParameter()
 		{
-			return this.GetTable<ScalarOutputParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => ScalarOutputParameter());
 		}
 
 		public partial class ScalarOutputParameterResult
@@ -291,7 +272,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="Scalar_ReturnParameter")]
 		public ITable<ScalarReturnParameterResult> ScalarReturnParameter()
 		{
-			return this.GetTable<ScalarReturnParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => ScalarReturnParameter());
 		}
 
 		public partial class ScalarReturnParameterResult
@@ -306,8 +287,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Package="TEST_PACKAGE1", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult> TestPACKAGE1TestTableFunction(int? I)
 		{
-			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+			return this.TableFromExpression(() => TestPACKAGE1TestTableFunction(I));
 		}
 
 		public partial class TestTableFUNCTIONResult
@@ -322,8 +302,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Package="TEST_PACKAGE2", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult0> TestPACKAGE2TestTableFunction(int? I)
 		{
-			return this.GetTable<TestTableFUNCTIONResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+			return this.TableFromExpression(() => TestPACKAGE2TestTableFunction(I));
 		}
 
 		public partial class TestTableFUNCTIONResult0
@@ -338,8 +317,7 @@ namespace Firebird3DataContext
 		[Sql.TableFunction(Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult1> TestTableFunction(int? I)
 		{
-			return this.GetTable<TestTableFUNCTIONResult1>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+			return this.TableFromExpression(() => TestTableFunction(I));
 		}
 
 		public partial class TestTableFUNCTIONResult1
@@ -404,7 +382,7 @@ namespace Firebird3DataContext
 	{
 		[Column(             DbType="integer",          DataType=LinqToDB.DataType.Int32),                           PrimaryKey,  NotNull] public int       DataTypeID { get; set; } // integer
 		[Column("Binary_",   DbType="blob",             DataType=LinqToDB.DataType.Blob),                               Nullable         ] public byte[]?   Binary     { get; set; } // blob
-		[Column("Boolean_",  DbType="char(1)",          DataType=LinqToDB.DataType.NChar,    Length=1),                 Nullable         ] public char?     Boolean    { get; set; } // char(1)
+		[Column("Boolean_",  DbType="boolean",          DataType=LinqToDB.DataType.Boolean),                            Nullable         ] public bool?     Boolean    { get; set; } // boolean
 		[Column("Byte_",     DbType="smallint",         DataType=LinqToDB.DataType.Int16),                              Nullable         ] public short?    Byte       { get; set; } // smallint
 		[Column("Bytes_",    DbType="blob",             DataType=LinqToDB.DataType.Blob),                               Nullable         ] public byte[]?   Bytes      { get; set; } // blob
 		[Column("CHAR_",     DbType="char(1)",          DataType=LinqToDB.DataType.NChar,    Length=1),                 Nullable         ] public char?     Char       { get; set; } // char(1)
@@ -481,7 +459,7 @@ namespace Firebird3DataContext
 		[Column(DbType="decimal(10,4)", DataType=LinqToDB.DataType.Decimal,  Precision=10, Scale=4), Nullable] public decimal?  MoneyValue     { get; set; } // decimal(10,4)
 		[Column(DbType="timestamp",     DataType=LinqToDB.DataType.DateTime),                        Nullable] public DateTime? DateTimeValue  { get; set; } // timestamp
 		[Column(DbType="timestamp",     DataType=LinqToDB.DataType.DateTime),                        Nullable] public DateTime? DateTimeValue2 { get; set; } // timestamp
-		[Column(DbType="char(1)",       DataType=LinqToDB.DataType.NChar,    Length=1),              Nullable] public char?     BoolValue      { get; set; } // char(1)
+		[Column(DbType="boolean",       DataType=LinqToDB.DataType.Boolean),                         Nullable] public bool?     BoolValue      { get; set; } // boolean
 		[Column(DbType="char(16)",      DataType=LinqToDB.DataType.NChar,    Length=16),             Nullable] public string?   GuidValue      { get; set; } // char(16)
 		[Column(DbType="blob",          DataType=LinqToDB.DataType.Blob),                            Nullable] public byte[]?   BinaryValue    { get; set; } // blob
 		[Column(DbType="smallint",      DataType=LinqToDB.DataType.Int16),                           Nullable] public short?    SmallIntValue  { get; set; } // smallint
@@ -573,7 +551,7 @@ namespace Firebird3DataContext
 		[Column(DbType="integer",          DataType=LinqToDB.DataType.Int32),                               Nullable         ] public int?      Field4          { get; set; } // integer
 		[Column(DbType="integer",          DataType=LinqToDB.DataType.Int32),                               Nullable         ] public int?      Field5          { get; set; } // integer
 		[Column(DbType="bigint",           DataType=LinqToDB.DataType.Int64),                               Nullable         ] public long?     FieldInt64      { get; set; } // bigint
-		[Column(DbType="char(1)",          DataType=LinqToDB.DataType.NChar,    Length=1),                  Nullable         ] public char?     FieldBoolean    { get; set; } // char(1)
+		[Column(DbType="boolean",          DataType=LinqToDB.DataType.Boolean),                             Nullable         ] public bool?     FieldBoolean    { get; set; } // boolean
 		[Column(DbType="varchar(20)",      DataType=LinqToDB.DataType.NVarChar, Length=20),                 Nullable         ] public string?   FieldString     { get; set; } // varchar(20)
 		[Column(DbType="varchar(20)",      DataType=LinqToDB.DataType.NVarChar, Length=20),                 Nullable         ] public string?   FieldNString    { get; set; } // varchar(20)
 		[Column(DbType="char(1)",          DataType=LinqToDB.DataType.NChar,    Length=1),                  Nullable         ] public char?     FieldChar       { get; set; } // char(1)
@@ -600,7 +578,7 @@ namespace Firebird3DataContext
 		[Column(DbType="integer",          DataType=LinqToDB.DataType.Int32),                               Nullable         ] public int?      Field4          { get; set; } // integer
 		[Column(DbType="integer",          DataType=LinqToDB.DataType.Int32),                               Nullable         ] public int?      Field5          { get; set; } // integer
 		[Column(DbType="bigint",           DataType=LinqToDB.DataType.Int64),                               Nullable         ] public long?     FieldInt64      { get; set; } // bigint
-		[Column(DbType="char(1)",          DataType=LinqToDB.DataType.NChar,    Length=1),                  Nullable         ] public char?     FieldBoolean    { get; set; } // char(1)
+		[Column(DbType="boolean",          DataType=LinqToDB.DataType.Boolean),                             Nullable         ] public bool?     FieldBoolean    { get; set; } // boolean
 		[Column(DbType="varchar(20)",      DataType=LinqToDB.DataType.NVarChar, Length=20),                 Nullable         ] public string?   FieldString     { get; set; } // varchar(20)
 		[Column(DbType="varchar(20)",      DataType=LinqToDB.DataType.NVarChar, Length=20),                 Nullable         ] public string?   FieldNString    { get; set; } // varchar(20)
 		[Column(DbType="char(1)",          DataType=LinqToDB.DataType.NChar,    Length=1),                  Nullable         ] public char?     FieldChar       { get; set; } // char(1)

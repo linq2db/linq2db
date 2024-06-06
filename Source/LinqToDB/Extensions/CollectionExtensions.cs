@@ -13,7 +13,7 @@ namespace LinqToDB.Extensions
 				size += col.Length;
 
 			if (size == 0)
-				return Array<T>.Empty;
+				return [];
 
 			var res = new T[size];
 

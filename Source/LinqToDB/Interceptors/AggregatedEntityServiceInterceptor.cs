@@ -6,11 +6,6 @@ namespace LinqToDB.Interceptors
 {
 	sealed class AggregatedEntityServiceInterceptor : AggregatedInterceptor<IEntityServiceInterceptor>, IEntityServiceInterceptor
 	{
-		protected override AggregatedInterceptor<IEntityServiceInterceptor> Create()
-		{
-			return new AggregatedEntityServiceInterceptor();
-		}
-
 		public object EntityCreated(EntityCreatedEventData eventData, object entity)
 		{
 			return Apply(() =>

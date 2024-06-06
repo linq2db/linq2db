@@ -10,7 +10,7 @@ namespace LinqToDB.Reflection
 	using Common;
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 	using Mapping;
 
 	public class MemberAccessor

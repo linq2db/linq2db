@@ -3,8 +3,6 @@
 open LinqToDB
 open LinqToDB.Mapping
 
-
-
 let Initialize () =
     // Add a AddScalarType for all option types you plan on using.
     let ms = new MappingSchema();

@@ -7,6 +7,6 @@
 	NamespaceName   = "Default.MariaDB";
 	DataContextName = "TestDataDB";
 
-	LoadMySqlMetadata(GetConnectionString("MariaDB"));
+	LoadMySqlMetadata(GetConnectionString("MariaDB.11"));
 	GenerateModel();
 #>

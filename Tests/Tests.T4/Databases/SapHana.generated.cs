@@ -85,8 +85,7 @@ namespace SapHanaDataContext
 		[Sql.TableFunction(Schema="TESTDB", Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				id);
+			return this.TableFromExpression(() => GetParentByID(iD));
 		}
 
 		#endregion
@@ -96,8 +95,7 @@ namespace SapHanaDataContext
 		[Sql.TableFunction(Schema="TESTDB", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult> TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				i);
+			return this.TableFromExpression(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult

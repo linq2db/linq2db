@@ -68,12 +68,12 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetIdentityExpression(table);
 		}
 
-		protected override bool BuildWhere(SelectQuery selectQuery)
+		protected override bool ShouldBuildWhere(SelectQuery selectQuery, out SqlSearchCondition condition)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
 
 			return
-				base.BuildWhere(selectQuery) ||
+				base.ShouldBuildWhere(selectQuery, out condition) ||
 				!NeedSkip(takeExpr, skipEpr) &&
 				 NeedTake(takeExpr) &&
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
@@ -90,23 +90,23 @@ namespace LinqToDB.DataProvider.Oracle
 			base.BuildSetOperation(operation, sb);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Date           :
 				case DataType.DateTime       : StringBuilder.Append("date");                      break;
 				case DataType.DateTime2      :
-					if (type.Type.Precision == 6 || type.Type.Precision == null)
+					if (type.Precision == 6 || type.Precision == null)
 						StringBuilder.Append("timestamp");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Type.Precision})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Precision})");
 					break;
 				case DataType.DateTimeOffset :
-					if (type.Type.Precision == 6 || type.Type.Precision == null)
+					if (type.Precision == 6 || type.Precision == null)
 						StringBuilder.Append("timestamp with time zone");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Type.Precision}) with time zone");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Precision}) with time zone");
 					break;
 				case DataType.UInt32         :
 				case DataType.Int64          : StringBuilder.Append("Number(19)");                break;
@@ -115,16 +115,16 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Money          : StringBuilder.Append("Number(19, 4)");             break;
 				case DataType.SmallMoney     : StringBuilder.Append("Number(10, 4)");             break;
 				case DataType.VarChar        :
-					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 						StringBuilder.Append("VarChar(4000)");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar({type.Length})");
 					break;
 				case DataType.NVarChar       :
-					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 						StringBuilder.Append("VarChar2(4000)");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar2({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar2({type.Length})");
 					break;
 				case DataType.Boolean        : StringBuilder.Append("Char(1)");                   break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;
@@ -132,10 +132,10 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Guid           : StringBuilder.Append("Raw(16)");                   break;
 				case DataType.Binary         :
 				case DataType.VarBinary      :
-					if (type.Type.Length == null || type.Type.Length == 0)
+					if (type.Length == null || type.Length == 0)
 						StringBuilder.Append("BLOB");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"Raw({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"Raw({type.Length})");
 					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);         break;
 			}
@@ -209,16 +209,14 @@ namespace LinqToDB.DataProvider.Oracle
 			return sb.Append(value);
 		}
 
-		protected override StringBuilder BuildExpression(
-			ISqlExpression expr,
-			bool buildTableName,
-			bool checkParentheses,
-			string? alias,
-			ref bool addAlias,
-			bool throwExceptionIfTableNotFound = true)
+		protected override StringBuilder BuildExpression(ISqlExpression expr,
+			bool                                                        buildTableName,
+			bool                                                        checkParentheses,
+			string?                                                     alias,
+			ref bool                                                    addAlias,
+			bool                                                        throwExceptionIfTableNotFound = true)
 		{
-			return base.BuildExpression(
-				expr,
+			return base.BuildExpression(expr,
 				buildTableName && Statement.QueryType != QueryType.MultiInsert,
 				checkParentheses,
 				alias,
@@ -234,7 +232,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			var exprPrecedence = GetPrecedence(expr);
 
-			if (expr.Expr2.ElementType == QueryElementType.SqlRow && expr.Operator != SqlPredicate.Operator.Overlaps)
+			if (QueryHelper.UnwrapNullablity(expr.Expr2).ElementType == QueryElementType.SqlRow && expr.Operator != SqlPredicate.Operator.Overlaps)
 			{
 				// Oracle needs brackets around the right-hand side to disambiguate the syntax, e.g.:
 				// (1, 2) = ( (3, 4) )
@@ -297,6 +295,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
 
 			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
@@ -640,8 +640,9 @@ END;",
 
 		protected override void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
 		{
+			var nullability = NullabilityContext.NonQuery;
 			BuildMultiInsertClause(statement);
-			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, skipAlias: false);
+			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, skipAlias : false);
 		}
 
 		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
@@ -650,10 +651,12 @@ END;",
 
 			Indent++;
 
+			var nullability = NullabilityContext.NonQuery;
+
 			if (statement.InsertType == MultiInsertType.Unconditional)
 			{
 				foreach (var insert in statement.Inserts)
-					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName : true, addAlias : false);
 			}
 			else
 			{
@@ -662,7 +665,7 @@ END;",
 					if (insert.When != null)
 					{
 						int length = StringBuilder.Append("WHEN ").Length;
-						BuildSearchCondition(insert.When, wrapCondition: true);
+						BuildSearchCondition(insert.When, wrapCondition : true);
 						// If `when` condition is optimized to always `true`,
 						// then BuildSearchCondition doesn't write anything.
 						if (StringBuilder.Length == length)
@@ -674,7 +677,7 @@ END;",
 						StringBuilder.AppendLine("ELSE");
 					}
 
-					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName : true, addAlias : false);
 				}
 			}
 

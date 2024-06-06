@@ -1,4 +1,4 @@
-﻿#if X86
+﻿#if DB2STUBS
 using System;
 using System.Collections.Generic;
 using System.Data.Common;

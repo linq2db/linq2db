@@ -1,11 +1,11 @@
 ﻿using System.Linq.Expressions;
 
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Linq.Builder
 {
+	using SqlQuery;
+
 	public interface IToSqlConverter
 	{
-		ISqlExpression ToSql(Expression expression);
+		ISqlExpression ToSql(object value);
 	}
 }

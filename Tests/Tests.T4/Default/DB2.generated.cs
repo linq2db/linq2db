@@ -80,8 +80,7 @@ namespace Default.DB2
 		[Sql.TableFunction(Schema="DB2INST1", Package="TEST_MODULE1", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult> TestMODULE1TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				i);
+			return this.TableFromExpression(() => TestMODULE1TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult
@@ -96,8 +95,7 @@ namespace Default.DB2
 		[Sql.TableFunction(Schema="DB2INST1", Package="TEST_MODULE2", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult0> TestMODULE2TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				i);
+			return this.TableFromExpression(() => TestMODULE2TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult0
@@ -112,8 +110,7 @@ namespace Default.DB2
 		[Sql.TableFunction(Schema="DB2INST1", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult1> TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult1>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				i);
+			return this.TableFromExpression(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult1
@@ -400,11 +397,11 @@ namespace Default.DB2
 
 		#region PersonSelectbykey
 
-		public static int PersonSelectbykey(this TestDataDB dataConnection, int? id)
+		public static int PersonSelectbykey(this TestDataDB dataConnection, int? iD)
 		{
 			var parameters = new []
 			{
-				new DataParameter("ID", id, LinqToDB.DataType.Int32)
+				new DataParameter("ID", iD, LinqToDB.DataType.Int32)
 			};
 
 			return dataConnection.ExecuteProc("DB2INST1.PERSON_SELECTBYKEY", parameters);

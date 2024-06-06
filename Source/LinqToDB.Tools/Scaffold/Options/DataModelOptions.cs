@@ -363,15 +363,6 @@ namespace LinqToDB.Scaffold
 		public NormalizationOptions FunctionTupleResultPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
 
 		/// <summary>
-		/// Gets or sets name generation and normalization rules for field to store <see cref="MethodInfo"/> for table function mapping method.
-		/// <list type="bullet">
-		/// <item>Default: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Prefix = "_"</c></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Prefix = "_"</c></item>
-		/// </list>
-		/// </summary>
-		public NormalizationOptions TableFunctionMethodInfoFieldNameOptions { get; set; } = new() { Casing = NameCasing.CamelCase, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Prefix = "_" };
-
-		/// <summary>
 		/// Gets or sets name generation and normalization rules for custom mapping class for result record of stored procedure or table function.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Result"</c></item>

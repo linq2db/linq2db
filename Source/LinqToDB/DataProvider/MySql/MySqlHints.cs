@@ -624,12 +624,12 @@ namespace LinqToDB.DataProvider.MySql
 
 		sealed class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var hint    = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
 				var idCount = (int)   ((SqlValue)sqlQueryExtension.Arguments["tableIDs.Count"]).Value!;
 
-				if ((hint is SubQuery.ForShare || idCount > 0) && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.MariaDB))
+				if ((hint is SubQuery.ForShare || idCount > 0) && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.MariaDB10))
 					stringBuilder.Append("-- ");
 
 				stringBuilder.Append(hint);
@@ -774,7 +774,6 @@ namespace LinqToDB.DataProvider.MySql
 
 			return new MySqlSpecificTable<TSource>(newTable);
 		}
-
 
 		[ExpressionMethod(nameof(LockInShareModeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> LockInShareModeHint<TSource>(

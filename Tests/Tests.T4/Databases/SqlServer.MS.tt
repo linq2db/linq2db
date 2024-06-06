@@ -25,7 +25,7 @@
 
 	GetSchemaOptions.LoadTable = t => t.Name != "Products" && t.Name != "Person";
 
-	LoadSqlServerMetadata(GetConnectionString("SqlServer.Northwind"), SqlServerVersion.v2012, LinqToDB.DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient);
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.Northwind"), SqlServerVersion.v2012);
 
 	Tables["Order Details"].Columns["OrderID"]. MemberName = "ID";
 
@@ -44,7 +44,7 @@
 
 	DatabaseName = null;//"TestData";
 
-	LoadSqlServerMetadata(GetConnectionString("SqlServer.2019"), SqlServerVersion.v2012, LinqToDB.DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient);
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.2019"), SqlServerVersion.v2012);
 
 	AddReturnParameter("Issue1897");
 

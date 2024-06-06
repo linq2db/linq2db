@@ -8,25 +8,22 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB
 {
-#if !NATIVE_ASYNC
-	using Async;
-#endif
+	using Common.Internal;
 	using Data;
 	using DataProvider;
+	using Infrastructure;
 	using Linq;
-	using LinqToDB.Common.Internal;
 	using Mapping;
 	using SqlProvider;
+	using Tools;
 
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataContext : IDataContext
+	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
 	{
 		bool _disposed;
 
@@ -82,12 +79,13 @@ namespace LinqToDB
 		/// Creates database context object that uses a <see cref="DataOptions"/> to configure the connection.
 		/// </summary>
 		/// <param name="options">Options, setup ahead of time.</param>
-#pragma warning disable CS8618
 		public DataContext(DataOptions options)
 		{
-			(Options = options).Apply(this);
+			Options       = options;
+			MappingSchema = default!;
+			DataProvider  = default!;
+			Options.Apply(this);
 		}
-#pragma warning restore CS8618
 
 		/// <summary>
 		/// Current DataContext options
@@ -97,6 +95,7 @@ namespace LinqToDB
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
+
 		/// <summary>
 		/// Gets initial value for database connection string.
 		/// </summary>
@@ -377,42 +376,7 @@ namespace LinqToDB
 
 		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx) => DataProvider.IsDBNullAllowed(Options, reader, idx);
 
-		/// <summary>
-		/// Creates instance of <see cref="DataConnection"/> class, attached to same database connection/transaction passed in options.
-		/// Used by <see cref="IDataContext.Clone(bool)"/> API only if <see cref="DataConnection.IsMarsEnabled"/>
-		/// is <c>true</c> and there is an active connection associated with current context.
-		/// <param name="currentConnection"><see cref="DataConnection"/> instance, used by current context instance.</param>
-		/// <param name="options">Connection options, will have <see cref="DbConnection"/> or <see cref="DbTransaction"/> set.</param>
-		/// <returns>New <see cref="DataConnection"/> instance.</returns>
-		/// </summary>
-		protected virtual DataConnection CloneDataConnection(DataConnection currentConnection, DataOptions options) => new(options);
-
-		IDataContext IDataContext.Clone(bool forNestedQuery)
-		{
-			AssertDisposed();
-
-			var dc = new DataContext(Options)
-			{
-				KeepConnectionAlive = KeepConnectionAlive,
-				InlineParameters    = InlineParameters
-			};
-
-			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
-			{
-				var options = _dataConnection.TransactionAsync != null
-					? Options.WithOptions<ConnectionOptions>(o => o with { DbTransaction = _dataConnection.TransactionAsync.Transaction  })
-					: Options.WithOptions<ConnectionOptions>(o => o with { DbConnection  = _dataConnection.EnsureConnection().Connection });
-
-				dc._dataConnection = CloneDataConnection(_dataConnection, options);
-			}
-
-			dc.QueryHints.    AddRange(QueryHints);
-			dc.NextQueryHints.AddRange(NextQueryHints);
-
-			return dc;
-		}
-
-		void IDisposable.Dispose()
+		public void Dispose()
 		{
 			Dispose(disposing: true);
 		}
@@ -426,11 +390,7 @@ namespace LinqToDB
 			((IDataContext)this).Close();
 		}
 
-#if NATIVE_ASYNC
-		async ValueTask IAsyncDisposable.DisposeAsync()
-#else
-		async Task IAsyncDisposable.DisposeAsync()
-#endif
+		public async ValueTask DisposeAsync()
 		{
 			await DisposeAsync(disposing: true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
@@ -438,18 +398,10 @@ namespace LinqToDB
 		/// <summary>
 		/// Closes underlying connection.
 		/// </summary>
-#if NATIVE_ASYNC
 		protected virtual ValueTask DisposeAsync(bool disposing)
-#else
-		protected virtual Task DisposeAsync(bool disposing)
-#endif
 		{
 			_disposed = true;
-#if NATIVE_ASYNC
 			return new ValueTask(((IDataContext)this).CloseAsync());
-#else
-			return ((IDataContext)this).CloseAsync();
-#endif
 		}
 
 		void IDataContext.Close()
@@ -556,9 +508,9 @@ namespace LinqToDB
 			return dct;
 		}
 
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
 		{
-			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters, preambles));
+			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, parametersContext, queryNumber, expression, parameters, preambles));
 		}
 
 		sealed class QueryRunner : IQueryRunner
@@ -580,11 +532,7 @@ namespace LinqToDB
 				_dataContext = null;
 			}
 
-#if NATIVE_ASYNC
 			public async ValueTask DisposeAsync()
-#else
-			public async Task DisposeAsync()
-#endif
 			{
 				await _queryRunner!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				await _dataContext!.ReleaseQueryAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -719,5 +667,10 @@ namespace LinqToDB
 						dataContext.AddInterceptor(interceptor, false);
 			}
 		}
+
+		/// <summary>
+		/// Gets service provider, used for data connection instance.
+		/// </summary>
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
 	}
 }
