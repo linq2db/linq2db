@@ -89,7 +89,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 			Expression<Func<DbDataReader, int, DateTimeOffset>>? readDateTimeOffsetFromOracleTimeStamp,
 			Expression<Func<DbDataReader, int, DateTimeOffset>>  readDateTimeOffsetFromOracleTimeStampTZ,
-			Expression<Func<DbDataReader, int, DateTimeOffset>>? readDateTimeOffsetFromOracleTimeStampLTZ,
 			Expression<Func<DbDataReader, int, decimal>>?        readOracleDecimalToDecimalAdv,
 			Expression<Func<DbDataReader, int, int>>?            readOracleDecimalToInt,
 			Expression<Func<DbDataReader, int, long>>?           readOracleDecimalToLong,
@@ -143,7 +142,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 			ReadDateTimeOffsetFromOracleTimeStamp    = readDateTimeOffsetFromOracleTimeStamp;
 			ReadDateTimeOffsetFromOracleTimeStampTZ  = readDateTimeOffsetFromOracleTimeStampTZ;
-			ReadDateTimeOffsetFromOracleTimeStampLTZ = readDateTimeOffsetFromOracleTimeStampLTZ;
 			ReadOracleDecimalToDecimalAdv            = readOracleDecimalToDecimalAdv;
 			ReadOracleDecimalToInt                   = readOracleDecimalToInt;
 			ReadOracleDecimalToLong                  = readOracleDecimalToLong;
@@ -203,7 +201,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public Expression<Func<DbDataReader, int, DateTimeOffset>>? ReadDateTimeOffsetFromOracleTimeStamp    { get; }
 		public Expression<Func<DbDataReader, int, DateTimeOffset>>  ReadDateTimeOffsetFromOracleTimeStampTZ  { get; }
-		public Expression<Func<DbDataReader, int, DateTimeOffset>>? ReadDateTimeOffsetFromOracleTimeStampLTZ { get; }
 		public Expression<Func<DbDataReader, int, decimal>>?        ReadOracleDecimalToDecimalAdv            { get; }
 		public Expression<Func<DbDataReader, int, int>>?            ReadOracleDecimalToInt                   { get; }
 		public Expression<Func<DbDataReader, int, long>>?           ReadOracleDecimalToLong                  { get; }
@@ -550,28 +547,6 @@ namespace LinqToDB.DataProvider.Oracle
 			var body = generator.Build();
 			var readDateTimeOffsetFromOracleTimeStampTZ = (Expression<Func<DbDataReader, int, DateTimeOffset>>)Expression.Lambda(body, rdParam, indexParam);
 
-			// rd.GetOracleTimeStampLTZ(i) => DateTimeOffset
-			generator    = new ExpressionGenerator(typeMapper);
-			tstzExpr     = generator.MapExpression((DbDataReader rd, int i) => ((OracleWrappers.OracleDataReader)(object)rd).GetOracleTimeStampLTZ(i).ToOracleTimeStampTZ(), rdParam, indexParam);
-			tstzVariable = generator.AssignToVariable(tstzExpr, "tstz");
-			if (isNative)
-			{
-				expr = generator.MapExpression((OracleWrappers.OracleTimeStampTZ tstz) => new DateTimeOffset(
-					tstz.Year, tstz.Month, tstz.Day,
-					tstz.Hour, tstz.Minute, tstz.Second,
-					TimeZoneInfo.Local.GetUtcOffset(new DateTimeOffset(tstz.Year, tstz.Month, tstz.Day, tstz.Hour, tstz.Minute, tstz.Second, default))).AddTicks(tstz.Nanosecond / NanosecondsPerTick), tstzVariable);
-			}
-			else
-			{
-				expr = generator.MapExpression((OracleWrappers.OracleTimeStampTZ tstz) => new DateTimeOffset(
-					tstz.Year, tstz.Month, tstz.Day,
-					tstz.Hour, tstz.Minute, tstz.Second,
-					tstz.GetTimeZoneOffset()).AddTicks(tstz.Nanosecond / NanosecondsPerTick), tstzVariable);
-			}
-			generator.AddExpression(expr);
-			body = generator.Build();
-			var readDateTimeOffsetFromOracleTimeStampLTZ = (Expression<Func<DbDataReader, int, DateTimeOffset>>)Expression.Lambda(body, rdParam, indexParam);
-
 			// rd.GetOracleDecimal(i) => decimal
 			var readOracleDecimal  = typeMapper.MapLambda<DbDataReader, int, OracleWrappers.OracleDecimal>((rd, i) => ((OracleWrappers.OracleDataReader)(object)rd).GetOracleDecimal(i));
 			var oracleDecimalParam = Expression.Parameter(readOracleDecimal.ReturnType, "dec");
@@ -669,7 +644,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 				null,
 				readDateTimeOffsetFromOracleTimeStampTZ,
-				readDateTimeOffsetFromOracleTimeStampLTZ,
 				readOracleDecimalToDecimalAdv,
 				readOracleDecimalToInt,
 				readOracleDecimalToLong,
@@ -861,7 +835,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 				readDateTimeOffsetFromOracleTimeStamp,
 				readDateTimeOffsetFromOracleTimeStampTZ,
-				null,
 				null,
 				null,
 				null,

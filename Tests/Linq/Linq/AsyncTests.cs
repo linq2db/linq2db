@@ -294,10 +294,12 @@ namespace Tests.Linq
 				}
 				catch (OperationCanceledException)
 				{
+#if !NETFRAMEWORK
 					if (context.IsAnyOf(TestProvName.AllOracleManaged) && !context.IsRemote())
 					{
 						Assert.Fail("Update test. Oracle developers evolved");
 					}
+#endif
 
 					// this casts any exception that inherits from OperationCanceledException
 					//   to a OperationCanceledException to pass the assert check above

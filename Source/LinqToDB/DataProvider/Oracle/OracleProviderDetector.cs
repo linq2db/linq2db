@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.Oracle
 				OracleProviderAdapter.ManagedClientNamespace => OracleProvider.Managed,
 				OracleProviderAdapter.DevartClientNamespace  => OracleProvider.Devart,
 				OracleProviderAdapter.NativeClientNamespace  => OracleProvider.Native,
-				_                                            => DetectProvider()
+				_                                            => DetectProviderAssembly(options)
 			};
 
 			switch (options.ProviderName)
@@ -100,7 +100,11 @@ namespace LinqToDB.DataProvider.Oracle
 		public override IDataProvider GetDataProvider(ConnectionOptions options, OracleProvider provider, OracleVersion version)
 		{
 			if (provider == OracleProvider.AutoDetect)
-				provider = DetectProvider();
+			{
+				var canBeDevart = options.ConnectionString?.IndexOf("SERVER", StringComparison.OrdinalIgnoreCase) != -1;
+				var canBeOracle = options.ConnectionString?.IndexOf("DATA SOURCE", StringComparison.OrdinalIgnoreCase) != -1;
+				provider = DetectProviderAssembly(options);
+			}
 
 			return (provider, version) switch
 			{
@@ -115,18 +119,25 @@ namespace LinqToDB.DataProvider.Oracle
 			};
 		}
 
-		public static OracleProvider DetectProvider()
+		private static OracleProvider DetectProviderAssembly(ConnectionOptions options)
 		{
+			// as connection string for DevArt has own (and actually more sane) format
+			// we cannot try to use incompatible provider
+			var canBeDevart = options.ConnectionString?.IndexOf("SERVER", StringComparison.OrdinalIgnoreCase) != -1;
+			var canBeOracle = options.ConnectionString?.IndexOf("DATA SOURCE", StringComparison.OrdinalIgnoreCase) != -1;
+
 			var fileName = typeof(OracleProviderDetector).Assembly.GetFileName();
 			var dirName  = Path.GetDirectoryName(fileName);
 
-			return File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.ManagedAssemblyName + ".dll"))
+			return canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.ManagedAssemblyName + ".dll"))
 				? OracleProvider.Managed
-				: File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.DevartAssemblyName + ".dll"))
+				: canBeDevart && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.DevartAssemblyName + ".dll"))
 					? OracleProvider.Devart
-					: File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.NativeAssemblyName + ".dll"))
+					: canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.NativeAssemblyName + ".dll"))
 						? OracleProvider.Native
-						: OracleProvider.Managed;
+						: canBeOracle
+							? OracleProvider.Managed
+							: OracleProvider.Devart;
 		}
 
 		public override OracleVersion? DetectServerVersion(DbConnection connection)

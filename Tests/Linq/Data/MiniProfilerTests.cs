@@ -1445,10 +1445,14 @@ namespace Tests.Data
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
 
 			OracleDataProvider provider;
+			Type connectionType;
 			using (var db = GetDataConnection(context))
+			{
 				provider = new OracleTests.TestOracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Provider, ((OracleDataProvider)db.DataProvider).Version);
+				connectionType = ((OracleDataProvider)db.DataProvider).Adapter.ConnectionType;
+			}
 
-			using (var db = CreateDataConnection(provider, context, type, "Oracle.DataAccess.Client.OracleConnection, Oracle.DataAccess"))
+			using (var db = CreateDataConnection(provider, context, type, connectionType))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>

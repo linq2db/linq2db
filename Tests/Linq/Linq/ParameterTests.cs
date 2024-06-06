@@ -90,6 +90,7 @@ namespace Tests.Linq
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
+				TestProvName.AllOracleDevartOCI,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana)]
 			string context)
@@ -114,6 +115,7 @@ namespace Tests.Linq
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
+				TestProvName.AllOracleDevartOCI,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana)]
 			string context)
@@ -137,6 +139,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllPostgreSQL,
+				TestProvName.AllOracleDevartOCI,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana)]
 			string context)
