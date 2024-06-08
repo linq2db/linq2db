@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace LinqToDB.SqlQuery
 {
 	partial class QueryHelper
 	{
-
 		public static SqlParameterValue GetParameterValue(this SqlParameter parameter, IReadOnlyParameterValues? parameterValues)
 		{
 			if (parameterValues != null && parameterValues.TryGetValue(parameter, out var value))
@@ -17,9 +17,8 @@ namespace LinqToDB.SqlQuery
 
 		public static bool TryEvaluateExpression(this IQueryElement expr, EvaluationContext context, out object? result)
 		{
-			var info = expr.TryEvaluateExpression(context);
-			result = info.Value;
-			return info.IsEvaluated;
+			(result, var success) = expr.TryEvaluateExpression(context);
+			return success;
 		}
 
 		public static bool IsMutable(this IQueryElement expr)
@@ -31,60 +30,56 @@ namespace LinqToDB.SqlQuery
 
 		public static bool CanBeEvaluated(this IQueryElement expr, bool withParameters)
 		{
-			return expr.TryEvaluateExpression(new EvaluationContext(withParameters ? SqlParameterValues.Empty : null)).IsEvaluated;
+			return expr.TryEvaluateExpression(new EvaluationContext(withParameters ? SqlParameterValues.Empty : null), out _);
 		}
 
 		public static bool CanBeEvaluated(this IQueryElement expr, EvaluationContext context)
 		{
-			return expr.TryEvaluateExpression(context).IsEvaluated;
+			return expr.TryEvaluateExpression(context, out _);
 		}
 
-		public static EvaluationContext.EvaluationInfo TryEvaluateExpression(this IQueryElement expr, EvaluationContext context)
+		internal static (object? value, bool success) TryEvaluateExpression(this IQueryElement expr, EvaluationContext context)
 		{
 			if (!context.TryGetValue(expr, out var info))
 			{
-				var canBeEvaluated =
-					TryEvaluateExpressionInternal(expr, context, out var result, out var errorMessage);
-				info = new EvaluationContext.EvaluationInfo(canBeEvaluated, result, errorMessage);
-				context.Register(expr, info);
-				return info;
+				if (TryEvaluateExpressionInternal(expr, context, out var result))
+				{
+					context.Register(expr, result);
+					return (result, true);
+				}
+				else
+				{
+					context.RegisterError(expr);
+					return (result, false);
+				}
 			}
 
-			return info!;
+			return info.Value;
 		}
 
-		public static bool TryEvaluateExpression(this IQueryElement expr, EvaluationContext context, out object? result,
-			out string? errorMessage)
-		{
-			if (!context.TryGetValue(expr, out var info))
-			{
-				var canBeEvaluated = TryEvaluateExpressionInternal(expr, context, out result, out errorMessage);
-				info = new EvaluationContext.EvaluationInfo(canBeEvaluated, result, errorMessage);
-				context.Register(expr, info);
-
-				return info.IsEvaluated;
-			}
-
-			result = info!.Value;
-			errorMessage = info.ErrorMessage;
-			return info.IsEvaluated;
-		}
-
-		static bool TryEvaluateExpressionInternal(this IQueryElement expr, EvaluationContext context, out object? result, out string? errorMessage)
+		static bool TryEvaluateExpressionInternal(this IQueryElement expr, EvaluationContext context, out object? result)
 		{
 			result = null;
-			errorMessage = null;
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlValue           : result = ((SqlValue)expr).Value; return true;
+				case QueryElementType.SqlValue           :
+				{
+					var sqlValue = (SqlValue)expr;
+					result = sqlValue.Value;
+					return true;
+				}
 				case QueryElementType.SqlParameter       :
 				{
 					var sqlParameter = (SqlParameter)expr;
 
-					if (context.ParameterValues == null) 
+					if (context.ParameterValues == null)
+					{
 						return false;
+					}
 
-					result = sqlParameter.GetParameterValue(context.ParameterValues).Value;
+					var parameterValue = sqlParameter.GetParameterValue(context.ParameterValues);
+
+					result = parameterValue.ProviderValue;
 					return true;
 				}
 				case QueryElementType.IsNullPredicate:
@@ -100,11 +95,19 @@ namespace LinqToDB.SqlQuery
 					var exprExpr = (SqlPredicate.ExprExpr)expr;
 					var reduced = exprExpr.Reduce(context);
 					if (!ReferenceEquals(reduced, expr))
-						return TryEvaluateExpression(reduced, context, out result, out errorMessage);
+						return TryEvaluateExpression(reduced, context, out result);
 
 					if (!exprExpr.Expr1.TryEvaluateExpression(context, out var value1) ||
 					    !exprExpr.Expr2.TryEvaluateExpression(context, out var value2))
 						return false;
+
+					if (value1 != null && value2 != null)
+					{
+						if (value1.GetType().IsEnum != value2.GetType().IsEnum)
+						{
+							return false;
+						}
+					}
 
 					switch (exprExpr.Operator)
 					{
@@ -188,14 +191,15 @@ namespace LinqToDB.SqlQuery
 						result = boolValue != isTruePredicate.IsNot;
 						return true;
 					}
+
 					return false;
 				}
 				case QueryElementType.SqlBinaryExpression:
 				{
 					var binary = (SqlBinaryExpression)expr;
-					if (!binary.Expr1.TryEvaluateExpression(context, out var leftEvaluated, out errorMessage))
+					if (!binary.Expr1.TryEvaluateExpression(context, out var leftEvaluated))
 						return false;
-					if (!binary.Expr2.TryEvaluateExpression(context, out var rightEvaluated, out errorMessage))
+					if (!binary.Expr2.TryEvaluateExpression(context, out var rightEvaluated))
 						return false;
 					dynamic? left  = leftEvaluated;
 					dynamic? right = rightEvaluated;
@@ -215,7 +219,6 @@ namespace LinqToDB.SqlQuery
 						case "<=": result = left <= right; break;
 						case ">=": result = left >= right; break;
 						default:
-							errorMessage = $"Unknown binary operation '{binary.Operation}'.";
 							return false;
 					}
 
@@ -231,33 +234,30 @@ namespace LinqToDB.SqlQuery
 						{
 							if (function.Parameters.Length != 3)
 							{
-								errorMessage = "CASE function expected to have 3 parameters.";
 								return false;
 							}
 
 							if (!function.Parameters[0]
-								.TryEvaluateExpression(context, out var cond, out errorMessage))
+								.TryEvaluateExpression(context, out var cond))
 								return false;
 
 							if (!(cond is bool))
 							{
-								errorMessage =
-									$"CASE function expected to have boolean condition (was: {cond?.GetType()}).";
 								return false;
 							}
 
 							if ((bool)cond!)
 								return function.Parameters[1]
-									.TryEvaluateExpression(context, out result, out errorMessage);
+									.TryEvaluateExpression(context, out result);
 							else
 								return function.Parameters[2]
-									.TryEvaluateExpression(context, out result, out errorMessage);
+									.TryEvaluateExpression(context, out result);
 						}
 
 						case "Length":
 						{
 							if (function.Parameters[0]
-								.TryEvaluateExpression(context, out var strValue, out errorMessage))
+								.TryEvaluateExpression(context, out var strValue))
 							{
 								if (strValue == null)
 									return true;
@@ -271,10 +271,10 @@ namespace LinqToDB.SqlQuery
 							return false;
 						}
 
-						case "$ToLower$":
+						case PseudoFunctions.TO_LOWER:
 						{
 							if (function.Parameters[0]
-								.TryEvaluateExpression(context, out var strValue, out errorMessage))
+								.TryEvaluateExpression(context, out var strValue))
 							{
 								if (strValue == null)
 									return true;
@@ -288,10 +288,10 @@ namespace LinqToDB.SqlQuery
 							return false;
 						}
 
-						case "$ToUpper$":
+						case PseudoFunctions.TO_UPPER:
 						{
 							if (function.Parameters[0]
-								.TryEvaluateExpression(context, out var strValue, out errorMessage))
+								.TryEvaluateExpression(context, out var strValue))
 							{
 								if (strValue == null)
 									return true;
@@ -306,9 +306,68 @@ namespace LinqToDB.SqlQuery
 						}
 
 						default:
-							errorMessage = $"Unknown function '{function.Name}'.";
 							return false;
 					}
+				}
+
+				case QueryElementType.SearchCondition    :
+				{
+					var cond     = (SqlSearchCondition)expr;
+
+					if (cond.Conditions.Count == 0)
+					{
+						result = true;
+						return true;
+					}
+
+					for (var i = 0; i < cond.Conditions.Count; i++)
+					{
+						var condition = cond.Conditions[i];
+						if (condition.TryEvaluateExpression(context, out var evaluated))
+						{
+							if (evaluated is bool boolValue)
+							{
+								if (i == cond.Conditions.Count - 1 || condition.IsOr == boolValue)
+								{
+									result = boolValue;
+									return true;
+								}
+							}
+							else if (!condition.IsOr)
+							{
+								return false;
+							}
+						}
+					}
+
+					return false;
+				}
+				case QueryElementType.ExprPredicate      :
+				{
+					var predicate = (SqlPredicate.Expr)expr;
+					if (!predicate.Expr1.TryEvaluateExpression(context, out var value))
+						return false;
+
+					result = value;
+					return true;
+				}
+				case QueryElementType.Condition          :
+				{
+					var cond = (SqlCondition)expr;
+					if (cond.Predicate.TryEvaluateExpression(context, out var evaluated))
+					{
+						if (evaluated is bool boolValue)
+						{
+							result = cond.IsNot ? !boolValue : boolValue;
+							return true;
+						}
+						else
+						{
+							return false;
+						}
+					}
+
+					return false;
 				}
 
 				default:
@@ -320,22 +379,21 @@ namespace LinqToDB.SqlQuery
 
 		public static object? EvaluateExpression(this IQueryElement expr, EvaluationContext context)
 		{
-			var info = expr.TryEvaluateExpression(context);
-			if (!info.IsEvaluated)
-			{
-				var message = info.ErrorMessage ?? GetEvaluationError(expr);
+			var (value, success) = expr.TryEvaluateExpression(context);
+			if (!success)
+				throw new LinqToDBException($"Cannot evaluate expression: {expr}");
 
-				throw new LinqToDBException(message);
-			}
-
-			return info.Value;
+			return value;
 		}
 
-		private static string GetEvaluationError(IQueryElement expr)
+		public static bool? EvaluateBoolExpression(this IQueryElement expr, EvaluationContext context, bool? defaultValue = null)
 		{
-			return $"Not implemented evaluation of '{expr.ElementType}': '{expr.ToDebugString()}'.";
-		}
+			var evaluated = expr.EvaluateExpression(context);
 
-		
+			if (evaluated is bool boolValue)
+				return boolValue;
+
+			return defaultValue;
+		}
 	}
 }

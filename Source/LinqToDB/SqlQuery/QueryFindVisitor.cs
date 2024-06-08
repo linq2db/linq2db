@@ -43,6 +43,24 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		IQueryElement? Find(List<SqlQueryExtension>? list)
+		{
+			if (list == null)
+				return null;
+
+			foreach (var item in list)
+			{
+				if (item.Scope is not Sql.QueryExtensionScope.None)
+				{
+					var e = Find(item.Arguments.Values);
+					if (e != null)
+						return e;
+				}
+			}
+
+			return null;
+		}
+
 		IQueryElement? FindX(SqlObjectExpression oe)
 		{
 			foreach (var item in oe.InfoParameters)
@@ -100,10 +118,18 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.IsTruePredicate:
 					{
-						return 
-							Find(((SqlPredicate.IsTrue)element).Expr1) ?? 
+						return
+							Find(((SqlPredicate.IsTrue)element).Expr1) ??
 							Find(((SqlPredicate.IsTrue)element).TrueValue) ??
 							Find(((SqlPredicate.IsTrue)element).FalseValue);
+					}
+
+				case QueryElementType.IsDistinctPredicate:
+					{
+						var p = (SqlPredicate.IsDistinct)element;
+						return
+							Find(p.Expr1) ??
+							Find(p.Expr2);
 					}
 
 				case QueryElementType.SqlBinaryExpression:
@@ -116,9 +142,10 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlTable:
 					{
 						return
-							Find(((SqlTable)element).All           ) ??
-							Find(((SqlTable)element).Fields        ) ??
-							Find(((SqlTable)element).TableArguments);
+							Find(((SqlTable)element).All               ) ??
+							Find(((SqlTable)element).Fields            ) ??
+							Find(((SqlTable)element).TableArguments    ) ??
+							Find(((SqlTable)element).SqlQueryExtensions);
 					}
 
 				case QueryElementType.SqlCteTable:
@@ -141,10 +168,10 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.OutputClause:
 					{
 						return
-							Find(((SqlOutputClause)element).SourceTable)   ??
 							Find(((SqlOutputClause)element).DeletedTable)  ??
 							Find(((SqlOutputClause)element).InsertedTable) ??
 							Find(((SqlOutputClause)element).OutputTable)   ??
+							Find(((SqlOutputClause)element).OutputColumns) ??
 							(((SqlOutputClause)element).HasOutputItems ? Find(((SqlOutputClause)element).OutputItems) : null);
 					}
 
@@ -158,8 +185,9 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.JoinedTable:
 					{
 						return
-							Find(((SqlJoinedTable)element).Table    ) ??
-							Find(((SqlJoinedTable)element).Condition);
+							Find(((SqlJoinedTable)element).Table             ) ??
+							Find(((SqlJoinedTable)element).Condition         ) ??
+							Find(((SqlJoinedTable)element).SqlQueryExtensions);
 					}
 
 				case QueryElementType.ExprExprPredicate:
@@ -209,7 +237,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SetExpression:
 					{
 						return
-							Find(((SqlSetExpression)element).Column    ) ??
+							Find(((SqlSetExpression)element).Column) ??
 							Find(((SqlSetExpression)element).Expression);
 					}
 
@@ -230,57 +258,70 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SelectStatement:
 					{
-						return Find(((SqlSelectStatement)element).SelectQuery) ??
-						       Find(((SqlSelectStatement)element).With       ) ??
-						       Find(((SqlSelectStatement)element).Tag        );
+						return
+							Find(((SqlSelectStatement)element).SelectQuery       ) ??
+							Find(((SqlSelectStatement)element).With              ) ??
+							Find(((SqlSelectStatement)element).Tag               ) ??
+							Find(((SqlSelectStatement)element).SqlQueryExtensions);
 					}
 
 				case QueryElementType.InsertStatement:
 					{
-						return Find(((SqlInsertStatement)element).SelectQuery) ??
-						       Find(((SqlInsertStatement)element).Insert     ) ??
-						       Find(((SqlInsertStatement)element).With       ) ??
-						       Find(((SqlInsertStatement)element).Tag        );
+						return
+							Find(((SqlInsertStatement)element).SelectQuery       ) ??
+							Find(((SqlInsertStatement)element).Insert            ) ??
+							Find(((SqlInsertStatement)element).Output            ) ??
+							Find(((SqlInsertStatement)element).With              ) ??
+							Find(((SqlInsertStatement)element).Tag               ) ??
+							Find(((SqlInsertStatement)element).SqlQueryExtensions);
 					}
 
 				case QueryElementType.UpdateStatement:
 					{
-						return Find(((SqlUpdateStatement)element).SelectQuery) ??
-						       Find(((SqlUpdateStatement)element).Update     ) ??
-						       Find(((SqlUpdateStatement)element).With       ) ??
-						       Find(((SqlUpdateStatement)element).Tag        );
+						return
+							Find(((SqlUpdateStatement)element).SelectQuery       ) ??
+							Find(((SqlUpdateStatement)element).Update            ) ??
+							Find(((SqlUpdateStatement)element).Output            ) ??
+							Find(((SqlUpdateStatement)element).With              ) ??
+							Find(((SqlUpdateStatement)element).Tag               ) ??
+							Find(((SqlUpdateStatement)element).SqlQueryExtensions) ;
 					}
 
 				case QueryElementType.InsertOrUpdateStatement:
 					{
-						return Find(((SqlInsertOrUpdateStatement)element).SelectQuery) ??
-						       Find(((SqlInsertOrUpdateStatement)element).Insert     ) ??
-						       Find(((SqlInsertOrUpdateStatement)element).Update     ) ??
-						       Find(((SqlInsertOrUpdateStatement)element).With       ) ??
-						       Find(((SqlInsertOrUpdateStatement)element).Tag        );
+						return
+							Find(((SqlInsertOrUpdateStatement)element).SelectQuery       ) ??
+							Find(((SqlInsertOrUpdateStatement)element).Insert            ) ??
+							Find(((SqlInsertOrUpdateStatement)element).Update            ) ??
+							Find(((SqlInsertOrUpdateStatement)element).With              ) ??
+							Find(((SqlInsertOrUpdateStatement)element).Tag               ) ??
+							Find(((SqlInsertOrUpdateStatement)element).SqlQueryExtensions);
 					}
 
 				case QueryElementType.DeleteStatement:
 					{
 						return
-							Find(((SqlDeleteStatement)element).Table      ) ??
-							Find(((SqlDeleteStatement)element).Top        ) ??
-							Find(((SqlDeleteStatement)element).SelectQuery) ??
-							Find(((SqlDeleteStatement)element).Tag        );
+							Find(((SqlDeleteStatement)element).Table             ) ??
+							Find(((SqlDeleteStatement)element).Top               ) ??
+							Find(((SqlDeleteStatement)element).SelectQuery       ) ??
+							Find(((SqlDeleteStatement)element).Tag               ) ??
+							Find(((SqlDeleteStatement)element).SqlQueryExtensions);
 					}
 
 				case QueryElementType.CreateTableStatement:
 					{
 						return
-							Find(((SqlCreateTableStatement)element).Table) ??
-							Find(((SqlCreateTableStatement)element).Tag  );
+							Find(((SqlCreateTableStatement)element).Table             ) ??
+							Find(((SqlCreateTableStatement)element).Tag               ) ??
+							Find(((SqlCreateTableStatement)element).SqlQueryExtensions);
 					}
 
 				case QueryElementType.DropTableStatement:
 					{
 						return
-							Find(((SqlDropTableStatement)element).Table) ??
-							Find(((SqlDropTableStatement)element).Tag  );
+							Find(((SqlDropTableStatement)element).Table             ) ??
+							Find(((SqlDropTableStatement)element).Tag               ) ??
+							Find(((SqlDropTableStatement)element).SqlQueryExtensions);
 					}
 
 				case QueryElementType.SelectClause:
@@ -294,12 +335,13 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlQuery:
 					{
 						return
-							Find(((SelectQuery)element).Select ) ??
-							Find(((SelectQuery)element).From   ) ??
-							Find(((SelectQuery)element).Where  ) ??
-							Find(((SelectQuery)element).GroupBy) ??
-							Find(((SelectQuery)element).Having ) ??
-							Find(((SelectQuery)element).OrderBy) ??
+							Find(((SelectQuery)element).Select            ) ??
+							Find(((SelectQuery)element).From              ) ??
+							Find(((SelectQuery)element).Where             ) ??
+							Find(((SelectQuery)element).GroupBy           ) ??
+							Find(((SelectQuery)element).Having            ) ??
+							Find(((SelectQuery)element).OrderBy           ) ??
+							Find(((SelectQuery)element).SqlQueryExtensions) ??
 							(((SelectQuery)element).HasSetOperators ? Find(((SelectQuery)element).SetOperators) : null);
 					}
 
@@ -325,15 +367,17 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.MergeStatement:
 					{
 						return
+							Find(((SqlMergeStatement)element).With      ) ??
 							Find(((SqlMergeStatement)element).Target    ) ??
 							Find(((SqlMergeStatement)element).Source    ) ??
 							Find(((SqlMergeStatement)element).On        ) ??
 							Find(((SqlMergeStatement)element).Target    ) ??
+							Find(((SqlMergeStatement)element).Output    ) ??
 							Find(((SqlMergeStatement)element).Operations) ??
 							Find(((SqlMergeStatement)element).Tag       );
 					}
 
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					{
 						return
 							Find(((SqlTableLikeSource)element).SourceEnumerable) ??
@@ -365,9 +409,14 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SqlValuesTable:
 					{
-						return 
+						return
 							Find(((SqlValuesTable)element).Fields                  ) ??
 							Find(((SqlValuesTable)element).Rows?.SelectMany(static r => r));
+					}
+
+				case QueryElementType.SqlRow:
+					{
+						return Find(((SqlRow)element).Values);
 					}
 
 				case QueryElementType.SqlField:

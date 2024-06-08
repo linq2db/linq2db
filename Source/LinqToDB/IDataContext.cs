@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using System.Threading.Tasks;
+	using Common.Internal;
+	using Interceptors;
 	using Linq;
 	using Mapping;
 	using SqlProvider;
@@ -16,7 +18,7 @@ namespace LinqToDB
 	/// Database connection abstraction interface.
 	/// </summary>
 	[PublicAPI]
-	public interface IDataContext : IEntityServices, IDisposable
+	public interface IDataContext : IConfigurationID, IDisposable
 #if NATIVE_ASYNC
 		, IAsyncDisposable
 #else
@@ -26,7 +28,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Provider identifier.
 		/// </summary>
-		string              ContextID             { get; }
+		string              ContextName           { get; }
 		/// <summary>
 		/// Gets SQL builder service factory method for current context data provider.
 		/// </summary>
@@ -34,7 +36,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets SQL optimizer service factory method for current context data provider.
 		/// </summary>
-		Func<ISqlOptimizer> GetSqlOptimizer       { get; }
+		Func<DataOptions,ISqlOptimizer> GetSqlOptimizer { get; }
 		/// <summary>
 		/// Gets SQL support flags for current context data provider.
 		/// </summary>
@@ -70,6 +72,11 @@ namespace LinqToDB
 		bool                CloseAfterUse         { get; set; }
 
 		/// <summary>
+		/// Current DataContext LINQ options
+		/// </summary>
+		DataOptions         Options               { get; }
+
+		/// <summary>
 		/// Returns column value reader expression.
 		/// </summary>
 		/// <param name="reader">Data reader instance.</param>
@@ -77,14 +84,14 @@ namespace LinqToDB
 		/// <param name="readerExpression">Data reader accessor expression.</param>
 		/// <param name="toType">Expected value type.</param>
 		/// <returns>Column read expression.</returns>
-		Expression          GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType);
+		Expression          GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType);
 		/// <summary>
 		/// Returns true, of data reader column could contain <see cref="DBNull"/> value.
 		/// </summary>
 		/// <param name="reader">Data reader instance.</param>
 		/// <param name="idx">Column index.</param>
 		/// <returns><c>true</c> or <c>null</c> if column could contain <see cref="DBNull"/>.</returns>
-		bool?               IsDBNullAllowed    (IDataReader reader, int idx);
+		bool?               IsDBNullAllowed    (DbDataReader reader, int idx);
 
 		/// <summary>
 		/// Clones current context.
@@ -103,11 +110,6 @@ namespace LinqToDB
 		Task                CloseAsync         ();
 
 		/// <summary>
-		/// Event, triggered before context connection closed using <see cref="Close"/> method.
-		/// </summary>
-		event EventHandler? OnClosing;
-
-		/// <summary>
 		/// Returns query runner service for current context.
 		/// </summary>
 		/// <param name="query">Query batch object.</param>
@@ -117,5 +119,24 @@ namespace LinqToDB
 		/// <param name="preambles">Query preambles</param>
 		/// <returns>Query runner service.</returns>
 		IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles);
+
+		/// <summary>
+		/// Adds interceptor instance to context.
+		/// </summary>
+		/// <param name="interceptor">Interceptor.</param>
+		void AddInterceptor(IInterceptor interceptor);
+
+		/// <summary>
+		/// Removes interceptor instance from context.
+		/// </summary>
+		/// <param name="interceptor">Interceptor.</param>
+		void RemoveInterceptor(IInterceptor interceptor);
+
+		IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
+
+		/// <summary>
+		/// Gets initial value for database connection configuration name.
+		/// </summary>
+		string?                       ConfigurationString         { get; }
 	}
 }

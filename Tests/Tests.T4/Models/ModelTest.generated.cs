@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -1046,5 +1046,3 @@ namespace Tests.T4.Model
 #endif
 	}
 }
-
-#pragma warning restore 1591

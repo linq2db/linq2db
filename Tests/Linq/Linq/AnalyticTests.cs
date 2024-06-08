@@ -18,6 +18,7 @@ namespace Tests.Linq
 				true,
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL)]
 			string context)
 		{
@@ -75,6 +76,7 @@ namespace Tests.Linq
 				true,
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL)]
 			string context)
 		{
@@ -100,7 +102,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -207,9 +209,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCorrOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestCorrOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
+#if NETFRAMEWORK
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
+#endif
+
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -250,7 +257,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -279,7 +286,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -308,7 +315,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -345,9 +352,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
+#if NETFRAMEWORK
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
+#endif
+
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -454,7 +466,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRowNumberOracleSorting([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		public void TestRowNumberOracleSorting([IncludeDataSources(false, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
@@ -467,7 +479,12 @@ namespace Tests.Linq
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
-				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
+				if (context.IsAnyOf(TestProvName.AllOracle))
+					Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
+				else if (context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER(ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
+				else
+					Assert.Fail("Missing assertion");
 			}
 		}
 
@@ -575,7 +592,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -613,7 +630,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer)] string context)
+		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -649,8 +666,8 @@ namespace Tests.Linq
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						Median1   = Sql.Ext.Median(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						Median2   = Sql.Ext.Median(p.Value1).Over().ToValue(),
+						Median1 = Sql.Ext.Median(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						Median2 = Sql.Ext.Median(p.Value1).Over().ToValue(),
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
@@ -673,7 +690,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -701,7 +718,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer)] string context)
+		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -879,7 +896,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1008,7 +1025,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1080,7 +1097,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1111,7 +1128,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1147,9 +1164,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
+#if NETFRAMEWORK
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
+#endif
+
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -1271,7 +1293,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)]string context)
+		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllClickHouse)]string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1299,7 +1321,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Position
+		sealed class Position
 		{
 			[Column] public int  Group { get; set; }
 			[Column] public int  Order { get; set; }
@@ -1314,17 +1336,17 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1732Lag([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55,
+			TestProvName.AllMySql55,
 			// doesn't support LAG with 3 parameters
-			TestProvName.MariaDB)] string context)
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1358,17 +1380,17 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1732Lead([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55,
+			TestProvName.AllMySql55,
 			// doesn't support 3-rd parameter for LEAD
-			TestProvName.MariaDB)] string context)
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1400,7 +1422,59 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
+		[Test]
+		public void FirstLastValueIgnoreNulls([IncludeDataSources(
+			TestProvName.AllSqlServer2022Plus,
+			TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Position.TestData))
+			{
+				var group = 7;
+
+				var q =
+					from p in db.GetTable<Position>()
+					where p.Group == @group
+					select new
+					{
+						Id = p.Id,
+						FirstRespect = (int?)Sql.Ext.FirstValue(p.Id, Sql.Nulls.Respect).Over().OrderByDesc(p.Order).ToValue(),
+						FirstIgnore = (int?)Sql.Ext.FirstValue(p.Id, Sql.Nulls.Ignore).Over().OrderByDesc(p.Order).ToValue(),
+						LastRespect = (int?)Sql.Ext.LastValue(p.Id, Sql.Nulls.Respect).Over().OrderBy(p.Order).ToValue(),
+						LastIgnore = (int?)Sql.Ext.LastValue(p.Id, Sql.Nulls.Ignore).Over().OrderBy(p.Order).ToValue(),
+					};
+
+				var res = q.ToArray();
+
+				Assert.AreEqual(4, res.Length);
+
+				Assert.AreEqual(5, res[0].Id);
+				Assert.IsNull(res[0].FirstRespect);
+				Assert.AreEqual(6, res[0].FirstIgnore);
+				Assert.AreEqual(5, res[0].LastRespect);
+				Assert.AreEqual(5, res[0].LastIgnore);
+
+				Assert.AreEqual(6, res[1].Id);
+				Assert.IsNull(res[1].FirstRespect);
+				Assert.AreEqual(6, res[1].FirstIgnore);
+				Assert.AreEqual(6, res[1].LastRespect);
+				Assert.AreEqual(6, res[1].LastIgnore);
+
+				Assert.IsNull(res[2].Id);
+				Assert.IsNull(res[2].FirstRespect);
+				Assert.IsNull(res[2].FirstIgnore);
+				Assert.IsNull(res[2].LastRespect);
+				Assert.AreEqual(6, res[2].LastIgnore);
+
+				Assert.IsNull(res[3].Id);
+				Assert.IsNull(res[3].FirstRespect);
+				Assert.IsNull(res[3].FirstIgnore);
+				Assert.IsNull(res[3].LastRespect);
+				Assert.AreEqual(6, res[3].LastIgnore);
+			}
+		}
+
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37950", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1408,7 +1482,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1425,7 +1499,7 @@ namespace Tests.Linq
 
 					};
 
-				var res = q.ToArray();
+				var res = q.AsEnumerable().OrderBy(r => r.Id).ToArray();
 
 				Assert.AreEqual(4, res.Length);
 
@@ -1433,14 +1507,14 @@ namespace Tests.Linq
 				Assert.IsNull(res[0].PreviousId);
 				Assert.IsNull(res[1].Id);
 				Assert.IsNull(res[1].PreviousId);
-				Assert.AreEqual(6, res[2].Id);
+				Assert.AreEqual(5, res[2].Id);
 				Assert.IsNull(res[2].PreviousId);
-				Assert.AreEqual(5, res[3].Id);
+				Assert.AreEqual(6, res[3].Id);
 				Assert.IsNull(res[3].PreviousId);
 			}
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37950", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1448,7 +1522,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1483,6 +1557,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1732NthValue([DataSources(
 			TestProvName.AllSqlServer,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,
@@ -1491,8 +1566,8 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
-			TestProvName.MySql55,
-			TestProvName.MariaDB)] string context)
+			TestProvName.AllMySql55,
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1525,7 +1600,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1799Table1
+		sealed class Issue1799Table1
 		{
 			[Column] public int      EventUser { get; set; }
 			[Column] public int      ProcessID { get; set; }
@@ -1533,30 +1608,30 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1799Table2
+		sealed class Issue1799Table2
 		{
 			[Column] public int     UserId        { get; set; }
 			[Column] public string? UserGroups { get; set; }
 		}
 
 		[Table]
-		class Issue1799Table3
+		sealed class Issue1799Table3
 		{
 			[Column] public int     ProcessID   { get; set; }
 			[Column] public string? ProcessName { get; set; }
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1799Test1([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1601,17 +1676,17 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1654,6 +1729,88 @@ namespace Tests.Linq
 				finalQuery
 					.Take(10)
 					.ToList();
+			}
+		}
+
+		[Test]
+		public void LeadLagWithStringDefault([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllMySql55,
+			// doesn't support 3-rd parameter for LEAD
+			TestProvName.AllMariaDB)] string context)
+		{
+			// #3423: LEAD and LAG `default` parameter can be a type other than int.
+			var data = new Issue1799Table3[]
+			{
+				new() { ProcessID = 1, ProcessName = "One" },
+				new() { ProcessID = 2, ProcessName = "Two" },
+			};
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 1, "None")
+												 	 .Over().OrderBy(p.ProcessID).ToValue())
+								 .ToArray();
+
+				CollectionAssert.AreEqual(new[] { "Two", "None" }, leads);
+
+
+				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 1, "None")
+												 	.Over().OrderBy(p.ProcessID).ToValue())
+								.ToArray();
+
+				CollectionAssert.AreEqual(new[] { "None", "One" }, lags);
+			}
+		}
+
+		[Test]
+		public void LeadLagOverloads([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllMySql55)] string context)
+		{
+			var data = new Issue1799Table3[]
+			{
+				new() { ProcessID = 1, ProcessName = "One" },
+				new() { ProcessID = 2, ProcessName = "Two" },
+				new() { ProcessID = 3, ProcessName = "Three" },
+				new() { ProcessID = 4, ProcessName = "Four" },
+			};
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 2)
+												 	 .Over().OrderBy(p.ProcessID).ToValue())
+								 .ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { "Three", "Four", null, null }, leads);
+
+				leads = table.Select(p => Sql.Ext.Lead(p.ProcessName)
+											 	 .Over().OrderBy(p.ProcessID).ToValue())
+							 .ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { "Two", "Three", "Four", null }, leads);
+
+				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 2)
+												 	.Over().OrderBy(p.ProcessID).ToValue())
+								.ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { null, null, "One", "Two" }, lags);
+
+				lags = table.Select(p => Sql.Ext.Lag(p.ProcessName)
+										 	.Over().OrderBy(p.ProcessID).ToValue())
+							.ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { null, "One", "Two", "Three" }, lags);
 			}
 		}
 	}

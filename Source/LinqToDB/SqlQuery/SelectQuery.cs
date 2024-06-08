@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common.Internal;
+	using Remote;
+
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SelectQuery : ISqlTableSource
+	public class SelectQuery : ISqlTableSource, IQueryExtendible
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		protected string DebugSqlText => SqlText;
@@ -19,12 +23,12 @@ namespace LinqToDB.SqlQuery
 		{
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
 
-			Select  = new SqlSelectClause (this);
-			From    = new SqlFromClause   (this);
-			Where   = new SqlWhereClause  (this);
-			GroupBy = new SqlGroupByClause(this);
-			Having  = new SqlWhereClause  (this);
-			OrderBy = new SqlOrderByClause(this);
+			Select  = new(this);
+			From    = new(this);
+			Where   = new(this);
+			GroupBy = new(this);
+			Having  = new(this);
+			OrderBy = new(this);
 		}
 
 		internal SelectQuery(int id)
@@ -39,10 +43,12 @@ namespace LinqToDB.SqlQuery
 			SqlGroupByClause        groupBy,
 			SqlWhereClause          having,
 			SqlOrderByClause        orderBy,
-			List<SqlSetOperator>?   setOparators,
+			List<SqlSetOperator>?   setOperators,
 			List<ISqlExpression[]>? uniqueKeys,
 			SelectQuery?            parentSelect,
-			bool                    parameterDependent)
+			bool                    parameterDependent,
+			string?                 queryName,
+			bool                    doNotSetAliases)
 		{
 			Select               = select;
 			From                 = from;
@@ -50,9 +56,11 @@ namespace LinqToDB.SqlQuery
 			GroupBy              = groupBy;
 			Having               = having;
 			OrderBy              = orderBy;
-			_setOperators        = setOparators;
+			_setOperators        = setOperators;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
+			QueryName            = queryName;
+			DoNotSetAliases      = doNotSetAliases;
 
 			if (uniqueKeys != null)
 				UniqueKeys.AddRange(uniqueKeys);
@@ -76,27 +84,29 @@ namespace LinqToDB.SqlQuery
 		public SqlOrderByClause OrderBy { get; internal set; } = null!;
 
 		private List<object>? _properties;
-		public  List<object>   Properties => _properties ??= new List<object>();
+		public  List<object>   Properties => _properties ??= new ();
 
 		public SelectQuery?   ParentSelect         { get; set; }
-		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && !HasSetOperators;
+		public bool           IsSimple      => IsSimpleOrSet && !HasSetOperators;
+		public bool           IsSimpleOrSet => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
 		public bool           IsParameterDependent { get; set; }
 
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
 		/// </summary>
-		public bool               DoNotRemove         { get; set; }
+		public bool                     DoNotRemove        { get; set; }
+		public string?                  QueryName          { get; set; }
+		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
+		public bool                     DoNotSetAliases    { get; set; }
 
-		private List<ISqlExpression[]>? _uniqueKeys;
+		List<ISqlExpression[]>? _uniqueKeys;
 
 		/// <summary>
 		/// Contains list of columns that build unique key for this sub-query.
 		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
 		/// </summary>
-		public  List<ISqlExpression[]>  UniqueKeys   => _uniqueKeys ??= new List<ISqlExpression[]>();
-
-		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
-
+		public  List<ISqlExpression[]> UniqueKeys    => _uniqueKeys ??= new ();
+		public  bool                   HasUniqueKeys => _uniqueKeys?.Count > 0;
 
 		#endregion
 
@@ -104,7 +114,6 @@ namespace LinqToDB.SqlQuery
 
 		private List<SqlSetOperator>? _setOperators;
 		public  List<SqlSetOperator>   SetOperators => _setOperators ??= new List<SqlSetOperator>();
-
 		public  bool            HasSetOperators    => _setOperators != null && _setOperators.Count > 0;
 
 		public void AddUnion(SelectQuery union, bool isAll)
@@ -116,18 +125,18 @@ namespace LinqToDB.SqlQuery
 
 		#region Helpers
 
-		public void ForEachTable(Action<SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
+		public void ForEachTable<TContext>(TContext context, Action<TContext, SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
 		{
 			if (!visitedQueries.Add(this))
 				return;
 
 			foreach (var table in From.Tables)
-				table.ForEach(action, visitedQueries);
+				table.ForEach(context, action, visitedQueries);
 
-			this.Visit((query: this, action, visitedQueries), static (context, e) =>
+			this.Visit((query: this, action, visitedQueries, context), static (context, e) =>
 			{
 				if (e is SelectQuery query && e != context.query)
-					query.ForEachTable(context.action, context.visitedQueries);
+					query.ForEachTable(context.context, context.action, context.visitedQueries);
 			});
 		}
 
@@ -179,7 +188,6 @@ namespace LinqToDB.SqlQuery
 		public bool CanBeNull => true;
 		public int Precedence => SqlQuery.Precedence.Unknown;
 
-
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return this == other;
@@ -203,25 +211,25 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Select) .Walk(options, func);
-			((ISqlExpressionWalkable)From)   .Walk(options, func);
-			((ISqlExpressionWalkable)Where)  .Walk(options, func);
-			((ISqlExpressionWalkable)GroupBy).Walk(options, func);
-			((ISqlExpressionWalkable)Having) .Walk(options, func);
-			((ISqlExpressionWalkable)OrderBy).Walk(options, func);
+			((ISqlExpressionWalkable)Select) .Walk(options, context, func);
+			((ISqlExpressionWalkable)From)   .Walk(options, context, func);
+			((ISqlExpressionWalkable)Where)  .Walk(options, context, func);
+			((ISqlExpressionWalkable)GroupBy).Walk(options, context, func);
+			((ISqlExpressionWalkable)Having) .Walk(options, context, func);
+			((ISqlExpressionWalkable)OrderBy).Walk(options, context, func);
 
 			if (HasSetOperators)
 				foreach (var setOperator in SetOperators)
-					((ISqlExpressionWalkable)setOperator.SelectQuery).Walk(options, func);
+					((ISqlExpressionWalkable)setOperator.SelectQuery).Walk(options, context, func);
 
 			if (HasUniqueKeys)
 				foreach (var uk in UniqueKeys)
 					foreach (var k in uk)
-						k.Walk(options, func);
+						k.Walk(options, context, func);
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -285,9 +293,14 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlQuery;
 
-		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+		public string SqlText
+		{
+			get
+			{
+				using var sb = Pools.StringBuilder.Allocate();
+				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			}
+		}
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
@@ -296,10 +309,7 @@ namespace LinqToDB.SqlQuery
 
 			dic.Add(this, this);
 
-			sb
-				.Append('(')
-				.Append(SourceID)
-				.Append(") ");
+			sb.Append(CultureInfo.InvariantCulture, $"({SourceID}) ");
 
 			((IQueryElement)Select). ToString(sb, dic);
 			((IQueryElement)From).   ToString(sb, dic);

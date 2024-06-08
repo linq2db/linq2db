@@ -16,11 +16,12 @@ namespace Tests.UserTests
 			public int Id;
 
 			[Column(Length = 100)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.DB2)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.Firebird)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.Oracle)]
-			[Column(DataType = DataType.Blob, Configuration = ProviderName.PostgreSQL, DbType = "bytea")]
-			[Column(                          Configuration = ProviderName.Informix,   DbType = "byte")]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.DB2)]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.Firebird)]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.Oracle)]
+			[Column(DataType = DataType.VarBinary, Configuration = ProviderName.ClickHouse)]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.PostgreSQL, DbType = "bytea")]
+			[Column(                               Configuration = ProviderName.Informix,   DbType = "byte")]
 			public byte[]? BlobValue;
 		}
 
@@ -106,7 +107,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test4([DataSources] string context)
 		{
-			var tableName = nameof(BlobClass) + (context.Contains("Firebird") ? TestUtils.GetNext().ToString() : null);
+			var tableName = nameof(BlobClass) + (context.IsAnyOf(TestProvName.AllFirebird) ? TestUtils.GetNext().ToString() : null);
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<BlobClass>(tableName))
 			{

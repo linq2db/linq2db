@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 
 namespace Tests
 {
@@ -73,8 +74,38 @@ namespace Tests
 		public virtual string[]? InterceptResetAllTypesIdentity(string context, int lastValue, int keepIdentityLastValue)
 			=> null;
 
+		/// <summary>
+		/// Intercept the InterceptResetTestSequence
+		/// </summary>
+		/// <param name="context">The context/datasource for which to reset the autonumber sequemce on AllTypes table.</param>
+		/// <param name="lastValue"></param>
+		/// <returns></returns>
 		public virtual string[]? InterceptResetTestSequence(string context, int lastValue)
 			=> null;
+
+		/// <summary>
+		/// Intercept the IsCaseSensitiveDB helper from Test.Base.
+		/// </summary>
+		/// <param name="context">The context/datasource for which to check.</param>
+		/// <returns></returns>
+		public virtual bool IsCaseSensitiveDB(string context)
+			=> false;
+
+		/// <summary>
+		/// Intercept the IsCaseSensitiveComparison helper from Test.Base.
+		/// </summary>
+		/// <param name="context">The context/datasource for which to check.</param>
+		/// <returns></returns>
+		public virtual bool IsCaseSensitiveComparison(string context)
+			=> false;
+
+		/// <summary>
+		/// Intercept the IsCollatedTableConfigured helper from Test.Base.
+		/// </summary>
+		/// <param name="context">The context/datasource for which to check.</param>
+		/// <returns></returns>
+		public virtual bool IsCollatedTableConfigured(string context)
+			=> false;
 
 		/// <summary>
 		/// Helper method to extract the class name and method name of a test method.
@@ -90,10 +121,10 @@ namespace Tests
 		public string ConfigString { get; }
 		public string Divider { get; }
 		public string Name { get; }
-		public Action<IDbConnection>? Action { get; }
+		public Action<DbConnection>? Action { get; }
 		public string? Database { get; }
 
-		public CreateDataScript(string configString, string divider, string name, Action<IDbConnection>? action = null, string? database = null)
+		public CreateDataScript(string configString, string divider, string name, Action<DbConnection>? action = null, string? database = null)
 		{
 			ConfigString = configString;
 			Divider = divider;

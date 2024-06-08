@@ -10,9 +10,10 @@ namespace Tests.Model
 	public class ComplexPerson : IPerson
 	{
 
-		[Identity]
 		[SequenceName(ProviderName.Firebird, "PersonID")]
-		[Column("PersonID", IsPrimaryKey = true)]
+		[Column("PersonID", Configuration = ProviderName.ClickHouse)]
+		[Column("PersonID", IsIdentity = true)]
+		[PrimaryKey]
 		public int      ID     { get; set; }
 		public Gender   Gender { get; set; }
 		public FullName Name   { get; set; } = null!;
@@ -60,9 +61,10 @@ namespace Tests.Model
 	public class ComplexPerson2 
 	{
 
-		[Identity]
+		[PrimaryKey]
 		[SequenceName(ProviderName.Firebird, "PersonID")]
-		[Column("PersonID", IsPrimaryKey = true)]
+		[Column("PersonID", Configuration = ProviderName.ClickHouse)]
+		[Column("PersonID", IsIdentity = true)]
 		public int      ID     { get; set; }
 		public Gender   Gender { get; set; }
 		public FullName Name   { get; set; } = null!;

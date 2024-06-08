@@ -68,12 +68,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Expr1 = Expr1.Walk(options, func)!;
-			Expr2 = Expr2.Walk(options, func)!;
+			Expr1 = Expr1.Walk(options, context, func)!;
+			Expr2 = Expr2.Walk(options, context, func)!;
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -142,6 +142,14 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out Type systemType, out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
+		{
+			systemType = SystemType;
+			expr1      = Expr1;
+			operation  = Operation;
+			expr2      = Expr2;
+		}
 
 		public void Deconstruct(out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
 		{

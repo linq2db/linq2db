@@ -1,9 +1,10 @@
-﻿namespace LinqToDB.DataProvider
+﻿using System;
+
+namespace LinqToDB.DataProvider
 {
 	internal static class SqlTypes
 	{
 		internal const string TypesNamespace = "System.Data.SqlTypes";
-
 
 		// those reader methods defined for both sql server and sql ce providers
 		internal const string GetSqlBinaryReaderMethod   = "GetSqlBinary";

@@ -14,7 +14,7 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class CommonTests : TestBase
 	{
-		class MyDataConnection : TestDataConnection
+		sealed class MyDataConnection : TestDataConnection
 		{
 			public MyDataConnection(string context) : base(context)
 			{
@@ -22,7 +22,7 @@ namespace Tests.Exceptions
 
 			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 			{
-				if (statement.IsInsert() && statement.RequireInsertClause().Into!.Name == "Parent")
+				if (statement.IsInsert() && statement.RequireInsertClause().Into!.TableName.Name == "Parent")
 				{
 					var expr =
 						statement.RequireInsertClause().Find(static e =>
@@ -30,7 +30,7 @@ namespace Tests.Exceptions
 							if (e.ElementType == QueryElementType.SetExpression)
 							{
 								var se = (SqlSetExpression)e;
-								return ((SqlField)se.Column).Name == "ParentID";
+								return ((SqlField)se.Column!).Name == "ParentID";
 							}
 
 							return false;
@@ -51,12 +51,12 @@ namespace Tests.Exceptions
 								{
 									var oldTable = (SqlTable)e;
 
-									if (oldTable.Name == "Parent")
+									if (oldTable.TableName.Name == "Parent")
 									{
-										var newTable = new SqlTable(oldTable) { Name = v.Context.tableName, PhysicalName = v.Context.tableName };
+										var newTable = new SqlTable(oldTable) { TableName = new (v.Context.tableName) };
 
 										foreach (var field in oldTable.Fields)
-											v.Context.dic.Add(field, newTable[field.Name] ?? throw new InvalidOperationException());
+											v.Context.dic.Add(field, newTable.FindFieldByMemberName(field.Name) ?? throw new InvalidOperationException());
 
 										return newTable;
 									}

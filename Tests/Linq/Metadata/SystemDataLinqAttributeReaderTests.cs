@@ -106,7 +106,8 @@ namespace Tests.Metadata
 		[Test]
 		public void ParseTableAttribute() {
 			var rd     = new SystemDataLinqAttributeReader();
-			var attrs = rd.GetAttributes<LinqToDB.Mapping.TableAttribute>(typeof(Shipper), true);
+			var attrs = rd.GetAttributes(typeof(Shipper))
+				.OfType<LinqToDB.Mapping.TableAttribute>().ToArray();
 
 			Assert.NotNull(attrs);
 			Assert.AreEqual(1, attrs.Length);
@@ -115,7 +116,7 @@ namespace Tests.Metadata
 		}
 
 		[Test]
-		public void SmokeSelect([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void SmokeSelect([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

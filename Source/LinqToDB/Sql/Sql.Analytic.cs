@@ -53,7 +53,7 @@ namespace LinqToDB
 
 		#region Call Builders
 
-		class OrderItemBuilder: Sql.IExtensionCallBuilder
+		sealed class OrderItemBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -74,7 +74,7 @@ namespace LinqToDB
 			}
 		}
 
-		class ApplyAggregateModifier: Sql.IExtensionCallBuilder
+		sealed class ApplyAggregateModifier : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -95,7 +95,7 @@ namespace LinqToDB
 			}
 		}
 
-		class ApplyNullsModifier: Sql.IExtensionCallBuilder
+		sealed class ApplyNullsModifier : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -112,7 +112,7 @@ namespace LinqToDB
 			{
 				case Sql.Nulls.None   :
 				case Sql.Nulls.Respect:
-					// no need to add RESPECT NULLS, as it is default behavior and token itself supported only by Oracle and Informix
+					// no need to add RESPECT NULLS, as it is default behavior and token itself supported only by Oracle, Informix and SQL Server 2022
 					return string.Empty;
 				case Sql.Nulls.Ignore :
 					return "IGNORE NULLS";
@@ -137,7 +137,7 @@ namespace LinqToDB
 			return string.Empty;
 		}
 
-		class ApplyFromAndNullsModifier: Sql.IExtensionCallBuilder
+		sealed class ApplyFromAndNullsModifier : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -385,7 +385,7 @@ namespace LinqToDB
 
 		public interface IAndExpected<out TR>
 		{
-			// TokenName used only for chain continuation 
+			// TokenName used only for chain continuation
 			[Sql.Extension("", TokenName = "and_connector")]
 			ISecondBoundaryExpected<TR> And { get; }
 		}
@@ -412,7 +412,7 @@ namespace LinqToDB
 		#region Extensions
 
 		[Sql.Extension("{function} FILTER (WHERE {filter})", TokenName = FunctionToken, ChainPrecedence = 2, IsWindowFunction = true)]
-		public static IAnalyticFunctionWithoutWindow<T> Filter<T>(this IAnalyticFunctionWithoutWindow<T> func, 
+		public static IAnalyticFunctionWithoutWindow<T> Filter<T>(this IAnalyticFunctionWithoutWindow<T> func,
 			[ExprParameter] bool filter)
 		{
 			throw new LinqException($"'{nameof(Filter)}' is server-side method.");
@@ -708,6 +708,7 @@ namespace LinqToDB
 			throw new LinqException($"'{nameof(DenseRank)}' is server-side method.");
 		}
 
+		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = ProviderName.SqlServer2022)]
 		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
 		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 		{
@@ -720,12 +721,31 @@ namespace LinqToDB
 			throw new LinqException($"'{nameof(Lag)}' is server-side method.");
 		}
 
-		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
-		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
+		[Sql.Extension("LAG({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
 		{
 			throw new LinqException($"'{nameof(Lag)}' is server-side method.");
 		}
 
+		[Sql.Extension("LAG({expr}, {offset})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] int offset)
+		{
+			throw new LinqException($"'{nameof(Lag)}' is server-side method.");
+		}
+
+		[Sql.Extension("LAG({expr}, {offset}, {default})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] int offset, [ExprParameter] T @default)
+		{
+			throw new LinqException($"'{nameof(Lag)}' is server-side method.");
+		}
+
+		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
+		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] T @default)
+		{
+			throw new LinqException($"'{nameof(Lag)}' is server-side method.");
+		}
+
+		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = ProviderName.SqlServer2022)]
 		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
 		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 		{
@@ -738,8 +758,26 @@ namespace LinqToDB
 			throw new LinqException($"'{nameof(Lead)}' is server-side method.");
 		}
 
+		[Sql.Extension("LEAD({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
+		{
+			throw new LinqException($"'{nameof(Lead)}' is server-side method.");
+		}
+
+		[Sql.Extension("LEAD({expr}, {offset})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] int offset)
+		{
+			throw new LinqException($"'{nameof(Lead)}' is server-side method.");
+		}
+
+		[Sql.Extension("LEAD({expr}, {offset}, {default})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] int offset, [ExprParameter] T @default)
+		{
+			throw new LinqException($"'{nameof(Lead)}' is server-side method.");
+		}
+
 		[Sql.Extension("LEAD({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
-		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
+		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] T @default)
 		{
 			throw new LinqException($"'{nameof(Lead)}' is server-side method.");
 		}

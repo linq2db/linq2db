@@ -1,10 +1,13 @@
-﻿using System.Linq.Expressions;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using LinqToDB.Expressions;
+	using Mapping;
 	using SqlQuery;
+	using Tools;
 
 	static partial class QueryRunner
 	{
@@ -12,23 +15,31 @@ namespace LinqToDB.Linq
 			where T : notnull
 		{
 			public static ITable<T> Query(
-				IDataContext    dataContext,
-				string?         tableName,
-				string?         serverName,
-				string?         databaseName,
-				string?         schemaName,
-				string?         statementHeader,
-				string?         statementFooter,
-				DefaultNullable defaultNullable,
-				TableOptions    tableOptions)
+				IDataContext      dataContext,
+				EntityDescriptor? tableDescriptor,
+				string?           tableName,
+				string?           serverName,
+				string?           databaseName,
+				string?           schemaName,
+				string?           statementHeader,
+				string?           statementFooter,
+				DefaultNullable   defaultNullable,
+				TableOptions      tableOptions)
 			{
-				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
+				using var m = ActivityService.Start(ActivityID.CreateTable);
+
+				var sqlTable    = tableDescriptor != null ? new SqlTable(tableDescriptor) : SqlTable.Create<T>(dataContext);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableName != null || schemaName != null || databaseName != null || serverName != null)
+				{
+					sqlTable.TableName = new(
+						          tableName    ?? sqlTable.TableName.Name,
+						Server  : serverName   ?? sqlTable.TableName.Server,
+						Database: databaseName ?? sqlTable.TableName.Database,
+						Schema  : schemaName   ?? sqlTable.TableName.Schema);
+				}
+
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				createTable.StatementHeader = statementHeader;
@@ -42,14 +53,14 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				query.GetElement(dataContext, Expression.Constant(null), null, null);
+				query.GetElement(dataContext, ExpressionInstances.UntypedNull, null, null);
 
-				ITable<T> table = new Table<T>(dataContext);
+				ITable<T> table = new Table<T>(dataContext, tableDescriptor);
 
-				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
-				if (sqlTable.Server       != null) table = table.ServerName  (sqlTable.Server);
-				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
-				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
+				if (sqlTable.TableName.Name     != null) table = table.TableName   (sqlTable.TableName.Name);
+				if (sqlTable.TableName.Server   != null) table = table.ServerName  (sqlTable.TableName.Server);
+				if (sqlTable.TableName.Database != null) table = table.DatabaseName(sqlTable.TableName.Database);
+				if (sqlTable.TableName.Schema   != null) table = table.SchemaName  (sqlTable.TableName.Schema);
 				if (sqlTable.TableOptions.IsSet()) table = table.TableOptions(sqlTable.TableOptions);
 
 				return table;
@@ -57,6 +68,7 @@ namespace LinqToDB.Linq
 
 			public static async Task<ITable<T>> QueryAsync(
 				IDataContext      dataContext,
+				EntityDescriptor? tableDescriptor,
 				string?           tableName,
 				string?           serverName,
 				string?           databaseName,
@@ -67,37 +79,45 @@ namespace LinqToDB.Linq
 				TableOptions      tableOptions,
 				CancellationToken token)
 			{
-				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var createTable = new SqlCreateTableStatement(sqlTable);
-
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
-				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
-
-				createTable.StatementHeader = statementHeader;
-				createTable.StatementFooter = statementFooter;
-				createTable.DefaultNullable = defaultNullable;
-
-				var query = new Query<int>(dataContext, null)
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.CreateTableAsync))
 				{
-					Queries = { new QueryInfo { Statement = createTable, } }
-				};
+					var sqlTable    = tableDescriptor != null ? new SqlTable(tableDescriptor) : SqlTable.Create<T>(dataContext);
+					var createTable = new SqlCreateTableStatement(sqlTable);
 
-				SetNonQueryQuery(query);
+					if (tableName != null || schemaName != null || databaseName != null || serverName != null)
+					{
+						sqlTable.TableName = new(
+							tableName              ?? sqlTable.TableName.Name,
+							Server  : serverName   ?? sqlTable.TableName.Server,
+							Database: databaseName ?? sqlTable.TableName.Database,
+							Schema  : schemaName   ?? sqlTable.TableName.Schema);
+					}
 
-				await query.GetElementAsync(dataContext, Expression.Constant(null), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
-				ITable<T> table = new Table<T>(dataContext);
+					createTable.StatementHeader = statementHeader;
+					createTable.StatementFooter = statementFooter;
+					createTable.DefaultNullable = defaultNullable;
 
-				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
-				if (sqlTable.Server       != null) table = table.ServerName  (sqlTable.Server);
-				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
-				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
-				if (sqlTable.TableOptions.IsSet()) table = table.TableOptions(sqlTable.TableOptions);
+					var query = new Query<int>(dataContext, null)
+					{
+						Queries = { new QueryInfo { Statement = createTable, } }
+					};
 
-				return table;
+					SetNonQueryQuery(query);
+
+					await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+					ITable<T> table = new Table<T>(dataContext, tableDescriptor);
+
+					if (sqlTable.TableName.Name     != null) table = table.TableName   (sqlTable.TableName.Name);
+					if (sqlTable.TableName.Server   != null) table = table.ServerName  (sqlTable.TableName.Server);
+					if (sqlTable.TableName.Database != null) table = table.DatabaseName(sqlTable.TableName.Database);
+					if (sqlTable.TableName.Schema   != null) table = table.SchemaName  (sqlTable.TableName.Schema);
+					if (sqlTable.TableOptions.IsSet()) table       = table.TableOptions(sqlTable.TableOptions);
+
+					return table;
+				}
 			}
 		}
 	}

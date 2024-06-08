@@ -1,16 +1,19 @@
 ﻿using System;
+using System.Data.Linq;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using LinqToDB.Common;
+	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
-	using System.Globalization;
 
-	public class DB2MappingSchema : MappingSchema
+	sealed class DB2MappingSchema : LockedMappingSchema
 	{
+#if NET6_0_OR_GREATER
+		private const string DATE_FORMAT       = "{0:yyyy-MM-dd}";
+#endif
 		private const string DATETIME_FORMAT   = "{0:yyyy-MM-dd-HH.mm.ss}";
 
 		private const string TIMESTAMP0_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss}";
@@ -40,30 +43,32 @@ namespace LinqToDB.DataProvider.DB2
 			"yyyy-MM-dd-HH.mm.ss.ffffffffffff",
 		};
 
-		public DB2MappingSchema() : this(ProviderName.DB2)
+		DB2MappingSchema() : base(ProviderName.DB2)
 		{
-		}
-
-		protected DB2MappingSchema(string configuration) : base(configuration)
-		{
-			SetValueToSqlConverter(typeof(Guid), (sb,dt,v) => ConvertGuidToSql(sb, (Guid)v));
-
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(byte), new SqlDataType(DataType.Int16, typeof(byte)));
+			SetDataType(typeof(byte?), new SqlDataType(DataType.Int16, typeof(byte)));
 
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid),     (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
+			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 
 			// set reader conversions from literals
 			SetConverter<string, DateTime>(ParseDateTime);
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetConverter<string, DateOnly>(ParseDateOnly);
+#endif
 		}
 
 		static DateTime ParseDateTime(string value)
 		{
-			if (DateTime.TryParse(value, out var res))
+			if (DateTime.TryParse(value, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var res))
 				return res;
 
 			return DateTime.ParseExact(
@@ -75,7 +80,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void ConvertTimeToSql(StringBuilder stringBuilder, TimeSpan time)
 		{
-			stringBuilder.Append($"'{time:hh\\:mm\\:ss}'");
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"'{time:hh\\:mm\\:ss}'");
 		}
 
 		static string GetTimestampFormat(SqlDataType type)
@@ -87,7 +92,7 @@ namespace LinqToDB.DataProvider.DB2
 				var dbtype = type.Type.DbType.ToLowerInvariant();
 				if (dbtype.StartsWith("timestamp("))
 				{
-					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), out var fromDbType))
+					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var fromDbType))
 						precision = fromDbType;
 				}
 			}
@@ -106,6 +111,31 @@ namespace LinqToDB.DataProvider.DB2
 			};
 		}
 
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		{
+			stringBuilder.Append('\'');
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+			stringBuilder.Append('\'');
+		}
+
+		private static readonly string[] DateOnlyFormats = new[]
+		{
+			"yyyy-MM-dd",
+		};
+
+		static DateOnly ParseDateOnly(string value)
+		{
+			if (DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var res))
+				return res;
+
+			return DateOnly.ParseExact(
+				value,
+				DateOnlyFormats,
+				CultureInfo.InvariantCulture,
+				DateTimeStyles.None);
+		}
+#endif
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType type, DateTime value)
 		{
@@ -119,78 +149,43 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("BX'");
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
-
-			stringBuilder.Append('\'');
+			stringBuilder
+				.Append("BX'")
+				.AppendByteArrayAsHexViaLookup32(value)
+				.Append('\'');
 		}
 
-		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+		static readonly Action<StringBuilder,int> _appendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, _appendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", _appendConversionAction, value);
 		}
 
 		internal static readonly DB2MappingSchema Instance = new ();
 
-		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)
+		public sealed class DB2zOSMappingSchema : LockedMappingSchema
 		{
-			var s = value.ToString("N");
-
-			stringBuilder
-				.Append("Cast(x'")
-				.Append(s.Substring( 6,  2))
-				.Append(s.Substring( 4,  2))
-				.Append(s.Substring( 2,  2))
-				.Append(s.Substring( 0,  2))
-				.Append(s.Substring(10,  2))
-				.Append(s.Substring( 8,  2))
-				.Append(s.Substring(14,  2))
-				.Append(s.Substring(12,  2))
-				.Append(s.Substring(16, 16))
-				.Append("' as char(16) for bit data)")
-				;
-		}
-	}
-
-	public class DB2zOSMappingSchema : MappingSchema
-	{
-		public DB2zOSMappingSchema()
-			: base(ProviderName.DB2zOS, DB2MappingSchema.Instance)
-		{
+			public DB2zOSMappingSchema() : base(ProviderName.DB2zOS,  DB2ProviderAdapter.Instance.MappingSchema, Instance)
+			{
+			}
 		}
 
-		public DB2zOSMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.DB2zOS, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
+		public sealed class DB2LUWMappingSchema : LockedMappingSchema
 		{
-		}
-	}
-
-	public class DB2LUWMappingSchema : MappingSchema
-	{
-		public DB2LUWMappingSchema()
-			: base(ProviderName.DB2LUW, DB2MappingSchema.Instance)
-		{
-		}
-
-		public DB2LUWMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.DB2LUW, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
-		{
+			public DB2LUWMappingSchema() : base(ProviderName.DB2LUW, DB2ProviderAdapter.Instance.MappingSchema, Instance)
+			{
+			}
 		}
 	}
 }

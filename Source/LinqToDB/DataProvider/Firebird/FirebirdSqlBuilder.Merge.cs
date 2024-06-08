@@ -1,11 +1,12 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+
+namespace LinqToDB.DataProvider.Firebird
 {
-	using LinqToDB.SqlQuery;
-	using System;
-	using System.Linq;
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.Text;
+	using SqlQuery;
 
 	public partial class FirebirdSqlBuilder
 	{
@@ -17,15 +18,15 @@
 		//Data type unknown
 
 		// VALUES(...) syntax not supported in MERGE source
-		protected override bool MergeSupportsSourceDirectValues => false;
+		protected override bool IsValuesSyntaxSupported => false;
 
 		protected override string FakeTable => "rdb$database";
 
 		private readonly ISet<Tuple<SqlValuesTable, int>> _typedColumns = new HashSet<Tuple<SqlValuesTable, int>>();
 
-		protected override bool MergeSourceValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
+		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
 		{
-			if (row >= 0 && rows[row][column] is SqlParameter parameter && parameter.IsQueryParameter)
+			if (row >= 0 && ConvertElement(rows[row][column]) is SqlParameter parameter && parameter.IsQueryParameter)
 			{
 				return true;
 			}
@@ -34,7 +35,7 @@
 			{
 				// without type Firebird with convert string values in column to CHAR(LENGTH_OF_BIGGEST_VALUE_IN_COLUMN) with
 				// padding shorter values with spaces
-				if (rows.Any(r => r[column] is SqlValue value && value.Value is string))
+				if (rows.Any(r => ConvertElement(r[column]) is SqlValue value && value.Value is string))
 				{
 					_typedColumns.Add(Tuple.Create(source, column));
 					return rows[0][column] is SqlValue val && val.Value != null;
@@ -44,7 +45,7 @@
 			}
 
 			return _typedColumns.Contains(Tuple.Create(source, column))
-				&& rows[row][column] is SqlValue sqlValue && sqlValue.Value != null;
+				&& ConvertElement(rows[row][column]) is SqlValue sqlValue && sqlValue.Value != null;
 		}
 
 		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
@@ -67,7 +68,7 @@
 				BuildExpression(value);
 
 				if (typeRequired)
-					StringBuilder.Append($" AS VARCHAR({length.ToString(CultureInfo.InvariantCulture)}))");
+					StringBuilder.Append(CultureInfo.InvariantCulture, $" AS VARCHAR({length}))");
 			}
 			else
 				base.BuildTypedExpression(dataType, value);

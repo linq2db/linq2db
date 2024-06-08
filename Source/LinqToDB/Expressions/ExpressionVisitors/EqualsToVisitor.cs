@@ -1,21 +1,37 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Expressions
 {
-	internal static class EqualsToVisitor
+	using Common;
+	using Extensions;
+	using Linq;
+	using Reflection;
+
+	static class EqualsToVisitor
 	{
 		#region Cache
-		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods = new ();
+		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods       = new ();
+		static readonly ConcurrentDictionary<MethodInfo,bool[]>                              _skipContantArgumentsMethods = new ();
+
+		static EqualsToVisitor()
+		{
+			// prefill with supported external methods as we cannot add attributes to them
+			var arr = new [] { false, true };
+			_skipContantArgumentsMethods[Methods.Queryable.Take               ] = arr;
+			_skipContantArgumentsMethods[Methods.Queryable.Skip               ] = arr;
+			_skipContantArgumentsMethods[Methods.Queryable.ElementAt          ] = arr;
+			_skipContantArgumentsMethods[Methods.Queryable.ElementAtOrDefault ] = arr;
+			_skipContantArgumentsMethods[Methods.Enumerable.Take              ] = arr;
+			_skipContantArgumentsMethods[Methods.Enumerable.Skip              ] = arr;
+			_skipContantArgumentsMethods[Methods.Enumerable.ElementAt         ] = arr;
+			_skipContantArgumentsMethods[Methods.Enumerable.ElementAtOrDefault] = arr;
+		}
 
 		public static void ClearCaches()
 		{
@@ -48,7 +64,7 @@ namespace LinqToDB.Expressions
 			return new EqualsToInfo(dataContext, queryableAccessorDic, queryableMemberAccessorDic, queryDependedObjects, compareConstantValues);
 		}
 
-		internal class EqualsToInfo
+		internal sealed class EqualsToInfo
 		{
 			public EqualsToInfo(
 				IDataContext                                              dataContext,
@@ -88,7 +104,7 @@ namespace LinqToDB.Expressions
 
 			if (info.MemberCompareCache == null || !info.MemberCompareCache.TryGetValue(memberInfo, out var compareResult))
 			{
-				compareResult = accessor.Expression.EqualsTo(accessor.Accessor(memberInfo, info.DataContext), info);
+				compareResult = accessor.Expression.EqualsTo(accessor.Execute(memberInfo, info.DataContext), info);
 				(info.MemberCompareCache ??= new (MemberInfoComparer.Instance)).Add(memberInfo, compareResult);
 			}
 
@@ -133,15 +149,11 @@ namespace LinqToDB.Expressions
 				case ExpressionType.RightShift        :
 				case ExpressionType.Subtract          :
 				case ExpressionType.SubtractChecked   :
-				{
-					//						var e1 = (BinaryExpression)expr1;
-					//						var e2 = (BinaryExpression)expr2;
 					return
-						((BinaryExpression)expr1).Method == ((BinaryExpression)expr2).Method &&
+						((BinaryExpression)expr1).Method == ((BinaryExpression)expr2).Method                      &&
 						((BinaryExpression)expr1).Conversion.EqualsTo(((BinaryExpression)expr2).Conversion, info) &&
-						((BinaryExpression)expr1).Left.EqualsTo(((BinaryExpression)expr2).Left, info) &&
+						((BinaryExpression)expr1).Left.EqualsTo(((BinaryExpression)expr2).Left, info)             &&
 						((BinaryExpression)expr1).Right.EqualsTo(((BinaryExpression)expr2).Right, info);
-				}
 
 				case ExpressionType.ArrayLength   :
 				case ExpressionType.Convert       :
@@ -152,23 +164,15 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Quote         :
 				case ExpressionType.TypeAs        :
 				case ExpressionType.UnaryPlus     :
-				{
-					//						var e1 = (UnaryExpression)expr1;
-					//						var e2 = (UnaryExpression)expr2;
 					return
 						((UnaryExpression)expr1).Method == ((UnaryExpression)expr2).Method &&
 						((UnaryExpression)expr1).Operand.EqualsTo(((UnaryExpression)expr2).Operand, info);
-				}
 
 				case ExpressionType.Conditional:
-				{
-					//						var e1 = (ConditionalExpression)expr1;
-					//						var e2 = (ConditionalExpression)expr2;
 					return
-						((ConditionalExpression)expr1).Test   .EqualsTo(((ConditionalExpression)expr2).Test, info) &&
-						((ConditionalExpression)expr1).IfTrue .EqualsTo(((ConditionalExpression)expr2).IfTrue, info) &&
+						((ConditionalExpression)expr1).Test.EqualsTo(((ConditionalExpression)expr2).Test, info)     &&
+						((ConditionalExpression)expr1).IfTrue.EqualsTo(((ConditionalExpression)expr2).IfTrue, info) &&
 						((ConditionalExpression)expr1).IfFalse.EqualsTo(((ConditionalExpression)expr2).IfFalse, info);
-				}
 
 				case ExpressionType.Call          : return EqualsToX((MethodCallExpression)expr1, (MethodCallExpression        )expr2, info);
 				case ExpressionType.Constant      : return EqualsToX((ConstantExpression  )expr1, (ConstantExpression          )expr2, info);
@@ -184,13 +188,9 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Parameter     : return ((ParameterExpression          )expr1).Name == ((ParameterExpression)expr2).Name;
 
 				case ExpressionType.TypeIs:
-				{
-					//						var e1 = (TypeBinaryExpression)expr1;
-					//						var e2 = (TypeBinaryExpression)expr2;
 					return
 						((TypeBinaryExpression)expr1).TypeOperand == ((TypeBinaryExpression)expr2).TypeOperand &&
 						((TypeBinaryExpression)expr1).Expression.EqualsTo(((TypeBinaryExpression)expr2).Expression, info);
-				}
 
 				case ExpressionType.Block:
 					return EqualsToX((BlockExpression)expr1, (BlockExpression)expr2, info);
@@ -334,7 +334,7 @@ namespace LinqToDB.Expressions
 		{
 			if (expr1.Member == expr2.Member)
 			{
-				if (expr1.Expression == expr2.Expression || expr1.Expression.Type == expr2.Expression.Type)
+				if (expr1.Expression == expr2.Expression || expr1.Expression!.Type == expr2.Expression!.Type)
 				{
 					if (info.QueryableAccessorDic != null && info.QueryableAccessorDic.TryGetValue(expr1, out var qa))
 						return
@@ -374,6 +374,9 @@ namespace LinqToDB.Expressions
 
 		static bool EqualsToX(LambdaExpression expr1, LambdaExpression expr2, EqualsToInfo info)
 		{
+			if (ReferenceEquals(expr1, expr2))
+				return true;
+
 			if (expr1.Parameters.Count != expr2.Parameters.Count || !expr1.Body.EqualsTo(expr2.Body, info))
 				return false;
 
@@ -415,36 +418,9 @@ namespace LinqToDB.Expressions
 				if ((info.Visited ??= new()).Add(eq1))
 					return eq1.EqualsTo(eq2, info);
 			}
-			else if (expr1.Value is IEnumerable list1 && expr2.Value is IEnumerable list2)
-			{
-				var enum1 = list1.GetEnumerator();
-				var enum2 = list2.GetEnumerator();
-				using (enum1 as IDisposable)
-				using (enum2 as IDisposable)
-				{
-					while (enum1.MoveNext())
-					{
-						if (!enum2.MoveNext() || !Equals(enum1.Current, enum2.Current))
-							return false;
-					}
-
-					if (enum2.MoveNext())
-						return false;
-				}
-
-				return true;
-			}
 
 			return !info.CompareConstantValues || expr1.Value == expr2.Value;
 		}
-
-		private static readonly MethodInfo[] SkipSecondArgumentMethods = new []
-		{
-			Methods.Queryable.Take      , Methods.Queryable.Skip,
-			Methods.Enumerable.Take     , Methods.Enumerable.Skip,
-			Methods.Queryable.ElementAt , Methods.Queryable.ElementAtOrDefault,
-			Methods.Enumerable.ElementAt, Methods.Enumerable.ElementAtOrDefault
-		};
 
 		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
 		{
@@ -454,28 +430,55 @@ namespace LinqToDB.Expressions
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
 
-			if (expr1.IsSameGenericMethod(SkipSecondArgumentMethods)
-				&& expr1.Arguments[1].NodeType == ExpressionType.Constant && expr2.Arguments[1].NodeType == ExpressionType.Constant)
-			{
-				// We do not compare last argument
-				return expr1.Arguments[0].EqualsTo(expr2.Arguments[0], info);
-			}
-
+			var mi = expr1.Method.GetGenericMethodDefinitionCached();
 			var dependentParameters = _queryDependentMethods.GetOrAdd(
-				expr1.Method, static mi =>
+				mi, static mi =>
 				{
-					var arr = mi
-						.GetParameters()
-						.Select(static p => (SqlQueryDependentAttribute?)p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).OfType<SqlQueryDependentAttribute>().FirstOrDefault())
-						.ToList();
+					var parameters = mi.GetParameters();
 
-					return arr.Any(static a => a != null) ? arr : null;
+					if (parameters.Length == 0)
+						return null;
+
+					SqlQueryDependentAttribute?[]? attributes = null;
+
+					for (var i = 0; i < parameters.Length; i++)
+					{
+						var attr = parameters[i].GetAttribute<SqlQueryDependentAttribute>();
+						if (attr != null)
+						{
+							attributes  ??= new SqlQueryDependentAttribute[parameters.Length];
+							attributes[i] = attr;
+						}
+					}
+
+					return attributes;
+				});
+
+			var skipConstantArguments = _skipContantArgumentsMethods.GetOrAdd(
+				mi, static mi =>
+				{
+					var parameters = mi.GetParameters();
+
+					if (parameters.Length == 0)
+						return Array<bool>.Empty;
+
+					var flags = new bool[parameters.Length];
+
+					for (var i = 0; i < parameters.Length; i++)
+						flags[i] = parameters[i].HasAttribute<SkipIfConstantAttribute>();
+
+					return flags;
 				});
 
 			if (dependentParameters == null)
 			{
 				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
+					if (skipConstantArguments[i]
+						&& expr1.Arguments[i].NodeType is ExpressionType.Constant or ExpressionType.Default
+						&& expr2.Arguments[i].NodeType is ExpressionType.Constant or ExpressionType.Default)
+						continue;
+
 					if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))
 						return false;
 				}
@@ -490,6 +493,7 @@ namespace LinqToDB.Expressions
 					{
 						var enum1 = dependentAttribute.SplitExpression(expr1.Arguments[i]).GetEnumerator();
 						var enum2 = dependentAttribute.SplitExpression(expr2.Arguments[i]).GetEnumerator();
+
 						using (enum1)
 						using (enum2)
 						{
@@ -500,6 +504,7 @@ namespace LinqToDB.Expressions
 
 								var arg1 = enum1.Current;
 								var arg2 = enum2.Current;
+
 								if (info.QueryDependedObjects != null && info.QueryDependedObjects.TryGetValue(arg1, out var nevValue))
 									arg1 = nevValue;
 								if (!dependentAttribute.ExpressionsEqual(info, arg1, arg2, static (info, e1, e2) => e1.EqualsTo(e2, info)))
@@ -512,6 +517,11 @@ namespace LinqToDB.Expressions
 					}
 					else
 					{
+						if (skipConstantArguments[i]
+							&& expr1.Arguments[i].NodeType is ExpressionType.Constant or ExpressionType.Default
+							&& expr2.Arguments[i].NodeType is ExpressionType.Constant or ExpressionType.Default)
+							continue;
+
 						if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))
 							return false;
 					}
@@ -533,14 +543,13 @@ namespace LinqToDB.Expressions
 			{
 				if (arg1.NodeType == ExpressionType.Constant && arg2.NodeType == ExpressionType.Constant)
 				{
-					var query1 = ((Sql.IQueryableContainer)arg1.EvaluateExpression()!).Query;
-					var query2 = ((Sql.IQueryableContainer)arg2.EvaluateExpression()!).Query;
+					var query1 = arg1.EvaluateExpression<Sql.IQueryableContainer>(info.DataContext)!.Query;
+					var query2 = arg2.EvaluateExpression<Sql.IQueryableContainer>(info.DataContext)!.Query;
 					return EqualsTo(query1.Expression, query2.Expression, info);
 				}
 			}
-			if (!arg1.EqualsTo(arg2, info))
-				return false;
-			return true;
+
+			return arg1.EqualsTo(arg2, info);
 		}
 	}
 }

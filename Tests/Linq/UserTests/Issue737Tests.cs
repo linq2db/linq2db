@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -11,16 +12,16 @@ namespace Tests.UserTests
 	public class Issue737Tests : TestBase
 	{
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var one = new QueryOne(db).Query().ToArray();
 				var two = new QueryTwo(db).Query().ToArray();
 			}
 		}
 
-		class QueryOne
+		sealed class QueryOne
 		{
 			readonly DataConnection _db;
 
@@ -33,7 +34,7 @@ namespace Tests.UserTests
 				=> _db.GetTable<Person>().SelectMany(x => _db.GetTable<Person>().Where(y => false), (x, y) => x);
 		}
 
-		class QueryTwo
+		sealed class QueryTwo
 		{
 			readonly DataConnection _db;
 

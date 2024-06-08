@@ -1,0 +1,268 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+// Generated.
+//
+using System;
+using System.Linq.Expressions;
+
+namespace LinqToDB.DataProvider.MySql
+{
+	public static partial class MySqlHints
+	{
+<#
+	GenerateTable("JoinFixedOrder");              GenerateQuery4("JoinFixedOrder");
+	GenerateTable("JoinOrder");                   GenerateQuery4("JoinOrder");
+	GenerateTable("JoinPrefix");                  GenerateQuery4("JoinPrefix");
+	GenerateTable("JoinSuffix");                  GenerateQuery4("JoinSuffix");
+
+	GenerateTable("Bka");                         GenerateQuery4("Bka");
+	GenerateTable("BatchedKeyAccess");            GenerateQuery4("BatchedKeyAccess");
+	GenerateTable("NoBka");                       GenerateQuery4("NoBka");
+	GenerateTable("NoBatchedKeyAccess");          GenerateQuery4("NoBatchedKeyAccess");
+	GenerateTable("Bnl");                         GenerateQuery4("Bnl");
+	GenerateTable("BlockNestedLoop");             GenerateQuery4("BlockNestedLoop");
+	GenerateTable("NoBnl");                       GenerateQuery4("NoBnl");
+	GenerateTable("NoBlockNestedLoop");           GenerateQuery4("NoBlockNestedLoop");
+
+	GenerateTable("DerivedConditionPushDown");    GenerateQuery4("DerivedConditionPushDown");
+	GenerateTable("NoDerivedConditionPushDown");  GenerateQuery4("NoDerivedConditionPushDown");
+	GenerateTable("HashJoin");                    GenerateQuery4("HashJoin");
+	GenerateTable("NoHashJoin");                  GenerateQuery4("NoHashJoin");
+	GenerateTable("Merge");                       GenerateQuery4("Merge");
+	GenerateTable("NoMerge");                     GenerateQuery4("NoMerge");
+
+	GenerateIndex("GroupIndex");
+	GenerateIndex("NoGroupIndex");
+	GenerateIndex("Index");
+	GenerateIndex("NoIndex");
+	GenerateIndex("IndexMerge");
+	GenerateIndex("NoIndexMerge");
+	GenerateIndex("JoinIndex");
+	GenerateIndex("NoJoinIndex");
+	GenerateIndex("Mrr");
+	GenerateIndex("NoMrr");
+	GenerateIndex("NoIcp");
+	GenerateIndex("NoRangeOptimization");
+	GenerateIndex("OrderIndex");
+	GenerateIndex("NoOrderIndex");
+	GenerateIndex("SkipScan");
+	GenerateIndex("NoSkipScan");
+
+	GenerateQuery5("SemiJoin");
+	GenerateQuery5("NoSemiJoin");
+
+	GenerateQuery2("MaxExecutionTime");
+	GenerateQuery3("SetVar");
+	GenerateQuery3("ResourceGroup");
+
+	GenerateIndex2("UseIndex");
+	GenerateIndex2("UseIndexForJoin");
+	GenerateIndex2("UseIndexForOrderBy");
+	GenerateIndex2("UseIndexForGroupBy");
+	GenerateIndex2("UseKey");
+	GenerateIndex2("UseKeyForJoin");
+	GenerateIndex2("UseKeyForOrderBy");
+	GenerateIndex2("UseKeyForGroupBy");
+	GenerateIndex2("IgnoreIndex");
+	GenerateIndex2("IgnoreIndexForJoin");
+	GenerateIndex2("IgnoreIndexForOrderBy");
+	GenerateIndex2("IgnoreIndexForGroupBy");
+	GenerateIndex2("IgnoreKey");
+	GenerateIndex2("IgnoreKeyForJoin");
+	GenerateIndex2("IgnoreKeyForOrderBy");
+	GenerateIndex2("IgnoreKeyForGroupBy");
+	GenerateIndex2("ForceIndex");
+	GenerateIndex2("ForceIndexForJoin");
+	GenerateIndex2("ForceIndexForOrderBy");
+	GenerateIndex2("ForceIndexForGroupBy");
+	GenerateIndex2("ForceKey");
+	GenerateIndex2("ForceKeyForJoin");
+	GenerateIndex2("ForceKeyForOrderBy");
+	GenerateIndex2("ForceKeyForGroupBy");
+
+	GenerateSubQuery("ForUpdate", ""); GenerateSubQuery("ForUpdate", "NoWait"); GenerateSubQuery("ForUpdate", "SkipLocked");
+	GenerateSubQuery("ForShare",  ""); GenerateSubQuery("ForShare",  "NoWait"); GenerateSubQuery("ForShare",  "SkipLocked");
+#>
+	}
+}
+<#+
+void GenerateTable(string hint)
+{
+#>
+		[ExpressionMethod(ProviderName.MySql, nameof(<#= hint #>TableHintImpl))]
+		public static IMySqlSpecificTable<TSource> <#= hint #>Hint<TSource>(this IMySqlSpecificTable<TSource> table)
+			where TSource : notnull
+		{
+			return MySqlHints.TableHint(table, Table.<#= hint #>);
+		}
+		static Expression<Func<IMySqlSpecificTable<TSource>,IMySqlSpecificTable<TSource>>> <#= hint #>TableHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return table => MySqlHints.TableHint(table, Table.<#= hint #>);
+		}
+
+		[ExpressionMethod(ProviderName.MySql, nameof(<#= hint #>InScopeHintImpl))]
+		public static IMySqlSpecificQueryable<TSource> <#= hint #>InScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return MySqlHints.TablesInScopeHint(query, Table.<#= hint #>);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,IMySqlSpecificQueryable<TSource>>> <#= hint #>InScopeHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => MySqlHints.TablesInScopeHint(query, Table.<#= hint #>);
+		}
+
+<#+
+}
+
+void GenerateIndex(string hint)
+{
+#>
+		[ExpressionMethod(ProviderName.MySql, nameof(<#= hint #>IndexHintImpl))]
+		public static IMySqlSpecificTable<TSource> <#= hint #>Hint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
+			where TSource : notnull
+		{
+			return MySqlHints.TableHint(table, Table.<#= hint #>, indexNames);
+		}
+		static Expression<Func<IMySqlSpecificTable<TSource>,string[],IMySqlSpecificTable<TSource>>> <#= hint #>IndexHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, indexNames) => MySqlHints.TableHint(table, Table.<#= hint #>, indexNames);
+		}
+
+<#+
+}
+
+void GenerateIndex2(string hint)
+{
+#>
+		[ExpressionMethod(ProviderName.MySql, nameof(<#= hint #>IndexHintImpl))]
+		public static IMySqlSpecificTable<TSource> <#= hint #>Hint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
+			where TSource : notnull
+		{
+			return MySqlHints.TableIndexHint(table, Table.<#= hint #>, indexNames);
+		}
+		static Expression<Func<IMySqlSpecificTable<TSource>,string[],IMySqlSpecificTable<TSource>>> <#= hint #>IndexHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, indexNames) => MySqlHints.TableIndexHint(table, Table.<#= hint #>, indexNames);
+		}
+
+<#+
+}
+
+void GenerateQuery(string hint)
+{
+#>
+		[ExpressionMethod(nameof(<#= hint #>HintImpl))]
+		public static IMySqlSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IMySqlSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return MySqlHints.QueryHint(query, Query.<#= hint #>);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,IMySqlSpecificQueryable<TSource>>> <#= hint #>HintImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => MySqlHints.QueryHint(query, Query.<#= hint #>);
+		}
+
+<#+
+}
+
+void GenerateQuery2(string hint)
+{
+#>
+		[ExpressionMethod(nameof(<#= hint #>HintImpl2))]
+		public static IMySqlSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IMySqlSpecificQueryable<TSource> query, int value)
+			where TSource : notnull
+		{
+			return MySqlHints.QueryHint(query, Query.<#= hint #>(value));
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,int,IMySqlSpecificQueryable<TSource>>> <#= hint #>HintImpl2<TSource>()
+			where TSource : notnull
+		{
+			return (query, value) => MySqlHints.QueryHint(query, Query.<#= hint #>(value));
+		}
+
+<#+
+}
+
+void GenerateQuery3(string hint)
+{
+#>
+		[ExpressionMethod(nameof(<#= hint #>HintImpl3))]
+		public static IMySqlSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IMySqlSpecificQueryable<TSource> query, string value)
+			where TSource : notnull
+		{
+			return MySqlHints.QueryHint(query, Query.<#= hint #>, value);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,string,IMySqlSpecificQueryable<TSource>>> <#= hint #>HintImpl3<TSource>()
+			where TSource : notnull
+		{
+			return (query, value) => MySqlHints.QueryHint(query, Query.<#= hint #>, value);
+		}
+
+<#+
+}
+
+void GenerateQuery4(string hint)
+{
+#>
+		[ExpressionMethod(nameof(<#= hint #>HintImpl4))]
+		public static IMySqlSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
+			where TSource : notnull
+		{
+			return MySqlHints.QueryHint(query, Query.<#= hint #>, tableIDs);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,Sql.SqlID[],IMySqlSpecificQueryable<TSource>>> <#= hint #>HintImpl4<TSource>()
+			where TSource : notnull
+		{
+			return (query, tableIDs) => MySqlHints.QueryHint(query, Query.<#= hint #>, tableIDs);
+		}
+
+<#+
+}
+
+void GenerateQuery5(string hint)
+{
+#>
+		[ExpressionMethod(nameof(<#= hint #>HintImpl5))]
+		public static IMySqlSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IMySqlSpecificQueryable<TSource> query, params string[] values)
+			where TSource : notnull
+		{
+			return MySqlHints.QueryHint(query, Query.<#= hint #>, values);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,string[],IMySqlSpecificQueryable<TSource>>> <#= hint #>HintImpl5<TSource>()
+			where TSource : notnull
+		{
+			return (query, values) => MySqlHints.QueryHint(query, Query.<#= hint #>, values);
+		}
+
+<#+
+}
+
+void GenerateSubQuery(string hint, string hint2)
+{
+#>
+		[ExpressionMethod(nameof(<#= hint #><#= hint2 #>HintImpl))]
+		public static IMySqlSpecificQueryable<TSource> <#= hint #><#= hint2 #>Hint<TSource>(
+			this IMySqlSpecificQueryable<TSource> query,
+			params Sql.SqlID[]                    tableIDs)
+			where TSource : notnull
+		{
+			return SubQueryTableHint(query, SubQuery.<#= hint #>, <#= hint2?.Length == 0 ? "" : "SubQuery." + hint2 + ", " #>tableIDs);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,Sql.SqlID[],IMySqlSpecificQueryable<TSource>>> <#= hint #><#= hint2 #>HintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, tableIDs) => SubQueryTableHint(query, SubQuery.<#= hint #>, <#= hint2?.Length == 0 ? "" : "SubQuery." + hint2 + ", " #>tableIDs);
+		}
+
+<#+
+}
+#>

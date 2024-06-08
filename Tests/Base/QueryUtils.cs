@@ -13,25 +13,16 @@ namespace Tests
 		{
 			var eq = (IExpressionQuery)query;
 			var expression = eq.Expression;
-			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
+			var info = Query<T>.GetQuery(eq.DataContext, ref expression, out _);
 
 			InitParameters(eq, info, expression);
 
-			return info.Queries.Single().Statement;
+			return info.GetQueries().Single().Statement;
 		}
 
 		private static void InitParameters<T>(IExpressionQuery eq, Query<T> info, Expression expression)
 		{
 			eq.DataContext.GetQueryRunner(info, 0, expression, null, null).GetSqlText();
-		}
-
-		public static int GetPreamblesCount<T>(this IQueryable<T> query)
-		{
-			var eq = (IExpressionQuery)query;
-			var expression = eq.Expression;
-			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
-
-			return info.PreamblesCount();
 		}
 
 		public static SelectQuery GetSelectQuery<T>(this IQueryable<T> query)
@@ -70,5 +61,11 @@ namespace Tests
 		{
 			return GetSelectQuery(query).From.Tables.Single();
 		}
+
+		public static long GetCacheMissCount<T>(this IQueryable<T> _)
+		{
+			return Query<T>.CacheMissCount;
+		}
+
 	}
 }

@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class DefaultIfEmptyBuilder : MethodCallBuilder
+	sealed class DefaultIfEmptyBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -30,13 +30,7 @@ namespace LinqToDB.Linq.Builder
 			return new DefaultIfEmptyContext(buildInfo.Parent, sequence, defaultValue);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
-		public class DefaultIfEmptyContext : SequenceContextBase
+		public sealed class DefaultIfEmptyContext : SequenceContextBase
 		{
 			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, Expression? defaultValue)
 				: base(parent, sequence, null)
@@ -46,15 +40,13 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression? DefaultValue { get; }
 
-			public bool Disabled { get; set; }
-
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 
 				var expr = Sequence.BuildExpression(expression, level, enforceServerSide);
 
-				if (!Disabled && expression == null)
+				if (!Builder.DisableDefaultIfEmpty && expression == null)
 				{
 					var q =
 						from col in SelectQuery.Select.Columns
@@ -74,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 					Expression e = Expression.Call(
 						ExpressionBuilder.DataReaderParam,
 						ReflectionHelper.DataReader.IsDBNull,
-						Expression.Constant(n));
+						ExpressionInstances.Int32Array(n));
 
 					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
@@ -120,7 +112,23 @@ namespace LinqToDB.Linq.Builder
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-				return Sequence.ConvertToIndex(expression, level, flags);
+				return ForceNullability(Sequence.ConvertToIndex(expression, level, flags));
+			}
+
+			private SqlInfo[] ForceNullability(SqlInfo[] sql)
+			{
+				if (Builder.DisableDefaultIfEmpty)
+					return sql;
+
+				// force nullability
+				for (var i = 0; i < sql.Length; i++)
+				{
+					var item = sql[i];
+					if (!item.Sql.CanBeNull)
+						sql[i] = item.WithSql(new SqlExpression(item.Sql.SystemType, "{0}", item.Sql.Precedence, item.Sql) { CanBeNull = true });
+				}
+
+				return sql;
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

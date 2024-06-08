@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Linq.Expressions;
-	using LinqToDB.Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Common;
+	using Expressions;
+	using Extensions;
+	using Mapping;
 
 	public class DB2ProviderAdapter : IDynamicProviderAdapter
 	{
@@ -18,87 +20,143 @@ namespace LinqToDB.DataProvider.DB2
 #if NETFRAMEWORK
 		public const string AssemblyName         = "IBM.Data.DB2";
 		public const string ClientNamespace      = "IBM.Data.DB2";
+		[Obsolete("Unused. Will be removed in v6")]
+		public const string? AssemblyNameOld     = null;
+		[Obsolete("Unused. Will be removed in v6")]
+		public const string? ClientNamespaceOld  = null;
 #else
-		public const string AssemblyName         = "IBM.Data.DB2.Core";
-		public const string ClientNamespace      = "IBM.Data.DB2.Core";
+		// note that we try new assembly name (IBM.Data.Db2) which available since net5.0 even for older
+		// TFMs as we don't have .net5.0 linq2db build and netcoreapp3.1 build will be used there
+		public const string  AssemblyName        = "IBM.Data.Db2";
+		public const string  ClientNamespace     = "IBM.Data.Db2";
+		public const string  AssemblyNameOld     = "IBM.Data.DB2.Core";
+		public const string  ClientNamespaceOld  = "IBM.Data.DB2.Core";
 #endif
 
-		private static readonly object _syncRoot = new object();
-		private static DB2ProviderAdapter? _instance;
-
-		private DB2ProviderAdapter(
-			Type connectionType,
-			Type dataReaderType,
-			Type parameterType,
-			Type commandType,
-			Type transactionType,
-
-			Type? db2DateTimeType,
-			Type db2BinaryType,
-			Type db2BlobType,
-			Type db2ClobType,
-			Type db2DateType,
-			Type db2DecimalType,
-			Type db2DecimalFloatType,
-			Type db2DoubleType,
-			Type db2Int16Type,
-			Type db2Int32Type,
-			Type db2Int64Type,
-			Type db2RealType,
-			Type db2Real370Type,
-			Type db2RowIdType,
-			Type db2StringType,
-			Type db2TimeType,
-			Type db2TimeStampType,
-			Type db2XmlType,
-			// optional, because recent provider version contains it as obsolete stub
-			Type? db2TimeSpanType,
-
-			MappingSchema mappingSchema,
-
-			Action<IDbDataParameter, DB2Type> dbTypeSetter,
-			Func  <IDbDataParameter, DB2Type> dbTypeGetter,
-
-			Func<string, DB2Connection> connectionCreator,
-			Func<object, bool>          isDB2BinaryNull,
-
-			BulkCopyAdapter bulkCopy)
+		DB2ProviderAdapter()
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			var clientNamespace = ClientNamespace;
+			var assembly        = Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 
-			DB2DateTimeType     = db2DateTimeType;
-			DB2BinaryType       = db2BinaryType;
-			DB2BlobType         = db2BlobType;
-			DB2ClobType         = db2ClobType;
-			DB2DateType         = db2DateType;
-			DB2DecimalType      = db2DecimalType;
-			DB2DecimalFloatType = db2DecimalFloatType;
-			DB2DoubleType       = db2DoubleType;
-			DB2Int16Type        = db2Int16Type;
-			DB2Int32Type        = db2Int32Type;
-			DB2Int64Type        = db2Int64Type;
-			DB2RealType         = db2RealType;
-			DB2Real370Type      = db2Real370Type;
-			DB2RowIdType        = db2RowIdType;
-			DB2StringType       = db2StringType;
-			DB2TimeType         = db2TimeType;
-			DB2TimeStampType    = db2TimeStampType;
-			DB2XmlType          = db2XmlType;
-			DB2TimeSpanType     = db2TimeSpanType;
+#if !NETFRAMEWORK
+			if (assembly == null)
+			{
+				assembly = Tools.TryLoadAssembly(AssemblyNameOld, ProviderFactoryName);
+				if (assembly != null)
+					clientNamespace = ClientNamespaceOld;
+			}
+			else if (assembly.GetName().Name == AssemblyNameOld)
+			{
+				// cover case when provider factory loaded old assembly
+				clientNamespace = ClientNamespaceOld;
+			}
+#endif
 
-			MappingSchema = mappingSchema;
+			if (assembly == null)
+				throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-			SetDbType = dbTypeSetter;
-			GetDbType = dbTypeGetter;
+			ConnectionType  = assembly.GetType($"{clientNamespace}.DB2Connection" , true)!;
+			ParameterType   = assembly.GetType($"{clientNamespace}.DB2Parameter"  , true)!;
+			DataReaderType  = assembly.GetType($"{clientNamespace}.DB2DataReader" , true)!;
+			TransactionType = assembly.GetType($"{clientNamespace}.DB2Transaction", true)!;
+			CommandType     = assembly.GetType($"{clientNamespace}.DB2Command"    , true)!;
 
-			CreateConnection = connectionCreator;
-			IsDB2BinaryNull  = isDB2BinaryNull;
+			var dbType          = assembly.GetType($"{clientNamespace}.DB2Type"       , true)!;
+			var serverTypesType = assembly.GetType($"{clientNamespace}.DB2ServerTypes", true)!;
 
-			BulkCopy = bulkCopy;
+			var bulkCopyType                    = assembly.GetType($"{clientNamespace}.DB2BulkCopy"                       , true)!;
+			var bulkCopyOptionsType             = assembly.GetType($"{clientNamespace}.DB2BulkCopyOptions"                , true)!;
+			var bulkCopyColumnMappingType       = assembly.GetType($"{clientNamespace}.DB2BulkCopyColumnMapping"          , true)!;
+			var rowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.DB2RowsCopiedEventHandler"         , true)!;
+			var rowsCopiedEventArgs             = assembly.GetType($"{clientNamespace}.DB2RowsCopiedEventArgs"            , true)!;
+			var bulkCopyColumnMappingCollection = assembly.GetType($"{clientNamespace}.DB2BulkCopyColumnMappingCollection", true)!;
+
+			MappingSchema = new DB2AdapterMappingSchema();
+
+			DB2BinaryType       = LoadType("DB2Binary"      , DataType.VarBinary)!;
+			DB2BlobType         = LoadType("DB2Blob"        , DataType.Blob)!;
+			DB2ClobType         = LoadType("DB2Clob"        , DataType.NText)!;
+			DB2DateType         = LoadType("DB2Date"        , DataType.Date)!;
+			DB2DateTimeType     = LoadType("DB2DateTime"    , DataType.DateTime , true);
+			DB2DecimalType      = LoadType("DB2Decimal"     , DataType.Decimal)!;
+			DB2DecimalFloatType = LoadType("DB2DecimalFloat", DataType.Decimal)!;
+			DB2DoubleType       = LoadType("DB2Double"      , DataType.Double)!;
+			DB2Int16Type        = LoadType("DB2Int16"       , DataType.Int16)!;
+			DB2Int32Type        = LoadType("DB2Int32"       , DataType.Int32)!;
+			DB2Int64Type        = LoadType("DB2Int64"       , DataType.Int64)!;
+			DB2RealType         = LoadType("DB2Real"        , DataType.Single)!;
+			DB2Real370Type      = LoadType("DB2Real370"     , DataType.Single)!;
+			DB2RowIdType        = LoadType("DB2RowId"       , DataType.VarBinary)!;
+			DB2StringType       = LoadType("DB2String"      , DataType.NVarChar)!;
+			DB2TimeType         = LoadType("DB2Time"        , DataType.Time)!;
+			DB2TimeStampType    = LoadType("DB2TimeStamp"   , DataType.DateTime2)!;
+			DB2XmlType          = LoadType("DB2Xml"         , DataType.Xml)!;
+			DB2TimeSpanType     = LoadType("DB2TimeSpan"    , DataType.Timestamp, true, true);
+			// not mapped currently: DB2MonthSpan, DB2SmartLOB, DB2TimeStampOffset, DB2XsrObjectId
+
+			var typeMapper = new TypeMapper();
+
+			typeMapper.RegisterTypeWrapper<DB2ServerTypes>(serverTypesType);
+			typeMapper.RegisterTypeWrapper<DB2Connection>(ConnectionType);
+			typeMapper.RegisterTypeWrapper<DB2Parameter>(ParameterType);
+			typeMapper.RegisterTypeWrapper<DB2Type>(dbType);
+			typeMapper.RegisterTypeWrapper<DB2Transaction>(TransactionType);
+			typeMapper.RegisterTypeWrapper<DB2Binary>(DB2BinaryType);
+
+			// bulk copy types
+			typeMapper.RegisterTypeWrapper<DB2BulkCopy>(bulkCopyType);
+			typeMapper.RegisterTypeWrapper<DB2RowsCopiedEventArgs>(rowsCopiedEventArgs);
+			typeMapper.RegisterTypeWrapper<DB2RowsCopiedEventHandler>(rowsCopiedEventHandlerType);
+			typeMapper.RegisterTypeWrapper<DB2BulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollection);
+			typeMapper.RegisterTypeWrapper<DB2BulkCopyOptions>(bulkCopyOptionsType);
+			typeMapper.RegisterTypeWrapper<DB2BulkCopyColumnMapping>(bulkCopyColumnMappingType);
+
+			typeMapper.FinalizeMappings();
+
+			var db2BinaryBuilder = typeMapper.Type<DB2Binary>().Member(p => p.IsNull);
+
+			IsDB2BinaryNull  = db2BinaryBuilder.BuildGetter<object>();
+
+			var dbTypeBuilder = typeMapper.Type<DB2Parameter>().Member(p => p.DB2Type);
+
+			SetDbType = dbTypeBuilder.BuildSetter<DbParameter>();
+			GetDbType = dbTypeBuilder.BuildGetter<DbParameter>();
+
+
+			BulkCopy = new BulkCopyAdapter(
+				typeMapper.BuildWrappedFactory((DbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)(object)connection, options)),
+				typeMapper.BuildWrappedFactory((int source, string destination) => new DB2BulkCopyColumnMapping(source, destination)));
+
+			CreateConnection = typeMapper.BuildWrappedFactory((string connectionString) => new DB2Connection(connectionString));
+
+			Type? LoadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
+			{
+				var type = assembly!.GetType($"{TypesNamespace}.{typeName}", !optional);
+
+				if (type == null)
+					return null;
+
+				if (obsolete && type.HasAttribute<ObsoleteAttribute>(false))
+					return null;
+
+				if (register)
+				{
+					var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Field(type, "Null"), typeof(object))).CompileExpression();
+					MappingSchema.AddScalarType(type, getNullValue(), true, dataType);
+				}
+
+				return type;
+			}
+		}
+
+		static readonly Lazy<DB2ProviderAdapter> _lazy = new (() => new ());
+		public static   DB2ProviderAdapter       Instance => _lazy.Value;
+
+		sealed class DB2AdapterMappingSchema : LockedMappingSchema
+		{
+			public DB2AdapterMappingSchema() : base("DB2Adapter")
+			{
+			}
 		}
 
 		public Type ConnectionType  { get; }
@@ -152,8 +210,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		public string ProviderTypesNamespace => TypesNamespace;
 
-		public Action<IDbDataParameter, DB2Type> SetDbType { get; }
-		public Func  <IDbDataParameter, DB2Type> GetDbType { get; }
+		public Action<DbParameter, DB2Type> SetDbType { get; }
+		public Func  <DbParameter, DB2Type> GetDbType { get; }
 
 		public Func<string, DB2Connection> CreateConnection { get; }
 
@@ -164,157 +222,21 @@ namespace LinqToDB.DataProvider.DB2
 		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
-				Func<IDbConnection, DB2BulkCopyOptions, DB2BulkCopy> bulkCopyCreator,
+				Func<DbConnection, DB2BulkCopyOptions, DB2BulkCopy> bulkCopyCreator,
 				Func<int, string, DB2BulkCopyColumnMapping> bulkCopyColumnMappingCreator)
 			{
 				Create = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<IDbConnection, DB2BulkCopyOptions, DB2BulkCopy> Create              { get; }
-			public Func<int, string, DB2BulkCopyColumnMapping>          CreateColumnMapping { get; }
-		}
-
-		public static DB2ProviderAdapter GetInstance()
-		{
-			if (_instance == null)
-				lock (_syncRoot)
-					if (_instance == null)
-					{
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
-						if (assembly == null)
-							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
-
-						var connectionType  = assembly.GetType($"{ClientNamespace}.DB2Connection" , true)!;
-						var parameterType   = assembly.GetType($"{ClientNamespace}.DB2Parameter"  , true)!;
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.DB2DataReader" , true)!;
-						var transactionType = assembly.GetType($"{ClientNamespace}.DB2Transaction", true)!;
-						var commandType     = assembly.GetType($"{ClientNamespace}.DB2Command"    , true)!;
-						var dbType          = assembly.GetType($"{ClientNamespace}.DB2Type"       , true)!;
-						var serverTypesType = assembly.GetType($"{ClientNamespace}.DB2ServerTypes", true)!;
-
-						var bulkCopyType                    = assembly.GetType($"{ClientNamespace}.DB2BulkCopy"                       , true)!;
-						var bulkCopyOptionsType             = assembly.GetType($"{ClientNamespace}.DB2BulkCopyOptions"                , true)!;
-						var bulkCopyColumnMappingType       = assembly.GetType($"{ClientNamespace}.DB2BulkCopyColumnMapping"          , true)!;
-						var rowsCopiedEventHandlerType      = assembly.GetType($"{ClientNamespace}.DB2RowsCopiedEventHandler"         , true)!;
-						var rowsCopiedEventArgs             = assembly.GetType($"{ClientNamespace}.DB2RowsCopiedEventArgs"            , true)!;
-						var bulkCopyColumnMappingCollection = assembly.GetType($"{ClientNamespace}.DB2BulkCopyColumnMappingCollection", true)!;
-
-
-						var mappingSchema = new MappingSchema();
-
-						var db2BinaryType       = loadType("DB2Binary"      , DataType.VarBinary)!;
-						var db2BlobType         = loadType("DB2Blob"        , DataType.Blob)!;
-						var db2ClobType         = loadType("DB2Clob"        , DataType.NText)!;
-						var db2DateType         = loadType("DB2Date"        , DataType.Date)!;
-						var db2DateTimeType     = loadType("DB2DateTime"    , DataType.DateTime , true);
-						var db2DecimalType      = loadType("DB2Decimal"     , DataType.Decimal)!;
-						var db2DecimalFloatType = loadType("DB2DecimalFloat", DataType.Decimal)!;
-						var db2DoubleType       = loadType("DB2Double"      , DataType.Double)!;
-						var db2Int16Type        = loadType("DB2Int16"       , DataType.Int16)!;
-						var db2Int32Type        = loadType("DB2Int32"       , DataType.Int32)!;
-						var db2Int64Type        = loadType("DB2Int64"       , DataType.Int64)!;
-						var db2RealType         = loadType("DB2Real"        , DataType.Single)!;
-						var db2Real370Type      = loadType("DB2Real370"     , DataType.Single)!;
-						var db2RowIdType        = loadType("DB2RowId"       , DataType.VarBinary)!;
-						var db2StringType       = loadType("DB2String"      , DataType.NVarChar)!;
-						var db2TimeType         = loadType("DB2Time"        , DataType.Time)!;
-						var db2TimeStampType    = loadType("DB2TimeStamp"   , DataType.DateTime2)!;
-						var db2XmlType          = loadType("DB2Xml"         , DataType.Xml)!;
-						var db2TimeSpanType     = loadType("DB2TimeSpan"    , DataType.Timestamp, true, true);
-
-						var typeMapper = new TypeMapper();
-
-						typeMapper.RegisterTypeWrapper<DB2ServerTypes>(serverTypesType);
-						typeMapper.RegisterTypeWrapper<DB2Connection>(connectionType);
-						typeMapper.RegisterTypeWrapper<DB2Parameter>(parameterType);
-						typeMapper.RegisterTypeWrapper<DB2Type>(dbType);
-						typeMapper.RegisterTypeWrapper<DB2Transaction>(transactionType);
-						typeMapper.RegisterTypeWrapper<DB2Binary>(db2BinaryType);
-
-						// bulk copy types
-						typeMapper.RegisterTypeWrapper<DB2BulkCopy>(bulkCopyType);
-						typeMapper.RegisterTypeWrapper<DB2RowsCopiedEventArgs>(rowsCopiedEventArgs);
-						typeMapper.RegisterTypeWrapper<DB2RowsCopiedEventHandler>(rowsCopiedEventHandlerType);
-						typeMapper.RegisterTypeWrapper<DB2BulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollection);
-						typeMapper.RegisterTypeWrapper<DB2BulkCopyOptions>(bulkCopyOptionsType);
-						typeMapper.RegisterTypeWrapper<DB2BulkCopyColumnMapping>(bulkCopyColumnMappingType);
-
-						typeMapper.FinalizeMappings();
-
-						var db2BinaryBuilder = typeMapper.Type<DB2Binary>().Member(p => p.IsNull);
-						var isDB2BinaryNull  = db2BinaryBuilder.BuildGetter<object>();
-
-						var dbTypeBuilder = typeMapper.Type<DB2Parameter>().Member(p => p.DB2Type);
-						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
-						var typeGetter    = dbTypeBuilder.BuildGetter<IDbDataParameter>();
-
-
-						var bulkCopy = new BulkCopyAdapter(
-							typeMapper.BuildWrappedFactory((IDbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)connection, options)),
-							typeMapper.BuildWrappedFactory((int source, string destination) => new DB2BulkCopyColumnMapping(source, destination)));
-
-
-						_instance = new DB2ProviderAdapter(
-							connectionType,
-							dataReaderType,
-							parameterType,
-							commandType,
-							transactionType,
-
-							db2DateTimeType,
-							db2BinaryType,
-							db2BlobType,
-							db2ClobType,
-							db2DateType,
-							db2DecimalType,
-							db2DecimalFloatType,
-							db2DoubleType,
-							db2Int16Type,
-							db2Int32Type,
-							db2Int64Type,
-							db2RealType,
-							db2Real370Type,
-							db2RowIdType,
-							db2StringType,
-							db2TimeType,
-							db2TimeStampType,
-							db2XmlType,
-							db2TimeSpanType,
-
-							mappingSchema,
-							typeSetter,
-							typeGetter,
-							typeMapper.BuildWrappedFactory((string connectionString) => new DB2Connection(connectionString)),
-							isDB2BinaryNull,
-							bulkCopy);
-
-						Type? loadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
-						{
-							var type = assembly!.GetType($"{TypesNamespace}.{typeName}", !optional);
-							if (type == null)
-								return null;
-
-							if (obsolete && type.GetCustomAttributes(typeof(ObsoleteAttribute), false).Length > 0)
-								return null;
-
-							if (register)
-							{
-								var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Field(type, "Null"), typeof(object))).CompileExpression();
-								mappingSchema.AddScalarType(type, getNullValue(), true, dataType);
-							}
-
-							return type;
-						}
-					}
-
-			return _instance;
+			public Func<DbConnection,DB2BulkCopyOptions,DB2BulkCopy> Create              { get; }
+			public Func<int,string,DB2BulkCopyColumnMapping>         CreateColumnMapping { get; }
 		}
 
 		#region Wrappers
 
 		[Wrapper]
-		private class DB2Binary
+		private sealed class DB2Binary
 		{
 			public bool IsNull { get; }
 		}
@@ -333,7 +255,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		[Wrapper]
-		public class DB2Connection : TypeWrapper, IDisposable
+		public class DB2Connection : TypeWrapper, IConnectionWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -356,10 +278,12 @@ namespace LinqToDB.DataProvider.DB2
 			public DB2ServerTypes eServerType => ((Func<DB2Connection, DB2ServerTypes>)CompiledWrappers[0])(this);
 			public void           Open()      => ((Action<DB2Connection>)CompiledWrappers[1])(this);
 			public void           Dispose()   => ((Action<DB2Connection>)CompiledWrappers[2])(this);
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		[Wrapper]
-		private class DB2Parameter
+		private sealed class DB2Parameter
 		{
 			public DB2Type DB2Type { get; set; }
 		}
@@ -429,7 +353,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		[Wrapper]
-		internal class DB2Transaction
+		internal sealed class DB2Transaction
 		{
 		}
 
@@ -475,8 +399,9 @@ namespace LinqToDB.DataProvider.DB2
 			public DB2BulkCopy(DB2Connection connection, DB2BulkCopyOptions options) => throw new NotImplementedException();
 
 			public void Dispose      ()                       => ((Action<DB2BulkCopy>)CompiledWrappers[0])(this);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<DB2BulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
-
+#pragma warning restore RS0030 //  API mapping must preserve type
 			public int NotifyAfter
 			{
 				get => ((Func  <DB2BulkCopy, int>)CompiledWrappers[2])(this);

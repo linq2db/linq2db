@@ -3,20 +3,24 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 
-	class AsSubQueryBuilder : MethodCallBuilder
+	sealed class AsSubQueryBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("AsSubQuery");
+			return methodCall.IsQueryable(nameof(LinqExtensions.AsSubQuery));
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
 			sequence.SelectQuery.DoNotRemove = true;
+
+			if (methodCall.Arguments.Count > 1)
+				sequence.SelectQuery.QueryName = methodCall.Arguments[1].EvaluateExpression<string>(builder.DataContext);
 
 			var elementType = methodCall.Arguments[0].Type.GetGenericArguments()[0];
 			if (typeof(IGrouping<,>).IsSameOrParentOf(elementType))
@@ -34,12 +38,6 @@ namespace LinqToDB.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 			
 			return sequence;
-		}
-
-		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression? param)
-		{
-			return null;
 		}
 	}
 }

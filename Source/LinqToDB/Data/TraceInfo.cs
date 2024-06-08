@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -6,7 +8,7 @@ using System.Text;
 
 namespace LinqToDB.Data
 {
-	using System.Data;
+	using Common.Internal;
 
 	/// <summary>
 	/// Tracing information for the <see cref="DataConnection"/> events.
@@ -49,9 +51,9 @@ namespace LinqToDB.Data
 		public DataConnection DataConnection { get; }
 
 		/// <summary>
-		/// Gets or sets the <see cref="IDbCommand"/> associated with the tracing event.
+		/// Gets or sets the <see cref="DbCommand"/> associated with the tracing event.
 		/// </summary>
-		public IDbCommand? Command { get; set; }
+		public DbCommand? Command { get; set; }
 
 		/// <summary>
 		/// Gets or sets the starting <see cref="DateTime"/> of the operation (UTC).
@@ -107,8 +109,9 @@ namespace LinqToDB.Data
 					if (_sqlText != null)
 						return _sqlText;
 
-					var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder(DataConnection.MappingSchema);
-					var sb          = new StringBuilder();
+					var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder(DataConnection.MappingSchema, DataConnection.Options);
+					using var sbv    = Pools.StringBuilder.Allocate();
+					var sb           = sbv.Value;
 
 					sb.Append("-- ").Append(DataConnection.ConfigurationString);
 
@@ -123,7 +126,7 @@ namespace LinqToDB.Data
 
 					sb.AppendLine();
 
-					sqlProvider.PrintParameters(sb, Command.Parameters.Cast<IDbDataParameter>());
+					sqlProvider.PrintParameters(DataConnection, sb, Command.Parameters.Cast<DbParameter>());
 
 					sb.AppendLine(Command.CommandText);
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Data;
+using System.Data.Common;
 using System.Data.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -122,7 +123,7 @@ namespace LinqToDB.Data
 		/// Provider's parameter instance for out, in-out, return parameters.
 		/// Could be used to read parameter value for complex types like Oracle's BFile.
 		/// </summary>
-		public IDbDataParameter? Output { get; internal set; }
+		public DbParameter? Output { get; internal set; }
 
 		/// <summary>
 		/// Shortcut to get/set full-type. Used internally.

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace LinqToDB.Common.Internal.Cache
 {
 	/// <summary>
-	/// Represents the cache options applied to an entry of the <see cref="IMemoryCache{TKey}"/> instance.
+	/// Represents the cache options applied to an entry of the <see cref="IMemoryCache{TKey,TItem}"/> instance.
 	/// </summary>
 	public class MemoryCacheEntryOptions<TKey>
 		where TKey: notnull

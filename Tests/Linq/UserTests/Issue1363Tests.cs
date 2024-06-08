@@ -8,11 +8,6 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	/// <summary>
-	/// Test fixes to Issue #1305.
-	/// Before fix fields in derived tables were added first in the column order by
-	/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, LinqToDB.SqlQuery.DefaultNullable)"/>.
-	/// </summary>
 	[TestFixture]
 	public class Issue1363Tests : TestBase
 	{
@@ -27,15 +22,12 @@ namespace Tests.UserTests
 		[ActiveIssue("CreateTable(Guid)", Configurations = new[]
 		{
 			TestProvName.AllAccess,
-			ProviderName.DB2,
-			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			TestProvName.AllSybase,
 		})]
 		[Test]
-		public void TestInsert([DataSources(ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
-			string context)
+		public void TestInsert([DataSources(TestProvName.AllSqlServer2005, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())

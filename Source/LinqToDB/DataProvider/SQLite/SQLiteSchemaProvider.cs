@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Data;
 
@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Data;
 	using SchemaProvider;
 
-	class SQLiteSchemaProvider : SchemaProviderBase
+	sealed class SQLiteSchemaProvider : SchemaProviderBase
 	{
 		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
@@ -31,8 +31,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
-			var views =  ((DbConnection)dataConnection.Connection).GetSchema("Views");
+			var tables = dataConnection.Connection.GetSchema("Tables");
+			var views =  dataConnection.Connection.GetSchema("Views");
 
 			return Enumerable
 				.Empty<TableInfo>()
@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.SQLite
 						CatalogName     = catalog,
 						SchemaName      = schema,
 						TableName       = name,
-						IsDefaultSchema = schema.IsNullOrEmpty(),
+						IsDefaultSchema = string.IsNullOrEmpty(schema),
 					}
 				)
 				.Concat(
@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider.SQLite
 						CatalogName     = catalog,
 						SchemaName      = schema,
 						TableName       = name,
-						IsDefaultSchema = schema.IsNullOrEmpty(),
+						IsDefaultSchema = string.IsNullOrEmpty(schema),
 						IsView          = true,
 					}
 				).ToList();
@@ -72,7 +72,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var dbConnection = (DbConnection)dataConnection.Connection;
+			var dbConnection = dataConnection.Connection;
 			var pks          = dbConnection.GetSchema("IndexColumns");
 			var idxs         = dbConnection.GetSchema("Indexes");
 
@@ -85,8 +85,8 @@ namespace LinqToDB.DataProvider.SQLite
 				select new PrimaryKeyInfo
 				{
 					TableID        = pk.Field<string>("TABLE_CATALOG") + "." + pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("CONSTRAINT_NAME"),
-					ColumnName     = pk.Field<string>("COLUMN_NAME"),
+					PrimaryKeyName = pk.Field<string>("CONSTRAINT_NAME")!,
+					ColumnName     = pk.Field<string>("COLUMN_NAME")!,
 					Ordinal        = pk.Field<int>   ("ORDINAL_POSITION"),
 				}
 			).ToList();
@@ -94,22 +94,23 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var cs = dataConnection.Connection.GetSchema("Columns");
 
 			return
 			(
 				from c in cs.AsEnumerable()
 				let tschema  = c.Field<string>("TABLE_SCHEMA")
 				let schema   = tschema == "sqlite_default_schema" ? "" : tschema
-				let dataType = c.Field<string>("DATA_TYPE").Trim()
+				let dataType = c.Field<string>("DATA_TYPE")!.Trim()
+				let length   = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"])
 				select new ColumnInfo
 				{
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
-					Name         = c.Field<string>("COLUMN_NAME"),
+					Name         = c.Field<string>("COLUMN_NAME")!,
 					IsNullable   = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Length       = length > int.MaxValue ? null : (int?)length,
 					Precision    = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
 					Scale        = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
 					IsIdentity   = c.Field<bool>  ("AUTOINCREMENT"),
@@ -122,7 +123,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var fks = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeys");
+			var fks = dataConnection.Connection.GetSchema("ForeignKeys");
 
 			var result =
 			(
@@ -130,11 +131,11 @@ namespace LinqToDB.DataProvider.SQLite
 				where fk.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY"
 				select new ForeignKeyInfo
 				{
-					Name         = fk.Field<string>("CONSTRAINT_NAME"           ),
+					Name         = fk.Field<string>("CONSTRAINT_NAME"           )!,
 					ThisTableID  = fk.Field<string>("TABLE_CATALOG"             ) + "." + fk.Field<string>("TABLE_SCHEMA")   + "." + fk.Field<string>("TABLE_NAME"),
-					ThisColumn   = fk.Field<string>("FKEY_FROM_COLUMN"          ),
+					ThisColumn   = fk.Field<string>("FKEY_FROM_COLUMN"          )!,
 					OtherTableID = fk.Field<string>("FKEY_TO_CATALOG"           ) + "." + fk.Field<string>("FKEY_TO_SCHEMA") + "." + fk.Field<string>("FKEY_TO_TABLE"),
-					OtherColumn  = fk.Field<string>("FKEY_TO_COLUMN"            ),
+					OtherColumn  = fk.Field<string>("FKEY_TO_COLUMN"            )!,
 					Ordinal      = fk.Field<int>   ("FKEY_FROM_ORDINAL_POSITION"),
 				}
 			).ToList();
@@ -142,12 +143,12 @@ namespace LinqToDB.DataProvider.SQLite
 			// Handle case where Foreign Key reference does not include a column name (Issue #784)
 			if (result.Any(fk => string.IsNullOrEmpty(fk.OtherColumn)))
 			{
-				var pks = GetPrimaryKeys(dataConnection, tables, options).ToDictionary(pk => string.Format("{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
+				var pks = GetPrimaryKeys(dataConnection, tables, options).ToDictionary(pk => string.Format(CultureInfo.InvariantCulture, "{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
 				foreach (var f in result.Where(fk => string.IsNullOrEmpty(fk.OtherColumn)))
 				{
-					var k = string.Format("{0}:{1}", f.OtherTableID, f.Ordinal);
-					if (pks.ContainsKey(k))
-						f.OtherColumn = pks[k];
+					var k = string.Format(CultureInfo.InvariantCulture, "{0}:{1}", f.OtherTableID, f.Ordinal);
+					if (pks.TryGetValue(k, out var column))
+						f.OtherColumn = column;
 				}
 			}
 			return result;
@@ -155,11 +156,15 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			return ((DbConnection)dbConnection.Connection).DataSource;
+			return dbConnection.Connection.DataSource;
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
+			// note that sqlite doesn't have types (it has facets) so type name will contain anything
+			// user specified in create table statement
+			// here we just map some well-known database types (non-sqlite specific) but this list
+			// will never be complete
 			return dataType switch
 			{
 				"smallint"         => DataType.Int16,
@@ -189,6 +194,7 @@ namespace LinqToDB.DataProvider.SQLite
 				"image"            => DataType.Image,
 				"general"          => DataType.VarBinary,
 				"oleobject"        => DataType.VarBinary,
+				"object"           => DataType.Variant,
 				"varchar"          => DataType.VarChar,
 				"nvarchar"         => DataType.NVarChar,
 				"memo"             => DataType.Text,
@@ -213,10 +219,11 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			return dataType switch
 			{
+				"object"    => typeof(object),
 				"datetime2" => typeof(DateTime),
 				_ => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
 			};

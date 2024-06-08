@@ -38,7 +38,7 @@ namespace Tests.UserTests
 			public string FileName { get; set; } = null!;
 		}
 
-		private class EmailReader : IDisposable
+		private sealed class EmailReader : IDisposable
 		{
 			private bool disposed;
 			private readonly int id;
@@ -73,7 +73,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestParameterCaching([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestParameterCaching([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Email>())
@@ -82,7 +82,7 @@ namespace Tests.UserTests
 				var reader1 = new EmailReader(35);
 				reader1.GetEmail(context);
 				reader1.Dispose();
-				var reader2 = new EmailReader(36);
+				using var reader2 = new EmailReader(36);
 
 				Assert.DoesNotThrow(() => reader2.GetEmail(context));
 			}

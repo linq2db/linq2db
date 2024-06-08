@@ -10,14 +10,14 @@ namespace Tests.Playground
 	public class TestTemplate : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column]              public int     Id    { get; set; }
 			[Column(Length = 50)] public string? Value { get; set; }
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName. AllSQLite)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

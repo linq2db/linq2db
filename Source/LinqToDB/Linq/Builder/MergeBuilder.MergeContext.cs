@@ -1,14 +1,15 @@
-﻿using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
 	internal partial class MergeBuilder
 	{
-		private class MergeContext : SequenceContextBase
+		private sealed class MergeContext : SequenceContextBase
 		{
 			private readonly ISet<Expression> _sourceParameters = new HashSet<Expression>();
 			private readonly ISet<Expression> _targetParameters = new HashSet<Expression>();
@@ -70,9 +71,6 @@ namespace LinqToDB.Linq.Builder
 								{
 									if (_sourceParameters.Contains(root))
 										return SourceContext.ConvertToSql(expression, level, flags);
-
-									if (_targetParameters.Contains(root))
-										return TargetContext.ConvertToSql(expression, level, flags);
 
 									return TargetContext.ConvertToSql(expression, level, flags);
 								}

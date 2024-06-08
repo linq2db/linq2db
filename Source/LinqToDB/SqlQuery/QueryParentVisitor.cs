@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
@@ -34,7 +35,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (element == null || !_all && VisitedElements.ContainsKey(element))
 				return;
-			
+
 			if (!_all)
 				VisitedElements.Add(element, element);
 
@@ -179,6 +180,14 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.IsDistinctPredicate:
+					{
+						var p = (SqlPredicate.IsDistinct)element;
+						Visit(p.Expr1);
+						Visit(p.Expr2);
+						break;
+					}
+
 				case QueryElementType.InSubQueryPredicate:
 					{
 						Visit(((SqlPredicate.InSubQuery)element).Expr1);
@@ -252,6 +261,7 @@ namespace LinqToDB.SqlQuery
 						Visit(((SqlUpdateStatement)element).Tag);
 						Visit(((SqlUpdateStatement)element).With);
 						Visit(((SqlUpdateStatement)element).Update);
+						Visit(((SqlUpdateStatement)element).Output);
 						Visit(((SqlUpdateStatement)element).SelectQuery);
 						break;
 					}
@@ -374,12 +384,16 @@ namespace LinqToDB.SqlQuery
 					VisitX((SqlConditionalInsertClause)element);
 					break;
 
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					VisitX((SqlTableLikeSource)element);
 					break;
 
 				case QueryElementType.SqlValuesTable:
 					VisitX((SqlValuesTable)element);
+					break;
+
+				case QueryElementType.SqlRow:
+					VisitX((SqlRow)element);
 					break;
 
 				case QueryElementType.MergeOperationClause:
@@ -396,6 +410,13 @@ namespace LinqToDB.SqlQuery
 
 				default:
 					throw new InvalidOperationException($"Visit visitor not implemented for element {element.ElementType}");
+			}
+
+			if (element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe)
+			{
+				foreach (var ext in qe.SqlQueryExtensions)
+				foreach (var arg in ext.Arguments)
+					Visit(arg.Value);
 			}
 		}
 
@@ -495,7 +516,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var j in table.Joins) Visit(j);
 		}
 
-		void VisitX(SqlTable table)
+		void VisitX(SqlTable? table)
 		{
 			if (table == null)
 				return;
@@ -507,17 +528,18 @@ namespace LinqToDB.SqlQuery
 				foreach (var a in table.TableArguments) Visit(a);
 		}
 
-		void VisitX(SqlOutputClause outputClause)
+		void VisitX(SqlOutputClause? outputClause)
 		{
 			if (outputClause == null)
 				return;
 
-			VisitX(outputClause.SourceTable);
 			VisitX(outputClause.DeletedTable);
 			VisitX(outputClause.InsertedTable);
 			VisitX(outputClause.OutputTable);
-			if (outputClause.OutputQuery != null)
-				VisitX(outputClause.OutputQuery);
+
+			if (outputClause.OutputColumns != null)
+				foreach (var item in outputClause.OutputColumns)
+					Visit(item);
 
 			if (outputClause.HasOutputItems)
 				foreach (var item in outputClause.OutputItems)
@@ -554,6 +576,11 @@ namespace LinqToDB.SqlQuery
 			foreach (var v in element.Parameters) Visit(v);
 		}
 
+		void VisitX(SqlRow element)
+		{
+			foreach (var v in element.Values) Visit(v);
+		}
+
 		void VisitX(SqlObjectExpression element)
 		{
 			foreach (var v in element.InfoParameters) Visit(v.Sql);
@@ -567,9 +594,11 @@ namespace LinqToDB.SqlQuery
 		void VisitX(SqlMergeStatement element)
 		{
 			Visit(element.Tag);
+			Visit(element.With);
 			Visit(element.Target);
 			Visit(element.Source);
 			Visit(element.On);
+			Visit(element.Output);
 
 			foreach (var operation in element.Operations)
 				Visit(operation);

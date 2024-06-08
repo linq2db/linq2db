@@ -78,7 +78,7 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region Clone
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public static T? Clone<T>(this T? element, Dictionary<IQueryElement, IQueryElement> objectTree)
 			where T : class, IQueryElement
 		{
@@ -88,7 +88,7 @@ namespace LinqToDB.SqlQuery
 			return new CloneVisitor<object?>(objectTree, null).Clone(element);
 		}
 
-		[return: NotNullIfNotNull("elements")]
+		[return: NotNullIfNotNull(nameof(elements))]
 		public static T[]? Clone<T>(this T[]? elements, Dictionary<IQueryElement, IQueryElement> objectTree)
 			where T : class, IQueryElement
 		{
@@ -98,7 +98,7 @@ namespace LinqToDB.SqlQuery
 			return new CloneVisitor<object?>(objectTree, null).Clone(elements);
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public static T? Clone<T, TContext>(this T? element, TContext context, Dictionary<IQueryElement, IQueryElement> objectTree, Func<TContext, IQueryElement, bool> doClone)
 			where T : class, IQueryElement
 		{
@@ -108,7 +108,7 @@ namespace LinqToDB.SqlQuery
 			return new CloneVisitor<TContext>(objectTree, context, doClone).Clone(element);
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public static T? Clone<T, TContext>(this T? element, TContext context, Func<TContext, IQueryElement, bool> doClone)
 			where T : class, IQueryElement
 		{
@@ -118,7 +118,7 @@ namespace LinqToDB.SqlQuery
 			return new CloneVisitor<TContext>(null, context, doClone).Clone(element);
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public static T? Clone<T>(this T? element, Func<IQueryElement, bool> doClone)
 			where T : class, IQueryElement
 		{
@@ -128,7 +128,7 @@ namespace LinqToDB.SqlQuery
 			return new CloneVisitor<object?>(null, doClone).Clone(element);
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public static T? Clone<T>(this T? element)
 			where T : class, IQueryElement
 		{
@@ -140,46 +140,64 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region Convert
+		public static T Convert<TContext, T>(this T element, TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, bool withStack)
+			where T : class, IQueryElement
+		{
+			return (T?)new ConvertVisitor<TContext>(context, convertAction, false, false, withStack).ConvertInternal(element) ?? element;
+		}
+
 		public static T Convert<TContext, T>(this T element, TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, false, false).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor<TContext>(context, convertAction, false, false, false).ConvertInternal(element) ?? element;
+		}
+
+		public static T Convert<T>(this T element, Func<ConvertVisitor<object?>, IQueryElement, IQueryElement> convertAction, bool withStack)
+			where T : class, IQueryElement
+		{
+			return (T?)new ConvertVisitor<object?>(null, convertAction, false, false, withStack).ConvertInternal(element) ?? element;
 		}
 
 		public static T Convert<T>(this T element, Func<ConvertVisitor<object?>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<object?>(null, convertAction, false, false).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor<object?>(null, convertAction, false, false, false).ConvertInternal(element) ?? element;
+		}
+
+		public static T Convert<TContext, T>(this T element, TContext context, bool allowMutation, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, bool withStack)
+			where T : class, IQueryElement
+		{
+			return (T?)new ConvertVisitor<TContext>(context, convertAction, false, allowMutation, withStack).ConvertInternal(element) ?? element;
 		}
 
 		public static T Convert<TContext, T>(this T element, TContext context, bool allowMutation, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, false, allowMutation).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor<TContext>(context, convertAction, false, allowMutation, false).ConvertInternal(element) ?? element;
 		}
 
 		public static T ConvertAll<TContext, T>(this T element, TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, true, false).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor<TContext>(context, convertAction, true, false, false).ConvertInternal(element) ?? element;
 		}
 
-		public static T ConvertAll<TContext, T>(this T element, TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, Func<VisitArgs<TContext>, bool> parentAction)
+		public static T ConvertAll<TContext, T>(this T element, TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, Func<ConvertVisitor<TContext>, bool> parentAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, true, false, parentAction).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor<TContext>(context, convertAction, true, false, false, parentAction).ConvertInternal(element) ?? element;
 		}
 
 		public static T ConvertAll<TContext, T>(this T element, TContext context, bool allowMutation, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, true, allowMutation).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor<TContext>(context, convertAction, true, allowMutation, false).ConvertInternal(element) ?? element;
 		}
 
 		public static T ConvertAll<T>(this T element, bool allowMutation, Func<ConvertVisitor<object?>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<object?>(null, convertAction, true, allowMutation).ConvertInternal(element) ?? element;
+			return (T?)new ConvertVisitor<object?>(null, convertAction, true, allowMutation, false).ConvertInternal(element) ?? element;
 		}
 		#endregion
 	}

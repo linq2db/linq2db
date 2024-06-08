@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -34,8 +35,7 @@ namespace LinqToDB.SqlQuery
 
 		Type ISqlExpression.SystemType => Type.SystemType;
 
-		//TODO: Setter used only in EnumerableContext and should be hidden.
-		public object?  Value { get; internal set; }
+		public object?    Value            { get; }
 
 		public object? CorrectParameterValue(object? rawValue)
 		{
@@ -66,8 +66,7 @@ namespace LinqToDB.SqlQuery
 
 		internal void SetTakeConverter(int take)
 		{
-			if (TakeValues == null)
-				TakeValues = new List<int>();
+			TakeValues ??= new List<int>();
 
 			TakeValues.Add(take);
 
@@ -107,9 +106,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -152,13 +151,11 @@ namespace LinqToDB.SqlQuery
 				.Append(Name ?? "parameter");
 
 #if DEBUG
-			sb.Append('(').Append(_paramNumber).Append(')');
+			sb.Append(CultureInfo.InvariantCulture, $"({_paramNumber})");
 #endif
 			if (Value != null)
-				sb
-					.Append('[')
-					.Append(Value)
-					.Append(']');
+				sb.Append(CultureInfo.InvariantCulture, $"[{Value}]");
+
 			return sb;
 		}
 

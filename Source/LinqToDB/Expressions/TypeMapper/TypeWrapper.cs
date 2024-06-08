@@ -56,8 +56,7 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		protected static Expression<Action<TI, TP>> PropertySetter<TI, TP>(Expression<Func<TI, TP>> getter)
 		{
-			if (!(getter.Body is MemberExpression me)
-				|| !(me.Member is PropertyInfo pi))
+			if (getter.Body is not MemberExpression { Member: PropertyInfo pi })
 				throw new LinqToDBException($"Expected property accessor expression");
 
 			var pThis  = Expression.Parameter(typeof(TI));
@@ -68,7 +67,7 @@ namespace LinqToDB.Expressions
 			return Expression.Lambda<Action<TI, TP>>(
 				Expression.Call(
 					pThis,
-					pi.SetMethod,
+					pi.SetMethod!,
 					pValue),
 				pThis, pValue);
 		}

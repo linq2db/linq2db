@@ -1,5 +1,4 @@
 ﻿using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -17,9 +16,9 @@ namespace Tests.UserTests
 
 			public static CustomFieldType? FromString(string? str)
 			{
-				if (str.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(str))
 					return null;
-				return new CustomFieldType { Field1 = str };
+				return new CustomFieldType { Field1 = str! };
 			}
 
 			public override string ToString()

@@ -1,32 +1,28 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Collections;
+using System.Data.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System;
-	using System.Collections;
-	using LinqToDB.Common;
-	using LinqToDB.Data;
+	using Common;
+	using Data;
 	using Mapping;
 	using SqlQuery;
 
-	public class MySqlMappingSchema : MappingSchema
+	sealed class MySqlMappingSchema : LockedMappingSchema
 	{
-		public MySqlMappingSchema() : this(ProviderName.MySql)
+		MySqlMappingSchema() : base(ProviderName.MySql)
 		{
-		}
-
-		protected MySqlMappingSchema(string configuration) : base(configuration)
-		{
-			SetValueToSqlConverter(typeof(string), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char),   (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
 
 			// both providers doesn't support BitArray directly and map bit fields to ulong by default
-			SetConvertExpression<BitArray?, DataParameter>(ba => new DataParameter(null, ba == null ? (ulong?)null :GetBits(ba), DataType.UInt64), false);
+			SetConvertExpression<BitArray?, DataParameter>(ba => new DataParameter(null, ba == null ? null : GetBits(ba), DataType.UInt64), false);
 		}
 
 		static ulong GetBits(BitArray ba)
@@ -69,30 +65,20 @@ namespace LinqToDB.DataProvider.MySql
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
-		internal static readonly MappingSchema Instance = new MySqlMappingSchema();
+		internal static readonly MySqlMappingSchema Instance = new ();
 
-		public class MySqlOfficialMappingSchema : MappingSchema
+		public sealed class MySqlOfficialMappingSchema : LockedMappingSchema
 		{
 			public MySqlOfficialMappingSchema()
-				: base(ProviderName.MySqlOfficial, Instance)
-			{
-			}
-
-			public MySqlOfficialMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.MySqlOfficial, Array<MappingSchema>.Append(schemas, Instance))
+				: base(ProviderName.MySqlOfficial, MySqlProviderAdapter.GetInstance(ProviderName.MySqlOfficial).MappingSchema, Instance)
 			{
 			}
 		}
 
-		public class MySqlConnectorMappingSchema : MappingSchema
+		public sealed class MySqlConnectorMappingSchema : LockedMappingSchema
 		{
 			public MySqlConnectorMappingSchema()
-				: base(ProviderName.MySqlConnector, Instance)
-			{
-			}
-
-			public MySqlConnectorMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.MySqlConnector, Array<MappingSchema>.Append(schemas, Instance))
+				: base(ProviderName.MySqlConnector, MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector).MappingSchema, Instance)
 			{
 			}
 		}

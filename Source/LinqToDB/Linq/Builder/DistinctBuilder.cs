@@ -1,18 +1,18 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Reflection;
 	using LinqToDB.Expressions;
-	using System.Reflection;
 
-	class DistinctBuilder : MethodCallBuilder
+	sealed class DistinctBuilder : MethodCallBuilder
 	{
-		private static readonly MethodInfo[] SupportedMethods = new [] { Methods.Queryable.Distinct, Methods.Enumerable.Distinct, Methods.LinqToDB.SelectDistinct };
+		static readonly MethodInfo[] _supportedMethods = { Methods.Queryable.Distinct, Methods.Enumerable.Distinct, Methods.LinqToDB.SelectDistinct };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsSameGenericMethod(SupportedMethods);
+			return methodCall.IsSameGenericMethod(_supportedMethods);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -37,12 +37,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return sequence;
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 	}
 }

@@ -37,23 +37,15 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			With?.Walk(options, func);
-			((ISqlExpressionWalkable?)_insert)?.Walk(options, func);
-			((ISqlExpressionWalkable?)_update)?.Walk(options, func);
+			With?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)_insert)?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)_update)?.Walk(options, context, func);
 
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
+			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
 
-			return null;
-		}
-
-		public override IEnumerable<IQueryElement> EnumClauses()
-		{
-			if (_insert != null)
-				yield return _insert;
-			if (_update != null)
-				yield return _update;
+			return base.Walk(options, context, func);
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)

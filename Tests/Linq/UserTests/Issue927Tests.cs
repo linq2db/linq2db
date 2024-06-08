@@ -12,7 +12,9 @@ namespace Tests.UserTests
 		[Test, Theory]
 		public void ExternalConnectionDisposing(bool dispose)
 		{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			var connection = new TestNoopConnection("");
+#pragma warning restore CA2000 // Dispose objects before losing scope
 			Assert.AreEqual(ConnectionState.Closed, connection.State);
 
 			using (var db = new DataConnection(new TestNoopProvider(), connection, dispose))
@@ -22,7 +24,7 @@ namespace Tests.UserTests
 			}
 
 			Assert.AreEqual(ConnectionState.Closed, connection.State);
-			Assert.AreEqual(dispose,                connection.Disposed);
+			Assert.AreEqual(dispose,                connection.IsDisposed);
 		}
 
 		[Test]
@@ -38,13 +40,15 @@ namespace Tests.UserTests
 			}
 
 			Assert.AreEqual(ConnectionState.Closed, connection.State);
-			Assert.True    (connection.Disposed);
+			Assert.True    (connection.IsDisposed);
 		}
 
 		[Test]
 		public void ExternalConnectionNotClosed()
 		{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			var connection = new TestNoopConnection("");
+#pragma warning restore CA2000 // Dispose objects before losing scope
 			connection.Open();
 
 			Assert.AreEqual(ConnectionState.Open, connection.State);
@@ -56,13 +60,15 @@ namespace Tests.UserTests
 			}
 
 			Assert.AreEqual(ConnectionState.Open, connection.State);
-			Assert.AreEqual(false,                connection.Disposed);
+			Assert.AreEqual(false,                connection.IsDisposed);
 		}
 
 		[Test]
 		public void CloneConnectionDisposed()
 		{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			var connection = new TestNoopConnection("");
+#pragma warning restore CA2000 // Dispose objects before losing scope
 			connection.Open();
 
 			Assert.AreEqual(ConnectionState.Open, connection.State);
@@ -84,11 +90,11 @@ namespace Tests.UserTests
 			}
 
 			Assert.AreEqual(ConnectionState.Open, connection.State);
-			Assert.AreEqual(false,                connection.Disposed);
+			Assert.AreEqual(false,                connection.IsDisposed);
 
 			Assert.IsNotNull(cloneConnection);
 			Assert.AreEqual (ConnectionState.Closed, cloneConnection.State);
-			Assert.AreEqual (true,                   cloneConnection.Disposed);
+			Assert.AreEqual (true,                   cloneConnection.IsDisposed);
 
 		}
 	}

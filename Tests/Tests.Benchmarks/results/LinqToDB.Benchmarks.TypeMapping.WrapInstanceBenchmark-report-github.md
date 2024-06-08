@@ -1,21 +1,24 @@
-``` ini
+```
 
-BenchmarkDotNet=v0.12.1.1533-nightly, OS=Windows 10.0.16299.125 (1709/FallCreatorsUpdate/Redstone3)
-Intel Core i7-3770K CPU 3.50GHz (Ivy Bridge), 1 CPU, 8 logical and 4 physical cores
-Frequency=3417995 Hz, Resolution=292.5692 ns, Timer=TSC
-  [Host]     : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
-  Job-GUCTZK : .NET 5.0.5 (5.0.521.16609), X64 RyuJIT
-  Job-IOHEYN : .NET Core 3.1.14 (CoreCLR 4.700.21.16201, CoreFX 4.700.21.16208), X64 RyuJIT
-  Job-FWTWYQ : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
+BenchmarkDotNet v0.13.9+228a464e8be6c580ad9408e98f18813f6407fb5a, Windows 10 (10.0.17763.4644/1809/October2018Update/Redstone5) (Hyper-V)
+AMD Ryzen 9 5950X, 2 CPU, 32 logical and 16 physical cores
+.NET SDK 7.0.401
+  [Host]     : .NET 7.0.11 (7.0.1123.42427), X64 RyuJIT AVX2
+  Job-DAXXNM : .NET 6.0.22 (6.0.2223.42425), X64 RyuJIT AVX2
+  Job-SLTPYD : .NET 7.0.11 (7.0.1123.42427), X64 RyuJIT AVX2
+  Job-YOWJJJ : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
+  Job-OZLLFF : .NET Framework 4.8 (4.8.4645.0), X64 RyuJIT VectorSize=256
 
 Jit=RyuJit  Platform=X64  
 
 ```
-|       Method |              Runtime |       Mean |     Median | Ratio | Allocated |
-|------------- |--------------------- |-----------:|-----------:|------:|----------:|
-|   TypeMapper |             .NET 5.0 | 36.6364 ns | 36.3235 ns |     ? |      32 B |
-| DirectAccess |             .NET 5.0 |  0.0006 ns |  0.0000 ns |     ? |         - |
-|   TypeMapper |        .NET Core 3.1 | 41.4521 ns | 40.9334 ns |     ? |      32 B |
-| DirectAccess |        .NET Core 3.1 |  0.0172 ns |  0.0160 ns |     ? |         - |
-|   TypeMapper | .NET Framework 4.7.2 | 47.4220 ns | 47.3455 ns |     ? |      32 B |
-| DirectAccess | .NET Framework 4.7.2 |  0.0064 ns |  0.0019 ns |     ? |         - |
+| Method       | Runtime              | Mean       | Allocated |
+|------------- |--------------------- |-----------:|----------:|
+| TypeMapper   | .NET 6.0             | 31.6151 ns |      32 B |
+| DirectAccess | .NET 6.0             |  0.0126 ns |         - |
+| TypeMapper   | .NET 7.0             | 37.6095 ns |      32 B |
+| DirectAccess | .NET 7.0             |  1.4090 ns |         - |
+| TypeMapper   | .NET Core 3.1        | 46.7331 ns |      32 B |
+| DirectAccess | .NET Core 3.1        |  0.0129 ns |         - |
+| TypeMapper   | .NET Framework 4.7.2 | 54.9320 ns |      32 B |
+| DirectAccess | .NET Framework 4.7.2 |  0.0000 ns |         - |

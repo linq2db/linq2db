@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	class SubQueryContext : PassThroughContext
 	{
 #if DEBUG
-		public string? _sqlQueryText => SelectQuery.SqlText;
+		public string? SqlQueryText => SelectQuery.SqlText;
 #endif
 
 		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)
@@ -42,9 +42,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			expression = SequenceHelper.CorrectExpression(expression, this, Context);
 
-			var indexes = SubQuery
-				.ConvertToIndex(expression, level, flags)
-				.ToArray();
+			var indexes = SubQuery.ConvertToIndex(expression, level, flags);
 
 			var result = indexes
 				.Select(idx => new SqlInfo(idx.MemberChain, idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index], idx.Index))
@@ -60,7 +58,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(expression, level, flags)
 				.Select(idx => idx
 					.WithQuery(SelectQuery)
-					.WithIndex(GetIndex(idx.Index, (SqlColumn)idx.Sql)))
+					.WithIndex(GetIndex(idx.Index, idx.Sql)))
 				.ToArray();
 		}
 
@@ -76,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 		protected virtual bool OptimizeColumns => true;
 		protected internal readonly Dictionary<int,int> ColumnIndexes = new ();
 
-		protected virtual int GetIndex(int index,  SqlColumn column)
+		protected virtual int GetIndex(int index, ISqlExpression column)
 		{
 			if (!ColumnIndexes.TryGetValue(index, out var idx))
 			{
@@ -93,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 			return Parent?.ConvertToParentIndex(idx, this) ?? idx;
 		}
 
-		public override void SetAlias(string alias)
+		public override void SetAlias(string? alias)
 		{
 			if (alias == null)
 				return;

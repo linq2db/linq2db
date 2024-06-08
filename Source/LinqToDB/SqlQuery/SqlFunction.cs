@@ -25,7 +25,7 @@ namespace LinqToDB.SqlQuery
 			: this(systemType, name, isAggregate, true, precedence, parameters)
 		{
 		}
-		
+
 		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, params ISqlExpression[] parameters)
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
@@ -75,12 +75,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, func)!;
+				Parameters[i] = Parameters[i].Walk(options, context, func)!;
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -134,7 +134,7 @@ namespace LinqToDB.SqlQuery
 				return true;
 
 
-			if (!(other is SqlFunction func) || Name != func.Name || Parameters.Length != func.Parameters.Length && SystemType != func.SystemType)
+			if (!(other is SqlFunction func) || Name != func.Name || Parameters.Length != func.Parameters.Length || SystemType != func.SystemType)
 				return false;
 
 			for (var i = 0; i < Parameters.Length; i++)
@@ -169,5 +169,23 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out Type systemType, out string name)
+		{
+			systemType = SystemType;
+			name       = Name;
+		}
+
+		public void Deconstruct(out string name)
+		{
+			name = Name;
+		}
+
+		public void Deconstruct(out Type systemType, out string name, out ISqlExpression[] parameters)
+		{
+			systemType = SystemType;
+			name       = Name;
+			parameters = Parameters;
+		}
 	}
 }

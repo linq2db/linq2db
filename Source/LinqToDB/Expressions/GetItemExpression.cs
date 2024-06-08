@@ -8,7 +8,7 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Expressions
 {
-	class GetItemExpression : Expression
+	sealed class GetItemExpression : Expression
 	{
 		public GetItemExpression(Expression expression, MappingSchema mappingSchema)
 		{

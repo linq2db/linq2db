@@ -12,6 +12,7 @@
 		SqlDataType,
 		SqlTable,
 		SqlAliasPlaceholder,
+		SqlRow,
 
 		ExprPredicate,
 		NotExprPredicate,
@@ -20,6 +21,7 @@
 		SearchStringPredicate,
 		BetweenPredicate,
 		IsNullPredicate,
+		IsDistinctPredicate,
 		IsTruePredicate,
 		InSubQueryPredicate,
 		InListPredicate,
@@ -64,11 +66,12 @@
 		DropTableStatement,
 		TruncateTableStatement,
 
-		MergeSourceTable,
+		SqlTableLikeSource,
 		MergeOperationClause,
 
 		GroupingSet,
 
-		Comment
+		Comment,
+		SqlID
 	}
 }

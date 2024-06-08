@@ -33,7 +33,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Issue2433Test(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -46,7 +46,8 @@ namespace Tests.UserTests
 						ModifiedTimeStamp = TestData.DateTime - TimeSpan.FromHours(2),
 						Id                = TestData.Guid2
 					};
-					((DataConnection)db).BulkCopy(new BulkCopyOptions
+
+					var options = GetDefaultBulkCopyOptions(context) with
 					{
 						CheckConstraints       = true,
 						BulkCopyType           = BulkCopyType.ProviderSpecific,
@@ -54,11 +55,10 @@ namespace Tests.UserTests
 						UseInternalTransaction = false,
 						NotifyAfter            = 2000,
 						BulkCopyTimeout        = 0,
-						RowsCopiedCallback     = i =>
-						{
-						}
-					},
-					new[] { dto1 });
+						RowsCopiedCallback     = i => { }
+					};
+
+					((DataConnection)db).BulkCopy(options, new[] { dto1 });
 				}
 			}
 		}

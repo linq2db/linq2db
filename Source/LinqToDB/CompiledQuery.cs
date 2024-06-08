@@ -9,6 +9,7 @@ namespace LinqToDB
 	using Expressions;
 	using Extensions;
 	using Linq;
+
 	using LinqToDB.Common;
 
 	/// <summary>
@@ -30,8 +31,7 @@ namespace LinqToDB
 		{
 			if (_compiledQuery == null)
 				lock (_sync)
-					if (_compiledQuery == null)
-						_compiledQuery = CompileQuery(_query);
+					_compiledQuery ??= CompileQuery(_query);
 
 			//TODO: pass preambles
 			return (TResult)_compiledQuery(args, null)!;
@@ -49,7 +49,7 @@ namespace LinqToDB
 			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type);
 		}
 
-		class TableHelper<T> : ITableHelper
+		sealed class TableHelper<T> : ITableHelper
 			where T : notnull
 		{
 			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type)
@@ -81,7 +81,7 @@ namespace LinqToDB
 							var idx = context.query.Parameters.IndexOf((ParameterExpression)pi);
 
 							if (idx >= 0)
-								return Expression.Convert(Expression.ArrayIndex(context.ps, Expression.Constant(idx)), pi.Type);
+								return Expression.Convert(Expression.ArrayIndex(context.ps, ExpressionInstances.Int32(idx)), pi.Type);
 
 							break;
 						}
@@ -91,7 +91,7 @@ namespace LinqToDB
 							var expr = (MethodCallExpression)pi;
 
 							if (expr.Method.DeclaringType == typeof(AsyncExtensions) &&
-								expr.Method.GetCustomAttributes(typeof(AsyncExtensions.ElementAsyncAttribute), true).Length != 0)
+								expr.Method.HasAttribute<AsyncExtensions.ElementAsyncAttribute>())
 							{
 								var type = expr.Type.GetGenericArguments()[0];
 

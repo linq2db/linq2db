@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
@@ -51,10 +52,10 @@ namespace LinqToDB.SqlQuery
 					}
 
 				case QueryElementType.SqlObjectExpression:
-				{
-					VisitX((SqlObjectExpression)element);
-					break;
-				}
+					{
+						VisitX((SqlObjectExpression)element);
+						break;
+					}
 
 				case QueryElementType.SqlBinaryExpression:
 					{
@@ -72,7 +73,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlCteTable:
 					{
 						if (VisitedElements.ContainsKey(element))
-							return;
+								return;
 						VisitedElements.Add(element, element);
 
 						VisitX((SqlCteTable)element);
@@ -178,6 +179,14 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.IsDistinctPredicate:
+					{
+						var p = (SqlPredicate.IsDistinct)element;
+						Visit(p.Expr1);
+						Visit(p.Expr2);
+						break;
+					}
+
 				case QueryElementType.InSubQueryPredicate:
 					{
 						Visit(((SqlPredicate.InSubQuery)element).Expr1);
@@ -251,6 +260,7 @@ namespace LinqToDB.SqlQuery
 						Visit(((SqlUpdateStatement)element).Tag);
 						Visit(((SqlUpdateStatement)element).With);
 						Visit(((SqlUpdateStatement)element).Update);
+						Visit(((SqlUpdateStatement)element).Output);
 						Visit(((SqlUpdateStatement)element).SelectQuery);
 						break;
 					}
@@ -330,7 +340,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.GroupingSet:
 					{
-						
+
 						VisitX((SqlGroupingSet)element);
 						break;
 					}
@@ -377,12 +387,16 @@ namespace LinqToDB.SqlQuery
 					VisitX((SqlConditionalInsertClause)element);
 					break;
 
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					VisitX((SqlTableLikeSource)element);
 					break;
 
 				case QueryElementType.SqlValuesTable:
 					VisitX((SqlValuesTable)element);
+					break;
+
+				case QueryElementType.SqlRow:
+					VisitX((SqlRow)element);
 					break;
 
 				case QueryElementType.MergeOperationClause:
@@ -399,6 +413,13 @@ namespace LinqToDB.SqlQuery
 
 				default:
 					throw new InvalidOperationException($"Visit visitor not implemented for element {element.ElementType}");
+			}
+
+			if (element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe)
+			{
+				foreach (var ext in qe.SqlQueryExtensions)
+				foreach (var arg in ext.Arguments)
+					Visit(arg.Value);
 			}
 
 			if (_visitStatic != null)
@@ -498,7 +519,7 @@ namespace LinqToDB.SqlQuery
 			Visit(sc.SkipValue);
 
 			// TODO: review visitors to make instantiation unnecessary
-			foreach (var c in sc.Columns.ToList()) Visit(c);
+			foreach (var c in sc.Columns.ToArray()) Visit(c);
 		}
 
 		void VisitX(SqlUpdateClause sc)
@@ -541,7 +562,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var j in table.Joins) Visit(j);
 		}
 
-		void VisitX(SqlTable table)
+		void VisitX(SqlTable? table)
 		{
 			if (table == null)
 				return;
@@ -581,24 +602,27 @@ namespace LinqToDB.SqlQuery
 
 		void VisitX(SqlOutputClause outputClause)
 		{
-			if (outputClause == null)
-				return;
-
-			VisitX(outputClause.SourceTable);
 			Visit(outputClause.DeletedTable);
 			Visit(outputClause.InsertedTable);
-			VisitX(outputClause.OutputTable);
-			if (outputClause.OutputQuery != null)
-				Visit(outputClause.OutputQuery);
+			Visit(outputClause.OutputTable);
 
 			if (outputClause.HasOutputItems)
 				foreach (var item in outputClause.OutputItems)
+					Visit(item);
+
+			if (outputClause.OutputColumns != null)
+				foreach (var item in outputClause.OutputColumns)
 					Visit(item);
 		}
 
 		void VisitX(SqlExpression element)
 		{
 			foreach (var v in element.Parameters) Visit(v);
+		}
+
+		void VisitX(SqlRow element)
+		{
+			foreach (var v in element.Values) Visit(v);
 		}
 
 		void VisitX(SqlObjectExpression element)
@@ -614,9 +638,11 @@ namespace LinqToDB.SqlQuery
 		void VisitX(SqlMergeStatement element)
 		{
 			Visit(element.Tag);
+			Visit(element.With);
 			Visit(element.Target);
 			Visit(element.Source);
 			Visit(element.On);
+			Visit(element.Output);
 
 			foreach (var operation in element.Operations)
 				Visit(operation);
@@ -663,5 +689,5 @@ namespace LinqToDB.SqlQuery
 			foreach (var item in element.Items)
 				Visit(item);
 		}
-	}
-}
+			}
+		}

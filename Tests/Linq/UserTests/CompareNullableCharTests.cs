@@ -12,24 +12,24 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class CompareNullableCharTests : TestBase
 	{
-		class Table1
+		sealed class Table1
 		{
 			[PrimaryKey(1)]
 			[Identity] public long  Field1 { get; set; }
 			[Nullable] public char? Foeld2 { get; set; }
 		}
 
-		class Repository : DataConnection
+		sealed class Repository : DataConnection
 		{
 			public Repository(string configurationString) : base(configurationString)
 			{
 			}
 
-			public ITable<Table1> Table1 => GetTable<Table1>();
+			public ITable<Table1> Table1 => this.GetTable<Table1>();
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new Repository(context))
 			{

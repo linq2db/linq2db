@@ -26,14 +26,18 @@ namespace LinqToDB.Linq.Builder
 			return Convert(builder, (MethodCallExpression)buildInfo.Expression, buildInfo, param);
 		}
 
+		protected virtual SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
+		{
+			return null;
+		}
+
 		public virtual bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			return builder.IsSequence(new BuildInfo(buildInfo, ((MethodCallExpression)buildInfo.Expression).Arguments[0]));
 		}
 
-		protected abstract bool                 CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
-		protected abstract IBuildContext        BuildMethodCall   (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
-		protected abstract SequenceConvertInfo? Convert           (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param);
+		protected abstract bool          CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
+		protected abstract IBuildContext BuildMethodCall   (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
 
 		protected static Expression ConvertMethod(
 			MethodCallExpression methodCall,
@@ -111,8 +115,8 @@ namespace LinqToDB.Linq.Builder
 								if (ma1.Member != ma2.Member)
 									break;
 
-								ex1 = ma1.Expression;
-								ex2 = ma2.Expression;
+								ex1 = ma1.Expression!;
+								ex2 = ma2.Expression!;
 							}
 						}
 					}

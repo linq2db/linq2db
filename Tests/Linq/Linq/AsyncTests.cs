@@ -25,7 +25,10 @@ namespace Tests.Linq
 		{
 			Test1(context);
 
-			using (var db = GetDataContext(context + ".LinqService"))
+			if (DisableRemoteContext)
+				Assert.Inconclusive("Remote context disabled");
+
+			using (var db = GetDataContext(context + LinqServiceSuffix))
 			{
 				var list = await db.Parent.ToArrayAsync();
 				Assert.That(list.Length, Is.Not.EqualTo(0));
@@ -35,7 +38,10 @@ namespace Tests.Linq
 		[Test]
 		public void Test1([DataSources(false)] string context)
 		{
-			using (var db = GetDataContext(context + ".LinqService"))
+			if (DisableRemoteContext)
+				Assert.Inconclusive("Remote context disabled");
+
+			using (var db = GetDataContext(context + LinqServiceSuffix))
 			{
 				var list = db.Parent.ToArrayAsync().Result;
 				Assert.That(list.Length, Is.Not.EqualTo(0));
@@ -50,7 +56,10 @@ namespace Tests.Linq
 
 		async Task TestForEachImpl(string context)
 		{
-			using (var db = GetDataContext(context + ".LinqService"))
+			if (DisableRemoteContext)
+				Assert.Inconclusive("Remote context disabled");
+
+			using (var db = GetDataContext(context + LinqServiceSuffix))
 			{
 				var list = new List<Parent>();
 
@@ -68,7 +77,7 @@ namespace Tests.Linq
 
 		async Task TestExecute1Impl(string context)
 		{
-			using (var conn = new TestDataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.InlineParameters = true;
 
@@ -85,7 +94,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestExecute2([DataSources(false)] string context)
 		{
-			using (var conn = new TestDataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.InlineParameters = true;
 
@@ -107,7 +116,7 @@ namespace Tests.Linq
 
 		async Task TestQueryToArrayImpl(string context)
 		{
-			using (var conn = new TestDataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.InlineParameters = true;
 
@@ -135,6 +144,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task ContainsAsyncTest([DataSources] string context)
 		{
@@ -224,22 +234,28 @@ namespace Tests.Linq
 			AreEqual(Parent.Where(x => x.ParentID > 1), list);
 		}
 
-		// TODO: Firebird disabled temporary due to bug in provider
 		[Test]
-		public void CancelableAsyncEnumerableTest([DataSources(TestProvName.AllFirebird)] string context)
+		public void CancellableAsyncEnumerableTest([DataSources] string context)
 		{
+#if NETFRAMEWORK
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				Assert.Inconclusive("MySqlConnector 0.x handles cancellation token incorrectly. Fixed in 1.x : https://github.com/mysql-net/MySqlConnector/issues/931");
+#endif
+#if !NETCOREAPP3_1
+			if (context.IsAnyOf(TestProvName.AllMySqlData))
+				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
+#endif
 			using var cts = new CancellationTokenSource();
 			var cancellationToken = cts.Token;
 			cts.Cancel();
 			using var db = GetDataContext(context);
 			var resultQuery = db.Parent.AsAsyncEnumerable().WithCancellation(cancellationToken);
-			var list = new List<Parent>();
 			Assert.ThrowsAsync<OperationCanceledException>(async () =>
 			{
 				try
 				{
 					await foreach (var row in resultQuery)
-						list.Add(row);
+					{ }
 				}
 				catch (OperationCanceledException)
 				{

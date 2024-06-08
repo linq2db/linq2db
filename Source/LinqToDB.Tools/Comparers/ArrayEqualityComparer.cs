@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.Tools.Comparers
 {
-	class ArrayEqualityComparer<T> : EqualityComparer<T[]>
+	sealed class ArrayEqualityComparer<T> : EqualityComparer<T[]>
 	{
 		public new static ArrayEqualityComparer<T> Default { get; } = new ArrayEqualityComparer<T>();
 
@@ -22,7 +22,7 @@ namespace LinqToDB.Tools.Comparers
 			if (obj == null)
 				return 0;
 
-			return obj.Aggregate(0, (acc, val) => acc ^ _elementComparer.GetHashCode(val));
+			return obj.Aggregate(0, (acc, val) => acc ^ _elementComparer.GetHashCode(val!));
 		}
 
 		public override bool Equals(T[]? x, T[]? y)

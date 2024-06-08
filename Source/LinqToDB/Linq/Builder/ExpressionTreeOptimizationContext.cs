@@ -1,46 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
-	using System.Runtime.CompilerServices;
 
 	public class ExpressionTreeOptimizationContext
 	{
-		readonly HashSet<Expression> _visitedExpressions = new ();
+		HashSet<Expression>? _visitedExpressions;
 
-		public IDataContext DataContext { get; }
+		public IDataContext  DataContext   { get; }
 		public MappingSchema MappingSchema { get; }
 
 		public ExpressionTreeOptimizationContext(IDataContext dataContext)
 		{
 			DataContext = dataContext;
 			MappingSchema = dataContext.MappingSchema;
+
+			_expandExpressionTransformer =
+				TransformVisitor<ExpressionTreeOptimizationContext>.Create(this,
+					static (ctx, expr) => ctx.ExpandExpressionTransformer(expr));
 		}
 
-		private EqualsToVisitor.EqualsToInfo? _equalsToContext;
-		private EqualsToVisitor.EqualsToInfo GetSimpleEqualsToContext()
+		private EqualsToVisitor.EqualsToInfo? _equalsToContextFalse;
+		private EqualsToVisitor.EqualsToInfo? _equalsToContextTrue;
+		internal EqualsToVisitor.EqualsToInfo GetSimpleEqualsToContext(bool compareConstantValues)
 		{
-			if (_equalsToContext == null)
-				_equalsToContext = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: true);
+			if (compareConstantValues)
+			{
+				if (_equalsToContextTrue == null)
+					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: compareConstantValues);
+				else
+					_equalsToContextTrue.Reset();
+				return _equalsToContextTrue;
+			}
 			else
-				_equalsToContext.Reset();
-			return _equalsToContext;
+			{
+				if (_equalsToContextFalse == null)
+					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: compareConstantValues);
+				else
+					_equalsToContextFalse.Reset();
+				return _equalsToContextFalse;
+			}
 		}
 
 		public void ClearVisitedCache()
 		{
-			_visitedExpressions.Clear();
+			_visitedExpressions?.Clear();
 		}
 
 		public static Expression AggregateExpression(Expression expression)
@@ -132,11 +149,6 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		Sql.ExpressionAttribute? GetExpressionAttribute(MemberInfo member)
-		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, a => a.Configuration);
-		}
-
 		public Expression ExpandQueryableMethods(Expression expression)
 		{
 			var result = (_expandQueryableMethodsTransformer ??= TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.ExpandQueryableMethodsTransformer(e)))
@@ -158,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var queryable = (IQueryable)mc.EvaluateExpression()!;
 
-					if (!queryable.Expression.EqualsTo(mc, GetSimpleEqualsToContext()))
+					if (!queryable.Expression.EqualsTo(mc, GetSimpleEqualsToContext(compareConstantValues: true)))
 						return new TransformInfo(queryable.Expression, false, true);
 				}
 			}
@@ -166,7 +178,7 @@ namespace LinqToDB.Linq.Builder
 			return new TransformInfo(expr);
 		}
 
-		public static Expression ExpandExpression(Expression expression)
+		public Expression ExpandExpression(Expression expression)
 		{
 			expression = AggregateExpression(expression);
 
@@ -175,8 +187,13 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		private static readonly TransformVisitor<object?> _expandExpressionTransformer = TransformVisitor<object?>.Create(ExpandExpressionTransformer);
-		public static Expression ExpandExpressionTransformer(Expression expr)
+		private TransformVisitor<ExpressionTreeOptimizationContext> _expandExpressionTransformer;
+
+		private bool _expressionDependsOnParameters;
+
+		public bool IsDependsOnParameters() => _expressionDependsOnParameters;
+
+		public Expression ExpandExpressionTransformer(Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -204,8 +221,7 @@ namespace LinqToDB.Linq.Builder
 							newArgs?.Add(arg);
 						else
 						{
-							if (newArgs == null)
-								newArgs = new List<Expression>(mc.Arguments.Take(index));
+							newArgs ??= new List<Expression>(mc.Arguments.Take(index));
 							newArgs.Add(newArg);
 						}
 					}
@@ -238,22 +254,39 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
 							{
-								var map = new Dictionary<Expression, Expression>();
-								for (int i = 0; i < invocation.Arguments.Count; i++)
+								var newBody = lambda.Body;
+								if (invocation.Arguments.Count > 0)
 								{
-									map.Add(lambda.Parameters[i], invocation.Arguments[i]);
-								}
+									var map = new Dictionary<Expression, Expression>();
+									for (int i = 0; i < invocation.Arguments.Count; i++)
+										map.Add(lambda.Parameters[i], invocation.Arguments[i]);
 
-								var newBody = lambda.Body.Transform(map, static (map, se) =>
+									newBody = lambda.Body.Transform(map, static (map, se) =>
 									{
 										if (se.NodeType == ExpressionType.Parameter &&
 												map.TryGetValue(se, out var newExpr))
 											return newExpr;
 										return se;
 									});
+								}
 
 								return ExpandExpression(newBody);
 							}
+						}
+					}
+					break;
+				}
+
+				case ExpressionType.Conditional:
+				{
+					var conditional = (ConditionalExpression)expr;
+					if (CanBeCompiled(conditional.Test))
+					{
+						var testValue = conditional.Test.EvaluateExpression();
+						if (testValue is bool test)
+						{
+							_expressionDependsOnParameters = true;
+							return test ? ExpandExpression(conditional.IfTrue) : ExpandExpression(conditional.IfFalse);
 						}
 					}
 					break;
@@ -265,99 +298,109 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsServerSideOnly
 
-		Dictionary<Expression, bool> _isServerSideOnlyCache = new ();
+		Dictionary<Expression, bool>? _isServerSideOnlyCache;
 
 		private FindVisitor<ExpressionTreeOptimizationContext>? _isServerSideOnlyVisitor;
 		public bool IsServerSideOnly(Expression expr)
 		{
-			if (_isServerSideOnlyCache.TryGetValue(expr, out var result))
+			if (_isServerSideOnlyCache != null && _isServerSideOnlyCache.TryGetValue(expr, out var result))
 				return result;
 
-			switch (expr.NodeType)
+			if (expr.Type == typeof(Sql.SqlID))
 			{
-				case ExpressionType.MemberAccess:
+				result = true;
+			}
+			else
+			{
+				result = false;
+
+				switch (expr.NodeType)
 				{
-					var ex = (MemberExpression)expr;
-					var l  = Expressions.ConvertMember(MappingSchema, ex.Expression?.Type, ex.Member);
-
-					if (l != null)
+					case ExpressionType.MemberAccess:
 					{
-						result = IsServerSideOnly(l.Body.Unwrap());
-					}
-					else
-					{
-						var attr = GetExpressionAttribute(ex.Member);
-						result = attr != null && attr.ServerSideOnly;
-					}
-
-					break;
-				}
-
-				case ExpressionType.Call:
-				{
-					var e = (MethodCallExpression)expr;
-
-					if (e.Method.DeclaringType == typeof(Enumerable))
-					{
-						if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
-							result = IsQueryMember(e.Arguments[0]);
-					}
-					else if (e.IsAggregate(MappingSchema) || e.IsAssociation(MappingSchema))
-					{
-						result = true;
-					}
-					else if (e.Method.DeclaringType == typeof(Queryable))
-					{
-						switch (e.Method.Name)
-						{
-							case "Any"     :
-							case "All"     :
-							case "Contains": result = true; break;
-						}
-					}
-					else
-					{
-						var l = Expressions.ConvertMember(MappingSchema, e.Object?.Type, e.Method);
+						var ex = (MemberExpression)expr;
+						var l  = Expressions.ConvertMember(MappingSchema, ex.Expression?.Type, ex.Member);
 
 						if (l != null)
 						{
-							result = (_isServerSideOnlyVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.IsServerSideOnly(e))).Find(l.Body.Unwrap()) != null;
+							result = IsServerSideOnly(l.Body.Unwrap());
 						}
 						else
 						{
-							var attr = GetExpressionAttribute(e.Method);
+							var attr = ex.Member.GetExpressionAttribute(MappingSchema);
 							result = attr != null && attr.ServerSideOnly;
 						}
+
+						break;
 					}
 
-					break;
+					case ExpressionType.Call:
+					{
+						var e = (MethodCallExpression)expr;
+
+						if (e.Method.DeclaringType == typeof(Enumerable))
+						{
+							if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
+								result = IsQueryMember(e.Arguments[0]);
+						}
+						else if (e.IsAggregate(MappingSchema) || e.IsAssociation(MappingSchema))
+						{
+							result = true;
+						}
+						else if (e.Method.DeclaringType == typeof(Queryable))
+						{
+							switch (e.Method.Name)
+							{
+								case "Any"     :
+								case "All"     :
+								case "Contains": result = true; break;
+							}
+						}
+						else
+						{
+							var l = Expressions.ConvertMember(MappingSchema, e.Object?.Type, e.Method);
+
+							if (l != null)
+							{
+								result = (_isServerSideOnlyVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.IsServerSideOnly(e))).Find(l.Body.Unwrap()) != null;
+							}
+							else
+							{
+								var attr = e.Method.GetExpressionAttribute(MappingSchema);
+								result = attr?.ServerSideOnly == true;
+							}
+						}
+
+						break;
+					}
 				}
 			}
 
-			_isServerSideOnlyCache.Add(expr, result);
+			(_isServerSideOnlyCache ??= new()).Add(expr, result);
 			return result;
 		}
 
 		static bool IsQueryMember(Expression expr)
 		{
 			expr = expr.Unwrap();
+
 			if (expr != null) switch (expr.NodeType)
+			{
+				case ExpressionType.Parameter   : return true;
+				case ExpressionType.MemberAccess: return IsQueryMember(((MemberExpression)expr).Expression!);
+				case ExpressionType.Call:
 				{
-					case ExpressionType.Parameter   : return true;
-					case ExpressionType.MemberAccess: return IsQueryMember(((MemberExpression)expr).Expression);
-					case ExpressionType.Call:
-					{
-						var call = (MethodCallExpression)expr;
+					var call = (MethodCallExpression)expr;
 
-						if (call.Method.DeclaringType == typeof(Queryable))
-							return true;
+					if (call.Method.DeclaringType == typeof(Queryable))
+						return true;
 
-						if (call.Method.DeclaringType == typeof(Enumerable) && call.Arguments.Count > 0)
-							return IsQueryMember(call.Arguments[0]);
+					if (call.Method.DeclaringType == typeof(Enumerable) && call.Arguments.Count > 0)
+						return IsQueryMember(call.Arguments[0]);
 
-						return IsQueryMember(call.Object);
-					}
+					return IsQueryMember(call.Object!);
 				}
+			}
 
 			return false;
 		}
@@ -369,7 +412,7 @@ namespace LinqToDB.Linq.Builder
 		Expression? _lastExpr2;
 		bool        _lastResult2;
 
-		private static HashSet<Expression> DefaultAllowedParams = new ()
+		static HashSet<Expression> DefaultAllowedParams = new ()
 		{
 			ExpressionBuilder.ParametersParam,
 			ExpressionBuilder.DataContextParam
@@ -383,13 +426,13 @@ namespace LinqToDB.Linq.Builder
 			// context allocation is cheaper than HashSet allocation
 			// and HashSet allocation is rare
 
-			var result  = null == GetCanBeCompiledVisitor().Find(expr);
+			var result = null == GetCanBeCompiledVisitor().Find(expr);
 
 			_lastExpr2 = expr;
 			return _lastResult2 = result;
 		}
 
-		internal class CanBeCompiledContext
+		internal sealed class CanBeCompiledContext
 		{
 			public CanBeCompiledContext(ExpressionTreeOptimizationContext optimizationContext)
 			{
@@ -422,7 +465,7 @@ namespace LinqToDB.Linq.Builder
 		private bool CanBeCompiledFind(CanBeCompiledContext context, Expression ex)
 		{
 			if (IsServerSideOnly(ex))
-					return true;
+				return true;
 
 			switch (ex.NodeType)
 			{
@@ -497,6 +540,7 @@ namespace LinqToDB.Linq.Builder
 
 			switch (ex.NodeType)
 			{
+				case ExpressionType.Default : return false;
 				case ExpressionType.Constant:
 				{
 					var c = (ConstantExpression)ex;
@@ -529,7 +573,7 @@ namespace LinqToDB.Linq.Builder
 					if (mc.Method.DeclaringType!.IsConstantable(false) || mc.Method.DeclaringType == typeof(object))
 						return false;
 
-					var attr = GetExpressionAttribute(mc.Method);
+					var attr = mc.Method.GetExpressionAttribute(MappingSchema);
 
 					if (attr != null && !attr.ServerSideOnly)
 						return false;
@@ -550,15 +594,10 @@ namespace LinqToDB.Linq.Builder
 				Expression.Constant(alias));
 		}
 
-		Dictionary<Expression, Expression> _exposedCache = new ();
-
 		private TransformInfoVisitor<ExpressionTreeOptimizationContext>? _exposeExpressionTransformer;
 
 		private TransformInfo ExposeExpressionTransformer(Expression expr)
 		{
-			if (_exposedCache.TryGetValue(expr, out var aleradyExposed))
-				return new TransformInfo(aleradyExposed, true);
-
 			switch (expr.NodeType)
 			{
 				case ExpressionType.ArrayLength:
@@ -567,10 +606,11 @@ namespace LinqToDB.Linq.Builder
 					var ll = Expressions.ConvertMember(MappingSchema, ue.Operand?.Type, ue.Operand!.Type.GetProperty(nameof(Array.Length))!);
 					if (ll != null)
 					{
-						var ex = СonvertMemberExpression(expr, ue.Operand!, ll);
+						var ex = ConvertMemberExpression(expr, ue.Operand!, ll);
 
 						return new TransformInfo(ex, false, true);
 					}
+
 					break;
 				}
 				case ExpressionType.MemberAccess:
@@ -579,8 +619,13 @@ namespace LinqToDB.Linq.Builder
 
 					if (me.Member.IsNullableHasValueMember())
 					{
-						return new TransformInfo(Expression.NotEqual(me.Expression, Expression.Constant(null, me.Expression.Type)), false, true);
+						return new TransformInfo(Expression.NotEqual(me.Expression!, Expression.Constant(null, me.Expression!.Type)), false, true);
 					}
+
+					//if (me.Member.IsNullableValueMember())
+					//{
+					//	return new TransformInfo(Expression.Convert(me.Expression!, me.Type), false, true);
+					//}
 
 					if (CanBeCompiled(expr))
 						break;
@@ -589,7 +634,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (l != null)
 					{
-						var ex = СonvertMemberExpression(expr, me.Expression!, l);
+						var ex = ConvertMemberExpression(expr, me.Expression!, l);
 
 						return new TransformInfo(AliasCall(ex, alias!), false, true);
 					}
@@ -609,6 +654,7 @@ namespace LinqToDB.Linq.Builder
 							return new TransformInfo(exposed, false, true);
 						}
 					}
+
 					break;
 				}
 
@@ -616,18 +662,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					var c = (ConstantExpression)expr;
 
-					// Fix Mono behaviour.
-					//
-					//if (c.Value is IExpressionQuery)
-					//	return ((IQueryable)c.Value).Expression;
-
 					if (c.Value is IQueryable queryable && !(queryable is ITable))
 					{
 						var e = queryable.Expression;
 
-						if (!_visitedExpressions!.Contains(e))
+						if (!(_visitedExpressions ??= new ()).Contains(e))
 						{
-							_visitedExpressions!.Add(e);
+							_visitedExpressions.Add(e);
 							return new TransformInfo(e, false, true);
 						}
 					}
@@ -646,19 +687,21 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (mc.Object.EvaluateExpression() is LambdaExpression lambds)
 							{
-								var map = new Dictionary<Expression, Expression>();
-								for (int i = 0; i < invocation.Arguments.Count; i++)
+								var newBody = lambds.Body;
+								if (invocation.Arguments.Count > 0)
 								{
-									map.Add(lambds.Parameters[i], invocation.Arguments[i]);
-								}
+									var map = new Dictionary<Expression, Expression>();
+									for (int i = 0; i < invocation.Arguments.Count; i++)
+										map.Add(lambds.Parameters[i], invocation.Arguments[i]);
 
-								var newBody = lambds.Body.Transform(map, static (map, se) =>
-								{
-									if (se.NodeType == ExpressionType.Parameter &&
-												map.TryGetValue(se, out var newExpr))
-										return newExpr;
-									return se;
-								});
+									newBody = lambds.Body.Transform(map, static (map, se) =>
+									{
+										if (se.NodeType == ExpressionType.Parameter &&
+													map.TryGetValue(se, out var newExpr))
+											return newExpr;
+										return se;
+									});
+								}
 
 								return new TransformInfo(newBody, false, true);
 							}
@@ -666,26 +709,42 @@ namespace LinqToDB.Linq.Builder
 					}
 					break;
 				}
-			}
 
-			_exposedCache.Add(expr, expr);
+				case ExpressionType.Call:
+				{
+					var call = (MethodCallExpression)expr;
+
+					var l = ConvertMethodExpression(call.Object?.Type ?? call.Method.ReflectedType!, call.Method, out var alias);
+
+					if (l != null)
+					{
+						var converted = ConvertMethod(call, l);
+						return new TransformInfo(converted, false, true);
+					}
+
+					break;
+				}
+			}
 
 			return new TransformInfo(expr, false);
 		}
 
+		Dictionary<Expression, Expression>? _exposedCache;
 		public Expression ExposeExpression(Expression expression)
 		{
-			if (_exposedCache.TryGetValue(expression, out var result))
+			if (_exposedCache != null && _exposedCache.TryGetValue(expression, out var result))
 				return result;
 
-			result = (_exposeExpressionTransformer ??= TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.ExposeExpressionTransformer(e))).Transform(expression);
+			result = (_exposeExpressionTransformer ??=
+				TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this,
+					static(ctx, e) => ctx.ExposeExpressionTransformer(e))).Transform(expression);
 
-			_exposedCache[expression] = result;
+			(_exposedCache ??= new())[expression] = result;
 
 			return result;
 		}
 
-		private static Expression СonvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
+		private static Expression ConvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
 		{
 			var body  = l.Body.Unwrap();
 			var parms = l.Parameters.ToDictionary(p => p);
@@ -714,7 +773,11 @@ namespace LinqToDB.Linq.Builder
 					});
 
 			if (ex.Type != expr.Type)
-				ex = new ChangeTypeExpression(ex, expr.Type);
+			{
+				//ex = new ChangeTypeExpression(ex, expr.Type);
+				ex = Expression.Convert(ex, expr.Type);
+			}
+
 			return ex;
 		}
 
@@ -722,7 +785,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			mi = type.GetMemberOverride(mi);
 
-			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi, a => a.Configuration);
+			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi);
 
 			if (attr != null)
 			{
@@ -738,16 +801,16 @@ namespace LinqToDB.Linq.Builder
 					{
 						var args  = method.GetGenericArguments();
 						var names = args.Select(t => (object)t.Name).ToArray();
-						var name  = string.Format(attr.MethodName, names);
+						var name  = string.Format(CultureInfo.InvariantCulture, attr.MethodName, names);
 
 						expr = Expression.Call(
-							mi.DeclaringType,
+							mi.DeclaringType!,
 							name,
 							name != attr.MethodName ? Array<Type>.Empty : args);
 					}
 					else
 					{
-						expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
+						expr = Expression.Call(mi.DeclaringType!, attr.MethodName, Array<Type>.Empty);
 					}
 
 					var evaluated = (LambdaExpression?)expr.EvaluateExpression();
@@ -758,6 +821,150 @@ namespace LinqToDB.Linq.Builder
 			alias = null;
 			return null;
 		}
+
+		public Expression ConvertMethod(MethodCallExpression pi, LambdaExpression lambda)
+		{
+			var ef    = lambda.Body.Unwrap();
+			var parms = new Dictionary<ParameterExpression,int>(lambda.Parameters.Count);
+			var pn    = pi.Method.IsStatic ? 0 : -1;
+
+			foreach (var p in lambda.Parameters)
+				parms.Add(p, pn++);
+
+			var pie = ef.Transform((pi, parms), static (context, wpi) =>
+			{
+				if (wpi.NodeType == ExpressionType.Parameter)
+				{
+					if (context.parms.TryGetValue((ParameterExpression)wpi, out var n))
+					{
+						if (n >= context.pi.Arguments.Count)
+						{
+							if (ExpressionBuilder.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+							{
+								if (ExpressionBuilder.DataContextParam.Type != wpi.Type)
+									return Expression.Convert(ExpressionBuilder.DataContextParam, wpi.Type);
+								return ExpressionBuilder.DataContextParam;
+							}
+
+							throw new LinqToDBException($"Can't convert {wpi} to expression.");
+						}
+
+						var result = n < 0 ? context.pi.Object! : context.pi.Arguments[n];
+
+						if (result.Type != wpi.Type)
+						{
+							var noConvert = result.UnwrapConvert();
+							if (noConvert.Type == wpi.Type)
+							{
+								result = noConvert;
+							}
+							else
+							{
+								if (noConvert.Type.IsValueType)
+									result = Expression.Convert(noConvert, wpi.Type);
+							}
+						}
+
+						return result;
+					}
+				}
+
+				return wpi;
+			});
+
+			if (pi.Method.ReturnType != pie.Type)
+			{
+				pie = pie.UnwrapConvert();
+				if (pi.Method.ReturnType != pie.Type)
+				{
+					// pie = new ChangeTypeExpression(pie, pi.Method.ReturnType);
+					pie = Expression.Convert(pie, pi.Method.ReturnType);
+				}
+			}
+
+			return pie;
+		}
+
+		#region PreferServerSide
+
+		private FindVisitor<ExpressionTreeOptimizationContext>? _enforceServerSideVisitorTrue;
+		private FindVisitor<ExpressionTreeOptimizationContext>? _enforceServerSideVisitorFalse;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private FindVisitor<ExpressionTreeOptimizationContext> GetVisitor(bool enforceServerSide)
+		{
+			if (enforceServerSide)
+				return _enforceServerSideVisitorTrue ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, true));
+			else
+				return _enforceServerSideVisitorFalse ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, false));
+		}
+
+		public bool PreferServerSide(Expression expr, bool enforceServerSide)
+		{
+			switch (expr.NodeType)
+			{
+				case ExpressionType.MemberAccess:
+					{
+						var pi = (MemberExpression)expr;
+						var l  = Expressions.ConvertMember(MappingSchema, pi.Expression?.Type, pi.Member);
+
+						if (l != null)
+						{
+							var info = l.Body.Unwrap();
+
+							if (l.Parameters.Count == 1 && pi.Expression != null)
+								info = info.Replace(l.Parameters[0], pi.Expression);
+
+							return GetVisitor(enforceServerSide).Find(info) != null;
+						}
+
+						var attr = pi.Member.GetExpressionAttribute(MappingSchema);
+						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
+					}
+
+				case ExpressionType.Call:
+					{
+						var pi = (MethodCallExpression)expr;
+						var l  = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
+
+						if (l != null)
+							return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
+
+						var attr = pi.Method.GetExpressionAttribute(MappingSchema);
+						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
+					}
+				default:
+					{
+						if (expr is BinaryExpression binary)
+						{
+							var l = Expressions.ConvertBinary(MappingSchema, binary);
+							if (l != null)
+							{
+								var body = l.Body.Unwrap();
+								var newExpr = body.Transform((l, binary), static (context, wpi) =>
+								{
+									if (wpi.NodeType == ExpressionType.Parameter)
+									{
+										if (context.l.Parameters[0] == wpi)
+											return context.binary.Left;
+										if (context.l.Parameters[1] == wpi)
+											return context.binary.Right;
+									}
+
+									return wpi;
+								});
+
+								return PreferServerSide(newExpr, enforceServerSide);
+							}
+						}
+						break;
+					}
+			}
+
+			return false;
+		}
+
+		#endregion
 
 	}
 }

@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Linq;
 	using SqlQuery;
 #if !NET45
-	using LinqToDB.Common;
+	using Common;
 	using Mapping;
 #endif
 
@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region Analytic Functions
 
-		class ApplyAggregateModifier: Sql.IExtensionCallBuilder
+		sealed class ApplyAggregateModifier : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -47,19 +47,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		#region array_agg
 
 		[Sql.Extension("ARRAY_AGG({expr})", TokenName = AnalyticFunctions.FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static AnalyticFunctions.IAnalyticFunctionWithoutWindow<T[]> ArrayAggregate<T>(this Sql.ISqlExtension? ext, 
+		public static AnalyticFunctions.IAnalyticFunctionWithoutWindow<T[]> ArrayAggregate<T>(this Sql.ISqlExtension? ext,
 			[ExprParameter] T expr)
 		{
 			throw new LinqException($"'{nameof(ArrayAggregate)}' is server-side method.");
 		}
-		
+
 		[Sql.Extension("ARRAY_AGG({modifier?}{_}{expr})", TokenName = AnalyticFunctions.FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsAggregate = true)]
-		public static AnalyticFunctions.IAnalyticFunctionWithoutWindow<T[]> ArrayAggregate<T>(this Sql.ISqlExtension? ext, 
+		public static AnalyticFunctions.IAnalyticFunctionWithoutWindow<T[]> ArrayAggregate<T>(this Sql.ISqlExtension? ext,
 			[ExprParameter] T expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
 			throw new LinqException($"'{nameof(ArrayAggregate)}' is server-side method.");
 		}
-		
+
 		[Sql.Extension("ARRAY_AGG({modifier?}{_}{expr}{_}{order_by_clause?})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 10)]
 		public static Sql.IAggregateFunctionNotOrdered<TEntity, TV[]> ArrayAggregate<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
@@ -118,6 +118,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, array) => dc.FromSqlScalar<T>($"UNNEST({array})");
 		}
+
 		public class Ordinality<T>
 		{
 			[Column(Name = "value")]                  public T    Value = default!;
@@ -136,7 +137,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (dc, array) => dc.FromSql<Ordinality<T>>($"UNNEST({array}) WITH ORDINALITY {Sql.AliasExpr()}(value, idx)");
 		}
 #endif
-		
+
 		#endregion
 
 		#region Arrays
@@ -483,7 +484,5 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		#endregion
-
-
 	}
 }

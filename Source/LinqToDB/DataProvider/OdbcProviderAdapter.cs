@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider
@@ -18,8 +19,8 @@ namespace LinqToDB.DataProvider
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
-			Action<IDbDataParameter, OdbcType> dbTypeSetter,
-			Func  <IDbDataParameter, OdbcType> dbTypeGetter)
+			Action<DbParameter, OdbcType> dbTypeSetter,
+			Func  <DbParameter, OdbcType> dbTypeGetter)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -37,19 +38,22 @@ namespace LinqToDB.DataProvider
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Action<IDbDataParameter, OdbcType> SetDbType { get; }
-		public Func  <IDbDataParameter, OdbcType> GetDbType { get; }
+		public Action<DbParameter, OdbcType> SetDbType { get; }
+		public Func  <DbParameter, OdbcType> GetDbType { get; }
 
 		public static OdbcProviderAdapter GetInstance()
 		{
 			if (_instance == null)
+			{
 				lock (_syncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 					if (_instance == null)
+#pragma warning restore CA1508 // Avoid dead conditional code
 					{
 #if NETFRAMEWORK
 						var assembly = typeof(System.Data.Odbc.OdbcConnection).Assembly;
 #else
-						var assembly = LinqToDB.Common.Tools.TryLoadAssembly(AssemblyName, null);
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif
@@ -67,8 +71,8 @@ namespace LinqToDB.DataProvider
 						typeMapper.FinalizeMappings();
 
 						var dbTypeBuilder = typeMapper.Type<OdbcParameter>().Member(p => p.OdbcType);
-						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
-						var typeGetter    = dbTypeBuilder.BuildGetter<IDbDataParameter>();
+						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
+						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
 						_instance = new OdbcProviderAdapter(
 							connectionType,
@@ -79,6 +83,7 @@ namespace LinqToDB.DataProvider
 							typeSetter,
 							typeGetter);
 					}
+			}
 
 			return _instance;
 		}
@@ -86,7 +91,7 @@ namespace LinqToDB.DataProvider
 		#region Wrappers
 
 		[Wrapper]
-		private class OdbcParameter
+		private sealed class OdbcParameter
 		{
 			public OdbcType OdbcType { get; set; }
 		}

@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 		public MultiInsertType                  InsertType { get; internal set; }
 
 		public SqlMultiInsertStatement(SqlTableLikeSource source)
-		{ 
+		{
 			Source = source;
 			Inserts = new List<SqlConditionalInsertClause>();
 		}
@@ -40,34 +40,26 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Source.Walk(options, func);
+			Source.Walk(options, context, func);
 
 			foreach (var insert in Inserts)
-				((ISqlExpressionWalkable)insert).Walk(options, func);
+				((ISqlExpressionWalkable)insert).Walk(options, context, func);
 
-			return null;
+			return base.Walk(options, context, func);
 		}
 
-		public override bool IsParameterDependent 
-		{ 
-			get => Source.IsParameterDependent; 
-			set => Source.IsParameterDependent = value; 
+		public override bool IsParameterDependent
+		{
+			get => Source.IsParameterDependent;
+			set => Source.IsParameterDependent = value;
 		}
 
-		public override SelectQuery? SelectQuery 
-		{ 
-			get => null; 
+		public override SelectQuery? SelectQuery
+		{
+			get => null;
 			set => throw new InvalidOperationException();
-		}
-		
-		public override IEnumerable<IQueryElement> EnumClauses()
-		{
-			foreach (var insert in Inserts)
-				yield return insert;
-			
-			yield return Source;
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
@@ -84,7 +76,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
-			=> Source.WalkQueries(func);
+		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
+			=> Source.WalkQueries(context, func);
 	}
 }

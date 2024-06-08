@@ -12,7 +12,7 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(
 		AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Interface,
 		AllowMultiple = true, Inherited = true)]
-	public class ColumnAttribute : Attribute
+	public class ColumnAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute instance.
@@ -81,13 +81,6 @@ namespace LinqToDB.Mapping
 			if (ca.HasScale())        Scale        = ca.Scale;
 			if (ca.HasOrder())        Order        = ca.Order;
 		}
-
-		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string? Configuration { get; set; }
 
 		/// <summary>
 		/// Gets or sets the name of a column in database.
@@ -338,5 +331,10 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <returns><c>true</c> if <see cref="Order"/> property was set in attribute.</returns>
 		internal bool HasOrder() => _order.HasValue;
+
+		public override string GetObjectID()
+		{
+			return FormattableString.Invariant($".{Configuration}.{Name}.{MemberName}.{(int)DataType}.{DbType}.{(IsColumn?'1':'0')}.{Storage}.{(IsDiscriminator?'1':'0')}.{(SkipOnEntityFetch?'1':'0')}.{_skipOnInsert}.{_skipOnUpdate}.{_isIdentity}.{_isPrimaryKey}.{PrimaryKeyOrder}.{_canBeNull}.{_length}.{_precision}.{_scale}.{CreateFormat}.{_order}.");
+		}
 	}
 }

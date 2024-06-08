@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
-using System.Reflection;
 using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using Extensions;
 	using LinqToDB.Common;
 	using SqlQuery;
 
@@ -60,7 +58,7 @@ namespace LinqToDB
 				set => Expression = value;
 			}
 
-			public override ISqlExpression? GetExpression(IDataContext dataContext, SelectQuery query, Expression expression, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var name = Name;
 
@@ -79,6 +77,11 @@ namespace LinqToDB
 				{
 					CanBeNull = GetCanBeNull(Array<ISqlExpression>.Empty)
 				};
+			}
+
+			public override string GetObjectID()
+			{
+				return $"{base.GetObjectID()}.{Name}.";
 			}
 		}
 	}

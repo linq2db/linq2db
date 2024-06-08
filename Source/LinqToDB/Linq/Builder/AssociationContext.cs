@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,10 +10,10 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}, T: {BuildContextDebuggingHelper.GetContextInfo(TableContext)}")]
-	class AssociationContext : IBuildContext
+	sealed class AssociationContext : IBuildContext
 	{
 #if DEBUG
-		string? IBuildContext._sqlQueryText => TableContext._sqlQueryText;
+		string? IBuildContext.SqlQueryText => TableContext.SqlQueryText;
 		public string Path => this.GetPath();
 #endif
 		public ExpressionBuilder Builder { get; }
@@ -25,8 +26,8 @@ namespace LinqToDB.Linq.Builder
 			set => throw new NotImplementedException();
 		}
 
-		public SqlStatement? Statement 
-		{ 
+		public SqlStatement? Statement
+		{
 			get => SubqueryContext.Statement;
 			set => SubqueryContext.Statement = value;
 		}
@@ -35,13 +36,15 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext         TableContext    { get; }
 		public AssociationDescriptor Descriptor      { get; }
+		public List<LoadWithInfo[]>? CurrentLoadWith { get; }
 		public IBuildContext         SubqueryContext { get; }
 		public SqlJoinedTable        Join            { get; }
 
-		public AssociationContext(ExpressionBuilder builder, AssociationDescriptor descriptor, IBuildContext tableContext, IBuildContext subqueryContext, SqlJoinedTable join)
+		public AssociationContext(ExpressionBuilder builder, AssociationDescriptor descriptor, List<LoadWithInfo[]>? currentLoadWith, IBuildContext tableContext, IBuildContext subqueryContext, SqlJoinedTable join)
 		{
 			Builder                = builder;
 			Descriptor             = descriptor;
+			CurrentLoadWith        = currentLoadWith;
 			TableContext           = tableContext;
 			SubqueryContext        = subqueryContext;
 			Join                   = join;
@@ -65,24 +68,29 @@ namespace LinqToDB.Linq.Builder
 			expression  = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 			var indexes = ConvertToIndex(expression, level, flags);
 
-			indexes = indexes.Select(idx => idx.WithQuery(SelectQuery))
-				.ToArray();
+			for (var i = 0; i < indexes.Length; i++)
+				indexes[i] = indexes[i].WithQuery(SelectQuery);
 
 			return indexes;
 		}
 
 		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			expression = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
+			expression  = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
+			var indexes = SubqueryContext.ConvertToIndex(expression, level, flags);
+			var isOuter = SubqueryContext is DefaultIfEmptyBuilder.DefaultIfEmptyContext && !Builder.DisableDefaultIfEmpty;
 
-			var indexes = SubqueryContext
-				.ConvertToIndex(expression, level, flags)
-				.ToArray();
+			for (var i = 0; i < indexes.Length; i++)
+			{
+				var index  = indexes[i];
+				indexes[i] = index = index.WithSql(SubqueryContext.SelectQuery.Select.Columns[index.Index]);
 
-			var corrected = indexes.Select(s => s.WithSql(SubqueryContext.SelectQuery.Select.Columns[s.Index]))
-				.ToArray();
+				// force nullability
+				if (isOuter && !index.Sql.CanBeNull)
+					indexes[i] = index.WithSql(new SqlExpression(index.Sql.SystemType, "{0}", index.Sql.Precedence, index.Sql) { CanBeNull = true });
+			}
 
-			return corrected;
+			return indexes;
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
@@ -108,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 			return TableContext.ConvertToParentIndex(index, this);
 		}
 
-		public void SetAlias(string alias)
+		public void SetAlias(string? alias)
 		{
 			//TODO
 		}
@@ -125,6 +133,16 @@ namespace LinqToDB.Linq.Builder
 
 		public void CompleteColumns()
 		{
+		}
+
+		public bool IsCompatibleLoadWith()
+		{
+			if (TableContext is not TableBuilder.TableContext tc)
+				return false;
+			if (!ReferenceEquals(CurrentLoadWith, tc.LoadWith))
+				return false;
+
+			return true;
 		}
 	}
 }

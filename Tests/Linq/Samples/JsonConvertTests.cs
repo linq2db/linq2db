@@ -14,9 +14,8 @@ using NUnit.Framework;
 
 namespace Tests.Samples
 {
-
 	[AttributeUsage(AttributeTargets.Property)]
-	public class JSonContentAttribute : Attribute
+	public class JsonContentAttribute : Attribute
 	{
 	}
 
@@ -47,7 +46,7 @@ namespace Tests.Samples
 
 		public static void GenerateConvertors(Type entityType, MappingSchema ms)
 		{
-			foreach (var propertyInfo in entityType.GetProperties().Where(p => p.GetCustomAttribute(typeof(JSonContentAttribute)) != null))
+			foreach (var propertyInfo in entityType.GetProperties().Where(p => p.HasAttribute<JsonContentAttribute>()))
 			{
 				// emulating inParam => JsonConvert.DeserializeObject(inParam, propertyInfo.PropertyType)
 
@@ -92,7 +91,7 @@ namespace Tests.Samples
 			AddMappingSchema(_convertorSchema);
 		}
 
-		public ITable<SampleClass> SampleClass => GetTable<SampleClass>();
+		public ITable<SampleClass> SampleClass => this.GetTable<SampleClass>();
 	}
 
 	[Table]
@@ -100,7 +99,7 @@ namespace Tests.Samples
 	{
 		[Column] public int Id    { get; set; }
 
-		[Column(DataType = DataType.VarChar, Length = 4000), JSonContent]
+		[Column(DataType = DataType.VarChar, Length = 4000), JsonContent]
 		public DataClass? Data { get; set; }
 	}
 
@@ -111,7 +110,7 @@ namespace Tests.Samples
 
 	public static class Json
 	{
-		class JsonValueBuilder : Sql.IExtensionCallBuilder
+		sealed class JsonValueBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -161,9 +160,8 @@ namespace Tests.Samples
 	[TestFixture]
 	public class JsonConvertTests : TestBase
 	{
-
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new MyDataConnection(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

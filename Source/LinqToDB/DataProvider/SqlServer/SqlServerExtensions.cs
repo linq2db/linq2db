@@ -1,8 +1,13 @@
-﻿using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+
+#if NET45
+// net45 is goner, so it is easier to suppress than fix
+#pragma warning disable MA0076 // Do not use implicit culture-sensitive ToString in interpolated strings
+#endif
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -774,5 +779,16 @@ namespace LinqToDB.DataProvider.SqlServer
 		#endregion
 
 		#endregion
+
+		/// <summary>
+		/// Generates 'ISNULL( value, replacementValue )' function.
+		/// </summary>
+		/// <typeparam name="T">Generic type.</typeparam>
+		/// <param name="ext">Extension point.</param>
+		/// <param name="value">Value to test whether is NULL.</param>
+		/// <param name="replacementValue">Value to replace.</param>
+		/// <returns>Function returns a replacementValue if the value is NULL.</returns>
+		[Sql.Extension("ISNULL({value}, {replacementValue})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAllParametersNullable)]
+		public static T IsNull<T>(this ISqlServerExtensions? ext, [ExprParameter] T? value, [ExprParameter] T? replacementValue) => throw new LinqException($"'{nameof(IsNull)}' is server - side method.");
 	}
 }

@@ -4,11 +4,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using NUnit.Framework;
 
-#if NET472
 using Tests.FSharp.Models;
-#else
-using Tests.Model;
-#endif
 
 namespace Tests.Linq
 {
@@ -18,7 +14,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlStringParameter([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = "John";
 				var person1 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
@@ -33,10 +29,10 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix)]
+		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p   = "abc";
 				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();

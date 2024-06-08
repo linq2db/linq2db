@@ -17,11 +17,11 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable?)When)?.Walk(options, func);
+			((ISqlExpressionWalkable?)When)?.Walk(options, context, func);
 
-			((ISqlExpressionWalkable)Insert).Walk(options, func);
+			((ISqlExpressionWalkable)Insert).Walk(options, context, func);
 
 			return null;
 		}

@@ -26,7 +26,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Issue2032Table.Data))

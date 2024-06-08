@@ -1,21 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
-		public SapHanaSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
+		}
+
+		protected SapHanaSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SapHanaSqlBuilder(this);
 		}
 
 		public override int CommandCount(SqlStatement statement)
@@ -32,15 +39,10 @@ namespace LinqToDB.DataProvider.SapHana
 				var table = insertClause.Into;
 
 				if (identityField == null || table == null)
-					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
+					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
 
 				StringBuilder.Append("SELECT CURRENT_IDENTITY_VALUE() FROM DUMMY");
 			}
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SapHanaSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
@@ -60,28 +62,21 @@ namespace LinqToDB.DataProvider.SapHana
 			if (createTable.StatementHeader == null)
 			{
 				AppendIndent().Append("CREATE COLUMN TABLE ");
-				BuildPhysicalTable(createTable.Table!, null);
+				BuildPhysicalTable(createTable.Table, null);
 			}
 			else
 			{
 				var name = WithStringBuilder(
-					new StringBuilder(),
-					() =>
+					static ctx =>
 					{
-						BuildPhysicalTable(createTable.Table!, null);
-						return StringBuilder.ToString();
-					});
+						ctx.this_.BuildPhysicalTable(ctx.createTable.Table, null);
+					}, (this_: this, createTable));
 
-				AppendIndent().AppendFormat(createTable.StatementHeader, name);
+				AppendIndent().AppendFormat(CultureInfo.InvariantCulture, createTable.StatementHeader, name);
 			}
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
-		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
-		}
-
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -117,14 +112,13 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.VarBinary:
 					if (type.Type.Length == null || type.Type.Length > 5000 || type.Type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(5000)");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}(5000)");
+
 						return;
 					}
 					break;
 			}
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
@@ -133,15 +127,6 @@ namespace LinqToDB.DataProvider.SapHana
 				StringBuilder.Append("FROM DUMMY").AppendLine();
 			else
 				base.BuildFromClause(statement, selectQuery);
-		}
-
-		public static bool TryConvertParameterSymbol { get; set; }
-
-		private static List<char>? _convertParameterSymbols;
-		public  static List<char>  ConvertParameterSymbols
-		{
-			get => _convertParameterSymbols == null ? (_convertParameterSymbols = new List<char>()) : _convertParameterSymbols;
-			set => _convertParameterSymbols = value ?? new List<char>();
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -166,10 +151,12 @@ namespace LinqToDB.DataProvider.SapHana
 						return sb.Append('"').Append(value).Append('"');
 					}
 
-				case ConvertType.NameToServer     :
-				case ConvertType.NameToDatabase   :
-				case ConvertType.NameToSchema     :
-				case ConvertType.NameToQueryTable :
+				case ConvertType.NameToServer    :
+				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToSchema    :
+				case ConvertType.NameToPackage   :
+				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToProcedure :
 					if (value.Length > 0 && value[0] == '\"')
 						return sb.Append(value);
 
@@ -192,22 +179,31 @@ namespace LinqToDB.DataProvider.SapHana
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
-			if (server   != null && server.Length == 0) server = null;
-			if (schema   != null && schema.Length == 0) schema = null;
-
-			// <table_name> ::= [[<linked_server_name>.]<schema_name>.]<identifier>
-			if (server != null && schema == null)
+			// <table_name> ::= [[<linked_server_name>.]<schema_name>.][library_name:]<identifier>
+			if (name.Server != null && name.Schema == null)
 				throw new LinqToDBException("You must specify schema name for linked server queries.");
 
-			if (server != null)
-				sb.Append(server).Append('.');
+			if (name.Server != null)
+			{
+				(escape ? Convert(sb, name.Server, ConvertType.NameToServer) : sb.Append(name.Server))
+					.Append('.');
+			}
 
-			if (schema != null)
-				sb.Append(schema).Append('.');
+			if (name.Schema != null)
+			{
+				(escape ? Convert(sb, name.Schema, ConvertType.NameToSchema) : sb.Append(name.Schema))
+					.Append('.');
+			}
 
-			return sb.Append(table);
+			if (name.Package != null)
+			{
+				(escape ? Convert(sb, name.Package, ConvertType.NameToPackage) : sb.Append(name.Package))
+					.Append(':');
+			}
+
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
@@ -242,5 +238,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			StringBuilder.Append(command);
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

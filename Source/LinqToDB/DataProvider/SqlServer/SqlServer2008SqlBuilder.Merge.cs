@@ -28,6 +28,7 @@
 		protected override void BuildMergeOperationDeleteBySource(SqlMergeOperationClause operation)
 		{
 			StringBuilder
+				.AppendLine()
 				.Append("WHEN NOT MATCHED BY SOURCE");
 
 			if (operation.Where != null)

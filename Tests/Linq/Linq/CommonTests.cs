@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -18,7 +18,7 @@ namespace Tests.Linq
 	public class CommonTests : TestBase
 	{
 		[Test]
-		public void CheckNullTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
+		public void CheckNullTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -162,7 +162,6 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[ActiveIssue("Incorrect length returned for Jürgen: 7 instead of 6", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc1([DataSources] string context)
 		{
@@ -172,7 +171,6 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length);
 		}
 
-		[ActiveIssue("Incorrect length returned for Jürgen: 7 instead of 6", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc2([DataSources] string context)
 		{
@@ -182,9 +180,9 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length + "".Length);
 		}
 
-		class Test
+		sealed class Test
 		{
-			class Entity
+			sealed class Entity
 			{
 				public Test? TestField;
 			}
@@ -219,7 +217,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class MyClass
+		sealed class MyClass
 		{
 			public int ID;
 
@@ -312,6 +310,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Condition1([DataSources] string context)
 		{
@@ -511,7 +510,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParameterTest1([DataSources] string context)
+		public void ParameterTest1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -558,7 +557,7 @@ namespace Tests.Linq
 			Assert.That(_i, Is.EqualTo(2));
 		}
 
-		class User
+		sealed class User
 		{
 			public string? FirstName;
 			public int?    Status;

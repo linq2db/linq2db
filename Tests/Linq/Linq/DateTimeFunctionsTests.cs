@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
 	using Model;
-	using System.Collections.Generic;
 
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
@@ -69,6 +70,7 @@ namespace Tests.Linq
 			public int GetHashCode(DateTime obj) => 0;
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void GetDate([DataSources] string context)
 		{
@@ -102,7 +104,7 @@ namespace Tests.Linq
 		[Test]
 		public void CurrentTimestampUtc(
 			[DataSources(ProviderName.Access, TestProvName.AllFirebird, ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -116,14 +118,18 @@ namespace Tests.Linq
 					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)),
 					$"{now}, {dbUtcNow}, {delta}");
 
-				// we don't set kind
-				Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
+				// we don't set kind and rely on provider's behavior
+				// Most providers return Unspecified, but at least it shouldn't be Local
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient))
+					Assert.AreEqual(DateTimeKind.Utc, dbUtcNow.Kind);
+				else
+					Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
 			}
 		}
 
 		[Test]
 		public void CurrentTzTimestamp(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus)]
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -141,7 +147,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
-			[IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllFirebird, ProviderName.SqlCe)]
+			[IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllFirebird, ProviderName.SqlCe, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -152,8 +158,12 @@ namespace Tests.Linq
 				var delta = dbUtcNow - DateTime.UtcNow;
 				Assert.IsTrue(delta.Between(TimeSpan.FromSeconds(-5), TimeSpan.FromSeconds(5)));
 
-				// we don't set kind
-				Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
+				// we don't set kind and rely on provider's behavior
+				// Most providers return Unspecified, but at least it shouldn't be Local
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient))
+					Assert.AreEqual(DateTimeKind.Utc, dbUtcNow.Kind);
+				else
+					Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
 			}
 		}
 
@@ -259,7 +269,7 @@ namespace Tests.Linq
 		[Test]
 		public void DatePartWeekNumberingType([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var dates = new[]
 				{
@@ -574,12 +584,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay2([IncludeDataSources(TestProvName.AllMySqlServer57Plus)] string context)
+		public void TimeOfDay2([IncludeDataSources(TestProvName.AllMySqlServer57Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
-					from t in db.Types select TruncMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
+					from t in db.Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
 		}
 
 		#endregion
@@ -655,7 +665,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types select           Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue)!. Value.Hour,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue))!.Value.Hour);
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue)!.Value.Hour));
 		}
 
 		[Test]
@@ -676,6 +686,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue))!.Value.Second);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddMillisecond([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
@@ -719,7 +730,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types select           t.DateTimeValue.AddHours(22). Hour,
-					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(22)).Hour);
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(22).Hour));
 		}
 
 		[Test]
@@ -740,6 +751,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddSeconds(-35)).Second);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddMilliseconds([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
@@ -963,7 +975,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in Types select Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue)!.Value.Hour,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.DateTimeValue))!.Value.Hour);
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.DateTimeValue)!.Value.Hour));
 		}
 
 		[Test]
@@ -990,6 +1002,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, part1 + part2, t.DateTimeValue))!.Value.Second);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddMillisecondExpression([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
@@ -1048,7 +1061,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in Types select t.DateTimeValue.AddHours(22).Hour,
-					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(part1 + part2)).Hour);
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(part1 + part2).Hour));
 		}
 
 		[Test]
@@ -1075,6 +1088,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddSeconds(part1 - part2)).Second);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddMillisecondsExpression([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
@@ -1268,6 +1282,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
+		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void SubDateMinute(
 			[DataSources(TestProvName.AllInformix)]
@@ -1279,6 +1294,7 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalMinutes));
 		}
 
+		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void DateDiffMinute(
 			[DataSources(TestProvName.AllInformix)]
@@ -1290,6 +1306,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
+		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void SubDateSecond(
 			[DataSources(TestProvName.AllInformix)]
@@ -1301,6 +1318,7 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalSeconds));
 		}
 
+		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
 		[Test]
 		public void DateDiffSecond(
 			[DataSources(TestProvName.AllInformix)]
@@ -1338,7 +1356,9 @@ namespace Tests.Linq
 						new CustomIntComparer(1));
 				}
 				// used type has precision == 1/300 of second
-				else if (context.Contains("Sybase") || context.Contains("SqlCe") || context.Contains("SqlServer") || context.Contains("Azure"))
+				else if (context.IsAnyOf(TestProvName.AllSybase)
+					|| context.IsAnyOf(ProviderName.SqlCe)
+					|| context.IsAnyOf(TestProvName.AllSqlServer))
 				{
 					AreEqual(
 						from t in Types select (int)(t.DateTimeValue.AddMilliseconds(2023456789) - t.DateTimeValue).TotalMilliseconds,
@@ -1365,7 +1385,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				if(context.Contains(ProviderName.SQLiteMS))
+				if(context.IsAnyOf(ProviderName.SQLiteMS))
 				{
 					AreEqual(
 						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2023456789)),
@@ -1373,7 +1393,9 @@ namespace Tests.Linq
 						new CustomNullableIntComparer(1));
 				}
 				// used type has precision == 1/300 of second
-				else if (context.Contains("Sybase") || context.Contains("SqlCe") || context.Contains("SqlServer") || context.Contains("Azure"))
+				else if (context.IsAnyOf(TestProvName.AllSybase)
+					|| context.IsAnyOf(ProviderName.SqlCe)
+					|| context.IsAnyOf(TestProvName.AllSqlServer))
 				{
 					AreEqual(
 						from t in Types select Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddMilliseconds(2023456789)),
@@ -1475,9 +1497,185 @@ namespace Tests.Linq
 					from t in from p in db.Types select new DateTime(p.DateTimeValue.Year + 1, 10, 1) where t.Month == 10 select t);
 		}
 
-#endregion
+		#endregion
 
-		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
+		#region DateAddViaTimeSpan
+
+		static TimeSpan?[] TimespansForTest()
+		{
+			return new TimeSpan?[]
+			{
+//				TimeSpan.FromMilliseconds(1),
+				TimeSpan.FromHours(1),
+				TimeSpan.FromMinutes(61),
+				TimeSpan.FromMinutes(120),
+				TimeSpan.FromSeconds(61),
+				TimeSpan.FromHours(24),
+				TimeSpan.FromHours(24) + TimeSpan.FromSeconds(1),
+				null
+			};
+		}
+
+		class DateTypes
+		{
+			[Column(CanBeNull = false, IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime, CanBeNull = false)]
+			public DateTime DateTime { get; set; }
+			[Column(DataType = DataType.DateTime, CanBeNull = true)]
+			public DateTime? DateTimeNullable { get; set; }
+
+			[Column(DataType = DataType.DateTime2, CanBeNull = false)]
+			[Column(DataType = DataType.DateTime, CanBeNull = false, Configuration = ProviderName.AccessOdbc)]
+			public DateTime DateTime2 { get; set; }
+
+			[Column(DataType = DataType.DateTime2, CanBeNull = true)]
+			[Column(DataType = DataType.DateTime, CanBeNull = true, Configuration = ProviderName.AccessOdbc)]
+			public DateTime? DateTime2Nullable { get; set; }
+
+			public static DateTypes[] Seed()
+			{
+				return new DateTypes[]
+				{
+					new DateTypes
+					{
+						Id = 1,
+						DateTime = TestData.DateTime,
+						DateTimeNullable = TestData.DateTime,
+						DateTime2 = TestData.DateTime,
+						DateTime2Nullable = TestData.DateTime,
+					},
+					new DateTypes
+					{
+						Id = 2,
+						DateTime = TestData.DateTime,
+						DateTimeNullable = null,
+						DateTime2 = TestData.DateTime,
+						DateTime2Nullable = null,
+					},
+				};
+			}
+		}
+
+		class DateTypesOffset
+		{
+			[Column(CanBeNull = false, IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTimeOffset, CanBeNull = false)]
+			public DateTimeOffset DateTimeOffset { get; set; }
+
+			[Column(DataType = DataType.DateTimeOffset, CanBeNull = true)]
+			public DateTimeOffset? DateTimeOffsetNullable { get; set; }
+
+			public static DateTypesOffset[] Seed()
+			{
+				return new DateTypesOffset[]
+				{
+					new DateTypesOffset
+					{
+						Id = 1,
+						DateTimeOffset = TestData.DateTimeOffset,
+						DateTimeOffsetNullable = TestData.DateTimeOffset,
+					},
+					new DateTypesOffset
+					{
+						Id = 2,
+						DateTimeOffset = TestData.DateTimeOffset,
+						DateTimeOffsetNullable = null,
+					},
+				};
+			}
+		}
+
+		[Test]
+		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context, [ValueSource(nameof(TimespansForTest))] TimeSpan? ts)
+		{
+			// something wrong with retrieving DateTime values for SQLite
+			if (context.StartsWith("SQLite") && context.EndsWith(".LinqService"))
+				return;
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(DateTypes.Seed()))
+			{
+
+				var query =
+					from t in table
+					select new
+					{
+						Id = t.Id,
+
+						DateTime = t.DateTime + ts,
+						DateTimeNullable = t.DateTimeNullable + ts,
+						DateTime2 = t.DateTime2 + ts,
+						DateTime2Nullable = t.DateTime2Nullable + ts,
+
+
+						M_DateTime = t.DateTime - ts,
+						M_DateTimeNullable = t.DateTimeNullable - ts,
+						M_DateTime2 = t.DateTime2 - ts,
+						M_DateTime2Nullable = t.DateTime2Nullable - ts,
+
+						C_DateTime = ts == null ? null : t.DateTime + Sql.ToSql(ts),
+						C_DateTimeNullable = ts == null ? null : t.DateTimeNullable + Sql.ToSql(ts),
+						C_DateTime2 = ts == null ? null : t.DateTime2 + Sql.ToSql(ts),
+						C_DateTime2Nullable = ts == null ? null : t.DateTime2Nullable + Sql.ToSql(ts),
+					};
+
+				var concated = query.Concat(query);
+
+				AssertQuery(concated);
+			}
+		}
+
+
+		[Test]
+		public void DateTimeOffsetAddTimeSpan(
+			[DataSources(
+				TestProvName.AllAccess,
+				TestProvName.AllFirebird,
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer2005,
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
+				TestProvName.AllSybase,
+				TestProvName.AllMySqlData, // TODO: mysql.data doesn't support DateTimeOffset
+				ProviderName.SqlCe)]
+			string context,
+			[ValueSource(nameof(TimespansForTest))] TimeSpan? ts)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(DateTypesOffset.Seed()))
+			{
+
+				var query =
+					from t in table
+					select new
+					{
+						Id = t.Id,
+
+						DateTimeOffset = t.DateTimeOffset + ts,
+						DateTimeOffsetNullable = t.DateTimeOffsetNullable + ts,
+
+
+						M_DateTimeOffset = t.DateTimeOffset - ts,
+						M_DateTimeOffsetNullable = t.DateTimeOffsetNullable - ts,
+
+						C_DateTimeOffset = t.DateTimeOffset + Sql.ToSql(ts),
+						C_DateTimeOffsetNullable = t.DateTimeOffsetNullable + Sql.ToSql(ts),
+					};
+
+				var concated = query.Concat(query);
+
+				AssertQuery(concated);
+			}
+		}
+
+		#endregion
+
+		[ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.", Configuration = ProviderName.DB2)]
 		[Test]
 		public void GetDateTest1([DataSources] string context)
 		{

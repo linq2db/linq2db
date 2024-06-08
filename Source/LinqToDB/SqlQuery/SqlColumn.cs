@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -30,7 +32,7 @@ namespace LinqToDB.SqlQuery
 #endif
 
 		ISqlExpression _expression;
-		
+
 		public ISqlExpression Expression
 		{
 			get => _expression;
@@ -38,13 +40,15 @@ namespace LinqToDB.SqlQuery
 			{
 				if (_expression == value)
 					return;
+				if (value == this)
+					throw new InvalidOperationException();
 				_expression = value;
 				_hashCode   = null;
 			}
 		}
 
 		SelectQuery? _parent;
-		
+
 		public SelectQuery? Parent
 		{
 			get => _parent;
@@ -61,10 +65,14 @@ namespace LinqToDB.SqlQuery
 
 		public ISqlExpression UnderlyingExpression()
 		{
-			var current = Expression;
+			var current = QueryHelper.UnwrapExpression(Expression, false);
 			while (current.ElementType == QueryElementType.Column)
 			{
-				current = ((SqlColumn)current).Expression;
+				var column      = (SqlColumn)current;
+				var columnQuery = column.Parent;
+				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Take(2).Count() > 1)
+					break;
+				current = QueryHelper.UnwrapExpression(column.Expression, false);
 			}
 
 			return current;
@@ -75,23 +83,30 @@ namespace LinqToDB.SqlQuery
 			get
 			{
 				if (RawAlias == null)
-				{
-					switch (Expression)
-					{
-						case SqlField    field  : return field.Alias ?? field.PhysicalName;
-						case SqlColumn   column : return column.Alias;
-						case SelectQuery query:
-							{
-								if (query.Select.Columns.Count == 1 && query.Select.Columns[0].Alias != "*")
-									return query.Select.Columns[0].Alias;
-								break;
-							}
-					}
-				}
+					return GetAlias(Expression);
 
 				return RawAlias;
 			}
 			set => RawAlias = value;
+		}
+
+		private static string? GetAlias(ISqlExpression? expr)
+		{
+			switch (expr)
+			{
+				case SqlField    field  : return field.Alias ?? field.PhysicalName;
+				case SqlColumn   column : return column.Alias;
+				case SelectQuery query  :
+					{
+						if (query.Select.Columns.Count == 1 && query.Select.Columns[0].Alias != "*")
+							return query.Select.Columns[0].Alias;
+						break;
+					}
+				case SqlExpression e
+					when e.Expr is "{0}": return GetAlias(e.Parameters[0]);
+			}
+
+			return null;
 		}
 
 		int? _hashCode;
@@ -157,7 +172,10 @@ namespace LinqToDB.SqlQuery
 
 #else
 			if (Expression is SqlField)
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			{
+				using var sb = Common.Internal.Pools.StringBuilder.Allocate();
+				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			}
 
 			return base.ToString()!;
 #endif
@@ -217,15 +235,14 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			if (!(options.SkipColumns && Expression is SqlColumn))
-				Expression = Expression.Walk(options, func)!;
+			Expression = Expression.Walk(options, context, func)!;
 
 			if (options.ProcessParent)
-				Parent = (SelectQuery)func(Parent!);
+				Parent = (SelectQuery)func(context, Parent!);
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -243,13 +260,12 @@ namespace LinqToDB.SqlQuery
 			}
 
 			sb
-				.Append('t')
-				.Append(Parent?.SourceID ?? - 1)
+				.Append(CultureInfo.InvariantCulture, $"t{Parent?.SourceID ?? -1}")
 #if DEBUG
-				.Append('[').Append(_columnNumber).Append(']')
+				.Append(CultureInfo.InvariantCulture, $"[{_columnNumber}]")
 #endif
 				.Append('.')
-				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
+				.Append(Alias ?? FormattableString.Invariant($"c{(parentIndex >= 0 ? parentIndex + 1 : parentIndex)}"));
 
 			return sb;
 		}

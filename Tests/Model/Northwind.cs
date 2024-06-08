@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
-	public class Northwind
+	public static class Northwind
 	{
 		public abstract class EntityBase<T>
 			where T: notnull
@@ -132,8 +132,8 @@ namespace Tests.Model
 			[PrimaryKey]          public int    EmployeeID;
 			[PrimaryKey, NotNull] public string TerritoryID = null!;
 
-			[Association(ThisKey="EmployeeID",  OtherKey="EmployeeID")]  public Employee  Employee = null!;
-			[Association(ThisKey="TerritoryID", OtherKey="TerritoryID")] public Territory Territory = null!;
+			[Association(ThisKey="EmployeeID",  OtherKey="EmployeeID")]  public Employee   Employee = null!;
+			[Association(ThisKey="TerritoryID", OtherKey="TerritoryID")] public Territory? Territory;
 		}
 
 		[Table(Name="Order Details")]
@@ -258,7 +258,7 @@ namespace Tests.Model
 			public List<EmployeeTerritory> EmployeeTerritories = null!;
 
 			[Association(ThisKey="RegionID", OtherKey="RegionID")]
-			public Region Region = null!;
+			public Region? Region;
 		}
 	}
 }

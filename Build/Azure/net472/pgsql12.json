@@ -1,8 +1,0 @@
-﻿{
-	"NET472.Azure": {
-		"Providers": [
-			// posgresql 12
-			"PostgreSQL.12"
-		]
-	}
-}

@@ -6,13 +6,13 @@ namespace LinqToDB.DataProvider.SqlCe
 	using SqlQuery;
 	using SqlProvider;
 
-	class SqlCeSqlOptimizer : BasicSqlOptimizer
+	sealed class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
 		public SqlCeSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			// This function mutates statement which is allowed only in this place
 			CorrectSkipAndColumns(statement);
@@ -20,17 +20,19 @@ namespace LinqToDB.DataProvider.SqlCe
 			// This function mutates statement which is allowed only in this place
 			CorrectInsertParameters(statement);
 
-			CorrectFunctionParameters(statement);
+			CorrectFunctionParameters(statement, dataOptions);
+
+			statement = CorrectBooleanComparison(statement);
 
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
-					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
+					statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SqlUpdateStatement) statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions);
 					break;
 			}
 
@@ -41,11 +43,91 @@ namespace LinqToDB.DataProvider.SqlCe
 			return statement;
 		}
 
-		protected static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
+		private static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
 
 		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
 
-		void CorrectInsertParameters(SqlStatement statement)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		{
+			var like = ConvertSearchStringPredicateViaLike(predicate, visitor);
+
+			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
+			{
+				SqlPredicate.ExprExpr? subStrPredicate = null;
+
+				switch (predicate.Kind)
+				{
+					case SqlPredicate.SearchString.SearchKind.StartsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(typeof(string), "SUBSTRING",
+										predicate.Expr1,
+										new SqlValue(1),
+									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+						break;
+					}
+
+					case SqlPredicate.SearchString.SearchKind.EndsWith:
+					{
+						var indexExpression = new SqlBinaryExpression(typeof(int),
+							new SqlBinaryExpression(typeof(int),
+								new SqlFunction(typeof(int), "Length", predicate.Expr1),
+								"-",
+								new SqlFunction(typeof(int), "Length", predicate.Expr2)),
+							"+",
+							new SqlValue(1));
+
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(typeof(string), "SUBSTRING",
+										predicate.Expr1,
+										indexExpression,
+										new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+
+						break;
+					}
+					case SqlPredicate.SearchString.SearchKind.Contains:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(int), "CHARINDEX",
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr2),
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr1)),
+								SqlPredicate.Operator.Greater,
+								new SqlValue(0), null);
+
+						break;
+					}
+
+				}
+
+				if (subStrPredicate != null)
+				{
+					var result = new SqlSearchCondition(
+						new SqlCondition(false, like, predicate.IsNot),
+						new SqlCondition(predicate.IsNot, subStrPredicate));
+
+					return result;
+				}
+			}
+
+			return like;
+		}
+
+		static void CorrectInsertParameters(SqlStatement statement)
 		{
 			//SlqCe do not support parameters in columns for insert
 			//
@@ -65,7 +147,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		void CorrectSkipAndColumns(SqlStatement statement)
+		static void CorrectSkipAndColumns(SqlStatement statement)
 		{
 			statement.Visit(static e =>
 			{
@@ -109,9 +191,9 @@ namespace LinqToDB.DataProvider.SqlCe
 			});
 		}
 
-		void CorrectFunctionParameters(SqlStatement statement)
+		static void CorrectFunctionParameters(SqlStatement statement, DataOptions options)
 		{
-			if (!SqlCeConfiguration.InlineFunctionParameters)
+			if (!options.FindOrDefault(SqlCeOptions.Default).InlineFunctionParameters)
 				return;
 
 			statement.Visit(static e =>
@@ -136,10 +218,34 @@ namespace LinqToDB.DataProvider.SqlCe
 			// already fixed by CorrectSkipAndColumns
 		}
 
-		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
-			EvaluationContext context)
+		private SqlStatement CorrectBooleanComparison(SqlStatement statement)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			statement = statement.ConvertAll(this, true, static (_, e) =>
+			{
+				if (e.ElementType == QueryElementType.IsTruePredicate)
+				{
+					var isTruePredicate = (SqlPredicate.IsTrue)e;
+					if (isTruePredicate.Expr1 is SelectQuery query && query.Select.Columns.Count == 1)
+					{
+						query.Select.Where.EnsureConjunction();
+						query.Select.Where.SearchCondition.Conditions.Add(new SqlCondition(false,
+							new SqlPredicate.IsTrue(query.Select.Columns[0].Expression, isTruePredicate.TrueValue,
+								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot, true)));
+						query.Select.Columns.Clear();
+
+						return new SqlPredicate.FuncLike(SqlFunction.CreateExists(query));
+					}
+				}
+
+				return e;
+			});
+
+			return statement;
+		}
+
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		{
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			switch (expression)
 			{
@@ -162,6 +268,11 @@ namespace LinqToDB.DataProvider.SqlCe
 				case SqlFunction func:
 					switch (func.Name)
 					{
+						case "Length":
+						{
+							return new SqlFunction(func.SystemType, "LEN", func.IsAggregate, func.IsPure,
+								func.Precedence, func.Parameters);
+						}
 						case "Convert" :
 							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 							{

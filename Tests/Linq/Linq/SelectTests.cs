@@ -2,27 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-#if NET472
-using System.Windows.Forms;
-#endif
+using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
+using LinqToDB.Linq;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Data;
-	using System.Data.Common;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using LinqToDB.Common;
-	using LinqToDB.Data.DbCommandProcessor;
 	using Model;
 
 	[TestFixture]
@@ -227,7 +220,7 @@ namespace Tests.Linq
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
 		[Test]
 		public void MultipleSelect11([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, TestProvName.AllSapHana)]
+			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var dt = DateTime.Now;
@@ -379,7 +372,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class MyMapSchema : MappingSchema
+		sealed class MyMapSchema : MappingSchema
 		{
 			public MyMapSchema()
 			{
@@ -387,7 +380,7 @@ namespace Tests.Linq
 			}
 		}
 
-		static readonly MyMapSchema _myMapSchema = new MyMapSchema();
+		static readonly MyMapSchema _myMapSchema = new ();
 
 		[Test]
 		public void Coalesce3([DataSources(false)] string context)
@@ -421,7 +414,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce4([DataSources(ProviderName.SqlCe)] string context)
+		public void Coalesce4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -432,7 +425,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce5([DataSources(ProviderName.SqlCe)] string context)
+		public void Coalesce5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -465,20 +458,28 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if NET472
+		public class ListViewItem
+		{
+			public ListViewItem(string[] items)
+			{
+			}
+
+			public bool    Checked    { get; set; }
+			public int     ImageIndex { get; set; }
+			public object? Tag        { get; set; }
+		}
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.Parent.Select(f =>
-					new ListViewItem(new[] { "", f.ParentID.ToString(), f.Value1.ToString() })
+					new ListViewItem(new[] { "", f.ParentID.ToString()!, f.Value1.ToString()! })
 					{
 						Checked    = true,
 						ImageIndex = 0,
 						Tag        = f.ParentID
 					}).ToList();
 		}
-#endif
 
 		static string ConvertString(string s, int? i, bool b, int n)
 		{
@@ -605,7 +606,7 @@ namespace Tests.Linq
 		[Test]
 		public void SelectField()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var q =
 					from p in db.GetTable<TestParent>()
@@ -665,14 +666,15 @@ namespace Tests.Linq
 		public void SelectComplex3([DataSources] string context)
 		{
 			var ms = new MappingSchema();
-			var b  = ms.GetFluentMappingBuilder();
+			var b  = new FluentMappingBuilder(ms);
 
 			b
 				.Entity<ComplexPerson3>()        .HasTableName ("Person")
 				.Property(_ => _.ID)             .HasColumnName("PersonID")
 				.Property(_ => _.Name.FirstName) .HasColumnName("FirstName")
 				.Property(_ => _.Name.LastName)  .HasColumnName("LastName")
-				.Property(_ => _.Name.MiddleName).HasColumnName("MiddleName");
+				.Property(_ => _.Name.MiddleName).HasColumnName("MiddleName")
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			{
@@ -684,6 +686,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void SelectNullableTest1([DataSources] string context)
 		{
@@ -705,6 +708,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void SelectNullableTest2([DataSources] string context)
 		{
@@ -911,7 +915,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void InternalFieldProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InternalFieldProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -921,12 +925,12 @@ namespace Tests.Linq
 					InternalStr = t.StringValue
 				});
 
-				var result = query.Where(x => x.InternalStr != "").ToArray();
+				var result = query.Where(x => x.InternalStr != "").OrderBy(_ => _.Int).ToArray();
 				Assert.That(result[0].InternalStr, Is.EqualTo(Types.First().StringValue));
 			}
 		}
 
-		class LocalClass
+		sealed class LocalClass
 		{
 		}
 
@@ -952,10 +956,10 @@ namespace Tests.Linq
 				string context)
 		{
 			var sql = "select PersonID, FirstName, MiddleName, LastName, Gender from Person where PersonID = 3";
-			if (context.Contains("Oracle"))
+			if (context.IsAnyOf(TestProvName.AllOracle))
 				sql = "select \"PersonID\", \"FirstName\", \"MiddleName\", \"LastName\", \"Gender\" from \"Person\" where \"PersonID\" = 3";
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
 
@@ -969,7 +973,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class MainEntityObject
+		sealed class MainEntityObject
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1019,20 +1023,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestExpressionMethodInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestExpressionMethodInProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
 				new ChildEntityObject{Id = 1, Value = "Value 1"}
 			}))
 			{
-				var query = 
+				var query =
 					from m in db.GetTable<MainEntityObject>()
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
 					select new DtoResult
@@ -1049,15 +1053,65 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class IntermediateChildResult
+		{
+			public int?   ParentId { get; set; }
+			public Child? Child    { get; set; }
+		}
 
 		[Test]
-		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalProjectionOptimization(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
+			[Values(true, false)] bool includeChild,
+			[Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				select new IntermediateChildResult { ParentId = c.ParentID, Child = includeChild ? c : null };
+
+			var cacheMissCount = Query<IntermediateChildResult>.CacheMissCount;
+
+			var result = query.ToArray().First();
+
+			void CheckResult()
+			{
+			if (includeChild)
+			{
+				result.Child.Should().NotBeNull();
+			}
+			else
+			{
+				result.Child.Should().BeNull();
+
+				((DataConnection)db).LastQuery.Should().NotContain("ChildID");
+			}
+			}
+
+			CheckResult();
+
+			includeChild = !includeChild;
+
+			result = query.ToArray().First();
+
+			CheckResult();
+
+			if (iteration > 1)
+			{
+				Query<IntermediateChildResult>.CacheMissCount.Should().Be(cacheMissCount);
+			}
+		}
+
+
+		[Test]
+		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
@@ -1069,6 +1123,7 @@ namespace Tests.Linq
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
 					select new
 					{
+						m.Id,
 						Child1 = c,
 						Child2 = c == null ? null : new ChildEntityObject { Id = c.Id, Value = c.Value },
 						Child3 = c != null ? c : new ChildEntityObject { Id = 4, Value = "Generated" },
@@ -1080,7 +1135,7 @@ namespace Tests.Linq
 							: c
 					};
 
-				var result = query.ToArray();
+				var result = query.OrderBy(_ => _.Id).ToArray();
 
 				Assert.NotNull(result[0].Child1);
 				Assert.IsNull (result[1].Child1);
@@ -1101,23 +1156,23 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConditionalInProjectionSubquery([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalInProjectionSubquery([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
 				new ChildEntityObject{Id = 1, Value = "Value 1"}
 			}))
 			{
-				var query = 
+				var query =
 					(from m in db.GetTable<MainEntityObject>()
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
-					select new 
+					select new
 					{
 						c.Id,
 						Value = (c != null) ? c.Value : (m.MainValue != null ? m.MainValue : "")
@@ -1149,7 +1204,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class ParentResult
+		sealed class ParentResult
 		{
 			public ParentResult(int parentID, int? value1)
 			{
@@ -1162,7 +1217,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConstructorProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestConstructorProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1187,7 +1242,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1213,7 +1268,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("Currently linq2db do not support such queries")]
 		[Test]
-		public void TestComplexMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestComplexMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1238,7 +1293,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestComplexNestedProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestComplexNestedProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1287,8 +1342,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value!.Value));
 
@@ -1303,8 +1357,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value!.Value) : (int?)null);
 
@@ -1319,8 +1372,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
 
@@ -1335,8 +1387,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
 
@@ -1446,7 +1497,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle12)] string context)
+		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle12Plus, TestProvName.AllMySql, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1471,7 +1522,7 @@ namespace Tests.Linq
 				 	.OrderBy(_ => _.Parent.ParentID);
 
 
-				var expectedQuery = 
+				var expectedQuery =
 					from p in Parent
 					from c1 in Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
 					let children = Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
@@ -1508,7 +1559,7 @@ namespace Tests.Linq
 				}
 			}
 		}
-		
+
 		[Test]
 		public void ToStringTest([DataSources] string context)
 		{
@@ -1524,13 +1575,13 @@ namespace Tests.Linq
 				id = 2;
 
 				var sql2 = query.ToString();
-				
+
 				Assert.That(sql1, Is.Not.EqualTo(sql2));
 			}
 		}
 
 		[Table]
-		class SelectExpressionTable
+		sealed class SelectExpressionTable
 		{
 			[PrimaryKey] public int ID { get; set; }
 
@@ -1612,14 +1663,14 @@ namespace Tests.Linq
 
 
 		[Table("test_mapping_column_2_prop")]
-		public partial class TestMappingColumn1PropInfo 
+		public partial class TestMappingColumn1PropInfo
 		{
 			[Column("id"),          PrimaryKey] public long Id         { get; set; } // bigint
 			[Column("test_number"), NotNull   ] public long TestNumber { get; set; } // bigint
 		}
 
 		[Table("test_mapping_column_2_prop")]
-		public partial class TestMappingColumn2PropInfo 
+		public partial class TestMappingColumn2PropInfo
 		{
 			[Column("test_number"), NotNull   ] public long TestNumber { get; set; } // bigint
 
@@ -1629,7 +1680,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MaterializeTwoMapped([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MaterializeTwoMapped([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var data = new[] { new TestMappingColumn1PropInfo  { Id = 1, TestNumber = 3 } };
 			using (var db = GetDataContext(context))
@@ -1642,7 +1693,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Table860_1
+		sealed class Table860_1
 		{
 			[Column] public int Id  { get; set; }
 			[Column] public int bId { get; set; }
@@ -1652,7 +1703,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Table860_2
+		sealed class Table860_2
 		{
 			[Column] public int Id  { get; set; }
 			[Column] public int cId { get; set; }
@@ -1662,7 +1713,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Table860_3
+		sealed class Table860_3
 		{
 			[Column] public int     Id   { get; set; }
 			[Column] public string? Prop { get; set; }
@@ -1706,8 +1757,7 @@ namespace Tests.Linq
 			// Microsoft.Data.SqlClient
 			// SqlCe
 			using (new OptimizeForSequentialAccess(true))
-			using (new CustomCommandProcessor(new SequentialAccessCommandProcessor()))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
 			{
 				var q = db.Person
 					.Select(p => new
@@ -1729,8 +1779,8 @@ namespace Tests.Linq
 		{
 			// fields read out-of-order, multiple times and with different types
 			using (new OptimizeForSequentialAccess(true))
-			using (new CustomCommandProcessor(new SequentialAccessCommandProcessor()))
-			using (var db = GetDataContext(context))
+			// suppressSequentialAccess: true to avoid interceptor added twice
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
 			{
 				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
 				Assert.AreEqual(typeof(InheritanceParent1)   , InheritanceParent[1].GetType());
