@@ -1,6 +1,8 @@
 ﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -24,46 +26,42 @@ namespace Tests.UserTests
 		[Test]
 		public void IssueTestInsertViaSelect([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<MessageEventDTO>())
+			using (db.CreateLocalTable<MessageEventDTO>(tableName: "MessageEventDTOTb2"))
 			{
-				using (db.CreateLocalTable<MessageEventDTO>())
-				using (db.CreateLocalTable<MessageEventDTO>(tableName: "MessageEventDTOTb2"))
-				{
-					var evtQry = db.GetTable<MessageEventDTO>();
-					var q = from evt in evtQry
-							select new MessageEventCombinedWithoutTranslationDTO
-							{
-								MessageEventDTO = evt,
-							};
+				var evtQry = db.GetTable<MessageEventDTO>();
+				var q = from evt in evtQry
+						select new MessageEventCombinedWithoutTranslationDTO
+						{
+							MessageEventDTO = evt,
+						};
 
-					var queryDelete = q.Select(x => x.MessageEventDTO!);
+				var query = q.Select(x => x.MessageEventDTO!);
 
-					var destination = db.GetTable<MessageEventDTO>().TableName("MessageEventDTOTb2");
+				var destination = db.GetTable<MessageEventDTO>().TableName("MessageEventDTOTb2");
 
-					queryDelete.Insert(destination, x => x);
-				}
+				query.Insert(destination, x => x);
 			}
 		}
 
 		[Test]
 		public void IssueTestDeleteViaSelect([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<MessageEventDTO>())
+			using (db.CreateLocalTable<MessageEventDTO>(tableName: "MessageEventDTOTb2"))
 			{
-				using (db.CreateLocalTable<MessageEventDTO>())
-				using (db.CreateLocalTable<MessageEventDTO>(tableName: "MessageEventDTOTb2"))
-				{
-					var evtQry = db.GetTable<MessageEventDTO>();
-					var q = from evt in evtQry
-							select new MessageEventCombinedWithoutTranslationDTO
-							{
-								MessageEventDTO = evt,
-							};
+				var evtQry = db.GetTable<MessageEventDTO>();
+				var q = from evt in evtQry
+						select new MessageEventCombinedWithoutTranslationDTO
+						{
+							MessageEventDTO = evt,
+						};
 
-					var queryDelete = q.Select(x => x.MessageEventDTO!);
+				var query = q.Select(x => x.MessageEventDTO!);
 
-					var rows = db.Delete(queryDelete);
-				}
+				var rows = db.Delete(query);
 			}
 		}
 	}
