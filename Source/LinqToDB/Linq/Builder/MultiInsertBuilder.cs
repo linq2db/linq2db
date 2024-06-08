@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
 
-	class MultiInsertBuilder : MethodCallBuilder
+	sealed class MultiInsertBuilder : MethodCallBuilder
 	{
 		#region MultiInsertBuilder
 
@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 		};
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{	
+		{
 			var genericMethod = methodCall.Method.GetGenericMethodDefinition();
 			return _methodBuilders.TryGetValue(genericMethod, out var build)
 				? build(builder, methodCall, buildInfo)
@@ -36,13 +36,13 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		private static IBuildContext BuildMultiInsert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{ 
+		{
 			// MultiInsert(IQueryable)
 			var sourceContext       = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var source              = new TableLikeQueryContext(sourceContext);
 			var statement           = new SqlMultiInsertStatement(source.Source);
 			sourceContext.Statement = statement;
-			
+
 			return source;
 		}
 
@@ -66,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 			};
 
 			statement.Add(when, insert);
-			
+
 			if (condition != null)
 			{
 				builder.BuildSearchCondition(
@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		private static IBuildContext BuildInto(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{ 
+		{
 			// Into(IQueryable, ITable, Expression setter)
 			return BuildTargetTable(
 				builder,
@@ -103,9 +103,9 @@ namespace LinqToDB.Linq.Builder
 				methodCall.Arguments[1],
 				methodCall.Arguments[2].UnwrapLambda());
 		}
-		
+
 		private static IBuildContext BuildWhen(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{ 
+		{
 			// When(IQueryable, Expression condition, ITable, Expression setter)
 			return BuildTargetTable(
 				builder,
@@ -116,9 +116,9 @@ namespace LinqToDB.Linq.Builder
 				methodCall.Arguments[2],
 				methodCall.Arguments[3].UnwrapLambda());
 		}
-		
+
 		private static IBuildContext BuildElse(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{ 
+		{
 			// Else(IQueryable, ITable, Expression setter)
 			return BuildTargetTable(
 				builder,
@@ -134,14 +134,14 @@ namespace LinqToDB.Linq.Builder
 		{
 			var source           = (TableLikeQueryContext)builder.BuildSequence(new BuildInfo(buildInfo, query));
 			var statement        = (SqlMultiInsertStatement)source.Context.Statement!;
-			
+
 			statement.InsertType = type;
-			
+
 			return new MultiInsertContext(source.Context);
 		}
 
 		private static IBuildContext BuildInsert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{ 
+		{
 			// Insert(IQueryable)
 			return BuildInsert(
 				builder,
@@ -151,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		private static IBuildContext BuildInsertAll(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{ 
+		{
 			// InsertAll(IQueryable)
 			return BuildInsert(
 				builder,
@@ -161,23 +161,20 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		private static IBuildContext BuildInsertFirst(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{ 
+		{
 			// InsertFirst(IQueryable)
 			return BuildInsert(
 				builder,
 				buildInfo,
 				MultiInsertType.First,
 				methodCall.Arguments[0]);
-		}		
-
-		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			=> null;
+		}
 
 		#endregion
 
 		#region MultiInsertContext
 
-		class MultiInsertContext : SequenceContextBase
+		sealed class MultiInsertContext : SequenceContextBase
 		{
 			private readonly ISet<Expression> _sourceParameters = new HashSet<Expression>();
 
@@ -188,13 +185,13 @@ namespace LinqToDB.Linq.Builder
 
 			public MultiInsertContext(IBuildContext source)
 				: base(null, source, null)
-			{ 
+			{
 				_source = source;
 			}
 
 			public MultiInsertContext(SqlMultiInsertStatement insert, IBuildContext source, IBuildContext target)
 				: base(null, new[] { target, source }, null)
-			{ 
+			{
 				_source   = source;
 				_target   = target;
 				Statement = insert;
@@ -203,7 +200,7 @@ namespace LinqToDB.Linq.Builder
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 				=> QueryRunner.SetNonQueryQuery(query);
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide) 
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 				=> throw new NotImplementedException();
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)

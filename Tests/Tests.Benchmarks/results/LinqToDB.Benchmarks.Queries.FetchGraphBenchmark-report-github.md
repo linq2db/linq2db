@@ -1,28 +1,32 @@
-``` ini
+```
 
-BenchmarkDotNet=v0.13.1, OS=Windows 10.0.16299.125 (1709/FallCreatorsUpdate/Redstone3)
-Intel Core i7-3770K CPU 3.50GHz (Ivy Bridge), 1 CPU, 8 logical and 4 physical cores
-Frequency=3417994 Hz, Resolution=292.5693 ns, Timer=TSC
-.NET SDK=5.0.402
-  [Host]     : .NET 5.0.11 (5.0.1121.47308), X64 RyuJIT
-  Job-ODZCDL : .NET 5.0.11 (5.0.1121.47308), X64 RyuJIT
-  Job-PCJJBI : .NET Core 3.1.20 (CoreCLR 4.700.21.47003, CoreFX 4.700.21.47101), X64 RyuJIT
-  Job-HHEMGO : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
+BenchmarkDotNet v0.13.9+228a464e8be6c580ad9408e98f18813f6407fb5a, Windows 10 (10.0.17763.5328/1809/October2018Update/Redstone5) (Hyper-V)
+AMD Ryzen 9 5950X, 2 CPU, 32 logical and 16 physical cores
+.NET SDK 8.0.101
+  [Host]     : .NET 7.0.15 (7.0.1523.57226), X64 RyuJIT AVX2
+  Job-KJWIMT : .NET 6.0.26 (6.0.2623.60508), X64 RyuJIT AVX2
+  Job-GULBRG : .NET 7.0.15 (7.0.1523.57226), X64 RyuJIT AVX2
+  Job-LRGNRQ : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
+  Job-SJROSW : .NET Framework 4.8 (4.8.4645.0), X64 RyuJIT VectorSize=256
 
 Jit=RyuJit  Platform=X64  
 
 ```
-|        Method |              Runtime |     Mean | Ratio | Allocated |
-|-------------- |--------------------- |---------:|------:|----------:|
-|          Linq |             .NET 5.0 | 3.220 ms |  0.72 |      1 MB |
-|     LinqAsync |             .NET 5.0 | 3.928 ms |  0.88 |      1 MB |
-|      Compiled |             .NET 5.0 | 3.220 ms |  0.73 |      1 MB |
-| CompiledAsync |             .NET 5.0 | 3.673 ms |  0.83 |      1 MB |
-|          Linq |        .NET Core 3.1 | 3.738 ms |  0.85 |      1 MB |
-|     LinqAsync |        .NET Core 3.1 | 4.758 ms |  1.08 |      1 MB |
-|      Compiled |        .NET Core 3.1 | 3.580 ms |  0.82 |      1 MB |
-| CompiledAsync |        .NET Core 3.1 | 4.399 ms |  1.00 |      1 MB |
-|          Linq | .NET Framework 4.7.2 | 4.432 ms |  0.99 |      1 MB |
-|     LinqAsync | .NET Framework 4.7.2 | 6.958 ms |  1.58 |      1 MB |
-|      Compiled | .NET Framework 4.7.2 | 4.419 ms |  1.00 |      1 MB |
-| CompiledAsync | .NET Framework 4.7.2 | 5.519 ms |  1.24 |      1 MB |
+| Method        | Runtime              | Mean     | Allocated |
+|-------------- |--------------------- |---------:|----------:|
+| Linq          | .NET 6.0             | 1.523 ms |   1.26 MB |
+| LinqAsync     | .NET 6.0             | 2.464 ms |   1.27 MB |
+| Compiled      | .NET 6.0             | 1.484 ms |   1.26 MB |
+| CompiledAsync | .NET 6.0             | 2.208 ms |   1.26 MB |
+| Linq          | .NET 7.0             | 1.235 ms |   1.26 MB |
+| LinqAsync     | .NET 7.0             | 2.374 ms |   1.26 MB |
+| Compiled      | .NET 7.0             | 1.452 ms |   1.26 MB |
+| CompiledAsync | .NET 7.0             | 2.238 ms |   1.26 MB |
+| Linq          | .NET Core 3.1        | 1.520 ms |   1.26 MB |
+| LinqAsync     | .NET Core 3.1        | 2.605 ms |   1.27 MB |
+| Compiled      | .NET Core 3.1        | 1.428 ms |   1.26 MB |
+| CompiledAsync | .NET Core 3.1        | 1.886 ms |   1.26 MB |
+| Linq          | .NET Framework 4.7.2 | 3.209 ms |   1.28 MB |
+| LinqAsync     | .NET Framework 4.7.2 | 4.574 ms |   1.28 MB |
+| Compiled      | .NET Framework 4.7.2 | 3.241 ms |   1.27 MB |
+| CompiledAsync | .NET Framework 4.7.2 | 4.718 ms |   1.27 MB |

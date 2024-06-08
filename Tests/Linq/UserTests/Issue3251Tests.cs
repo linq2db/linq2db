@@ -22,11 +22,11 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestMappingCombine([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		public void TestMappingCombine([IncludeDataSources(ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
-			mb.Entity<Class1>().HasTableName("Class1Table");
+			var mb = new FluentMappingBuilder(ms);
+			mb.Entity<Class1>().HasTableName("Class1Table").Build();
 
 			using (var db = new DataConnection("SQLite.MS", ms))
 			{
@@ -37,15 +37,15 @@ namespace Tests.UserTests
 			}
 
 			var newMs = new MappingSchema(ms);
-			var mb2 = newMs.GetFluentMappingBuilder();
-			mb2.Entity<Class2>().HasTableName("Class2Table");
+			var mb2 = new FluentMappingBuilder(newMs);
+			mb2.Entity<Class2>().HasTableName("Class2Table").Build();
 			using (var db = new DataConnection("SQLite.MS", newMs))
 			{
 				var ed1 = newMs.GetEntityDescriptor(typeof(Class2));
 				var ed2 = db.MappingSchema.GetEntityDescriptor(typeof(Class2));
 
-				Assert.AreEqual("Class2Table", ed1.TableName);
-				Assert.AreEqual("Class2Table", ed2.TableName);
+				Assert.AreEqual("Class2Table", ed1.Name.Name);
+				Assert.AreEqual("Class2Table", ed2.Name.Name);
 			}
 		}
 	}

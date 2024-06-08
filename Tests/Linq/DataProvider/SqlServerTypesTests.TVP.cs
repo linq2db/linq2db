@@ -178,8 +178,8 @@ namespace Tests.DataProvider
 			[ValueSource(nameof(DataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
 			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var result = db.QueryProc<TVPRecord>("TableTypeTestProc", testCase.Factory(external));
 
@@ -193,8 +193,8 @@ namespace Tests.DataProvider
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
 			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var result = from record in db.FromSql<TVPRecord>($"{testCase.Factory(external)}")
 							 select new TVPRecord() { Id = record.Id, Name = record.Name };
@@ -219,8 +219,8 @@ namespace Tests.DataProvider
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
 			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (var table = db.CreateTempTable<TestMergeTVPTable>())
 			{
 				var cnt = table
@@ -251,8 +251,8 @@ namespace Tests.DataProvider
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var result =
 					from record in TableValue(db, testCase.Factory(external))
@@ -266,8 +266,8 @@ namespace Tests.DataProvider
 		public void TableValuedParameterProcedureAsNullTest(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var result = db.QueryProc<TVPRecord>("TableTypeTestProc", new DataParameter("@table", null, DataType.Structured) {  DbType = TYPE_NAME});
 
@@ -278,8 +278,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void TableValuedParameterAsNullInQueryUsingFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var result = from record in db.FromSql<TVPRecord>($"select * from  {new DataParameter("table", null, DataType.Structured) { DbType = TYPE_NAME }}")
 							 select new TVPRecord() { Id = record.Id, Name = record.Name };
@@ -302,7 +302,7 @@ namespace Tests.DataProvider
 			{
 				Result[] GetResult(params int[] values)
 				{
-					var table = new DataTable();
+					using var table = new DataTable();
 
 					table.Columns.Add("Id", typeof(int));
 					table.Columns.Add("Name", typeof(string));
@@ -360,10 +360,11 @@ namespace Tests.DataProvider
 		[Test]
 		public void TableValuedParameterProcedureT4Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
-				var result = TableTypeTestProc(db, GetDataTable());
+				using var table = GetDataTable();
+				var result = TableTypeTestProc(db, table);
 
 				AreEqualWithComparer(TestUDTData, result);
 			}

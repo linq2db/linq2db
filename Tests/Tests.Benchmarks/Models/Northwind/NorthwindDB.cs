@@ -11,23 +11,29 @@ namespace LinqToDB.Benchmarks.Models
 {
 	public class NorthwindDB : DataConnection
 	{
-		public NorthwindDB(IDataProvider provider) : base(provider, new MockDbConnection(Array.Empty<QueryResult>(), ConnectionState.Open))
+		public NorthwindDB(DataOptions options) : base(options)
 		{
 		}
 
-		public ITable<Northwind.Category>            Category            => GetTable<Northwind.Category>();
-		public ITable<Northwind.Customer>            Customer            => GetTable<Northwind.Customer>();
-		public ITable<Northwind.Employee>            Employee            => GetTable<Northwind.Employee>();
-		public ITable<Northwind.EmployeeTerritory>   EmployeeTerritory   => GetTable<Northwind.EmployeeTerritory>();
-		public ITable<Northwind.OrderDetail>         OrderDetail         => GetTable<Northwind.OrderDetail>();
-		public ITable<Northwind.Order>               Order               => GetTable<Northwind.Order>();
-		public ITable<Northwind.Product>             Product             => GetTable<Northwind.Product>();
-		public ITable<Northwind.ActiveProduct>       ActiveProduct       => GetTable<Northwind.ActiveProduct>();
-		public ITable<Northwind.DiscontinuedProduct> DiscontinuedProduct => GetTable<Northwind.DiscontinuedProduct>();
-		public ITable<Northwind.Region>              Region              => GetTable<Northwind.Region>();
-		public ITable<Northwind.Shipper>             Shipper             => GetTable<Northwind.Shipper>();
-		public ITable<Northwind.Supplier>            Supplier            => GetTable<Northwind.Supplier>();
-		public ITable<Northwind.Territory>           Territory           => GetTable<Northwind.Territory>();
+#pragma warning disable CA2000 // Dispose objects before losing scope
+		public NorthwindDB(IDataProvider provider) : base(provider, new MockDbConnection(Array.Empty<QueryResult>(), ConnectionState.Open))
+#pragma warning restore CA2000 // Dispose objects before losing scope
+		{
+		}
+
+		public ITable<Northwind.Category>            Category            => this.GetTable<Northwind.Category>();
+		public ITable<Northwind.Customer>            Customer            => this.GetTable<Northwind.Customer>();
+		public ITable<Northwind.Employee>            Employee            => this.GetTable<Northwind.Employee>();
+		public ITable<Northwind.EmployeeTerritory>   EmployeeTerritory   => this.GetTable<Northwind.EmployeeTerritory>();
+		public ITable<Northwind.OrderDetail>         OrderDetail         => this.GetTable<Northwind.OrderDetail>();
+		public ITable<Northwind.Order>               Order               => this.GetTable<Northwind.Order>();
+		public ITable<Northwind.Product>             Product             => this.GetTable<Northwind.Product>();
+		public ITable<Northwind.ActiveProduct>       ActiveProduct       => this.GetTable<Northwind.ActiveProduct>();
+		public ITable<Northwind.DiscontinuedProduct> DiscontinuedProduct => this.GetTable<Northwind.DiscontinuedProduct>();
+		public ITable<Northwind.Region>              Region              => this.GetTable<Northwind.Region>();
+		public ITable<Northwind.Shipper>             Shipper             => this.GetTable<Northwind.Shipper>();
+		public ITable<Northwind.Supplier>            Supplier            => this.GetTable<Northwind.Supplier>();
+		public ITable<Northwind.Territory>           Territory           => this.GetTable<Northwind.Territory>();
 
 		public IQueryable<SqlServerExtensions.FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(
 			ITable<TTable> table,
@@ -45,7 +51,7 @@ namespace LinqToDB.Benchmarks.Models
 			var methodInfo = typeof(NorthwindDB).GetMethod("WithUpdateLock")!
 				.MakeGenericMethod(typeof(T));
 
-			return GetTable<T>(this, methodInfo);
+			return this.GetTable<T>(this, methodInfo);
 		}
 	}
 }

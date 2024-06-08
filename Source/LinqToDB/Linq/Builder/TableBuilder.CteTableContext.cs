@@ -26,12 +26,12 @@ namespace LinqToDB.Linq.Builder
 					break;
 				case 2 :
 					bodyExpr = methodCall.Arguments[0].Unwrap();
-					name     = methodCall.Arguments[1].EvaluateExpression() as string;
+					name     = methodCall.Arguments[1].EvaluateExpression<string>(builder.DataContext);
 					break;
 				case 3 :
-					query    = methodCall.Arguments[0].EvaluateExpression() as IQueryable;
+					query    = methodCall.Arguments[0].EvaluateExpression<IQueryable>(builder.DataContext);
 					bodyExpr = methodCall.Arguments[1].Unwrap();
-					name     = methodCall.Arguments[2].EvaluateExpression() as string;
+					name     = methodCall.Arguments[2].EvaluateExpression<string>(builder.DataContext);
 					isRecursive = true;
 					break;
 				default:
@@ -71,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 
 		static CteTableContext BuildCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var queryable    = (IQueryable)buildInfo.Expression.EvaluateExpression()!;
+			var queryable    = buildInfo.Expression.EvaluateExpression<IQueryable>(builder.DataContext)!;
 			var cteInfo      = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, false, ""));
 			var cteBuildInfo = new BuildInfo(buildInfo, cteInfo.Item3, buildInfo.SelectQuery);
 			var cteContext   = new CteTableContext(builder, cteBuildInfo, cteInfo.Item1, cteInfo.Item3);
@@ -79,17 +79,17 @@ namespace LinqToDB.Linq.Builder
 			return cteContext;
 		}
 
-		class CteTableContext : TableContext
+		sealed class CteTableContext : TableContext
 		{
 			private readonly CteClause      _cte;
 			private readonly Expression     _cteExpression;
 			private          IBuildContext? _cteQueryContext;
 
 			public CteTableContext(ExpressionBuilder builder, BuildInfo buildInfo, CteClause cte, Expression cteExpression)
-				: base(builder, buildInfo, new SqlCteTable(builder.MappingSchema, cte))
+				: base(builder, buildInfo, new SqlCteTable(cte, builder.MappingSchema.GetEntityDescriptor(cte.ObjectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated)))
 			{
-				_cte             = cte;
-				_cteExpression   = cteExpression;
+				_cte           = cte;
+				_cteExpression = cteExpression;
 			}
 
 			IBuildContext? GetQueryContext()
@@ -142,11 +142,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info));
 						var alias    = flags == ConvertFlags.Field ? GenerateAlias(expression) : null;
-						if (alias == null)
-						{
-							alias = baseInfo?.MemberChain.LastOrDefault()?.Name ??
-						                  info.MemberChain.LastOrDefault()?.Name;
-						}	
+						alias ??= baseInfo?.MemberChain.LastOrDefault()?.Name ?? info.MemberChain.LastOrDefault()?.Name;
 						var field    = RegisterCteField(baseInfo?.Sql, info.Sql, info.Index, alias);
 						return new SqlInfo(info.MemberChain, field);
 					})
@@ -178,8 +174,7 @@ namespace LinqToDB.Linq.Builder
 					alias = field?.Name;
 				}
 
-				if (alias == null)
-					alias = column.Alias;
+				alias ??= column.Alias;
 
 				return alias;
 			}
@@ -236,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 					return newField;
 				});
 
-				var field = SqlTable[cteField.Name!];
+				var field = SqlTable.FindFieldByMemberName(cteField.Name!);
 				if (field == null)
 				{
 					field = new SqlField(cteField);

@@ -7,8 +7,7 @@ using System.Reflection;
 
 namespace LinqToDB.Common.Internal
 {
-
-	public class ValueComparer<T> : ValueComparer, IEqualityComparer<T>
+	class ValueComparer<T> : ValueComparer, IEqualityComparer<T>
 	{
 		private Func<T?, T?, bool>? _equals;
 		private Func<T?, int>?      _hashCode;
@@ -153,7 +152,7 @@ namespace LinqToDB.Common.Internal
 			if (type != unwrappedType || !type.IsValueType)
 			{
 				expression = Expression.Condition(Expression.NotEqual(param, Expression.Constant(null, param.Type)),
-					expression, Expression.Constant(0, typeof(int)));
+					expression, Expressions.ExpressionInstances.Constant0);
 			}
 
 			return Expression.Lambda<Func<T, int>>(expression, param);

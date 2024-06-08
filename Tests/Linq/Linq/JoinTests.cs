@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -407,7 +411,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin52([DataSources] string context)
+		public void GroupJoin52([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -423,7 +427,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin53([DataSources] string context)
+		public void GroupJoin53([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -439,7 +443,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin54([DataSources] string context)
+		public void GroupJoin54([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -482,7 +486,7 @@ namespace Tests.Linq
 				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
 				Assert.AreEqual(list1[0].lj.Count(), list2[0].lj.Count());
 
-				var ch2 = list2[0].lj.ToList();
+				var ch2 = list2[0].lj.OrderBy(_ => _.ChildID).ToList();
 
 				Assert.AreEqual(ch1[0].ParentID, ch2[0].ParentID);
 				Assert.AreEqual(ch1[0].ChildID,  ch2[0].ChildID);
@@ -651,7 +655,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoinAny1([DataSources] string context)
+		public void GroupJoinAny1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -664,7 +668,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoinAny2([DataSources] string context)
+		public void GroupJoinAny2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -677,7 +681,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoinAny3([DataSources] string context)
+		public void GroupJoinAny3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -690,7 +694,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoinAny4([DataSources] string context)
+		public void GroupJoinAny4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -701,7 +705,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoinAny5([DataSources] string context)
+		public void GroupJoinAny5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -885,7 +889,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ReferenceJoin1([DataSources(TestProvName.AllAccess)] string context)
+		public void ReferenceJoin1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -907,7 +911,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinByAnonymousTest([DataSources(TestProvName.AllAccess)] string context)
+		public void JoinByAnonymousTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -920,7 +924,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FourTableJoin([DataSources(ProviderName.Access)] string context)
+		public void FourTableJoin([DataSources(ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -992,7 +996,7 @@ namespace Tests.Linq
 
 		[Test, Explicit]
 		public void StackOverflow([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012/*, ProviderName.SqlServer2014*/)]
+			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1053,7 +1057,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullJoin1([DataSources] string context)
+		public void NullJoin1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1067,7 +1071,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullJoin2([DataSources] string context)
+		public void NullJoin2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1085,7 +1089,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullWhereJoin([DataSources] string context)
+		public void NullWhereJoin([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1100,7 +1104,9 @@ namespace Tests.Linq
 
 		[Test]
 		public void JoinSubQueryCount([DataSources(
-			TestProvName.AllAccess, ProviderName.SqlCe, ProviderName.SqlServer2000)]
+				TestProvName.AllClickHouse,
+				TestProvName.AllAccess,
+				ProviderName.SqlCe)]
 			string context)
 		{
 			var n = 1;
@@ -1122,7 +1128,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubQuerySum([DataSources(ProviderName.SqlCe)] string context)
+		public void JoinSubQuerySum([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1163,11 +1169,17 @@ namespace Tests.Linq
 
 		public class AllJoinsSourceAttribute : IncludeDataSourcesAttribute
 		{
-			public AllJoinsSourceAttribute() : base(
-				TestProvName.AllSqlServer2005Plus,
+			private static readonly string[] SupportedProviders = new[]
+			{
+				TestProvName.AllSqlServer,
 				TestProvName.AllOracle,
 				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL)
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllClickHouse
+			}.SelectMany(_ => _.Split(',')).ToArray();
+
+			public AllJoinsSourceAttribute(params string[] excludedProviders)
+				: base(SupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
@@ -1247,7 +1259,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlNullWhereJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		public void SqlNullWhereJoin([AllJoinsSource(TestProvName.AllClickHouse)] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1264,7 +1276,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlNullWhereSubqueryJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		public void SqlNullWhereSubqueryJoin([AllJoinsSource(TestProvName.AllClickHouse)] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1350,7 +1362,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlLinqNullWhereJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		public void SqlLinqNullWhereJoin([AllJoinsSource(TestProvName.AllClickHouse)] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1365,7 +1377,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlLinqNullWhereSubqueryJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		public void SqlLinqNullWhereSubqueryJoin([AllJoinsSource(TestProvName.AllClickHouse)] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2108,7 +2120,7 @@ namespace Tests.Linq
 		/// </summary>
 		/// <param name="context"></param>
 		[Test]
-		public void JoinBuildersConflicts([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+		public void JoinBuildersConflicts([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2135,7 +2147,7 @@ namespace Tests.Linq
 		{
 			[PrimaryKey] public int Id { get; set; }
 
-			[Association(ThisKey = "Id", OtherKey = "FactId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "FactId", CanBeNull = true)]
 			public IEnumerable<Tag> TagFactIdIds { get; set; } = null!;
 
 			public static readonly Fact[] Data = new[]
@@ -2185,7 +2197,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2208,7 +2220,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2231,7 +2243,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2254,7 +2266,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag = leftTag != null ? leftTag : null };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2276,7 +2288,7 @@ namespace Tests.Linq
 					where ft.fact.Id > 3
 					select ft;
 
-				var results = q.ToArray();
+				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2298,7 +2310,7 @@ namespace Tests.Linq
 					where ft.fact.Id > 3
 					select ft;
 
-				var results = q.ToArray();
+				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2321,7 +2333,7 @@ namespace Tests.Linq
 					where fact.Id > 3
 					select new { fact, leftTag };
 
-				var results = t.ToArray();
+				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.AreEqual(2, results.Length);
 				Assert.AreEqual(4, results[0].fact.Id);
@@ -2668,7 +2680,7 @@ namespace Tests.Linq
 			[Column("inId"), PrimaryKey] public int InId { get; set; }
 			[Column("inIdMain")]         public int InIdMain { get; set; }
 
-			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false, Relationship = Relationship.ManyToOne)]
+			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false)]
 			public StMain Main { get; set; } = null!;
 
 			public static StVersion[] Data = Array<StVersion>.Empty;
@@ -2770,7 +2782,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1455Test1([DataSources] string context)
+		public void Issue1455Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var queryLastUpd = db.CreateLocalTable<Alert>())
@@ -2828,7 +2840,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1455Test2([DataSources] string context)
+		public void Issue1455Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var queryLastUpd = db.CreateLocalTable<Alert>())
@@ -2886,10 +2898,85 @@ namespace Tests.Linq
 		}
 		#endregion
 
-
-		[ActiveIssue(1224, Configurations = new[] 
+		#region issue 2421
+		[Table]
+		public class UserDTO
 		{
-			TestProvName.AllSQLite,
+			[PrimaryKey, Identity] public int     UserId { get; set; }
+			[Column,     Nullable] public string? UserName { get; set; }
+		}
+
+		[Table]
+		public class UserPositionDTO
+		{
+			[PrimaryKey, Identity] public int UserPositionId { get; set; }
+			[Column,     NotNull ] public int UserId         { get; set; }
+			[Column,     NotNull ] public int PositionId     { get; set; }
+
+			[Association(ThisKey = nameof(UserId), OtherKey = nameof(UserDTO.UserId), CanBeNull = false)]
+			public UserDTO User { get; set; } = null!;
+
+			[Association(ThisKey = nameof(PositionId), OtherKey = nameof(PositionDTO.PositionId), CanBeNull = false)]
+			public PositionDTO Position { get; set; } = null!;
+		}
+
+		[Table("UPS")]
+		public class UserPositionSectorDTO
+		{
+			[PrimaryKey, Identity] public int UserPositionSectorId { get; set; }
+			[Column,     NotNull ] public int UserPositionId       { get; set; }
+			[Column,     NotNull ] public int SectorId             { get; set; }
+
+			[Association(ThisKey = nameof(UserPositionId), OtherKey = nameof(UserPositionDTO.UserPositionId), CanBeNull = false)]
+			public UserPositionDTO UserPosition { get; set; } = null!;
+
+			[Association(ThisKey = nameof(SectorId), OtherKey = nameof(SectorDTO.SectorId), CanBeNull = false)]
+			public SectorDTO Sector { get; set; } = null!;
+		}
+
+		[Table]
+		public class PositionDTO
+		{
+			[PrimaryKey, Identity] public int    PositionId   { get; set; }
+			[Column,     NotNull ] public string PositionName { get; set; } = null!;
+		}
+
+		[Table]
+		public class SectorDTO
+		{
+			[PrimaryKey, Identity] public int    SectorId { get; set; }
+			[Column,     NotNull ] public string SectorName { get; set; } = null!;
+
+			[Association(ThisKey = nameof(SectorId), OtherKey = nameof(UserPositionSectorDTO.SectorId))]
+			public List<UserPositionSectorDTO> UserPositionSectors { get; set; } = null!;
+		}
+
+		// to sdanyliv: we generate same sql for sqlite and it works there, so fix should affect only access
+		[Test]
+		public void Issue2421([DataSources] string context)
+		{
+			using var db                  = GetDataContext(context);
+			using var users               = db.CreateLocalTable<UserDTO>();
+			using var userPositions       = db.CreateLocalTable<UserPositionDTO>();
+			using var userPositionSectors = db.CreateLocalTable<UserPositionSectorDTO>();
+			using var positions           = db.CreateLocalTable<PositionDTO>();
+			using var sectors             = db.CreateLocalTable<SectorDTO>();
+
+			var query = sectors
+				.Select(x => new
+				{
+					SectorId = x.SectorId,
+					UserId   = x.UserPositionSectors
+						.Where(y => y.UserPosition.PositionId == 1)
+						.Select(y => y.UserPosition.User.UserId)
+				});
+
+			var result = query.ToArray();
+		}
+		#endregion
+
+		[ActiveIssue(1224, Configurations = new[]
+		{
 			TestProvName.AllAccess,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
@@ -2897,7 +2984,7 @@ namespace Tests.Linq
 		}, Details = "FULL OUTER JOIN support. Also check and enable other tests that do full join on fix")]
 		[Test(Description = "Tests regression in v3.3 when for RightCount generated SQL started to use same field as for LeftCount")]
 		// InformixDB2 disabled due to serious bug in provider: while query returns 3, data reader returns 0 here
-		public void FullJoinCondition_Regression([DataSources(ProviderName.InformixDB2)] string context)
+		public void FullJoinCondition_Regression([DataSources(ProviderName.InformixDB2, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2914,5 +3001,70 @@ namespace Tests.Linq
 			}
 		}
 
+		class t_ws_submissions
+		{
+			public int submission_id;
+		}
+
+		class t_ws_policies
+		{
+			public int    submission_id;
+			public string policy_nbr = null!;
+		}
+
+		class DoNotExecuteCommandInterceptor : CommandInterceptor
+		{
+			public static readonly IInterceptor Instance = new DoNotExecuteCommandInterceptor();
+
+			class DoNotExecuteDataReader : DbDataReader
+			{
+				public override bool     GetBoolean (int ordinal) => default;
+				public override byte     GetByte    (int ordinal) => default;
+				public override char     GetChar    (int ordinal) => default;
+				public override DateTime GetDateTime(int ordinal) => default;
+				public override decimal  GetDecimal (int ordinal) => default;
+				public override double   GetDouble  (int ordinal) => default;
+				public override float    GetFloat   (int ordinal) => default;
+				public override Guid     GetGuid    (int ordinal) => default;
+				public override short    GetInt16   (int ordinal) => default;
+				public override int      GetInt32   (int ordinal) => default;
+				public override long     GetInt64   (int ordinal) => default;
+				public override string   GetString  (int ordinal) => default!;
+				public override object   GetValue   (int ordinal) => default!;
+
+
+				public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length) => default;
+				public override long GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length) => default;
+
+				public override Type   GetFieldType   (int      ordinal) => throw new NotImplementedException();
+				public override string GetDataTypeName(int      ordinal) => throw new NotImplementedException();
+				public override string GetName        (int      ordinal) => throw new NotImplementedException();
+				public override int    GetOrdinal     (string   name)    => throw new NotImplementedException();
+				public override int    GetValues      (object[] values)  => throw new NotImplementedException();
+				public override bool   IsDBNull       (int      ordinal) => throw new NotImplementedException();
+
+				public override object this[int    ordinal] => default!;
+				public override object this[string name]    => default!;
+
+				public override int  FieldCount      { get; }
+				public override int  RecordsAffected { get; }
+				public override bool HasRows         { get; }
+				public override bool IsClosed        { get; }
+				public override int  Depth           { get; }
+
+				public override bool NextResult() => false;
+				public override bool Read      () => false;
+
+				public override IEnumerator GetEnumerator()
+				{
+					return Array.Empty<int>().GetEnumerator();
+				}
+			}
+
+			public override Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
+			{
+				return new DoNotExecuteDataReader();
+			}
+		}
 	}
 }

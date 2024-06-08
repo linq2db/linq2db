@@ -1,70 +1,49 @@
-﻿using System.Data;
+﻿using System;
+using System.Data.Common;
+using System.IO;
 using System.Reflection;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Common;
 	using Data;
 	using Configuration;
-	using System;
 
+	[PublicAPI]
 	public static class SapHanaTools
 	{
-#if NETFRAMEWORK || NETCOREAPP
-		private static readonly Lazy<IDataProvider> _hanaDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new SapHanaDataProvider(ProviderName.SapHanaNative);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-#endif
-
-		private static readonly Lazy<IDataProvider> _hanaOdbcDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new SapHanaOdbcDataProvider();
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _hanaDataProvider     = DataConnection.CreateDataProvider<SapHanaDataProvider>();
+		static readonly Lazy<IDataProvider> _hanaOdbcDataProvider = DataConnection.CreateDataProvider<SapHanaOdbcDataProvider>();
 
 		public static void ResolveSapHana(string path)
 		{
-			new AssemblyResolver(
+			_ = new AssemblyResolver(
 				path,
-#if NETFRAMEWORK || NETCOREAPP
-			DetectedProviderName == ProviderName.SapHanaNative
-						? SapHanaProviderAdapter.AssemblyName :
-#endif
-						OdbcProviderAdapter.AssemblyName);
+				DetectedProviderName == ProviderName.SapHanaNative
+					? SapHanaProviderAdapter.AssemblyName
+					: OdbcProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveSapHana(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName!);
+			_ = new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
 		{
-#if NETFRAMEWORK || NETCOREAPP
 			if (assemblyName == SapHanaProviderAdapter.AssemblyName) return _hanaDataProvider.Value;
-#endif
 			if (assemblyName == OdbcProviderAdapter.AssemblyName)    return _hanaOdbcDataProvider.Value;
-
 
 			switch (providerName)
 			{
 				case ProviderName.SapHanaOdbc  : return _hanaOdbcDataProvider.Value;
-#if NETFRAMEWORK || NETCOREAPP
 				case ProviderName.SapHanaNative: return _hanaDataProvider.Value;
-#endif
 			}
 
-#if NETFRAMEWORK || NETCOREAPP
 			if (DetectedProviderName == ProviderName.SapHanaNative)
 				return _hanaDataProvider.Value;
-#endif
 
 			return _hanaOdbcDataProvider.Value;
 		}
@@ -76,12 +55,12 @@ namespace LinqToDB.DataProvider.SapHana
 			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
@@ -94,35 +73,34 @@ namespace LinqToDB.DataProvider.SapHana
 
 		static string DetectProviderName()
 		{
-#if NETFRAMEWORK || NETCOREAPP
-			return ProviderName.SapHanaNative;
-#else
+			var path = typeof(SapHanaTools).Assembly.GetPath();
+
+			if (File.Exists(Path.Combine(path, $"{SapHanaProviderAdapter.AssemblyName}.dll")))
+				return ProviderName.SapHanaNative;
+
 			return ProviderName.SapHanaOdbc;
-#endif
 		}
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (connectionString.IndexOf("HDBODBC", StringComparison.InvariantCultureIgnoreCase) >= 0)
+			if (options.ConnectionString?.IndexOf("HDBODBC", StringComparison.OrdinalIgnoreCase) >= 0)
 				return _hanaOdbcDataProvider.Value;
 
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
-#if NETFRAMEWORK || NETCOREAPP
 				case SapHanaProviderAdapter.ClientNamespace:
 				case "Sap.Data.Hana.v4.5"                  :
 				case "Sap.Data.Hana.Core"                  :
 				case "Sap.Data.Hana.Core.v2.1"             :
 				case ProviderName.SapHanaNative            : return _hanaDataProvider.Value;
-#endif
 				case ProviderName.SapHanaOdbc              : return _hanaOdbcDataProvider.Value;
 				case ""                                    :
 				case null                                  :
-					if (css.Name.Contains("Hana"))
+					if (options.ConfigurationString?.Contains("Hana") == true)
 						goto case ProviderName.SapHana;
 					break;
 				case ProviderName.SapHana                  :
-					if (css.Name.IndexOf("ODBC", StringComparison.InvariantCultureIgnoreCase) >= 0)
+					if (options.ConfigurationString?.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) >= 0)
 						return _hanaOdbcDataProvider.Value;
 
 					return GetDataProvider();
@@ -131,6 +109,11 @@ namespace LinqToDB.DataProvider.SapHana
 			return null;
 		}
 
-		public static BulkCopyType DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use SapHanaOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => SapHanaOptions.Default.BulkCopyType;
+			set => SapHanaOptions.Default = SapHanaOptions.Default with { BulkCopyType = value };
+		}
 	}
 }

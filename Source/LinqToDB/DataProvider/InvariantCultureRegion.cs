@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Globalization;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB
 {
-	internal class InvariantCultureRegion : IDisposable
+	internal sealed class InvariantCultureRegion : IExecutionScope
 	{
-		private readonly CultureInfo? _original;
+		private readonly IExecutionScope? _parentRegion;
+		private readonly CultureInfo?     _original;
 
-		public InvariantCultureRegion()
+		public InvariantCultureRegion(IExecutionScope? parentRegion)
 		{
+			_parentRegion = parentRegion;
+
 			if (!Thread.CurrentThread.CurrentCulture.Equals(CultureInfo.InvariantCulture))
 			{
 				_original = Thread.CurrentThread.CurrentCulture;
@@ -21,6 +25,18 @@ namespace LinqToDB
 		{
 			if (_original != null)
 				Thread.CurrentThread.CurrentCulture = _original;
+
+			_parentRegion?.Dispose();
 		}
+
+#if NATIVE_ASYNC
+		ValueTask IAsyncDisposable.DisposeAsync()
+		{
+			if (_original != null)
+				Thread.CurrentThread.CurrentCulture = _original;
+
+			return _parentRegion?.DisposeAsync() ?? default;
+		}
+#endif
 	}
 }

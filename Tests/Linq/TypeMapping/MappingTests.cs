@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common;
@@ -18,14 +19,18 @@ namespace Tests.TypeMapping
 		public delegate string      ReturningDelegate           (string input);
 		public delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
 
-		public class SampleClass
+		public interface ISampleClass
+		{
+		}
+
+		public class SampleClass : ISampleClass
 		{
 			public int     Id       { get; set; }
 			public int     Value    { get; set; }
 			public string? StrValue { get; set; }
 
-			public OtherClass GetOther       (int idx) => new OtherClass { OtherStrProp = "OtherStrValue" + idx        };
-			public OtherClass GetOtherAnother(int idx) => new OtherClass { OtherStrProp = "OtherAnotherStrValue" + idx };
+			public OtherClass GetOther       (int idx) => new () { OtherStrProp = "OtherStrValue" + idx        };
+			public OtherClass GetOtherAnother(int idx) => new () { OtherStrProp = "OtherAnotherStrValue" + idx };
 
 			public void SomeAction() => ++Value;
 
@@ -69,6 +74,8 @@ namespace Tests.TypeMapping
 				Id    = id;
 				Value = value;
 			}
+
+			public Task<SampleClass> GetSelfAsync(CancellationToken cancellationToken) => Task.FromResult(this);
 
 			public RegularEnum1 GetRegularEnum1(int raw) => (RegularEnum1)raw;
 			public RegularEnum2 GetRegularEnum2(int raw) => (RegularEnum2)raw;
@@ -131,7 +138,7 @@ namespace Tests.TypeMapping
 			Bits24 = 10
 		}
 
-		internal class SqlError
+		internal sealed class SqlError
 		{
 			public SqlError()
 			{
@@ -139,9 +146,9 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class SqlErrorCollection : IEnumerable
+		internal sealed class SqlErrorCollection : IEnumerable
 		{
-			private List<object> _errors = new List<object>()
+			private List<object> _errors = new ()
 			{
 				new SqlError(),
 				new SqlError()
@@ -161,7 +168,7 @@ namespace Tests.TypeMapping
 		[Wrapper] delegate string      ReturningDelegate           (string input);
 		[Wrapper] delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
 
-		class StringToIntMapper : ICustomMapper
+		sealed class StringToIntMapper : ICustomMapper
 		{
 			bool ICustomMapper.CanMap(Expression expression)
 			{
@@ -174,7 +181,7 @@ namespace Tests.TypeMapping
 			}
 		}
 
-		class SampleClass : TypeWrapper
+		sealed class SampleClass : TypeWrapper
 		{
 			private static object[] Wrappers { get; }
 				= new object[]
@@ -259,6 +266,8 @@ namespace Tests.TypeMapping
 			[return: CustomMapper(typeof(StringToIntMapper))]
 			public int ReturnTypeMapper(string value) => ((Func<SampleClass, string, int>)CompiledWrappers[19])(this, value);
 
+			public Task<SampleClass> GetSelfAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+
 			public RegularEnum1 RegularEnum1Property
 			{
 				get => ((Func<SampleClass, RegularEnum1  >)CompiledWrappers[8])(this);
@@ -320,7 +329,7 @@ namespace Tests.TypeMapping
 			internal static string GetOtherStr(this SampleClass sc, int idx) => throw new NotImplementedException();
 		}
 
-		class OtherClass : TypeWrapper
+		sealed class OtherClass : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -336,7 +345,7 @@ namespace Tests.TypeMapping
 			}
 		}
 
-		class CollectionSample : TypeWrapper
+		sealed class CollectionSample : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -357,7 +366,7 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class SqlError : TypeWrapper
+		internal sealed class SqlError : TypeWrapper
 		{
 			public SqlError(object instance) : base(instance, null)
 			{
@@ -365,7 +374,7 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class SqlErrorCollection : TypeWrapper
+		internal sealed class SqlErrorCollection : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -454,7 +463,6 @@ namespace Tests.TypeMapping
 			[Test]
 			public void WrappingTests()
 			{
-
 				var concrete = new Dynamic.SampleClass{ Id = 1, Value = 33 };
 
 				var typeMapper = CreateTypeMapper();
@@ -511,6 +519,25 @@ namespace Tests.TypeMapping
 				Assert.That(instance.Id      , Is.EqualTo(55));
 				Assert.That(instance.Value   , Is.EqualTo(77));
 				Assert.That(instance.StrValue, Is.EqualTo("Str"));
+			}
+
+			[Test]
+			public async Task TestMapTaskMethod()
+			{
+				var typeMapper = CreateTypeMapper();
+
+				var pInstance = Expression.Parameter(typeof(Dynamic.ISampleClass));
+				var pToken    = Expression.Parameter(typeof(CancellationToken));
+
+				var asyncCall = Expression.Lambda<Func<Dynamic.ISampleClass, CancellationToken, Task<SampleClass>>>(
+					typeMapper.MapExpression((Dynamic.ISampleClass instance, CancellationToken cancellationToken) => typeMapper.WrapTask<SampleClass>(((SampleClass)(object)instance).GetSelfAsync(cancellationToken), typeof(Dynamic.SampleClass), cancellationToken), pInstance, pToken),
+					pInstance, pToken);
+
+				var instance = await asyncCall.CompileExpression()(new Dynamic.SampleClass(55, 77) {StrValue = "Str"}, default);
+
+				Assert.That(instance.Id      , Is.EqualTo(55));
+				Assert.That(instance.Value   , Is.EqualTo(77));
+				Assert.That(instance.StrValue, Is.Null);
 			}
 
 			[Test]

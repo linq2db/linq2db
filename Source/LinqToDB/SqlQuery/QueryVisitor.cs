@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
@@ -35,7 +36,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (element == null || !_all && VisitedElements.ContainsKey(element))
 				return;
-			
+
 			switch (element.ElementType)
 			{
 				case QueryElementType.SqlFunction:
@@ -45,16 +46,16 @@ namespace LinqToDB.SqlQuery
 					}
 
 				case QueryElementType.SqlExpression:
-				{
+					{
 						VisitX((SqlExpression)element);
-					break;
-				}
+						break;
+					}
 
 				case QueryElementType.SqlObjectExpression:
-				{
-					VisitX((SqlObjectExpression)element);
-					break;
-				}
+					{
+						VisitX((SqlObjectExpression)element);
+						break;
+					}
 
 				case QueryElementType.SqlBinaryExpression:
 					{
@@ -339,7 +340,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.GroupingSet:
 					{
-						
+
 						VisitX((SqlGroupingSet)element);
 						break;
 					}
@@ -394,6 +395,10 @@ namespace LinqToDB.SqlQuery
 					VisitX((SqlValuesTable)element);
 					break;
 
+				case QueryElementType.SqlRow:
+					VisitX((SqlRow)element);
+					break;
+
 				case QueryElementType.MergeOperationClause:
 					VisitX((SqlMergeOperationClause)element);
 					break;
@@ -408,6 +413,13 @@ namespace LinqToDB.SqlQuery
 
 				default:
 					throw new InvalidOperationException($"Visit visitor not implemented for element {element.ElementType}");
+			}
+
+			if (element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe)
+			{
+				foreach (var ext in qe.SqlQueryExtensions)
+				foreach (var arg in ext.Arguments)
+					Visit(arg.Value);
 			}
 
 			if (_visitStatic != null)
@@ -507,7 +519,7 @@ namespace LinqToDB.SqlQuery
 			Visit(sc.SkipValue);
 
 			// TODO: review visitors to make instantiation unnecessary
-			foreach (var c in sc.Columns.ToList()) Visit(c);
+			foreach (var c in sc.Columns.ToArray()) Visit(c);
 		}
 
 		void VisitX(SqlUpdateClause sc)
@@ -590,24 +602,27 @@ namespace LinqToDB.SqlQuery
 
 		void VisitX(SqlOutputClause outputClause)
 		{
-			if (outputClause == null)
-				return;
-
-			Visit(outputClause.SourceTable);
 			Visit(outputClause.DeletedTable);
 			Visit(outputClause.InsertedTable);
 			Visit(outputClause.OutputTable);
-			if (outputClause.OutputQuery != null)
-				Visit(outputClause.OutputQuery);
 
 			if (outputClause.HasOutputItems)
 				foreach (var item in outputClause.OutputItems)
+					Visit(item);
+
+			if (outputClause.OutputColumns != null)
+				foreach (var item in outputClause.OutputColumns)
 					Visit(item);
 		}
 
 		void VisitX(SqlExpression element)
 		{
 			foreach (var v in element.Parameters) Visit(v);
+		}
+
+		void VisitX(SqlRow element)
+		{
+			foreach (var v in element.Values) Visit(v);
 		}
 
 		void VisitX(SqlObjectExpression element)

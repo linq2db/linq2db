@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace Tests.Exceptions
 {
-	class ConvertTests : TestBase
+	sealed class ConvertTests : TestBase
 	{
 		enum Enum1
 		{

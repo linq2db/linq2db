@@ -1,7 +1,6 @@
 #!/bin/bash
 
-docker run -d --name hana2 -p 39017:39017 store/saplabs/hanaexpress:2.00.045.00.20200121.1 --agree-to-sap-license --passwords-url file:///hana/password.json
-
+docker run -h hxehost -d --name hana2 -p 39017:39017 saplabs/hanaexpress:2.00.072.00.20231123.1 --agree-to-sap-license --passwords-url file:///hana/password.json
 #echo Generate password file
 cat <<-EOJSON > hana_password.json
 {"master_password": "Passw0rd"}
@@ -28,22 +27,43 @@ done
 
 docker logs hana2
 
-# instead of hxehost, docker image use dynamic host name
-hxehost=$(docker logs hana2 | grep -oP "(?<=New host: ).*")
-
 # create test schema
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -d HXE -n localhost:39017 -u SYSTEM -p Passw0rd CREATE SCHEMA TESTDB
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd CREATE SCHEMA TESTDB
 # clear memory limits
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -d HXE -n localhost:39017 -u SYSTEM -p Passw0rd ALTER USER SYSTEM CLEAR PARAMETER STATEMENT MEMORY LIMIT
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd ALTER USER SYSTEM CLEAR PARAMETER STATEMENT MEMORY LIMIT
 # create linked server for FQN names testing
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -d HXE -n localhost:39017 -u SYSTEM -p Passw0rd 'CREATE REMOTE SOURCE "LINKED_DB" ADAPTER "hanaodbc" CONFIGURATION '"'"'DRIVER=libodbcHDB.so;ServerNode=127.0.0.1:39017;DatabaseName=HXE'"'"''
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -d HXE -n localhost:39017 -u SYSTEM -p Passw0rd 'CREATE CREDENTIAL FOR USER SYSTEM COMPONENT '"'"'SAPHANAFEDERATION'"'"' PURPOSE '"'"'LINKED_DB'"'"' TYPE '"'"'PASSWORD'"'"' USING '"'"'user=SYSTEM;password=Passw0rd'"'"''
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'CREATE REMOTE SOURCE "LINKED_DB" ADAPTER "hanaodbc" CONFIGURATION '"'"'DRIVER=libodbcHDB.so;ServerNode=127.0.0.1:39017;'"'"''
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'CREATE CREDENTIAL FOR USER SYSTEM COMPONENT '"'"'SAPHANAFEDERATION'"'"' PURPOSE '"'"'LINKED_DB'"'"' TYPE '"'"'PASSWORD'"'"' USING '"'"'user=SYSTEM;password=Passw0rd'"'"''
 
 # free some memory (diserver ~300mb, webdispatcher ~500m), so we can run tests
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','${hxehost}') UNSET ('"'"'diserver'"'"','"'"'instances'"'"') WITH RECONFIGURE'
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','${hxehost}') SET ('"'"'webdispatcher'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') UNSET ('"'"'diserver'"'"','"'"'instances'"'"') WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'webdispatcher'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'preprocessor'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
 
-cat <<-EOJSON > UserDataProviders.json
+# additional memory tuning
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'dynamic_result_cache'"'"','"'"'total_size'"'"') = '"'"'1'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'result_cache'"'"','"'"'total_size'"'"') = '"'"'1'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'indexserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'dynamic_result_cache'"'"','"'"'total_size'"'"') = '"'"'1'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'indexserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'result_cache'"'"','"'"'total_size'"'"') = '"'"'1'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'load_trace'"'"','"'"'enable'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'indexserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'load_trace'"'"','"'"'enable'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'mergedog'"'"','"'"'unload_check_interval'"'"') = '"'"'5000'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'indexserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'mergedog'"'"','"'"'unload_check_interval'"'"') = '"'"'5000'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'session'"'"','"'"'connection_history_maximum_size'"'"') = '"'"'10'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'indexserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'session'"'"','"'"'connection_history_maximum_size'"'"') = '"'"'10'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'session'"'"','"'"'result_buffer_reclaim_threshold'"'"') = '"'"'1000'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'indexserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'session'"'"','"'"'result_buffer_reclaim_threshold'"'"') = '"'"'1000'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'sql'"'"','"'"'plan_cache_enabled'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'indexserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'sql'"'"','"'"'plan_cache_enabled'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'sql'"'"','"'"'plan_cache_statistics_enabled'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'indexserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'sql'"'"','"'"'plan_cache_statistics_enabled'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'sql'"'"','"'"'plan_statistics_enabled'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'indexserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'sql'"'"','"'"'plan_statistics_enabled'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'debugger'"'"','"'"'enabled'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'unload_trace'"'"','"'"'enable'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'indexserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'unload_trace'"'"','"'"'enable'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
+
+cat <<-EOJSON > HanaDataProviders.json
 {
     "BASE.Azure": {
         "BasedOn": "AzureConnectionStrings",
@@ -51,23 +71,11 @@ cat <<-EOJSON > UserDataProviders.json
         "TraceLevel": "Info",
         "Connections": {
             "SapHana.Odbc": {
-                "ConnectionString": "Driver=$HOME/linq2db_ci/providers/saphana/linux/ODBC/libodbcHDB.so;SERVERNODE=localhost:39017;databaseName=HXE;CS=TESTDB;UID=SYSTEM;PWD=Passw0rd;"
+                "ConnectionString": "Driver=$HOME/linq2db_ci/providers/saphana/linux/ODBC/libodbcHDB.so;SERVERNODE=localhost:39017;CS=TESTDB;UID=SYSTEM;PWD=Passw0rd;"
             }
         }
     },
-    "CORE21.Azure": {
-        "BasedOn": "BASE.Azure",
-        "Providers": [
-            "SapHana.Odbc"
-        ]
-    },
-    "CORE31.Azure": {
-        "BasedOn": "BASE.Azure",
-        "Providers": [
-            "SapHana.Odbc"
-        ]
-    },
-    "NET50.Azure": {
+    "NET60.Azure": {
         "BasedOn": "BASE.Azure",
         "Providers": [
             "SapHana.Odbc"

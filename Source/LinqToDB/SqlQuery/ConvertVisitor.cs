@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Linq.Builder;
+	using Linq.Builder;
 
 	public class ConvertVisitor<TContext>
 	{
 		// when true, only changed (and explicitly added) elements added to VisitedElements
-		// greatly reduce memory allocation for majority of cases, where there is nothing to replace
+		// greatly reduce memory allocation for the majority of cases, where there is nothing to replace
 		private bool                                                       _visitAll;
 		private Func<ConvertVisitor<TContext>,IQueryElement,IQueryElement> _convert;
 		private Func<ConvertVisitor<TContext>, bool>?                      _parentAction;
@@ -64,7 +65,7 @@ namespace LinqToDB.SqlQuery
 			_stack?          .Clear();
 		}
 
-		void CorrectQueryHierarchy(SelectQuery? parentQuery)
+		static void CorrectQueryHierarchy(SelectQuery? parentQuery)
 		{
 			if (parentQuery == null)
 				return;
@@ -143,7 +144,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		internal IQueryElement? ConvertInternal(IQueryElement? element)
 		{
 			if (element == null)
@@ -271,7 +272,7 @@ namespace LinqToDB.SqlQuery
 							AddVisited(table.All, newTable.All);
 							foreach (var prevField in table.Fields)
 							{
-								var newField = newTable[prevField.Name];
+								var newField = newTable.FindFieldByMemberName(prevField.Name);
 								if (newField != null)
 									AddVisited(prevField, newField);
 							}
@@ -295,7 +296,7 @@ namespace LinqToDB.SqlQuery
 							ReplaceVisited(table.All, newTable.All);
 							foreach (var prevField in table.Fields)
 							{
-								var newField = newTable[prevField.Name];
+								var newField = newTable.FindFieldByMemberName(prevField.Name);
 								if (newField != null)
 								{
 									ReplaceVisited(prevField, newField);
@@ -327,7 +328,7 @@ namespace LinqToDB.SqlQuery
 						joins != null && !ReferenceEquals(table.Joins, joins))
 							newElement = new SqlTableSource(
 								source ?? table.Source,
-								table._alias,
+								table.RawAlias,
 								joins ?? table.Joins,
 								uk ?? (table.HasUniqueKeys ? table.UniqueKeys : null));
 
@@ -460,7 +461,7 @@ namespace LinqToDB.SqlQuery
 							t != null && !ReferenceEquals(p.TrueValue, t) ||
 							f != null && !ReferenceEquals(p.FalseValue, f)
 							)
-							newElement = new SqlPredicate.IsTrue(e ?? p.Expr1, t ?? p.TrueValue, f ?? p.FalseValue, p.WithNull, p.IsNot);
+							newElement = new SqlPredicate.IsTrue(e ?? p.Expr1, t ?? p.TrueValue, f ?? p.FalseValue, p.WithNull, p.IsNot, p.OptimizeNull);
 
 						break;
 					}
@@ -533,11 +534,11 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SetExpression:
 					{
 						var s = (SqlSetExpression)element;
-						var c = (ISqlExpression?)ConvertInternal(s.Column    );
-						var e = (ISqlExpression?)ConvertInternal(s.Expression);
+						var e = (ISqlExpression?) ConvertInternal(s.Expression);
 
+						var c = (ISqlExpression?)ConvertInternal(s.Column);
 						if (c != null && !ReferenceEquals(s.Column, c) || e != null && !ReferenceEquals(s.Expression, e))
-							newElement = new SqlSetExpression(c ?? s.Column, e ?? s.Expression!);
+							newElement = new SqlSetExpression(c ?? s.Column, e ?? s.Expression);
 
 						break;
 					}
@@ -790,10 +791,7 @@ namespace LinqToDB.SqlQuery
 
 								if (!ReferenceEquals(expr, column.Expression))
 								{
-									if (cols == null)
-									{
-										cols = new List<SqlColumn>(sc.Columns.Take(i));
-									}
+									cols ??= new List<SqlColumn>(sc.Columns.Take(i));
 
 									var newColumn = new SqlColumn(null, expr, column.Alias);
 									cols.Add(newColumn);
@@ -828,7 +826,7 @@ namespace LinqToDB.SqlQuery
 
 						if (ts != null && !ReferenceEquals(fc.Tables, ts))
 						{
-							newElement = new SqlFromClause(ts ?? fc.Tables);
+							newElement = new SqlFromClause(ts);
 							((SqlFromClause)newElement).SetSqlQuery(fc.SelectQuery);
 						}
 
@@ -842,7 +840,7 @@ namespace LinqToDB.SqlQuery
 
 						if (cond != null && !ReferenceEquals(wc.SearchCondition, cond))
 						{
-							newElement = new SqlWhereClause(cond ?? wc.SearchCondition);
+							newElement = new SqlWhereClause(cond);
 							((SqlWhereClause)newElement).SetSqlQuery(wc.SelectQuery);
 						}
 
@@ -856,7 +854,7 @@ namespace LinqToDB.SqlQuery
 
 						if (es != null && !ReferenceEquals(gc.Items, es))
 						{
-							newElement = new SqlGroupByClause(gc.GroupingType, es ?? gc.Items);
+							newElement = new SqlGroupByClause(gc.GroupingType, es);
 							((SqlGroupByClause)newElement).SetSqlQuery(gc.SelectQuery);
 						}
 
@@ -869,7 +867,7 @@ namespace LinqToDB.SqlQuery
 						var es = Convert(gc.Items);
 
 						if (es != null && !ReferenceEquals(gc.Items, es))
-							newElement = new SqlGroupingSet(es ?? gc.Items);
+							newElement = new SqlGroupingSet(es);
 
 						break;
 					}
@@ -881,7 +879,7 @@ namespace LinqToDB.SqlQuery
 
 						if (es != null && !ReferenceEquals(oc.Items, es))
 						{
-							newElement = new SqlOrderByClause(es ?? oc.Items);
+							newElement = new SqlOrderByClause(es);
 							((SqlOrderByClause)newElement).SetSqlQuery(oc.SelectQuery);
 						}
 
@@ -912,8 +910,7 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.SqlQuery:
 					{
-						var q = (SelectQuery)element;
-
+						var q  = (SelectQuery)element;
 						var fc = (SqlFromClause?)   ConvertInternal(q.From   ) ?? q.From;
 						var sc = (SqlSelectClause?) ConvertInternal(q.Select ) ?? q.Select;
 						var wc = (SqlWhereClause?)  ConvertInternal(q.Where  ) ?? q.Where;
@@ -923,6 +920,7 @@ namespace LinqToDB.SqlQuery
 						var us = q.HasSetOperators ?Convert(q.SetOperators)     : q.SetOperators;
 
 						List<ISqlExpression[]>? uk = null;
+
 						if (q.HasUniqueKeys)
 							uk = ConvertListArray(q.UniqueKeys, null) ?? q.UniqueKeys;
 
@@ -958,6 +956,12 @@ namespace LinqToDB.SqlQuery
 
 								foreach (var column in q.Select.Columns)
 									sc.Columns.Add(column.Clone(q, objTree, static (q, e) => e is SqlColumn c && c.Parent == q));
+							}
+							else
+							{
+								for (var i = 0; i < q.Select.Columns.Count; i++)
+									if (ReferenceEquals(sc.Columns[i], q.Select.Columns[i]))
+										sc.Columns[i] = q.Select.Columns[i].Clone(q, objTree ??= new(), static (q, e) => e is SqlColumn c && c.Parent == q);
 							}
 
 							if (ReferenceEquals(fc, q.From))
@@ -995,7 +999,9 @@ namespace LinqToDB.SqlQuery
 
 							nq.Init(sc, fc, wc, gc, hc, oc, us, uk,
 								q.ParentSelect,
-								q.IsParameterDependent);
+								q.IsParameterDependent,
+								q.QueryName,
+								q.DoNotSetAliases);
 
 							// update visited in case if columns were cloned
 							if (objTree != null)
@@ -1004,6 +1010,7 @@ namespace LinqToDB.SqlQuery
 
 							newElement = nq;
 						}
+
 						break;
 					}
 
@@ -1169,28 +1176,34 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.OutputClause:
 					{
 						var output    = (SqlOutputClause)element;
-						var sourceT   = ConvertInternal(output.SourceTable)   as SqlTable;
 						var insertedT = ConvertInternal(output.InsertedTable) as SqlTable;
 						var deletedT  = ConvertInternal(output.DeletedTable)  as SqlTable;
 						var outputT   = ConvertInternal(output.OutputTable)   as SqlTable;
-						var outputQ   = output.OutputQuery != null ? ConvertInternal(output.OutputQuery) as SelectQuery : null;
+						var outputC   = output.OutputColumns != null ? ConvertSafe(output.OutputColumns) : null;
+
+						List<SqlSetExpression>? outputItems = null;
+
+						if (output.HasOutputItems)
+							outputItems = ConvertSafe(output.OutputItems);
 
 						if (
-							sourceT   != null && !ReferenceEquals(output.SourceTable, sourceT)     ||
 							insertedT != null && !ReferenceEquals(output.InsertedTable, insertedT) ||
-							deletedT  != null && !ReferenceEquals(output.DeletedTable, deletedT)   ||
-							outputT   != null && !ReferenceEquals(output.OutputTable, outputT)     ||
-							outputQ   != null && !ReferenceEquals(output.OutputQuery, outputQ)
+							deletedT  != null && !ReferenceEquals(output.DeletedTable,  deletedT)  ||
+							outputT   != null && !ReferenceEquals(output.OutputTable,   outputT)   ||
+							outputC   != null && !ReferenceEquals(output.OutputColumns, outputC)   ||
+							output.HasOutputItems && outputItems != null && !ReferenceEquals(output.OutputItems, outputItems)
 						)
 						{
 							newElement = new SqlOutputClause
 							{
-								SourceTable   = sourceT   ?? output.SourceTable,
 								InsertedTable = insertedT ?? output.InsertedTable,
 								DeletedTable  = deletedT  ?? output.DeletedTable,
 								OutputTable   = outputT   ?? output.OutputTable,
-								OutputQuery   = outputQ   ?? output.OutputQuery,
+								OutputColumns = outputC   ?? output.OutputColumns,
 							};
+
+							if (outputItems != null)
+								((SqlOutputClause)newElement).OutputItems.AddRange(outputItems);
 						}
 
 						break;
@@ -1247,7 +1260,7 @@ namespace LinqToDB.SqlQuery
 
 						if (targs != null && !ReferenceEquals(table.Parameters, targs))
 						{
-							var newTable = new SqlRawSqlTable(table, targs ?? table.Parameters!);
+							var newTable = new SqlRawSqlTable(table, targs);
 							newElement   = newTable;
 
 							AddVisited(table.All, newTable.All);
@@ -1323,8 +1336,7 @@ namespace LinqToDB.SqlQuery
 
 								newCte.Body = correctedBody;
 
-								if (newClauses == null)
-									newClauses = new(with.Clauses);
+								newClauses ??= new(with.Clauses);
 
 								newClauses[i] = newCte;
 							}
@@ -1335,8 +1347,7 @@ namespace LinqToDB.SqlQuery
 
 							if (!_visitAll || !ReferenceEquals(cte, newCte))
 							{
-								if (newClauses == null)
-									newClauses = new(with.Clauses);
+								newClauses ??= new(with.Clauses);
 								newClauses[i] = newCte;
 
 								AddVisited(cte, newCte);
@@ -1346,6 +1357,18 @@ namespace LinqToDB.SqlQuery
 						if (newClauses != null)
 							newElement = new SqlWithClause() { Clauses = newClauses };
 
+						break;
+					}
+
+					case QueryElementType.SqlRow:
+					{
+						var row    = (SqlRow)element;
+						var values = Convert(row.Values);
+
+						if (values != null && !ReferenceEquals(row.Values, values))
+						{
+							newElement = new SqlRow(values);
+						}
 						break;
 					}
 
@@ -1359,6 +1382,26 @@ namespace LinqToDB.SqlQuery
 
 					default:
 						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
+				}
+
+				if (element != newElement && element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe && newElement is IQueryExtendible ne)
+				{
+					ne.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
+
+					foreach (var item in qe.SqlQueryExtensions)
+					{
+						var ext = new SqlQueryExtension
+						{
+							Configuration = item.Configuration,
+							Scope         = item.Scope,
+							BuilderType   = item.BuilderType,
+						};
+
+						foreach (var arg in item.Arguments)
+							ext.Arguments.Add(arg.Key, (ISqlExpression)ConvertInternal(arg.Value));
+
+						ne.SqlQueryExtensions.Add(ext);
+					}
 				}
 			}
 			Pop();

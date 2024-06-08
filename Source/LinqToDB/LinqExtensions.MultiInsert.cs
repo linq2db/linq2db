@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -176,7 +176,7 @@ namespace LinqToDB
 			if (query is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => query.Provider.Execute<int>(expr), token);
+			return Task.Run(() => query.Provider.Execute<int>(expr), token);
 		}
 
 		/// <summary>
@@ -221,7 +221,7 @@ namespace LinqToDB
 			if (query is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => query.Provider.Execute<int>(expr), token);
+			return Task.Run(() => query.Provider.Execute<int>(expr), token);
 		}
 
 		/// <summary>
@@ -266,7 +266,7 @@ namespace LinqToDB
 			if (query is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => query.Provider.Execute<int>(expr), token);
+			return Task.Run(() => query.Provider.Execute<int>(expr), token);
 		}		
 
 		#endregion
@@ -287,7 +287,7 @@ namespace LinqToDB
 		public interface IMultiInsertElse<TSource>
 		{ }
 
-		private class MultiInsertQuery<TSource> : IMultiInsertSource<TSource>
+		private sealed class MultiInsertQuery<TSource> : IMultiInsertSource<TSource>
 		{
 			public readonly IQueryable<TSource> Query;
 

@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class ScalarSelectBuilder : ISequenceBuilder
+	sealed class ScalarSelectBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
 
@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-		class ScalarSelectContext : IBuildContext
+		sealed class ScalarSelectContext : IBuildContext
 		{
 			public ScalarSelectContext(ExpressionBuilder builder)
 			{
@@ -49,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 #if DEBUG
-			public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 			public string Path => this.GetPath();
 #endif
 
@@ -69,8 +69,7 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				if (expression == null)
-					expression = ((LambdaExpression)Expression!).Body.Unwrap();
+				expression ??= ((LambdaExpression)Expression!).Body.Unwrap();
 
 				switch (expression.NodeType)
 				{
@@ -125,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 				return Parent?.ConvertToParentIndex(index, context) ?? index;
 			}
 
-			public void SetAlias(string alias)
+			public void SetAlias(string? alias)
 			{
 			}
 
@@ -134,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
-			public virtual SqlStatement GetResultStatement()
+			public SqlStatement GetResultStatement()
 			{
 				return Statement ??= new SqlSelectStatement(SelectQuery);
 			}

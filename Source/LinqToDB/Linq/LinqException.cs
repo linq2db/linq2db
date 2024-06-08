@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Globalization;
 using System.Runtime.Serialization;
 
 namespace LinqToDB.Linq
@@ -36,7 +37,7 @@ namespace LinqToDB.Linq
 		/// <seealso cref="Exception.Message"/>
 		[JetBrains.Annotations.StringFormatMethod("message")]
 		public LinqException(string message, params object?[] args)
-			: base(string.Format(message, args))
+			: base(string.Format(CultureInfo.InvariantCulture, message, args))
 		{
 		}
 
@@ -61,21 +62,6 @@ namespace LinqToDB.Linq
 		/// <seealso cref="Exception.InnerException"/>
 		public LinqException(Exception innerException)
 			: base(innerException.Message, innerException)
-		{
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqException"/> class
-		/// with serialized data.
-		/// </summary>
-		/// <param name="info">The object that holds the serialized object data.</param>
-		/// <param name="context">The contextual information about the source or destination.</param>
-		/// <remarks>
-		/// This constructor is called during deserialization to
-		/// reconstitute the exception object transmitted over a stream.
-		/// </remarks>
-		protected LinqException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
 		{
 		}
 	}

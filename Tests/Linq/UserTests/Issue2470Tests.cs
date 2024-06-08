@@ -15,7 +15,7 @@ namespace Tests.UserTests
 			[PrimaryKey, Identity] public int Id { get; set; }
 			[Column, NotNull] public string Name { get; set; } = null!;
 
-			[Association(ThisKey = "Id", OtherKey = "OrderId", CanBeNull = true, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "OrderId", CanBeNull = true)]
 			public IEnumerable<OrderItem> Items { get; set; } = null!;
 		}
 
@@ -26,7 +26,7 @@ namespace Tests.UserTests
 			[Column, NotNull] public int OrderId { get; set; }
 			[Column, NotNull] public string Product { get; set; } = null!;
 
-			[Association(ThisKey = "OrderId", OtherKey = "Id", CanBeNull = false, KeyName = "FK_OrderItem_Order", BackReferenceName = "Items")]
+			[Association(ThisKey = "OrderId", OtherKey = "Id", CanBeNull = false)]
 			public Order Order { get; set; } = null!;
 		}
 

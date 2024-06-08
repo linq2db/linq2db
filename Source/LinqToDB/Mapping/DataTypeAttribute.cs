@@ -10,7 +10,7 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(
 		AttributeTargets.Field | AttributeTargets.Property,
 		AllowMultiple = true, Inherited = true)]
-	public class DataTypeAttribute : Attribute
+	public class DataTypeAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute instance.
@@ -42,13 +42,6 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string? Configuration { get; set; }
-
-		/// <summary>
 		/// Gets or sets linq2db type of the database column.
 		/// </summary>
 		public DataType? DataType { get; set; }
@@ -57,5 +50,10 @@ namespace LinqToDB.Mapping
 		/// Gets or sets the name of the database column type.
 		/// </summary>
 		public string? DbType { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{DataType}.{DbType}.";
+		}
 	}
 }

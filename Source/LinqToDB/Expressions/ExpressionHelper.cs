@@ -96,5 +96,67 @@ namespace LinqToDB.Expressions
 
 			throw new InvalidOperationException($"Instance property or field with name {name} not found on type {obj.Type}");
 		}
+
+		/// <summary>
+		/// Get the same <see cref="MemberInfo"/> as the <see cref="PropertyOrField(Expression, string)"/> method
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		/// <exception cref="InvalidOperationException"></exception>
+		internal static MemberInfo GetPropertyOrFieldMemberInfo(Type type, string name)
+		{
+			var pi = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy);
+
+			if (pi != null)
+				return pi;
+
+			var fi = type.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy);
+			if (fi != null)
+				return fi;
+
+			pi = type.GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+			if (pi != null)
+				return pi;
+
+			fi = type.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+			if (fi != null)
+				return fi;
+
+			throw new InvalidOperationException($"Instance property or field with name {name} not found on type {type}");
+		}
+
+		/// <summary>
+		/// Compared to <see cref="Expression.PropertyOrField(Expression, string)"/>, performs case-sensitive member search.
+		/// </summary>
+		public static MemberExpression PropertyOrField(Type type, string name, bool allowInherited = true)
+		{
+			var flags = BindingFlags.Static | BindingFlags.Public;
+			if (allowInherited)
+				flags |= BindingFlags.FlattenHierarchy;
+
+			var pi = type.GetProperty(name, flags);
+
+			if (pi != null)
+				return Expression.Property(null, pi);
+
+			var fi = type.GetField(name, flags);
+			if (fi != null)
+				return Expression.Field(null, fi);
+
+			flags = BindingFlags.Static | BindingFlags.NonPublic;
+			if (allowInherited)
+				flags |= BindingFlags.FlattenHierarchy;
+
+			pi = type.GetProperty(name, flags);
+			if (pi != null)
+				return Expression.Property(null, pi);
+
+			fi = type.GetField(name, flags);
+			if (fi != null)
+				return Expression.Field(null, fi);
+
+			throw new InvalidOperationException($"Static property or field with name {name} not found on type {type}");
+		}
 	}
 }

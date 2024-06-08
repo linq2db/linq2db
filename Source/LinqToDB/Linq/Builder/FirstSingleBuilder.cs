@@ -5,21 +5,26 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 	using Common;
 	using Reflection;
 
-	class FirstSingleBuilder : MethodCallBuilder
+	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
 		public  static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
 		private static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			return IsApplicable(methodCall);
+		}
+
+		private static bool IsApplicable(MethodCallExpression methodCall)
+		{
 			return
-				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 1 ||
+				methodCall.IsQueryable(MethodNames)           && methodCall.Arguments.Count == 1 ||
 				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 2;
 		}
 
@@ -53,8 +58,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (take != 0)
 			{
-				var takeExpression = Configuration.Linq.ParameterizeTakeSkip
-					? (ISqlExpression)new SqlParameter(new DbDataType(typeof(int)), "take", take)
+				var takeExpression = builder.DataOptions.LinqOptions.ParameterizeTakeSkip
+					? (ISqlExpression)new SqlParameter(new (typeof(int)), "take", take)
 					{
 						IsQueryParameter = !builder.DataContext.InlineParameters
 					}
@@ -129,12 +134,15 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		public class FirstSingleContext : SequenceContextBase
+		public sealed class FirstSingleContext : SequenceContextBase
 		{
+			private readonly bool _orDefault;
+
 			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
 			{
 				_methodCall = methodCall;
+				_orDefault  = _methodCall.Method.Name.Contains("OrDefault");
 			}
 
 			readonly MethodCallExpression _methodCall;
@@ -261,10 +269,7 @@ namespace LinqToDB.Linq.Builder
 					_checkNullIndex = q.DefaultIfEmpty(-1).First();
 
 					if (_checkNullIndex < 0)
-					{
-						_checkNullIndex = SelectQuery.Select.Add(new SqlValue(1));
-						SelectQuery.Select.Columns[_checkNullIndex].RawAlias = "is_empty";
-					}
+						_checkNullIndex = SelectQuery.Select.AddNew(new SqlValue(1), "is_empty");
 
 					_checkNullIndex = ConvertToParentIndex(_checkNullIndex, this);
 				}
@@ -272,21 +277,25 @@ namespace LinqToDB.Linq.Builder
 				return _checkNullIndex;
 			}
 
-
 			static bool HasSubQuery(IBuildContext context)
 			{
-				//TODO: candidate for refactor. We need better way for detecting such cases.
-
-				Expression? expressionToCheck = null;
-
 				var ctx = context;
 
 				while (true)
 				{
 					if (ctx is SelectContext sc)
 					{
-						expressionToCheck = sc.Body;
-						break;
+						foreach (var member in sc.Members.Values)
+						{
+							if (member is MethodCallExpression mc
+								&& !IsApplicable(mc)
+								&& (context.Builder.IsSubQuery(ctx, mc) || EagerLoading.IsChainContainsNotSupported(mc)))
+							{
+								return true;
+							}
+						}
+
+						return false;
 					}
 
 					if (ctx is SubQueryContext sub)
@@ -302,17 +311,6 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 				}
-				if (expressionToCheck != null)
-				{
-					var found = null != expressionToCheck.Find(ctx, static(c, e) =>
-					{
-						if (e is MethodCallExpression mc && c.Builder.IsSubQuery(c, mc))
-							return true;
-						return false;
-					});
-
-					return found;
-				}
 
 				return false;
 			}
@@ -322,9 +320,9 @@ namespace LinqToDB.Linq.Builder
 				if (expression == null || level == 0)
 				{
 					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
-					    Parent!.SelectQuery.GroupBy.IsEmpty                       &&
-					    Parent.SelectQuery.From.Tables.Count > 0                  &&
-					    !HasSubQuery(Sequence))
+						Parent!.SelectQuery.GroupBy.IsEmpty &&
+						Parent.SelectQuery.From.Tables.Count > 0 &&
+						!HasSubQuery(Sequence))
 					{
 						CreateJoin();
 
@@ -332,7 +330,7 @@ namespace LinqToDB.Linq.Builder
 
 						Expression defaultValue;
 
-						if (_methodCall.Method.Name.EndsWith("OrDefault"))
+						if (_orDefault)
 							defaultValue = Expression.Constant(expr.Type.GetDefaultValue(), expr.Type);
 						else
 							defaultValue = Expression.Convert(
@@ -354,14 +352,14 @@ namespace LinqToDB.Linq.Builder
 
 					if (expression == null)
 					{
-						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
-						       || Sequence.IsExpression(null, level, RequestFor.Object).Result)
+						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported
+						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
 						{
 							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);
 						}
 
 						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);
-						idx = Parent.ConvertToParentIndex(idx, Parent);
+						    idx = Parent.ConvertToParentIndex(idx, Parent);
 						return Builder.BuildSql(_methodCall.Type, idx, SelectQuery);
 					}
 
@@ -369,6 +367,24 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				throw new NotImplementedException();
+			}
+
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				if (!_orDefault || Parent == null || SelectQuery.Select.Columns[index].CanBeNull)
+					return base.ConvertToParentIndex(index, context);
+
+				var column = SelectQuery.Select.Columns[index];
+
+				var idx = Parent.ConvertToParentIndex(index, context);
+
+				foreach (var col in Parent.SelectQuery.Select.Columns)
+				{
+					if (col.Expression == column)
+						col.Expression = new SqlExpression(col.SystemType, "{0}", column.Precedence, column) { CanBeNull = true };
+				}
+
+				return idx;
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)

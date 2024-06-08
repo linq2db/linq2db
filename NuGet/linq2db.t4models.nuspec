@@ -9,16 +9,19 @@
 			linq linq2db LinqToDB ORM database DB T4 datamodel SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase
 			Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
+		<readme>README.md</readme>
 		<dependencies>
-			<dependency id="linq2db" version="3.0.0" />
+			<dependency id="linq2db" version="5.0.0" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
 		</contentFiles>
 	</metadata>
 	<files>
+		<file src="..\Nuget\README.T4.md"                                                  target="README.md"                                                    />
+
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                       target="tools"                                                        />
-		<file src="..\Tests\Tests.T4\bin\Azure\net472\Humanizer.dll"                       target="tools"                                                        />
+		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                           target="tools"                                                        />
 		<file src="..\Tests\Linq\bin\Azure\net472\Npgsql.dll"                              target="tools"                                                        />
 		<file src="..\Tests\Linq\bin\Azure\net472\MySqlConnector.dll"                      target="tools"                                                        />
 		<file src="..\Tests\Linq\bin\Azure\net472\FirebirdSql.Data.FirebirdClient.dll"     target="tools"                                                        />
@@ -34,6 +37,8 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Memory.dll"                       target="tools"                                                        />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Diagnostics.DiagnosticSource.dll" target="tools"                                                        />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"       target="tools"                                                        />
+		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Channels.dll"           target="tools"                                                        />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.HashCode.dll"              target="tools"                                                        />
 
 		<file src="..\NuGet\t4models\linq2db.t4models.props"                               target="build"                                                        />
 

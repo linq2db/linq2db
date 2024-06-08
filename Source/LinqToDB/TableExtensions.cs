@@ -1,19 +1,20 @@
-﻿
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using System;
-	using System.Diagnostics.CodeAnalysis;
+	using Data;
+	using DataProvider;
 	using Expressions;
-	using LinqToDB.Data;
-	using LinqToDB.DataProvider;
 
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
 	/// </summary>
 	[PublicAPI]
-	public static partial class TableExtensions
+	public static class TableExtensions
 	{
 		#region Table Helpers
 
@@ -66,6 +67,20 @@ namespace LinqToDB
 			where T : notnull
 		{
 			return ((ITableMutable<T>)table).ChangeTableOptions(options);
+		}
+
+		/// <summary>
+		/// Builds table name for <paramref name="table"/>.
+		/// </summary>
+		/// <typeparam name="T">Table record type.</typeparam>
+		/// <param name="table">Table instance.</param>
+		/// <returns>Table name.</returns>
+		public static string GetTableName<T>(this ITable<T> table)
+			where T : notnull
+		{
+			return table.DataContext.CreateSqlProvider()
+				.BuildObjectName(new (), new (table.TableName, Server: table.ServerName, Database: table.DatabaseName, Schema: table.SchemaName), tableOptions: table.TableOptions)
+				.ToString();
 		}
 
 		#endregion

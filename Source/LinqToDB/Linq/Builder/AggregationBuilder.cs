@@ -1,30 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
-	using LinqToDB.Reflection;
+	using Reflection;
 	using LinqToDB.Common.Internal;
+	using LinqToDB.Expressions;
 
-	class AggregationBuilder : MethodCallBuilder
+	sealed class AggregationBuilder : MethodCallBuilder
 	{
 		public  static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum"      };
 		private static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync" };
 
 		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
-			var functions = mapping.GetAttributes<Sql.ExpressionAttribute>(methodCall.Method.ReflectedType!,
-				methodCall.Method,
-				f => f.Configuration);
-			return functions.FirstOrDefault(f => f.IsAggregate || f.IsWindowFunction);
+			var function = methodCall.Method.GetExpressionAttribute(mapping);
+			return function != null && (function.IsAggregate || function.IsWindowFunction) ? function : null;
 		}
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -72,22 +68,13 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression sqlExpression = new SqlFunction(methodCall.Type, methodName, true, sql);
 
-			if (sqlExpression == null)
-				throw new LinqToDBException("Invalid Aggregate function implementation");
-
 			context.Sql        = context.SelectQuery;
 			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodName);
 
 			return context;
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
-		class AggregationContext : SequenceContextBase
+		sealed class AggregationContext : SequenceContextBase
 		{
 			public AggregationContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
@@ -158,7 +145,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							var resultVar = generator.AssignToVariable(defaultValue, "result");
-							
+
 							generator.AddExpression(Expression.IfThen(
 								Expression.NotEqual(exprVar, ExpressionInstances.UntypedNull),
 								Expression.Assign(resultVar, Expression.Convert(exprVar, resultVar.Type))));

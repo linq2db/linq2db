@@ -52,7 +52,10 @@ namespace Tests.Common
 
 			await foreach (var enumerable2 in enumerables)
 			{
-				finalList.Add(await enumerable2.ToListAsync());
+				var array1 = new List<int>();
+				await foreach (var elem in enumerable2)
+					array1.Add(elem);
+				finalList.Add(array1);
 			}
 			Assert.AreEqual(new int[][] { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7, 8 }, new[] { 9 } }, finalList);
 		}
@@ -65,11 +68,13 @@ namespace Tests.Common
 
 			await foreach (var enumerable2 in enumerables)
 			{
-				var array1 = await enumerable2.ToListAsync();
+				var array1 = new List<int>();
+				await foreach (var elem in enumerable2)
+					array1.Add(elem);
 				Assert.AreEqual(new int[] { 0, 1, 2 }, array1);
 				Assert.ThrowsAsync<InvalidOperationException>(async () =>
 				{
-					var array2 = await enumerable2.ToListAsync();
+					await foreach (var _ in enumerable2) { }
 				});
 				return;
 			}

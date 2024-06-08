@@ -16,14 +16,14 @@ namespace Tests.UserTests
 	{
 		public static class SqlLite
 		{
-			class MatchBuilder : Sql.IExtensionCallBuilder
+			sealed class MatchBuilder : Sql.IExtensionCallBuilder
 			{
 				public void Build(Sql.ISqExtensionBuilder builder)
 				{
 					var method = (MethodInfo) builder.Member;
 					var arg = method.GetGenericArguments().Single();
 
-					builder.AddParameter("table_field", new SqlTable(builder.Mapping, arg));
+					builder.AddParameter("table_field", new SqlTable(builder.Mapping.GetEntityDescriptor(arg)));
 				}
 			}
 
@@ -47,7 +47,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestAnonymous([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Execute(@"
 DROP TABLE IF EXISTS dataFTS;
@@ -79,7 +79,7 @@ CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastNam
 		[Test]
 		public void TestDirect([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Execute(@"
 DROP TABLE IF EXISTS dataFTS;

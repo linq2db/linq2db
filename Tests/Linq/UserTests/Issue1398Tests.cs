@@ -1,4 +1,5 @@
 ﻿using LinqToDB;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
@@ -57,12 +58,15 @@ namespace Tests.UserTests
 
 		// TODO: disabled providers lacks connections
 		[Test]
-		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12)] string context)
+		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12, TestProvName.AllSQLiteClassic)] string context)
 		{
 			const int recordsCount = 20;
 
+			// sqlite connection pooling is not compatible with tested template
+			SQLiteTools.ClearAllPools();
+
 			using (new DisableBaseline("Multi-threading"))
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<InsertTable>())
 			{
 				var tasks = new List<Task>();
@@ -81,7 +85,7 @@ namespace Tests.UserTests
 
 		private void Insert(string context, int value)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.GetTable<InsertTable>().Insert(() => new InsertTable { Value = value });
 			}

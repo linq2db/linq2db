@@ -1,7 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Data.Linq;
+using System.Diagnostics;
+using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Informix;
+using LinqToDB.Mapping;
 
 #if NET472
 using IBM.Data.Informix;
@@ -10,11 +16,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Data.Linq;
-	using System.Diagnostics;
-	using System.Threading.Tasks;
-	using LinqToDB.DataProvider.Informix;
-	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]
@@ -32,7 +33,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				// TimeSpan cannot be passed as parameter if it is not IfxTimeSpan
 				// for Linq queries we handle it by converting parameters to literals, but Execute uses parameters
@@ -84,7 +85,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -115,7 +116,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -204,7 +205,7 @@ namespace Tests.DataProvider
 		};
 
 		[Table("LinqDataTypes")]
-		class DataTypes
+		sealed class DataTypes
 		{
 			[Column] public int       ID;
 			[Column] public decimal?  MoneyValue;
@@ -222,7 +223,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypesMultipleRows([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -259,7 +260,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyLinqTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -296,7 +297,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypesProviderSpecific([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -333,7 +334,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyLinqTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -369,7 +370,7 @@ namespace Tests.DataProvider
 
 		void BulkCopyAllTypes(string context, BulkCopyType bulkCopyType)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -407,7 +408,7 @@ namespace Tests.DataProvider
 
 		async Task BulkCopyAllTypesAsync(string context, BulkCopyType bulkCopyType)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -450,8 +451,8 @@ namespace Tests.DataProvider
 
 			foreach (var column in ed.Columns)
 			{
-				var actualValue = column.GetValue(actual);
-				var testValue   = column.GetValue(test);
+				var actualValue = column.GetProviderValue(actual);
+				var testValue   = column.GetProviderValue(test);
 
 				Assert.That(actualValue, Is.EqualTo(testValue),
 					actualValue is DateTimeOffset
@@ -494,15 +495,16 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateAllTypes([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
-
-				ms.GetFluentMappingBuilder()
+				new FluentMappingBuilder(ms)
 					.Entity<AllType>()
-						.HasTableName("AllTypeCreateTest");
+						.HasTableName("AllTypeCreateTest")
+					.Build();
+
+				db.AddMappingSchema(ms);
 
 				try
 				{

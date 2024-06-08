@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common
@@ -67,29 +66,26 @@ namespace LinqToDB.Common
 			foreach (var item in items)
 			{
 				var name = nameFunc(item);
-				if (!name.IsNullOrEmpty() && currentNames?.Contains(name) != true && validatorFunc(name, namesParameter))
+				if (!string.IsNullOrEmpty(name) && currentNames?.Contains(name!) != true && validatorFunc(name!, namesParameter))
 				{
-					if (currentNames == null)
-						currentNames = new HashSet<string>(comparer);
-					currentNames.Add(name);
-					nameSetter(item, name, namesParameter);
+					currentNames ??= new HashSet<string>(comparer);
+					currentNames.Add(name!);
+					nameSetter(item, name!, namesParameter);
 					continue;
 				}
 
-				if (currentNames == null)
-					currentNames = new HashSet<string>(comparer);
-				if (currentCounters == null)
-					currentCounters = new Dictionary<string, int>(comparer);
+				currentNames ??= new HashSet<string>(comparer);
+				currentCounters ??= new Dictionary<string, int>(comparer);
 
 				name = defaultName(item);
 
-				if (name.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(name))
 					name = nameFunc(item);
-				if (name.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(name))
 					name = "t";
 
 				var digitCount = 0;
-				while (char.IsDigit(name[name.Length - 1 - digitCount]))
+				while (char.IsDigit(name![name.Length - 1 - digitCount]))
 				{
 					++digitCount;
 				}
@@ -103,14 +99,14 @@ namespace LinqToDB.Common
 
 					if (!currentCounters.TryGetValue(name, out startDigit))
 					{
-						startDigit = int.Parse(prevName.Substring(prevName.Length - digitCount, digitCount));
+						startDigit = int.Parse(prevName.Substring(prevName.Length - digitCount, digitCount), NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 					}
 				}
 
 				string newName;
 				do
 				{
-					newName = name + startDigit;
+					newName = FormattableString.Invariant($"{name}{startDigit}");
 					++startDigit;
 				} while (currentNames.Contains(newName) || !validatorFunc(newName, namesParameter));
 

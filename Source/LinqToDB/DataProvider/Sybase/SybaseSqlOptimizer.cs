@@ -1,19 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
-	class SybaseSqlOptimizer : BasicSqlOptimizer
+	sealed class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
 		public SybaseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
@@ -22,7 +23,7 @@ namespace LinqToDB.DataProvider.Sybase
 			};
 		}
 
-		protected static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
+		private static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 
@@ -32,7 +33,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			switch (func.Name)
 			{
-				case "$Replace$": return new SqlFunction(func.SystemType, "Str_Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case PseudoFunctions.REPLACE: return new SqlFunction(func.SystemType, "Str_Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
 
 				case "CharIndex":
 				{
@@ -66,12 +67,35 @@ namespace LinqToDB.DataProvider.Sybase
 
 					break;
 				}
+
+				case PseudoFunctions.CONVERT:
+				{
+					var ftype = func.SystemType.ToUnderlying();
+					if (ftype == typeof(string))
+					{
+						var stype = func.Parameters[2].SystemType!.ToUnderlying();
+
+						if (stype == typeof(DateTime)
+#if NET6_0_OR_GREATER
+							|| stype == typeof(DateOnly)
+#endif
+							)
+						{
+							return new SqlFunction(func.SystemType, "convert", false, true, func.Parameters[0], func.Parameters[2], new SqlValue(23))
+							{
+								CanBeNull = func.CanBeNull
+							};
+						}
+					}
+
+					break;
+				}
 			}
 
 			return base.ConvertFunction(func);
 		}
 
-		SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
+		static SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
 		{
 			var tableToUpdate = statement.Update.Table;
 
@@ -79,7 +103,7 @@ namespace LinqToDB.DataProvider.Sybase
 				return statement;
 
 			if (statement.SelectQuery.From.Tables.Count > 0)
-			{ 
+			{
 				if (tableToUpdate == statement.SelectQuery.From.Tables[0].Source)
 					return statement;
 

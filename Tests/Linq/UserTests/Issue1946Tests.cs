@@ -24,7 +24,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new[]{new User{Id = 1, Version = UserVersion.FirstRelease} }))

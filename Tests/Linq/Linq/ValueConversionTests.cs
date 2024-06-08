@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using FluentAssertions;
 using LinqToDB;
@@ -16,7 +18,7 @@ namespace Tests.Linq
 	public class ValueConversionTests : TestBase
 	{
 
-		class ItemClass
+		sealed class ItemClass
 		{
 			public string? Value { get; set; }
 		}
@@ -28,27 +30,27 @@ namespace Tests.Linq
 			Value3,
 			Null
 		}
-		
+
 		[Table("ValueConversion")]
-		class MainClass
+		sealed class MainClass
 		{
 			[PrimaryKey]
 			public int Id    { get; set; }
-			
-			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)] 
+
+			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)]
 			public JToken? Value1 { get; set; }
-			
-			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)] 
+
+			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)]
 			public List<ItemClass>? Value2 { get; set; }
 
 
-			[Column(DataType = DataType.NVarChar, Length = 50)] 
+			[Column(DataType = DataType.NVarChar, Length = 50)]
 			public EnumValue Enum { get; set; }
 
-			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)] 
+			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			public EnumValue? EnumNullable { get; set; }
 
-			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)] 
+			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			public EnumValue EnumWithNull { get; set; }
 
 
@@ -84,7 +86,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class WithNullConverter: ValueConverter<EnumValue, string?>
+		sealed class WithNullConverter : ValueConverter<EnumValue, string?>
 		{
 			public WithNullConverter() : base(v => v == EnumValue.Null ? null : v.ToString(), p=> p == null ? EnumValue.Null : (EnumValue)Enum.Parse(typeof(EnumValue), p), true)
 			{
@@ -93,28 +95,28 @@ namespace Tests.Linq
 		}
 
 		[Table("ValueConversion")]
-		class MainClassRaw
+		sealed class MainClassRaw
 		{
 			[PrimaryKey]
 			public int Id    { get; set; }
-			
-			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)] 
+
+			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)]
 			public string? Value1 { get; set; }
-			
-			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)] 
+
+			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)]
 			public string? Value2 { get; set; }
 
 
 			[Column(DataType = DataType.NVarChar, Length = 50)]
 			public string Enum { get; set; } = null!;
 
-			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)] 
+			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			public string? EnumNullable { get; set; }
 
-			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)] 
+			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			public string? EnumWithNull { get; set; }
 
-			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)] 
+			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			public string? EnumWithNullDeclarative { get; set; }
 
 			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
@@ -134,14 +136,13 @@ namespace Tests.Linq
 		private static MappingSchema CreateMappingSchema()
 		{
 			var ms = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 
 			builder.Entity<MainClass>()
 				.Property(e => e.Value1)
 				.HasConversion(v => JsonConvert.SerializeObject(v), p => JsonConvert.DeserializeObject<JToken>(p))
 				.Property(e => e.Value2)
-				.HasConversionFunc(v => JsonConvert.SerializeObject(v),
-					p => JsonConvert.DeserializeObject<List<ItemClass>>(p))
+				.HasConversionFunc(JsonConvert.SerializeObject, JsonConvert.DeserializeObject<List<ItemClass>>)
 				.Property(e => e.Enum)
 				.HasConversion(v => v.ToString(), p => (EnumValue)Enum.Parse(typeof(EnumValue), p))
 				.Property(e => e.EnumNullable)
@@ -149,7 +150,7 @@ namespace Tests.Linq
 				.Property(e => e.EnumWithNull)
 				.HasConversion(
 					v => v == EnumValue.Null ? null : v.ToString(),
-					p => p == null ? EnumValue.Null : (EnumValue)Enum.Parse(typeof(EnumValue), p), 
+					p => p == null ? EnumValue.Null : (EnumValue)Enum.Parse(typeof(EnumValue), p),
 					true
 				)
 				.Property(e => e.BoolValue)
@@ -160,7 +161,8 @@ namespace Tests.Linq
 				.HasConversion(
 					_ => _.HasValue ? _.Value.ToLocalTime() : new DateTime?(),
 					_ => _.HasValue ? new DateTime(_.Value.Ticks, DateTimeKind.Local) : new DateTime?()
-				);
+				)
+				.Build();
 
 			return ms;
 		}
@@ -175,7 +177,7 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(testData))
 			{
 				// Table Materialization
-				var result = table.ToArray();
+				var result = table.OrderBy(_ => _.Id).ToArray();
 
 				Assert.That(result[0].Value1, Is.Not.Null);
 				Assert.That(result[0].Value2!.Count, Is.GreaterThan(0));
@@ -201,12 +203,12 @@ namespace Tests.Linq
 
 				Assert.That(result[9].Value1, Is.Null);
 				Assert.That(result[9].Value2, Is.Null);
-		
+
 				Assert.That(result[0].BoolValue, Is.EqualTo(true));
 				Assert.That(result[1].BoolValue, Is.EqualTo(false));
 				Assert.That(result[2].BoolValue, Is.EqualTo(false));
 				Assert.That(result[3].BoolValue, Is.EqualTo(false));
-				
+
 
 				var query = from t in table
 					select new
@@ -216,17 +218,17 @@ namespace Tests.Linq
 						t.Value2,
 					};
 
-				var selectResult = query.ToArray();
+				var selectResult = query.OrderBy(_ => _.Id).ToArray();
 
 				Assert.That(selectResult[0].Value1, Is.Not.Null);
 				Assert.That(selectResult[0].Value2!.Count, Is.GreaterThan(0));
-				
-				var subqueryResult = query.AsSubQuery().ToArray();
-				
+
+				var subqueryResult = query.AsSubQuery().OrderBy(_ => _.Id).ToArray();
+
 				Assert.That(subqueryResult[0].Value1, Is.Not.Null);
 				Assert.That(subqueryResult[0].Value2!.Count, Is.GreaterThan(0));
 
-				var unionResult = query.Concat(query.AsSubQuery()).ToArray();
+				var unionResult = query.Concat(query.AsSubQuery()).OrderBy(_ => _.Id).ToArray();
 
 				var firstItem = unionResult.First();
 				Assert.That(firstItem.Value1, Is.Not.Null);
@@ -253,7 +255,7 @@ namespace Tests.Linq
 				var testedList = testData[0].Value2;
 
 				var query = from t in table
-					where testedList == t.Value2 
+					where testedList == t.Value2
 					select new
 					{
 						t.Id,
@@ -262,13 +264,13 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(1));
 			}
 		}
 
 		[Test]
-		public void ParameterTestsNullable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void ParameterTestsNullable([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = CreateMappingSchema();
 
@@ -317,7 +319,7 @@ namespace Tests.Linq
 				{
 					var elements = item.ToArray();
 				}
-			
+
 			}
 		}
 
@@ -337,7 +339,7 @@ namespace Tests.Linq
 					select t;
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(1));
 			}
 		}
@@ -362,7 +364,7 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(3));
 			}
 		}
@@ -387,13 +389,78 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(7));
 			}
 		}
 
 		[Test]
-		public void BoolJoinTest([DataSources(false)] string context)
+		public void CoalesceTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = from t1 in table
+					select new
+					{
+						Converted = t1.EnumNullable ?? t1.Enum,
+					};
+
+				var selectResult = query.ToArray();
+
+				selectResult.Should().HaveCount(10);
+			}
+		}
+
+		[Test]
+		public void ConditionUnionTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = from t1 in table
+					select new
+					{
+						Converted = t1.EnumNullable != null ? t1.EnumNullable : t1.Enum,
+					};
+
+				var selectResult = query.Concat(query).ToArray();
+
+				selectResult.Should().HaveCount(20);
+			}
+		}
+
+		[Test]
+		public void CoalesceConcatTest([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				var query = from t1 in table
+					select new
+					{
+						Converted1 = t1.EnumNullable ?? t1.Enum,
+						Converted2 = t1.Value1,
+						Converted3 = t1.EnumNullable ?? t1.Enum,
+					};
+
+				var selectResult = query.Union(query).ToArray();
+
+				selectResult.Should().HaveCount(10);
+			}
+		}
+
+		[Test]
+		public void BoolJoinTest([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = CreateMappingSchema();
 
@@ -409,7 +476,7 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(9));
 			}
 		}
@@ -424,7 +491,7 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(testData))
 			{
 				var query = from t in table
-					where null == t.Value2 
+					where null == t.Value2
 					select new
 					{
 						t.Id,
@@ -433,7 +500,7 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(1));
 			}
 		}
@@ -450,7 +517,7 @@ namespace Tests.Linq
 				List<ItemClass>? testedList = null;
 
 				var query = from t in table
-					where testedList == t.Value2 
+					where testedList == t.Value2
 					select new
 					{
 						t.Id,
@@ -459,7 +526,7 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(1));
 			}
 		}
@@ -493,7 +560,7 @@ namespace Tests.Linq
 
 				var toUpdate2 = new MainClass
 				{
-					Id = 2, 
+					Id = 2,
 					Value1 = JToken.Parse("{ some: \"updated2}\" }"),
 					Value2 = new List<ItemClass> { new ItemClass { Value = "updated2" } },
 					EnumWithNull = EnumValue.Value2,
@@ -504,19 +571,19 @@ namespace Tests.Linq
 
 				var update2Check = rawTable.First(e => e.Id == 2);
 
-				Assert.That(update2Check.Value1, Is.EqualTo("{\"some\":\"updated2}\"}"));
+				Assert.That(update2Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"updated2}\"}"));
 				Assert.That(update2Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "updated2" } })));
 				Assert.That(update2Check.EnumWithNull, Is.EqualTo("Value2"));
 				Assert.That(update2Check.EnumWithNullDeclarative, Is.EqualTo("Value2"));
 
-				
+
 				var toUpdate3 = new MainClass
 				{
-					Id = 3, 
+					Id = 3,
 					Value1 = null,
 					Value2 = null,
-					EnumWithNull = EnumValue.Null, 
-					EnumWithNullDeclarative = EnumValue.Null, 
+					EnumWithNull = EnumValue.Null,
+					EnumWithNullDeclarative = EnumValue.Null,
 				};
 				db.Update(toUpdate3);
 
@@ -558,7 +625,7 @@ namespace Tests.Linq
 				Assert.That(insert1Check.EnumWithNullDeclarative, Is.Null);
 				Assert.That(insert1Check.BoolValue, Is.EqualTo('Y'));
 				Assert.That(insert1Check.AnotherBoolValue, Is.EqualTo('T'));
-				
+
 				table
 					.Value(e => e.Id, 2)
 					.Value(e => e.Value1, (JToken?)null)
@@ -581,7 +648,7 @@ namespace Tests.Linq
 
 				var toInsert = new MainClass
 				{
-					Id = 3, 
+					Id = 3,
 					Value1 = JToken.Parse("{ some: \"inserted3}\" }"),
 					Value2 = new List<ItemClass> { new ItemClass { Value = "inserted3" } },
 					Enum = EnumValue.Value3,
@@ -593,7 +660,7 @@ namespace Tests.Linq
 
 				var insert3Check = rawTable.First(e => e.Id == 3);
 
-				Assert.That(insert3Check.Value1, Is.EqualTo("{\"some\":\"inserted3}\"}"));
+				Assert.That(insert3Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"inserted3}\"}"));
 				Assert.That(insert3Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "inserted3" } })));
 				Assert.That(insert3Check.Enum,   Is.EqualTo("Value3"));
 				Assert.That(insert3Check.EnumNullable, Is.Null);
@@ -605,7 +672,7 @@ namespace Tests.Linq
 				Assert.That(table.Count(), Is.EqualTo(3));
 			}
 		}
-		
+
 		[Test]
 		public void InsertExpression([DataSources(false)] string context, [Values(1, 2)] int iteration)
 		{
@@ -641,6 +708,164 @@ namespace Tests.Linq
 
 			}
 		}
-		
+
+		public class Issue3684DateTimeNullConverter : ValueConverterFunc<DateTime?, System.Data.SqlTypes.SqlDateTime>
+		{
+			public Issue3684DateTimeNullConverter() : base(
+				model =>
+				{
+					if (model == null)
+						return SqlDateTime.Null;
+
+					return new SqlDateTime(model.Value);
+				},
+				provider =>
+				{
+					if (provider.IsNull)
+						return null;
+
+					return provider.Value;
+				}, true)
+			{
+			}
+		}
+
+		[Table]
+		public class Issue3684Table
+		{
+			[PrimaryKey, Identity                                                  ] public int       Id                   { get; set; }
+			[ValueConverter(ConverterType = typeof(Issue3684DateTimeNullConverter))]
+			[Column(DataType = DataType.DateTime2, Precision = 0)                  ] public DateTime? FirstAppointmentTime { get; set; }
+			[ValueConverter(ConverterType = typeof(Issue3684DateTimeNullConverter))]
+			[Column(DataType = DataType.DateTime)                                  ] public DateTime? PassportDateOfIssue  { get; set; }
+		}
+
+		[Test]
+		public void Issue3684Test([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			// remote context serialization for SqlDateTime
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<SqlDateTime, string>(value => ((DateTime)value).ToBinary().ToString(CultureInfo.InvariantCulture));
+			ms.SetConvertExpression<string, SqlDateTime>(value => DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture)));
+
+			using var db    = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable<Issue3684Table>();
+
+			table.Insert(() => new Issue3684Table());
+			table.Insert(() => new Issue3684Table() { FirstAppointmentTime = TestData.DateTime0, PassportDateOfIssue = TestData.DateTime3 });
+
+			var data = table.OrderBy(_ => _.Id).ToArray();
+
+			Assert.AreEqual(2, data.Length);
+
+			Assert.AreEqual(1, data[0].Id);
+			Assert.IsNull(data[0].FirstAppointmentTime);
+			Assert.IsNull(data[0].PassportDateOfIssue);
+
+			Assert.AreEqual(2, data[1].Id);
+			Assert.AreEqual(TestData.DateTime0, data[1].FirstAppointmentTime);
+			Assert.AreEqual(TestData.DateTime3, data[1].PassportDateOfIssue);
+		}
+
+		sealed class BoolConverterAttribute : ValueConverterAttribute
+		{
+			public BoolConverterAttribute()
+			{
+				ValueConverter = new ValueConverter<bool, string>(b => b ? "Y" : "N", m => m == "Y", false);
+			}
+		}
+
+		sealed class BoolConverterNullableAttribute : ValueConverterAttribute
+		{
+			public BoolConverterNullableAttribute()
+			{
+				ValueConverter = new ValueConverter<bool?, string>((bool? b) => b == true ? "Y" : "N", m => m == "Y", false);
+			}
+		}
+
+		sealed class BoolConverterNullsAttribute : ValueConverterAttribute
+		{
+			public BoolConverterNullsAttribute()
+			{
+				ValueConverter = new ValueConverter<bool, string?>(b => b ? "Y" : null, m => m == "Y", true);
+			}
+		}
+
+		[Table]
+		public class Issue3830TestTable
+		{
+			[Column                                                                            ] public int   Id    { get; set; }
+			[Column(DataType = DataType.Char, Length = 1), BoolConverter                       ] public bool  Bool1 { get; set; }
+			[Column(DataType = DataType.Char, Length = 1), BoolConverterNullable               ] public bool? Bool2 { get; set; }
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), BoolConverterNulls] public bool  Bool3 { get; set; }
+
+			public static readonly Issue3830TestTable[] TestData = new Issue3830TestTable[]
+			{
+				new Issue3830TestTable() { Id = 1, Bool1 = true,  Bool2 = null,  Bool3 = false },
+				new Issue3830TestTable() { Id = 2, Bool1 = false, Bool2 = null,  Bool3 = true  },
+				new Issue3830TestTable() { Id = 3, Bool1 = false, Bool2 = true,  Bool3 = false },
+				new Issue3830TestTable() { Id = 4, Bool1 = true,  Bool2 = false, Bool3 = true  },
+			};
+		}
+
+		[Test]
+		public void Issue3830Test([DataSources] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+			using var table     = db.CreateLocalTable(Issue3830TestTable.TestData);
+
+			foreach (var record in Issue3830TestTable.TestData)
+			{
+				// bool_field=value
+				AssertRecord(record, table.Where(r => r.Bool1 == record.Bool1 && r.Bool2 == record.Bool2 && r.Bool3 == record.Bool3).ToArray());
+				// bool_field
+				if (record.Bool1 == true ) AssertRecord(record, table.Where(r => r.Bool1 && r.Bool2 == record.Bool2 && r.Bool3 == record.Bool3).ToArray());
+				if (record.Bool3 == true ) AssertRecord(record, table.Where(r => r.Bool3 && r.Bool1 == record.Bool1 && r.Bool2 == record.Bool2).ToArray());
+				// !bool_field
+				if (record.Bool1 == false) AssertRecord(record, table.Where(r => !r.Bool1 && r.Bool2 == record.Bool2 && r.Bool3 == record.Bool3).ToArray());
+				if (record.Bool3 == false) AssertRecord(record, table.Where(r => !r.Bool3 && r.Bool1 == record.Bool1 && r.Bool2 == record.Bool2).ToArray());
+				// bool_field is null
+				if (record.Bool2 == null ) AssertRecord(record, table.Where(r => r.Bool2 == null && r.Bool1 == record.Bool1 && r.Bool3 == record.Bool3).ToArray());
+				// bool_field is not null
+				if (record.Bool2 != null ) AssertRecord(record, table.Where(r => r.Bool2 != null && r.Bool1 == record.Bool1 && r.Bool3 == record.Bool3).ToArray());
+			}
+
+			static void AssertRecord(Issue3830TestTable record, Issue3830TestTable[] result)
+			{
+				Assert.AreEqual(1           , result.Length  );
+				Assert.AreEqual(record.Id   , result[0].Id   );
+				Assert.AreEqual(record.Bool1, result[0].Bool1);
+				Assert.AreEqual(record.Bool2, result[0].Bool2);
+				Assert.AreEqual(record.Bool3, result[0].Bool3);
+			}
+		}
+
+		[Test]
+		public void ConditionNullTest([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from p in Parent
+				from i in new[] { 0, 1 }
+				select new
+				{
+					ID    = i == 0 ? null : (int?)p.ParentID,
+					Value = p.Value1
+				} into p
+				where p.ID == p.Value
+				select p
+				,
+				from p in db.Parent
+				from i in new[] { 0, 1 }
+				select new
+				{
+					ID    = i == 0 ? null : (int?)p.ParentID,
+					Value = p.Value1
+				} into p
+				where p.ID == p.Value
+				select p);
+		}
 	}
 }

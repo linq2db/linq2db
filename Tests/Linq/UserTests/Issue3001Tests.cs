@@ -25,8 +25,7 @@ namespace Tests.UserTests
 
 			[Column] [PrimaryKey] public int Id;
 
-			[Association(ThisKey = nameof(HouseId), OtherKey = "Id", CanBeNull = true,
-				Relationship     = Relationship.ManyToOne)]
+			[Association(ThisKey = nameof(HouseId), OtherKey = "Id", CanBeNull = true)]
 			public House3001 House { get; set; } = null!;
 		}
 
@@ -36,8 +35,7 @@ namespace Tests.UserTests
 
 			[Column] public int PersonId;
 
-			[Association(ThisKey = nameof(PersonId), OtherKey = "Id", CanBeNull = false,
-				Relationship     = Relationship.ManyToOne)]
+			[Association(ThisKey = nameof(PersonId), OtherKey = "Id", CanBeNull = false)]
 			public Person3001 Person { get; set; } = null!;
 
 			[ExpressionMethod(nameof(HouseExpression))]
@@ -58,8 +56,9 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void TestExpressionAssociation([IncludeDataSources(TestProvName.AllSQLite)]
+		public void TestExpressionAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using var db          = GetDataContext(context);

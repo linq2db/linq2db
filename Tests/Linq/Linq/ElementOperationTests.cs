@@ -80,7 +80,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void NestedFirstOrDefaultScalar1([DataSources(
-			TestProvName.AllInformix, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -91,8 +91,11 @@ namespace Tests.Linq
 
 		[Test]
 		public void NestedFirstOrDefaultScalar2([DataSources(
-			TestProvName.AllInformix, TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllSapHana)]
+			TestProvName.AllInformix,
+			TestProvName.AllOracle,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSybase,
+			TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -144,7 +147,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedFirstOrDefault3([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllOracle)]
+		public void NestedFirstOrDefault3([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -154,7 +157,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedFirstOrDefault4([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQLLess10)] string context)
+		public void NestedFirstOrDefault4([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL9)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -177,7 +180,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedSingleOrDefault1([DataSources] string context)
+		public void NestedSingleOrDefault1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

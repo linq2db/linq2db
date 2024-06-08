@@ -1,5 +1,4 @@
-﻿#if !NETCOREAPP2_1
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -92,7 +91,7 @@ namespace Tests.OData.Microsoft
 
 		[Test]
 		public void SelectViaOData(
-			[IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
 			[ValueSource(nameof(ODataQueriesTestCases))] ODataQueries testCase)
 		{
 			var modelBuilder = new ODataModelBuilder();
@@ -112,7 +111,7 @@ namespace Tests.OData.Microsoft
 
 				var uri = new Uri("http://localhost:15580" + testCase.Query);
 #if NETFRAMEWORK
-				var request = new HttpRequestMessage()
+				using var request = new HttpRequestMessage()
 				{
 					Method = HttpMethod.Get,
 					RequestUri = uri
@@ -175,24 +174,24 @@ namespace Tests.OData.Microsoft
 			public virtual AggregationPropertyContainer Container { get; set; } = null!;
 		}
 
-		class AggregationWrapper : GroupByWrapper
+		sealed class AggregationWrapper : GroupByWrapper
 		{
 		}
 
 		class AggregationPropertyContainer : NamedProperty
 		{
-			public class LastInChain : AggregationPropertyContainer
+			public sealed class LastInChain : AggregationPropertyContainer
 			{
 			}
 		}
 
-		class FlatteningWrapper<T>: GroupByWrapper
+		sealed class FlatteningWrapper<T>: GroupByWrapper
 		{
 			public T Source { get; set; } = default!;
 		}
 
 		[Test]
-		public void SelectPure([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void SelectPure([IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
@@ -306,4 +305,3 @@ namespace Tests.OData.Microsoft
 
 	}
 }
-#endif

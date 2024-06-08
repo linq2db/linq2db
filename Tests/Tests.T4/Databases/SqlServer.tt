@@ -35,8 +35,8 @@
 	GenerateProcedureResultAsList = true;
 
 	GetSchemaOptions.LoadTable = t => t.Name != "Products" && t.Name != "Person";
-	
-	LoadSqlServerMetadata(GetConnectionString("Northwind"));
+
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.Northwind"));
 
 	Tables["Order Details"].Columns["OrderID"]. MemberName = "ID";
 
@@ -57,7 +57,7 @@
 
 	//GenerateConstructors = false;
 
-	LoadSqlServerMetadata(GetConnectionString("SqlServer.2014"));
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.2019"));
 
 	AddReturnParameter("Issue1897");
 

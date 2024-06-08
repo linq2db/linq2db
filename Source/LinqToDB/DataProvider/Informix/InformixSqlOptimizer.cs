@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlQuery;
 	using Mapping;
 
-	class InformixSqlOptimizer : BasicSqlOptimizer
+	sealed class InformixSqlOptimizer : BasicSqlOptimizer
 	{
 		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.Informix
 				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
@@ -94,22 +94,22 @@ namespace LinqToDB.DataProvider.Informix
 						select.VisitAll(ClearQueryParameter);
 				});
 
-			return base.Finalize(statement);
+			return base.Finalize(mappingSchema, statement, dataOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:
-					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement);
+					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions);
 					statement = deleteStatement;
 					if (deleteStatement.SelectQuery != null)
 						deleteStatement.SelectQuery.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update:
-					statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions);
 					break;
 			}
 
@@ -135,7 +135,8 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				switch (func.Name)
 				{
-					case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl");
+					// passing parameter to NVL will result in "A syntax error has occurred." error from server
+					case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false);
 					case "Convert"  :
 					{
 						var par0 = func.Parameters[0];
@@ -147,10 +148,25 @@ namespace LinqToDB.DataProvider.Informix
 						{
 							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 							{
-								case TypeCode.String   : return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
+								case TypeCode.String   :
+								{
+									var stype = func.Parameters[1].SystemType!.ToUnderlying();
+									if (stype == typeof(DateTime))
+									{
+										return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("%Y-%m-%d %H:%M:%S.%F"));
+									}
+#if NET6_0_OR_GREATER
+									else if (stype == typeof(DateOnly))
+									{
+										return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("%Y-%m-%d"));
+									}
+#endif
+									return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
+								}
+
 								case TypeCode.Boolean  :
 								{
-									var ex = AlternativeConvertToBoolean(func, 1);
+									var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 									if (ex != null)
 										return ex;
 									break;
@@ -174,6 +190,12 @@ namespace LinqToDB.DataProvider.Informix
 
 										return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);
 									}
+
+									if ((IsDateTime2Type(func.Parameters[0], "DateTime2")
+											|| IsDateTimeType(func.Parameters[0], "DateTime")
+											|| IsSmallDateTimeType(func.Parameters[0], "SmallDateTime"))
+										&& func.Parameters[1].SystemType == typeof(string))
+										return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue("%Y-%m-%d %H:%M:%S"));
 
 									if (IsTimeDataType(func.Parameters[0]))
 										return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", Precedence.Primary, func.Parameters[1]);

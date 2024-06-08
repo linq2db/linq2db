@@ -7,7 +7,7 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common.Internal.Cache;
 
-	class CompiledTable<T>
+	sealed class CompiledTable<T>
 		where T : notnull
 	{
 		public CompiledTable(LambdaExpression lambda, Expression expression)
@@ -21,16 +21,20 @@ namespace LinqToDB.Linq
 
 		Query<T> GetInfo(IDataContext dataContext)
 		{
-			var contextID       = dataContext.ContextID;
-			var contextType     = dataContext.GetType();
-			var mappingSchemaID = dataContext.MappingSchema.ConfigurationID;
+			var configurationID = dataContext.ConfigurationID;
+			var dataOptions     = dataContext.Options;
 
 			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
-				(operation: "CT", contextID, contextType, mappingSchemaID, expression: _expression),
-				(dataContext, lambda: _lambda),
+				(
+					operation: "CT",
+					configurationID,
+					expression : _expression,
+					queryFlags : dataContext.GetQueryFlags()
+				),
+				(dataContext, lambda: _lambda, dataOptions),
 				static (o, key, ctx) =>
 				{
-					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
 
 					var query = new Query<T>(ctx.dataContext, key.expression);
 
@@ -42,7 +46,7 @@ namespace LinqToDB.Linq
 
 					query.ClearMemberQueryableInfo();
 					return query;
-				});
+				})!;
 
 
 			return result;

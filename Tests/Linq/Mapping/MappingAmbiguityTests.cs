@@ -38,12 +38,12 @@ namespace Tests.Mapping
 		[Test]
 		public void TestCreate([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<TestTable>())
 			{
 				var sql = db.LastQuery!;
 
-				Assert.AreEqual(sql.Replace("\r", ""), @"CREATE TABLE [TestTable]
+				Assert.AreEqual(@"CREATE TABLE IF NOT EXISTS [TestTable]
 (
 	[ID]      INTEGER       NOT NULL,
 	[Field1]  INTEGER       NOT NULL,
@@ -55,7 +55,7 @@ namespace Tests.Mapping
 
 	CONSTRAINT [PK_TestTable] PRIMARY KEY ([ID])
 )
-".Replace("\r", ""));
+".Replace("\r", ""), sql.Replace("\r", ""));
 			}
 		}
 
@@ -73,7 +73,7 @@ namespace Tests.Mapping
 					.UpdateWhenMatched()
 					.Merge();
 
-				if (context.Contains("Oracle") && context.Contains("Native"))
+				if (context.IsAnyOf(TestProvName.AllOracleNative))
 					Assert.AreEqual(-1, res);
 				else
 					Assert.AreEqual(0, res);

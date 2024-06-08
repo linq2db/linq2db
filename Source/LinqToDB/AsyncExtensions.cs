@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -69,7 +70,7 @@ namespace LinqToDB
 		#endregion
 
 		[AttributeUsage(AttributeTargets.Method)]
-		internal class ElementAsyncAttribute : Attribute
+		internal sealed class ElementAsyncAttribute : Attribute
 		{
 		}
 
@@ -94,7 +95,7 @@ namespace LinqToDB
 			return new AsyncEnumerableAdapter<TSource>(source);
 		}
 
-		private class AsyncEnumerableAdapter<T> : IAsyncEnumerable<T>
+		private sealed class AsyncEnumerableAdapter<T> : IAsyncEnumerable<T>
 		{
 			private readonly IQueryable<T> _query;
 			public AsyncEnumerableAdapter(IQueryable<T> query)
@@ -182,9 +183,9 @@ namespace LinqToDB
 			token);
 		}
 
-#endregion
+		#endregion
 
-#region ToListAsync
+		#region ToListAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to a list.
@@ -210,9 +211,9 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
-#region ToArrayAsync
+		#region ToArrayAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to an array.
@@ -246,9 +247,9 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
-#region ToDictionaryAsync
+		#region ToDictionaryAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to a dictionary.
@@ -372,7 +373,18 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
+#if NATIVE_ASYNC
+		internal static ConfiguredAsyncDisposable ConfigureForUsing(this IAsyncDisposable asyncDisposable)
+		{
+			return asyncDisposable.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		}
+#else
+		internal static IAsyncDisposable ConfigureForUsing(this IAsyncDisposable asyncDisposable)
+		{
+			return asyncDisposable;
+		}
+#endif
 	}
 }

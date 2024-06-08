@@ -1,35 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+
 using LinqToDB.Common;
+using LinqToDB.DataProvider;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.SqlProvider
 {
 	public class OptimizationContext
 	{
-		private SqlParameter[]? _staticParameters;
+		private IQueryParametersNormalizer?                      _parametersNormalizer;
+		private Dictionary<SqlParameter, SqlParameter>?          _parametersMap;
+		private List<SqlParameter>?                              _actualParameters;
+		private Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
 
-		readonly Dictionary<IQueryElement, IQueryElement> _optimized =
-			new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+		private readonly Dictionary<IQueryElement, IQueryElement> _optimized = new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+		private readonly Func<IQueryParametersNormalizer>         _parametersNormalizerFactory;
 
-		private List<SqlParameter>? _actualParameters;
-		private HashSet<string>?    _usedParameterNames;
-
-		private Dictionary<(DbDataType, string, object?), SqlParameter>? _dynamicParameters;
-
-		public OptimizationContext(EvaluationContext context, AliasesContext aliases, 
-			bool isParameterOrderDepended)
+		public OptimizationContext(
+			EvaluationContext                context,
+			AliasesContext                   aliases,
+			bool                             isParameterOrderDependent,
+			Func<IQueryParametersNormalizer> parametersNormalizerFactory)
 		{
-			Aliases = aliases ?? throw new ArgumentNullException(nameof(aliases));
-			Context = context;
-			IsParameterOrderDepended = isParameterOrderDepended;
+			Aliases                      = aliases ?? throw new ArgumentNullException(nameof(aliases));
+			Context                      = context;
+			IsParameterOrderDependent    = isParameterOrderDependent;
+			_parametersNormalizerFactory = parametersNormalizerFactory;
 		}
 
-		public EvaluationContext Context                  { get; }
-		public bool              IsParameterOrderDepended { get; }
-		public AliasesContext    Aliases                  { get; }
+		public EvaluationContext Context                   { get; }
+		public bool              IsParameterOrderDependent { get; }
+		public AliasesContext    Aliases                   { get; }
 
 		public bool IsOptimized(IQueryElement element, [NotNullWhen(true)] out IQueryElement? newExpr)
 		{
@@ -58,47 +61,49 @@ namespace LinqToDB.SqlProvider
 			_optimized[element] = newExpr;
 		}
 
-		public bool HasParameters() => _actualParameters != null && _actualParameters.Count > 0;
+		public bool HasParameters() => _actualParameters?.Count > 0;
 
-		public IEnumerable<SqlParameter> GetParameters()
-		{
-			if (_actualParameters == null)
-				return Array<SqlParameter>.Empty;
-
-			return _actualParameters;
-		}
+		public IReadOnlyList<SqlParameter> GetParameters() => _actualParameters ?? (IReadOnlyList<SqlParameter>)Array<SqlParameter>.Empty;
 
 		public SqlParameter AddParameter(SqlParameter parameter)
 		{
-			_actualParameters ??= new List<SqlParameter>();
+			var returnValue = parameter;
 
-			var alreadyRegistered = _actualParameters.Contains(parameter);
-			if (IsParameterOrderDepended || !alreadyRegistered)
+			if (!IsParameterOrderDependent && _parametersMap?.TryGetValue(parameter, out var newParameter) == true)
 			{
-				if (alreadyRegistered)
+				returnValue = newParameter;
+			}
+			else
+			{
+				var newName = (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(parameter.Name);
+
+				if (IsParameterOrderDependent || newName != parameter.Name)
 				{
-					parameter = new SqlParameter(parameter.Type, parameter.Name, parameter.Value)
+					returnValue = new SqlParameter(parameter.Type, newName, parameter.Value)
 					{
-						AccessorId = parameter.AccessorId
+						AccessorId     = parameter.AccessorId,
+						ValueConverter = parameter.ValueConverter
 					};
 				}
 
-				CorrectParamName(parameter);
+				if (!IsParameterOrderDependent)
+					(_parametersMap ??= new()).Add(parameter, returnValue);
 
-				_actualParameters.Add(parameter);
+				(_actualParameters ??= new()).Add(returnValue);
 			}
 
-			return parameter;
+			return returnValue;
 		}
 
-		public SqlParameter SuggestDynamicParameter(DbDataType dbDataType, string name, object? value)
+		public SqlParameter SuggestDynamicParameter(DbDataType dbDataType, object? value)
 		{
-			var key = (dbDataType, name, value);
+			var key = (dbDataType, value);
 
 			if (_dynamicParameters == null || !_dynamicParameters.TryGetValue(key, out var param))
 			{
 				// converting to SQL Parameter
-				param = new SqlParameter(dbDataType, name, value);
+				// real name (in case of conflicts) will be generated on later stage in AddParameter method
+				param = new SqlParameter(dbDataType, "value", value);
 
 				_dynamicParameters ??= new();
 				_dynamicParameters.Add(key, param);
@@ -107,37 +112,11 @@ namespace LinqToDB.SqlProvider
 			return param;
 		}
 
-		private void CorrectParamName(SqlParameter parameter)
-		{
-			if (_usedParameterNames == null)
-			{
-				_staticParameters = Aliases.GetParameters();
-
-				if (_staticParameters == null)
-					_usedParameterNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-				else
-					_usedParameterNames = new HashSet<string>(_staticParameters.Select(p => p.Name!),
-						StringComparer.InvariantCultureIgnoreCase);
-			}
-
-			if (!(_staticParameters?.Contains(parameter) == true) 
-			    && (string.IsNullOrEmpty(parameter.Name) || _usedParameterNames.Contains(parameter.Name!)))
-			{
-				Utils.MakeUniqueNames(new[] {parameter}, _usedParameterNames, p => p.Name,
-					(p, v, s) => p.Name = v,
-					p => p.Name.IsNullOrEmpty() ? "p_1" :
-						char.IsDigit(p.Name[p.Name.Length - 1]) ? p.Name : p.Name + "_1",
-					StringComparer.InvariantCultureIgnoreCase);
-
-			}
-
-			_usedParameterNames.Add(parameter.Name!);
-		}
-
 		public void ClearParameters()
 		{
-			_usedParameterNames = null;
-			_actualParameters = null;
+			// must discard instance instead of Clean as it is returned by GetParameters
+			_actualParameters     = null;
+			_parametersNormalizer = null;
 		}
 
 		private ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>? _visitor;

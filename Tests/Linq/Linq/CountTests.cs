@@ -50,7 +50,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count3([DataSources] string context)
+		public void Count3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -86,7 +86,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count7([DataSources(ProviderName.SqlCe)] string context)
+		public void Count7([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -97,7 +97,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubQueryCount([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				AreEqual(
 					from p in Parent
@@ -109,7 +109,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy1([DataSources] string context)
+		public void GroupBy1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -135,7 +135,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy102([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupBy102([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -160,7 +160,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy103([DataSources] string context)
+		public void GroupBy103([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -174,7 +174,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
-		public void GroupBy21([DataSources] string context)
+		public void GroupBy21([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var n = 1;
 
@@ -194,7 +194,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
-		public void GroupBy22([DataSources] string context)
+		public void GroupBy22([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var n = 1;
 
@@ -213,7 +213,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.SqlServer2000, TestProvName.AllAccess)] string context)
+		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -231,7 +231,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
-		public void GroupBy3([DataSources] string context)
+		public void GroupBy3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -269,7 +269,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy5([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupBy5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -367,7 +367,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWhere201([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByWhere201([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -382,7 +382,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWhere202([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByWhere202([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -397,7 +397,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWhere203([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByWhere203([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -458,7 +458,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery1([DataSources] string context)
+		public void SubQuery1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -471,7 +471,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery2([DataSources] string context)
+		public void SubQuery2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -484,7 +484,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery3([DataSources] string context)
+		public void SubQuery3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -497,7 +497,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery4([DataSources] string context)
+		public void SubQuery4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -506,7 +506,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery5([DataSources] string context)
+		public void SubQuery5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -515,7 +515,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery6([DataSources(ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase)] string context)
+		public void SubQuery6([DataSources(ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -524,7 +524,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery7([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.Access)] string context)
+		public void SubQuery7([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -533,7 +533,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQueryMax1([DataSources] string context)
+		public void SubQueryMax1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -542,7 +542,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task SubQueryMax1Async([DataSources] string context)
+		public async Task SubQueryMax1Async([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -551,7 +551,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQueryMax2([DataSources] string context)
+		public void SubQueryMax2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -560,7 +560,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin1([DataSources] string context)
+		public void GroupJoin1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -583,7 +583,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin2([DataSources] string context)
+		public void GroupJoin2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -610,7 +610,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin3([DataSources] string context)
+		public void GroupJoin3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -629,7 +629,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin4([DataSources] string context)
+		public void GroupJoin4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -662,7 +662,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Child")]
-		class Child2
+		sealed class Child2
 		{
 			[Column] public int? ParentID;
 			[Column] public int  ChildID;

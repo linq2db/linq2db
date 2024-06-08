@@ -4,12 +4,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Common.Internal
 {
-	public abstract class ValueComparer : IEqualityComparer, IEqualityComparer<object>
+	using Expressions;
+	using Extensions;
+
+	abstract class ValueComparer : IEqualityComparer, IEqualityComparer<object>
 	{
 		private protected static readonly MethodInfo _doubleEqualsMethodInfo
 			= MemberHelper.MethodOf<double>(d => d.Equals(0));
@@ -54,7 +55,7 @@ namespace LinqToDB.Common.Internal
 		/// <param name="y"> The second instance. </param>
 		/// <returns> <see langword="true" /> if they are equal; <see langword="false" /> otherwise. </returns>
 		public new abstract bool Equals(object? x, object? y);
-		
+
 		/// <summary>
 		///     Returns the hash code for the given instance.
 		/// </summary>
@@ -126,7 +127,7 @@ namespace LinqToDB.Common.Internal
 				new object[] { favorStructuralComparisons })!;
 		}
 
-		private static ConcurrentDictionary<(Type, bool), ValueComparer> _defaultValueComparers = new();
+		static readonly ConcurrentDictionary<(Type, bool), ValueComparer> _defaultValueComparers = new();
 
 		public static ValueComparer GetDefaultValueComparer(Type type, bool favorStructuralComparisons)
 		{

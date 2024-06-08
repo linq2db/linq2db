@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
+	using SqlQuery;
 	using LinqToDB.Expressions;
 
-	class OrderByBuilder : MethodCallBuilder
+	sealed class OrderByBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
 
@@ -76,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 					var isImmutable = QueryHelper.IsConstant(sqlInfo.Sql);
 					if (isImmutable)
 						continue;
-					
+
 					// possible we have to extend this list
 					//
 					isComplex = null != sqlInfo.Sql.Find(QueryElementType.SqlQuery);
@@ -91,27 +90,21 @@ namespace LinqToDB.Linq.Builder
 				wrapped = true;
 			}
 
-	
-			if (!isContinuousOrder && !Configuration.Linq.DoNotClearOrderBys)
+			if (!isContinuousOrder && !builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 
 			foreach (var expr in sql)
 			{
 				// we do not need sorting by immutable values, like "Some", Func("Some"), "Some1" + "Some2". It does nothing for ordering
+				// IT: Actually it does. See ORDER BY ordinal position.
 				//
-				if (QueryHelper.IsConstant(expr.Sql))
+				if (!builder.DataOptions.SqlOptions.EnableConstantExpressionInOrderBy && QueryHelper.IsConstant(expr.Sql))
 					continue;
-			
+
 				sequence.SelectQuery.OrderBy.Expr(expr.Sql, methodCall.Method.Name.EndsWith("Descending"));
 			}
 
 			return sequence;
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 	}
 }

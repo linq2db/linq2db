@@ -74,6 +74,9 @@ namespace LinqToDB.SqlQuery
 				sb.AppendLine();
 			}
 
+			if (Output?.HasOutput == true)
+				((IQueryElement)Output).ToString(sb, dic);
+
 			return sb;
 		}
 
@@ -87,7 +90,7 @@ namespace LinqToDB.SqlQuery
 			for (var i = 0; i < Operations.Count; i++)
 				((ISqlExpressionWalkable)Operations[i]).Walk(options, context, func);
 
-			return null;
+			return base.Walk(options, context, func);
 		}
 
 

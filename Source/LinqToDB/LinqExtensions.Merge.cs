@@ -1,24 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB
 {
 	using Expressions;
-	using JetBrains.Annotations;
 	using Linq;
 	using Async;
 	using Reflection;
-	using System.Collections.Generic;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
 	public static partial class LinqExtensions
 	{
 
-		private class MergeQuery<TTarget, TSource> :
+		private sealed class MergeQuery<TTarget, TSource> :
 			IMergeableUsing<TTarget>,
 			IMergeableOn<TTarget, TSource>,
 			IMergeableSource<TTarget, TSource>,
@@ -928,24 +929,29 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
-		public static IEnumerable<TOutput> MergeWithOutput<TTarget, TSource, TOutput>(
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// <item>Firebird 3+ (doesn't support more than one record and "action" parameter; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		public static IEnumerable<TOutput> MergeWithOutput<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget, TSource>                     merge,
 			     Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression)
 		{
 			if (merge            == null) throw new ArgumentNullException(nameof(merge));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
-
+			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
 
 			return currentQuery.Provider.CreateQuery<TOutput>(
-					Expression.Call(
-						null,
-						Methods.LinqToDB.Merge.MergeWithOutput.MakeGenericMethod(typeof(TTarget), typeof(TSource),
-							typeof(TOutput)),
-						currentQuery.Expression,
-						Expression.Quote(outputExpression)))
+				Expression.Call(
+					null,
+					Methods.LinqToDB.Merge.MergeWithOutput.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+					currentQuery.Expression,
+					Expression.Quote(outputExpression)))
 				.AsEnumerable();
 		}
 
@@ -959,24 +965,101 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// <item>Firebird 3+ (doesn't support more than one record and "action" parameter; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		public static IEnumerable<TOutput> MergeWithOutput<TTarget,TSource,TOutput>(
+			this IMergeable<TTarget,TSource>                         merge,
+			Expression<Func<string,TTarget,TTarget,TSource,TOutput>> outputExpression)
+		{
+			if (merge            == null) throw new ArgumentNullException(nameof(merge));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+
+			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+
+			return currentQuery.Provider.CreateQuery<TOutput>(
+				Expression.Call(
+					null,
+					MergeWithOutputSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+					currentQuery.Expression,
+					Expression.Quote(outputExpression)))
+				.AsEnumerable();
+		}
+
+		/// <summary>
+		/// Executes merge command and returns output information, affected by merge operations.
+		/// </summary>
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="merge">Merge command definition.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// <item>Firebird 3+ (doesn't support more than one record and "action" parameter; database limitation)</item>
+		/// </list>
+		/// </remarks>
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget, TSource, TOutput>(
-			this IMergeable<TTarget, TSource>                     merge,
+			this IMergeable<TTarget,TSource>                 merge,
 			Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression)
 		{
 			if (merge            == null) throw new ArgumentNullException(nameof(merge));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
-
+			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
 
 			return currentQuery.Provider.CreateQuery<TOutput>(
-					Expression.Call(
-						null,
-						Methods.LinqToDB.Merge.MergeWithOutput.MakeGenericMethod(typeof(TTarget), typeof(TSource),
-							typeof(TOutput)),
-						currentQuery.Expression,
-						Expression.Quote(outputExpression)))
+				Expression.Call(
+					null,
+					Methods.LinqToDB.Merge.MergeWithOutput.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+					currentQuery.Expression,
+					Expression.Quote(outputExpression)))
+				.AsAsyncEnumerable();
+		}
+
+		/// <summary>
+		/// Executes merge command and returns output information, affected by merge operations.
+		/// </summary>
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="merge">Merge command definition.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// <item>Firebird 3+ (doesn't support more than one record and "action" parameter; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget,TSource,TOutput>(
+			this IMergeable<TTarget,TSource>                         merge,
+			Expression<Func<string,TTarget,TTarget,TSource,TOutput>> outputExpression)
+		{
+			if (merge            == null) throw new ArgumentNullException(nameof(merge));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+
+			var mergeQuery   = ((MergeQuery<TTarget,TSource>)merge).Query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+
+			return currentQuery.Provider.CreateQuery<TOutput>(
+				Expression.Call(
+					null,
+					MergeWithOutputSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+					currentQuery.Expression,
+					Expression.Quote(outputExpression)))
 				.AsAsyncEnumerable();
 		}
 
@@ -991,28 +1074,74 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
-		public static int MergeWithOutputInto<TTarget, TSource, TOutput>(
-			this IMergeable<TTarget, TSource>                     merge,
-			     ITable<TOutput>                                  outputTable,
-			     Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression
-			) 
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// </list>
+		/// </remarks>
+		public static int MergeWithOutputInto<TTarget,TSource,TOutput>(
+			this IMergeable<TTarget,TSource>                 merge,
+			ITable<TOutput>                                  outputTable,
+			Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression
+			)
 			where TOutput: notnull
 		{
 			if (merge            == null) throw new ArgumentNullException(nameof(merge));
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
-
+			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
 
 			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					Methods.LinqToDB.Merge.MergeWithOutputInto.MakeGenericMethod(typeof(TTarget), typeof(TSource),
-						typeof(TOutput)),
+					Methods.LinqToDB.Merge.MergeWithOutputInto.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
 					currentQuery.Expression,
-					Expression.Constant(outputTable),
+					((IQueryable<TOutput>)outputTable).Expression,
+					Expression.Quote(outputExpression)
+				)
+			);
+		}
+
+		/// <summary>
+		/// Executes merge command, inserts output information into table and returns total number of target records, affected by merge operations.
+		/// </summary>
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="merge">Merge command definition.</param>
+		/// <param name="outputTable">Table which should handle output result.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// </list>
+		/// </remarks>
+		public static int MergeWithOutputInto<TTarget,TSource,TOutput>(
+			this IMergeable<TTarget,TSource>                         merge,
+			ITable<TOutput>                                          outputTable,
+			Expression<Func<string,TTarget,TTarget,TSource,TOutput>> outputExpression
+			)
+			where TOutput: notnull
+		{
+			if (merge            == null) throw new ArgumentNullException(nameof(merge));
+			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+
+			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+
+			return currentQuery.Provider.Execute<int>(
+				Expression.Call(
+					null,
+					MergeWithOutputIntoSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+					currentQuery.Expression,
+					((IQueryable<TOutput>)outputTable).Expression,
 					Expression.Quote(outputExpression)
 				)
 			);
@@ -1030,35 +1159,86 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// </list>
+		/// </remarks>
 		public static Task<int> MergeWithOutputIntoAsync<TTarget, TSource, TOutput>(
 			this IMergeable<TTarget, TSource>                merge,
 			ITable<TOutput>                                  outputTable,
 			Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression,
 			CancellationToken                                token = default
-		) 
+		)
 			where TOutput: notnull
 		{
 			if (merge            == null) throw new ArgumentNullException(nameof(merge));
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
-
+			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Merge.MergeWithOutputInto.MakeGenericMethod(typeof(TTarget), typeof(TSource),
-					typeof(TOutput)),
+				Methods.LinqToDB.Merge.MergeWithOutputInto.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
 				currentQuery.Expression,
-				Expression.Constant(outputTable),
+				((IQueryable<TOutput>)outputTable).Expression,
 				Expression.Quote(outputExpression)
 			);
 
 			if (currentQuery is IQueryProviderAsync query)
 				return query.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => currentQuery.Provider.Execute<int>(expr), token);
+			return Task.Run(() => currentQuery.Provider.Execute<int>(expr), token);
+		}
+
+		/// <summary>
+		/// Executes merge command, inserts output information into table and returns total number of target records, affected by merge operations.
+		/// </summary>
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="merge">Merge command definition.</param>
+		/// <param name="outputTable">Table which should handle output result.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// </list>
+		/// </remarks>
+		public static Task<int> MergeWithOutputIntoAsync<TTarget,TSource,TOutput>(
+			this IMergeable<TTarget,TSource>                         merge,
+			ITable<TOutput>                                          outputTable,
+			Expression<Func<string,TTarget,TTarget,TSource,TOutput>> outputExpression,
+			CancellationToken                                        token = default
+		)
+			where TOutput: notnull
+		{
+			if (merge            == null) throw new ArgumentNullException(nameof(merge));
+			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+
+			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+
+			var expr = Expression.Call(
+				null,
+				MergeWithOutputIntoSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+				currentQuery.Expression,
+				((IQueryable<TOutput>)outputTable).Expression,
+				Expression.Quote(outputExpression)
+			);
+
+			if (currentQuery is IQueryProviderAsync query)
+				return query.ExecuteAsync<int>(expr, token);
+
+			return Task.Run(() => currentQuery.Provider.Execute<int>(expr), token);
 		}
 
 		#endregion
@@ -1090,7 +1270,7 @@ namespace LinqToDB
 			if (currentQuery is IQueryProviderAsync query)
 				return query.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => currentQuery.Provider.Execute<int>(expr), token);
+			return Task.Run(() => currentQuery.Provider.Execute<int>(expr), token);
 		}
 		#endregion
 	}

@@ -1,67 +1,66 @@
 ﻿using System;
+using System.Data.Linq;
 using System.Globalization;
 using System.Text;
-
 
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
 
-	public class SQLiteMappingSchema : MappingSchema
+	public class SQLiteMappingSchema : LockedMappingSchema
 	{
-		private const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
-		private const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
-		private const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
-		private const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
-		private const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+		internal const string DATE_FORMAT_RAW  = "yyyy-MM-dd";
+		private  const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
+		private  const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
+		private  const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
+		private  const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
+		private  const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
 
-		public SQLiteMappingSchema() : this(ProviderName.SQLite)
-		{
-		}
-
-		protected SQLiteMappingSchema(string configuration) : base(configuration)
+		SQLiteMappingSchema() : base(ProviderName.SQLite)
 		{
 			SetConvertExpression<string,TimeSpan>(s => DateTime.Parse(s, null, DateTimeStyles.NoCurrentDateDefault).TimeOfDay);
 
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertGuidToSql    (sb, (Guid)    v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),     (sb,dt,_,v) => ConvertGuidToSql    (sb, dt, (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb, _,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
+			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
+#endif
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 		}
 
-		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+		static void ConvertGuidToSql(StringBuilder stringBuilder, SqlDataType dt, Guid value)
 		{
-			stringBuilder.Append("X'");
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
-
-			stringBuilder.Append('\'');
+			// keep in sync with provider's SetParameter method
+			switch (dt.Type.DataType, dt.Type.DbType)
+			{
+				case (DataType.NChar, _) or (DataType.NVarChar, _) or (DataType.NText, _)
+					or (DataType.Char, _) or (DataType.VarChar, _) or (DataType.Text, _)
+					// we can add more types on request later
+					or (_, "TEXT"):
+					stringBuilder
+						// ToUpperInvariant to match Microsoft.Data.SQLite behavior
+						.Append(CultureInfo.InvariantCulture, $"'{value.ToString().ToUpperInvariant()}'");
+					break;
+				default:
+					ConvertBinaryToSql(stringBuilder, value.ToByteArray());
+					break;
+			}
 		}
 
-		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)
+		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			var s = value.ToString("N");
-
 			stringBuilder
-				.Append("Cast(x'")
-				.Append(s.Substring( 6,  2))
-				.Append(s.Substring( 4,  2))
-				.Append(s.Substring( 2,  2))
-				.Append(s.Substring( 0,  2))
-				.Append(s.Substring(10,  2))
-				.Append(s.Substring( 8,  2))
-				.Append(s.Substring(14,  2))
-				.Append(s.Substring(12,  2))
-				.Append(s.Substring(16, 16))
-				.Append("' as blob)")
-				;
+				.Append("X'")
+				.AppendByteArrayAsHexViaLookup32(value)
+				.Append('\'');
 		}
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
@@ -87,14 +86,17 @@ namespace LinqToDB.DataProvider.SQLite
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+#endif
+
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("char(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"char({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
@@ -109,18 +111,16 @@ namespace LinqToDB.DataProvider.SQLite
 
 		internal static readonly SQLiteMappingSchema Instance = new ();
 
-		public class ClassicMappingSchema : MappingSchema
+		public class ClassicMappingSchema : LockedMappingSchema
 		{
-			public ClassicMappingSchema()
-				: base(ProviderName.SQLiteClassic, Instance)
+			public ClassicMappingSchema() : base(ProviderName.SQLiteClassic, Instance)
 			{
 			}
 		}
 
-		public class MicrosoftMappingSchema : MappingSchema
+		public class MicrosoftMappingSchema : LockedMappingSchema
 		{
-			public MicrosoftMappingSchema()
-				: base(ProviderName.SQLiteMS, Instance)
+			public MicrosoftMappingSchema() : base(ProviderName.SQLiteMS, Instance)
 			{
 			}
 		}

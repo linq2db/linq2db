@@ -1,16 +1,48 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Mapping;
 	using Reflection;
 
 	public static class MemberHelper
 	{
+		[DebuggerDisplay("{Type.Name}.{MemberInfo.Name}")]
+		public struct MemberInfoWithType : IEquatable<MemberInfoWithType>
+		{
+			public MemberInfoWithType(Type? type, MemberInfo memberInfo)
+			{
+				Type       = type;
+				MemberInfo = memberInfo;
+			}
+
+			public Type?      Type;
+			public MemberInfo MemberInfo;
+
+			public readonly bool Equals(MemberInfoWithType other)
+			{
+				return Equals(Type, other.Type) && MemberInfo.Equals(other.MemberInfo);
+			}
+
+			public override bool Equals(object? obj)
+			{
+				return obj is MemberInfoWithType other && Equals(other);
+			}
+
+			public readonly override int GetHashCode()
+			{
+				unchecked
+				{
+					return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ MemberInfo.GetHashCode();
+				}
+			}
+		}
+
 		/// <summary>
 		/// Gets the member information from given lambda expression. <seealso cref="GetMemberInfo(Expression)" />
 		/// </summary>
@@ -20,6 +52,17 @@ namespace LinqToDB.Expressions
 		public static MemberInfo GetMemberInfo(LambdaExpression func)
 		{
 			return GetMemberInfo(func.Body);
+		}
+
+		/// <summary>
+		/// Gets the member information with type from given lambda expression. <seealso cref="GetMemberInfo(Expression)" />
+		/// </summary>
+		/// <param name="func">The lambda expression.</param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
+		public static MemberInfoWithType GetMemberInfoWithType(LambdaExpression func)
+		{
+			return GetMemberInfoWithType(func.Body);
 		}
 
 		/// <summary>
@@ -39,11 +82,31 @@ namespace LinqToDB.Expressions
 		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
 		public static MemberInfo GetMemberInfo(Expression expr)
 		{
+			return GetMemberInfoWithType(expr).MemberInfo;
+		}
+
+		/// <summary>
+		/// Gets the member information with type from given expression.
+		/// </summary>
+		/// <remarks>
+		/// Returns member information for given expressions, e.g.:
+		/// <list type="bullet">
+		/// <item><description>For: x =&gt; x.SomeProperty, returns MemberInfo of SomeProperty.</description></item>
+		/// <item><description>For: x =&gt; x.SomeMethod(), returns MethodInfo of SomeMethod.</description></item>
+		/// <item><description>For: x =&gt; new { X = x.Name }, return ConstructorInfo of anonymous type.</description></item>
+		/// <item><description>For: x =&gt; Sql.Property&lt;int&gt;(x, "SomeProperty"), returns MemberInfo of "SomeProperty" if exists on type, otherwise returns DynamicColumnInfo for SomeProperty on given type.</description></item>
+		/// </list>
+		/// </remarks>
+		/// <param name="expr">The expression.</param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
+		public static MemberInfoWithType GetMemberInfoWithType(Expression expr)
+		{
 			while (expr.NodeType == ExpressionType.Convert || expr.NodeType == ExpressionType.ConvertChecked || expr.NodeType == ExpressionType.TypeAs)
 				expr = ((UnaryExpression)expr).Operand;
 
 			if (expr.NodeType == ExpressionType.New)
-				return ((NewExpression)expr).Constructor;
+				return new MemberInfoWithType(expr.Type, ((NewExpression)expr).Constructor!);
 
 			if (expr is MethodCallExpression methodCall && methodCall.Method.IsSqlPropertyMethodEx())
 			{
@@ -60,21 +123,21 @@ namespace LinqToDB.Expressions
 					(m.MemberInfo.MemberType == MemberTypes.Property || m.MemberInfo.MemberType == MemberTypes.Field));
 
 				if (existingMember != null)
-					return existingMember.MemberInfo;
+					return new MemberInfoWithType(objectExpr.Type, existingMember.MemberInfo);
 
 				// create dynamic column info
-				return new DynamicColumnInfo(objectExpr.Type, methodCall.Method.GetGenericArguments()[0], memberName);
+				return new MemberInfoWithType(objectExpr.Type, new DynamicColumnInfo(objectExpr.Type, methodCall.Method.GetGenericArguments()[0], memberName));
 			}
 
 			if (expr.NodeType == ExpressionType.ArrayLength)
-				return ((UnaryExpression)expr).Operand.Type.GetProperty(nameof(Array.Length))!;
+				return new MemberInfoWithType(((UnaryExpression)expr).Operand.Type, ((UnaryExpression)expr).Operand.Type.GetProperty(nameof(Array.Length))!);
 
 			return
 				expr is MemberExpression me
-					? me.Member
+					? new MemberInfoWithType(me.Expression?.Type, me.Member)
 					: expr is MethodCallExpression mce
-						? mce.Method
-						: (MemberInfo)((NewExpression)expr).Constructor;
+						? new MemberInfoWithType(mce.Object?.Type ?? mce.Method.ReflectedType, mce.Method)
+						: new MemberInfoWithType(expr.Type, (MemberInfo)((NewExpression)expr).Constructor!);
 		}
 
 		public static MemberInfo MemberOf<T>(Expression<Func<T,object?>> func)
@@ -93,6 +156,11 @@ namespace LinqToDB.Expressions
 		}
 
 		public static PropertyInfo PropertyOf<T>(Expression<Func<T,object?>> func)
+		{
+			return (PropertyInfo)GetMemberInfo(func);
+		}
+
+		public static PropertyInfo PropertyOf(Expression<Func<object?>> func)
 		{
 			return (PropertyInfo)GetMemberInfo(func);
 		}

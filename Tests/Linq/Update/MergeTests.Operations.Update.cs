@@ -637,7 +637,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(GetSource2(db).ToList().Select(_ => new
+					.Using(GetSource2(db).ToList().OrderBy(_ => _.OtherId).Select(_ => new
 					{
 						Key = _.OtherId,
 						Field01 = _.OtherField1,
@@ -667,8 +667,8 @@ namespace Tests.xUpdate
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
-				if (context != ProviderName.Sybase)
-				AssertRow(InitialTargetData[2], result[2], null, 203);
+				if (!context.IsAnyOf(ProviderName.Sybase))
+					AssertRow(InitialTargetData[2], result[2], null, 203);
 
 				Assert.AreEqual(4, result[3].Id);
 				Assert.AreEqual(5, result[3].Field1);
@@ -746,15 +746,15 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(GetSource2(db).ToList().Select(_ => new
+					.Using(GetSource2(db).ToList().OrderBy(_ => _.OtherId).Select(_ => new
 					{
-						@in = _.OtherId,
-						join = _.OtherField1,
-						outer = _.OtherField2,
-						inner = _.OtherField3,
-						with = _.OtherField4,
-						left = _.OtherField5,
-						Left = _.OtherField2
+						@in    = _.OtherId,
+						join   = _.OtherField1,
+						outer  = _.OtherField2,
+						inner  = _.OtherField3,
+						with   = _.OtherField4,
+						left   = _.OtherField5,
+						Left   = _.OtherField2
 					}))
 					.On((t, s) => t.Id == s.@in)
 					.UpdateWhenMatchedAnd(

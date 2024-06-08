@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,6 +9,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
+	using Tools;
+
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
@@ -63,7 +66,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Database command wrapper.</returns>
@@ -84,7 +87,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql)
 		{
 			return new CommandInfo(connection, sql).Query(objectReader);
 		}
@@ -98,7 +101,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProc(objectReader);
 		}
@@ -112,7 +115,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<IDataReader, T> objectReader, string sql, params DataParameter[] parameters)
+		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProcAsync(objectReader);
 		}
@@ -127,7 +130,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<IDataReader, T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProcAsync(objectReader, cancellationToken);
 		}
@@ -146,11 +149,11 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters)
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProc(objectReader);
 		}
@@ -169,12 +172,12 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<IDataReader, T> objectReader, string sql, object? parameters, CancellationToken cancellationToken = default)
+		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters, CancellationToken cancellationToken = default)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProcAsync(objectReader, cancellationToken);
 		}
@@ -188,7 +191,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Query(objectReader);
 		}
@@ -207,11 +210,11 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Query(objectReader);
 		}
@@ -228,7 +231,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql)
 		{
 			return new CommandInfo(connection, sql).QueryToListAsync(objectReader);
 		}
@@ -242,7 +245,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken)
 		{
 			return new CommandInfo(connection, sql).QueryToListAsync(objectReader, cancellationToken);
 		}
@@ -255,7 +258,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql)
 		{
 			return new CommandInfo(connection, sql).QueryToArrayAsync(objectReader);
 		}
@@ -269,7 +272,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken)
 		{
 			return new CommandInfo(connection, sql).QueryToArrayAsync(objectReader, cancellationToken);
 		}
@@ -283,7 +286,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync(objectReader);
 		}
@@ -298,7 +301,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync(objectReader, cancellationToken);
 		}
@@ -312,7 +315,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader);
 		}
@@ -327,7 +330,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader, cancellationToken);
 		}
@@ -346,11 +349,11 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync(objectReader);
 		}
@@ -369,12 +372,12 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters, CancellationToken cancellationToken)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters, CancellationToken cancellationToken)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync(objectReader, cancellationToken);
 		}
@@ -393,11 +396,11 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader);
 		}
@@ -417,11 +420,11 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken, object? parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader, cancellationToken);
 		}
@@ -644,7 +647,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
@@ -666,7 +669,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -737,7 +740,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>
@@ -839,7 +842,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>
@@ -938,7 +941,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns result.</returns>
@@ -1003,7 +1006,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
@@ -1187,7 +1190,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
@@ -1210,7 +1213,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
@@ -1232,7 +1235,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
@@ -1255,7 +1258,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
@@ -1296,7 +1299,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
@@ -1362,7 +1365,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
@@ -1385,7 +1388,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -1471,7 +1474,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
@@ -1495,7 +1498,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
@@ -1518,7 +1521,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
@@ -1542,7 +1545,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
@@ -1603,7 +1606,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Number of records, affected by command execution.</returns>
@@ -1624,7 +1627,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Number of records, affected by command execution.</returns>
@@ -1693,7 +1696,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -1715,7 +1718,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -1749,7 +1752,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -1784,7 +1787,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -1848,7 +1851,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Resulting value.</returns>
@@ -1884,7 +1887,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Resulting value.</returns>
@@ -1988,7 +1991,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with resulting value.</returns>
@@ -2011,7 +2014,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with resulting value.</returns>
@@ -2047,7 +2050,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with resulting value.</returns>
@@ -2084,7 +2087,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Resulting value.</returns>
@@ -2144,7 +2147,7 @@ namespace LinqToDB.Data
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Data reader object.</returns>
@@ -2192,7 +2195,13 @@ namespace LinqToDB.Data
 			where T : class
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
-			return dataConnection.DataProvider.BulkCopy(dataConnection.GetTable<T>(), options, source);
+
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
+
+			return dataConnection.DataProvider.BulkCopy(
+				dataConnection.Options.WithOptions(options),
+				dataConnection.GetTable<T>(),
+				source);
 		}
 
 		/// <summary>
@@ -2208,9 +2217,11 @@ namespace LinqToDB.Data
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
+
 			return dataConnection.DataProvider.BulkCopy(
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
 				dataConnection.GetTable<T>(),
-				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
 				source);
 		}
 
@@ -2226,9 +2237,11 @@ namespace LinqToDB.Data
 		{
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
+
 			return dataConnection.DataProvider.BulkCopy(
+				dataConnection.Options,
 				dataConnection.GetTable<T>(),
-				new BulkCopyOptions(),
 				source);
 		}
 
@@ -2245,7 +2258,14 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			return table.GetDataProvider().BulkCopy(table, options, source);
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
+
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopy(
+				dataConnection.Options.WithOptions(options),
+				table,
+				source);
 		}
 
 		/// <summary>
@@ -2261,7 +2281,14 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			return table.GetDataProvider().BulkCopy(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source);
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
+
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopy(
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize, }),
+				table,
+				source);
 		}
 
 		/// <summary>
@@ -2276,14 +2303,32 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			return table.GetDataProvider().BulkCopy(table, new BulkCopyOptions(), source);
-		}
+			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
-		
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopy(
+				dataConnection.Options,
+				table,
+				source);
+		}
 
 		#endregion
 
 		#region BulkCopy IEnumerable async
+
+		static Task<BulkCopyRowsCopied> CallMetrics(Func<Task<BulkCopyRowsCopied>> call)
+		{
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.BulkCopyAsync);
+
+			return a is null ? call() : CallAwait();
+
+			async Task<BulkCopyRowsCopied> CallAwait()
+			{
+				await using (a)
+					return await call().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+		}
 
 		/// <summary>
 		/// Asynchronously performs bulk insert operation.
@@ -2300,7 +2345,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.GetTable<T>(), options, source, cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options.WithOptions(options),
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2318,11 +2368,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.GetTable<T>(),
-				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
-				source, 
-				cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2339,11 +2390,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.GetTable<T>(),
-				new BulkCopyOptions(),
-				source, 
-				cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options,
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2361,7 +2413,14 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, options, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options.WithOptions(options),
+					table,
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2379,7 +2438,14 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize, }),
+					table,
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2396,7 +2462,14 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options,
+					table,
+					source,
+					cancellationToken));
 		}
 
 		#endregion
@@ -2419,7 +2492,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.GetTable<T>(), options, source, cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options.WithOptions(options),
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2437,11 +2515,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.GetTable<T>(),
-				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2458,11 +2537,12 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.GetTable<T>(),
-				new BulkCopyOptions(),
-				source,
-				cancellationToken);
+			return CallMetrics(() =>
+				dataConnection.DataProvider.BulkCopyAsync(
+					dataConnection.Options,
+					dataConnection.GetTable<T>(),
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2480,7 +2560,14 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, options, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options.WithOptions(options),
+					table,
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2498,7 +2585,14 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+					table,
+					source,
+					cancellationToken));
 		}
 
 		/// <summary>
@@ -2515,11 +2609,17 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return CallMetrics(() =>
+				table.GetDataProvider().BulkCopyAsync(
+					dataConnection.Options,
+					table,
+					source,
+					cancellationToken));
 		}
 
 #endif
 		#endregion
-
 	}
 }

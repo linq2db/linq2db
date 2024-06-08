@@ -2,7 +2,6 @@
 using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
-using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -19,10 +18,7 @@ namespace Tests.UserTests
 			public double Distance      { get; set; }
 			public string BranchPic     { get; set; } = null!;
 
-			[JsonIgnore]
 			public decimal PointX { get; set; }
-
-			[JsonIgnore]
 			public decimal PointY { get; set; }
 		}
 
@@ -69,7 +65,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SelectManyLetJoinTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void SelectManyLetJoinTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<AttachmentEntity>())

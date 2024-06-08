@@ -15,6 +15,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using LinqToDB.Common;
+	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]
@@ -180,6 +181,104 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ContainsKey21([DataSources] string context)
+		{
+			IDictionary<int,int> arr = new Dictionary<int,int>
+			{
+				{ 1, 1 },
+				{ 2, 2 },
+			};
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+#pragma warning disable CA1841 // Prefer Dictionary.Contains methods : suppressed as we test this method
+					from p in    Parent where arr.Keys.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Keys.Contains(p.ParentID) select p);
+#pragma warning restore CA1841 // Prefer Dictionary.Contains methods
+		}
+
+		[Test]
+		public void ContainsKey22([DataSources] string context)
+		{
+			IDictionary<int,int> arr = new Dictionary<int,int>
+			{
+				{ 1, 1 },
+				{ 2, 2 },
+			};
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.ContainsKey(p.ParentID) select p,
+					from p in db.Parent where arr.ContainsKey(p.ParentID) select p);
+		}
+
+		[Test]
+		public void ContainsValue21([DataSources] string context)
+		{
+			IDictionary<int,int> arr = new Dictionary<int,int>
+			{
+				{ 1, 1 },
+				{ 2, 2 },
+			};
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+#pragma warning disable CA1841 // Prefer Dictionary.Contains methods : suppressed as we test this method
+					from p in    Parent where arr.Values.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Values.Contains(p.ParentID) select p);
+#pragma warning restore CA1841 // Prefer Dictionary.Contains methods
+		}
+
+		[Test]
+		public void ContainsKey31([DataSources] string context)
+		{
+			IReadOnlyDictionary<int,int> arr = new Dictionary<int,int>
+			{
+				{ 1, 1 },
+				{ 2, 2 },
+			};
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+#pragma warning disable CA1841 // Prefer Dictionary.Contains methods : suppressed as we test this method
+					from p in    Parent where arr.Keys.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Keys.Contains(p.ParentID) select p);
+#pragma warning restore CA1841 // Prefer Dictionary.Contains methods
+		}
+
+		[Test]
+		public void ContainsKey32([DataSources] string context)
+		{
+			IReadOnlyDictionary<int,int> arr = new Dictionary<int,int>
+			{
+				{ 1, 1 },
+				{ 2, 2 },
+			};
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.ContainsKey(p.ParentID) select p,
+					from p in db.Parent where arr.ContainsKey(p.ParentID) select p);
+		}
+
+		[Test]
+		public void ContainsValue31([DataSources] string context)
+		{
+			IReadOnlyDictionary<int,int> arr = new Dictionary<int,int>
+			{
+				{ 1, 1 },
+				{ 2, 2 },
+			};
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+#pragma warning disable CA1841 // Prefer Dictionary.Contains methods : suppressed as we test this method
+					from p in    Parent where arr.Values.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Values.Contains(p.ParentID) select p);
+#pragma warning restore CA1841 // Prefer Dictionary.Contains methods
+		}
+
+		[Test]
 		public void ContainsHashSet1([DataSources] string context)
 		{
 			var arr = new HashSet<int> { 1, 2 };
@@ -189,6 +288,19 @@ namespace Tests.Linq
 					from p in    Parent where arr.Contains(p.ParentID) select p,
 					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
+
+#if NET6_0_OR_GREATER
+		[Test]
+		public void ContainsReadOnlySet([DataSources] string context)
+		{
+			IReadOnlySet<int> arr = new HashSet<int> { 1, 2 };
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Contains(p.ParentID) select p);
+		}
+#endif
 
 		[Test]
 		public void EmptyContains1([DataSources] string context)
@@ -400,7 +512,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum2([DataSources] string context)
+		public void Sum2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -495,7 +607,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MatchFtsTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void MatchFtsTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -507,11 +619,30 @@ namespace Tests.Linq
 				Assert.True(str.Contains(" matches "));
 			}
 		}
+
+		[Table]
+		sealed class TagsTable
+		{
+			[Column] public string? Name { get; set; }
+		}
+
+		[Test]
+		public void Issue3543Test([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tags = db.CreateLocalTable<TagsTable>();
+
+			(from tag in tags
+			 select new
+			 {
+				 Name = tag.Name!.Substring(tag.Name.IndexOf(".") + 1, tag.Name.IndexOf(".", 5) - tag.Name.IndexOf(".") - 1)
+			 }).ToList();
+		}
 	}
 
 	public static class SqlLite
 	{
-		class MatchBuilder : Sql.IExtensionCallBuilder
+		sealed class MatchBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -520,7 +651,7 @@ namespace Tests.Linq
 
 				var sqlTable = (SqlTable)field.Table!;
 
-				var newField = new SqlField(sqlTable, sqlTable.PhysicalName!);
+				var newField = new SqlField(sqlTable, sqlTable.TableName.Name);
 
 				builder.AddParameter("table_field", newField);
 			}

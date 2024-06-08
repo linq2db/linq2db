@@ -11,9 +11,9 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using Common;
 
-	class UpdateBuilder : MethodCallBuilder
+	sealed class UpdateBuilder : MethodCallBuilder
 	{
-		private static readonly string[] Methods = new []
+		static readonly string[] _methods =
 		{
 			nameof(LinqExtensions.Update),
 			nameof(LinqExtensions.UpdateWithOutput),
@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable(Methods);
+			return methodCall.IsQueryable(_methods);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -36,21 +36,22 @@ namespace LinqToDB.Linq.Builder
 				_                                           => UpdateType.Update,
 			};
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-
+			var sequence         = builder.BuildSequence(new (buildInfo, methodCall.Arguments[0]));
 			var updateStatement  = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
-			sequence.Statement   = updateStatement;
-
 			var genericArguments = methodCall.Method.GetGenericArguments();
-			Type? objectType     = default;
-
 			var outputExpression = (LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap();
+
+			Type? objectType;
+
+			sequence.Statement = updateStatement;
+
 			static LambdaExpression? RewriteOutputExpression(LambdaExpression? expr)
 			{
 				if (expr == default) return default;
-				
+
 				var outputType = expr.Parameters[0].Type;
-				var param1 = Expression.Parameter(outputType, "source");
+				var param1     = Expression.Parameter(outputType, "source");
+
 				return Expression.Lambda(
 					// (source, deleted, inserted) => expr(deleted, inserted)
 					expr.Body,
@@ -77,10 +78,11 @@ namespace LinqToDB.Linq.Builder
 					CheckAssociation(sequence);
 
 					var expr = methodCall.Arguments[1].Unwrap();
+
 					if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
 					{
 						sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
-						expr = methodCall.Arguments[2].Unwrap();
+						expr     = methodCall.Arguments[2].Unwrap();
 					}
 
 					if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
@@ -129,8 +131,10 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery, 0)
+
+					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, builder.DataContext.Options, updateStatement, updateStatement.SelectQuery, 0)
 						.ResolveWeakJoins();
+
 					updateStatement.SelectQuery.Select.Columns.Clear();
 
 					BuildSetter(
@@ -157,17 +161,26 @@ namespace LinqToDB.Linq.Builder
 					throw new InvalidOperationException("Unknown Output Method");
 			}
 
+			if (updateStatement.Update.Items.Count == 0)
+				throw new LinqToDBException("Update query has no setters defined.");
+
 			if (updateType == UpdateType.Update)
 				return new UpdateContext(buildInfo.Parent, sequence);
 
-			var insertedTable    = SqlTable.Inserted(objectType);
-			var deletedTable     = SqlTable.Deleted(objectType);
+			var ed            = builder.MappingSchema.GetEntityDescriptor(objectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			var insertedTable = builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables ? SqlTable.Inserted(ed) : updateStatement.GetUpdateTable();
+			var deletedTable  = SqlTable.Deleted(ed);
 
-			updateStatement.Output = new SqlOutputClause()
+			if (insertedTable == null)
+				throw new InvalidOperationException("Cannot find target table for UPDATE statement");
+
+			updateStatement.Output = new SqlOutputClause();
+
+			if (builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables)
 			{
-				InsertedTable = insertedTable,
-				DeletedTable = deletedTable,
-			};
+				updateStatement.Output.InsertedTable = insertedTable;
+				updateStatement.Output.DeletedTable  = deletedTable;
+			}
 
 			if (updateType == UpdateType.UpdateOutput)
 			{
@@ -177,12 +190,13 @@ namespace LinqToDB.Linq.Builder
 					var param2 = Expression.Parameter(outputType, "deleted");
 					var param3 = Expression.Parameter(outputType, "inserted");
 					var returnType = typeof(UpdateOutput<>).MakeGenericType(outputType);
+
 					return Expression.Lambda(
 						// (source, deleted, inserted) => new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
 						Expression.MemberInit(
 							Expression.New(returnType),
-							Expression.Bind(returnType.GetProperty("Deleted"), param2),
-							Expression.Bind(returnType.GetProperty("Inserted"), param3)),
+							Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Deleted))!, param2),
+							Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Inserted))!, param3)),
 						param1, param2, param3);
 				}
 
@@ -204,6 +218,7 @@ namespace LinqToDB.Linq.Builder
 					var param1 = Expression.Parameter(outputType, "source");
 					var param2 = Expression.Parameter(outputType, "deleted");
 					var param3 = Expression.Parameter(outputType, "inserted");
+
 					return Expression.Lambda(
 						// (source, deleted, inserted) => inserted
 						param3,
@@ -214,6 +229,7 @@ namespace LinqToDB.Linq.Builder
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
 				outputExpression ??= BuildDefaultOutputExpression(objectType);
+
 				BuildSetterWithContext(
 					builder,
 					buildInfo,
@@ -284,12 +300,6 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		#endregion
 
 		#region Helpers
@@ -335,7 +345,7 @@ namespace LinqToDB.Linq.Builder
 
 			void BuildNew(NewExpression expression, Expression path)
 			{
-				for (var i = 0; i < expression.Members.Count; i++)
+				for (var i = 0; i < expression.Members!.Count; i++)
 				{
 					var member   = expression.Members[i];
 					var argument = expression.Arguments[i];
@@ -421,10 +431,7 @@ namespace LinqToDB.Linq.Builder
 					if (info.MemberChain.Length == 0)
 						throw new LinqException("Object initializer expected for insert statement.");
 
-					if (info.MemberChain.Length != 1)
-						throw new InvalidOperationException();
-
-					var member = info.MemberChain[0];
+					var member = info.MemberChain[info.MemberChain.Length - 1];
 					var pe     = Expression.MakeMemberAccess(bodyPath, member);
 					var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 					var expr   = info.Sql;
@@ -442,29 +449,52 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext                   fieldsContext,
 			IBuildContext                   valuesContext,
 			SqlTable?                       table,
-			List<SqlSetExpression> items)
+			List<SqlSetExpression>          items)
 		{
 			extract = (LambdaExpression)builder.ConvertExpression(extract);
 			var ext = extract.Body.Unwrap();
 
-			var sp    = fieldsContext.Parent;
-			var ctx   = new ExpressionContext(buildInfo.Parent, fieldsContext, extract);
-			var sql   = ctx.ConvertToSql(ext, 0, ConvertFlags.Field);
-			var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
-			builder.ReplaceParent(ctx, sp);
-
-			if (sql.Length != 1)
-				throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
-
-			var column = table != null && field != null ? table[field.Name]! : sql[0].Sql;
-
-			sp       = valuesContext.Parent;
-			ctx      = new ExpressionContext(buildInfo.Parent, valuesContext, update);
-			var expr = builder.ConvertToSqlExpression(ctx, update.Body, QueryHelper.GetColumnDescriptor(column), false);
+			var sp  = fieldsContext.Parent;
+			var ctx = new ExpressionContext(buildInfo.Parent, fieldsContext, extract);
 
 			builder.ReplaceParent(ctx, sp);
 
-			items.Add(new SqlSetExpression(column, expr));
+			Mapping.ColumnDescriptor? columnDescriptor = null;
+			SqlSetExpression 		  setExpression;
+
+			if (ext.IsSqlRow())
+			{
+				var row = ext.GetSqlRowValues()
+					.Select(GetField)
+					.ToArray();
+
+				var rowExpression = new SqlRow(row);
+
+				setExpression = new SqlSetExpression(rowExpression, null);
+			}
+			else
+			{
+				var column = GetField(ext);
+				columnDescriptor = QueryHelper.GetColumnDescriptor(column);
+				setExpression    = new SqlSetExpression(column, null);
+			}
+
+			sp  = valuesContext.Parent;
+			ctx = new ExpressionContext(buildInfo.Parent, valuesContext, update);
+			setExpression.Expression = builder.ConvertToSqlExpression(ctx, update.Body, columnDescriptor, false);
+			builder.ReplaceParent(ctx, sp);
+			items.Add(setExpression);
+
+			ISqlExpression GetField(Expression fieldExpr)
+			{
+				var sql   = ctx.ConvertToSql(fieldExpr, 0, ConvertFlags.Field);
+				var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
+
+				if (sql.Length != 1)
+					throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
+
+				return table != null && field != null ? table.FindFieldByMemberName(field.Name)! : sql[0].Sql;
+			}
 		}
 
 		internal static void ParseSet(
@@ -480,6 +510,7 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression columnSql;
 			MemberInfo     member;
+
 			if (ext.NodeType == ExpressionType.MemberAccess)
 			{
 				var body = (MemberExpression)ext;
@@ -514,6 +545,13 @@ namespace LinqToDB.Linq.Builder
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(columnSql);
 
+			// Note: this ParseSet overload doesn't support a SqlRow value.
+			// This overload is called for a constants, e.g. `Set(x => x.Name, "Doe")`.
+			// SqlRow can't be constructed as C# values, they can only be used inside expressions, so the call
+			// `Set(x => SqlRow(x.Name, x.Age), SqlRow("Doe", 18))`
+			// is not possible (2nd SqlRow would be called at runtime and throw).
+			// This is useless anyway, as `Set(x => x.Name, "Doe").Set(x => x.Age, 18)` generates simpler SQL anyway.
+
 			var p = builder.ParametersContext.BuildParameter(updateMethod.Arguments[valueIndex], columnDescriptor, true);
 
 			items.Add(new SqlSetExpression(columnSql, p.SqlParameter));
@@ -523,7 +561,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region UpdateContext
 
-		class UpdateContext : SequenceContextBase
+		sealed class UpdateContext : SequenceContextBase
 		{
 			public UpdateContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)
@@ -561,12 +599,18 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		class UpdateOutputContext : SelectContext
+		sealed class UpdateOutputContext : SelectContext
 		{
-			public UpdateOutputContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext source, IBuildContext deletedTable, IBuildContext insertedTable)
+			public UpdateOutputContext(
+				IBuildContext?     parent,
+				LambdaExpression   lambda,
+				IBuildContext      source,
+				IBuildContext      deletedTable,
+				IBuildContext      insertedTable)
 				: base(parent, lambda, source, deletedTable, insertedTable)
 			{
 				Statement = source.Statement;
+
 				Sequence[0].SelectQuery.Select.Columns.Clear();
 				Sequence[1].SelectQuery = Sequence[0].SelectQuery;
 				Sequence[2].SelectQuery = Sequence[0].SelectQuery;
@@ -574,21 +618,56 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
+				var updateStatement = (SqlUpdateStatement)Statement!;
+
 				var expr   = BuildExpression(null, 0, false);
 				var mapper = Builder.BuildMapper<T>(expr);
 
-				var updateStatement = (SqlUpdateStatement)Statement!;
+				if (updateStatement.SelectQuery.From.Tables.Count > 0
+					&& updateStatement.SelectQuery.From.Tables[0].Source is SelectQuery sourceQuery
+					&& sourceQuery.Select.Columns.Count > 0)
+				{
+					// TODO: better fix?
+					// for "UPDATE qry FROM qry(T)" we must check that output doesn't include missing field from qry
+					// e.g. see Issue3044UpdateOutputWithTake2 test and TableWithData.Value field
+					var setColumns = new HashSet<string>();
 
-				updateStatement.Output!.OutputQuery = Sequence[0].SelectQuery;
+					foreach (var col in sourceQuery.Select.Columns)
+						setColumns.Add(col.Alias!);
 
-				QueryRunner.SetRunQuery(query, mapper);
+					var columns = new List<ISqlExpression>(Sequence[0].SelectQuery.Select.Columns.Count);
+
+					foreach (var c in Sequence[0].SelectQuery.Select.Columns)
+					{
+						if (c.Expression is SqlField f && !setColumns.Contains(f.PhysicalName))
+							columns.Add(new SqlExpression(c.Expression.SystemType!, $"NULL /* {f.PhysicalName} */"));
+						else
+							columns.Add(c.Expression);
+					}
+
+					updateStatement.Output!.OutputColumns = columns;
+
+					QueryRunner.SetRunQuery(query, mapper);
+				}
+				else
+				{
+
+					var columns = new List<ISqlExpression>(Sequence[0].SelectQuery.Select.Columns.Count);
+
+					foreach (var c in Sequence[0].SelectQuery.Select.Columns)
+						columns.Add(c.Expression);
+
+					updateStatement.Output!.OutputColumns = columns;
+
+					QueryRunner.SetRunQuery(query, mapper);
+				}
 			}
 		}
 		#endregion
 
 		#region Set
 
-		internal class Set : MethodCallBuilder
+		internal sealed class Set : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
@@ -638,15 +717,10 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						updateStatement.Update.Items);
 
+				// TODO: remove in v4?
 				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 

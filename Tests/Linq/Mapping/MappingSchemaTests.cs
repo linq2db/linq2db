@@ -119,63 +119,6 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void BaseSchema3()
-		{
-			var ms1 = new MappingSchema();
-
-			Assert.That(ms1.Schemas.Length, Is.EqualTo(2));
-			Assert.That(ms1.Schemas[0].GetHashCode(), Is.EqualTo(ms1.Schemas[0].GetHashCode()));
-			Assert.That(ms1.Schemas[1].GetHashCode(), Is.EqualTo(MappingSchema.Default.Schemas[0].GetHashCode()));
-
-			var converter = ms1.ValueToSqlConverter;
-
-			Assert.That(converter.BaseConverters.Length, Is.EqualTo(1));
-			Assert.That(converter.BaseConverters[0].GetHashCode(), Is.EqualTo(MappingSchema.Default.ValueToSqlConverter.GetHashCode()));
-		}
-
-		[Test]
-		public void BaseSchema4()
-		{
-			var ms1 = new MappingSchema();
-			var ms2 = new MappingSchema(ms1);
-
-			Assert.That(ms2.Schemas.Length, Is.EqualTo(3));
-			Assert.That(ms2.Schemas[0].GetHashCode(), Is.EqualTo(ms2.Schemas[0].GetHashCode()));
-			Assert.That(ms2.Schemas[1].GetHashCode(), Is.EqualTo(ms1.Schemas[0].GetHashCode()));
-			Assert.That(ms2.Schemas[2].GetHashCode(), Is.EqualTo(MappingSchema.Default.Schemas[0].GetHashCode()));
-
-			var converter = ms2.ValueToSqlConverter;
-
-			Assert.That(converter.BaseConverters.Length, Is.EqualTo(2));
-			Assert.That(converter.BaseConverters[0].GetHashCode(), Is.EqualTo(ms1.ValueToSqlConverter.GetHashCode()));
-			Assert.That(converter.BaseConverters[1].GetHashCode(), Is.EqualTo(MappingSchema.Default.ValueToSqlConverter.GetHashCode()));
-		}
-
-		[Test]
-		public void BaseSchema5()
-		{
-			var ms1 = new MappingSchema();
-			var ms2 = new MappingSchema(ms1);
-			var ms3 = new MappingSchema(ms1);
-			var ms4 = new MappingSchema(ms2, ms3);
-
-			Assert.That(ms4.Schemas.Length, Is.EqualTo(5));
-			Assert.That(ms4.Schemas[0].GetHashCode(), Is.EqualTo(ms4.Schemas[0].GetHashCode()));
-			Assert.That(ms4.Schemas[1].GetHashCode(), Is.EqualTo(ms2.Schemas[0].GetHashCode()));
-			Assert.That(ms4.Schemas[2].GetHashCode(), Is.EqualTo(ms3.Schemas[0].GetHashCode()));
-			Assert.That(ms4.Schemas[3].GetHashCode(), Is.EqualTo(ms1.Schemas[0].GetHashCode()));
-			Assert.That(ms4.Schemas[4].GetHashCode(), Is.EqualTo(MappingSchema.Default.Schemas[0].GetHashCode()));
-
-			var converter = ms4.ValueToSqlConverter;
-
-			Assert.That(converter.BaseConverters.Length, Is.EqualTo(4));
-			Assert.That(converter.BaseConverters[0].GetHashCode(), Is.EqualTo(ms2.ValueToSqlConverter.GetHashCode()));
-			Assert.That(converter.BaseConverters[1].GetHashCode(), Is.EqualTo(ms3.ValueToSqlConverter.GetHashCode()));
-			Assert.That(converter.BaseConverters[2].GetHashCode(), Is.EqualTo(ms1.ValueToSqlConverter.GetHashCode()));
-			Assert.That(converter.BaseConverters[3].GetHashCode(), Is.EqualTo(MappingSchema.Default.ValueToSqlConverter.GetHashCode()));
-		}
-
-		[Test]
 		public void CultureInfo()
 		{
 			var ms = new MappingSchema();
@@ -198,8 +141,7 @@ namespace Tests.Mapping
 			Assert.AreEqual(100000.999,                            ms.GetConverter<string,double>  ()!("100000,999"));
 		}
 
-
-		class AttrTest
+		sealed class AttrTest
 		{
 			[MapValue(Value = 1)]
 			[MapValue(Value = 2, Configuration = "2")]
@@ -214,8 +156,7 @@ namespace Tests.Mapping
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(2));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
@@ -229,8 +170,7 @@ namespace Tests.Mapping
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(3));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
@@ -245,8 +185,7 @@ namespace Tests.Mapping
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(3));
 			Assert.That(attrs[0].Value, Is.EqualTo(3));
@@ -261,7 +200,7 @@ namespace Tests.Mapping
 				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
-			Assert.That(attrs.Length, Is.EqualTo(3));
+			Assert.AreEqual(1, attrs.Length);
 		}
 
 		[Test]
@@ -269,8 +208,7 @@ namespace Tests.Mapping
 		{
 			var attrs = MappingSchema.Default.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(1));
 			Assert.That(attrs[0].Value, Is.EqualTo(1));
@@ -292,16 +230,14 @@ namespace Tests.Mapping
 		[Test]
 		public void AttributeTest6()
 		{
-			var ms = new MappingSchema("2",
-				new MappingSchema("3")
-				{
-					MetadataReader = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)))
-				});
+			var ms3 = new MappingSchema("3");
+			ms3.AddMetadataReader(new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data))));
+
+			var ms = new MappingSchema("2", ms3);
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(4));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
@@ -313,43 +249,35 @@ namespace Tests.Mapping
 		[Test]
 		public void AttributeTest7()
 		{
-			var ms = new MappingSchema("2",
-				new MappingSchema("3")
-				{
-					MetadataReader = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)))
-				})
-			{
-				MetadataReader = MappingSchema.Default.MetadataReader
-			};
+			var ms3 = new MappingSchema("3");
+			ms3.AddMetadataReader(new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data))));
+
+			var ms = new MappingSchema("2", ms3);
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(4));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
-			Assert.That(attrs[1].Value, Is.EqualTo(3));
-			Assert.That(attrs[2].Value, Is.EqualTo(30));
+			Assert.That(attrs[1].Value, Is.EqualTo(30));
+			Assert.That(attrs[2].Value, Is.EqualTo(3));
 			Assert.That(attrs[3].Value, Is.EqualTo(1));
 		}
 
 		[Test]
 		public void AttributeTest8()
 		{
-			var ms = new MappingSchema("3", new MappingSchema("2"))
-			{
-				MetadataReader = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)))
-			};
+			var ms = new MappingSchema("3", new MappingSchema("2"));
+			ms.AddMetadataReader(new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data))));
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(4));
-			Assert.That(attrs[0].Value, Is.EqualTo(30));
 			Assert.That(attrs[1].Value, Is.EqualTo(3));
+			Assert.That(attrs[0].Value, Is.EqualTo(30));
 			Assert.That(attrs[2].Value, Is.EqualTo(2));
 			Assert.That(attrs[3].Value, Is.EqualTo(1));
 		}

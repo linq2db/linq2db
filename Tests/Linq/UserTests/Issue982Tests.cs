@@ -1,26 +1,29 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
-using System;
-using System.Linq;
 
 namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue982Tests : TestBase
 	{
-		private class Issue982FirebirdSqlOptimizer : FirebirdSqlOptimizer
+		private sealed class Issue982FirebirdSqlOptimizer : FirebirdSqlOptimizer
 		{
 			public Issue982FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 			{
 			}
 
-			public override SqlStatement Finalize(SqlStatement statement)
+			public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 			{
-				statement = base.Finalize(statement);
+				statement = base.Finalize(mappingSchema, statement, dataOptions);
 
 				AddConditions(statement);
 

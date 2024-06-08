@@ -3,6 +3,8 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
@@ -387,7 +389,7 @@ namespace Tests.Linq
 
 				var secondOrder =
 					from p in firstOrder
-					join pp in db.Parent on p.Value1 equals pp.Value1 
+					join pp in db.Parent on p.Value1 equals pp.Value1
 					orderby pp.ParentID
 					select p;
 
@@ -412,7 +414,7 @@ namespace Tests.Linq
 				var secondOrder =
 					from p in firstOrder
 					join pp in db.Parent on p.ParentID equals pp.ParentID
-					orderby p.ParentID descending 
+					orderby p.ParentID descending
 					select p;
 
 				var selectQuery = secondOrder.GetSelectQuery();
@@ -515,9 +517,9 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void OrderByConstant([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void OrderByConstant([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context))
+			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(false)))
 			{
 				var param = 2;
 				var query =
@@ -532,9 +534,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByConstant2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void OrderByConstant2([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context))
+			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(false)))
 			{
 				var param = 2;
 				var query =
@@ -549,9 +551,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByImmutableSubquery([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void OrderByImmutableSubquery([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context))
+			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(false)))
 			{
 				var param = 2;
 
@@ -567,7 +569,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByUnionImmutable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void OrderByUnionImmutable([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
@@ -591,7 +593,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByInUnion([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracleManaged)] string context)
+		public void OrderByInUnion([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -629,5 +631,63 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void EnableConstantExpressionInOrderByTest([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		{
+			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
+
+			var q =
+			(
+				from p in db.Person
+				where p.ID.In(1, 3)
+				orderby 1, p.LastName
+				select new
+				{
+					p.ID,
+					p.LastName
+				}
+			)
+			.ToList();
+
+			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 1 : 3));
+		}
+
+		[Test]
+		public void EnableConstantExpressionInOrderByTest2([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		{
+			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
+
+			var q =
+			(
+				from p in db.ComplexPerson
+				where p.ID.In(1, 3)
+				orderby 1 descending , p.Name.LastName descending
+				select new
+				{
+					p.ID,
+					p.Name.LastName
+				}
+			)
+			.ToList();
+
+			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 3 : 1));
+		}
+
+		[Test]
+		public void EnableConstantExpressionInOrderByTest3([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		{
+			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
+
+			var q =
+			(
+				from p in db.ComplexPerson
+				where p.ID.In(1, 3)
+				orderby 1, p.Name.LastName
+				select p
+			)
+			.ToList();
+
+			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 1 : 3));
+		}
 	}
 }

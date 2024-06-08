@@ -12,16 +12,19 @@
 			IBM Data Server Provider for .NET will still need to be installed on the production or development machine in order to connect to Informix.
 		</summary>
 		<tags>linq linq2db Informix LinqToDB ORM database DB SQL</tags>
+		<readme>README.md</readme>
 		<dependencies>
-			<dependency id="linq2db" version="3.0.0" />
+			<dependency id="linq2db" version="5.0.0" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
 		</contentFiles>
 	</metadata>
 	<files>
+		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
+
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
-		<file src="..\Tests\Tests.T4\bin\Azure\net472\Humanizer.dll"                 target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                                                                              />
 
 		<file src="..\NuGet\Informix\linq2db.Informix.props"                         target="build"                                                                                              />

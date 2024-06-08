@@ -13,19 +13,23 @@ namespace LinqToDB.Benchmarks.Mappings
 		{
 		}
 
+#pragma warning disable CA2000 // Dispose objects before losing scope
 		public Db(IDataProvider provider, QueryResult result) : base(provider, new MockDbConnection(result, ConnectionState.Open))
+#pragma warning restore CA2000 // Dispose objects before losing scope
 		{
 		}
 
+#pragma warning disable CA2000 // Dispose objects before losing scope
 		public Db(IDataProvider provider, QueryResult[] results) : base(provider, new MockDbConnection(results, ConnectionState.Open))
+#pragma warning restore CA2000 // Dispose objects before losing scope
 		{
 		}
 
-		public ITable<SalesOrderHeader> SalesOrderHeader => GetTable<SalesOrderHeader>();
+		public ITable<SalesOrderHeader> SalesOrderHeader => this.GetTable<SalesOrderHeader>();
 
-		public ITable<CreditCard> CreditCards => GetTable<CreditCard>();
+		public ITable<CreditCard> CreditCards => this.GetTable<CreditCard>();
 
-		public ITable<SalesOrderHeader> SalesOrderHeaders => GetTable<SalesOrderHeader>();
+		public ITable<SalesOrderHeader> SalesOrderHeaders => this.GetTable<SalesOrderHeader>();
 	}
 
 	[Table(Schema = "Sales", Name = "CreditCard")]
@@ -289,7 +293,7 @@ namespace LinqToDB.Benchmarks.Mappings
 		}
 	}
 
-	public class EagerLoad
+	public static class EagerLoad
 	{
 		public static DataTable SchemaTable_SalesOrderDetails;
 		public static string[]  Names_SalesOrderDetails      = new[] { "SalesOrderID", "SalesOrderID", "SalesOrderDetailID", "CarrierTrackingNumber", "OrderQty", "ProductID", "SpecialOfferID", "UnitPrice", "UnitPriceDiscount", "LineTotal", "rowguid", "ModifiedDate" };

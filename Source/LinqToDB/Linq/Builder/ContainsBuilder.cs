@@ -6,10 +6,10 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class ContainsBuilder : MethodCallBuilder
+	sealed class ContainsBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames      = { "Contains"      };
-		private static readonly string[] MethodNamesAsync = { "ContainsAsync" };
+		private static readonly string[] MethodNames      = ["Contains"];
+		private static readonly string[] MethodNamesAsync = ["ContainsAsync"];
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -23,20 +23,18 @@ namespace LinqToDB.Linq.Builder
 			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var buildInStatement = false;
 
-			if (sequence.SelectQuery.Select.TakeValue != null ||
-			    sequence.SelectQuery.Select.SkipValue != null)
+			if (sequence.SelectQuery.Select.TakeValue != null                              ||
+			    sequence.SelectQuery.Select.SkipValue != null                              ||
+			    builder.DataContext.SqlProviderFlags.DoesNotSupportCorrelatedSubquery      ||
+			    builder.DataContext.SqlProviderFlags.IsExistsPreferableForContains == false &&
+			    builder.DataOptions.LinqOptions.PreferExistsForScalar == false              &&
+			    builder.MappingSchema.IsScalarType(methodCall.Arguments[1].Type))
 			{
 				sequence         = new SubQueryContext(sequence);
 				buildInStatement = true;
 			}
 
 			return new ContainsContext(buildInfo.Parent, methodCall, sequence, buildInStatement);
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		public static bool IsConstant(MethodCallExpression methodCall)
@@ -47,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(false) == false;
 		}
 
-		class ContainsContext : SequenceContextBase
+		sealed class ContainsContext : SequenceContextBase
 		{
 			readonly MethodCallExpression _methodCall;
 			readonly bool                 _buildInStatement;
@@ -94,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 					if (Parent != null)
 						query = Parent.SelectQuery;
 
-					return new[] { new SqlInfo(sql, query) };
+					return [new SqlInfo(sql, query)];
 				}
 
 				throw new InvalidOperationException();

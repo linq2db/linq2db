@@ -9,7 +9,7 @@ using LinqToDB.Linq;
 namespace LinqToDB.Expressions
 {
 	// PathVisitor cannot be shared/reused due to _visited state field
-	internal class PathVisitor<TContext>
+	internal sealed class PathVisitor<TContext>
 	{
 		private readonly TContext                                 _context;
 		private readonly Action<TContext, Expression, Expression> _func;
@@ -48,7 +48,7 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		private void Path(Expression expr, PropertyInfo property)
+		private void Path(Expression? expr, PropertyInfo property)
 		{
 			_path = Expression.Property(_path, property);
 			Path(expr);

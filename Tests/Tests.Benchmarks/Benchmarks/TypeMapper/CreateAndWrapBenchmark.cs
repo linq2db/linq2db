@@ -7,8 +7,8 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// benchmaerks with result wrapping also show additional allocation for wrapper instance
 	public class CreateAndWrapBenchmark
 	{
-		private static readonly int            IntParameter            = -1;
-		private static readonly string         StringParameter         = "TestString";
+		private const           int            IntParameter            = -1;
+		private const           string         StringParameter         = "TestString";
 		private static readonly TimeSpan       TimeSpanParameter       = TimeSpan.FromMinutes(5);
 		private static readonly DateTimeOffset DateTimeOffsetParameter = DateTimeOffset.Now;
 		private const           int            NanosecondsPerTick      = 100;

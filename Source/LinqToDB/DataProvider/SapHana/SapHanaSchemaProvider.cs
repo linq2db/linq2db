@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
@@ -48,13 +49,13 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			var dts = dataConnection.Connection.GetSchema("DataTypes");
 
 			var dt = dts.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
-					TypeName         = t.Field<string>("TypeName"),
-					DataType         = t.Field<string>("DataType"),
+					TypeName         = t.Field<string>("TypeName")!,
+					DataType         = t.Field<string>("DataType")!,
 					CreateFormat     = t.Field<string>("CreateFormat"),
 					CreateParameters = t.Field<string>("CreateParameters"),
 					ProviderDbType   = Converter.ChangeTypeTo<int>(t["ProviderDbType"]),
@@ -161,7 +162,7 @@ namespace LinqToDB.DataProvider.SapHana
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var pks = ((DbConnection) dataConnection.Connection).GetSchema("IndexColumns");
+			var pks = dataConnection.Connection.GetSchema("IndexColumns");
 
 			return
 			(
@@ -170,8 +171,8 @@ namespace LinqToDB.DataProvider.SapHana
 				select new PrimaryKeyInfo
 				{
 					TableID        = pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("INDEX_NAME"),
-					ColumnName     = pk.Field<string>("COLUMN_NAME"),
+					PrimaryKeyName = pk.Field<string>("INDEX_NAME")!,
+					ColumnName     = pk.Field<string>("COLUMN_NAME")!,
 					Ordinal        = Converter.ChangeTypeTo<int>(pk["POSITION"]),
 				}
 			).ToList();
@@ -316,11 +317,10 @@ namespace LinqToDB.DataProvider.SapHana
 					F.SCHEMA_NAME,
 					F.FUNCTION_NAME AS PROCEDURE_NAME,
 					1 AS IS_FUNCTION,
-					CASE WHEN FP.DATA_TYPE_NAME = 'TABLE_TYPE' THEN 1 ELSE 0 END AS IS_TABLE_FUNCTION,
+					CASE WHEN F.FUNCTION_USAGE_TYPE = 'TABLE' THEN 1 ELSE 0 END AS IS_TABLE_FUNCTION,
 					DEFINITION
 				FROM FUNCTIONS AS F
-				JOIN FUNCTION_PARAMETERS AS FP ON F.FUNCTION_OID = FP.FUNCTION_OID
-				WHERE FP.PARAMETER_TYPE = 'RETURN' AND F.SCHEMA_NAME " + SchemasFilter)
+				WHERE F.SCHEMA_NAME " + SchemasFilter)
 			.ToList();
 		}
 
@@ -396,7 +396,7 @@ namespace LinqToDB.DataProvider.SapHana
 				from r in resultTable.AsEnumerable()
 
 				let systemType   = r.Field<Type>("DataType")
-				let columnName   = GetEmptyStringIfInvalidColumnName(r.Field<string>("ColumnName"))
+				let columnName   = GetEmptyStringIfInvalidColumnName(r.Field<string>("ColumnName")!)
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
 				let dataType     = GetDataTypeByProviderDbType(providerType, options)
 				let columnType   = dataType?.TypeName
@@ -412,7 +412,7 @@ namespace LinqToDB.DataProvider.SapHana
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = systemType ?? typeof(object),
+					SystemType           = systemType,
 					DataType             = GetDataType(columnType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 				}
@@ -425,7 +425,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return columnName.IndexOfAny(invalidCharacters) > -1 ? string.Empty : columnName;
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			switch (dataType)
 			{
@@ -446,7 +446,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{
@@ -507,8 +507,8 @@ namespace LinqToDB.DataProvider.SapHana
 				commandText = "SELECT * FROM " + commandText + "(";
 				commandText += string.Join(",", procedure.Parameters.Select(p => (
 					p.SystemType == typeof (DateTime)
-						? "'" + DateTime.Now + "'"
-						: DefaultValue.GetValue(p.SystemType)) ?? "''"));
+						? string.Format(CultureInfo.InvariantCulture, "'{0}'", DateTime.Now)
+						: string.Format(CultureInfo.InvariantCulture, "{0}", DefaultValue.GetValue(p.SystemType ?? typeof(object)) ?? "''"))));
 
 				commandText += ")";
 				commandType = CommandType.Text;
@@ -569,7 +569,7 @@ namespace LinqToDB.DataProvider.SapHana
 							? ""
 							: p.SystemType == typeof (DateTime)
 								? DateTime.Now
-								: DefaultValue.GetValue(p.SystemType),
+								: DefaultValue.GetValue(p.SystemType ?? typeof(object)),
 					DataType = p.DataType,
 					Size = (int?)p.Size,
 					Direction =
@@ -649,10 +649,10 @@ namespace LinqToDB.DataProvider.SapHana
 				{
 					var infoStr = sqlDataTypeParts[1].Substring(0, sqlDataTypeParts[1].Length - 1);
 					var splited = infoStr.Split(',');
-					length = Convert.ToInt32(splited[0]);
+					length = Convert.ToInt32(splited[0], CultureInfo.InvariantCulture);
 					if (splited.Length == 2)
 					{
-						scale = Convert.ToInt32(splited[1]);
+						scale = Convert.ToInt32(splited[1], CultureInfo.InvariantCulture);
 					}
 				}
 
@@ -719,7 +719,7 @@ namespace LinqToDB.DataProvider.SapHana
 					ForeignKeys     = new List<ForeignKeySchema>(),
 					Parameters      = (
 						from pr in pgroup
-						let dt         = GetDataType(pr.DataType, options)
+						let dt         = GetDataType(pr.DataType, null, options)
 						let systemType = GetSystemType(pr.DataType, null, dt, pr.Length ?? 0, pr.Precision, pr.Scale, options)
 						orderby pr.Ordinal
 						select new ParameterSchema
@@ -732,7 +732,7 @@ namespace LinqToDB.DataProvider.SapHana
 							Size                 = pr.Length,
 							ParameterName        = ToValidName(pr.ParameterName!),
 							ParameterType        = ToTypeName(systemType, !pr.IsIn),
-							SystemType           = systemType ?? typeof(object),
+							SystemType           = systemType,
 							DataType             = GetDataType(pr.DataType, null, pr.Length, pr.Precision, pr.Scale),
 							ProviderSpecificType = GetProviderSpecificType(pr.DataType),
 							IsNullable           = pr.IsNullable
@@ -745,7 +745,7 @@ namespace LinqToDB.DataProvider.SapHana
 				from c in GetColumns(dataConnection, options)
 				join v in result on c.TableID equals v.ID
 				orderby c.Ordinal
-				select new {v, c, dt = GetDataType(c.DataType, options) };
+				select new {v, c, dt = GetDataType(c.DataType, null, options) };
 
 			foreach (var column in columns)
 			{
@@ -761,7 +761,7 @@ namespace LinqToDB.DataProvider.SapHana
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(column.c.Name),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = systemType ?? typeof(object),
+					SystemType           = systemType,
 					DataType             = GetDataType(dataType, column.c.ColumnType, column.c.Length, column.c.Precision, column.c.Scale),
 					ProviderSpecificType = GetProviderSpecificType(dataType),
 					SkipOnInsert         = column.c.SkipOnInsert || column.c.IsIdentity,
@@ -770,6 +770,7 @@ namespace LinqToDB.DataProvider.SapHana
 					PrimaryKeyOrder      = -1,
 					IsIdentity           = column.c.IsIdentity,
 					Description          = column.c.Description,
+					Ordinal              = column.c.Ordinal,
 				});
 			}
 

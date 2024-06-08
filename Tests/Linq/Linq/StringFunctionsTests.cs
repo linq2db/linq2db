@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -27,7 +29,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column]                                                              public int     Id     { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? Value1 { get; set; }
@@ -42,6 +44,7 @@ namespace Tests.Linq
 				TestProvName.AllSqlServer2017Plus,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
+				TestProvName.AllClickHouse,
 				TestProvName.AllSapHana,
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
@@ -69,12 +72,17 @@ namespace Tests.Linq
 		{
 			var data = GenerateData();
 
+			// https://github.com/ClickHouse/ClickHouse/issues/29978
+			// if it changes, CanBeNull = false should be removed from mappings
+			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
+
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
 				var actual = from t in table
 					group t.Value1 by new {t.Id, Value = t.Value1}
 					into g
+					orderby g.Key.Id
 					select new
 					{
 						Max = g.Max(),
@@ -84,10 +92,11 @@ namespace Tests.Linq
 				var expected = from t in data
 					group t.Value1 by new {t.Id, Value = t.Value1}
 					into g
+					orderby g.Key.Id
 					select new
 					{
 						Max = g.Max(),
-						Values = AggregateStrings(" -> ", g),
+						Values = AggregateStrings(" -> ", g) ?? nullVal,
 					};
 
 				AreEqual(expected, actual);
@@ -95,9 +104,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AggregationOrderTest([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
+		public void AggregationOrderTest([IncludeDataSources(TestProvName.AllSqlServer2017Plus, TestProvName.AllClickHouse)] string context)
 		{
 			var data = GenerateData();
+
+			// https://github.com/ClickHouse/ClickHouse/issues/29978
+			// if it changes, CanBeNull = false should be removed from mappings
+			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
 
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
@@ -105,6 +118,7 @@ namespace Tests.Linq
 				var actual = from t in table
 					group t.Value1 by new {t.Id, Value = t.Value1}
 					into g
+					orderby g.Key.Id
 					select new
 					{
 						Max = g.Max(),
@@ -114,10 +128,11 @@ namespace Tests.Linq
 				var expected = from t in data
 					group t.Value1 by new {t.Id, Value = t.Value1}
 					into g
+					orderby g.Key.Id
 					select new
 					{
 						Max = g.Max(),
-						Values = AggregateStrings(" -> ", g.OrderBy(e => e)),
+						Values = AggregateStrings(" -> ", g.OrderBy(e => e)) ?? nullVal,
 					};
 
 				AreEqual(expected, actual);
@@ -160,12 +175,17 @@ namespace Tests.Linq
 		{
 			var data = GenerateData();
 
+			// https://github.com/ClickHouse/ClickHouse/issues/29978
+			// if it changes, CanBeNull = false should be removed from mappings
+			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
+
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
 				var actual = from t in table
 					group t by new {t.Id, Value = t.Value1}
 					into g
+					orderby g.Key.Id
 					select new
 					{
 						Values = g.StringAggregate(" -> ", e => e.Value1).ToValue(),
@@ -174,9 +194,10 @@ namespace Tests.Linq
 				var expected = from t in data
 					group t by new {t.Id, Value = t.Value1}
 					into g
+					orderby g.Key.Id
 					select new
 					{
-						Values = AggregateStrings(" -> ", g.Select(e => e.Value1)),
+						Values = AggregateStrings(" -> ", g.Select(e => e.Value1)) ?? nullVal,
 					};
 
 				AreEqual(expected, actual);
@@ -310,20 +331,29 @@ namespace Tests.Linq
 				var query = from t in table
 					select new
 					{
-						Count = table.CountExt(e => e.Value1, Sql.AggregateModifier.Distinct),
+						Count      = table.CountExt(e => e.Value1, Sql.AggregateModifier.Distinct),
 						Aggregated = table.StringAggregate(" -> ", x => x.Value1).ToValue()
 					};
 
-
 				var expected = from t in data
-					select new 
-					{ 
-						Count      = data.Count(x => x.Value1 != null), 
+					select new
+					{
+						Count      = data.Count(x => x.Value1 != null),
 						Aggregated = string.Join(" -> ", data.Where(x => x.Value1 != null).Select(x => x.Value1))
 					};
 
+				// not usable due to lack of aggreation order
+				//AreEqual(expected, query);
 
-				AreEqual(expected, query);
+				var result = query.ToArray();
+				Assert.AreEqual(3, result.Length);
+				Assert.AreEqual(2, result[0].Count);
+				Assert.AreEqual(2, result[1].Count);
+				Assert.AreEqual(2, result[2].Count);
+
+				Assert.That(result[0].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
+				Assert.That(result[1].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
+				Assert.That(result[2].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
 			}
 		}
 
@@ -333,30 +363,33 @@ namespace Tests.Linq
 				TestProvName.AllSqlServer,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
+				TestProvName.AllClickHouse,
 				TestProvName.AllSQLite
 			)] string context)
 		{
-			var data = GenerateData();
+			var data = GenerateData().OrderBy(_ => _.Id);
 
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
-				var actualOne   = table.Select(t => Sql.ConcatStrings(" -> ", t.Value2));
+				var query = table.OrderBy(_ => _.Id);
+
+				var actualOne   = query.Select(t => Sql.ConcatStrings(" -> ", t.Value2));
 				var expectedOne = data .Select(t => Sql.ConcatStrings(" -> ", t.Value2));
 
 				Assert.AreEqual(expectedOne, actualOne);
 
-				var actualOneNull   = table.Select(t => Sql.ConcatStrings(" -> ", t.Value3));
+				var actualOneNull   = query.Select(t => Sql.ConcatStrings(" -> ", t.Value3));
 				var expectedOneNull = data .Select(t => Sql.ConcatStrings(" -> ", t.Value3));
 
 				Assert.AreEqual(expectedOneNull, actualOneNull);
 
-				var actual   = table.Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value1, t.Value2));
+				var actual   = query.Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value1, t.Value2));
 				var expected = data .Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value1, t.Value2));
 
 				Assert.AreEqual(expected, actual);
 
-				var actualAllEmpty   = table.Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value3));
+				var actualAllEmpty   = query.Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value3));
 				var expectedAllEmpty = data .Select(t => Sql.ConcatStrings(" -> ", t.Value3, t.Value3));
 
 				Assert.AreEqual(expectedAllEmpty, actualAllEmpty);
@@ -441,12 +474,17 @@ namespace Tests.Linq
 		{
 			var data = GenerateData();
 
+			// https://github.com/ClickHouse/ClickHouse/issues/29978
+			// if it changes, CanBeNull = false should be removed from mappings
+			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
+
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
 				var actual = from t in table
 							 group t.Value4 by new { t.Id, Value = t.Value4 }
 					into g
+							 orderby g.Key.Id
 							 select new
 							 {
 								 Max = g.Max(),
@@ -456,10 +494,11 @@ namespace Tests.Linq
 				var expected = from t in data
 							   group t.Value4 by new { t.Id, Value = t.Value4 }
 					into g
+							   orderby g.Key.Id
 							   select new
 							   {
 								   Max = g.Max(),
-								   Values = AggregateStrings(" -> ", g),
+								   Values = AggregateStrings(" -> ", g) ?? nullVal,
 							   };
 
 				AreEqual(expected, actual);
@@ -499,12 +538,17 @@ namespace Tests.Linq
 		{
 			var data = GenerateData();
 
+			// https://github.com/ClickHouse/ClickHouse/issues/29978
+			// if it changes, CanBeNull = false should be removed from mappings
+			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
+
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
 				var actual = from t in table
 							 group t.Value4 by new { t.Id, Value = t.Value4 }
 					into g
+							 orderby g.Key.Id
 							 select new
 							 {
 								 Max = g.Max(),
@@ -514,14 +558,29 @@ namespace Tests.Linq
 				var expected = from t in data
 							   group t.Value4 by new { t.Id, Value = t.Value4 }
 					into g
+							   orderby g.Key.Id
 							   select new
 							   {
 								   Max = g.Max(),
-								   Values = AggregateStrings(separator, g),
+								   Values = AggregateStrings(separator, g) ?? nullVal,
 							   };
 
 				AreEqual(expected, actual);
 			}
+		}
+
+		[Test]
+		public void MySqlConcatStringsTest([IncludeDataSources(TestProvName.AllMySql)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			_ = (from p in db.Person where p.FirstName == ("A" + "B") select p).ToList();
+			Assert.That(db.LastQuery, Contains.Substring("AB"));
+
+			//var str = "C";
+
+			_ = (from p in db.Person where p.FirstName == "A" + p.FirstName + "B" select p).ToList();
+			Assert.That(db.LastQuery, Contains.Substring("Concat('A', `p`.`FirstName`, 'B')"));
 		}
 	}
 }

@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Benchmarks.Models
 {
-	public partial class Northwind
+	public static partial class Northwind
 	{
 		public abstract class EntityBase<T>
 		{

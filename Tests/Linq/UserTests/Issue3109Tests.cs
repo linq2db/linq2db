@@ -11,19 +11,19 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3109Tests : TestBase
 	{
-		private class TestDb : DataConnection
+		private sealed class TestDb : DataConnection
 		{
 			public TestDb(string configuration) : base(configuration)
 			{
 			}
 
 
-			public ITable<Left>      Lefts      => GetTable<Left>();
-			public ITable<LeftRight> LeftRights => GetTable<LeftRight>();
-			public ITable<Right>     Rights     => GetTable<Right>();
+			public ITable<Left>      Lefts      => this.GetTable<Left>();
+			public ITable<LeftRight> LeftRights => this.GetTable<LeftRight>();
+			public ITable<Right>     Rights     => this.GetTable<Right>();
 		}
 
-		private class Left
+		private sealed class Left
 		{
 			[Association(ThisKey = nameof(LeftId), OtherKey = nameof(LeftRight.LeftId))]
 			public IEnumerable<LeftRight>? LeftRights;
@@ -40,12 +40,13 @@ namespace Tests.UserTests
 			}
 		}
 
-		private class LeftRight
+		private sealed class LeftRight
 		{
 			[Column(IsPrimaryKey = true, CanBeNull = false)]
 			public int LeftId { get; set; }
 
 			[Column(IsPrimaryKey = true, CanBeNull = false, DataType = DataType.Blob)]
+			[Column(IsPrimaryKey = true, CanBeNull = false, DataType = DataType.VarBinary, Configuration = ProviderName.ClickHouse)]
 			public byte[] RightId { get; set; } = null!;
 
 			[Association(ThisKey = nameof(LeftId), OtherKey = nameof(Issue3109Tests.Left.LeftId))]
@@ -60,9 +61,10 @@ namespace Tests.UserTests
 			}
 		}
 
-		private class Right
+		private sealed class Right
 		{
 			[Column(IsPrimaryKey = true, CanBeNull = false, DataType = DataType.Blob)]
+			[Column(IsPrimaryKey = true, CanBeNull = false, DataType = DataType.VarBinary, Configuration = ProviderName.ClickHouse)]
 			public byte[] RightId { get; set; } = null!;
 
 			public string? RightData { get; set; }
@@ -79,7 +81,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(false, TestProvName.AllSQLite)]
+		public void SampleSelectTest([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)]
 			string context)
 		{
 			Left      left      = new() { LeftId  = 1 };

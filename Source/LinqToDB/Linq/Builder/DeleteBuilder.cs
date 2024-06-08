@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class DeleteBuilder : MethodCallBuilder
+	sealed class DeleteBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames =
 		{
@@ -86,11 +86,14 @@ namespace LinqToDB.Linq.Builder
 
 				deleteStatement.Output = new SqlOutputClause();
 
-				var deletedTable = SqlTable.Deleted(methodCall.Method.GetGenericArguments()[0]);
+				var deletedTable = builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable
+					? SqlTable.Deleted(builder.MappingSchema.GetEntityDescriptor(methodCall.Method.GetGenericArguments()[0], builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated))
+					: deleteStatement.GetDeleteTable() ?? throw new InvalidOperationException("Cannot find target table for DELETE statement");
 
 				outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable);
 
-				deleteStatement.Output.DeletedTable = deletedTable;
+				if (builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable)
+					deleteStatement.Output.DeletedTable = deletedTable;
 
 				if (deleteType == DeleteContext.DeleteType.DeleteOutputInto)
 				{
@@ -115,13 +118,7 @@ namespace LinqToDB.Linq.Builder
 			return new DeleteContext(buildInfo.Parent, sequence);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
-		class DeleteContext : SequenceContextBase
+		sealed class DeleteContext : SequenceContextBase
 		{
 			public enum DeleteType
 			{
@@ -166,7 +163,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		class DeleteWithOutputContext : SelectContext
+		sealed class DeleteWithOutputContext : SelectContext
 		{
 			public DeleteWithOutputContext(IBuildContext? parent, IBuildContext sequence, IBuildContext outputContext, LambdaExpression outputExpression)
 				: base(parent, outputExpression, outputContext)
@@ -182,7 +179,7 @@ namespace LinqToDB.Linq.Builder
 				var deleteStatement = (SqlDeleteStatement)Statement!;
 				var outputQuery = Sequence[0].SelectQuery;
 
-				deleteStatement.Output!.OutputQuery = outputQuery;
+				deleteStatement.Output!.OutputColumns = outputQuery.Select.Columns.Select(c => c.Expression).ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}

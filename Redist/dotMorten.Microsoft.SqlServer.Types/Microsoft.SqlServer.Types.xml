@@ -590,6 +590,12 @@
             </summary>
             <returns>A SqlChars object containing the WKT representation of the SqlGeography.</returns>
         </member>
+        <member name="M:Microsoft.SqlServer.Types.SqlGeography.AsTextZM">
+            <summary>
+            Returns the Open Geospatial Consortium (OGC) Well-Known Text (WKT) representation of a SqlGeography instance augmented with any Z (elevation) and M (measure) values carried by the instance.
+            </summary>
+            <returns>A SqlChars value containing the WKT representation of the SqlGeography instance.</returns>
+        </member>
         <member name="M:Microsoft.SqlServer.Types.SqlGeography.InstanceOf(System.String)">
             <summary>
             Tests if the <see cref="T:Microsoft.SqlServer.Types.SqlGeography"/> instance is the same as the specified type.

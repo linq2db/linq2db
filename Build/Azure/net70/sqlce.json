@@ -1,0 +1,8 @@
+﻿{
+	"NET70.Azure": {
+		"Providers": [
+			// SQL CE
+			"SqlCe"
+		]
+	}
+}

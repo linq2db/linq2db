@@ -26,7 +26,7 @@ namespace LinqToDB.Expressions
 	public interface IGenericInfoProvider
 	{
 		/// <summary>
-		/// IMplementation should use this method to provide conversions for generic types with type parameters, used
+		/// Implementation should use this method to provide conversions for generic types with type parameters, used
 		/// to instantiate instance of current class.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema, to which conversions should be added.</param>

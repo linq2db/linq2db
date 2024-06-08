@@ -72,7 +72,8 @@ namespace Tests.UserTests
 				{
 					var count = db.Insert(new TestTable() { Id = 1, Name = "Manuel", Age = 14 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -82,7 +83,8 @@ namespace Tests.UserTests
 					r.Name = "Jacob";
 					r.Age = 15;
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 15);
@@ -91,7 +93,8 @@ namespace Tests.UserTests
 					r.Name = "John";
 					r.Age = 22;
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 22);
@@ -110,7 +113,8 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() { Id = 1, Name = "Smith", Age = 2 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -120,7 +124,8 @@ namespace Tests.UserTests
 					r.Name = "Franki";
 					r.Age = 15;
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 15);
@@ -129,7 +134,8 @@ namespace Tests.UserTests
 					r.Name = "Jack";
 					r.Age = 2;
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 15);
@@ -147,7 +153,8 @@ namespace Tests.UserTests
 				{
 					var count = db.Insert(new TestTableNull() { Id = 1, Name = "Tommy", Age = null });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					var r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
@@ -156,7 +163,8 @@ namespace Tests.UserTests
 					r.Name = "Jack";
 					r.Age = 2;
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 2);
@@ -165,7 +173,8 @@ namespace Tests.UserTests
 					r.Name = "Franki";
 					r.Age = null;
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 2);
@@ -176,15 +185,18 @@ namespace Tests.UserTests
 		[Test]
 		public void TestSkipWithFluentBuilder([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			var ms = new MappingSchema();
+			var mapping = new FluentMappingBuilder(ms);
+			mapping.Entity<TestTableFluent>().HasSkipValuesOnUpdate(t => t.Age, 2, 5).Build();
+
+			using (var db = GetDataContext(context, ms))
 			{
-				var mapping = db.MappingSchema.GetFluentMappingBuilder();
-				mapping.Entity<TestTableFluent>().HasSkipValuesOnUpdate(t => t.Age, 2, 5);
 				using (db.CreateLocalTable<TestTableFluent>())
 				{
 					var count = db.Insert(new TestTableFluent() { Id = 1, Name = null, Age = 2 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -194,7 +206,8 @@ namespace Tests.UserTests
 					r.Name = "Franki";
 					r.Age = 18;
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 18);
@@ -203,7 +216,8 @@ namespace Tests.UserTests
 					r.Name = "Jack";
 					r.Age = 2;
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 18);
@@ -221,7 +235,8 @@ namespace Tests.UserTests
 				{
 					var count = db.Insert(new TestTableEnum() { Id = 1, Name = "Max", Age = 20, Gender = TestTableEnum.GenderType.Female });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
 					var r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 
@@ -232,7 +247,8 @@ namespace Tests.UserTests
 					r.Age = 2;
 					r.Gender = TestTableEnum.GenderType.Male;
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 2);
@@ -243,7 +259,8 @@ namespace Tests.UserTests
 					r.Age = 20;
 					r.Gender = TestTableEnum.GenderType.Female;
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 20);

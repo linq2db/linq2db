@@ -160,7 +160,7 @@ namespace Tests.Linq
 			// Correct start
 			Assert.AreEqual("12356784", Sql.Stuff("1234",        4,    0,    "5678"));
 
-			// Correct length												 
+			// Correct length
 			Assert.AreEqual("125678",   Sql.Stuff("1234",        3,    5,    "5678"));
 		}
 
@@ -255,7 +255,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NETCOREAPP3_1_OR_GREATER
 		[Test]
 		public void ContainsConstantWithCase1([DataSources(ProviderName.SqlCe)] string context)
 		{
@@ -470,10 +470,10 @@ namespace Tests.Linq
 				var nameToCheck = firstName.Substring(0, 3);
 				switch (comparison)
 				{
-					case StringComparison.OrdinalIgnoreCase : 
-					case StringComparison.InvariantCultureIgnoreCase : 
-					case StringComparison.CurrentCultureIgnoreCase : 
-						nameToCheck = nameToCheck.ToUpper();
+					case StringComparison.OrdinalIgnoreCase :
+					case StringComparison.InvariantCultureIgnoreCase :
+					case StringComparison.CurrentCultureIgnoreCase :
+						nameToCheck = nameToCheck.ToUpperInvariant();
 						break;
 				}
 
@@ -482,12 +482,12 @@ namespace Tests.Linq
 
 				switch (comparison)
 				{
-					case StringComparison.Ordinal : 
-					case StringComparison.CurrentCulture : 
-					case StringComparison.InvariantCulture : 
+					case StringComparison.Ordinal :
+					case StringComparison.CurrentCulture :
+					case StringComparison.InvariantCulture :
 					{
 						nameToCheck = firstName.Substring(0, 3);
-						nameToCheck = nameToCheck.ToUpper();
+						nameToCheck = nameToCheck.ToUpperInvariant();
 
 						db.Person.Count(p =>  p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(0);
 						db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(1);
@@ -513,17 +513,17 @@ namespace Tests.Linq
 		public void StartsWith1IgnoreCase([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			{
+				{
 				db.Person.Count(p => p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(1);
 				db.Person.Count(p => !p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(0);
-			}
-		}
+				}
+				}
 
 		[Test]
 		public void StartsWith1Case([DataSources] string context)
-		{
+				{
 			using (var db = GetDataContext(context))
-			{
+				{
 				db.Person.Count(p => p.FirstName.StartsWith("Jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
 				db.Person.Count(p => p.FirstName.StartsWith("jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
 
@@ -593,7 +593,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class StringTypesTable
+		sealed class StringTypesTable
 		{
 			[Column]                                                              public int    Id             { get; set; }
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.Char)]     public string CharColumn     { get; set; } = null!;
@@ -730,9 +730,9 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(data))
 			{
 				var str   = "some";
-				
-				var result = table.Where(t => 
-						t.CharColumn.StartsWith(str)  && 
+
+				var result = table.Where(t =>
+						t.CharColumn.StartsWith(str)  &&
 						t.NCharColumn.StartsWith(str) &&
 						t.VarCharColumn.StartsWith(str) &&
 						t.NVarCharColumn.StartsWith(str)
@@ -869,6 +869,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Nothing to see here, it just broke after new ClickHouse release (broken in: 24.2.2)", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void LastIndexOf2([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
@@ -883,6 +884,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Nothing to see here, it just broke after new ClickHouse release (broken in: 24.2.2)", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void LastIndexOf3([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
@@ -990,19 +992,19 @@ namespace Tests.Linq
 			}
 		}
 
-		class Category
+		sealed class Category
 		{
 			[PrimaryKey, Identity] public int     Id;
 			[Column, NotNull]      public string? Name;
 		}
 
-		class Task
+		sealed class Task
 		{
 			[PrimaryKey, Identity] public int     Id;
 			[Column, NotNull]      public string? Name;
 		}
 
-		class TaskCategory
+		sealed class TaskCategory
 		{
 			[Column, NotNull] public int Id;
 			[Column, NotNull] public int TaskId;
@@ -1010,7 +1012,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Stuff2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void Stuff2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1176,6 +1178,46 @@ namespace Tests.Linq
 					where pp.Name.TrimEnd() == "  John" select pp;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
+		}
+
+		// for disabled providers see notes on implementation at
+		// EXpressions.TrimLeft/TrimRight
+		[Test]
+		public void TrimLeftCharacters([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimStart(' ', 'J') == "ohn "
+				select pp;
+			Assert.AreEqual(1, q.ToList().First().ID);
+		}
+
+		[Test]
+		public void TrimRightCharacters([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimEnd(' ', 'n') == "  Joh"
+				select pp;
+			Assert.AreEqual(1, q.ToList().First().ID);
 		}
 
 		[Test]
@@ -1390,6 +1432,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void IsNullOrEmpty2([DataSources] string context)
 		{
@@ -1401,7 +1444,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class CollatedTable
+		sealed class CollatedTable
 		{
 			[Column, PrimaryKey] public int    Id              { get; set; }
 			[Column            ] public string CaseSensitive   { get; set; } = null!;
@@ -1410,7 +1453,7 @@ namespace Tests.Linq
 			public static readonly CollatedTable TestData = new () { Id = 1, CaseSensitive = "TestString", CaseInsensitive = "TestString" };
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NETCOREAPP3_1_OR_GREATER
 		[Test]
 		public void ExplicitOrdinalIgnoreCase_Contains([DataSources] string context)
 		{
@@ -1430,6 +1473,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe)]
 		[Test]
 		public void ExplicitOrdinal_Contains([DataSources] string context)
 		{
@@ -1449,6 +1493,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe)]
 		[Test]
 		public void Explicit_Contains([DataSources] string context)
 		{
@@ -1726,7 +1771,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int Id { get; set; }
 			[Column(DataType = DataType.NVarChar, Length = 50)] public MyClass? Value { get; set; }
@@ -1738,8 +1783,8 @@ namespace Tests.Linq
 			// providers doesn't support IConvertible parameter coercion
 			ProviderName.SQLiteMS,
 			ProviderName.DB2,
-			ProviderName.MySqlConnector,
-			TestProvName.MariaDB,
+			TestProvName.AllClickHouse,
+			TestProvName.AllMySqlConnector,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,
 			TestProvName.AllSybase)] string context)

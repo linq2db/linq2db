@@ -13,7 +13,7 @@ namespace Tests.Linq
 
 	public static class TestedExtensions
 	{
-		class DatePartBuilder: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -37,7 +37,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderMySql: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderMySql : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -70,7 +70,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderPostgre: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderPostgre : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -103,7 +103,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderSqLite: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderSqLite : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -140,7 +140,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderAccess: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderAccess : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -163,8 +163,7 @@ namespace Tests.Linq
 			}
 		}
 
-
-		class DatePartBuilderSapHana: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderSapHana : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -187,7 +186,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderInformix: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderInformix : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -211,7 +210,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderOracle: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderOracle : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -235,7 +234,41 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderDB2: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderClickHouse : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				string exprStr;
+				var part = builder.GetValue<Sql.DateParts>("part");
+
+				switch (part)
+				{
+					case Sql.DateParts.Year       : exprStr = "YEAR({date})"                      ; break;
+					case Sql.DateParts.Quarter    : exprStr = "QUARTER({date})"                   ; break;
+					case Sql.DateParts.Month      : exprStr = "MONTH({date})"                     ; break;
+					case Sql.DateParts.DayOfYear  : exprStr = "DAYOFYEAR({date})"                 ; break;
+					case Sql.DateParts.Day        : exprStr = "DAY({date})"                       ; break;
+					case Sql.DateParts.Week       : exprStr = "toISOWeek(toDateTime64({date}, 0))"; break;
+					case Sql.DateParts.Hour       : exprStr = "HOUR({date})"                      ; break;
+					case Sql.DateParts.Minute     : exprStr = "MINUTE({date})"                    ; break;
+					case Sql.DateParts.Second     : exprStr = "SECOND({date})"                    ; break;
+					case Sql.DateParts.WeekDay    :
+						builder.Expression = "DAYOFWEEK(addDays({date}, 1))";
+						builder.Extension.Precedence = Precedence.Additive;
+						return;
+					case Sql.DateParts.Millisecond:
+						builder.Expression = "toUnixTimestamp64Milli({date}) % 1000";
+						builder.Extension.Precedence = Precedence.Multiplicative;
+						return;
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
+
+				builder.Expression = exprStr;
+			}
+		}
+
+		sealed class DatePartBuilderDB2 : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -259,7 +292,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderFirebird: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderFirebird : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -308,6 +341,7 @@ namespace Tests.Linq
 		[Sql.Extension(PN.Access,     "DatePart('{part}', {date})",               ServerSideOnly = false, BuilderType = typeof(DatePartBuilderAccess))]
 		[Sql.Extension(PN.SapHana,    "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderSapHana))]
 		[Sql.Extension(PN.Oracle,     "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderOracle))]
+		[Sql.Extension(PN.ClickHouse, "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderClickHouse))]
 		public static int? DatePart(this Sql.ISqlExtension? ext, Sql.DateParts part, [ExprParameter] DateTime? date)
 		{
 			if (date == null)

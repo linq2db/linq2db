@@ -1,6 +1,11 @@
-﻿using System.Threading;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Mapping;
+using LinqToDB.Metadata;
 
 using NUnit.Framework;
 
@@ -24,7 +29,6 @@ namespace Tests.UserTests
 		public void Test1()
 		{
 			var ms      = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
 
 			Assert.IsEmpty(ms.GetAttributes<PrimaryKeyAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!));
 
@@ -55,7 +59,6 @@ namespace Tests.UserTests
 		public void Test2()
 		{
 			var ms      = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
 
 			Assert.IsEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!));
 			Assert.IsEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Value")!));
@@ -86,7 +89,7 @@ namespace Tests.UserTests
 		}
 
 		/// <summary>
-		/// This will reset <see cref="MappingSchema.MetadataReaders"></see>
+		/// This will reset MappingSchema.MetadataReaders
 		/// </summary>
 		/// <param name="ms"></param>
 		/// <param name="semaphore"></param>
@@ -96,7 +99,7 @@ namespace Tests.UserTests
 			{
 				semaphore.WaitOne();
 
-				var builder = ms.GetFluentMappingBuilder();
+				ms.AddMetadataReader(new FluentMetadataReader(new Dictionary<Type, List<MappingAttribute>>(), new Dictionary<MemberInfo, List<MappingAttribute>>(), new List<MemberInfo>()));
 			}
 			finally
 			{
@@ -106,8 +109,8 @@ namespace Tests.UserTests
 		}
 
 		/// <summary>
-		/// This will iterate through <see cref="MappingSchema.MetadataReaders"/>,
-		/// and had a chance to fail on <see cref="MappingSchema._metadataReaders"/> == null
+		/// This will iterate through MappingSchema.MetadataReaders
+		/// and had a chance to fail on MappingSchema._metadataReaders == null
 		/// </summary>
 		/// <param name="ms"></param>
 		/// <param name="semaphore"></param>
@@ -139,9 +142,9 @@ namespace Tests.UserTests
 			try
 			{
 				semaphore1.WaitOne();
-				var builder = ms.GetFluentMappingBuilder();
+				var builder = new FluentMappingBuilder(ms);
 
-				builder.Entity<TestEntity>().Property(_ => _.Id).IsColumn();
+				builder.Entity<TestEntity>().Property(_ => _.Id).IsColumn().Build();
 				semaphore2.WaitOne();
 
 				Assert.IsNotEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!));
@@ -167,9 +170,9 @@ namespace Tests.UserTests
 			try
 			{
 				semaphore1.WaitOne();
-				var builder = ms.GetFluentMappingBuilder();
+				var builder = new FluentMappingBuilder(ms);
 
-				builder.Entity<TestEntity>().Property(_ => _.Value).IsColumn();
+				builder.Entity<TestEntity>().Property(_ => _.Value).IsColumn().Build();
 				semaphore2.WaitOne();
 
 				Assert.IsNotEmpty(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!));

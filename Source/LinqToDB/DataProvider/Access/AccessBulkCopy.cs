@@ -1,10 +1,10 @@
 ﻿namespace LinqToDB.DataProvider.Access
 {
-	class AccessBulkCopy : BasicBulkCopy
+	sealed class AccessBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
-		/// We subtract 1 here to be safe since some ADO providers use parameter for command itself. 
+		/// We subtract 1 here to be safe since some ADO providers use parameter for command itself.
 		/// </remarks>
 		protected override int MaxParameters => 767;
 		/// <remarks>

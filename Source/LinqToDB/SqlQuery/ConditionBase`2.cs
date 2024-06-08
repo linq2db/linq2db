@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
 	#region ConditionBase
 
@@ -91,22 +93,22 @@
 
 			#region Predicate.In
 
-			public T2 In   (SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, false, subQuery)); }
-			public T2 NotIn(SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, true,  subQuery)); }
+			public T2 InSubQuery   (SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, false, subQuery)); }
+			public T2 NotInSubQuery(SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, true,  subQuery)); }
 
-			SqlPredicate.InList CreateInList(bool isNot, object[] exprs)
+			SqlPredicate.InList CreateInList(bool isNot, bool compareNullsAsValues, object[]? exprs)
 			{
-				var list = new SqlPredicate.InList(_expr, Common.Configuration.Linq.CompareNullsAsValues ? false : null, isNot);
+				var list = new SqlPredicate.InList(_expr, compareNullsAsValues ? false : null, isNot);
 
-				if (exprs != null && exprs.Length > 0)
+				if (exprs?.Length > 0)
 				{
 					foreach (var item in exprs)
 					{
-						if (item == null || item is SqlValue && ((SqlValue)item).Value == null)
+						if (item == null || item is SqlValue { Value : null })
 							continue;
 
-						if (item is ISqlExpression)
-							list.Values.Add((ISqlExpression)item);
+						if (item is ISqlExpression expression)
+							list.Values.Add(expression);
 						else
 							list.Values.Add(new SqlValue(item));
 					}
@@ -115,8 +117,8 @@
 				return list;
 			}
 
-			public T2 In   (params object[] exprs) { return Add(CreateInList(false, exprs)); }
-			public T2 NotIn(params object[] exprs) { return Add(CreateInList(true,  exprs)); }
+			public T2 In   (bool compareNullsAsValues, params object[] exprs) { return Add(CreateInList(false, compareNullsAsValues, exprs));  }
+			public T2 NotIn(bool compareNullsAsValues, params object[] exprs) { return Add(CreateInList(true,  compareNullsAsValues,  exprs)); }
 
 			#endregion
 		}

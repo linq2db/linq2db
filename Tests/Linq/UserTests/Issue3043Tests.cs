@@ -31,7 +31,7 @@ namespace Tests.UserTests
 			[Column]
 			public int CityId { get; set; }
 	
-			[Association(ThisKey = nameof(CityId), OtherKey = "Id", CanBeNull = true, Relationship = Relationship.ManyToOne)]
+			[Association(ThisKey = nameof(CityId), OtherKey = "Id", CanBeNull = true)]
 			public City3043? City { get; set; }
 	
 			[ExpressionMethod(nameof(CityInfoExpression))]
@@ -51,7 +51,7 @@ namespace Tests.UserTests
 			[Column]
 			public int StreetId { get; set; }
 	
-			[Association(ThisKey = nameof(StreetId), OtherKey = "Id", CanBeNull = true, Relationship = Relationship.ManyToOne)]
+			[Association(ThisKey = nameof(StreetId), OtherKey = "Id", CanBeNull = true)]
 			public Street3043? Street { get; set; }
 		}
 
@@ -63,7 +63,7 @@ namespace Tests.UserTests
 			[Column]
 			public int HouseId;
 
-			[Association(ThisKey = nameof(HouseId), OtherKey = "Id", CanBeNull = true, Relationship = Relationship.ManyToOne)]
+			[Association(ThisKey = nameof(HouseId), OtherKey = "Id", CanBeNull = true)]
 			public House3043? House { get; set; }
 		}
 
@@ -75,7 +75,7 @@ namespace Tests.UserTests
 			[Column]
 			public int PersonId;
 
-			[Association(ThisKey = nameof(PersonId), OtherKey = "Id", CanBeNull = false, Relationship = Relationship.ManyToOne)]
+			[Association(ThisKey = nameof(PersonId), OtherKey = "Id", CanBeNull = false)]
 			public Person3043 Person { get; set; } = null!;
 
 			[ExpressionMethod(nameof(HouseExpression))]

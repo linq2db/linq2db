@@ -9,7 +9,7 @@
 
 	GetSchemaOptions.PreferProviderSpecificTypes = true;
 
-	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL"));
+	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL.10"));
 
 	GetTable("testsamename").TypeName = "_testsamename";
 	GetTable("testsamename").DataContextPropertyName = "_testsamename";
@@ -18,7 +18,7 @@
 
 	GenerateModel();
 
-	GenerationEnvironment.Replace(
-		"#pragma warning disable 1591",
-		"#pragma warning disable 1591\r\n#pragma warning disable 618");
+//	GenerationEnvironment.Replace(
+//		"#pragma warning disable 1573, 1591",
+//		"#pragma warning disable 1573, 1591, 618");
 #>

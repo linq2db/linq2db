@@ -1,14 +1,13 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Globalization;
-	using Common;
 	using Mapping;
 	using SqlQuery;
 
-	public class InformixMappingSchema : MappingSchema
+	sealed class InformixMappingSchema : LockedMappingSchema
 	{
 		private const string DATE_FORMAT               = "TO_DATE('{0:yyyy-MM-dd}', '%Y-%m-%d')";
 		private const string DATETIME_FORMAT           = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', '%Y-%m-%d %H:%M:%S')";
@@ -18,25 +17,27 @@ namespace LinqToDB.DataProvider.Informix
 
 		static readonly char[] _extraEscapes = { '\r', '\n' };
 
-		public InformixMappingSchema() : this(ProviderName.Informix)
-		{
-		}
-
-		protected InformixMappingSchema(string configuration) : base(configuration)
+		InformixMappingSchema() : base(ProviderName.Informix)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append('\''));
+			SetValueToSqlConverter(typeof(bool), (sb,_,_,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append('\''));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(byte),   new SqlDataType(DataType.Int16,    typeof(byte)));
+			SetDataType(typeof(byte?),  new SqlDataType(DataType.Int16,    typeof(byte)));
 
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v)   => ConvertStringToSql  (sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v)   => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v)   => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb, dt, v) => BuildIntervalLiteral(sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
+			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,o,v) => ConvertDateTimeToSql(sb, dt, o, (DateTime)v));
+			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+#endif
 		}
 
-		private void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
+		private static void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
 		{
 			// for now just generate DAYS TO FRACTION(5) interval, hardly anyone needs YEAR TO MONTH one
 			// and if he needs, it is easy to workaround by adding another one converter to mapping schema
@@ -51,21 +52,18 @@ namespace LinqToDB.DataProvider.Informix
 				(absoluteTs.Ticks / 100) % 100000);
 		}
 
-		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+		static readonly Action<StringBuilder,int> _appendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			// chr works with values in 0..255 range, bigger/smaller values will be converted to byte
 			// this is fine as long as we don't have out-of-range characters in _extraEscapes
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, _extraEscapes);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, _appendConversionAction, value, _extraEscapes);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
@@ -77,54 +75,55 @@ namespace LinqToDB.DataProvider.Informix
 					AppendConversion(stringBuilder, value);
 					break;
 				default:
-					DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
+					DataTools.ConvertCharToSql(stringBuilder, "'", _appendConversionAction, value);
 					break;
 			}
 		}
 
-
-		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DataOptions options, DateTime value)
 		{
 			// datetime literal using TO_DATE function used because it works with all kinds of datetime ranges
 			// without generation of range-specific literals
 			// see Issue1307Tests tests
 			string format;
+
 			if ((value.Ticks % 10000000) / 100 != 0)
-				format = InformixConfiguration.ExplicitFractionalSecondsSeparator ?
+			{
+				var ifxo = options.FindOrDefault(InformixOptions.Default);
+
+				format = ifxo.ExplicitFractionalSecondsSeparator ?
 					DATETIME5_EXPLICIT_FORMAT :
 					DATETIME5_FORMAT;
+			}
 			else
+			{
 				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
 					? DATE_FORMAT
 					: DATETIME_FORMAT;
+			}
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+#endif
+
 		internal static readonly InformixMappingSchema Instance = new ();
 
-		public class IfxMappingSchema : MappingSchema
+		public sealed class IfxMappingSchema : LockedMappingSchema
 		{
-			public IfxMappingSchema()
-				: base(ProviderName.Informix, Instance)
-			{
-			}
-
-			public IfxMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.Informix, Array<MappingSchema>.Append(schemas, Instance))
+			public IfxMappingSchema() : base(ProviderName.Informix, InformixProviderAdapter.GetInstance(ProviderName.Informix).MappingSchema, Instance)
 			{
 			}
 		}
 
-		public class DB2MappingSchema : MappingSchema
+		public sealed class DB2MappingSchema : LockedMappingSchema
 		{
-			public DB2MappingSchema()
-				: base(ProviderName.InformixDB2, Instance)
-			{
-			}
-
-			public DB2MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.InformixDB2, Array<MappingSchema>.Append(schemas, Instance))
+			public DB2MappingSchema() : base(ProviderName.InformixDB2, InformixProviderAdapter.GetInstance(ProviderName.InformixDB2).MappingSchema, Instance)
 			{
 			}
 		}

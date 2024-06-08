@@ -12,6 +12,7 @@
 		SqlDataType,
 		SqlTable,
 		SqlAliasPlaceholder,
+		SqlRow,
 
 		ExprPredicate,
 		NotExprPredicate,
@@ -70,6 +71,7 @@
 
 		GroupingSet,
 
-		Comment
+		Comment,
+		SqlID
 	}
 }

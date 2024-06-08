@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	class SubQueryContext : PassThroughContext
 	{
 #if DEBUG
-		public string? _sqlQueryText => SelectQuery.SqlText;
+		public string? SqlQueryText => SelectQuery.SqlText;
 #endif
 
 		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)
@@ -42,9 +42,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			expression = SequenceHelper.CorrectExpression(expression, this, Context);
 
-			var indexes = SubQuery
-				.ConvertToIndex(expression, level, flags)
-				.ToArray();
+			var indexes = SubQuery.ConvertToIndex(expression, level, flags);
 
 			var result = indexes
 				.Select(idx => new SqlInfo(idx.MemberChain, idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index], idx.Index))
@@ -93,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 			return Parent?.ConvertToParentIndex(idx, this) ?? idx;
 		}
 
-		public override void SetAlias(string alias)
+		public override void SetAlias(string? alias)
 		{
 			if (alias == null)
 				return;

@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using LinqToDB.Expressions;
 
-	class InsertBuilder : MethodCallBuilder
+	sealed class InsertBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = new []
 		{
@@ -148,27 +148,21 @@ namespace LinqToDB.Linq.Builder
 							{
 								var objType = arg.Type;
 
-								var ed   = builder.MappingSchema.GetEntityDescriptor(objType);
+								var ed   = builder.MappingSchema.GetEntityDescriptor(objType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 								var into = sequence;
 								var ctx  = new TableBuilder.TableContext(builder, buildInfo, objType);
 
-								var table = new SqlTable(objType);
+								var table = new SqlTable(ed);
 
 								foreach (var c in ed.Columns.Where(c => !c.SkipOnInsert))
 								{
-									var field = table[c.ColumnName];
-									if (field == null)
-										continue;
-
-									var pe = Expression.MakeMemberAccess(arg, c.MemberInfo);
-
+									var field     = table.FindFieldByMemberName(c.MemberName) ?? throw new InvalidOperationException($"Cannot find column {c.MemberName}({c.ColumnName})");
+									var pe        = Expression.MakeMemberAccess(arg, c.MemberInfo);
 									var column    = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 									var parameter = builder.ParametersContext.BuildParameterFromArgumentProperty(methodCall, argIndex, field.ColumnDescriptor);
 
 									insertStatement.Insert.Items.Add(new SqlSetExpression(column[0].Sql, parameter.SqlParameter));
 								}
-
-								var insertedTable = SqlTable.Inserted(methodCall.Method.GetGenericArguments()[0]);
 
 								break;
 							}
@@ -180,17 +174,23 @@ namespace LinqToDB.Linq.Builder
 
 				if (insertType == InsertContext.InsertType.InsertOutput || insertType == InsertContext.InsertType.InsertOutputInto)
 				{
-					outputExpression = 
+					outputExpression =
 						(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap()
 						?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments().Last());
 
 					insertStatement.Output = new SqlOutputClause();
 
-					var insertedTable = SqlTable.Inserted(outputExpression.Parameters[0].Type);
+					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable
+						? SqlTable.Inserted(builder.MappingSchema.GetEntityDescriptor(outputExpression.Parameters[0].Type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated))
+						: insertStatement.Insert.Into;
+
+					if (insertedTable == null)
+						throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
 					outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable);
 
-					insertStatement.Output.InsertedTable = insertedTable;
+					if (builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable)
+						insertStatement.Output.InsertedTable = insertedTable;
 
 					if (insertType == InsertContext.InsertType.InsertOutputInto)
 					{
@@ -208,12 +208,14 @@ namespace LinqToDB.Linq.Builder
 						insertStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
 					}
 				}
-
 			}
 
 			var insert = insertStatement.Insert;
 
-			var q = insert.Into!.IdentityFields
+			if (insert.Into == null)
+				throw new LinqToDBException("Insert query has no setters defined.");
+
+			var q = insert.Into.IdentityFields
 				.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());
 
 			foreach (var field in q)
@@ -240,17 +242,11 @@ namespace LinqToDB.Linq.Builder
 			return new InsertContext(buildInfo.Parent, sequence, insertType, outputExpression);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		#endregion
 
 		#region InsertContext
 
-		class InsertContext : SequenceContextBase
+		sealed class InsertContext : SequenceContextBase
 		{
 			public enum InsertType
 			{
@@ -323,7 +319,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region InsertWithOutputContext
 
-		class InsertWithOutputContext : SelectContext
+		sealed class InsertWithOutputContext : SelectContext
 		{
 			public InsertWithOutputContext(IBuildContext? parent, IBuildContext sequence, IBuildContext outputContext, LambdaExpression outputExpression)
 				: base(parent, outputExpression, outputContext)
@@ -339,7 +335,7 @@ namespace LinqToDB.Linq.Builder
 				var insertStatement = (SqlInsertStatement)Statement!;
 				var outputQuery     = Sequence[0].SelectQuery;
 
-				insertStatement.Output!.OutputQuery = outputQuery;
+				insertStatement.Output!.OutputColumns = outputQuery.Select.Columns.Select(c => c.Expression).ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
@@ -349,7 +345,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Into
 
-		internal class Into : MethodCallBuilder
+		internal sealed class Into : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
@@ -368,7 +364,7 @@ namespace LinqToDB.Linq.Builder
 					if (info.MemberChain.Length == 0)
 						continue;
 
-					var destInfo = destInfos.FirstOrDefault(di => info.CompareMembers(di));
+					var destInfo = destInfos.FirstOrDefault(info.CompareMembers);
 
 					if (destInfo != null)
 						result.Add(Tuple.Create(info, destInfo));
@@ -431,19 +427,13 @@ namespace LinqToDB.Linq.Builder
 
 				return sequence;
 			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
-			}
 		}
 
 		#endregion
 
 		#region Value
 
-		internal class Value : MethodCallBuilder
+		internal sealed class Value : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
@@ -480,7 +470,7 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						insertStatement.Insert.Into,
 						insertStatement.Insert.Items);
-				}				
+				}
 				else
 					UpdateBuilder.ParseSet(
 						builder,
@@ -490,15 +480,11 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						insertStatement.Insert.Items);
 
+				// why we even do it?
+				// TODO: remove in v4?
 				insertStatement.Insert.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 

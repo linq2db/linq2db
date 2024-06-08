@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using SqlQuery;
 	using Common.Internal.Cache;
+	using SqlQuery;
+	using Tools;
 
 	static partial class QueryRunner
 	{
@@ -22,12 +23,17 @@ namespace LinqToDB.Linq
 				TableOptions tableOptions,
 				Type         type)
 			{
-				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
+				var sqlTable = new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
 
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableName != null || schemaName != null || databaseName != null || serverName != null)
+				{
+					sqlTable.TableName = new(
+						          tableName    ?? sqlTable.TableName.Name,
+						Server  : serverName   ?? sqlTable.TableName.Server,
+						Database: databaseName ?? sqlTable.TableName.Database,
+						Schema  : schemaName   ?? sqlTable.TableName.Schema);
+				}
+
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				var deleteStatement = new SqlDeleteStatement();
@@ -42,7 +48,7 @@ namespace LinqToDB.Linq
 				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
 
 				if (keys.Count == 0)
-					throw new LinqException($"Table '{sqlTable.Name}' does not have primary key.");
+					throw new LinqException($"Table '{sqlTable.NameForLogging}' does not have primary key.");
 
 				foreach (var field in keys)
 				{
@@ -73,15 +79,29 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj!, dataContext);
-				var ei   = Common.Configuration.Linq.DisableQueryCache
+				using var a = ActivityService.Start(ActivityID.DeleteObject);
+
+				var type        = GetType<T>(obj!, dataContext);
+				var dataOptions = dataContext.Options;
+
+				var ei = dataOptions.LinqOptions.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type),
+					: Cache<T,int>.QueryCache.GetOrCreate(
+						(
+							operation: 'D',
+							dataContext.ConfigurationID,
+							tableName,
+							schemaName,
+							databaseName,
+							serverName,
+							tableOptions,
+							type,
+							queryFlags: dataContext.GetQueryFlags()
+						),
 						dataContext,
 						static (entry, key, context) =>
 						{
-							entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+							entry.SlidingExpiration = context.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 							return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
@@ -101,21 +121,34 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj!, dataContext);
-				var ei   = Common.Configuration.Linq.DisableQueryCache
-					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
-						(operation: 'D', dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type),
-						dataContext,
-						static (entry, key, context) =>
-						{
-							entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-							return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
-						});
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.DeleteObjectAsync))
+				{
+					var type = GetType<T>(obj!, dataContext);
+					var ei = dataContext.Options.LinqOptions.DisableQueryCache
+						? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
+						: Cache<T,int>.QueryCache.GetOrCreate(
+							(
+								operation: 'D',
+								dataContext.ConfigurationID,
+								tableName,
+								schemaName,
+								databaseName,
+								serverName,
+								tableOptions,
+								type,
+								queryFlags: dataContext.GetQueryFlags()
+							),
+							dataContext,
+							static (entry, key, context) =>
+							{
+								entry.SlidingExpiration = context.Options.LinqOptions.CacheSlidingExpirationOrDefault;
+								return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
+							});
 
-				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return (int)result!;
+					return (int)result!;
+				}
 			}
 		}
 	}

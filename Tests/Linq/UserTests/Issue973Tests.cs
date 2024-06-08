@@ -12,13 +12,13 @@ using Tests.Model;
 namespace Tests.UserTests
 {
 	/// <summary>
-	/// Builder for parametrized sql IN expression
+	/// Builder for parameterized sql IN expression
 	/// </summary>
 	/// <seealso cref="Sql.IExtensionCallBuilder" />
 	public class InExpressionItemBuilder : Sql.IExtensionCallBuilder
 	{
 		/// <summary>
-		/// Builds the parametrized sql IN expression
+		/// Builds the parameterized sql IN expression
 		/// </summary>
 		/// <param name="builder">The builder.</param>
 		/// <exception cref="ArgumentNullException">Values for \"In\" operation should not be empty - values</exception>
@@ -34,7 +34,9 @@ namespace Tests.UserTests
 
 			if (values == null || values.Length == 0)
 			{
-				throw new ArgumentNullException("values", "Values for \"In\" operation should not be empty");
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
+				throw new ArgumentNullException(nameof(values), "Values for \"In\" operation should not be empty");
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
 			}
 
 			foreach (var value in values)

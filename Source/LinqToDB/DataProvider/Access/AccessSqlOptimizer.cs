@@ -1,8 +1,9 @@
-﻿using LinqToDB.Linq;
-using LinqToDB.Mapping;
+﻿using System;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Linq;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -31,17 +32,29 @@ namespace LinqToDB.DataProvider.Access
 			return base.ConvertLikePredicate(mappingSchema, predicate, context);
 		}
 
+		protected override string EscapeLikePattern(string str)
+		{
+			var newStr = DataTools.EscapeUnterminatedBracket(str);
+			if (newStr == str)
+				newStr = newStr.Replace("[", "[[]");
+
+			foreach (var s in LikeCharactersToEscape)
+				newStr = newStr.Replace(s, "[" + s + "]");
+
+			return newStr;
+		}
+
 		public override ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
 		{
 			throw new LinqException("Access does not support `Replace` function which is required for such query.");
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
-				QueryType.Update => CorrectAccessUpdate((SqlUpdateStatement)statement),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Update => CorrectAccessUpdate ((SqlUpdateStatement)statement),
 				_                => statement,
 			};
 		}
@@ -100,8 +113,8 @@ namespace LinqToDB.DataProvider.Access
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
 								new SqlFunction(typeof(int), "InStr",
-									indexExpr, 
-									predicate.Expr1, 
+									indexExpr,
+									predicate.Expr1,
 									predicate.Expr2,
 									new SqlValue(0)),
 								SqlPredicate.Operator.Equal,
@@ -142,9 +155,9 @@ namespace LinqToDB.DataProvider.Access
 		{
 			switch (func.Name)
 			{
-				case "$ToLower$" : return new SqlFunction(func.SystemType, "LCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$ToUpper$" : return new SqlFunction(func.SystemType, "UCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "Length"    : return new SqlFunction(func.SystemType, "LEN",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case PseudoFunctions.TO_LOWER: return new SqlFunction(func.SystemType, "LCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case PseudoFunctions.TO_UPPER: return new SqlFunction(func.SystemType, "UCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "Length"                : return new SqlFunction(func.SystemType, "LEN",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 			}
 			return base.ConvertFunction(func);
 		}

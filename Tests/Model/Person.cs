@@ -24,7 +24,9 @@ namespace Tests.Model
 
 		// Firebird: it duplicates identity generation trigger job
 		//[SequenceName(ProviderName.Firebird, "PersonID")]
-		[Column("PersonID"), Identity, PrimaryKey]     public int     ID;
+		[Column("PersonID", Configuration = ProviderName.ClickHouse)]
+		[Column("PersonID", IsIdentity = true), PrimaryKey]
+		                                               public int     ID;
 		[NotNull]                                      public string  FirstName { get; set; } = null!;
 		[NotNull]                                      public string  LastName = null!;
 		[Nullable]                                     public string? MiddleName;
@@ -33,15 +35,17 @@ namespace Tests.Model
 		[NotColumn]
 		int IPerson.ID
 		{
-			get { return ID; }
-			set { ID = value; }
+			get => ID;
+			set => ID = value;
 		}
+
 		[NotColumn]
 		string IPerson.FirstName
 		{
 			get { return FirstName; }
 			set { FirstName = value; }
 		}
+
 		[NotColumn]
 		string IPerson.LastName
 		{

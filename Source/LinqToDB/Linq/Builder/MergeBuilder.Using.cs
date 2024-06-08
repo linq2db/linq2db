@@ -1,7 +1,4 @@
-﻿using LinqToDB.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -14,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-		internal class Using : MethodCallBuilder
+		internal sealed class Using : MethodCallBuilder
 		{
 			static readonly MethodInfo[] _supportedMethods = {UsingMethodInfo1, UsingMethodInfo2};
 
@@ -33,12 +30,6 @@ namespace LinqToDB.Linq.Builder
 				mergeContext.Merge.Source = source.Source;
 
 				return mergeContext;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 	}

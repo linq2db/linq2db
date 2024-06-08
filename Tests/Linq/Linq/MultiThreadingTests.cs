@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -23,16 +25,17 @@ namespace Tests.Linq
 
 			TestContext.WriteLine(JsonConvert.SerializeObject(obj, Formatting.Indented));
 		}
-		
+
 		[Table]
-		class MultiThreadedData
+		sealed class MultiThreadedData
 		{
-			[Column(IsPrimaryKey = true)] 
+			[Column(IsPrimaryKey = true)]
 			public int Id    { get; set; }
 			[Column] public int Value { get; set; }
-			[Column(Length = 50, DataType = DataType.Char)] 
+			[Column(DataType = DataType.NVarChar, Configuration = ProviderName.ClickHouse)]
+			[Column(Length = 50, DataType = DataType.Char)]
 			public string StrValue { get; set; } = null!;
-			
+
 			public static MultiThreadedData[] TestData()
 			{
 				return Enumerable.Range(1, 100)
@@ -51,10 +54,10 @@ namespace Tests.Linq
 			// maximum Provider pool count
 			const int poolCount = 10;
 
-			var semaphore = new Semaphore(0, poolCount);
-			
+			using var semaphore = new Semaphore(0, poolCount);
+
 			var threads = new Thread[threadCount];
-			var results = new Tuple<TParam, TResult, string, IDataParameterCollection?, Exception?>[threadCount];
+			var results = new Tuple<TParam, TResult, string, DbParameter[], Exception?>[threadCount];
 
 			for (var i = 0; i < threadCount; i++)
 			{
@@ -69,13 +72,16 @@ namespace Tests.Linq
 						{
 							using (var threadDb = (DataConnection)GetDataContext(context))
 							{
+								var commandInterceptor = new SaveCommandInterceptor();
+								threadDb.AddInterceptor(commandInterceptor);
+
 								var result = queryFunc(threadDb, param);
-								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, threadDb.LastParameters, (Exception?)null);
+								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, (Exception?)null);
 							}
 						}
 						catch (Exception e)
 						{
-							results[n] = Tuple.Create(param, default(TResult), "", (IDataParameterCollection?)null, e)!;
+							results[n] = Tuple.Create(param, default(TResult), "", (DbParameter[]?)null, e)!;
 						}
 
 					}
@@ -118,14 +124,14 @@ namespace Tests.Linq
 					if (result.Item4 != null)
 					{
 						var sb = new StringBuilder();
-						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema).PrintParameters(sb, result.Item4.OfType<IDbDataParameter>());
+						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
 						TestContext.WriteLine(sb);
 					}
 					TestContext.WriteLine();
 					TestContext.WriteLine(result.Item3);
 
 					DumpObject(result.Item2);
-					
+
 					DumpObject(testResult);
 
 
@@ -135,11 +141,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWithTests([DataSources(false, ProviderName.Sybase)] string context)
+		public void StartsWithTests([DataSources(false, TestProvName.AllSybase)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
-			
+
 			var testData = MultiThreadedData.TestData();
 
 			// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
@@ -163,8 +169,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EndsWithTests([DataSources(false, ProviderName.Sybase)] string context)
+		public void EndsWithTests([DataSources(false, TestProvName.AllSybase)] string context)
 		{
+			var skipTrim = context.IsAnyOf(TestProvName.AllClickHouse);
+
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
@@ -179,7 +187,9 @@ namespace Tests.Linq
 				ConcurrentRunner(db, context, 10,
 					(threadDb, p) =>
 					{
-						var query = threadDb.GetTable<MultiThreadedData>().Where(x => x.StrValue.Trim().EndsWith(p));
+						var query = skipTrim
+							? threadDb.GetTable<MultiThreadedData>().Where(x => x.StrValue.EndsWith(p))
+							: threadDb.GetTable<MultiThreadedData>().Where(x => x.StrValue.Trim().EndsWith(p));
 						return query.Select(q => q.StrValue).ToArray();
 					}, (result, p) =>
 					{
@@ -191,7 +201,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParamOptimization([DataSources(false, ProviderName.Sybase)] string context)
+		public void ParamOptimization([DataSources(false, TestProvName.AllSybase)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
@@ -216,10 +226,10 @@ namespace Tests.Linq
 						AreEqual(expected, result);
 					}, Enumerable.Range(1, 50).ToArray());
 			}
-		}		
-		
+		}
+
 		[Test]
-		public void MergeInsert([MergeTests.MergeDataContextSource(false, ProviderName.Sybase, TestProvName.AllInformix)] string context)
+		public void MergeInsert([MergeTests.MergeDataContextSource(false, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
@@ -244,13 +254,13 @@ namespace Tests.Linq
 						return result;
 					}, (result, p) =>
 					{
-						
+
 					}, Enumerable.Range(1, 100).ToArray());
 			}
 		}
 
 		[Test]
-		public void EagerLoadMultiLevel([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void EagerLoadMultiLevel([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
@@ -314,7 +324,7 @@ namespace Tests.Linq
 						result.Count.Should().Be(expected.Count);
 
 						if (expected.Count > 0)
-							AreEqualWithComparer(result, expected);	
+							AreEqualWithComparer(result, expected);
 					}, Enumerable.Range(1, 100).ToArray());
 			}
 		}
@@ -373,7 +383,7 @@ namespace Tests.Linq
 					})
 					.ToList();
 
-				AreEqualWithComparer(result, expected);	
+				AreEqualWithComparer(result, expected);
 
 			}
 		}

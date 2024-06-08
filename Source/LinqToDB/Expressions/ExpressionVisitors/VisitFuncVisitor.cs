@@ -40,7 +40,7 @@ namespace LinqToDB.Expressions
 			return new VisitFuncVisitor<TContext>(context, func);
 		}
 
-		void Visit<T>(IEnumerable<T> source, Action<T> func)
+		static void Visit<T>(IEnumerable<T> source, Action<T> func)
 		{
 			foreach (var item in source)
 				func(item);
@@ -53,7 +53,7 @@ namespace LinqToDB.Expressions
 				Visit(item);
 		}
 
-		public void Visit(Expression expr)
+		public void Visit(Expression? expr)
 		{
 			if (expr == null || (_staticFunc != null ? !_staticFunc(expr) : !_func!(_context!, expr)))
 				return;

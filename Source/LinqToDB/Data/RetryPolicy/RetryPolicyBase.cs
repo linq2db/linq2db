@@ -14,23 +14,52 @@ namespace LinqToDB.Data.RetryPolicy
 
 	public abstract class RetryPolicyBase : IRetryPolicy
 	{
+
 		/// <summary>
 		/// Creates a new instance of <see cref="RetryPolicyBase" />.
 		/// </summary>
 		/// <param name="maxRetryCount">The maximum number of retry attempts. </param>
 		/// <param name="maxRetryDelay">The maximum delay in milliseconds between retries. </param>
-		protected RetryPolicyBase(int maxRetryCount, TimeSpan maxRetryDelay)
+		/// <param name="randomFactor">The maximum random factor. </param>
+		/// <param name="exponentialBase">The base for the exponential function used to compute the delay between retries. </param>
+		/// <param name="coefficient">The coefficient for the exponential function used to compute the delay between retries. </param>
+		protected RetryPolicyBase(int maxRetryCount, TimeSpan maxRetryDelay, double randomFactor, double exponentialBase, TimeSpan coefficient)
 		{
 			if (maxRetryCount < 0)
 				throw new ArgumentOutOfRangeException(nameof(maxRetryCount));
 			if (maxRetryDelay.TotalMilliseconds < 0.0)
 				throw new ArgumentOutOfRangeException(nameof(maxRetryDelay));
+			if (randomFactor < 1.0)
+				throw new ArgumentOutOfRangeException(nameof(randomFactor));
+			if (exponentialBase <= 0.0)
+				throw new ArgumentOutOfRangeException(nameof(exponentialBase));
+			if (coefficient.TotalMilliseconds < 0.0)
+				throw new ArgumentOutOfRangeException(nameof(coefficient));
 
-			MaxRetryCount         = maxRetryCount;
-			MaxRetryDelay         = maxRetryDelay;
+			MaxRetryCount   = maxRetryCount;
+			MaxRetryDelay   = maxRetryDelay;
+			RandomFactor    = randomFactor;
+			ExponentialBase = exponentialBase;
+			Coefficient     = coefficient;
+
 			ExceptionsEncountered = new List<Exception>();
 			Random                = new Random();
 		}
+
+		/// <summary>
+		/// The maximum random factor, must not be lesser than 1.
+		/// </summary>
+		public double   RandomFactor    { get; }
+
+		/// <summary>
+		/// The base for the exponential function used to compute the delay between retries, must be positive.
+		/// </summary>
+		public double   ExponentialBase { get; }
+
+		/// <summary>
+		/// The coefficient for the exponential function used to compute the delay between retries, must be nonnegative.
+		/// </summary>
+		public TimeSpan Coefficient     { get; }
 
 		/// <summary>
 		/// The list of exceptions that caused the operation to be retried so far.
@@ -38,7 +67,7 @@ namespace LinqToDB.Data.RetryPolicy
 		protected virtual List<Exception> ExceptionsEncountered { get; }
 
 		/// <summary>
-		/// A pseudo-random number generater that can be used to vary the delay between retries.
+		/// A pseudo-random number generator that can be used to vary the delay between retries.
 		/// </summary>
 		protected virtual Random Random { get; }
 
@@ -201,7 +230,7 @@ namespace LinqToDB.Data.RetryPolicy
 					OnRetry();
 				}
 
-				await TaskEx.Delay(delay.Value, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await Task.Delay(delay.Value, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 
@@ -234,11 +263,11 @@ namespace LinqToDB.Data.RetryPolicy
 			if (currentRetryCount < MaxRetryCount)
 			{
 				var delta =
-					(Math.Pow(Configuration.RetryPolicy.DefaultExponentialBase, currentRetryCount) - 1.0) *
-					(1.0 + Random.NextDouble() * (Configuration.RetryPolicy.DefaultRandomFactor - 1.0));
+					(Math.Pow(ExponentialBase, currentRetryCount) - 1.0) *
+					(1.0 + Random.NextDouble() * (RandomFactor - 1.0));
 
 				var delay = Math.Min(
-					Configuration.RetryPolicy.DefaultCoefficient.TotalMilliseconds * delta,
+					Coefficient.TotalMilliseconds * delta,
 					MaxRetryDelay.TotalMilliseconds);
 
 				return TimeSpan.FromMilliseconds(delay);

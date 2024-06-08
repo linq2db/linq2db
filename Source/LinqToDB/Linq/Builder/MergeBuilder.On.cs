@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-		internal class On : MethodCallBuilder
+		internal sealed class On : MethodCallBuilder
 		{
 			static readonly MethodInfo[] _supportedMethods = {OnMethodInfo1, OnMethodInfo2, OnTargetKeyMethodInfo};
 
@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 
 						for (var i = 0; i < mi1.Bindings.Count; i++)
 						{
-							var binding2 = (MemberAssignment)mi2.Bindings.Where(b => b.Member == mi1.Bindings[i].Member).FirstOrDefault();
+							var binding2 = (MemberAssignment?)mi2.Bindings.FirstOrDefault(b => b.Member == mi1.Bindings[i].Member);
 							if (binding2 == null)
 								throw new LinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
 
@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 					var targetType       = statement.Target.SystemType!;
 					var pTarget          = Expression.Parameter(targetType, "t");
 					var pSource          = Expression.Parameter(targetType, "s");
-					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType);
+					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 					Expression? ex = null;
 
@@ -125,12 +125,6 @@ namespace LinqToDB.Linq.Builder
 
 				mergeContext.SourceContext.MatchBuilt();
 				return mergeContext;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 	}

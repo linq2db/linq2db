@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlProvider
 {
-	using LinqToDB.Common;
+	using Common;
 	using SqlQuery;
 
-	public abstract partial class BasicSqlBuilder : ISqlBuilder
+	public abstract partial class BasicSqlBuilder
 	{
 		/// <summary>
 		/// If true, provider supports column aliases specification after table alias.
@@ -29,17 +29,19 @@ namespace LinqToDB.SqlProvider
 		/// If true, builder will generate command for empty enumerable source;
 		/// Otherwise exception will be generated.
 		/// </summary>
-		protected virtual bool isEmptyValuesSourceSupported => true;
+		protected virtual bool IsEmptyValuesSourceSupported => true;
 
 		/// <summary>
 		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
-		/// FROM clause, this property should contain name of table with single record.
+		/// FROM clause, this property should contain name of table (or equivalent SQL) with single record.
+		/// IMPORTANT: as this property could return SQL, we don't escape it, so it should contain only valid SQL/identifiers.
 		/// </summary>
 		protected virtual string? FakeTable => null;
 
 		/// <summary>
 		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property could contain name of schema for table with single record.
+		/// Returned name should be already escaped if escaping required.
 		/// </summary>
 		protected virtual string? FakeTableSchema => null;
 
@@ -57,7 +59,9 @@ namespace LinqToDB.SqlProvider
 
 			BuildOutputSubclause(merge.Output);
 
-			BuildMergeTerminator(merge);
+			BuildSubQueryExtensions(merge);
+			BuildQueryExtensions   (merge);
+			BuildMergeTerminator   (merge);
 		}
 
 		/// <summary>
@@ -181,7 +185,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildMergeSourceQuery(SqlTableLikeSource mergeSource)
 		{
 			mergeSource = ConvertElement(mergeSource);
-			
+
 			BuildPhysicalTable(mergeSource.Source, null);
 
 			BuildMergeAsSourceClause(mergeSource);
@@ -192,7 +196,7 @@ namespace LinqToDB.SqlProvider
 			mergeSource = ConvertElement(mergeSource);
 			StringBuilder.Append(' ');
 
-			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name, TableOptions.NotSet);
+			BuildObjectName(StringBuilder, new (mergeSource.Name), ConvertType.NameToQueryTable, true, TableOptions.NotSet);
 
 			if (SupportsColumnAliasesInSource)
 			{
@@ -235,7 +239,7 @@ namespace LinqToDB.SqlProvider
 
 				StringBuilder.Append(')');
 			}
-			else if (isEmptyValuesSourceSupported)
+			else if (IsEmptyValuesSourceSupported)
 				BuildMergeEmptySource(merge);
 			else
 				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
@@ -349,7 +353,8 @@ namespace LinqToDB.SqlProvider
 			if (FakeTable == null)
 				return false;
 
-			BuildTableName(StringBuilder, null, null, FakeTableSchema, FakeTable, TableOptions.NotSet);
+			// NO ESCAPING!
+			BuildObjectName(StringBuilder, new (FakeTable, Schema: FakeTableSchema), ConvertType.NameToQueryTable, false, TableOptions.NotSet);
 			return true;
 		}
 

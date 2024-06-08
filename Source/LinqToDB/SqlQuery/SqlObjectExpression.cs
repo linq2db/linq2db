@@ -5,8 +5,8 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
 	using Linq.Builder;
+	using Extensions;
 	using Mapping;
 	using Reflection;
 
@@ -27,7 +27,7 @@ namespace LinqToDB.SqlQuery
 
 			var ta        = TypeAccessor.GetAccessor(mi.DeclaringType!);
 			var valueType = mi.GetMemberType();
-			var value     = ta[mi.Name].Getter!(obj);
+			var value     = ta[mi.Name].GetValue(obj);
 
 			return MappingSchema.GetSqlValue(valueType, value);
 		}

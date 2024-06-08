@@ -85,6 +85,36 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ActiveIssue(3015, Configurations = new[]
+		{
+			TestProvName.AllAccess,
+			ProviderName.DB2,
+			TestProvName.AllFirebird,
+			TestProvName.AllInformix,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle,
+			TestProvName.AllPostgreSQL,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllSapHana,
+			TestProvName.AllSybase,
+		})]
+		public void MergeIntoCteIssue4107([MergeDataContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var updatedCount = db.Person.Where(x => x.FirstName == "unknown").AsCte()
+				.Merge()
+					.Using(db.Child)
+					.On((dest, src) => dest.ID == src.ChildID)
+						.UpdateWhenMatched((dest, temp) => new Model.Person()
+						{
+							MiddleName = "unpdated"
+						})
+					.Merge();
+		}
+
+		[Test]
 		[ActiveIssue(2363)]
 		public void MergeFromIQueryable([MergeDataContextSource] string context)
 		{
@@ -168,7 +198,6 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			TestProvName.AllPostgreSQL,
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
@@ -212,7 +241,6 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			TestProvName.AllPostgreSQL,
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,

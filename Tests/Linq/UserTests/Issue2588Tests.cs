@@ -11,14 +11,14 @@ namespace Tests.UserTests
 	public class Issue2588Tests : TestBase
 	{
 		[Table]
-		class TestClass
+		sealed class TestClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
 		}
 
 		[Test]
-		public async Task AggregationWithNull([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task AggregationWithNull([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<TestClass>())

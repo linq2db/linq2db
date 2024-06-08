@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 
@@ -40,9 +41,8 @@ namespace LinqToDB.SqlQuery
 		public ISqlTableSource Source       { get; set; }
 		public SqlTableType    SqlTableType => Source.SqlTableType;
 
-		// TODO: remove internal.
-		internal string? _alias;
-		public   string?  Alias
+		private string? _alias;
+		public  string?  Alias
 		{
 			get
 			{
@@ -59,6 +59,8 @@ namespace LinqToDB.SqlQuery
 			}
 			set => _alias = value;
 		}
+
+		internal string? RawAlias => _alias;
 
 		private List<ISqlExpression[]>? _uniqueKeys;
 
@@ -187,8 +189,7 @@ namespace LinqToDB.SqlQuery
 				Source.ToString(sb, dic);
 
 			sb
-				.Append(" as t")
-				.Append(SourceID);
+				.Append(CultureInfo.InvariantCulture, $" as t{SourceID}");
 
 			foreach (IQueryElement join in Joins)
 			{
@@ -213,6 +214,15 @@ namespace LinqToDB.SqlQuery
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return this == other;
+		}
+
+		#endregion
+
+		#region Deconstruct
+
+		public void Deconstruct(out ISqlTableSource source)
+		{
+			source = Source;
 		}
 
 		#endregion

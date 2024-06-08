@@ -8,17 +8,16 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Linq.Builder
 {
-
+	using Async;
 	using Common;
 	using Common.Internal;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Async;
 
-	internal class EagerLoading
+	internal sealed class EagerLoading
 	{
 		static readonly MethodInfo EnlistEagerLoadingFunctionalityMethodInfo = MemberHelper.MethodOfGeneric(() =>
 			EnlistEagerLoadingFunctionality<int, int, int>(null!, null!, null!, null!, null!));
@@ -26,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo EnlistEagerLoadingFunctionalityDetachedMethodInfo = MemberHelper.MethodOfGeneric(() =>
 			EnlistEagerLoadingFunctionalityDetached<int>(null!, null!));
 
-		class EagerLoadingContext<T, TKey>
+		sealed class EagerLoadingContext<T, TKey>
 			where TKey : notnull
 		{
 			private Dictionary<TKey, List<T>>? _items;
@@ -98,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpression  = Expression.New(constructor);
 			var initExpression = Expression.MemberInit(newExpression,
-				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty("Item" + (i + 1)), a)));
+				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty(FormattableString.Invariant($"Item{i + 1}"))!, a)));
 			return initExpression;
 		}
 
@@ -108,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!isEnumerable && type.IsClass && type.IsGenericType && type.Name.StartsWith("<>"))
 			{
-				isEnumerable = type.GenericTypeArguments.Any(t => IsDetailType(t));
+				isEnumerable = type.GenericTypeArguments.Any(IsDetailType);
 			}
 
 			return isEnumerable;
@@ -153,22 +152,24 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression? ConstructMemberPath(IEnumerable<AccessorMember> memberPath, Expression ob, bool throwOnError)
 		{
-			Expression result = ob;
+			var result = ob;
+
 			foreach (var memberInfo in memberPath)
 			{
-				if (result.Type != memberInfo.MemberInfo.DeclaringType)
+				if (memberInfo.MemberInfo.DeclaringType?.IsSameOrParentOf(result.Type) == false)
 				{
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.MemberInfo.Name}.");
 					return null;
 				}
+
 				if (memberInfo.MemberInfo.IsMethodEx())
 				{
 					var methodInfo = (MethodInfo)memberInfo.MemberInfo;
 					if (methodInfo.IsStatic)
-						result = Expression.Call(methodInfo, memberInfo.Arguments.ToArray());
+						result = Expression.Call(methodInfo, memberInfo.Arguments!.ToArray());
 					else
-						result = Expression.Call(result, methodInfo, memberInfo.Arguments.ToArray());
+						result = Expression.Call(result, methodInfo, memberInfo.Arguments!.ToArray());
 				}
 				else
 					result = Expression.MakeMemberAccess(result, memberInfo.MemberInfo);
@@ -182,10 +183,11 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression? ConstructMemberPath(IEnumerable<MemberInfo> memberPath, Expression ob, bool throwOnError)
 		{
-			Expression result = ob;
+			var result = ob;
+
 			foreach (var memberInfo in memberPath)
 			{
-				if (!memberInfo.DeclaringType!.IsSameOrParentOf(result.Type))
+				if (memberInfo.DeclaringType?.IsSameOrParentOf(result.Type) == false)
 				{
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
@@ -303,7 +305,7 @@ namespace LinqToDB.Linq.Builder
 			"GroupBy"
 		};
 
-		static bool IsChainContainsNotSupported(Expression expression)
+		internal static bool IsChainContainsNotSupported(Expression expression)
 		{
 			var current = expression;
 			while (current?.NodeType == ExpressionType.Call)
@@ -319,7 +321,7 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		class ExtractNotSupportedPartContext
+		sealed class ExtractNotSupportedPartContext
 		{
 			public ExtractNotSupportedPartContext(MappingSchema mappingSchema)
 			{
@@ -353,7 +355,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.Call:
 					{
 						if (context.NewQueryable != null)
-							return new TransformInfo(e, true); ;
+							return new TransformInfo(e, true);
 
 						var mc = (MethodCallExpression)e;
 						if (mc.IsQueryable(LoadWithBuilder.MethodNames))
@@ -478,7 +480,7 @@ namespace LinqToDB.Linq.Builder
 				if (typeof(ITable<>).IsSameOrParentOf(desiredType))
 				{
 					var tableType   = typeof(PersistentTable<>).MakeGenericType(elementType);
-					result = Expression.New(tableType.GetConstructor(new[] { result.Type }),
+					result = Expression.New(tableType.GetConstructor(new[] { result.Type })!,
 						result);
 				}
 			}
@@ -486,7 +488,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		class KeyInfo
+		sealed class KeyInfo
 		{
 			public Expression Original       = null!;
 			public Expression ForSelect      = null!;
@@ -802,7 +804,8 @@ namespace LinqToDB.Linq.Builder
 
 				detailQuery = associationLambda.GetBody(detailQuery);
 
-				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
+				var desiredType = association.GetAssociationDesiredAssignmentType(associationMember.MemberInfo, parentType, objectType);
+				ExtractNotSupportedPart(mappingSchema, detailQuery, desiredType, out detailQuery, out finalExpression, out replaceParam);
 
 				var masterKeys   = prevKeys.Concat(subMasterKeys).ToArray();
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, detailQuery, mainQuery, builder);
@@ -851,7 +854,8 @@ namespace LinqToDB.Linq.Builder
 					masterKeys.AddRange(ExtractKeys(extractContext, masterParam));
 				}
 
-				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
+				var desiredType = association.GetAssociationDesiredAssignmentType(associationMember.MemberInfo, parentType, objectType);
+				ExtractNotSupportedPart(mappingSchema, detailQuery, desiredType, out detailQuery, out finalExpression, out replaceParam);
 
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, detailQuery, mainQuery, builder);
 			}
@@ -950,8 +954,8 @@ namespace LinqToDB.Linq.Builder
 						context.dependencies.Add(e);
 						while (ma.Expression.Unwrap()?.NodeType == ExpressionType.MemberAccess)
 						{
-							context.ignore.Add(ma.Expression);
-							ma = (MemberExpression) ma.Expression.Unwrap();
+							context.ignore.Add(ma.Expression!);
+							ma = (MemberExpression) ma.Expression!.Unwrap();
 						}
 					}
 				}
@@ -1166,7 +1170,7 @@ namespace LinqToDB.Linq.Builder
 				var equalityBody = GenerateEquals(mappingSchema,
 						groupJoin.InnerKeyLambda.GetBody(param_d).Unwrap(),
 						groupJoin.OuterKeyLambda.GetBody(detailLambda.Parameters[0]).Unwrap())
-					.Aggregate((Expression?)null, (a, e) => a == null ? e : Expression.AndAlso(a, e));
+					.Aggregate((Expression?)null, (a, e) => a == null ? e : Expression.AndAlso(a, e))!;
 
 				var methodInfo  = Methods.Queryable.Where.MakeGenericMethod(param_d.Type);
 				var filteredQueryableDetail = Expression.Call(methodInfo, detailQuery,
@@ -1186,7 +1190,7 @@ namespace LinqToDB.Linq.Builder
 						break;
 
 					if (searchExpression.NodeType == ExpressionType.MemberAccess)
-						searchExpression = ((MemberExpression)searchExpression).Expression;
+						searchExpression = ((MemberExpression)searchExpression).Expression!;
 					else
 						throw new NotImplementedException();
 				}
@@ -1362,7 +1366,7 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		private static Expression GeneratePreambleExpression(IList<KeyInfo> preparedKeys, 
+		private static Expression GeneratePreambleExpression(IList<KeyInfo> preparedKeys,
 			ParameterExpression masterParam, Expression detailQuery, Expression masterQuery, ExpressionBuilder builder)
 		{
 			// mark query as distinct
@@ -1414,7 +1418,7 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression EnlistEagerLoadingFunctionality<T, TD, TKey>(
 			ExpressionBuilder builder,
-			Expression mainQueryExpr, 
+			Expression mainQueryExpr,
 			Expression<Func<T, IEnumerable<TD>>> detailQueryLambda,
 			Expression compiledKeyExpression,
 			Expression<Func<T, TKey>> selectKeyExpression)
@@ -1451,7 +1455,7 @@ namespace LinqToDB.Linq.Builder
 			var detailQueryPrepared = Query<TD>.CreateQuery(builder.OptimizationContext, builder.ParametersContext, builder.DataContext,
 				detailQuery.Expression);
 
-			var idx = builder.RegisterPreamble(detailQueryPrepared, 
+			var idx = builder.RegisterPreamble(detailQueryPrepared,
 				static (data, dc, expr, ps) =>
 				{
 					var query      = (Query<TD>)data!;
@@ -1485,7 +1489,7 @@ namespace LinqToDB.Linq.Builder
 				expression);
 
 			// Filler code is duplicated for the future usage with IAsyncEnumerable
-			var idx = builder.RegisterPreamble(detailQueryPrepared, 
+			var idx = builder.RegisterPreamble(detailQueryPrepared,
 				static (data, dc, expr, ps) =>
 				{
 					var query       = (Query<KeyDetailEnvelope<TKey, TD>>)data!;
@@ -1524,7 +1528,7 @@ namespace LinqToDB.Linq.Builder
 						eagerLoadingContext.Add(d.Key, d.Detail);
 					}
 #endif
-					
+
 					return eagerLoadingContext;
 				}
 			);
@@ -1533,7 +1537,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static LambdaExpression CorrectLambdaType(LambdaExpression before, LambdaExpression after, MappingSchema mappingSchema)
 		{
-			if (IsEnumerableType(before.ReturnType, mappingSchema) && before.ReturnType.IsGenericType)
+			if (IsEnumerableType(before.ReturnType, mappingSchema) && before.ReturnType.IsGenericType && before.ReturnType.GenericTypeArguments.Length == 1)
 			{
 				var generic     = before.ReturnType.GetGenericTypeDefinition();
 				var elementType = GetEnumerableElementType(after.ReturnType, mappingSchema);
@@ -1547,7 +1551,7 @@ namespace LinqToDB.Linq.Builder
 			return after;
 		}
 
-		internal class ReplaceInfo
+		internal sealed class ReplaceInfo
 		{
 			public ReplaceInfo(MappingSchema mappingSchema)
 			{
@@ -1563,12 +1567,12 @@ namespace LinqToDB.Linq.Builder
 		internal static Expression CreateKDH(Expression key, Expression data)
 		{
 			var genericType   = typeof(KDH<,>).MakeGenericType(key.Type, data.Type);
-			var constructor   = genericType.GetConstructor(Array<Type>.Empty);
+			var constructor   = genericType.GetConstructor(Array<Type>.Empty)!;
 			var newExpression = Expression.New(constructor);
 
-			var memberInit    = Expression.MemberInit(newExpression, 
-				Expression.Bind(genericType.GetProperty("Key"), key),
-				Expression.Bind(genericType.GetProperty("Data"), data));
+			var memberInit    = Expression.MemberInit(newExpression,
+				Expression.Bind(genericType.GetProperty(nameof(KDH<object,object>.Key))!, key),
+				Expression.Bind(genericType.GetProperty(nameof(KDH<object,object>.Data))!, data));
 
 			return memberInit;
 		}
@@ -1641,7 +1645,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		[return: NotNullIfNotNull("body")]
+		[return: NotNullIfNotNull(nameof(body))]
 		internal static Expression? ReplaceParametersWithChangedType(Expression? body, IList<ParameterExpression> before, IList<ParameterExpression> after)
 		{
 			if (body == null)
@@ -1659,7 +1663,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var prm = context.after[idx];
 							if (prm != ma.Expression)
-								return Expression.MakeMemberAccess(prm, GetMemberForType(prm.Type, ma.Member));
+								return Expression.MakeMemberAccess(prm, GetMemberForType(prm.Type, ma.Member)!);
 						}
 					}
 				}
@@ -1691,7 +1695,7 @@ namespace LinqToDB.Linq.Builder
 			return newBody;
 		}
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		internal static Expression? FinalizeExpressionKeys(HashSet<Expression> stable, Expression? expr)
 		{
 			if (expr == null)
@@ -1716,7 +1720,7 @@ namespace LinqToDB.Linq.Builder
 								var newAssignments = mi.Bindings.Cast<MemberAssignment>().Select(a =>
 									{
 										var finalized = FinalizeExpressionKeys(stable, a.Expression);
-										return Expression.Bind(GetMemberForType(newType, a.Member), finalized);
+										return Expression.Bind(GetMemberForType(newType, a.Member)!, finalized);
 									})
 									.ToArray();
 
@@ -1774,10 +1778,10 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var ma     = (MemberExpression)e;
-							var newObj = FinalizeExpressionKeys(stable, ma.Expression);
+							var newObj = FinalizeExpressionKeys(stable, ma.Expression!);
 							if (newObj != ma.Expression)
 							{
-								return Expression.MakeMemberAccess(newObj, GetMemberForType(newObj.Type, ma.Member));
+								return Expression.MakeMemberAccess(newObj, GetMemberForType(newObj.Type, ma.Member)!);
 							}
 							break;
 						}
@@ -1891,7 +1895,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var mc = (MethodCallExpression)expr;
 
-						if (mc.IsQueryable())
+						if (mc.IsQueryable() && mc.Method.IsGenericMethod)
 						{
 							var methodGenericArguments  = mc.Method.GetGenericArguments();
 							var methodGenericDefinition = mc.Method.GetGenericMethodDefinition();
@@ -1938,7 +1942,7 @@ namespace LinqToDB.Linq.Builder
 
 									if (arg != newArg)
 									{
-										if (typeof(Expression<>).IsSameOrParentOf(genericParameters[i].ParameterType) 
+										if (typeof(Expression<>).IsSameOrParentOf(genericParameters[i].ParameterType)
 										    && newArg.Unwrap().NodeType == ExpressionType.Lambda)
 										{
 											newArg = Expression.Quote(CorrectLambdaType((LambdaExpression)arg.Unwrap(),
@@ -1966,7 +1970,7 @@ namespace LinqToDB.Linq.Builder
 													.GetGenericArguments()
 												: templateLambdaType.GetGenericArguments();
 
-										
+
 										var argLambda     = (LambdaExpression)arg;
 										var newParameters = argLambda.Parameters.ToArray();
 										var newBody       = argLambda.Body;
@@ -2111,7 +2115,7 @@ namespace LinqToDB.Linq.Builder
 								updated = updated.NodeType == ExpressionType.MemberInit
 									? ((MemberAssignment)((MemberInitExpression)updated).Bindings[0]).Expression
 									: ExpressionHelper.PropertyOrField(updated, "Key");
-							}	
+							}
 							newExpr = CreateKDH(updated, mi);
 						}
 
@@ -2173,7 +2177,7 @@ namespace LinqToDB.Linq.Builder
 
 							newExpr = unary.Update(newArg);
 						}
-						
+
 						break;
 					}
 			}

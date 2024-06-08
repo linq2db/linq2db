@@ -9,9 +9,10 @@ namespace Tests.UserTests
 	public class Issue269Tests : TestBase
 	{
 		[AttributeUsage(AttributeTargets.Parameter)]
-		class TestDataContextSourceAttribute : DataSourcesAttribute
+		sealed class TestDataContextSourceAttribute : DataSourcesAttribute
 		{
-			public TestDataContextSourceAttribute() : base(
+			public static string[] Unsupported = new[]
+			{
 				TestProvName.AllAccess,
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
@@ -20,13 +21,17 @@ namespace Tests.UserTests
 				TestProvName.AllSqlServer,
 				ProviderName.DB2,
 				ProviderName.SqlCe,
-				TestProvName.AllSapHana)
+				TestProvName.AllSapHana
+			}.SelectMany(_ => _.Split(',')).ToArray();
+
+			public TestDataContextSourceAttribute(params string[] except) : base(
+				Unsupported.Concat(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
 
 		[Test]
-		public void TestTake([TestDataContextSource] string context)
+		public void TestTake([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -51,7 +56,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDistinct([TestDataContextSource] string context)
+		public void TestDistinct([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -79,7 +84,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestSkipDistinct([TestDataContextSource] string context)
+		public void TestSkipDistinct([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -106,7 +111,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDistinctSkip([TestDataContextSource] string context)
+		public void TestDistinctSkip([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -133,7 +138,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestSkip([TestDataContextSource] string context)
+		public void TestSkip([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

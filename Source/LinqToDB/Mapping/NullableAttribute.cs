@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace LinqToDB.Mapping
 {
@@ -9,7 +9,7 @@ namespace LinqToDB.Mapping
 	/// Using this attribute, you can allow <c>NULL</c> values for identity columns.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=true)]
-	public class NullableAttribute : Attribute
+	public class NullableAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute isntance.
@@ -40,16 +40,14 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string? Configuration { get; set; }
-
-		/// <summary>
 		/// Gets or sets nullability flag for current column.
 		/// Default value: <c>true</c>.
 		/// </summary>
 		public bool   CanBeNull     { get; set; }
+
+		public override string GetObjectID()
+		{
+			return FormattableString.Invariant($".{Configuration}.{(CanBeNull ? 1 : 0)}.");
+		}
 	}
 }

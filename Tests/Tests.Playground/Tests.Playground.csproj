@@ -1,14 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.Providers.props" />
+	<Import Project="..\linq2db.TestProjects.props" />
 
 	<PropertyGroup>
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<AssemblyName>linq2db.Tests.Playground</AssemblyName>
-		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\Linq\DataProvider\OracleTests.cs" Link="OracleTests.cs" />
+		<Compile Include="..\Linq\DataProvider\SQLiteTests.cs" Link="SQLiteTests.cs" />
+		<Compile Include="..\Linq\DataProvider\SqlServerTests.cs" Link="SqlServerTests.cs" />
+		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
+		<Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
+		<Compile Include="..\Linq\Linq\DateTimeFunctionsTests.cs" Link="DateTimeFunctionsTests.cs" />
+		<Compile Include="..\Linq\Linq\JoinTests.cs" Link="JoinTests.cs" />
+		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\UserTests\Issue2767Tests.cs" Link="Issue2767Tests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue2787Tests.cs" Link="Issue2787Tests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue2743Tests.cs" Link="Issue2743Tests.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\Linq\app.config" Link="app.config" />
 	</ItemGroup>
 
 </Project>

@@ -4,11 +4,10 @@ using System.Linq;
 
 namespace LinqToDB.Tools
 {
-	using System.Text;
 	using Common;
 	using Data;
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using Mapping;
+	using SqlProvider;
 
 	public static class DataExtensions
 	{
@@ -38,7 +37,7 @@ namespace LinqToDB.Tools
 
 			IList<T>? sourceList = null;
 
-			var entityDescriptor = context.MappingSchema.GetEntityDescriptor(typeof(T));
+			var entityDescriptor = context.MappingSchema.GetEntityDescriptor(typeof(T), context.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			foreach (var column in entityDescriptor.Columns)
 			{
@@ -49,7 +48,7 @@ namespace LinqToDB.Tools
 					if (sourceList.Count == 0)
 						return sourceList;
 
-					var sqlBuilder = context.DataProvider.CreateSqlBuilder(context.MappingSchema);
+					var sqlBuilder = context.DataProvider.CreateSqlBuilder(context.MappingSchema, context.Options);
 
 					var sequenceName = useSequenceName && column.SequenceName != null ? column.SequenceName.SequenceName : null;
 
@@ -59,9 +58,7 @@ namespace LinqToDB.Tools
 					{
 						if (useIdentity)
 						{
-							var sb = new StringBuilder();
-							sqlBuilder.BuildTableName(sb, entityDescriptor.ServerName, entityDescriptor.DatabaseName, entityDescriptor.SchemaName, entityDescriptor.TableName, entityDescriptor.TableOptions);
-							var tableName = sb.ToString();
+							var tableName = sqlBuilder.BuildObjectName(new (), entityDescriptor.Name, tableOptions: entityDescriptor.TableOptions).ToString();
 
 							var identity = context.Select(() => new { last = Sql.CurrentIdentity(tableName), step = Sql.IdentityStep(tableName) });
 

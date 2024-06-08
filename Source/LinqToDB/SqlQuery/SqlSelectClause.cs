@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common.Internal;
+
 	public class SqlSelectClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
 	{
 		#region Init
@@ -171,15 +174,24 @@ namespace LinqToDB.SqlQuery
 		/// <returns>Returns index of column in Columns list.</returns>
 		int AddOrFindColumn(SqlColumn col)
 		{
+			var colUnderlying = col.UnderlyingExpression();
 			var colExpression = col.Expression;
 
 			for (var i = 0; i < Columns.Count; i++)
 			{
 				var column           = Columns[i];
 				var columnExpression = column.Expression;
+				var underlying       = column.UnderlyingExpression();
 
-				if (columnExpression.CanBeNull == colExpression.CanBeNull && column.UnderlyingExpression().Equals(col.UnderlyingExpression()))
+				if (underlying.Equals(colUnderlying))
 				{
+					if (underlying.ElementType == QueryElementType.SqlValue &&
+						colExpression.ElementType == QueryElementType.Column)
+					{
+						// avoid suppressing constant columns
+						continue;
+					}
+
 					return i;
 				}
 			}
@@ -361,24 +373,24 @@ namespace LinqToDB.SqlQuery
 			else
 			{
 				var columnNames = new List<string>();
-				var csb         = new StringBuilder();
+				using var csb = Pools.StringBuilder.Allocate();
 				var maxLength   = 0;
 				for (var i = 0; i < Columns.Count; i++)
 				{
-					csb.Length = 0;
+					csb.Value.Length = 0;
 					var c = Columns[i];
-					csb.Append('\t');
+					csb.Value.Append('\t');
 
-					csb
+					csb.Value
 						.Append('t')
-						.Append(c.Parent?.SourceID ?? -1)
+						.Append((c.Parent?.SourceID ?? -1).ToString(NumberFormatInfo.InvariantInfo))
 #if DEBUG
 						.Append('[').Append(c.ColumnNumber).Append(']')
 #endif
 						.Append('.')
-						.Append(c.Alias ?? "c" + (i + 1));
+						.Append(c.Alias ?? FormattableString.Invariant($"c{i + 1}"));
 
-					var columnName = csb.ToString();
+					var columnName = csb.Value.ToString();
 					columnNames.Add(columnName);
 					maxLength = Math.Max(maxLength, columnName.Length);
 				}
@@ -391,10 +403,10 @@ namespace LinqToDB.SqlQuery
 						.Append(' ', maxLength - columnName.Length)
 						.Append(" = ");
 
-					csb.Length = 0;
-					c.Expression.ToString(csb, dic);
+					csb.Value.Length = 0;
+					c.Expression.ToString(csb.Value, dic);
 
-					var expressionText = csb.ToString();
+					var expressionText = csb.Value.ToString();
 					if (expressionText.Contains("\n"))
 					{
 						var ident = "\t" + new string(' ', maxLength + 2);

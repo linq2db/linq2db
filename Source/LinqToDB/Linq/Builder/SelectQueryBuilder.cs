@@ -3,7 +3,7 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class SelectQueryBuilder : MethodCallBuilder
+	sealed class SelectQueryBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -23,12 +23,5 @@ namespace LinqToDB.Linq.Builder
 		{
 			return true;
 		}
-
-		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression? param)
-		{
-			return null;
-		}
-
 	}
 }

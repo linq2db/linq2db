@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Reflection
 {
-	using System.Data;
-	using System.Data.Common;
 	using Expressions;
+	using Extensions;
 	using Linq;
-	using LinqToDB.Common;
-	using LinqToDB.Extensions;
+	using Common;
+	using SqlQuery;
 
 	/// <summary>
 	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
@@ -19,10 +20,23 @@ namespace LinqToDB.Reflection
 	/// </summary>
 	public static class Methods
 	{
+		internal static class Query
+		{
+			public static readonly MethodInfo GetIQueryable = MemberHelper.MethodOf<Linq.Query>(a => a.GetIQueryable(default, default!, default));
+		}
+
 		public static class ADONet
 		{
-			public static readonly MethodInfo IsDBNull      = MemberHelper.MethodOf<IDataRecord> (r => r.IsDBNull(0));
-			public static readonly MethodInfo IsDBNullAsync = MemberHelper.MethodOf<DbDataReader>(r => r.IsDBNullAsync(0));
+			public static readonly MethodInfo   IsDBNull         = MemberHelper.MethodOf  <DbDataReader>(r => r.IsDBNull(0));
+			public static readonly MethodInfo   IsDBNullAsync    = MemberHelper.MethodOf  <DbDataReader>(r => r.IsDBNullAsync(0));
+			public static readonly PropertyInfo ConnectionString = MemberHelper.PropertyOf<DbConnection>(c => c.ConnectionString);
+		}
+
+		public static class System
+		{
+			public static readonly MethodInfo Guid_NewGuid     = MemberHelper.MethodOf(     () => Guid.NewGuid());
+			public static readonly MethodInfo Guid_ToString    = MemberHelper.MethodOf<Guid>(g => g.ToString());
+			public static readonly MethodInfo Guid_ToByteArray = MemberHelper.MethodOf<Guid>(g => g.ToByteArray());
 		}
 
 		public static class Enumerable
@@ -47,7 +61,7 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo DefaultIfEmpty       = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.DefaultIfEmpty());
 			public static readonly MethodInfo DefaultIfEmptyValue  = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.DefaultIfEmpty(0));
 
-			public static readonly MethodInfo OfType               = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.OfType<double>());
+			public static readonly MethodInfo OfType               = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.OfType<int>());
 
 			public static readonly MethodInfo SelectManySimple     = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.SelectMany(a => Array<int>.Empty));
 			public static readonly MethodInfo SelectManyProjection = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.SelectMany(a => Array<int>.Empty, (m, d) => d));
@@ -95,7 +109,7 @@ namespace LinqToDB.Reflection
 
 		public static class LinqToDB
 		{
-			internal static readonly MethodInfo EvaluateExpression = MemberHelper.MethodOf(() => InternalExtensions.EvaluateExpression(null));
+			internal static readonly MethodInfo EvaluateExpression = MemberHelper.MethodOf(() => ExpressionEvaluator.EvaluateExpression(null, null));
 
 			public static readonly MethodInfo GetTable    = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.GetTable<object>());
 
@@ -130,6 +144,7 @@ namespace LinqToDB.Reflection
 
 			public static class Table
 			{
+				public static readonly MethodInfo TableID      = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableID     (null!));
 				public static readonly MethodInfo TableName    = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableName   (null!));
 				public static readonly MethodInfo SchemaName   = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.SchemaName  (null!));
 				public static readonly MethodInfo DatabaseName = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.DatabaseName(null!));
@@ -142,21 +157,20 @@ namespace LinqToDB.Reflection
 
 			public static class GroupBy
 			{
-				public static readonly MethodInfo Rollup       = MemberHelper.MethodOfGeneric<Sql.IGroupBy>(g => g.Rollup<object>(null!));
-				public static readonly MethodInfo Cube         = MemberHelper.MethodOfGeneric<Sql.IGroupBy>(g => g.Cube<object>(null!));
-				public static readonly MethodInfo GroupingSets = MemberHelper.MethodOfGeneric<Sql.IGroupBy>(g => g.GroupingSets<object>(null!));
+				public static readonly MethodInfo Rollup       = MemberHelper.MethodOfGeneric<global::LinqToDB.Sql.IGroupBy>(g => g.Rollup<object>(null!));
+				public static readonly MethodInfo Cube         = MemberHelper.MethodOfGeneric<global::LinqToDB.Sql.IGroupBy>(g => g.Cube<object>(null!));
+				public static readonly MethodInfo GroupingSets = MemberHelper.MethodOfGeneric<global::LinqToDB.Sql.IGroupBy>(g => g.GroupingSets<object>(null!));
 
-				public static readonly MethodInfo Grouping     = MemberHelper.MethodOf(() => Sql.Grouping(null!));
-
+				public static readonly MethodInfo Grouping     = MemberHelper.MethodOf(() => global::LinqToDB.Sql.Grouping(null!));
 			}
 
 			public static class SqlExt
 			{
-				public static readonly MethodInfo ToNotNull     = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNull(i));
-				public static readonly MethodInfo ToNotNullable = MemberHelper.MethodOfGeneric<int?>(i => Sql.ToNotNullable(i));
-				public static readonly MethodInfo Alias         = MemberHelper.MethodOfGeneric<int?>(i => Sql.Alias(i, ""));
-				// don't use MethodOfGeneric here (Sql.Property treatened in specifal way by it)
-				public static readonly MethodInfo Property      = typeof(Sql).GetMethodEx(nameof(Sql.Property))!.GetGenericMethodDefinition();
+				public static readonly MethodInfo ToNotNull        = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.ToNotNull(i));
+				public static readonly MethodInfo ToNotNullable    = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.ToNotNullable(i));
+				public static readonly MethodInfo Alias            = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.Alias(i, ""));
+				// don't use MethodOfGeneric here (Sql.Property treatened in special way by it)
+				public static readonly MethodInfo Property         = typeof(global::LinqToDB.Sql).GetMethodEx(nameof(global::LinqToDB.Sql.Property))!.GetGenericMethodDefinition();
 			}
 
 			public static class Update
@@ -213,6 +227,8 @@ namespace LinqToDB.Reflection
 
 				public static class T
 				{
+					public static readonly MethodInfo AsValueInsertable = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.AsValueInsertable());
+
 					public static readonly MethodInfo Value             = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.Value(e => e.Value1, 1));
 					public static readonly MethodInfo ValueExpression   = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.Value(e => e.Value1, () => 1));
 
@@ -294,21 +310,23 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo UpdateWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, bool>> p, Expression<Func<LW1, LW1>> s) => q.UpdateWhenNotMatchedBySourceAnd(p, s));
 				public static readonly MethodInfo DeleteWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, bool>> p) => q.DeleteWhenNotMatchedBySourceAnd(p));
 
-				public static readonly MethodInfo ExecuteMergeMethodInfo  = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.Merge());
-				public static readonly MethodInfo MergeWithOutput         = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutput((_, _, _) => 0));
-				public static readonly MethodInfo MergeWithOutputInto     = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutputInto(null!, (_, _, _) => 0));
+				public static readonly MethodInfo ExecuteMergeMethodInfo    = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.Merge());
+				public static readonly MethodInfo MergeWithOutput           = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutput((_, _, _) => 0));
+				public static readonly MethodInfo MergeWithOutputSource     = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutput((_, _, _, _) => 0));
+				public static readonly MethodInfo MergeWithOutputInto       = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutputInto(null!, (_, _, _) => 0));
+				public static readonly MethodInfo MergeWithOutputIntoSource = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutputInto(null!, (_, _, _,_) => 0));
 			}
 
 			public static class MultiInsert
 			{
 				// Sadly member names must be different from their englobing type, this actually is `.MultiInsert()`
-				public static readonly MethodInfo Begin         = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.MultiInsert))!;
-				public static readonly MethodInfo Into          = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Into))!;
-				public static readonly MethodInfo When          = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.When))!;
-				public static readonly MethodInfo Else          = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Else))!;
-				public static readonly MethodInfo Insert        = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Insert))!;
-				public static readonly MethodInfo InsertAll     = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.InsertAll))!;
-				public static readonly MethodInfo InsertFirst   = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.InsertFirst))!;
+				public static readonly MethodInfo Begin       = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.MultiInsert))!;
+				public static readonly MethodInfo Into        = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Into))!;
+				public static readonly MethodInfo When        = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.When))!;
+				public static readonly MethodInfo Else        = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Else))!;
+				public static readonly MethodInfo Insert      = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Insert))!;
+				public static readonly MethodInfo InsertAll   = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.InsertAll))!;
+				public static readonly MethodInfo InsertFirst = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.InsertFirst))!;
 			}
 
 			public static class Tools
@@ -325,9 +343,20 @@ namespace LinqToDB.Reflection
 			}
 
 			public static class DataParameter
-			{ 
+			{
 				public static readonly PropertyInfo DbDataType = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.DbDataType);
 				public static readonly PropertyInfo Value      = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.Value);
+			}
+
+			internal static class Exceptions
+			{
+				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
+			}
+
+			internal static class Sql
+			{
+				public static readonly ConstructorInfo SqlParameterConstructor = MemberHelper.ConstructorOf(() => new SqlParameter(default(DbDataType), default(string), null));
+				public static readonly ConstructorInfo SqlValueConstructor     = MemberHelper.ConstructorOf(() => new SqlValue    (default(DbDataType), null));
 			}
 		}
 
