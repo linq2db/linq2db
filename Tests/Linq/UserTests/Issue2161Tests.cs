@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using LinqToDB;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -47,17 +49,30 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestLoadWithDiscriminator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWithDiscriminator([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Order>(new []{new OrderType1() { OrderId = 1, OrderName = "Order1" }}))
 			using (db.CreateLocalTable<OrderDetail>(new []{new OrderDetail() { OrderDetailId = 100, OrderId = 1, Title = "Detail1" }}))
 			{
+				var interceptor = new CountCommandsInterceptor();
+				db.AddInterceptor(interceptor);
 				//Below line makes same join queries twice
 				var query = db.GetTable<Order>().LoadWith(o => o.Details).Where(o => o.OrderId == 1);
 				var order = query.FirstOrDefault();
 
-				Assert.That(query.GetPreamblesCount(), Is.EqualTo(1));
+				Assert.That(interceptor.Count, Is.EqualTo(2));
+			}
+		}
+
+		sealed class CountCommandsInterceptor : CommandInterceptor
+		{
+			public int Count { get; private set; }
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				Count++;
+				return command;
 			}
 		}
 	}

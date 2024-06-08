@@ -64,7 +64,7 @@
 					Size          = pr.Size,
 					ParameterName = pr.ParameterName,
 					ParameterType = pr.ParameterType,
-					SystemType    = pr.SystemType,
+					SystemType    = pr.SystemType ?? typeof(object),
 					DataType      = pr.DataType.ToString(),
 					IsNullable    = pr.IsNullable
 				})
@@ -80,7 +80,7 @@
 
 	LinqToDB.Data.DataConnection GetSapHanaConnection(string connectionString)
 	{
-		return LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(connectionString);
+		return LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(connectionString, LinqToDB.DataProvider.SapHana.SapHanaProvider.Unmanaged);
 	}
 
 	LinqToDB.Data.DataConnection GetSapHanaConnection(string server, string schema, string uid, string password)

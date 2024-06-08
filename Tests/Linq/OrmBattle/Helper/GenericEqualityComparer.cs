@@ -10,7 +10,7 @@ namespace Tests.OrmBattle.Helper
 {
 	public class GenericEqualityComparer<T> : IComparable<T>, IEqualityComparer<T>
 	{
-		private readonly List<PropertyInfo> _propertyInfos = new List<PropertyInfo>();
+		private readonly List<PropertyInfo> _propertyInfos = new ();
 
 		public GenericEqualityComparer(params Expression<Func<T, object>>[] property)
 		{
@@ -21,7 +21,7 @@ namespace Tests.OrmBattle.Helper
 
 		#region IEqualityComparer Members
 
-		public bool Equals([AllowNull] T x, [AllowNull] T y)
+		public bool Equals(T? x, T? y)
 		{
 			foreach (var propertyInfo in _propertyInfos)
 			{
@@ -55,7 +55,7 @@ namespace Tests.OrmBattle.Helper
 
 		#endregion
 
-		public int CompareTo([AllowNull] T other)
+		public int CompareTo(T? other)
 		{
 			var x = this;
 			var y = other;

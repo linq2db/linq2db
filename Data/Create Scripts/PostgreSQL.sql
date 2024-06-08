@@ -288,12 +288,10 @@ CREATE TABLE "AllTypes"
 -- SKIP PostgreSQL.9.2 BEGIN
 -- SKIP PostgreSQL.9.3 BEGIN
 -- SKIP PostgreSQL.9.5 BEGIN
--- SKIP PostgreSQL BEGIN
 	"macaddr8DataType"  macaddr8                   NULL,
 -- SKIP PostgreSQL.9.2 END
 -- SKIP PostgreSQL.9.3 END
 -- SKIP PostgreSQL.9.5 END
--- SKIP PostgreSQL END
 
 	"jsonDataType"        json                     NULL,
 -- SKIP PostgreSQL.9.2 BEGIN
@@ -653,4 +651,50 @@ CREATE SCHEMA "SchemaName"
 GO
 CREATE OR REPLACE FUNCTION "SchemaName"."fnTest"(param INT) RETURNS VARCHAR(20)
 AS $$ BEGIN RETURN 'issue2679test'; END $$ LANGUAGE PLPGSQL;
+GO
+
+DROP TABLE IF EXISTS same_name2
+GO
+DROP TABLE IF EXISTS same_name1
+GO
+DROP TABLE IF EXISTS same_name
+GO
+CREATE TABLE same_name (
+id INTEGER PRIMARY KEY
+)
+GO
+CREATE TABLE same_name1 (
+id			INTEGER PRIMARY KEY,
+same_name	INTEGER NULL,
+
+CONSTRAINT same_name
+	FOREIGN KEY (same_name)
+	REFERENCES same_name (id)
+)
+GO
+CREATE TABLE same_name2 (
+id			INTEGER PRIMARY KEY,
+same_name	INTEGER NULL,
+
+CONSTRAINT same_name
+	FOREIGN KEY (same_name)
+	REFERENCES same_name (id)
+)
+GO
+DROP TABLE "CollatedTable"
+GO
+CREATE TABLE "CollatedTable"
+(
+	"Id"				INT NOT NULL,
+	"CaseSensitive"		VARCHAR(20) NOT NULL,
+	"CaseInsensitive"	VARCHAR(20) NOT NULL
+)
+GO
+DROP TABLE "TestMergeIdentity"
+GO
+CREATE TABLE "TestMergeIdentity"
+(
+	"Id"     SERIAL NOT NULL PRIMARY KEY,
+	"Field"  INT NULL
+)
 GO

@@ -8,52 +8,38 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Common.Internal.Cache
 {
-	internal class CacheEntry : ICacheEntry
+	internal sealed class CacheEntry<TKey,TEntry> : ICacheEntry<TKey,TEntry>
+		where TKey: notnull
 	{
-		private bool _disposed;
-		private static readonly Action<object> ExpirationCallback = ExpirationTokensExpired;
-		private readonly Action<CacheEntry> _notifyCacheOfExpiration;
-		private readonly Action<CacheEntry> _notifyCacheEntryCommit;
-		private IList<IDisposable>? _expirationTokenRegistrations;
-		private IList<PostEvictionCallbackRegistration>? _postEvictionCallbacks;
-		private bool _isExpired;
+		private bool                                           _disposed;
+		private static readonly Action<object>                 ExpirationCallback = ExpirationTokensExpired;
+		private readonly Action<CacheEntry<TKey,TEntry>>       _notifyCacheOfExpiration;
+		private readonly Action<CacheEntry<TKey,TEntry>>       _notifyCacheEntryCommit;
+		private IList<IDisposable>?                            _expirationTokenRegistrations;
+		private IList<PostEvictionCallbackRegistration<TKey>>? _postEvictionCallbacks;
+		private bool                                           _isExpired;
 
 		internal IList<IChangeToken>? _expirationTokens;
-		internal DateTimeOffset? _absoluteExpiration;
-		internal TimeSpan? _absoluteExpirationRelativeToNow;
-		private TimeSpan? _slidingExpiration;
-		private long? _size;
-		private IDisposable? _scope;
-		private object? _value;
-		private bool _valueHasBeenSet;
+		internal DateTimeOffset?      _absoluteExpiration;
+		internal TimeSpan?            _absoluteExpirationRelativeToNow;
+		private TimeSpan?             _slidingExpiration;
+		private long?                 _size;
+		private IDisposable?          _scope;
+		private TEntry?               _value;
+		private bool                  _valueHasBeenSet;
 
-		internal readonly object _lock = new object();
+		internal readonly object _lock = new ();
 
 		internal CacheEntry(
-			object key,
-			Action<CacheEntry> notifyCacheEntryCommit,
-			Action<CacheEntry> notifyCacheOfExpiration)
+			TKey key,
+			Action<CacheEntry<TKey,TEntry>> notifyCacheEntryCommit,
+			Action<CacheEntry<TKey,TEntry>> notifyCacheOfExpiration)
 		{
-			if (key == null)
-			{
-				throw new ArgumentNullException(nameof(key));
-			}
+			Key                      = key                     ?? throw new ArgumentNullException(nameof(key));
+			_notifyCacheEntryCommit  = notifyCacheEntryCommit  ?? throw new ArgumentNullException(nameof(notifyCacheEntryCommit));
+			_notifyCacheOfExpiration = notifyCacheOfExpiration ?? throw new ArgumentNullException(nameof(notifyCacheOfExpiration));
 
-			if (notifyCacheEntryCommit == null)
-			{
-				throw new ArgumentNullException(nameof(notifyCacheEntryCommit));
-			}
-
-			if (notifyCacheOfExpiration == null)
-			{
-				throw new ArgumentNullException(nameof(notifyCacheOfExpiration));
-			}
-
-			Key = key;
-			_notifyCacheEntryCommit = notifyCacheEntryCommit;
-			_notifyCacheOfExpiration = notifyCacheOfExpiration;
-
-			_scope = CacheEntryHelper.EnterScope(this);
+			_scope = CacheEntryHelper<TKey,TEntry>.EnterScope(this);
 		}
 
 		/// <summary>
@@ -112,10 +98,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			get
 			{
-				if (_expirationTokens == null)
-				{
-					_expirationTokens = new List<IChangeToken>();
-				}
+				_expirationTokens ??= new List<IChangeToken>();
 
 				return _expirationTokens;
 			}
@@ -124,14 +107,11 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Gets or sets the callbacks will be fired after the cache entry is evicted from the cache.
 		/// </summary>
-		public IList<PostEvictionCallbackRegistration> PostEvictionCallbacks
+		public IList<PostEvictionCallbackRegistration<TKey>> PostEvictionCallbacks
 		{
 			get
 			{
-				if (_postEvictionCallbacks == null)
-				{
-					_postEvictionCallbacks = new List<PostEvictionCallbackRegistration>();
-				}
+				_postEvictionCallbacks ??= new List<PostEvictionCallbackRegistration<TKey>>();
 
 				return _postEvictionCallbacks;
 			}
@@ -160,9 +140,9 @@ namespace LinqToDB.Common.Internal.Cache
 			}
 		}
 
-		public object Key { get; private set; }
+		public TKey Key { get; private set; }
 
-		public object? Value
+		public TEntry? Value
 		{
 			get => _value;
 			set
@@ -193,7 +173,7 @@ namespace LinqToDB.Common.Internal.Cache
 				if (_valueHasBeenSet)
 				{
 					_notifyCacheEntryCommit(this);
-					PropagateOptions(CacheEntryHelper.Current);
+					PropagateOptions(CacheEntryHelper<TKey,TEntry>.Current);
 				}
 			}
 		}
@@ -209,7 +189,9 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				EvictionReason = reason;
 			}
+
 			_isExpired = true;
+
 			DetachTokens();
 		}
 
@@ -221,8 +203,7 @@ namespace LinqToDB.Common.Internal.Cache
 				return true;
 			}
 
-			if (_slidingExpiration.HasValue
-				&& (now - LastAccessed) >= _slidingExpiration)
+			if (_slidingExpiration.HasValue && (now - LastAccessed) >= _slidingExpiration)
 			{
 				SetExpired(EvictionReason.Expired);
 				return true;
@@ -235,9 +216,10 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (_expirationTokens != null)
 			{
-				for (int i = 0; i < _expirationTokens.Count; i++)
+				for (var i = 0; i < _expirationTokens.Count; i++)
 				{
 					var expiredToken = _expirationTokens[i];
+
 					if (expiredToken.HasChanged)
 					{
 						SetExpired(EvictionReason.TokenExpired);
@@ -254,16 +236,16 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				lock (_lock)
 				{
-					for (int i = 0; i < _expirationTokens.Count; i++)
+					for (var i = 0; i < _expirationTokens.Count; i++)
 					{
 						var expirationToken = _expirationTokens[i];
+
 						if (expirationToken.ActiveChangeCallbacks)
 						{
-							if (_expirationTokenRegistrations == null)
-							{
-								_expirationTokenRegistrations = new List<IDisposable>(1);
-							}
+							_expirationTokenRegistrations ??= new List<IDisposable>(1);
+
 							var registration = expirationToken.RegisterChangeCallback(ExpirationCallback, this);
+
 							_expirationTokenRegistrations.Add(registration);
 						}
 					}
@@ -276,7 +258,7 @@ namespace LinqToDB.Common.Internal.Cache
 			// start a new thread to avoid issues with callbacks called from RegisterChangeCallback
 			Task.Factory.StartNew(state =>
 			{
-				var entry = (CacheEntry)state!;
+				var entry = (CacheEntry<TKey,TEntry>)state!;
 				entry.SetExpired(EvictionReason.TokenExpired);
 				entry._notifyCacheOfExpiration(entry);
 			}, obj, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
@@ -303,12 +285,12 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (_postEvictionCallbacks != null)
 			{
-				Task.Factory.StartNew(state => InvokeCallbacks((CacheEntry)state!), this,
+				Task.Factory.StartNew(state => InvokeCallbacks((CacheEntry<TKey,TEntry>)state!), this,
 					CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
 			}
 		}
 
-		private static void InvokeCallbacks(CacheEntry entry)
+		private static void InvokeCallbacks(CacheEntry<TKey,TEntry> entry)
 		{
 			var callbackRegistrations = Interlocked.Exchange(ref entry._postEvictionCallbacks, null);
 
@@ -333,7 +315,7 @@ namespace LinqToDB.Common.Internal.Cache
 			}
 		}
 
-		internal void PropagateOptions(CacheEntry? parent)
+		internal void PropagateOptions(CacheEntry<TKey,TEntry>? parent)
 		{
 			if (parent == null)
 			{

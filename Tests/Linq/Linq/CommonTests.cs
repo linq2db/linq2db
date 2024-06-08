@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -18,7 +18,7 @@ namespace Tests.Linq
 	public class CommonTests : TestBase
 	{
 		[Test]
-		public void CheckNullTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
+		public void CheckNullTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -35,9 +35,12 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.That(list.Count,     Is.EqualTo(1));
-				Assert.That(list[0].ChildA, Is.Null);
-				Assert.That(list[0].ChildB, Is.Not.Null);
+				Assert.That(list, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0].ChildA, Is.Null);
+					Assert.That(list[0].ChildB, Is.Not.Null);
+				});
 			}
 		}
 
@@ -162,7 +165,6 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[ActiveIssue("Incorrect length returned for Jürgen: 7 instead of 6", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc1([DataSources] string context)
 		{
@@ -172,7 +174,6 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length);
 		}
 
-		[ActiveIssue("Incorrect length returned for Jürgen: 7 instead of 6", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc2([DataSources] string context)
 		{
@@ -182,9 +183,9 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length + "".Length);
 		}
 
-		class Test
+		sealed class Test
 		{
-			class Entity
+			sealed class Entity
 			{
 				public Test? TestField;
 			}
@@ -199,9 +200,8 @@ namespace Tests.Linq
 		public void ClosureTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreNotEqual(
-					new Test().TestClosure(db),
-					new Test().TestClosure(db));
+				Assert.That(
+					new Test().TestClosure(db), Is.Not.EqualTo(new Test().TestClosure(db)));
 		}
 
 		[Test]
@@ -219,7 +219,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class MyClass
+		sealed class MyClass
 		{
 			public int ID;
 
@@ -272,7 +272,7 @@ namespace Tests.Linq
 					select p);
 		}
 
-		public ITable<Person> People2(TestDataConnection db)
+		private ITable<Person> People2(TestDataConnection db)
 		{
 			return db.GetTable<Person>();
 		}
@@ -511,7 +511,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParameterTest1([DataSources] string context)
+		public void ParameterTest1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -558,7 +558,7 @@ namespace Tests.Linq
 			Assert.That(_i, Is.EqualTo(2));
 		}
 
-		class User
+		sealed class User
 		{
 			public string? FirstName;
 			public int?    Status;

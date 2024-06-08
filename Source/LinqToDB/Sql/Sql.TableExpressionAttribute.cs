@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using LinqToDB.SqlProvider;
+	using Mapping;
+	using SqlProvider;
 	using SqlQuery;
 
 	partial class Sql
@@ -38,6 +36,7 @@ namespace LinqToDB
 			{
 			}
 
+			// TODO: V5 consider removal of Name+Expression
 			protected new string? Name => base.Name;
 
 			public string? Expression
@@ -46,15 +45,31 @@ namespace LinqToDB
 				set => base.Name = value;
 			}
 
-			public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
+			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, ExpressionAttribute.ConvertFunc<TContext> converter)
 			{
-				table.SqlTableType   = SqlTableType.Expression;
-				table.Name           = Expression ?? member.Name;
-				table.TableArguments = ConvertArgs(member, sqlArgs.ToArray());
+				table.SqlTableType = SqlTableType.Expression;
+				var expressionStr  = table.Expression = Expression ?? methodCall.Method.Name!;
 
-				if (Schema   != null) table.Schema   = Schema;
-				if (Database != null) table.Database = Database;
-				if (Server   != null) table.Server   = Server;
+				ExpressionAttribute.PrepareParameterValues(context, mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes, converter);
+
+				if (string.IsNullOrEmpty(expressionStr))
+					throw new LinqToDBException($"Cannot retrieve Table Expression body from expression '{methodCall}'.");
+
+				// Add two fake expressions, TableName and Alias
+				knownExpressions.Insert(0, (null, null));
+				knownExpressions.Insert(0, (null, null));
+
+				if (Schema != null || Database != null || Server != null || Package != null)
+					table.TableName = new SqlObjectName(
+						table.TableName.Name,
+						Schema  : Schema   ?? table.TableName.Schema,
+						Database: Database ?? table.TableName.Database,
+						Server  : Server   ?? table.TableName.Server,
+						Package : Package  ?? table.TableName.Package);
+
+				table.TableArguments = ExpressionAttribute.PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter, out var error)
+					.Skip(2)
+					.ToArray()!;
 			}
 		}
 	}

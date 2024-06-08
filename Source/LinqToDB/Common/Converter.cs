@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Data.Linq;
 using System.Globalization;
+using System.IO;
 using System.Linq.Expressions;
 using System.Xml;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Common
 {
-	using System.Collections;
-	using System.IO;
 	using Expressions;
-	using JetBrains.Annotations;
 	using Mapping;
 
 	/// <summary>
@@ -19,33 +20,42 @@ namespace LinqToDB.Common
 	[PublicAPI]
 	public static class Converter
 	{
-		static readonly ConcurrentDictionary<object,LambdaExpression> _expressions = new ConcurrentDictionary<object,LambdaExpression>();
+		static readonly ConcurrentDictionary<(Type from, Type to), LambdaExpression> _expressions = new ();
 
 		static XmlDocument CreateXmlDocument(string str)
 		{
 			var xml = new XmlDocument() { XmlResolver = null };
 
-			xml.Load(XmlReader.Create(new StringReader(str), new XmlReaderSettings() { XmlResolver = null }));
+			using var reader = XmlReader.Create(new StringReader(str), new XmlReaderSettings() { XmlResolver = null });
+			xml.Load(reader);
 
 			return xml;
 		}
 
 		static Converter()
 		{
-			SetConverter<string,         char>       (v => v.Length == 0 ? '\0' : v[0]);
-			SetConverter<string,         Binary>     (v => new Binary(Convert.FromBase64String(v)));
-			SetConverter<Binary,         string>     (v => Convert.ToBase64String(v.ToArray()));
-			SetConverter<Binary,         byte[]>     (v => v.ToArray());
-			SetConverter<bool,           decimal>    (v => v ? 1m : 0m);
-			SetConverter<DateTimeOffset, DateTime>   (v => v.LocalDateTime);
-			SetConverter<string,         XmlDocument>(v => CreateXmlDocument(v));
-			SetConverter<string,         byte[]>     (v => Convert.FromBase64String(v));
-			SetConverter<byte[],         string>     (v => Convert.ToBase64String(v));
-			SetConverter<TimeSpan,       DateTime>   (v => DateTime.MinValue + v);
-			SetConverter<DateTime,       TimeSpan>   (v => v - DateTime.MinValue);
-			SetConverter<string,         DateTime>   (v => DateTime.Parse(v, null, DateTimeStyles.NoCurrentDateDefault));
-			SetConverter<char,           bool>       (v => ToBoolean(v));
-			SetConverter<string,         bool>       (v => v.Length == 1 ? ToBoolean(v[0]) : bool.Parse(v));
+			SetConverter<string,         char>          (v => v.Length == 0 ? '\0' : v[0]);
+			SetConverter<string,         Binary>        (v => new Binary(Convert.FromBase64String(v)));
+			SetConverter<Binary,         string>        (v => Convert.ToBase64String(v.ToArray()));
+			SetConverter<Binary,         byte[]>        (v => v.ToArray());
+			SetConverter<bool,           decimal>       (v => v ? 1m : 0m);
+			SetConverter<DateTimeOffset, DateTime>      (v => v.LocalDateTime);
+			SetConverter<string,         XmlDocument>   (v => CreateXmlDocument(v));
+			SetConverter<string,         byte[]>        (v => Convert.FromBase64String(v));
+			SetConverter<byte[],         string>        (v => Convert.ToBase64String(v));
+			SetConverter<TimeSpan,       DateTime>      (v => DateTime.MinValue + v);
+			SetConverter<DateTime,       TimeSpan>      (v => v - DateTime.MinValue);
+			SetConverter<string,         DateTime>      (v => DateTime.Parse(v, CultureInfo.InvariantCulture, DateTimeStyles.NoCurrentDateDefault));
+			SetConverter<char,           bool>          (v => ToBoolean(v));
+			SetConverter<string,         bool>          (v => v.Length == 1 ? ToBoolean(v[0]) : bool.Parse(v));
+
+#if NET6_0_OR_GREATER
+			SetConverter<DateTime,       DateOnly>      (v => DateOnly.FromDateTime(v));
+			SetConverter<DateOnly,       DateTime>      (v => v.ToDateTime(TimeOnly.MinValue));
+
+			// use DateTime.Parse() because db processing may return strings that are full date/time.
+			SetConverter<string,         DateOnly>      (v => DateOnly.FromDateTime(DateTime.Parse(v, CultureInfo.InvariantCulture, DateTimeStyles.None)));
+#endif
 
 			SetConverter<byte  , BitArray>(v => new BitArray(new byte[] { v }));
 			SetConverter<sbyte , BitArray>(v => new BitArray(new byte[] { unchecked((byte)v) }));
@@ -87,7 +97,7 @@ namespace LinqToDB.Common
 		/// <param name="expr">Converter expression.</param>
 		public static void SetConverter<TFrom,TTo>(Expression<Func<TFrom,TTo>> expr)
 		{
-			_expressions[new { from = typeof(TFrom), to = typeof(TTo) }] = expr;
+			_expressions[(typeof(TFrom), typeof(TTo))] = expr;
 		}
 
 		/// <summary>
@@ -98,31 +108,32 @@ namespace LinqToDB.Common
 		/// <returns>Conversion expression or null, of converter not found.</returns>
 		internal static LambdaExpression? GetConverter(Type from, Type to)
 		{
-			_expressions.TryGetValue(new { from, to }, out var l);
+			_expressions.TryGetValue((from, to), out var l);
 			return l;
 		}
 
-		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ConcurrentDictionary<object,Func<object,object>>();
+		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ();
 
 		/// <summary>
-		/// Converts value to <paramref name="conversionType"/> type.
+		/// Converts value to <paramref name="toConvertType"/> type.
 		/// </summary>
 		/// <param name="value">Value to convert.</param>
-		/// <param name="conversionType">Target conversion type.</param>
+		/// <param name="toConvertType">Target conversion type.</param>
 		/// <param name="mappingSchema">Optional mapping schema.</param>
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for details.</param>
 		/// <returns>Converted value.</returns>
-		public static object? ChangeType(object? value, Type conversionType, MappingSchema? mappingSchema = null)
+		public static object? ChangeType(object? value, Type toConvertType, MappingSchema? mappingSchema = null, ConversionType conversionType = ConversionType.Common)
 		{
-			if (value == null || value is DBNull)
+			if (value is null or DBNull)
 				return mappingSchema == null ?
-					DefaultValue.GetValue(conversionType) :
-					mappingSchema.GetDefaultValue(conversionType);
+					DefaultValue.GetValue(toConvertType) :
+					mappingSchema.GetDefaultValue(toConvertType);
 
 			var from = value.GetType();
-			if (from == conversionType)
+			if (from == toConvertType)
 				return value;
 
-			var to   = conversionType;
+			var to   = toConvertType;
 			var key  = new { from, to };
 
 			var converters = mappingSchema == null ? _converters : mappingSchema.Converters;
@@ -130,9 +141,8 @@ namespace LinqToDB.Common
 			if (!converters.TryGetValue(key, out var l))
 			{
 				var li = mappingSchema != null
-					? mappingSchema.GetConverter(new DbDataType(from), new DbDataType(to), true)!
-					: (ConvertInfo.Default.Get    (from, to) ??
-						ConvertInfo.Default.Create(mappingSchema, from, to));
+					? mappingSchema.GetConverter(new DbDataType(from), new DbDataType(to), true, conversionType)!
+					: ConvertInfo.Default.Get(from, to, conversionType) ?? ConvertInfo.Default.Create(mappingSchema, from, to, conversionType);
 
 				var b  = li.CheckNullLambda.Body;
 				var ps = li.CheckNullLambda.Parameters;
@@ -140,12 +150,14 @@ namespace LinqToDB.Common
 				var p  = Expression.Parameter(typeof(object), "p");
 				var ex = Expression.Lambda<Func<object,object>>(
 					Expression.Convert(
-						b.Transform(e =>
-							e == ps[0] ?
-								Expression.Convert(p, e.Type) :
-							IsDefaultValuePlaceHolder(e) ?
-								new DefaultValueExpression(mappingSchema, e.Type) :
-								e),
+						b.Transform(
+							(mappingSchema, ps, p),
+							static (context, e) =>
+								e == context.ps[0] ?
+									Expression.Convert(context.p, e.Type) :
+								IsDefaultValuePlaceHolder(e) ?
+									new DefaultValueExpression(context.mappingSchema, e.Type) :
+									e),
 						typeof(object)),
 					p);
 
@@ -159,7 +171,7 @@ namespace LinqToDB.Common
 
 		static class ExprHolder<T>
 		{
-			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ConcurrentDictionary<Type,Func<object,T>>();
+			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ();
 		}
 
 		/// <summary>
@@ -168,8 +180,9 @@ namespace LinqToDB.Common
 		/// <typeparam name="T">Target conversion type.</typeparam>
 		/// <param name="value">Value to convert.</param>
 		/// <param name="mappingSchema">Optional mapping schema.</param>
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for details.</param>
 		/// <returns>Converted value.</returns>
-		public static T ChangeTypeTo<T>(object? value, MappingSchema? mappingSchema = null)
+		public static T ChangeTypeTo<T>(object? value, MappingSchema? mappingSchema = null, ConversionType conversionType = ConversionType.Common)
 		{
 			if (value == null || value is DBNull)
 				return mappingSchema == null ?
@@ -184,18 +197,20 @@ namespace LinqToDB.Common
 
 			if (!ExprHolder<T>.Converters.TryGetValue(from, out var l))
 			{
-				var li = ConvertInfo.Default.Get(from, to) ?? ConvertInfo.Default.Create(mappingSchema, from, to);
+				var li = ConvertInfo.Default.Get(from, to, conversionType) ?? ConvertInfo.Default.Create(mappingSchema, from, to, conversionType);
 				var b  = li.CheckNullLambda.Body;
 				var ps = li.CheckNullLambda.Parameters;
 
 				var p  = Expression.Parameter(typeof(object), "p");
 				var ex = Expression.Lambda<Func<object,T>>(
-					b.Transform(e =>
-						e == ps[0] ?
-							Expression.Convert (p, e.Type) :
-							IsDefaultValuePlaceHolder(e) ?
-								new DefaultValueExpression(mappingSchema, e.Type) :
-								e),
+					b.Transform(
+						(ps, p, mappingSchema),
+						static (context, e) =>
+							e == context.ps[0] ?
+								Expression.Convert (context.p, e.Type) :
+								IsDefaultValuePlaceHolder(e) ?
+									new DefaultValueExpression(context.mappingSchema, e.Type) :
+									e),
 					p);
 
 				l = ex.CompileExpression();
@@ -225,6 +240,8 @@ namespace LinqToDB.Common
 			return expr is DefaultValueExpression;
 		}
 
+		internal static readonly FindVisitor<object?> IsDefaultValuePlaceHolderVisitor = FindVisitor<object?>.Create(IsDefaultValuePlaceHolder);
+
 		/// <summary>
 		/// Returns type, to which provided enumeration values should be mapped.
 		/// </summary>
@@ -234,6 +251,36 @@ namespace LinqToDB.Common
 		public static Type? GetDefaultMappingFromEnumType(MappingSchema mappingSchema, Type enumType)
 		{
 			return ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, enumType);
+		}
+
+		internal static bool TryConvertToString(object? value, out string? str)
+		{
+			if (value is null)
+			{
+				str = null;
+				return true;
+			}
+
+			if (value is string stringValue)
+			{
+				str = stringValue;
+				return true;
+			}
+
+			if (value is IConvertible convertible)
+			{
+				try
+				{
+					str = convertible.ToString(null);
+					return true;
+				}
+				catch
+				{
+				}
+			}
+
+			str = null;
+			return false;
 		}
 	}
 }

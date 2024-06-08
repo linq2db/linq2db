@@ -59,7 +59,7 @@ namespace Tests.Linq
 		}
 
 		[UsedImplicitly]
-		class DisposableTable
+		sealed class DisposableTable
 		{
 			public int ID;
 		}
@@ -84,7 +84,7 @@ namespace Tests.Linq
 		[Table(IsTemporary = true, Configuration = ProviderName.PostgreSQL, Database = "TestData", Schema = "test_schema")]
 		[Table(IsTemporary = true, Configuration = ProviderName.DB2,                               Schema = "SESSION")]
 		[UsedImplicitly]
-		class IsTemporaryTable
+		sealed class IsTemporaryTable
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -101,7 +101,7 @@ namespace Tests.Linq
 		[Table(TableOptions = TableOptions.IsGlobalTemporaryStructure)]
 		[Table(TableOptions = TableOptions.IsGlobalTemporaryStructure, Configuration = ProviderName.DB2, Schema = "SESSION")]
 		[UsedImplicitly]
-		class IsGlobalTemporaryTable
+		sealed class IsGlobalTemporaryTable
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -110,9 +110,9 @@ namespace Tests.Linq
 		[Test]
 		public void IsGlobalTemporaryTest([IncludeDataSources(
 			ProviderName.DB2,
-			ProviderName.Firebird,
-			ProviderName.Oracle,
-			TestProvName.AllSqlServer2005Plus,
+			ProviderName.Firebird25,
+			TestProvName.AllOracle,
+			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context,
 			[Values(true)] bool firstCall)
 		{
@@ -122,10 +122,11 @@ namespace Tests.Linq
 		}
 
 		[Table(TableOptions = TableOptions.CreateIfNotExists)]
+		[Table(TableOptions = TableOptions.CreateIfNotExists | TableOptions.IsTemporary, Configuration = ProviderName.Informix)]
 		[Table(TableOptions = TableOptions.CreateIfNotExists | TableOptions.IsTemporary, Configuration = ProviderName.SqlServer2008)]
 		[Table("##temp_table", TableOptions = TableOptions.CreateIfNotExists, Configuration = ProviderName.SqlServer2012)]
 		[UsedImplicitly]
-		class CreateIfNotExistsTable
+		sealed class CreateIfNotExistsTable
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -135,16 +136,17 @@ namespace Tests.Linq
 		public void CreateIfNotExistsTest([IncludeDataSources(
 			true,
 			ProviderName.DB2,
-			ProviderName.Informix,
-			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllClickHouse,
+			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			ProviderName.PostgreSQL,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
-			TestProvName.AllSqlServer2005Plus,
+			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context.StartsWith("SqlServer.20") && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.IsRemote())
 				return;
 
 			using var db = GetDataContext(context);
@@ -156,23 +158,26 @@ namespace Tests.Linq
 			table.Insert(() => new CreateIfNotExistsTable { Id = 1, Value = 2 });
 
 			_ = table.ToArray();
-			_ = db.CreateTempTable<CreateIfNotExistsTable>(tableOptions:TableOptions.NotSet);
+			using (db.CreateTempTable<CreateIfNotExistsTable>(tableOptions: TableOptions.NotSet))
+			{
+			}
 		}
 
 		[Test]
 		public void CreateTempIfNotExistsTest([IncludeDataSources(
 			false,
 			ProviderName.DB2,
-			ProviderName.Informix,
-			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllFirebird,
+			TestProvName.AllClickHouse,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			ProviderName.PostgreSQL,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
-			TestProvName.AllSqlServer2005Plus,
+			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context.StartsWith("SqlServer.20") && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.IsRemote())
 				return;
 
 			using var db = GetDataContext(context);
@@ -182,11 +187,13 @@ namespace Tests.Linq
 			using var table = db.CreateTempTable<CreateIfNotExistsTable>();
 
 			_ = table.ToArray();
-			_ = db.CreateTempTable<CreateIfNotExistsTable>(tableOptions:TableOptions.NotSet);
+			using (db.CreateTempTable<CreateIfNotExistsTable>(tableOptions: TableOptions.NotSet))
+			{
+			}
 		}
 
 		[UsedImplicitly]
-		class TestTable
+		sealed class TestTable
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -274,12 +281,15 @@ namespace Tests.Linq
 		[Test]
 		public void FluentMappingTest([DataSources(false, TestProvName.AllMySql)] string context)
 		{
-			using var db = GetDataContext(context);
+			var ms = new MappingSchema();
 
-			db.MappingSchema.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<TestTable>()
-				.HasIsTemporary()
-				.HasTableOptions(TableOptions.DropIfExists);
+					.HasIsTemporary()
+					.HasTableOptions(TableOptions.DropIfExists)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
 
 			db.DropTable<TestTable>();
 

@@ -13,7 +13,7 @@
 
 			foreach (var table in Tables.Values)
 			{
-				var idx = table.Description.IndexOf("[Obsolete", StringComparison.InvariantCulture);
+				var idx = table.Description.IndexOf("[Obsolete", StringComparison.Ordinal);
 
 				if (idx >= 0)
 				{
@@ -34,7 +34,7 @@
 
 				foreach (var c in table.Columns.Values)
 				{
-					idx = c.Description.IndexOf("[Obsolete", StringComparison.InvariantCulture);
+					idx = c.Description.IndexOf("[Obsolete", StringComparison.Ordinal);
 
 					if (idx >= 0)
 					{
@@ -84,7 +84,7 @@
 						{
 							var cls = (Class)parent;
 
-							bool parentClassIncludesSchemaName = cls.Name.Equals(schema + "Schema", StringComparison.InvariantCultureIgnoreCase);
+							bool parentClassIncludesSchemaName = cls.Name.Equals(schema + "Schema", StringComparison.OrdinalIgnoreCase);
 							bool classIsForDefaultSchema       = cls.Name == DataContextName;
 							bool isExtensionMethod             = cls.Parent is Namespace || cls.Name == "TableExtensions";
 

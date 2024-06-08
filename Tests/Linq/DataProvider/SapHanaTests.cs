@@ -4,18 +4,19 @@ using System.Linq;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SapHana;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Threading.Tasks;
 	using Model;
 
 	[TestFixture]
@@ -68,53 +69,59 @@ namespace Tests.DataProvider
 		{
 			var param1Name = context.Contains("Odbc") ? "?" : ":p";
 			var param2Name = context.Contains("Odbc") ? "?" : ":p2";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<string>($"SELECT {param1Name} from dummy", new { p = 1 }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<string>($"SELECT {param1Name} from dummy", new { p = "1" }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<int>($"SELECT {param1Name} from dummy", new { p = new DataParameter { Value = 1 } }), Is.EqualTo(1));
-				Assert.That(conn.Execute<string>($"SELECT {param1Name} from dummy", new { p = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<int>($"SELECT {param1Name} + {param2Name} from dummy", new { p = 2, p2 = 3 }), Is.EqualTo(5));
-				Assert.That(conn.Execute<int>($"SELECT {param2Name} + {param1Name} from dummy", new { p2 = 2, p = 3 }), Is.EqualTo(5));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<string>($"SELECT {param1Name} from dummy", new { p = 1 }), Is.EqualTo("1"));
+					Assert.That(conn.Execute<string>($"SELECT {param1Name} from dummy", new { p = "1" }), Is.EqualTo("1"));
+					Assert.That(conn.Execute<int>($"SELECT {param1Name} from dummy", new { p = new DataParameter { Value = 1 } }), Is.EqualTo(1));
+					Assert.That(conn.Execute<string>($"SELECT {param1Name} from dummy", new { p = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
+					Assert.That(conn.Execute<int>($"SELECT {param1Name} + {param2Name} from dummy", new { p = 2, p2 = 3 }), Is.EqualTo(5));
+					Assert.That(conn.Execute<int>($"SELECT {param2Name} + {param1Name} from dummy", new { p2 = 2, p = 3 }), Is.EqualTo(5));
+				});
 			}
 		}
 
 		[Test]
 		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(TestType<long?>   (conn, "bigintDataType", DataType.Int64), Is.EqualTo(123456789123456789));
-				Assert.That(TestType<short?>  (conn, "smallintDataType", DataType.Int16), Is.EqualTo(12345));
-				Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal), Is.EqualTo(1234.567m));
-				Assert.That(TestType<decimal?>(conn, "smalldecimalDataType", DataType.Decimal), Is.EqualTo(123.456m));
-				Assert.That(TestType<int?>    (conn, "intDataType", DataType.Int32), Is.EqualTo(123456789));
-				Assert.That(TestType<byte?>   (conn, "tinyintDataType", DataType.Byte), Is.EqualTo(123));
-				Assert.That(TestType<double?> (conn, "floatDataType", DataType.Double), Is.EqualTo(1234.567));
+				Assert.Multiple(() =>
+				{
+					Assert.That(TestType<long?>(conn, "bigintDataType", DataType.Int64), Is.EqualTo(123456789123456789));
+					Assert.That(TestType<short?>(conn, "smallintDataType", DataType.Int16), Is.EqualTo(12345));
+					Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal), Is.EqualTo(1234.567m));
+					Assert.That(TestType<decimal?>(conn, "smalldecimalDataType", DataType.Decimal), Is.EqualTo(123.456m));
+					Assert.That(TestType<int?>(conn, "intDataType", DataType.Int32), Is.EqualTo(123456789));
+					Assert.That(TestType<byte?>(conn, "tinyintDataType", DataType.Byte), Is.EqualTo(123));
+					Assert.That(TestType<double?>(conn, "floatDataType", DataType.Double), Is.EqualTo(1234.567));
 
-				//Assert.That(TestType<float?>(conn, "realDataType", DataType.Single), Is.EqualTo(1234.567f));
+					//Assert.That(TestType<float?>(conn, "realDataType", DataType.Single), Is.EqualTo(1234.567f));
 
-				Assert.That(TestType<DateTime?>(conn, "dateDataType", DataType.Date), Is.EqualTo(new DateTime(2012, 12, 12)));
-				Assert.That(TestType<TimeSpan?>(conn, "timeDataType", DataType.Time), Is.EqualTo(new TimeSpan(12, 12, 12)));
-				Assert.That(TestType<DateTime?>(conn, "seconddateDataType", DataType.DateTime), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				Assert.That(TestType<DateTime?>(conn, "timestampDataType", DataType.Timestamp), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 123)));
+					Assert.That(TestType<DateTime?>(conn, "dateDataType", DataType.Date), Is.EqualTo(new DateTime(2012, 12, 12)));
+					Assert.That(TestType<TimeSpan?>(conn, "timeDataType", DataType.Time), Is.EqualTo(new TimeSpan(12, 12, 12)));
+					Assert.That(TestType<DateTime?>(conn, "seconddateDataType", DataType.DateTime), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+					Assert.That(TestType<DateTime?>(conn, "timestampDataType", DataType.Timestamp), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 123)));
 
-				Assert.That(TestType<char?>(conn, "charDataType", DataType.Char), Is.EqualTo('1'));
-				Assert.That(TestType<string>(conn, "charDataType", DataType.Char), Is.EqualTo("1"));
-				Assert.That(TestType<string>(conn, "charDataType", DataType.NChar), Is.EqualTo("1"));
-				Assert.That(TestType<string>(conn, "varcharDataType", DataType.VarChar), Is.EqualTo("bcd"));
-				Assert.That(TestType<string>(conn, "varcharDataType", DataType.NVarChar), Is.EqualTo("bcd"));
+					Assert.That(TestType<char?>(conn, "charDataType", DataType.Char), Is.EqualTo('1'));
+					Assert.That(TestType<string>(conn, "charDataType", DataType.Char), Is.EqualTo("1"));
+					Assert.That(TestType<string>(conn, "charDataType", DataType.NChar), Is.EqualTo("1"));
+					Assert.That(TestType<string>(conn, "varcharDataType", DataType.VarChar), Is.EqualTo("bcd"));
+					Assert.That(TestType<string>(conn, "varcharDataType", DataType.NVarChar), Is.EqualTo("bcd"));
 
-				Assert.That(TestType<string>(conn, "shorttextDataType", DataType.Text), Is.EqualTo("def"));
-				Assert.That(TestType<char?>(conn, "ncharDataType", DataType.NChar), Is.EqualTo('ą'));
-				Assert.That(TestType<string>(conn, "nvarcharDataType", DataType.NVarChar), Is.EqualTo("ąčęėįš"));
-				Assert.That(TestType<string>(conn, "alphanumDataType", DataType.Text), Is.EqualTo("qwert123QWE"));
+					Assert.That(TestType<string>(conn, "shorttextDataType", DataType.Text), Is.EqualTo("def"));
+					Assert.That(TestType<char?>(conn, "ncharDataType", DataType.NChar), Is.EqualTo('ą'));
+					Assert.That(TestType<string>(conn, "nvarcharDataType", DataType.NVarChar), Is.EqualTo("ąčęėįš"));
+					Assert.That(TestType<string>(conn, "alphanumDataType", DataType.Text), Is.EqualTo("qwert123QWE"));
 
-				Assert.That(TestType<byte[]>(conn, "binaryDataType", DataType.Binary), Is.EqualTo(new byte[] { 97, 98, 99, 100, 101, 102, 103, 104 }));
-				Assert.That(TestType<byte[]>(conn, "binaryDataType", DataType.VarBinary), Is.EqualTo(new byte[] { 97, 98, 99, 100, 101, 102, 103, 104 }));
-				Assert.That(TestType<byte[]>(conn, "varbinaryDataType", DataType.Binary), Is.EqualTo(new byte[] { 97, 98, 99, 100, 101, 102, 103, 104 }));
-				Assert.That(TestType<byte[]>(conn, "varbinaryDataType", DataType.VarBinary), Is.EqualTo(new byte[] { 97, 98, 99, 100, 101, 102, 103, 104 }));
-				Assert.That(TestType<Binary>(conn, "varbinaryDataType", DataType.VarBinary).ToArray(), Is.EqualTo(new byte[] { 97, 98, 99, 100, 101, 102, 103, 104 }));
+					Assert.That(TestType<byte[]>(conn, "binaryDataType", DataType.Binary), Is.EqualTo(new byte[] { 97, 98, 99, 100, 101, 102, 103, 104 }));
+					Assert.That(TestType<byte[]>(conn, "binaryDataType", DataType.VarBinary), Is.EqualTo(new byte[] { 97, 98, 99, 100, 101, 102, 103, 104 }));
+					Assert.That(TestType<byte[]>(conn, "varbinaryDataType", DataType.Binary), Is.EqualTo(new byte[] { 97, 98, 99, 100, 101, 102, 103, 104 }));
+					Assert.That(TestType<byte[]>(conn, "varbinaryDataType", DataType.VarBinary), Is.EqualTo(new byte[] { 97, 98, 99, 100, 101, 102, 103, 104 }));
+					Assert.That(TestType<Binary>(conn, "varbinaryDataType", DataType.VarBinary).ToArray(), Is.EqualTo(new byte[] { 97, 98, 99, 100, 101, 102, 103, 104 }));
+				});
 
 				//field types, than cannot be included in where clause
 
@@ -140,14 +147,17 @@ namespace Tests.DataProvider
 		public void TestDate([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 
-				Assert.That(conn.Execute<DateTime>("SELECT Cast('2012-12-12' as date) from dummy"), Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12' as date) from dummy"), Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime>($"SELECT {paramName} from dummy", DataParameter.Date("p", dateTime)), Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>($"SELECT {paramName} from dummy", new DataParameter("p", dateTime, DataType.Date)), Is.EqualTo(dateTime));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<DateTime>("SELECT Cast('2012-12-12' as date) from dummy"), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12' as date) from dummy"), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime>($"SELECT {paramName} from dummy", DataParameter.Date("p", dateTime)), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime?>($"SELECT {paramName} from dummy", new DataParameter("p", dateTime, DataType.Date)), Is.EqualTo(dateTime));
+				});
 			}
 		}
 
@@ -155,16 +165,19 @@ namespace Tests.DataProvider
 		public void TestDateTime([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
-				Assert.That(conn.Execute<DateTime>("SELECT Cast('2012-12-12 12:12:12' as datetime) from dummy"), Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as datetime) from dummy"), Is.EqualTo(dateTime));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<DateTime>("SELECT Cast('2012-12-12 12:12:12' as datetime) from dummy"), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as datetime) from dummy"), Is.EqualTo(dateTime));
 
-				Assert.That(conn.Execute<DateTime>($"SELECT {paramName} from dummy", DataParameter.DateTime("p", dateTime)), Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>($"SELECT {paramName} from dummy", new DataParameter("p", dateTime)), Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>($"SELECT {paramName} from dummy", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime>($"SELECT {paramName} from dummy", DataParameter.DateTime("p", dateTime)), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime?>($"SELECT {paramName} from dummy", new DataParameter("p", dateTime)), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime?>($"SELECT {paramName} from dummy", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
+				});
 			}
 		}
 
@@ -172,31 +185,34 @@ namespace Tests.DataProvider
 		public void TestChar([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<char>("SELECT Cast('1' as char) from dummy"), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char) from dummy"), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char>("SELECT Cast('1' as char(1)) from dummy"), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char(1)) from dummy"), Is.EqualTo('1'));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<char>("SELECT Cast('1' as char) from dummy"), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT Cast('1' as char) from dummy"), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>("SELECT Cast('1' as char(1)) from dummy"), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT Cast('1' as char(1)) from dummy"), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char>($"SELECT Cast({paramName} as char) from dummy", DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>($"SELECT Cast({paramName} as char) from dummy", DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char>($"SELECT Cast({paramName} as char(1)) from dummy", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>($"SELECT Cast({paramName} as char(1)) from dummy", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>($"SELECT Cast({paramName} as char) from dummy", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>($"SELECT Cast({paramName} as char) from dummy", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>($"SELECT Cast({paramName} as char(1)) from dummy", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>($"SELECT Cast({paramName} as char(1)) from dummy", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", DataParameter.Create("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", DataParameter.Create("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", DataParameter.Create("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", DataParameter.Create("p", '1')), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>($"SELECT {paramName} from dummy", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>($"SELECT {paramName} from dummy", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
+				});
 			}
 		}
 
@@ -204,20 +220,23 @@ namespace Tests.DataProvider
 		public void TestString([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20)) from dummy"), Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20)) from dummy"), Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20)) from dummy"), Is.EqualTo("12345"));
+					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20)) from dummy"), Is.Null);
 
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.Char("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.VarChar("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.Text("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.NChar("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.NText("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.Create("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.Char("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.VarChar("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.Text("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.NChar("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.NText("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.Create("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
+				});
 			}
 		}
 
@@ -225,10 +244,13 @@ namespace Tests.DataProvider
 		public void TestBinaryFromDb([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var arr = new byte[] {97, 98, 99, 100, 101, 102, 103, 104};
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<byte[]>("SELECT \"binaryDataType\" from \"AllTypes\" WHERE ID=2"), Is.EqualTo(arr));
-				Assert.That(conn.Execute<byte[]>("SELECT \"varbinaryDataType\" from \"AllTypes\" WHERE ID=2"), Is.EqualTo(arr));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<byte[]>("SELECT \"binaryDataType\" from \"AllTypes\" WHERE ID=2"), Is.EqualTo(arr));
+					Assert.That(conn.Execute<byte[]>("SELECT \"varbinaryDataType\" from \"AllTypes\" WHERE ID=2"), Is.EqualTo(arr));
+				});
 			}
 		}
 
@@ -238,17 +260,20 @@ namespace Tests.DataProvider
 		{
 			var arr1 = new byte[] { 46, 127, 0, 5 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
-				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Image("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
-				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Create("p", new Binary(arr1))), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Image("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Create("p", new Binary(arr1))), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
+				});
 			}
 		}
 
@@ -257,20 +282,26 @@ namespace Tests.DataProvider
 		public void TestXml([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT '<xml/>' from dummy"), Is.EqualTo("<xml/>"));
-				Assert.That(conn.Execute<XDocument>("SELECT '<xml/>' from dummy").ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XmlDocument>("SELECT '<xml/>' from dummy").InnerXml, Is.EqualTo("<xml />"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<string>("SELECT '<xml/>' from dummy"), Is.EqualTo("<xml/>"));
+					Assert.That(conn.Execute<XDocument>("SELECT '<xml/>' from dummy").ToString(), Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XmlDocument>("SELECT '<xml/>' from dummy").InnerXml, Is.EqualTo("<xml />"));
+				});
 
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml = Convert<string, XmlDocument>.Lambda("<xml/>");
 
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.Xml("p", "<xml/>")), Is.EqualTo("<xml/>"));
-				Assert.That(conn.Execute<XDocument>($"SELECT {paramName} from dummy", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XmlDocument>($"SELECT {paramName} from dummy", DataParameter.Xml("p", xml)).InnerXml, Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XDocument>($"SELECT {paramName} from dummy", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XDocument>($"SELECT {paramName} from dummy", new DataParameter("p", xml)).ToString(), Is.EqualTo("<xml />"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", DataParameter.Xml("p", "<xml/>")), Is.EqualTo("<xml/>"));
+					Assert.That(conn.Execute<XDocument>($"SELECT {paramName} from dummy", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XmlDocument>($"SELECT {paramName} from dummy", DataParameter.Xml("p", xml)).InnerXml, Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XDocument>($"SELECT {paramName} from dummy", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XDocument>($"SELECT {paramName} from dummy", new DataParameter("p", xml)).ToString(), Is.EqualTo("<xml />"));
+				});
 			}
 		}
 
@@ -283,12 +314,15 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<TestEnum>("SELECT 'A' from dummy"), Is.EqualTo(TestEnum.AA));
-				Assert.That(conn.Execute<TestEnum?>("SELECT 'A' from dummy"), Is.EqualTo(TestEnum.AA));
-				Assert.That(conn.Execute<TestEnum>("SELECT 'B' from dummy"), Is.EqualTo(TestEnum.BB));
-				Assert.That(conn.Execute<TestEnum?>("SELECT 'B' from dummy"), Is.EqualTo(TestEnum.BB));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<TestEnum>("SELECT 'A' from dummy"), Is.EqualTo(TestEnum.AA));
+					Assert.That(conn.Execute<TestEnum?>("SELECT 'A' from dummy"), Is.EqualTo(TestEnum.AA));
+					Assert.That(conn.Execute<TestEnum>("SELECT 'B' from dummy"), Is.EqualTo(TestEnum.BB));
+					Assert.That(conn.Execute<TestEnum?>("SELECT 'B' from dummy"), Is.EqualTo(TestEnum.BB));
+				});
 			}
 		}
 
@@ -296,14 +330,17 @@ namespace Tests.DataProvider
 		public void TestEnum2([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = TestEnum.AA }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = TestEnum.AA }), Is.EqualTo("A"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
 
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = conn.MappingSchema.GetConverter<TestEnum?, string>()!(TestEnum.AA) }), Is.EqualTo("A"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
+					Assert.That(conn.Execute<string>($"SELECT {paramName} from dummy", new { p = conn.MappingSchema.GetConverter<TestEnum?, string>()!(TestEnum.AA) }), Is.EqualTo("A"));
+				});
 			}
 		}
 
@@ -372,7 +409,7 @@ namespace Tests.DataProvider
 
 		void BulkCopyTest(string context, BulkCopyType bulkCopyType)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.BeginTransaction();
 
@@ -413,7 +450,7 @@ namespace Tests.DataProvider
 
 		async Task BulkCopyTestAsync(string context, BulkCopyType bulkCopyType)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.BeginTransaction();
 
@@ -479,7 +516,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyProviderSpecificUpperCaseColumns([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -509,7 +546,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyProviderSpecificUpperCaseColumnsAsync([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -539,7 +576,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyProviderSpecificLowerCaseColumns([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -569,7 +606,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyProviderSpecificLowerCaseColumnsAsync([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -596,11 +633,12 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
 		public void BulkCopyLinqTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -626,11 +664,12 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
 		public async Task BulkCopyLinqTypesAsync([IncludeDataSources(CurrentProvider)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -665,7 +704,7 @@ namespace Tests.DataProvider
 				var query = ctx.CaParamTest(10,10.01, "mandatory", null, null, "optional")
 					.Where(x=>x.intmandatory > 0);
 				var result = query.ToList();
-				Assert.That(result.Count, Is.GreaterThan(0));
+				Assert.That(result, Is.Not.Empty);
 			}
 		}
 
@@ -689,15 +728,13 @@ namespace Tests.DataProvider
 
 			[CalculationViewInputParametersExpression]
 			public LinqToDB.ITable<FIT_CA_PARAM_TEST> CaParamTest(
-				int ipIntMandatory, double ipDoubleMandatory, string ipStringMandatory,
-				int? ipIntOptional, double? ipDoubleOptional, string ipStringOptional)
+				[SqlQueryDependent] int  ipIntMandatory, [SqlQueryDependent] double  ipDoubleMandatory, [SqlQueryDependent] string ipStringMandatory,
+				[SqlQueryDependent] int? ipIntOptional,  [SqlQueryDependent] double? ipDoubleOptional,  [SqlQueryDependent] string ipStringOptional)
 			{
-				return GetTable<FIT_CA_PARAM_TEST>(
-					this,
-					(MethodInfo) MethodBase.GetCurrentMethod()!,
+				return this.TableFromExpression(() => CaParamTest(
 					ipIntMandatory, ipDoubleMandatory,
 					ipStringMandatory, ipIntOptional,
-					ipDoubleOptional, ipStringOptional);
+					ipDoubleOptional, ipStringOptional));
 			}
 		}
 
@@ -734,16 +771,16 @@ namespace Tests.DataProvider
 		[Test]
 		public void ByDefaultLoadCurrentSchemaOnly([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
-				var currentSchema = TestUtils.GetSchemaName(db);
+				var currentSchema = TestUtils.GetSchemaName(db, context);
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
 				foreach (var table in schema.Tables)
-					Assert.AreEqual(currentSchema, table.SchemaName);
+					Assert.That(table.SchemaName, Is.EqualTo(currentSchema));
 
 				foreach (var procedure in schema.Procedures)
-					Assert.AreEqual(currentSchema, procedure.SchemaName);
+					Assert.That(procedure.SchemaName, Is.EqualTo(currentSchema));
 			}
 		}
 
@@ -762,7 +799,7 @@ namespace Tests.DataProvider
 			{
 				var data = db.GetTable<AllTypesGeo>().ToArray();
 
-				Assert.AreEqual(7, data.Length);
+				Assert.That(data, Has.Length.EqualTo(7));
 			}
 		}
 
@@ -774,6 +811,89 @@ namespace Tests.DataProvider
 			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<ArgumentException>(() => db.GetTable<AllTypesGeo>().ToArray());
+			}
+		}
+
+		[Test]
+		public void TestModule([IncludeDataSources(false, TestProvName.AllSapHana)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				Assert.That(db.ExecuteProc<int>("TEST_PROCEDURE", new { i = 1 }), Is.EqualTo(4));
+
+				// native provider cannot call library member As it replaces : separator with ? parameter token
+				if (context.IsAnyOf(ProviderName.SapHanaOdbc))
+				{
+					Assert.Multiple(() =>
+					{
+						Assert.That(db.QueryProc<int>("TEST_PACKAGE1:TEST_PROCEDURE", new { i = 1 }).First(), Is.EqualTo(2));
+						Assert.That(db.QueryProc<int>("TEST_PACKAGE2:TEST_PROCEDURE", new { i = 1 }).First(), Is.EqualTo(3));
+					});
+				}
+
+				Assert.That(db.Person.Select(p => SapHanaModuleFunctions.TestFunction(1)).First(), Is.EqualTo(4));
+				if (context.IsAnyOf(ProviderName.SapHanaOdbc))
+				{
+					Assert.Multiple(() =>
+					{
+						Assert.That(db.Person.Select(p => SapHanaModuleFunctions.TestFunctionP1(1)).First(), Is.EqualTo(2));
+						Assert.That(db.Person.Select(p => SapHanaModuleFunctions.TestFunctionP2(1)).First(), Is.EqualTo(3));
+					});
+				}
+
+				Assert.That(SapHanaModuleFunctions.TestTableFunction(db, 1).Select(r => r.O).First(), Is.EqualTo(4));
+				if (context.IsAnyOf(ProviderName.SapHanaOdbc))
+				{
+					Assert.Multiple(() =>
+					{
+						Assert.That(SapHanaModuleFunctions.TestTableFunctionP1(db, 1).Select(r => r.O).First(), Is.EqualTo(2));
+						Assert.That(SapHanaModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First(), Is.EqualTo(3));
+					});
+				}
+			}
+		}
+
+		static class SapHanaModuleFunctions
+		{
+			[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunction(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.Function("TEST_PACKAGE1:TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunctionP1(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.Function("TEST_PACKAGE2:TEST_FUNCTION", ServerSideOnly = true)]
+			public static int TestFunctionP2(int param)
+			{
+				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]
+			public static LinqToDB.ITable<Record> TestTableFunction(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE1")]
+			public static LinqToDB.ITable<Record> TestTableFunctionP1(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE2")]
+			public static LinqToDB.ITable<Record> TestTableFunctionP2(IDataContext db, int param1)
+			{
+				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+			}
+
+			public sealed class Record
+			{
+				public int O { get; set; }
 			}
 		}
 	}

@@ -32,9 +32,7 @@ namespace Tests.UserTests
 			public string Title { get; set; } = null!;
 		}
 
-		[ActiveIssue(1441, Details = "Causes StackOverflowException")]
-		[Test]
-		public void SampleSelectTest1([DataSources] string context)
+		private void SampleSelectTest1([DataSources] string context)
 		{
 			using (var db           = GetDataContext(context))
 			using (var authorsTable = db.CreateLocalTable<Author>())
@@ -46,7 +44,8 @@ namespace Tests.UserTests
 
 				if (onlyWithBooks)
 				{
-					// This causes StackOverflowException
+					// referencing authors variable causes StackOverflowException
+					// due to circular dependency
 					authors =
 						from book in booksTable
 						from author in authors.InnerJoin(author => author.Id == book.AuthorId)

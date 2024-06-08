@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Tests.Model;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -21,8 +23,9 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess,
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
-				TestProvName.AllSqlServer2005Minus,
-				TestProvName.AllPostgreSQL,
+				TestProvName.AllSqlServer2005,
+				TestProvName.AllClickHouse,
+				TestProvName.AllPostgreSQL14Minus,
 				TestProvName.AllMySql,
 			}.SelectMany(_ => _.Split(',')).ToList();
 
@@ -42,32 +45,24 @@ namespace Tests.xUpdate
 		{
 			static string[] Supported = new[]
 			{
-				ProviderName.Sybase,
-				ProviderName.SybaseManaged,
-				ProviderName.SqlServer2008,
-				ProviderName.SqlServer2012,
-				ProviderName.SqlServer2014,
-				TestProvName.SqlServer2016,
-				ProviderName.SqlServer2017,
-				TestProvName.SqlServer2019,
-				TestProvName.SqlServer2019SequentialAccess,
-				TestProvName.SqlServer2019FastExpressionCompiler,
-				TestProvName.SqlAzure
-			};
+				TestProvName.AllSybase,
+				TestProvName.AllSqlServer2008Plus,
+				TestProvName.AllPostgreSQL15Plus,
+			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
-				: base(true, Supported.Except(except).ToArray())
+				: base(true, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 
 			public IdentityInsertMergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
-				: base(includeLinqService, Supported.Except(except).ToArray())
+				: base(includeLinqService, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
 
 		[Table("merge1")]
-		class TestMapping1
+		internal sealed class TestMapping1
 		{
 			[Column("Id")]
 			[PrimaryKey]
@@ -94,7 +89,8 @@ namespace Tests.xUpdate
 
 		[Table("TestMergeIdentity", Configuration = ProviderName.Sybase)]
 		[Table("TestMergeIdentity", Configuration = ProviderName.SqlServer)]
-		class TestMappingWithIdentity
+		[Table("TestMergeIdentity", Configuration = ProviderName.PostgreSQL)]
+		sealed class TestMappingWithIdentity
 		{
 			[Column("Id", SkipOnInsert = true, IsIdentity = true)]
 			public int Id;
@@ -104,7 +100,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("merge2")]
-		class TestMapping2
+		internal sealed class TestMapping2
 		{
 			[Column("Id")]
 			[PrimaryKey]
@@ -146,12 +142,15 @@ namespace Tests.xUpdate
 
 		private void AssertRow(TestMapping1 expected, TestMapping1 actual, int? exprected3, int? exprected4)
 		{
-			Assert.AreEqual(expected.Id, actual.Id);
-			Assert.AreEqual(expected.Field1, actual.Field1);
-			Assert.AreEqual(expected.Field2, actual.Field2);
-			Assert.AreEqual(exprected3, actual.Field3);
-			Assert.AreEqual(exprected4, actual.Field4);
-			Assert.IsNull(actual.Field5);
+			Assert.Multiple(() =>
+			{
+				Assert.That(actual.Id, Is.EqualTo(expected.Id));
+				Assert.That(actual.Field1, Is.EqualTo(expected.Field1));
+				Assert.That(actual.Field2, Is.EqualTo(expected.Field2));
+				Assert.That(actual.Field3, Is.EqualTo(exprected3));
+				Assert.That(actual.Field4, Is.EqualTo(exprected4));
+				Assert.That(actual.Field5, Is.Null);
+			});
 		}
 
 		private void PrepareData(IDataContext db)
@@ -215,8 +214,11 @@ namespace Tests.xUpdate
 				var result1 = GetTarget(db). OrderBy(_ => _.Id).ToList();
 				var result2 = GetSource1(db).OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(4, result1.Count);
-				Assert.AreEqual(4, result2.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result1, Has.Count.EqualTo(4));
+					Assert.That(result2, Has.Count.EqualTo(4));
+				});
 
 				AssertRow(InitialTargetData[0], result1[0], null, null);
 				AssertRow(InitialTargetData[1], result1[1], null, null);
@@ -232,14 +234,13 @@ namespace Tests.xUpdate
 
 		private void AssertRowCount(int expected, int actual, string context)
 		{
-			var provider = GetProviderName(context, out var _);
 			// another sybase quirk, nothing surprising
-			if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
-				Assert.LessOrEqual(expected, actual);
-			else if ((provider == ProviderName.OracleNative || provider == TestProvName.Oracle11Native) && actual == -1)
+			if (context.IsAnyOf(TestProvName.AllSybase))
+				Assert.That(expected, Is.LessThanOrEqualTo(actual));
+			else if (context.IsAnyOf(TestProvName.AllOracleNative) && actual == -1)
 			{ }
 			else
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 		}
 	}
 }

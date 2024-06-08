@@ -122,6 +122,10 @@ CREATE TABLE Parent     (ParentID int, Value1 int)
 GO
 CREATE TABLE Child      (ParentID int, ChildID int)
 GO
+CREATE INDEX IX_ChildIndex ON Child (ParentID)
+GO
+CREATE INDEX IX_ChildIndex2 ON Child (ParentID DESC)
+GO
 CREATE TABLE GrandChild (ParentID int, ChildID int, GrandChildID int)
 GO
 
@@ -129,11 +133,7 @@ CREATE TABLE LinqDataTypes
 (
 	ID             int,
 	MoneyValue     decimal(10,4),
-	DateTimeValue  datetime
--- SKIP MySql55 BEGIN
-	(3)
--- SKIP MySql55 END
-	,
+	DateTimeValue  datetime(3),
 	DateTimeValue2 datetime NULL,
 	BoolValue      boolean,
 	GuidValue      char(36),
@@ -170,17 +170,6 @@ CREATE TABLE `AllTypes`
 	timestampDataType   timestamp                    NULL,
 	timeDataType        time                         NULL,
 	yearDataType        year                         NULL,
--- SKIP MySql BEGIN
--- SKIP MySqlConnector BEGIN
--- SKIP MariaDB BEGIN
-	year2DataType       year(2)                      NULL,
--- SKIP MySql END
--- SKIP MySqlConnector END
--- SKIP MariaDB END
--- SKIP MySql55 BEGIN
-	year2DataType       year(4)                      NULL,
--- SKIP MySql55 END
-	year4DataType       year(4)                      NULL,
 
 	charDataType        char(1)                      NULL,
 	char20DataType      char(20)                     NULL,
@@ -218,8 +207,6 @@ INSERT INTO `AllTypes`
 	timestampDataType,
 	timeDataType,
 	yearDataType,
-	year2DataType,
-	year4DataType,
 
 	charDataType,
 	varcharDataType,
@@ -245,8 +232,6 @@ SELECT
 	NULL,
 	NULL,
 
-	NULL,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -281,9 +266,7 @@ SELECT
 	'2012-12-12 12:12:12',
 	'2012-12-12 12:12:12',
 	'12:12:12',
-	98,
-	'97',
-	'2012',
+	1998,
 
 	'1',
 	'234',
@@ -382,12 +365,23 @@ CREATE TABLE TestMerge1
 	FieldNChar      NCHAR(1)          NULL,
 	FieldFloat      FLOAT             NULL,
 	FieldDouble     DOUBLE            NULL,
-	FieldDateTime   DATETIME          NULL,
+	FieldDateTime   DATETIME(6)       NULL,
 	FieldBinary     VARBINARY(20)     NULL,
 	FieldGuid       CHAR(36)          NULL,
 	FieldDecimal    DECIMAL(24, 10)   NULL,
 	FieldDate       DATE              NULL,
+-- SKIP MySql.5.7 BEGIN
+-- SKIP MySql.8.0 BEGIN
+-- SKIP MySqlConnector.5.7 BEGIN
+-- SKIP MySqlConnector.8.0 BEGIN
+	FieldTime       TIME(6)           NULL,
+-- SKIP MySql.5.7 END
+-- SKIP MySql.8.0 END
+-- SKIP MySqlConnector.5.7 END
+-- SKIP MySqlConnector.8.0 END
+-- SKIP MariaDB.11 BEGIN
 	FieldTime       TIME              NULL,
+-- SKIP MariaDB.11 END
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL,
 
@@ -411,12 +405,23 @@ CREATE TABLE TestMerge2
 	FieldNChar      NCHAR(1)          NULL,
 	FieldFloat      FLOAT             NULL,
 	FieldDouble     DOUBLE            NULL,
-	FieldDateTime   DATETIME          NULL,
+	FieldDateTime   DATETIME(6)       NULL,
 	FieldBinary     VARBINARY(20)     NULL,
 	FieldGuid       CHAR(36)          NULL,
 	FieldDecimal    DECIMAL(24, 10)   NULL,
 	FieldDate       DATE              NULL,
+-- SKIP MySql.5.7 BEGIN
+-- SKIP MySql.8.0 BEGIN
+-- SKIP MySqlConnector.5.7 BEGIN
+-- SKIP MySqlConnector.8.0 BEGIN
+	FieldTime       TIME(6)           NULL,
+-- SKIP MySql.5.7 END
+-- SKIP MySql.8.0 END
+-- SKIP MySqlConnector.5.7 END
+-- SKIP MySqlConnector.8.0 END
+-- SKIP MariaDB.11 BEGIN
 	FieldTime       TIME              NULL,
+-- SKIP MariaDB.11 END
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL,
 
@@ -461,14 +466,6 @@ CREATE TABLE FullTextIndexTest (
 	FULLTEXT idx_field1 (TestField1),
 	FULLTEXT idx_field2 (TestField2)
 )
--- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
--- SKIP MySqlConnector BEGIN
-	ENGINE=MyISAM
--- SKIP MySql END
--- SKIP MariaDB END
--- SKIP MySqlConnector END
-;
 GO
 INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('this is text1', 'this is text2');
 INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('looking for something?', 'found it!');
@@ -480,7 +477,7 @@ CREATE TABLE Issue1993 (
 PRIMARY KEY(id));
 GO
 CREATE PROCEDURE `Issue2313Parameters`(
-	IN `VarChar255` VARCHAR(255),
+	IN `VarCharDefault` VARCHAR(255),
 	IN `VarChar1` VARCHAR(1),
 	IN `Char255` CHAR(255),
 	IN `Char1` CHAR(1),
@@ -498,9 +495,7 @@ CREATE PROCEDURE `Issue2313Parameters`(
 	IN `DateTime` DATETIME,
 	IN `TimeStamp` TIMESTAMP,
 	IN `Time` TIME,
--- SKIP MySql55 BEGIN
 	IN `Json` JSON,
--- SKIP MySql55 END
 	IN `TinyInt` TINYINT,
 	IN `TinyIntUnsigned` TINYINT UNSIGNED,
 	IN `SmallInt` SMALLINT,
@@ -535,7 +530,7 @@ CREATE PROCEDURE `Issue2313Parameters`(
 )
 BEGIN
 	SELECT
-	`VarChar255`,
+	`VarCharDefault`,
 	`VarChar1`,
 	`Char255`,
 	`Char1`,
@@ -553,9 +548,7 @@ BEGIN
 	`DateTime`,
 	`TimeStamp`,
 	`Time`,
--- SKIP MySql55 BEGIN
 	`Json`,
--- SKIP MySql55 END
 	`TinyInt`,
 	`TinyIntUnsigned`,
 	`SmallInt`,
@@ -591,7 +584,7 @@ BEGIN
 END
 GO
 CREATE PROCEDURE `Issue2313Results`(
-	IN `VarChar255` VARCHAR(255),
+	IN `VarCharDefault` VARCHAR(4000),
 	IN `VarChar1` VARCHAR(1),
 	IN `Char255` CHAR(255),
 	IN `Char1` CHAR(1),
@@ -632,9 +625,8 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `Enum` ENUM('one', 'two'),
 	IN `Set` ENUM('one', 'two'),
 
--- SKIP MySql55 BEGIN
--- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
+-- SKIP MySql.5.7 BEGIN
+-- SKIP MySql.8.0 BEGIN
 	IN `Json` JSON,
 	IN `Geometry` GEOMETRY,
 	IN `Point` POINT,
@@ -644,15 +636,14 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `MultiLineString` MULTILINESTRING,
 	IN `MultiPolygon` MULTIPOLYGON,
 	IN `GeometryCollection` GEOMETRYCOLLECTION,
--- SKIP MariaDB END
--- SKIP MySql END
--- SKIP MySql55 END
+-- SKIP MySql.8.0 END
+-- SKIP MySql.5.7 END
 
 	IN `Year` YEAR
 )
 BEGIN
 	SELECT
-	`VarChar255`,
+	`VarCharDefault`,
 	`VarChar1`,
 	`Char255`,
 	`Char1`,
@@ -694,9 +685,8 @@ BEGIN
 	`Set`,
 	`Year`
 
--- SKIP MySql55 BEGIN
--- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
+-- SKIP MySql.5.7 BEGIN
+-- SKIP MySql.8.0 BEGIN
 	,`Json`,
 	`Geometry`,
 	`Point`,
@@ -706,11 +696,79 @@ BEGIN
 	`MultiLineString`,
 	`MultiPolygon`,
 	`GeometryCollection`
--- SKIP MariaDB END
--- SKIP MySql END
--- SKIP MySql55 END
-
+-- SKIP MySql.8.0 END
+-- SKIP MySql.5.7 END
 
 	FROM Person;
 END
 GO
+
+DROP TABLE `CollatedTable`
+GO
+CREATE TABLE `CollatedTable`
+(
+	`Id`				INT NOT NULL,
+	`CaseSensitive`		VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+	`CaseInsensitive`	VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
+)
+GO
+
+-- SKIP MySql.8.0 BEGIN
+-- SKIP MySqlConnector.8.0 BEGIN
+-- SKIP MySql.5.7 BEGIN
+-- SKIP MySqlConnector.5.7 BEGIN
+
+CREATE OR REPLACE FUNCTION TEST_FUNCTION(i INT) RETURNS INT RETURN i + 3
+
+GO
+
+CREATE OR REPLACE PROCEDURE TEST_PROCEDURE (IN i INT)
+SELECT i + 3;
+GO
+
+SET SQL_MODE='ORACLE';
+GO
+
+CREATE OR REPLACE PACKAGE TEST_PACKAGE1 AS
+	FUNCTION TEST_FUNCTION (i INT) RETURN INT;
+	PROCEDURE TEST_PROCEDURE (i INT);
+END;
+GO
+
+CREATE OR REPLACE PACKAGE BODY TEST_PACKAGE1 AS
+	FUNCTION TEST_FUNCTION (i INT) RETURN INT AS
+	BEGIN 
+		RETURN i + 1;
+	END TEST_FUNCTION;
+	PROCEDURE TEST_PROCEDURE (i INT) AS
+	BEGIN 
+		SELECT i + 1;
+	END TEST_PROCEDURE;
+END TEST_PACKAGE1;
+GO
+
+CREATE OR REPLACE PACKAGE TEST_PACKAGE2 AS
+	FUNCTION TEST_FUNCTION (i INT) RETURN INT;
+	PROCEDURE TEST_PROCEDURE (i INT);
+END;
+GO
+
+CREATE OR REPLACE PACKAGE BODY TEST_PACKAGE2 AS
+	FUNCTION TEST_FUNCTION (i INT) RETURN INT AS
+	BEGIN 
+		RETURN i + 2;
+	END TEST_FUNCTION;
+	PROCEDURE TEST_PROCEDURE (i INT) AS
+	BEGIN 
+		SELECT i + 2;
+	END TEST_PROCEDURE;
+END TEST_PACKAGE2;
+GO
+
+set session sql_mode=default
+GO
+
+-- SKIP MySqlConnector.5.7 END
+-- SKIP MySql.5.7 END
+-- SKIP MySqlConnector.8.0 END
+-- SKIP MySql.8.0 END

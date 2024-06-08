@@ -1,70 +1,84 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using Mapping;
-
-	public class SqlCteTable : SqlTable, ICloneableElement
+	public class SqlCteTable : SqlTable
 	{
-		public          CteClause? Cte  { get; private set; }
+		public CteClause? Cte { get; set; }
 
-		public override string?    Name
+		public override SqlObjectName TableName
 		{
-			get => Cte?.Name ?? base.Name;
-			set => base.Name = value;
-		}
-
-		public override string?    PhysicalName
-		{
-			get => Cte?.Name ?? base.PhysicalName;
-			set => base.PhysicalName = value;
+			get => new SqlObjectName(Cte?.Name ?? string.Empty);
+			set { }
 		}
 
 		public SqlCteTable(
-			MappingSchema mappingSchema,
-			CteClause     cte)
-			: base(mappingSchema, cte.ObjectType, cte.Name)
+			CteClause cte,
+			Type      entityType)
+			: base(entityType, null, new SqlObjectName(cte.Name ?? string.Empty))
 		{
-			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
-
-			// CTE has it's own names even there is mapping
-			foreach (var field in Fields)
-				field.PhysicalName = field.Name;
+			Cte = cte;
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
-			: base(id, cte.Name, alias, string.Empty, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
+			: base(id, null, alias, new(string.Empty), cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
 		{
-			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
+			Cte = cte;
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields)
-			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
+			: base(id, null, alias, new(string.Empty), null!, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
 		{
+		}
+
+		public override IList<ISqlExpression>? GetKeys(bool allIfEmpty)
+		{
+			if (Cte?.Body == null)
+				return null;
+
+			var cteKeys = Cte.Body.GetKeys(allIfEmpty);
+
+			if (!(cteKeys?.Count > 0))
+				return cteKeys;
+
+			var hasInvalid = false;
+			IList<ISqlExpression> projected = Cte.Body.Select.Columns.Select((c, idx) =>
+			{
+				var found = cteKeys.FirstOrDefault(k => ReferenceEquals(c, k));
+				if (found != null)
+				{
+					var field = Cte.Fields[idx];
+
+					var foundField = Fields.FirstOrDefault(f => f.Name == field.Name);
+					if (foundField == null)
+						hasInvalid = true;
+					return (foundField as ISqlExpression)!;
+				}
+
+				hasInvalid = true;
+				return null!;
+			}).ToList();
+
+			if (hasInvalid)
+				return null;
+
+			return projected;
 		}
 
 		internal void SetDelayedCteObject(CteClause cte)
 		{
-			Cte          = cte ?? throw new ArgumentNullException(nameof(cte));
-			Name         = cte.Name;
-			PhysicalName = cte.Name;
-			ObjectType   = cte.ObjectType;
+			Cte        = cte;
+			ObjectType = cte.ObjectType;
 		}
 
-		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause cte)
+		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause? cte)
+			: base(table.ObjectType, null, table.TableName)
 		{
 			Alias              = table.Alias;
-			Server             = table.Server;
-			Database           = table.Database;
-			Schema             = table.Schema;
-
-			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
-
 			Cte                = cte;
 
 			AddRange(fields);
@@ -73,57 +87,22 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementType ElementType  => QueryElementType.SqlCteTable;
 		public override SqlTableType     SqlTableType => SqlTableType.Cte;
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			Cte?.ToString(sb, dic);
-			return sb;
+			writer
+				.DebugAppendUniqueId(this)
+				.Append("CteTable(")
+				.AppendElement(Cte)
+				.Append('[').Append(SourceID).Append(']')
+				.Append(')');
+
+			return writer;
 		}
 
 		#region IQueryElement Members
 
-		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
-
+		public string SqlText => this.ToDebugString();
 
 		#endregion
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var table = new SqlCteTable(this, Array<SqlField>.Empty, Cte == null ? throw new InvalidOperationException("Cte is null") : (CteClause)Cte.Clone(objectTree, doClone))
-				{
-					Name               = base.Name,
-					Alias              = Alias,
-					Server             = Server,
-					Database           = Database,
-					Schema             = Schema,
-					PhysicalName       = base.PhysicalName,
-					ObjectType         = ObjectType,
-					SqlTableType       = SqlTableType,
-				};
-
-				table.ClearFields();
-
-				foreach (var field in Fields)
-				{
-					var fc = new SqlField(field);
-
-					objectTree.Add(field, fc);
-					table.     Add(fc);
-				}
-
-				objectTree.Add(this, table);
-				objectTree.Add(All,  table.All);
-
-				clone = table;
-			}
-
-			return clone;
-		}
 	}
 }

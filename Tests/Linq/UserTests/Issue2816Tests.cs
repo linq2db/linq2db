@@ -42,7 +42,7 @@ namespace Tests.UserTests
 		};
 
 		[Table("Issue2816Table")]
-		class TestClass
+		sealed class TestClass
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -84,7 +84,7 @@ namespace Tests.UserTests
 			if (!string.IsNullOrWhiteSpace(((char)character).ToString()))
 				Assert.Inconclusive($"Character {(char)character} not supported by runtime");
 
-			var testData = GetTestCase((char)character, GetProviderName(context, out _), out var supported);
+			var testData = GetTestCase((char)character, GetProviderName(context, out var isRemoteContext), out var supported);
 			if (!supported)
 				Assert.Inconclusive($"Character {(char)character} not supported by database");
 
@@ -98,12 +98,12 @@ namespace Tests.UserTests
 
 					if (supported)
 					{
-						Assert.AreEqual(1, query.Length);
-						Assert.AreEqual(3, query[0].Id);
+						Assert.That(query, Has.Length.EqualTo(1));
+						Assert.That(query[0].Id, Is.EqualTo(3));
 					}
 					else
 					{
-						Assert.AreEqual(3, query.Length);
+						Assert.That(query, Has.Length.EqualTo(3));
 					}
 				}
 			}
@@ -137,8 +137,7 @@ namespace Tests.UserTests
 		{
 			switch (providerName)
 			{
-				case ProviderName.Access:
-				case ProviderName.AccessOdbc:
+				case string when providerName.IsAnyOf(TestProvName.AllAccess):
 					// only 4 characters including space supported
 					return character == 0x20
 						|| character == 0x1680

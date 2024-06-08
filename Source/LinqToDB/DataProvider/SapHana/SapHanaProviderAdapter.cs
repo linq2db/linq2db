@@ -1,18 +1,17 @@
-﻿#if NETFRAMEWORK || NETCOREAPP
-using System;
+﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
-	using System.Threading;
-	using System.Threading.Tasks;
-	using LinqToDB.Expressions;
+	using Expressions;
 
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new object();
+		private static readonly object _syncRoot = new ();
 		private static SapHanaProviderAdapter? _instance;
 
 #if NETFRAMEWORK
@@ -30,17 +29,19 @@ namespace LinqToDB.DataProvider.SapHana
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
+			Func<string, DbConnection> connectionFactory,
 
-			Action<IDbDataParameter, HanaDbType> dbTypeSetter,
+			Action<DbParameter, HanaDbType> dbTypeSetter,
 
-			Func<IDbConnection, HanaBulkCopyOptions, IDbTransaction?, HanaBulkCopy> bulkCopyCreator,
-			Func<int, string, HanaBulkCopyColumnMapping> bulkCopyColumnMappingCreator)
+			Func<DbConnection, HanaBulkCopyOptions, DbTransaction?, HanaBulkCopy> bulkCopyCreator,
+			Func<int, string, HanaBulkCopyColumnMapping>                          bulkCopyColumnMappingCreator)
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			TransactionType    = transactionType;
+			_connectionFactory = connectionFactory;
 
 			SetDbType = dbTypeSetter;
 
@@ -48,22 +49,32 @@ namespace LinqToDB.DataProvider.SapHana
 			CreateBulkCopyColumnMapping = bulkCopyColumnMappingCreator;
 		}
 
+#region IDynamicProviderAdapter
+
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Action<IDbDataParameter, HanaDbType> SetDbType { get; }
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
 
-		public Func<IDbConnection, HanaBulkCopyOptions, IDbTransaction?, HanaBulkCopy> CreateBulkCopy              { get; }
-		public Func<int, string, HanaBulkCopyColumnMapping>                            CreateBulkCopyColumnMapping { get; }
+#endregion
+
+		public Action<DbParameter, HanaDbType> SetDbType { get; }
+
+		internal Func<DbConnection, HanaBulkCopyOptions, DbTransaction?, HanaBulkCopy> CreateBulkCopy              { get; }
+		public   Func<int, string, HanaBulkCopyColumnMapping>                          CreateBulkCopyColumnMapping { get; }
 
 		internal static SapHanaProviderAdapter GetInstance()
 		{
 			if (_instance == null)
+			{
 				lock (_syncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 					if (_instance == null)
+#pragma warning restore CA1508 // Avoid dead conditional code
 					{
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
@@ -100,7 +111,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 						typeMapper.FinalizeMappings();
 
-						var typeSetter = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType).BuildSetter<IDbDataParameter>();
+						var connectionFactory = typeMapper.BuildTypedFactory<string, HanaConnection, DbConnection>((string connectionString) => new HanaConnection(connectionString));
+
+						var typeSetter = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType).BuildSetter<DbParameter>();
 
 						_instance = new SapHanaProviderAdapter(
 							connectionType,
@@ -108,10 +121,12 @@ namespace LinqToDB.DataProvider.SapHana
 							parameterType,
 							commandType,
 							transactionType,
+							connectionFactory,
 							typeSetter,
-							typeMapper.BuildWrappedFactory((IDbConnection connection, HanaBulkCopyOptions options, IDbTransaction? transaction) => new HanaBulkCopy((HanaConnection)connection, options, (HanaTransaction?)transaction)),
+							typeMapper.BuildWrappedFactory((DbConnection connection, HanaBulkCopyOptions options, DbTransaction? transaction) => new HanaBulkCopy((HanaConnection)(object)connection, options, (HanaTransaction?)(object?)transaction)),
 							typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)));
 					}
+			}
 
 			return _instance;
 		}
@@ -122,12 +137,13 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		[Wrapper]
-		public class HanaConnection
+		internal sealed class HanaConnection
 		{
+			public HanaConnection(string connectionString) => throw new NotImplementedException();
 		}
 
 		[Wrapper]
-		private class HanaParameter
+		private sealed class HanaParameter
 		{
 			public HanaDbType HanaDbType { get; set; }
 		}
@@ -162,7 +178,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		#region BulkCopy
 		[Wrapper]
-		public class HanaBulkCopy : TypeWrapper, IDisposable
+		internal class HanaBulkCopy : TypeWrapper, IDisposable
 		{
 			private static object[] Wrappers { get; }
 				= new object[]
@@ -207,11 +223,15 @@ namespace LinqToDB.DataProvider.SapHana
 			public HanaBulkCopy(HanaConnection connection, HanaBulkCopyOptions options, HanaTransaction? transaction) => throw new NotImplementedException();
 
 			public void Dispose      ()                       => ((Action<HanaBulkCopy>)CompiledWrappers[0])(this);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<HanaBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
+#pragma warning restore RS0030 //  API mapping must preserve type
 
 			public bool CanWriteToServerAsync => CompiledWrappers[11] != null;
+#pragma warning disable RS0030 // API mapping must preserve type
 			public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
 				=> ((Func<HanaBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[11])(this, dataReader, cancellationToken);
+#pragma warning restore RS0030 //  API mapping must preserve type
 
 			public int NotifyAfter
 			{
@@ -316,4 +336,3 @@ namespace LinqToDB.DataProvider.SapHana
 		#endregion
 	}
 }
-#endif

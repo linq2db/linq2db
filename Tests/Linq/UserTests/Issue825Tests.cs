@@ -28,10 +28,10 @@ namespace Tests.UserTests
 			[PrimaryKey, Identity, Column("ParentID")]
 			public int Id { get; set; }
 
-			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true)]
 			public IList<ParentPermission> ParentPermissions { get; set; } = null!;
 
-			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true)]
 			public IList<Child825> Childs { get; set; } = null!;
 		}
 
@@ -49,7 +49,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([DataSources] string context)
+		public void Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -66,8 +66,8 @@ namespace Tests.UserTests
 
 				var result = query.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(3, result[0].Id);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result[0].Id, Is.EqualTo(3));
 			}
 		}
 	}

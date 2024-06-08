@@ -1,143 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.IO;
 	using Data;
-	using LinqToDB.Common;
-	using LinqToDB.Configuration;
-	using LinqToDB.DataProvider.DB2;
 
 	public static class InformixTools
 	{
-#if NETFRAMEWORK
-		private static readonly Lazy<IDataProvider> _informixDataProvider = new Lazy<IDataProvider>(() =>
+		internal static InformixProviderDetector ProviderDetector = new();
+
+		public static bool AutoDetectProvider
 		{
-			var provider = new InformixDataProvider(ProviderName.Informix);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-#endif
-
-		private static readonly Lazy<IDataProvider> _informixDB2DataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new InformixDataProvider(ProviderName.InformixDB2);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
-		{
-			switch (css.ProviderName)
-			{
-				case ProviderName.InformixDB2:
-					return _informixDB2DataProvider.Value;
-#if NETFRAMEWORK
-				case InformixProviderAdapter.IfxClientNamespace:
-					return _informixDataProvider.Value;
-#endif
-				case ""                      :
-				case null                    :
-				case DB2ProviderAdapter.NetFxClientNamespace:
-				case DB2ProviderAdapter.CoreClientNamespace :
-
-					// this check used by both Informix and DB2 providers to avoid conflicts
-					if (css.Name.Contains("Informix"))
-						goto case ProviderName.Informix;
-					break;
-				case ProviderName.Informix   :
-					if (css.Name.Contains("DB2"))
-						return _informixDB2DataProvider.Value;
-
-#if NETFRAMEWORK
-					return _informixDataProvider.Value;
-#else
-					return _informixDB2DataProvider.Value;
-#endif
-			}
-
-			return null;
+			get => ProviderDetector.AutoDetectProvider;
+			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		private static string DetectProviderName()
+		public static IDataProvider GetDataProvider(InformixProvider provider = InformixProvider.AutoDetect, string? connectionString = null)
 		{
-#if NETFRAMEWORK
-			var path = typeof(InformixTools).Assembly.GetPath();
-
-			if (File.Exists(Path.Combine(path, $"{InformixProviderAdapter.IfxAssemblyName}.dll")))
-				return ProviderName.Informix;
-#endif
-
-			return ProviderName.InformixDB2;
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
 		}
 
-		private  static string? _detectedProviderName;
-		internal static string DetectedProviderName =>
-			_detectedProviderName ??= DetectProviderName();
+		#region CreateDataConnection
 
-		public static IDataProvider GetDataProvider(string? providerName = null)
+		public static DataConnection CreateDataConnection(string connectionString, InformixProvider provider = InformixProvider.AutoDetect)
 		{
-			switch (providerName ?? DetectedProviderName)
-			{
-#if NETFRAMEWORK
-				case ProviderName.Informix   : return _informixDataProvider.Value;
-#endif
-				case ProviderName.InformixDB2: return _informixDB2DataProvider.Value;
-			}
-
-#if NETFRAMEWORK
-				return _informixDataProvider.Value;
-#else
-				return _informixDB2DataProvider.Value;
-#endif
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
 		}
 
-#region CreateDataConnection
-
-		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, InformixProvider provider = InformixProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(providerName), connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, InformixProvider provider = InformixProvider.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(providerName), connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
-		{
-			return new DataConnection(GetDataProvider(providerName), transaction);
-		}
-
-#endregion
-
-#region BulkCopy
-
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int                         maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
-#endregion
+		#endregion
 	}
 }

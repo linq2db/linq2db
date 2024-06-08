@@ -1,7 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
 
@@ -69,7 +71,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Where1([DataSources] string context)
+		public void Where1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -86,7 +88,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Where2([DataSources] string context)
+		public void Where2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -103,7 +105,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Where3([DataSources] string context)
+		public void Where3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -120,102 +122,98 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void Where4([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent
-						.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()),
-					db.Parent
-						.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()));
-		}
+		//public void Where4([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			   Parent
+		//				.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()),
+		//			db.Parent
+		//				.Select(p => new { p, children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()));
+		//}
 
 		//[Test]
-		public void Where5([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent
-						.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()),
-					db.Parent
-						.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
-						.Where (t => t.children1.Any()));
-		}
+		//public void Where5([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			   Parent
+		//				.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()),
+		//			db.Parent
+		//				.Select(p => new { children1 = p.Children. Where(c => c.ParentID > 1)  })
+		//				.Where (t => t.children1.Any()));
+		//}
 
 		//[Test]
-		public void Where6([DataSources] string context)
+		//public void Where6([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			   Parent
+		//				.Select(p => p.Children. Where(c => c.ParentID > 1))
+		//				.Where (t => t.Any()),
+		//			db.Parent
+		//				.Select(p => p.Children. Where(c => c.ParentID > 1))
+		//				.Where (t => t.Any()));
+		//}
+
+		[Test]
+		public void Any1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent
-						.Select(p => p.Children. Where(c => c.ParentID > 1))
-						.Where (t => t.Any()),
+				Assert.That(
 					db.Parent
-						.Select(p => p.Children. Where(c => c.ParentID > 1))
-						.Where (t => t.Any()));
+						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
+						.Any(p => p.children1.Any()), Is.EqualTo(Parent
+						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
+						.Any(p => p.children1.Any())));
 		}
 
 		[Test]
-		public void Any1([DataSources] string context)
+		public void Any2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Any(p => p.children1.Any()),
-					db.Parent
-						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Any(p => p.children1.Any()));
-		}
-
-		[Test]
-		public void Any2([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => p.Children.Where(c => c.ParentID > 1))
-						.Any(p => p.Any()),
+				Assert.That(
 					db.Parent
 						.Select(p => p.Children.Where(c => c.ParentID > 1))
-						.Any(p => p.Any()));
+						.Any(p => p.Any()), Is.EqualTo(Parent
+						.Select(p => p.Children.Where(c => c.ParentID > 1))
+						.Any(p => p.Any())));
 		}
 
 		[Test]
-		public void Any3([DataSources] string context)
+		public void Any3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Where(p => p.children1.Any())
-						.Any(),
+				Assert.That(
 					db.Parent
 						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
 						.Where(p => p.children1.Any())
-						.Any());
+						.Any(), Is.EqualTo(Parent
+						.Select(p => new { p, children1 = p.Children.Where(c => c.ParentID > 1) })
+						.Where(p => p.children1.Any())
+						.Any()));
 		}
 
 		//[Test]
-		public void Any4([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent
-						.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Where(p => p.children1.Any())
-						.Any(),
-					db.Parent
-						.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
-						.Where(p => p.children1.Any())
-						.Any());
-		}
+		//public void Any4([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		Assert.That(
+		//			db.Parent
+		//				.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
+		//				.Where(p => p.children1.Any())
+		//				.Any(), Is.EqualTo(Parent
+		//				.Select(p => new { children1 = p.Children.Where(c => c.ParentID > 1) })
+		//				.Where(p => p.children1.Any())
+		//				.Any()));
+		//}
 
 		[Test]
-		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -251,7 +249,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest3([DataSources(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest3([DataSources(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -267,7 +265,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
+		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -297,7 +295,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
+		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -327,7 +325,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -357,7 +355,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -394,13 +392,13 @@ namespace Tests.Linq
 					.ToArray();
 
 				// Access has different order in result set
-				if (!context.StartsWith(ProviderName.Access))
+				if (!context.IsAnyOf(TestProvName.AllAccess))
 					AreEqual(expected, actual);
 			}
 		}
 
 		[Test]
-		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -437,14 +435,14 @@ namespace Tests.Linq
 					.ToArray();
 
 				// Access has different order in result set
-				if (!context.StartsWith(ProviderName.Access))
+				if (!context.IsAnyOf(TestProvName.AllAccess))
 					AreEqual(expected, actual);
 			}
 		}
 
 		// PostgreSQL92 Uses 3 queries and we join results in wrong order. See LetTest71 with explicit sort
 		[Test]
-		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllAccess)] string context)
+		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -465,7 +463,7 @@ namespace Tests.Linq
 					(
 						from p in db.Parent
 						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
+						let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 						select new
 						{
 							p.ParentID,
@@ -478,7 +476,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Access)] string context)
+		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -498,8 +496,8 @@ namespace Tests.Linq
 					,
 					(
 						from p in db.Parent
-						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID)
-						let ch2 = ch1.Where(c => c.ChildID > -100)
+						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
+						let ch2 = ch1.OrderBy(c => c.ChildID).Where(c => c.ChildID > -100)
 						select new
 						{
 							p.ParentID,
@@ -512,7 +510,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest8([DataSources] string context)
+		public void LetTest8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -569,16 +567,7 @@ namespace Tests.Linq
 		public void LetTest10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					(
-						from p in Parent
-						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
-						select new
-						{
-							First = ch1.FirstOrDefault()
-						}
-					).Any()
-					,
+				Assert.That(
 					(
 						from p in db.Parent
 						let ch1 = db.Child.Where(c => c.ParentID == p.ParentID)
@@ -586,7 +575,15 @@ namespace Tests.Linq
 						{
 							First = ch1.FirstOrDefault()
 						}
-					).Any());
+					).Any(), Is.EqualTo((
+						from p in Parent
+						let ch1 = Child.Where(c => c.ParentID == p.ParentID)
+						select new
+						{
+							First = ch1.FirstOrDefault()
+						}
+					).Any()
+				));
 		}
 
 		[Test]
@@ -605,7 +602,8 @@ namespace Tests.Linq
 					,
 					from p in db.Parent
 					let ch1 = db.Child.OrderBy(c => c.ParentID).FirstOrDefault(c => c.ParentID > 0)
-					let ch2 = db.Child.Where(c => c.ChildID > -100)
+					let ch2 = db.Child.OrderBy(c => c.ParentID).Where(c => c.ChildID > -100)
+					orderby p.ParentID
 					select new
 					{
 						First1 = ch1 == null ? 0 : ch1.ParentID,
@@ -613,8 +611,8 @@ namespace Tests.Linq
 					});
 		}
 
-				#region Removal of compiler-generated conversions
-		class ConversionsTestTable
+		#region Removal of compiler-generated conversions
+		sealed class ConversionsTestTable
 		{
 			public sbyte   SByte  { get; set; }
 			public byte    Byte   { get; set; }
@@ -647,7 +645,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -686,14 +684,14 @@ namespace Tests.Linq
 							 || (ulong )EnumByte.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeSByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -732,14 +730,14 @@ namespace Tests.Linq
 							 || (ulong )EnumSByte.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -778,14 +776,14 @@ namespace Tests.Linq
 							 || (ulong )EnumInt16.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeUInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -824,14 +822,14 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt16.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -870,14 +868,14 @@ namespace Tests.Linq
 							 || (ulong )EnumInt32.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeUInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -916,14 +914,14 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt32.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -962,14 +960,14 @@ namespace Tests.Linq
 							 || (ulong )EnumInt64.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeUInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -1008,10 +1006,42 @@ namespace Tests.Linq
 							 || (ulong )EnumUInt64.TestValue == x.UInt64N)
 					.ToList();
 
-				Assert.False(db.LastQuery!.ToLower().Contains("convert"));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("convert"));
 			}
 		}
 
+		#endregion
+
+		#region issue 3791
+		[Table]
+		public class Issue3791Table
+		{
+			[Identity, PrimaryKey] public int     Id      { get; set; }
+			[Column              ] public string? OtherId { get; set; }
+
+			[Association(ThisKey = nameof(OtherId), OtherKey = nameof(Issue3791GuidTable.Id))]
+			public Issue3791GuidTable? Association { get; set; }
+		}
+		[Table(IsColumnAttributeRequired = false)]
+		public class Issue3791GuidTable
+		{
+			[PrimaryKey] public Guid Id { get; set; }
+		}
+
+		[Test]
+		public void Issue3791Test([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<Guid, string>(a => a.ToString());
+			ms.SetConvertExpression<string, Guid>(a => Guid.Parse(a));
+
+			using var db = GetDataContext(context);
+
+			using var table = db.CreateLocalTable<Issue3791Table>();
+			using var _     = db.CreateLocalTable<Issue3791GuidTable>();
+
+			table.LoadWith(a => a.Association).ToList();
+		}
 		#endregion
 	}
 }

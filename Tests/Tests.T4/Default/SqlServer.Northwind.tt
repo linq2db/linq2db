@@ -1,0 +1,12 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"   #>
+<#@ output extension=".generated.cs"                                                           #>
+<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\Microsoft.SqlServer.Types.dll"      #>
+<#@ include file="..\Shared.ttinclude"                                             once="true" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude" once="true" #>
+<#
+	NamespaceName   = "Default.SqlServerNorthwind";
+	DataContextName = "TestDataDB";
+
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.Northwind"));
+	GenerateModel();
+#>

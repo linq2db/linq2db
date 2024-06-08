@@ -1,31 +1,25 @@
-﻿#if NET472
+﻿#if NETFRAMEWORK
 using System.Data.Linq.Mapping;
-using ColumnAttribute = System.Data.Linq.Mapping.ColumnAttribute;
-using TableAttribute = System.Data.Linq.Mapping.TableAttribute;
-#else
-using ColumnAttribute = System.ComponentModel.DataAnnotations.Schema.ColumnAttribute;
-using TableAttribute = System.ComponentModel.DataAnnotations.Schema.TableAttribute;
-#endif
 
 using LinqToDB;
 using LinqToDB.Common;
 
 using NUnit.Framework;
 
+using ColumnAttribute = System.Data.Linq.Mapping.ColumnAttribute;
+using TableAttribute = System.Data.Linq.Mapping.TableAttribute;
+
 namespace Tests.Linq
 {
+	using LinqToDB.Metadata;
+
 	using Model;
 
-#if NET472
 	[Table(Name = "Person")]
-#else
-	[Table("Person")]
-#endif
 	public class L2SPersons
 	{
 		private int _personID;
 
-#if NET472
 		[Column(
 			Storage       = "_personID",
 			Name          = "PersonID",
@@ -34,10 +28,6 @@ namespace Tests.Linq
 			IsDbGenerated = true,
 			AutoSync      = AutoSync.Never,
 			CanBeNull     = false)]
-#else
-		[Column("PersonID",
-			TypeName      = "integer(32,0)")]
-#endif
 		public int PersonID
 		{
 			get { return _personID;  }
@@ -62,9 +52,12 @@ namespace Tests.Linq
 		[Test]
 		public void IsDbGeneratedTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+			var ms = new LinqToDB.Mapping.MappingSchema();
+			ms.AddMetadataReader(new SystemDataLinqAttributeReader());
+
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, ms))
 			{
 				db.BeginTransaction();
 
@@ -80,3 +73,4 @@ namespace Tests.Linq
 		}
 	}
 }
+#endif

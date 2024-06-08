@@ -27,24 +27,16 @@ namespace Tests.UserTests
 
 			[Column, NotNull] public int AccessTariffId { get; set; } // integer
 
-			[Association(ThisKey = "InvoiceId", OtherKey = "Id", CanBeNull = false,
-				KeyName = "custom_invoice_InvoiceId_fkey",
-				BackReferenceName = "facturaciofacturainvoiceidfkeys")]
+			[Association(ThisKey = "InvoiceId", OtherKey = "Id", CanBeNull = false)]
 			public Invoice Invoice { get; set; }
 
-			[Association(ThisKey = "ServicePointId", OtherKey = "Id", CanBeNull = false,
-				KeyName = "custom_invoice_ServicePointId_fkey",
-				BackReferenceName = "facturaciofacturacupsidfkeys")]
+			[Association(ThisKey = "ServicePointId", OtherKey = "Id", CanBeNull = false)]
 			public ServicePoint ServicePoint { get; set; }
 
-			[Association(ThisKey = "ContractId", OtherKey = "Id", CanBeNull = false,
-				KeyName = "custom_invoice_ContractId_fkey",
-				BackReferenceName = "facturaciofacturapolissaidfkeys")]
+			[Association(ThisKey = "ContractId", OtherKey = "Id", CanBeNull = false)]
 			public Contract Contract { get; set; }
 
-			[Association(ThisKey = "AccessTariffId", OtherKey = "Id", CanBeNull = false,
-				KeyName = "custom_invoice_AccessTariffId_fkey",
-				BackReferenceName = "facturaciofacturatarifaaccesidfkeys")]
+			[Association(ThisKey = "AccessTariffId", OtherKey = "Id", CanBeNull = false)]
 			public AccessTariff AccessTariff { get; set; }
 
 			/// <summary>
@@ -71,9 +63,7 @@ namespace Tests.UserTests
 			/// <summary>
 			/// Price list used for this invoice
 			/// </summary>
-			[Association(ThisKey = "PriceListId", OtherKey = "Id", CanBeNull = true,
-				KeyName = "custom_invoice_llista_preu_fkey",
-				BackReferenceName = "facturaciofacturallista_preufkeys")]
+			[Association(ThisKey = "PriceListId", OtherKey = "Id", CanBeNull = true)]
 			public PriceList PriceList { get; set; }
 		}
 
@@ -105,13 +95,13 @@ namespace Tests.UserTests
 			/// <summary>
 			///     Municipio
 			/// </summary>
-			[Association(ThisKey = "TownId", OtherKey = "Id", CanBeNull = true, KeyName = "service_point_TownId_fkey", BackReferenceName = "cupspsidmunicipifkeys")]
+			[Association(ThisKey = "TownId", OtherKey = "Id", CanBeNull = true)]
 			public Town Town { get; set; }
 
 			/// <summary>
 			///     Tipo vía
 			/// </summary>
-			[Association(ThisKey = "StreetTypeId", OtherKey = "Id", CanBeNull = true, KeyName = "service_point_StreetTypeId_fkey")]
+			[Association(ThisKey = "StreetTypeId", OtherKey = "Id", CanBeNull = true)]
 			public StreetType StreetType { get; set; }
 		}
 
@@ -150,7 +140,7 @@ namespace Tests.UserTests
 			/// <summary>
 			/// Invoice Lines
 			/// </summary>
-			[Association(ThisKey = "Id", OtherKey = "InvoiceId", CanBeNull = true, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "InvoiceId", CanBeNull = true)]
 			public ICollection<InvoiceLine> Lines { get; set; }
 
 			/// <summary>
@@ -161,17 +151,17 @@ namespace Tests.UserTests
 
 			[Column, Nullable] public int PendingStateId { get; set; }
 
-			[Association(ThisKey = "PendingStateId", OtherKey = "Id", CanBeNull = true, KeyName = "invoice_pending_state_fkey", BackReferenceName = "accountinvoicependingstatefkeys")]
+			[Association(ThisKey = "PendingStateId", OtherKey = "Id", CanBeNull = true)]
 			public InvoicePendingState PendingState { get; set; }
 
 			[Column, Nullable] public int? RectifyingInvoiceId { get; set; }
 
-			[Association(ThisKey = "RectifyingInvoiceId", OtherKey = "Id", CanBeNull = true, KeyName = "invoice_rectifying_id_fkey", BackReferenceName = "accountinvoicerectifyingidfkeys")]
+			[Association(ThisKey = "RectifyingInvoiceId", OtherKey = "Id", CanBeNull = true)]
 			public Invoice Rectifying { get; set; }
 
 			[Column, Nullable] public int? RefundByInvoiceId { get; set; }
 
-			[Association(ThisKey = "RefundByInvoiceId", OtherKey = "Id", CanBeNull = true, KeyName = "invoice_refund_by_id_fkey", BackReferenceName = "accountinvoicerefundbyidfkeys")]
+			[Association(ThisKey = "RefundByInvoiceId", OtherKey = "Id", CanBeNull = true)]
 			public Invoice RefundBy { get; set; }
 		}
 
@@ -182,7 +172,7 @@ namespace Tests.UserTests
 
 			[Column, Nullable] public int? TaxId { get; set; } // integer
 
-			[Association(ThisKey = "TaxId", OtherKey = "Id", CanBeNull = false, KeyName = "invoice_TaxId_fkey", BackReferenceName = "accountinvoicetaxidfkeys")]
+			[Association(ThisKey = "TaxId", OtherKey = "Id", CanBeNull = false)]
 			public AccountTax Tax { get; set; }
 		}
 
@@ -199,13 +189,10 @@ namespace Tests.UserTests
 			[Column, Nullable] public int? InvoiceId { get; set; } // integer
 			[Column, Nullable] public int? ProductId { get; set; } // integer
 
-			[Association(ThisKey = "ProductUnitId", OtherKey = "Id", CanBeNull = true,
-				KeyName = "invoice_line_uos_fkey",
-				BackReferenceName = "accountinvoicelineuosfkeys")]
+			[Association(ThisKey = "ProductUnitId", OtherKey = "Id", CanBeNull = true)]
 			public ProductUnit ProductUnit { get; set; }
 
-			[Association(ThisKey = "ProductId", OtherKey = "Id", CanBeNull = true,
-				KeyName = "invoice_line_procut_fkey", BackReferenceName = "invoice_line_procut_fkeys")]
+			[Association(ThisKey = "ProductId", OtherKey = "Id", CanBeNull = true)]
 			public Product Product { get; set; }
 		}
 
@@ -214,7 +201,7 @@ namespace Tests.UserTests
 		{
 			[Column, Nullable] public int? StateId { get; set; } // integer
 
-			[Association(ThisKey = "StateId", OtherKey = "Id", CanBeNull = true, KeyName = "town_state_fkey")]
+			[Association(ThisKey = "StateId", OtherKey = "Id", CanBeNull = true)]
 			public CountryState State { get; set; }
 		}
 
@@ -224,10 +211,10 @@ namespace Tests.UserTests
 			[Column, NotNull] public int CountryId { get; set; } // integer
 			[Column, Nullable] public int? AutonomousCommunityId { get; set; } // integer
 
-			[Association(ThisKey = "AutonomousCommunityId", OtherKey = "Id", CanBeNull = true, KeyName = "country_state_autonomous_community_fkey")]
+			[Association(ThisKey = "AutonomousCommunityId", OtherKey = "Id", CanBeNull = true)]
 			public AutonomousCommunity Community { get; set; }
 
-			[Association(ThisKey = "CountryId", OtherKey = "Id", CanBeNull = true, KeyName = "country_state_contry_fkey")]
+			[Association(ThisKey = "CountryId", OtherKey = "Id", CanBeNull = true)]
 			public Country Country { get; set; }
 		}
 
@@ -269,7 +256,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestLoadWithInfiniteLoop([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWithInfiniteLoop([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -298,7 +285,7 @@ namespace Tests.UserTests
 					.LoadWith(i => i.PriceList)
 					.Where(f => f.Id == 1);
 
-				Assert.DoesNotThrow(() => _ = query.ToString());
+				Assert.DoesNotThrow(() => TestContext.WriteLine(query.ToString()));
 			}
 		}
 	}

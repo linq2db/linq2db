@@ -1,11 +1,11 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace LinqToDB.DataProvider.Firebird
 {
-	using LinqToDB.SqlQuery;
-	using System;
-	using System.Linq;
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.Text;
+	using SqlQuery;
 
 	public partial class FirebirdSqlBuilder
 	{
@@ -17,15 +17,15 @@
 		//Data type unknown
 
 		// VALUES(...) syntax not supported in MERGE source
-		protected override bool MergeSupportsSourceDirectValues => false;
+		protected override bool IsValuesSyntaxSupported => false;
 
 		protected override string FakeTable => "rdb$database";
 
 		private readonly ISet<Tuple<SqlValuesTable, int>> _typedColumns = new HashSet<Tuple<SqlValuesTable, int>>();
 
-		protected override bool MergeSourceValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
+		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
 		{
-			if (row >= 0 && rows[row][column] is SqlParameter parameter && parameter.IsQueryParameter)
+			if (row >= 0 && ConvertElement(rows[row][column]) is SqlParameter parameter && parameter.IsQueryParameter)
 			{
 				return true;
 			}
@@ -34,7 +34,7 @@
 			{
 				// without type Firebird with convert string values in column to CHAR(LENGTH_OF_BIGGEST_VALUE_IN_COLUMN) with
 				// padding shorter values with spaces
-				if (rows.Any(r => r[column] is SqlValue value && value.Value is string))
+				if (rows.Any(r => ConvertElement(r[column]) is SqlValue value && value.Value is string))
 				{
 					_typedColumns.Add(Tuple.Create(source, column));
 					return rows[0][column] is SqlValue val && val.Value != null;
@@ -44,33 +44,43 @@
 			}
 
 			return _typedColumns.Contains(Tuple.Create(source, column))
-				&& rows[row][column] is SqlValue sqlValue && sqlValue.Value != null;
+				&& ConvertElement(rows[row][column]) is SqlValue sqlValue && sqlValue.Value != null;
 		}
 
-		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		// available since FB5
+		protected override void BuildMergeOperationDeleteBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
-			if (dataType.Type.DbType == null && dataType.Type.DataType == DataType.NVarChar)
+			StringBuilder
+				.AppendLine()
+				.Append("WHEN NOT MATCHED BY SOURCE");
+
+			if (operation.Where != null)
 			{
-				var length = 0;
-				var typeRequired = false;
-				if (value is SqlValue sqlValue && sqlValue.Value is string stringValue)
-				{
-					typeRequired = true;
-					length = Encoding.UTF8.GetByteCount(stringValue);
-					if (length == 0)
-						length = 1;
-				}
-
-				if (typeRequired)
-					StringBuilder.Append("CAST(");
-
-				BuildExpression(value);
-
-				if (typeRequired)
-					StringBuilder.Append($" AS VARCHAR({length.ToString(CultureInfo.InvariantCulture)}))");
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
-			else
-				base.BuildTypedExpression(dataType, value);
+
+			StringBuilder.AppendLine(" THEN DELETE");
+		}
+
+		// available since FB5
+		protected override void BuildMergeOperationUpdateBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
+		{
+			StringBuilder
+				.AppendLine()
+				.Append("WHEN NOT MATCHED BY SOURCE");
+
+			if (operation.Where != null)
+			{
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+			}
+
+			StringBuilder.AppendLine(" THEN UPDATE");
+
+			var update = new SqlUpdateClause();
+			update.Items.AddRange(operation.Items);
+			BuildUpdateSet(null, update);
 		}
 	}
 }

@@ -7,76 +7,37 @@ using System.Reflection;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using Microsoft.SqlServer.Server;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 using SqlDataRecordMS = Microsoft.Data.SqlClient.Server.SqlDataRecord;
-using SqlMetaDataMS   = Microsoft.Data.SqlClient.Server.SqlMetaData;
+using SqlMetaDataMS = Microsoft.Data.SqlClient.Server.SqlMetaData;
 
 namespace Tests.DataProvider
 {
 	public partial class SqlServerTypesTests
 	{
 		internal const string TYPE_NAME = "[dbo].[TestTableType]";
-		public class TVPRecord
-		{
-			public int? Id { get; set; }
 
-			public string? Name { get; set; }
-		}
-
-		internal static TVPRecord[] TestUDTData = new[]
-		{
-			new TVPRecord(),
-			new TVPRecord() { Id = 1, Name = "Value1" },
-			new TVPRecord() { Id = 2, Name = "Value2" }
-		};
-
-		public static DataTable GetDataTable()
+		private static DataTable GetDataTable()
 		{
 			var table = new DataTable();
 
 			table.Columns.Add("Id", typeof(int));
 			table.Columns.Add("Name", typeof(string));
 
-			foreach (var record in TestUDTData)
+			foreach (var record in SqlServerTestUtils.TestUDTData)
 			{
 				table.Rows.Add(record.Id, record.Name);
 			}
 
 			return table;
-		}
-
-		public static IEnumerable<SqlDataRecord> GetSqlDataRecords()
-		{
-			var sqlRecord = new SqlDataRecord(
-				new SqlMetaData("Id",   SqlDbType.Int),
-				new SqlMetaData("Name", SqlDbType.NVarChar, 10));
-
-			foreach (var record in TestUDTData)
-			{
-				sqlRecord.SetValue(0, record.Id);
-				sqlRecord.SetValue(1, record.Name);
-
-				yield return sqlRecord;
-			}
-		}
-
-		public static IEnumerable<SqlDataRecordMS> GetSqlDataRecordsMS()
-		{
-			var sqlRecord = new SqlDataRecordMS(
-				new SqlMetaDataMS("Id", SqlDbType.Int),
-				new SqlMetaDataMS("Name", SqlDbType.NVarChar, 10));
-
-			foreach (var record in TestUDTData)
-			{
-				sqlRecord.SetValue(0, record.Id);
-				sqlRecord.SetValue(1, record.Name);
-
-				yield return sqlRecord;
-			}
 		}
 
 		public class ParameterFactory
@@ -99,13 +60,13 @@ namespace Tests.DataProvider
 				yield return new ParameterFactory("DataTable", _ => GetDataTable());
 
 				// as IEnumerable<SqlDataRecord>
-				yield return new ParameterFactory("SqlDataRecords", _ => _.Connection is Microsoft.Data.SqlClient.SqlConnection ? (object)GetSqlDataRecordsMS() : GetSqlDataRecords());
+				yield return new ParameterFactory("SqlDataRecords", _ => _.Connection is Microsoft.Data.SqlClient.SqlConnection ? (object)SqlServerTestUtils.GetSqlDataRecordsMS() : SqlServerTestUtils.GetSqlDataRecords());
 
 				// TODO: doesn't work now as DbDataReader converted to Lst<object> of DbDataRecordInternal somewhere in linq2db
 				// before we can pass it to provider
 				// as DbDataReader
 				//var sql = new StringBuilder();
-				//foreach (var record in TestUDTData)
+				//foreach (var record in SqlServerTestUtils.TestUDTData)
 				//{
 				//	if (sql.Length > 0)
 				//		sql.Append(" UNION ALL ");
@@ -160,16 +121,16 @@ namespace Tests.DataProvider
 		}
 
 		[Sql.TableExpression("select * from {0}")]
-		private static ITable<TVPRecord> TableValue(DataParameter p)
+		private static ITable<SqlServerTestUtils.TVPRecord> TableValue(DataParameter p)
 		{
 			throw new InvalidOperationException();
 		}
 
 		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue(null!));
 
-		public static ITable<TVPRecord> TableValue(IDataContext ctx, DataParameter p)
+		private static ITable<SqlServerTestUtils.TVPRecord> TableValue(IDataContext ctx, DataParameter p)
 		{
-			return ctx.GetTable<TVPRecord>(null, _methodInfo, p);
+			return ctx.GetTable<SqlServerTestUtils.TVPRecord>(null, _methodInfo, p);
 		}
 
 		[Test]
@@ -178,12 +139,12 @@ namespace Tests.DataProvider
 			[ValueSource(nameof(DataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
 			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
-				var result = db.QueryProc<TVPRecord>("TableTypeTestProc", testCase.Factory(external));
+				var result = db.QueryProc<SqlServerTestUtils.TVPRecord>("TableTypeTestProc", testCase.Factory(external));
 
-				AreEqualWithComparer(TestUDTData, result);
+				AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
 			}
 		}
 
@@ -193,13 +154,13 @@ namespace Tests.DataProvider
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
 			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
-				var result = from record in db.FromSql<TVPRecord>($"{testCase.Factory(external)}")
-							 select new TVPRecord() { Id = record.Id, Name = record.Name };
+				var result = from record in db.FromSql<SqlServerTestUtils.TVPRecord>($"{testCase.Factory(external)}")
+							 select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name };
 
-				AreEqualWithComparer(TestUDTData, result);
+				AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
 			}
 		}
 
@@ -219,13 +180,13 @@ namespace Tests.DataProvider
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
 			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (var table = db.CreateTempTable<TestMergeTVPTable>())
 			{
 				var cnt = table
 					.Merge()
-					.Using(db.FromSql<TVPRecord>($"{testCase.Factory(external)}").Where(_ => _.Id != null))
+					.Using(db.FromSql<SqlServerTestUtils.TVPRecord>($"{testCase.Factory(external)}").Where(_ => _.Id != null))
 					.On((t, s) => t.Id == s.Id)
 					.InsertWhenNotMatched(s => new TestMergeTVPTable()
 					{
@@ -236,12 +197,18 @@ namespace Tests.DataProvider
 
 				var data = table.OrderBy(_ => _.Id).ToArray();
 
-				Assert.AreEqual(2, cnt);
-				Assert.AreEqual(2, data.Length);
-				Assert.AreEqual(1, data[0].Id);
-				Assert.AreEqual("Value1", data[0].Name);
-				Assert.AreEqual(2, data[1].Id);
-				Assert.AreEqual("Value2", data[1].Name);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt, Is.EqualTo(2));
+					Assert.That(data, Has.Length.EqualTo(2));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(1));
+					Assert.That(data[0].Name, Is.EqualTo("Value1"));
+					Assert.That(data[1].Id, Is.EqualTo(2));
+					Assert.That(data[1].Name, Is.EqualTo("Value2"));
+				});
 			}
 		}
 
@@ -251,14 +218,14 @@ namespace Tests.DataProvider
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var result =
 					from record in TableValue(db, testCase.Factory(external))
-					select new TVPRecord() { Id = record.Id, Name = record.Name };
+					select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name };
 
-				AreEqualWithComparer(TestUDTData, result);
+				AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
 			}
 		}
 
@@ -266,44 +233,114 @@ namespace Tests.DataProvider
 		public void TableValuedParameterProcedureAsNullTest(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
-				var result = db.QueryProc<TVPRecord>("TableTypeTestProc", new DataParameter("@table", null, DataType.Structured) {  DbType = TYPE_NAME});
+				var result = db.QueryProc<SqlServerTestUtils.TVPRecord>("TableTypeTestProc", new DataParameter("@table", null, DataType.Structured) {  DbType = TYPE_NAME});
 
-				Assert.AreEqual(0, result.ToList().Count);
+				Assert.That(result.ToList(), Is.Empty);
 			}
 		}
 
 		[Test]
 		public void TableValuedParameterAsNullInQueryUsingFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
+			{
+				var result = from record in db.FromSql<SqlServerTestUtils.TVPRecord>($"select * from  {new DataParameter("table", null, DataType.Structured) { DbType = TYPE_NAME }}")
+							 select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name };
+
+				Assert.That(result.ToList(), Is.Empty);
+			}
+		}
+
+		public class Result
+		{
+			public int[]? Ints { get; set; }
+		}
+		
+		[Test]
+		public void TVPCachingIssue(
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
 			using (var external = new DataConnection(context))
 			using (var db = new DataConnection(context))
 			{
-				var result = from record in db.FromSql<TVPRecord>($"select * from  {new DataParameter("table", null, DataType.Structured) { DbType = TYPE_NAME }}")
-							 select new TVPRecord() { Id = record.Id, Name = record.Name };
+				Result[] GetResult(params int[] values)
+				{
+					using var table = new DataTable();
 
-				Assert.AreEqual(0, result.ToList().Count);
+					table.Columns.Add("Id", typeof(int));
+					table.Columns.Add("Name", typeof(string));
+				
+					foreach (var value in values)
+						table.Rows.Add(value, "_");
+
+					var parameter = new DataParameter("table", table, DataType.Structured) { DbType = TYPE_NAME };
+
+					var query = from x in db.FromSql<SqlServerTestUtils.TVPRecord>($"{parameter}") select x.Id!.Value;
+
+					return db.GetTable<Person>()
+						.Where(p => query.Contains(p.ID))
+						.Select(p1 => new Result
+						{
+							Ints = db.GetTable<Person>()
+								.Where(p2 => p2.ID > p1.ID)
+								.Select(p => p.ID)
+								.ToArray()
+						}).ToArray();
+				}
+
+				void AssertResult(Result[] r1, Result[] r2)
+				{
+					Assert.That(r2, Has.Length.EqualTo(r1.Length));
+					for (var i = 0; i < r1.Length; i++)
+					{
+						var ints1 = r1[i].Ints!;
+						var ints2 = r2[i].Ints!;
+						Assert.That(ints2, Has.Length.EqualTo(ints1.Length));
+					
+						for (var j = 0; j < ints1.Length; j++)
+							Assert.That(ints2[j], Is.EqualTo(ints1[j]));
+					}
+				}
+				
+				Result[] res1;
+				Result[] res2;
+				
+				// workaround
+				using (NoLinqCache.Scope())
+				{
+					res1 = GetResult(1, 2);
+					res2 = GetResult(2, 3); 
+				}
+				
+				var res3 = GetResult(1, 2);
+				var res4 = GetResult(2, 3);
+				
+				AssertResult(res1, res3); // pass
+				AssertResult(res2, res4); // fail
 			}
 		}
 
 		[Test]
 		public void TableValuedParameterProcedureT4Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using (var external = GetDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
-				var result = TableTypeTestProc(db, GetDataTable());
+				using var table = GetDataTable();
+				var result = TableTypeTestProc(db, table);
 
-				AreEqualWithComparer(TestUDTData, result);
+				AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
 			}
 		}
 
 		// this is procedure, generated by T4 template (without db name and "this" for connection parameter)
-		public static IEnumerable<TVPRecord> TableTypeTestProc(DataConnection dataConnection, DataTable @table)
+		private static IEnumerable<SqlServerTestUtils.TVPRecord> TableTypeTestProc(DataConnection dataConnection, DataTable @table)
 		{
-			return dataConnection.QueryProc<TVPRecord>("[TableTypeTestProc]",
+			return dataConnection.QueryProc<SqlServerTestUtils.TVPRecord>("[TableTypeTestProc]",
 				new DataParameter("@table", @table, DataType.Structured) { DbType = "[dbo].[TestTableType]" });
 		}
 	}

@@ -1,67 +1,168 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using LinqToDB.Common;
-using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common.Internal;
+	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
 
-	class MethodChainBuilder : MethodCallBuilder
+	sealed class MethodChainBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
-			return functions.Any();
+			if (functions.Length == 0)
+				return false;
+
+			var function = functions[0];
+			if (!(function.IsAggregate || function.IsWindowFunction))
+				return false;
+
+			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(methodCall.Method.ReturnType))
+				return false;
+
+			var root = methodCall.SkipMethodChain(builder.MappingSchema, out var isQueryable);
+
+			root = builder.MakeExpression(null, root, ProjectFlags.Root);
+
+			if (root is ContextRefExpression)
+				return true;
+
+			if (isQueryable)
+				return true;
+
+			if (ReferenceEquals(root, methodCall))
+				return false;
+
+			if (builder.IsSequence(buildInfo.Parent, root))
+				return true;
+
+			return false;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			return true;
+		}
+
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
 
-			var root = methodCall.SkipMethodChain(builder.MappingSchema);
+			var root = methodCall.SkipMethodChain(builder.MappingSchema, out _);
 
 			// evaluating IQueryableContainer
 			while (root.NodeType == ExpressionType.Constant && typeof(Sql.IQueryableContainer).IsSameOrParentOf(root.Type))
 			{
-				root = ((Sql.IQueryableContainer)root.EvaluateExpression()!).Query.Expression;
-				root = root.SkipMethodChain(builder.MappingSchema);
+				var evaluated = ((Sql.IQueryableContainer)root.EvaluateExpression()!).Query.Expression;
+				methodCall = (MethodCallExpression)methodCall.Replace(root, evaluated);
+				root       = evaluated.SkipMethodChain(builder.MappingSchema, out _);
 			}
 
-			root = builder.ConvertExpressionTree(root);
+			IBuildContext? sequence;
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
+			root = builder.ConvertExpressionTree(root);
+			var rootContextref = builder.MakeExpression(null, root, ProjectFlags.Root) as ContextRefExpression;
 
 			var finalFunction = functions.First();
-				
-			var sqlExpression = finalFunction.GetExpression(builder.DataContext, buildInfo.SelectQuery, methodCall,
-				(e, descriptor) => builder.ConvertToExtensionSql(sequence, e, descriptor));
 
-			var context = new ChainContext(buildInfo.Parent, sequence, methodCall);
-			context.Sql        = context.SelectQuery;
-			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodCall.Method.Name);
+			if (rootContextref != null)
+			{
+				sequence = rootContextref.BuildContext;
+			}
+			else
+			{
+				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
+				if (buildResult.BuildContext == null)
+					return buildResult;
+				sequence = buildResult.BuildContext;
+			}
 
-			return context;
+			var buildSequence        = sequence;
+			var placeholderSelect    = sequence.SelectQuery;
+			var placeholderSequence  = sequence;
+			var inAggregationContext = true;
+
+			if (!buildInfo.IsSubQuery && finalFunction.IsAggregate)
+			{
+				// Wrap by subquery to handle aggregate limitations, especially for SQL Server
+				//
+				sequence            = new SubQueryContext(sequence);
+				placeholderSelect   = sequence.SelectQuery;
+				placeholderSequence = sequence;
+
+				rootContextref = new ContextRefExpression(root.Type, sequence);
+				methodCall     = (MethodCallExpression)methodCall.Replace(root, rootContextref);
+			}
+			else
+			{
+				var rootContext = builder.GetRootContext(buildInfo.Parent, rootContextref, true);
+
+				inAggregationContext = rootContext != null;
+
+				if (!inAggregationContext)
+				{
+					rootContextref = new ContextRefExpression(root.Type, sequence);
+					methodCall     = (MethodCallExpression)methodCall.Replace(root, rootContextref);
+				}
+
+				placeholderSequence = rootContext?.BuildContext ?? sequence;
+
+				if (placeholderSequence is GroupByBuilder.GroupByContext groupCtx)
+				{
+					placeholderSequence = groupCtx.Element;
+					placeholderSelect   = groupCtx.SubQuery.SelectQuery;
+
+					methodCall = (MethodCallExpression)SequenceHelper.ReplaceContext(methodCall, groupCtx, placeholderSequence);
+				}
+			}
+
+			var sqlExpression = finalFunction.GetExpression(
+				(builder, context: placeholderSequence, forselect: placeholderSelect, flags: buildInfo.GetFlags()), 
+				builder.DataContext, 
+				builder, 
+				placeholderSelect, 
+				methodCall,
+				static (ctx, e, descriptor, inline) =>
+				{
+					var result = ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor, inline);
+					result = ctx.builder.UpdateNesting(ctx.forselect, result);
+					return result;
+				});
+
+			if (sqlExpression is not SqlPlaceholderExpression placeholder)
+				return BuildSequenceResult.Error(methodCall);
+
+			builder.RegisterExtensionAccessors(methodCall);
+
+			var context = new ChainContext(buildInfo.Parent, placeholderSequence, methodCall);
+
+			placeholder = placeholder
+					.WithPath(methodCall)
+					.WithAlias(methodCall.Method.Name);
+
+			if (!inAggregationContext && buildInfo.IsSubQuery)
+			{
+				var indexed = builder.ToColumns(sequence, placeholder);
+				placeholder = ExpressionBuilder.CreatePlaceholder(buildInfo.Parent, sequence.SelectQuery, methodCall, alias: methodCall.Method.Name);
+			}
+			
+			context.Placeholder = placeholder;
+
+			return BuildSequenceResult.FromContext(context);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
-		class ChainContext : SequenceContextBase
+		internal sealed class ChainContext : SequenceContextBase
 		{
 			public ChainContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
 			{
-				_returnType = methodCall.Method.ReturnType;
-				_methodName = methodCall.Method.Name;
+				MethodCall = methodCall;
+				_returnType     = methodCall.Method.ReturnType;
+				_methodName     = methodCall.Method.Name;
 
 				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
 				{
@@ -70,95 +171,70 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			readonly string     _methodName;
-			readonly Type       _returnType;
-			private  SqlInfo[]? _index;
+			readonly string _methodName;
+			readonly Type   _returnType;
 
-			public int             FieldIndex;
-			public ISqlExpression? Sql;
+			public SqlPlaceholderExpression Placeholder = null!;
+			public MethodCallExpression     MethodCall { get; }
 
+			// ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
 			static int CheckNullValue(bool isNull, object context)
 			{
 				if (isNull)
+				{
 					throw new InvalidOperationException(
-						$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
+						$"Function '{context}' returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
+				}
+
 				return 0;
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				var expr   = BuildExpression(FieldIndex, Sql);
-				var mapper = Builder.BuildMapper<object>(expr);
+				var mapper = Builder.BuildMapper<object>(SelectQuery, expr);
 
-				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
-				var index = info.Index;
-				if (Parent != null)
-					index = ConvertToParentIndex(index, Parent);
-				return BuildExpression(index, info.Sql);
-			}
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
+					return path;
 
-			Expression BuildExpression(int fieldIndex, ISqlExpression? sqlExpression)
-			{
-				Expression expr;
-
-				if (_returnType.IsClass || _returnType.IsNullable())
+				if (flags.IsAggregationRoot() || flags.IsAssociationRoot())
 				{
-					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
-				}
-				else
-				{
-					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, Expression.Constant(0)), Expression.Constant(_methodName)),
-						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
+					var corrected = SequenceHelper.CorrectExpression(path, this, Sequence);
+					return corrected;
 				}
 
-				return expr;
-			}
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+				if (Placeholder == null)
+					return path;
 
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				switch (flags)
+				Expression result = Placeholder;
+
+				if (!_returnType.IsNullableType() && flags.IsExpression())
 				{
-					case ConvertFlags.All   :
-					case ConvertFlags.Key   :
-					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level + 1, flags);
+					result = Expression.Block(
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)),
+							new SqlReaderIsNullExpression(Placeholder, false), Expression.Constant(_methodName)),
+						Placeholder);
 				}
 
-				throw new InvalidOperationException();
+				return result;
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
-				return flags switch
+				return null;
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new ChainContext(null, context.CloneContext(Sequence), context.CloneExpression(MethodCall))
 				{
-					ConvertFlags.Field =>
-						_index ??= new[]
-						{
-							new SqlInfo(Sql!, Parent!.SelectQuery, Parent.SelectQuery.Select.Add(Sql!))
-						},
-					_ => throw new InvalidOperationException(),
+					Placeholder = context.CloneExpression(Placeholder)
 				};
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				return requestFlag switch
-				{
-					RequestFor.Root       => new IsExpressionResult(Lambda != null && expression == Lambda.Parameters[0]),
-					RequestFor.Expression => IsExpressionResult.True,
-					_                     => IsExpressionResult.False,
-				};
-			}
-
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				throw new NotImplementedException();
 			}
 		}
 

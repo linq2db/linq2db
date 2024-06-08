@@ -3,26 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace LinqToDB.DataProvider
 {
+	using Async;
 	using Common;
-	using LinqToDB.Data;
+	using Data;
 	using Mapping;
-	using System.Threading;
-	using System.Threading.Tasks;
 
-	public class BulkCopyReader<T> : BulkCopyReader
-#if !NETFRAMEWORK
-		, IAsyncDisposable
-#endif
+	public class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
 	{
 		readonly IEnumerator<T>?      _enumerator;
-#if !NETFRAMEWORK
 		readonly IAsyncEnumerator<T>? _asyncEnumerator;
-#endif
 
 		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IEnumerable<T> collection)
 			: base(dataConnection, columns)
@@ -30,7 +27,6 @@ namespace LinqToDB.DataProvider
 			_enumerator = collection.GetEnumerator();
 		}
 
-#if !NETFRAMEWORK
 		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IAsyncEnumerable<T> collection, CancellationToken cancellationToken)
 			: base(dataConnection, columns)
 		{
@@ -42,40 +38,32 @@ namespace LinqToDB.DataProvider
 			if (_enumerator != null)
 				return _enumerator.MoveNext();
 			
-			var result = _asyncEnumerator!.MoveNextAsync();
-			return result.IsCompleted ? result.Result : result.AsTask().GetAwaiter().GetResult();
+			return SafeAwaiter.Run(() => _asyncEnumerator!.MoveNextAsync());
 		}
+
+		protected override object Current
+			=> (_enumerator != null ? _enumerator.Current : _asyncEnumerator!.Current)!;
 
 		protected override ValueTask<bool> MoveNextAsync()
 			=> _enumerator != null ? new ValueTask<bool>(_enumerator.MoveNext()) : _asyncEnumerator!.MoveNextAsync();
 
-		protected override object Current
-			=> (_enumerator != null ? _enumerator.Current : _asyncEnumerator!.Current)!;
-#else
-		protected override bool MoveNext()
-			=> _enumerator!.MoveNext();
-
-		protected override object Current
-			=> _enumerator!.Current!;
-#endif
-
 		#region Implementation of IDisposable
 
-#if !NETFRAMEWORK
 #pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		protected override void Dispose(bool disposing)
 #pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
 		{
-			if (disposing && _asyncEnumerator != null)
+			if (disposing)
 			{
-				var result = _asyncEnumerator.DisposeAsync();
-
-				if (!result.IsCompleted)
-					result.AsTask().GetAwaiter().GetResult();
+				_enumerator?.Dispose();
+				if (_asyncEnumerator != null)
+				{
+					SafeAwaiter.Run(_asyncEnumerator.DisposeAsync);
+				}
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 #pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		public override ValueTask DisposeAsync()
 #pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
@@ -83,54 +71,55 @@ namespace LinqToDB.DataProvider
 		public ValueTask DisposeAsync()
 #endif
 		{
-			return _asyncEnumerator?.DisposeAsync() ?? new ValueTask(Task.CompletedTask);
+			_enumerator?.Dispose();
+			return _asyncEnumerator?.DisposeAsync() ?? default;
 		}
 
-#endif
-
-		#endregion
+#endregion
 
 	}
 
-	public abstract class BulkCopyReader : DbDataReader, IDataReader, IDataRecord
+	public abstract class BulkCopyReader : DbDataReader
 	{
 		public int Count;
 
 		readonly DataConnection                   _dataConnection;
 		readonly DbDataType[]                     _columnTypes;
 		readonly List<ColumnDescriptor>           _columns;
-		readonly Parameter                        _valueConverter = new Parameter();
+		readonly Parameter                        _valueConverter = new ();
 		readonly IReadOnlyDictionary<string, int> _ordinals;
 
 		protected abstract bool MoveNext();
-#if !NETFRAMEWORK
 		protected abstract ValueTask<bool> MoveNextAsync();
-#endif
+
 		protected abstract object Current { get; }
 
-		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns)
+		protected BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns)
 		{
 			_dataConnection = dataConnection;
 			_columns        = columns;
-			_columnTypes    = _columns.Select(c => c.GetDbDataType(true)).ToArray();
+			_columnTypes    = _columns.Select(c => c.GetConvertedDbDataType()).ToArray();
 			_ordinals       = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 
-		public class Parameter : IDbDataParameter
+		public class Parameter : DbParameter
 		{
-			public DbType             DbType        { get; set; }
-			public ParameterDirection Direction     { get; set; }
-			public bool               IsNullable    { get { return Value == null || Value is DBNull; } }
-			public string?            ParameterName { get; set; }
-			public string?            SourceColumn  { get; set; }
-			public DataRowVersion     SourceVersion { get; set; }
-			public object?            Value         { get; set; }
-			public byte               Precision     { get; set; }
-			public byte               Scale         { get; set; }
-			public int                Size          { get; set; }
+			public override DbType             DbType                  { get; set; }
+			public override ParameterDirection Direction               { get; set; }
+			public override bool               IsNullable              { get => Value == null || Value is DBNull; set { } }
+			[AllowNull]
+			public override string             ParameterName           { get; set; }
+			public override int                Size                    { get; set; }
+			[AllowNull]
+			public override string             SourceColumn            { get; set; }
+			public override DataRowVersion     SourceVersion           { get; set; }
+			public override bool               SourceColumnNullMapping { get; set; }
+			public override object?            Value                   { get; set; }
+
+			public override void ResetDbType() { }
 		}
 
-		#region Implementation of IDataRecord
+#region Implementation of IDataRecord
 
 		public override string GetName(int ordinal)
 		{
@@ -142,9 +131,11 @@ namespace LinqToDB.DataProvider
 			return _dataConnection.DataProvider.ConvertParameterType(_columns[ordinal].MemberType, _columnTypes[ordinal]);
 		}
 
-		public override object? GetValue(int ordinal)
+		public override object GetValue(int ordinal) => GetValueInternal(ordinal) ?? throw new InvalidOperationException("Value is NULL");
+
+		private object? GetValueInternal(int ordinal)
 		{
-			var value = _columns[ordinal].GetValue(Current);
+			var value = _columns[ordinal].GetProviderValue(Current);
 
 			_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[ordinal], value);
 
@@ -158,7 +149,7 @@ namespace LinqToDB.DataProvider
 
 			for (var it = 0; it < count; ++it)
 			{
-				var value = _columns[it].GetValue(obj);
+				var value = _columns[it].GetProviderValue(obj);
 				_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[it], value);
 				values[it] = _valueConverter.Value;
 			}
@@ -168,12 +159,12 @@ namespace LinqToDB.DataProvider
 
 		public override int FieldCount => _columns.Count;
 
-		public override long GetBytes(int ordinal, long dataOffset, byte[] buffer, int bufferOffset, int length)
+		public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override long GetChars(int ordinal, long dataOffset, char[] buffer, int bufferOffset, int length)
+		public override long GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length)
 		{
 			throw new NotImplementedException();
 		}
@@ -192,14 +183,14 @@ namespace LinqToDB.DataProvider
 		public override string      GetString      (int ordinal) => throw new NotImplementedException();
 		public override decimal     GetDecimal     (int ordinal) => throw new NotImplementedException();
 		public override DateTime    GetDateTime    (int ordinal) => throw new NotImplementedException();
-		public override bool        IsDBNull       (int ordinal) => GetValue(ordinal) == null;
+		public override bool        IsDBNull       (int ordinal) => GetValueInternal(ordinal) == null;
 
 		public override object this[int i]       => throw new NotImplementedException();
 		public override object this[string name] => throw new NotImplementedException();
 
-		#endregion
+#endregion
 
-		#region Implementation of IDataReader
+#region Implementation of IDataReader
 
 		public override void Close()
 		{
@@ -241,10 +232,11 @@ namespace LinqToDB.DataProvider
 			for (var i = 0; i < _columns.Count; ++i)
 			{
 				var columnDescriptor = _columns[i];
+				var convertedType    = columnDescriptor.GetConvertedDbDataType();
 				var row              = table.NewRow();
 
 				row[SchemaTableColumn.ColumnName]              = columnDescriptor.ColumnName;
-				row[SchemaTableColumn.DataType]                = _dataConnection.DataProvider.ConvertParameterType(columnDescriptor.MemberType, _columnTypes[i]);
+				row[SchemaTableColumn.DataType]                = _dataConnection.DataProvider.ConvertParameterType(convertedType.SystemType, _columnTypes[i]);
 				row[SchemaTableColumn.IsKey]                   = columnDescriptor.IsPrimaryKey;
 				row[SchemaTableOptionalColumn.IsAutoIncrement] = columnDescriptor.IsIdentity;
 				row[SchemaTableColumn.AllowDBNull]             = columnDescriptor.CanBeNull;
@@ -277,17 +269,15 @@ namespace LinqToDB.DataProvider
 			return b;
 		}
 
-#if !NETFRAMEWORK
 		public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
 		{
-			var b = await MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			var b = await MoveNextAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			if (b)
 				Count++;
 
 			return b;
 		}
-#endif
 
 		public override int Depth           => throw new NotImplementedException();
 
@@ -295,7 +285,7 @@ namespace LinqToDB.DataProvider
 
 		public override int RecordsAffected => throw new NotImplementedException();
 
-		#endregion
+#endregion
 
 		public override IEnumerator GetEnumerator() => throw new NotImplementedException();
 

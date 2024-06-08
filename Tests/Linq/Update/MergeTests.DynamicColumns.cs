@@ -11,13 +11,13 @@ namespace Tests.xUpdate
 	// could be added on request
 	public partial class MergeTests
 	{
-		class DynamicColumns1
+		sealed class DynamicColumns1
 		{
 			[DynamicColumnsStore]
 			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
 		}
 
-		class DynamicColumns2
+		sealed class DynamicColumns2
 		{
 			[DynamicColumnsStore]
 			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
@@ -27,14 +27,15 @@ namespace Tests.xUpdate
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<DynamicColumns1>().HasTableName("TestMerge1")
 					.HasPrimaryKey(x => Sql.Property<int>(x, "Id"))
 					.Property(x => Sql.Property<int?>(x, "Field1"))
 					.Property(x => Sql.Property<int?>(x, "Field2"))
 					.Property(x => Sql.Property<int?>(x, "Field3")).HasSkipOnInsert(true)
 					.Property(x => Sql.Property<int?>(x, "Field4")).HasSkipOnUpdate(true)
-					.Property(x => Sql.Property<int?>(x, "Field5")).HasSkipOnInsert(true).HasSkipOnUpdate(true);
+					.Property(x => Sql.Property<int?>(x, "Field5")).HasSkipOnInsert(true).HasSkipOnUpdate(true)
+				.Build();
 
 			return ms;
 		}
@@ -60,7 +61,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(4, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
@@ -96,9 +97,12 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
 
-				Assert.AreEqual(2, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(2));
 
-				Assert.AreEqual(3, result.Count);
+					Assert.That(result, Has.Count.EqualTo(3));
+				});
 
 				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
@@ -131,9 +135,12 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
 
-				Assert.AreEqual(2, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(2));
 
-				Assert.AreEqual(3, result.Count);
+					Assert.That(result, Has.Count.EqualTo(3));
+				});
 
 				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
@@ -162,7 +169,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
@@ -196,9 +203,12 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
 
-				Assert.AreEqual(4, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(4));
 
-				Assert.AreEqual(5, result.Count);
+					Assert.That(result, Has.Count.EqualTo(5));
+				});
 
 				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
@@ -229,7 +239,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(4, rows, context);
 
-				Assert.AreEqual(5, result.Count);
+				Assert.That(result, Has.Count.EqualTo(5));
 
 				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
@@ -261,7 +271,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(0, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
@@ -272,7 +282,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DynamicColumns_DeleteBySourceFromPartialSourceProjection(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
 			{
@@ -290,9 +300,12 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(3, result.Count);
+					Assert.That(result, Has.Count.EqualTo(3));
+				});
 
 				AssertRow(InitialTargetData[1], result[0], null, null);
 				AssertRow(InitialTargetData[2], result[1], null, 203);
@@ -330,24 +343,27 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 
-				Assert.AreEqual(6, result[2].Id);
-				Assert.IsNull(result[2].Field1);
-				Assert.AreEqual(6, result[2].Field2);
-				Assert.IsNull(result[2].Field3);
-				Assert.IsNull(result[2].Field4);
-				Assert.IsNull(result[2].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[2].Id, Is.EqualTo(6));
+					Assert.That(result[2].Field1, Is.Null);
+					Assert.That(result[2].Field2, Is.EqualTo(6));
+					Assert.That(result[2].Field3, Is.Null);
+					Assert.That(result[2].Field4, Is.Null);
+					Assert.That(result[2].Field5, Is.Null);
 
-				Assert.AreEqual(8, result[3].Id);
-				Assert.AreEqual(10, result[3].Field1);
-				Assert.AreEqual(13, result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.IsNull(result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+					Assert.That(result[3].Id, Is.EqualTo(8));
+					Assert.That(result[3].Field1, Is.EqualTo(10));
+					Assert.That(result[3].Field2, Is.EqualTo(13));
+					Assert.That(result[3].Field3, Is.Null);
+					Assert.That(result[3].Field4, Is.Null);
+					Assert.That(result[3].Field5, Is.Null);
+				});
 			}
 		}
 
@@ -379,31 +395,34 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 				AssertRow(InitialTargetData[3], result[3], null, null);
 
-				Assert.AreEqual(InitialSourceData[2].Id + 10, result[4].Id);
-				Assert.AreEqual(123, result[4].Field1);
-				Assert.AreEqual(InitialSourceData[2].Field1, result[4].Field2);
-				Assert.AreEqual(4, result[4].Field3);
-				Assert.AreEqual(999, result[4].Field4);
-				Assert.AreEqual(888, result[4].Field5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
+					Assert.That(result[4].Field1, Is.EqualTo(123));
+					Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
+					Assert.That(result[4].Field3, Is.EqualTo(4));
+					Assert.That(result[4].Field4, Is.EqualTo(999));
+					Assert.That(result[4].Field5, Is.EqualTo(888));
 
-				Assert.AreEqual(InitialSourceData[3].Id + 10, result[5].Id);
-				Assert.AreEqual(123, result[5].Field1);
-				Assert.AreEqual(InitialSourceData[3].Field1, result[5].Field2);
-				Assert.IsNull(result[5].Field3);
-				Assert.AreEqual(999, result[5].Field4);
-				Assert.AreEqual(888, result[5].Field5);
+					Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id + 10));
+					Assert.That(result[5].Field1, Is.EqualTo(123));
+					Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field1));
+					Assert.That(result[5].Field3, Is.Null);
+					Assert.That(result[5].Field4, Is.EqualTo(999));
+					Assert.That(result[5].Field5, Is.EqualTo(888));
+				});
 			}
 		}
 
 		[Test]
-		public void DynamicColumns_SameSourceDeleteBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void DynamicColumns_SameSourceDeleteBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
 			{
@@ -420,9 +439,12 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(3, result.Count);
+					Assert.That(result, Has.Count.EqualTo(3));
+				});
 
 				AssertDynamicRow(InitialTargetData[1], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[2], result[1], null, 203);
@@ -432,12 +454,15 @@ namespace Tests.xUpdate
 
 		private void AssertDynamicRow(TestMapping1 expected, DynamicColumns1 actual, int? exprected3, int? exprected4)
 		{
-			Assert.AreEqual(expected.Id    , actual.ExtendedProperties["Id"]);
-			Assert.AreEqual(expected.Field1, actual.ExtendedProperties["Field1"]);
-			Assert.AreEqual(expected.Field2, actual.ExtendedProperties["Field2"]);
-			Assert.AreEqual(exprected3     , actual.ExtendedProperties["Field3"]);
-			Assert.AreEqual(exprected4     , actual.ExtendedProperties["Field4"]);
-			Assert.IsNull(actual.ExtendedProperties["Field5"]);
+			Assert.Multiple(() =>
+			{
+				Assert.That(actual.ExtendedProperties["Id"], Is.EqualTo(expected.Id));
+				Assert.That(actual.ExtendedProperties["Field1"], Is.EqualTo(expected.Field1));
+				Assert.That(actual.ExtendedProperties["Field2"], Is.EqualTo(expected.Field2));
+				Assert.That(actual.ExtendedProperties["Field3"], Is.EqualTo(exprected3));
+				Assert.That(actual.ExtendedProperties["Field4"], Is.EqualTo(exprected4));
+				Assert.That(actual.ExtendedProperties["Field5"], Is.Null);
+			});
 		}
 	}
 }

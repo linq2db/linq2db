@@ -20,12 +20,12 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestIssue2856([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestIssue2856([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var s = GetDataContext(context))
 			using (s.CreateLocalTable<GlobalTaskDTO>())
 			{
-				var allRpIds = new[] {Guid.NewGuid(), Guid.NewGuid()};
+				var allRpIds = new[] { TestData.Guid1, TestData.Guid2 };
 
 				Assert.DoesNotThrow(() =>
 					_ = (

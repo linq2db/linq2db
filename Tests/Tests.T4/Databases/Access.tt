@@ -8,10 +8,9 @@
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
 
-	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
-	//LoadAccessMetadata(solutionsPath + @"\Data\", "TestData.mdb");
-	var path = $@"{solutionsPath}\Tests\Linq\bin\Debug\net472\Database\TestData.mdb";
-	LoadAccessMetadata($"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={path};Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True");
+	var artifactsPath = Host.ResolveAssemblyReference("$(ArtifactsPath)");
+	var path = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.mdb";
+	LoadAccessMetadata($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={path};Locale Identifier=1033;Persist Security Info=True");
 
 	GenerateModel();
 #>

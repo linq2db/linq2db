@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace LinqToDB.Data
 {
-	using System.Data;
+	using Common.Internal;
 
 	/// <summary>
 	/// Tracing information for the <see cref="DataConnection"/> events.
@@ -18,16 +18,25 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataConnection"><see cref="DataConnection"/> instance, generated this trace.</param>
 		/// <param name="traceInfoStep">Trace execution step.</param>
-		public TraceInfo(DataConnection dataConnection, TraceInfoStep traceInfoStep)
+		/// <param name="operation">Operation associated with trace event.</param>
+		/// <param name="isAsync">Flag indicating whether operation was executed asynchronously.</param>
+		public TraceInfo(DataConnection dataConnection, TraceInfoStep traceInfoStep, TraceOperation operation, bool isAsync)
 		{
 			DataConnection = dataConnection;
 			TraceInfoStep  = traceInfoStep;
+			Operation      = operation;
+			IsAsync        = isAsync;
 		}
 
 		/// <summary>
 		/// Gets the tracing execution step, <see cref="TraceInfoStep"/>.
 		/// </summary>
 		public TraceInfoStep TraceInfoStep { get; }
+
+		/// <summary>
+		/// Gets the operation, for which tracing event generated, <see cref="TraceOperation"/>.
+		/// </summary>
+		public TraceOperation Operation { get; }
 
 		/// <summary>
 		/// Gets or sets the tracing detail level, <see cref="TraceLevel"/>.
@@ -40,9 +49,9 @@ namespace LinqToDB.Data
 		public DataConnection DataConnection { get; }
 
 		/// <summary>
-		/// Gets or sets the <see cref="IDbCommand"/> associated with the tracing event.
+		/// Gets or sets the <see cref="DbCommand"/> associated with the tracing event.
 		/// </summary>
-		public IDbCommand? Command { get; set; }
+		public DbCommand? Command { get; set; }
 
 		/// <summary>
 		/// Gets or sets the starting <see cref="DateTime"/> of the operation (UTC).
@@ -77,9 +86,9 @@ namespace LinqToDB.Data
 		public Expression? MapperExpression { get; set; }
 
 		/// <summary>
-		/// Gets or sets a flag indicating whether the command was executed asynchronously.
+		/// Gets a flag indicating whether operation was executed asynchronously.
 		/// </summary>
-		public bool IsAsync { get; set; }
+		public bool IsAsync { get; }
 
 		private string? _sqlText;
 
@@ -98,8 +107,9 @@ namespace LinqToDB.Data
 					if (_sqlText != null)
 						return _sqlText;
 
-					var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder(DataConnection.MappingSchema);
-					var sb          = new StringBuilder();
+					var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder(DataConnection.MappingSchema, DataConnection.Options);
+					using var sbv    = Pools.StringBuilder.Allocate();
+					var sb           = sbv.Value;
 
 					sb.Append("-- ").Append(DataConnection.ConfigurationString);
 
@@ -114,7 +124,7 @@ namespace LinqToDB.Data
 
 					sb.AppendLine();
 
-					sqlProvider.PrintParameters(sb, Command.Parameters.Cast<IDbDataParameter>().ToArray());
+					sqlProvider.PrintParameters(DataConnection, sb, Command.Parameters.Cast<DbParameter>());
 
 					sb.AppendLine(Command.CommandText);
 

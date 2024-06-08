@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System;
+
+namespace LinqToDB.DataProvider.Firebird
 {
 	public static class FirebirdConfiguration
 	{
@@ -8,11 +10,21 @@
 		/// <remarks>
 		/// Default value: <see cref="FirebirdIdentifierQuoteMode.Auto"/>.
 		/// </remarks>
-		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode { get; set; } = FirebirdIdentifierQuoteMode.Auto;
+		[Obsolete("Use FirebirdOptions.Default.IdentifierQuoteMode instead.")]
+		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode
+		{
+			get => FirebirdOptions.Default.IdentifierQuoteMode;
+			set => FirebirdOptions.Default = FirebirdOptions.Default with { IdentifierQuoteMode = value };
+		}
 
 		/// <summary>
-		/// Specifies that Firebird supports literal encoding. Availiable from version 2.5.
+		/// Specifies that Firebird supports literal encoding. Available from version 2.5 and could be used for Dialect 1 databases.
 		/// </summary>
-		public static bool IsLiteralEncodingSupported = true;
+		[Obsolete("Use FirebirdOptions.Default.IsLiteralEncodingSupported instead.")]
+		public static bool IsLiteralEncodingSupported
+		{
+			get => FirebirdOptions.Default.IsLiteralEncodingSupported;
+			set => FirebirdOptions.Default = FirebirdOptions.Default with { IsLiteralEncodingSupported = value };
+		}
 	}
 }

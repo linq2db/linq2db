@@ -24,7 +24,9 @@ namespace Tests.UserTests
 		public class Entity533
 		{
 			[SequenceName(ProviderName.Firebird, "PersonID")]
-			[Column("PersonID"), Identity, PrimaryKey]
+			[Column("PersonID", Configuration = ProviderName.ClickHouse)]
+			[Column("PersonID", IsIdentity = true)]
+			[PrimaryKey]
 			public int      ID         { get; set; }
 
 			[Column]public Gender    Gender     { get; set; }
@@ -37,7 +39,7 @@ namespace Tests.UserTests
 		public void Issue533Test([DataSources] string context)
 		{
 			ResetPersonIdentity(context);
-			
+
 			var ms = new MappingSchema();
 			ms.SetConverter<MyString, string?>((obj) =>
 			{
@@ -56,7 +58,7 @@ namespace Tests.UserTests
 			});
 
 			using (var db = GetDataContext(context, ms))
-			using (new DeletePerson(db))
+			using (new RestoreBaseTables(db))
 			{
 				var obj = new Entity533
 				{
@@ -64,12 +66,22 @@ namespace Tests.UserTests
 					LastName  = new MyString { Value = "LastName533" },
 				};
 
-				var id1 = Convert.ToInt32(db.InsertWithIdentity(obj));
+				int id;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					obj.ID = id = 100;
+					db.Insert(obj);
+				}
+				else
+					id = db.InsertWithInt32Identity(obj);
 
-				var obj2 = db.GetTable<Entity533>().First(_ => _.ID == id1);
+				var obj2 = db.GetTable<Entity533>().First(_ => _.ID == id);
 
-				Assert.IsNull  (obj2.MiddleName);
-				Assert.AreEqual(obj.FirstName.Value, obj2.FirstName.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(obj2.MiddleName, Is.Null);
+					Assert.That(obj2.FirstName.Value, Is.EqualTo(obj.FirstName.Value));
+				});
 			}
 		}
 	}

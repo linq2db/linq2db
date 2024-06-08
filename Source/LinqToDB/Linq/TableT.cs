@@ -1,40 +1,71 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 namespace LinqToDB.Linq
 {
 	using Extensions;
+	using LinqToDB.Expressions;
+	using Mapping;
 	using Reflection;
+	using SqlQuery;
 
-	class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
+	sealed class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
+		where T : notnull
 	{
 		public Table(IDataContext dataContext)
 		{
 			var expression = typeof(T).IsScalar()
 				? null
 				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
-					Expression.Constant(dataContext));
+					SqlQueryRootExpression.Create(dataContext.MappingSchema, dataContext.GetType()));
 
-			InitTable(dataContext, expression);
+			InitTable(dataContext, expression, null);
+		}
+
+		internal Table(IDataContext dataContext, Table<T> basedOn)
+		{
+			Init(dataContext, basedOn.Expression);
+			_tableOptions = basedOn.TableOptions;
+			_tableID = basedOn.TableID;
+			_name = basedOn._name;
+		}
+
+		internal Table(IDataContext dataContext, EntityDescriptor? tableDescriptor)
+		{
+			var expression = typeof(T).IsScalar()
+				? null
+				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
+					SqlQueryRootExpression.Create(dataContext.MappingSchema, dataContext.GetType()));
+
+			InitTable(dataContext, expression, tableDescriptor);
 		}
 
 		public Table(IDataContext dataContext, Expression expression)
 		{
-			InitTable(dataContext, expression);
+			InitTable(dataContext, expression, null);
 		}
 
-		void InitTable(IDataContext dataContext, Expression? expression)
+		void InitTable(IDataContext dataContext, Expression? expression, EntityDescriptor? tableDescriptor)
 		{
+			if (expression != null && tableDescriptor != null)
+			{
+				if (tableDescriptor.TableOptions != TableOptions.NotSet)
+					expression = ApplyTableOptions(expression, tableDescriptor.TableOptions);
+
+				expression = ApplyTableName(expression, tableDescriptor.Name.Name);
+				if (!string.IsNullOrEmpty(tableDescriptor.Name.Schema))
+					expression = ApplySchemaName(expression, tableDescriptor.Name.Schema);
+				if (!string.IsNullOrEmpty(tableDescriptor.Name.Database))
+					expression = ApplyDatabaseName(expression, tableDescriptor.Name.Database);
+				if (!string.IsNullOrEmpty(tableDescriptor.Name.Server))
+					expression = ApplyServerName(expression, tableDescriptor.Name.Server);
+			}
+
 			Init(dataContext, expression);
 
-			var ed = dataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed = tableDescriptor ?? dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
-			_serverName   = ed.ServerName;
-			_databaseName = ed.DatabaseName;
-			_schemaName   = ed.SchemaName;
-			_tableName    = ed.TableName;
+			_name         = ed.Name;
 			_tableOptions = ed.TableOptions;
 		}
 
@@ -44,58 +75,103 @@ namespace LinqToDB.Linq
 		static MethodInfo? _schemaNameMethodInfo;
 		static MethodInfo? _tableNameMethodInfo;
 		static MethodInfo? _tableOptionsMethodInfo;
+		static MethodInfo? _tableIDMethodInfo;
 		// ReSharper restore StaticMemberInGenericType
 
-		private string? _serverName;
+		static Expression ApplyTableOptions(Expression expression, TableOptions tableOptions)
+		{
+			expression = Expression.Call(
+				null,
+				_tableOptionsMethodInfo ??= Methods.LinqToDB.Table.TableOptions.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(tableOptions));
+			return expression;
+		}
+
+		static Expression ApplyTableName(Expression expression, string? tableName)
+		{
+			expression = Expression.Call(
+				null,
+				_tableNameMethodInfo ??= Methods.LinqToDB.Table.TableName.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(tableName));
+			return expression;
+		}
+
+		static Expression ApplyDatabaseName(Expression expression, string? databaseName)
+		{
+			expression = Expression.Call(
+				null,
+				_databaseNameMethodInfo ??= Methods.LinqToDB.Table.DatabaseName.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(databaseName));
+			return expression;
+		}
+
+		static Expression ApplySchemaName(Expression expression, string? schemaName)
+		{
+			expression = Expression.Call(
+				null,
+				_schemaNameMethodInfo ??= Methods.LinqToDB.Table.SchemaName.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(schemaName));
+			return expression;
+		}
+
+		static Expression ApplyServerName(Expression expression, string? serverName)
+		{
+			expression = Expression.Call(
+				null,
+				_serverNameMethodInfo ??= Methods.LinqToDB.Table.ServerName.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(serverName));
+			return expression;
+		}
+
+		static Expression ApplyTaleId(Expression expression, string? id)
+		{
+			expression = Expression.Call(
+				null,
+				_tableIDMethodInfo ??= Methods.LinqToDB.Table.TableID.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(id, typeof(string)));
+			return expression;
+		}
+
+		private SqlObjectName _name;
+
 		public  string?  ServerName
 		{
-			get => _serverName;
+			get => _name.Server;
 			set
 			{
-				if (_serverName != value)
+				if (_name.Server != value)
 				{
-					Expression = Expression.Call(
-						null,
-						_serverNameMethodInfo ??= Methods.LinqToDB.Table.ServerName.MakeGenericMethod(typeof(T)),
-						Expression, Expression.Constant(value));
+					Expression = ApplyServerName(Expression, value);
 
-					_serverName = value;
+					_name = _name with { Server = value };
 				}
 			}
 		}
 
-		private string? _databaseName;
 		public  string?  DatabaseName
 		{
-			get => _databaseName;
+			get => _name.Database;
 			set
 			{
-				if (_databaseName != value)
+				if (_name.Database != value)
 				{
-					Expression = Expression.Call(
-						null,
-						_databaseNameMethodInfo ??= Methods.LinqToDB.Table.DatabaseName.MakeGenericMethod(typeof(T)),
-						Expression, Expression.Constant(value));
+					Expression = ApplyDatabaseName(Expression, value);
 
-					_databaseName = value;
+					_name = _name with { Database = value };
 				}
 			}
 		}
 
-		private string? _schemaName;
 		public  string?  SchemaName
 		{
-			get => _schemaName;
+			get => _name.Schema;
 			set
 			{
-				if (_schemaName != value)
+				if (_name.Schema != value)
 				{
-					Expression = Expression.Call(
-						null,
-						_schemaNameMethodInfo ??= Methods.LinqToDB.Table.SchemaName.MakeGenericMethod(typeof(T)),
-						Expression, Expression.Constant(value));
+					Expression = ApplySchemaName(Expression, value);
 
-					_schemaName = value;
+					_name = _name with { Schema = value };
 				}
 			}
 		}
@@ -108,92 +184,83 @@ namespace LinqToDB.Linq
 			{
 				if (_tableOptions != value)
 				{
-					Expression = Expression.Call(
-						null,
-						_tableOptionsMethodInfo ??= Methods.LinqToDB.Table.TableOptions.MakeGenericMethod(typeof(T)),
-						Expression, Expression.Constant(value));
+					Expression = ApplyTableOptions(Expression, value);
 
 					_tableOptions = value;
 				}
 			}
 		}
 
-		private string _tableName = null!;
 		public  string  TableName
 		{
-			get => _tableName;
+			get => _name.Name;
 			set
 			{
-				if (_tableName != value)
+				if (_name.Name != value)
 				{
-					Expression = Expression.Call(
-						null,
-						_tableNameMethodInfo ??= Methods.LinqToDB.Table.TableName.MakeGenericMethod(typeof(T)),
-						Expression, Expression.Constant(value));
+					Expression = ApplyTableName(Expression, value);
 
-					_tableName = value;
+					_name = _name with { Name = value };
 				}
 			}
 		}
 
-		public string GetTableName() =>
-			DataContext.CreateSqlProvider()
-				.ConvertTableName(new StringBuilder(), ServerName, DatabaseName, SchemaName, TableName, TableOptions)
-				.ToString();
+		private string? _tableID;
+		public string?   TableID
+		{
+			get => _tableID;
+			set
+			{
+				if (_tableID != value)
+				{
+					Expression = ApplyTaleId(Expression, value);
+
+					_tableID = value;
+				}
+			}
+		}
 
 		public ITable<T> ChangeServerName(string? serverName)
 		{
-			return new Table<T>(DataContext)
+			return new Table<T>(DataContext, this)
 			{
-				TableName    = TableName,
-				SchemaName   = SchemaName,
-				DatabaseName = DatabaseName,
-				Expression   = Expression,
-				ServerName   = serverName,
-				TableOptions = TableOptions
+				ServerName = serverName
 			};
 		}
 
 		public ITable<T> ChangeDatabaseName(string? databaseName)
 		{
-			return new Table<T>(DataContext)
+			return new Table<T>(DataContext, this)
 			{
-				TableName    = TableName,
-				SchemaName   = SchemaName,
-				ServerName   = ServerName,
-				Expression   = Expression,
-				DatabaseName = databaseName,
-				TableOptions = TableOptions
+				DatabaseName = databaseName
 			};
 		}
 
 		public ITable<T> ChangeSchemaName(string? schemaName)
 		{
-			return new Table<T>(DataContext)
+			return new Table<T>(DataContext, this)
 			{
-				TableName    = TableName,
-				ServerName   = ServerName,
-				DatabaseName = DatabaseName,
-				Expression   = Expression,
-				SchemaName   = schemaName,
-				TableOptions = TableOptions
+				SchemaName = schemaName
 			};
 		}
 
 		public ITable<T> ChangeTableName(string tableName)
 		{
-			return new Table<T>(DataContext)
+			return new Table<T>(DataContext, this)
 			{
-				SchemaName   = SchemaName,
-				ServerName   = ServerName,
-				DatabaseName = DatabaseName,
-				Expression   = Expression,
-				TableName    = tableName,
-				TableOptions = TableOptions
+				TableName = tableName
 			};
 		}
 
 		public ITable<T> ChangeTableOptions(TableOptions options)
+		{
+			return new Table<T>(DataContext, this)
+			{
+				TableOptions = options
+			};
+		}
+
+		public ITable<T> ChangeTableID(string? tableID)
 		{
 			return new Table<T>(DataContext)
 			{
@@ -202,7 +269,8 @@ namespace LinqToDB.Linq
 				DatabaseName = DatabaseName,
 				Expression   = Expression,
 				TableName    = TableName,
-				TableOptions = options
+				TableOptions = TableOptions,
+				TableID      = tableID,
 			};
 		}
 
@@ -210,7 +278,7 @@ namespace LinqToDB.Linq
 
 		public override string ToString()
 		{
-			return $"Table({GetTableName()})";
+			return $"Table({this.GetTableName()})";
 		}
 
 		#endregion

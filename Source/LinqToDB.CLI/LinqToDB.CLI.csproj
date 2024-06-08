@@ -1,0 +1,64 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<RootNamespace>LinqToDB.CLI</RootNamespace>
+		<AssemblyName>dotnet-linq2db</AssemblyName>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+		<OutputType>Exe</OutputType>
+		<WarningsAsErrors>true</WarningsAsErrors>
+		<SignAssembly>False</SignAssembly>
+		<RollForward>Major</RollForward>
+	</PropertyGroup>
+
+	<Target Name="CopyHosts" AfterTargets="Build">
+		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net6.0" />
+		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net7.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net7.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net7.0" />
+		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net8.0" />
+
+		<!--cleanup for pack-->
+		<ItemGroup>
+			<JunkFiles
+				Condition="$(Configuration) == 'Release'"
+				Include="
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.xml;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.pdb;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net7.0\*.xml;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net7.0\*.pdb;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.xml;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.pdb;"
+		/>
+		</ItemGroup>
+
+		<Delete Condition="$(Configuration) == 'Release'" Files="@(JunkFiles)" />
+	</Target>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Template.tt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
+		<PackageReference Include="Mono.TextTemplating" />
+
+		<!--providers-->
+		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+		<PackageReference Include="MySqlConnector" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		<PackageReference Include="Npgsql" />
+		<PackageReference Include="AdoNetCore.AseClient" />
+		<PackageReference Include="System.Data.Odbc" />
+		<PackageReference Include="System.Data.OleDb" />
+		<PackageReference Include="ClickHouse.Client" />
+		<PackageReference Include="Octonica.ClickHouseClient" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
+</Project>

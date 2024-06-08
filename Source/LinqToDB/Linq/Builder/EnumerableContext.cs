@@ -1,193 +1,295 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	// based on ArrayContext
-	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-	class EnumerableContext : IBuildContext
+	using Common;
+	using Data;
+	using Extensions;
+	using LinqToDB.Expressions;
+	using Mapping;
+	using Reflection;
+	using SqlQuery;
+
+	//TODO: review
+	sealed class EnumerableContext : BuildContextBase
 	{
-		readonly Type _elementType;
+		readonly EntityDescriptor _entityDescriptor;
+		readonly bool _filedsDefined;
 
-#if DEBUG
-		public string?               _sqlQueryText { get; }
-		public string                Path          => this.GetPath();
-#endif
-		public  ExpressionBuilder    Builder       { get; }
-		public  Expression           Expression    { get; }
-		public  SelectQuery          SelectQuery   { get; set; }
-		public  SqlStatement?        Statement     { get; set; }
-		public  IBuildContext?       Parent        { get; set; }
+		public override Expression?    Expression    { get; }
+		public override MappingSchema  MappingSchema => Builder.MappingSchema;
+		public          SqlValuesTable Table         { get; }
 
-		private readonly EntityDescriptor _entityDescriptor;
-
-		public SqlValuesTable Table { get; }
-
-		public EnumerableContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType,
-			ISqlExpression source)
+		public EnumerableContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType)
+			: base(builder, elementType, query)
 		{
 			Parent            = buildInfo.Parent;
-			Builder           = builder;
-			Expression        = buildInfo.Expression;
-			SelectQuery       = query;
-			_elementType      = elementType;
-			_entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType);
-			Table             = new SqlValuesTable(source);
+			_entityDescriptor = MappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+
+			Table      = BuildValuesTable(buildInfo.Expression, out _filedsDefined);
+			Expression = buildInfo.Expression;
+
+			if (!buildInfo.IsTest)
+				SelectQuery.From.Table(Table);
 		}
 
-		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+		EnumerableContext(ExpressionBuilder builder, MappingSchema mappingSchema, Expression expression, SelectQuery query, SqlValuesTable table, Type elementType)
+			: base(builder, elementType, query)
 		{
-			throw new NotImplementedException();
+			Parent = null;
+			_entityDescriptor = mappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			Table      = table;
+			Expression = expression;
 		}
 
-		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
+		SqlValuesTable BuildValuesTable(Expression expr, out bool fieldsDefined)
 		{
-			var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
-			var index = info.Index;
-			if (Parent != null)
-				index = ConvertToParentIndex(index, Parent);
-			return Builder.BuildSql(_elementType, index, info.Sql);
-		}
-
-		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-		{
-			if (expression == null)
+			if (expr.NodeType == ExpressionType.NewArrayInit)
 			{
-				var query = SelectQuery;
-				var sql   = SelectQuery.Select.Columns[0];
-
-				if (Parent != null)
-					query = Parent.SelectQuery;
-
-				return new[] { new SqlInfo(sql, query) };
+				fieldsDefined = true;
+				return BuildValuesTableFromArray((NewArrayExpression)expr);
 			}
 
-			switch (flags)
+			var param = Builder.ParametersContext.BuildParameter(this, expr, null, forceConstant : true,
+				buildParameterType : ParametersContext.BuildParameterType.InPredicate);
+
+			if (param == null)
 			{
-				case ConvertFlags.Field:
+				throw new InvalidOperationException($"Expression '{expr}' not translated to parameter.");
+			}
+
+			fieldsDefined = false;
+			return new SqlValuesTable(param.SqlParameter);
+		}
+
+		SqlValuesTable BuildValuesTableFromArray(NewArrayExpression arrayExpression)
+		{
+			if (MappingSchema.IsScalarType(ElementType))
+			{
+				var rows  = arrayExpression.Expressions.Select(e => new[] {Builder.ConvertToSql(Parent, e)}).ToList();
+				var contextRef = new ContextRefExpression(ElementType, this);
+				var specialProp = SequenceHelper.CreateSpecialProperty(contextRef, ElementType, "item");
+				var field = new SqlField(Table, "item") { Type = new DbDataType(ElementType)};
+				return new SqlValuesTable(new[] { field }, new[] { specialProp.Member }, rows);
+			}
+
+			var knownMembers = new HashSet<MemberInfo>();
+
+			foreach (var row in arrayExpression.Expressions)
+			{
+				var members = new Dictionary<MemberInfo, Expression>();
+				Builder.ProcessProjection(members, row);
+
+				knownMembers.AddRange(members.Keys);
+			}
+
+			var ed = MappingSchema.GetEntityDescriptor(ElementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+
+			var builtRows = new List<ISqlExpression[]>(arrayExpression.Expressions.Count);
+
+			var columnsInfo = knownMembers
+				.Select(m => (Member: m, Column: ed.Columns.FirstOrDefault(c => c.MemberInfo == m)))
+				.ToList();
+
+			foreach (var row in arrayExpression.Expressions)
+			{
+				var members = new Dictionary<MemberInfo, Expression>();
+				Builder.ProcessProjection(members, row);
+
+				var rowValues = new ISqlExpression[columnsInfo.Count];
+
+				var idx = 0;
+				foreach (var (member, column) in columnsInfo)
 				{
-					if (expression.NodeType == ExpressionType.MemberAccess)
+					ISqlExpression sql;
+					if (members.TryGetValue(member, out var accessExpr))
 					{
-						var memberExpression = (MemberExpression)expression;
-
-						foreach (var column in _entityDescriptor.Columns)
-						{
-							if (column.MemberInfo.EqualsTo(memberExpression.Member, _elementType))
-							{
-								if (!Table.FieldsLookup!.TryGetValue(column.MemberInfo.Name, out var newField))
-								{
-									Table.Add(newField = new SqlField(column), (record, parameters) =>
-									{
-										// TODO: improve this place to avoid closures
-										object? value;
-										if (column.MemberInfo.IsPropertyEx())
-											value = ((PropertyInfo)column.MemberInfo).GetValue(record);
-										else if (column.MemberInfo.IsFieldEx())
-											value = ((FieldInfo)column.MemberInfo).GetValue(record);
-										else
-											throw new InvalidOperationException();
-
-										var valueExpr = Expression.Constant(value, column.MemberType);
-										if (parameters.TryGetValue(valueExpr, out var parameter))
-											return parameter;
-
-										// TODO: parameter accessor is overkill here for disposable parameter
-										// we need method to create parameter value directly with all conversions
-										var sql = Builder.ConvertToSqlExpression(Parent!, valueExpr, column, false);
-										if (sql is SqlParameter p)
-										{
-											p.IsQueryParameter = !Builder.MappingSchema.ValueToSqlConverter.CanConvert(p.Type.SystemType);
-											foreach (var pa in Builder._parameters.Values)
-											{
-												if (pa.SqlParameter == p)
-												{
-													// Mimic QueryRunner.SetParameters
-													p.Value        = pa.ValueAccessor(Builder.Expression, Builder.DataContext, null);
-													var dbDataType = pa.DbDataTypeAccessor(Builder.Expression, Builder.DataContext, null);
-													p.Type         = p.Type.WithSetValues(dbDataType);
-													break;
-												}
-											}
-										}
-
-										parameters.Add(valueExpr, sql);
-
-										return sql;
-									});
-								}
-
-								return new[]
-								{
-									new SqlInfo(column.MemberInfo, newField, SelectQuery)
-								};
-
-							}
-						}
+						sql = Builder.ConvertToSql(Parent, accessExpr, columnDescriptor: column);
+					}
+					else
+					{
+						var nullValue = Expression.Constant(MappingSchema.GetDefaultValue(ElementType), ElementType);
+						sql = Builder.ConvertToSql(Parent, nullValue, columnDescriptor: column);
 					}
 
-					break;
+					rowValues[idx] = sql;
+					++idx;
 				}
+
+				builtRows.Add(rowValues);
 			}
 
-			throw new NotImplementedException();
-		}
+			var fields = new SqlField[columnsInfo.Count];
 
-		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-		{
-			var sql = ConvertToSql(expression, level, flags);
-
-			if (sql[0].Index < 0)
-				sql[0] = sql[0].WithIndex(sql[0].Query!.Select.Add(sql[0].Sql));
-
-			return sql;
-		}
-
-		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-		{
-			if (expression == null)
+			for (var index = 0; index < columnsInfo.Count; index++)
 			{
-				switch (requestFlag)
-				{
-					case RequestFor.Expression:
-					case RequestFor.Field: return IsExpressionResult.False;
-				}
+				var (member, column) = columnsInfo[index];
+				var field            = column != null
+					? new SqlField(column)
+					: new SqlField(new DbDataType(member.GetMemberType()), FormattableString.Invariant($"item{index + 1}"), true);
+				fields[index]        = field;
 			}
 
-			return IsExpressionResult.False;
+			return new SqlValuesTable(fields, columnsInfo.Select(ci => ci.Member).ToArray(), builtRows);
 		}
 
-		public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+		static ConstructorInfo _parameterConstructor =
+			MemberHelper.ConstructorOf(() => new SqlParameter(new DbDataType(typeof(object)), "", null));
+
+		static ConstructorInfo _sqlValueconstructor =
+			MemberHelper.ConstructorOf(() => new SqlValue(new DbDataType(typeof(object)), null));
+
+		SqlField? GetField(MemberExpression path)
 		{
-			throw new NotImplementedException();
+			if (SequenceHelper.IsSpecialProperty(path, ElementType, "item"))
+			{
+				var newField = BuildField(null, path);
+				return newField;
+			}
+
+			foreach (var column in _entityDescriptor.Columns)
+			{
+				if (!column.MemberInfo.EqualsTo(path.Member, ElementType))
+				{
+					continue;
+				}
+
+				var newField = BuildField(column, path);
+				return newField;
+			}
+
+			return null;
 		}
 
-		public int ConvertToParentIndex(int index, IBuildContext context)
+		SqlField BuildField(ColumnDescriptor? column, MemberExpression me)
 		{
-			throw new NotImplementedException();
+			var memberName = me.Member.Name;
+			if (!Table.FieldsLookup!.TryGetValue(me.Member, out var newField))
+			{
+				var getter = column?.GetDbParamLambda();
+				if (getter == null)
+				{
+					var thisParam = Expression.Parameter(me.Type, memberName);
+					getter = Expression.Lambda(thisParam, thisParam);
+				}
+
+				var dbDataType = column?.GetDbDataType(true) ?? ColumnDescriptor.CalculateDbDataType(MappingSchema, me.Type);
+
+				var generator = new ExpressionGenerator();
+				if (typeof(DataParameter).IsSameOrParentOf(getter.Body.Type))
+				{
+					var variable  = generator.AssignToVariable(getter.Body);
+					generator.AddExpression(
+						Expression.New(
+							_parameterConstructor,
+							Expression.Property(variable, Methods.LinqToDB.DataParameter.DbDataType),
+							Expression.Constant(memberName),
+							Expression.Property(variable, Methods.LinqToDB.DataParameter.Value)
+						));
+				}
+				else
+				{
+					generator.AddExpression(Expression.New(_sqlValueconstructor,
+						Expression.Constant(dbDataType),
+						Expression.Convert(getter.Body, typeof(object))));
+				}
+
+				var param = Expression.Parameter(typeof(object), "e");
+
+				var body = generator.Build();
+				body = body.Replace(getter.Parameters[0], Expression.Convert(param, ElementType));
+
+				var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);
+				var getterFunc   = getterLambda.Compile();
+
+				Table.Add(newField = new SqlField(dbDataType, memberName, column?.CanBeNull ?? true), me.Member, getterFunc);
+			}
+
+			return newField;
 		}
 
-		public void SetAlias(string alias)
+		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			SelectQuery.Select.Columns[0].Alias = alias;
+			if (SequenceHelper.IsSameContext(path, this))
+			{
+				if (flags.IsRoot() || flags.IsTable())
+					return path;
+
+				if (MappingSchema.IsScalarType(ElementType))
+				{
+					if (path.Type != ElementType)
+					{
+						path = ((ContextRefExpression)path).WithType(ElementType);
+					}
+
+					var specialProp = SequenceHelper.CreateSpecialProperty(path, ElementType, "item");
+					return Builder.MakeExpression(this, specialProp, flags);
+				}
+
+				if (Table.FieldsLookup == null)
+					throw new InvalidOperationException("Enumerable fields are not defined.");
+
+				Expression result;
+				if (_filedsDefined)
+				{
+					var membersOrdered =
+						from f in Table.Fields
+						join fm in Table.FieldsLookup on f equals fm.Value
+						select fm.Key;
+
+					result = Builder.BuildEntityExpression(MappingSchema, path, ElementType, membersOrdered.ToList());
+
+				}
+				else
+				{
+					result = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
+				}
+
+				return result;
+			}
+
+			if (path is not MemberExpression member)
+				return ExpressionBuilder.CreateSqlError(this, path);
+
+			var sql = GetField(member);
+			if (sql == null)
+				return ExpressionBuilder.CreateSqlError(this, path);
+
+			var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path);
+
+			return placeholder;
 		}
 
-		public ISqlExpression GetSubQuery(IBuildContext context)
+		public override IBuildContext Clone(CloningContext context)
 		{
-			throw new NotImplementedException();
+			return new EnumerableContext(Builder, MappingSchema, Expression!, context.CloneElement(SelectQuery),
+				context.CloneElement(Table), ElementType);
 		}
 
-		public SqlStatement GetResultStatement()
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
-			throw new NotImplementedException();
+			var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
+
+			QueryRunner.SetRunQuery(query, mapper);
 		}
 
-		public void CompleteColumns()
+		public override void SetAlias(string? alias)
 		{
+			if (SelectQuery.Select.Columns.Count == 1)
+			{
+				var sqlColumn = SelectQuery.Select.Columns[0];
+				if (sqlColumn.RawAlias == null)
+					sqlColumn.Alias = alias;
+			}
+		}
+
+		public override SqlStatement GetResultStatement()
+		{
+			return new SqlSelectStatement(SelectQuery);
 		}
 	}
 }

@@ -3,110 +3,120 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-	public class DataReaderAsync : IDisposable
-#if !NETFRAMEWORK
-		, IAsyncDisposable
-#endif
+	public class DataReaderAsync : IDisposable, IAsyncDisposable
 	{
-		public   CommandInfo?      CommandInfo       { get; set; }
-		public   DbDataReader?     Reader            { get; set; }
-		internal int               ReadNumber        { get; set; }
-		internal CancellationToken CancellationToken { get; set; }
-		private  DateTime          StartedOn         { get; }      = DateTime.UtcNow;
-		private  Stopwatch         Stopwatch         { get; }      = Stopwatch.StartNew();
-		internal Action?           OnDispose         { get; set; }
+		internal DataReaderWrapper? ReaderWrapper     { get; private set; }
+		public   DbDataReader?      Reader            => ReaderWrapper?.DataReader;
+		public   CommandInfo?       CommandInfo       { get; }
+		internal int                ReadNumber        { get; set; }
+		internal CancellationToken  CancellationToken { get; set; }
+		private  DateTime           StartedOn         { get; }      = DateTime.UtcNow;
+		private  Stopwatch          Stopwatch         { get; }      = Stopwatch.StartNew();
+
+		public DataReaderAsync(CommandInfo commandInfo, DataReaderWrapper dataReader)
+		{
+			CommandInfo   = commandInfo;
+			ReaderWrapper = dataReader;
+		}
+
 		public void Dispose()
 		{
-			if (Reader != null)
+			if (ReaderWrapper != null)
 			{
-				Reader.Dispose();
+				ReaderWrapper.Dispose();
 
 				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed)
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = CommandInfo.DataConnection.GetCurrentCommand(),
+						Command         = ReaderWrapper.Command,
 						StartTime       = StartedOn,
 						ExecutionTime   = Stopwatch.Elapsed,
 						RecordsAffected = ReadNumber,
 					});
 				}
-			}
 
-			OnDispose?.Invoke();
+				ReaderWrapper.Dispose();
+				ReaderWrapper = null;
+			}
 		}
 
-#if NETSTANDARD2_1PLUS
 		public async ValueTask DisposeAsync()
 		{
-			if (Reader != null)
+			if (ReaderWrapper != null)
 			{
-				await Reader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed)
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, true)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = CommandInfo.DataConnection.GetCurrentCommand(),
+						Command         = ReaderWrapper.Command,
 						StartTime       = StartedOn,
 						ExecutionTime   = Stopwatch.Elapsed,
 						RecordsAffected = ReadNumber,
 					});
 				}
-			}
 
-			OnDispose?.Invoke();
+				await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				ReaderWrapper = null;
+			}
 		}
-#elif !NETFRAMEWORK
-		public ValueTask DisposeAsync()
-		{
-			Dispose();
-			return new ValueTask(Task.CompletedTask);
-		}
-#endif
 
 		#region Query with object reader
 
-		public Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader)
+		public Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader)
 		{
 			return QueryToListAsync(objectReader, CancellationToken.None);
 		}
 
-		public async Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
+		public async Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list;
 		}
 
-		public Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader)
+		public Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader)
 		{
 			return QueryToArrayAsync(objectReader, CancellationToken.None);
 		}
 
-		public async Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
+		public async Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list.ToArray();
 		}
 
-		public Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action)
+		public Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action)
 		{
 			return QueryForEachAsync(objectReader, action, CancellationToken.None);
 		}
 
-		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
+		public async Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action, CancellationToken cancellationToken)
 		{
 			while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				action(objectReader(Reader));
+		}
+
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(Func<DbDataReader, T> objectReader)
+		{
+			return Impl(objectReader);
+
+			async IAsyncEnumerable<T> Impl(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					yield return objectReader(Reader);
+			}
 		}
 
 		#endregion
@@ -150,7 +160,30 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			await CommandInfo!.ExecuteQueryAsync(Reader!, CommandInfo.DataConnection.Command.CommandText + "$$$" + ReadNumber, action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await CommandInfo!.ExecuteQueryAsync(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		}
+
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>()
+		{
+			return Impl();
+
+			async IAsyncEnumerable<T> Impl([EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				if (ReadNumber != 0
+					&& !await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					yield break;
+				}
+
+				ReadNumber++;
+
+				await foreach (var element in CommandInfo!.ExecuteQueryAsync<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"))
+						.WithCancellation(cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					yield return element;
+				}
+			}
 		}
 
 		#endregion
@@ -191,6 +224,11 @@ namespace LinqToDB.Data
 			return QueryForEachAsync(action, cancellationToken);
 		}
 
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(T template)
+		{
+			return QueryToAsyncEnumerable<T>();
+		}
+		
 		#endregion
 
 		#region Execute scalar
@@ -208,7 +246,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			var sql = CommandInfo!.DataConnection.Command.CommandText + "$$$" + ReadNumber;
+			var sql = FormattableString.Invariant($"{CommandInfo!.CommandText}$$${ReadNumber}");
 
 			return await CommandInfo.ExecuteScalarAsync<T>(Reader!, sql, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}

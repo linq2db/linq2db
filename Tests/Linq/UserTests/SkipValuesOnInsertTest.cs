@@ -84,21 +84,23 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() {Id = 1, Name = "John", Age = 14});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.IsNotNull(r);
-					Assert.IsNull(r.Name);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Name, Is.Null);
 
 					count = db.Insert(new TestTable() {Id = 2, Name = "Max", Age = 15});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.IsNotNull(r);
-					Assert.IsNull(r.Name);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Name, Is.Null);
 				}
 			}
 		}
@@ -113,21 +115,23 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() {Id = 1, Name = "Paul", Age = 14});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Name, "Paul");
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Name, Is.EqualTo("Paul"));
 
 					count = db.Insert(new TestTable() {Id = 2, Name = "Mary", Age = 15});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Name, "Mary");
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Name, Is.EqualTo("Mary"));
 				}
 			}
 		}
@@ -142,21 +146,23 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() {Id = 1, Name = "Smith", Age = 2});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.IsNotNull(r);
-					Assert.IsNull(r.Age);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Age, Is.Null);
 
 					count = db.Insert(new TestTable() {Id = 2, Name = "Tommy", Age = 5});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.IsNotNull(r);
-					Assert.IsNull(r.Age);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Age, Is.Null);
 				}
 			}
 		}
@@ -171,21 +177,23 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() {Id = 1, Name = "Smith", Age = 55});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Age, 55);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Age, Is.EqualTo(55));
 
 					count = db.Insert(new TestTable() {Id = 2, Name = "Tommy", Age = 50});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Age, 50);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Age, Is.EqualTo(50));
 				}
 			}
 		}
@@ -202,11 +210,13 @@ namespace Tests.UserTests
 					
 					var count = db.Insert(new TestTableNull() { Id = 1, Name = "Tommy", Age = null });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
+
 					var r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.IsNotNull(r);
-					Assert.IsNotNull(r.Age);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Age, Is.Not.Null);
 				}
 			}
 		}
@@ -219,18 +229,19 @@ namespace Tests.UserTests
 				// Change default value, so that null is not inserted as default.
 				db.MappingSchema.SetDefaultValue(typeof(int?), 0);
 
-				var mapping = db.MappingSchema.GetFluentMappingBuilder();
-				mapping.Entity<TestTableFluent>().HasSkipValuesOnInsert(t => t.Age, 2, 5);
+				var mapping = new FluentMappingBuilder(db.MappingSchema);
+				mapping.Entity<TestTableFluent>().HasSkipValuesOnInsert(t => t.Age, 2, 5).Build();
 				using (db.CreateLocalTable<TestTableFluent>())
 				{
 					var count = db.Insert(new TestTableFluent() { Id = 1, Name = null, Age = 2 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Age, 0);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Age, Is.EqualTo(0));
 				}
 			}
 		}
@@ -244,21 +255,23 @@ namespace Tests.UserTests
 				{
 					var count = db.Insert(new TestTableEnum() { Id = 1, Name = "Max", Age = 20, Gender = TestTableEnum.GenderType.Male});
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Gender, TestTableEnum.GenderType.Male);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Gender, Is.EqualTo(TestTableEnum.GenderType.Male));
 
 					count = db.Insert(new TestTableEnum() { Id = 2, Name = "Jenny", Age = 25, Gender = TestTableEnum.GenderType.Female });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Gender, TestTableEnum.GenderType.Undefined);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Gender, Is.EqualTo(TestTableEnum.GenderType.Undefined));
 				}
 			}
 		}
@@ -272,35 +285,42 @@ namespace Tests.UserTests
 				{
 					var count = db.Insert(new TestTableMixed() { Id = 1, Name = "Jason", Age = 20 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Name, "Jason");
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Name, Is.EqualTo("Jason"));
 
 					r.Name = "Max";
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
+
 					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1)!;
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Name, "Jason");
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Name, Is.EqualTo("Jason"));
 
 					count = db.Insert(new TestTableMixed() { Id = 2, Name = "John", Age = 25 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.IsNotNull(r);
-					Assert.IsNull(r.Name);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Name, Is.Null);
 
 					r.Name = "Jessy";
 					count = db.Update(r);
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
+
 					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2)!;
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Name, "Jessy");
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Name, Is.EqualTo("Jessy"));
 				}
 			}
 		}

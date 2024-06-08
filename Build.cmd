@@ -1,5 +1,7 @@
-cd /d "%~dp0"
-"%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe" linq2db.sln /p:Configuration=Release /t:Restore;Rebuild /v:m
-"%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe" linq2db.sln /p:Configuration=Debug   /t:Restore;Rebuild /v:m
-"%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe" linq2db.sln /p:Configuration=Azure   /t:Restore;Rebuild /v:m
+@echo off
 
+cd /d "%~dp0"
+
+dotnet build linq2db.sln -c Release --no-incremental -v m
+dotnet build linq2db.sln -c Debug --no-incremental -v m
+dotnet build linq2db.sln -c Azure --no-incremental -v m

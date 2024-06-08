@@ -5,10 +5,10 @@ namespace LinqToDB.SqlQuery
 {
 	public abstract class SqlStatementWithQueryBase : SqlStatement
 	{
-		public override bool               IsParameterDependent
+		public override bool          IsParameterDependent
 		{
-			get => SelectQuery!.IsParameterDependent;
-			set => SelectQuery!.IsParameterDependent = value;
+			get => SelectQuery.IsParameterDependent;
+			set => SelectQuery.IsParameterDependent = value;
 		}
 
 		private         SelectQuery? _selectQuery;
@@ -26,22 +26,11 @@ namespace LinqToDB.SqlQuery
 			_selectQuery = selectQuery;
 		}
 
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
 			var ts = SelectQuery!.GetTableSource(table) ?? With?.GetTableSource(table);
+			noAlias = false;
 			return ts;
-		}
-
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
-		{
-			if (SelectQuery != null)
-			{
-				var newQuery = func(SelectQuery);
-				if (!ReferenceEquals(newQuery, SelectQuery))
-					SelectQuery = newQuery;
-			}
-
-			With?.WalkQueries(func);
 		}
 	}
 }

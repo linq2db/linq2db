@@ -2,10 +2,12 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Data
 {
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+
 	internal static class TransactionScopeHelper
 	{
 		static readonly Func<bool> _getInScopeFunc = GetTransactionScopeFunc();
@@ -27,12 +29,12 @@ namespace LinqToDB.Data
 			if (assembly != null)
 			{
 				var t = assembly.GetType("System.Transactions.Transaction");
-				
+
 				var currentDataProperty = t?.GetProperty("Current", BindingFlags.Public | BindingFlags.Static);
 				if (currentDataProperty != null)
 				{
 					var body   = Expression.NotEqual(Expression.MakeMemberAccess(null, currentDataProperty),
-						Expression.Constant(null));
+						ExpressionInstances.UntypedNull);
 					var lambda = Expression.Lambda<Func<bool>>(body);
 					return lambda.CompileExpression();
 				}

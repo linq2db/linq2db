@@ -2,13 +2,11 @@
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.FSharp;
+
 using NUnit.Framework;
 
-#if NET472
 using Tests.FSharp.Models;
-#else
-using Tests.Model;
-#endif
 
 namespace Tests.Linq
 {
@@ -18,7 +16,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlStringParameter([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = "John";
 				var person1 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
@@ -26,17 +24,20 @@ namespace Tests.Linq
 				p = "Tester";
 				var person2 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
 
-				Assert.That(person1.FirstName, Is.EqualTo("John"));
-				Assert.That(person2.FirstName, Is.EqualTo("Tester"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(person1.FirstName, Is.EqualTo("John"));
+					Assert.That(person2.FirstName, Is.EqualTo("Tester"));
+				});
 			}
 		}
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix)]
+		public void ExposeSqlStringParameter([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p   = "abc";
 				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();

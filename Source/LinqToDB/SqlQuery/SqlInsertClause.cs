@@ -1,19 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlInsertClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlInsertClause : IQueryElement
 	{
 		public SqlInsertClause()
 		{
-			Items = new List<SqlSetExpression>();
+			Items        = new List<SqlSetExpression>();
 		}
 
-		public List<SqlSetExpression> Items        { get; }
+		public List<SqlSetExpression> Items        { get; set; }
 		public SqlTable?              Into         { get; set; }
 		public bool                   WithIdentity { get; set; }
+
+		public void Modify(SqlTable? into)
+		{
+			Into  = into;
+		}
 
 		#region Overrides
 
@@ -21,69 +25,40 @@ namespace LinqToDB.SqlQuery
 
 			public override string ToString()
 			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+				return this.ToDebugString();
 			}
 
 #endif
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlInsertClause { WithIdentity = WithIdentity };
-
-			if (Into != null)
-				clone.Into = (SqlTable)Into.Clone(objectTree, doClone);
-
-			foreach (var item in Items)
-				clone.Items.Add((SqlSetExpression)item.Clone(objectTree, doClone));
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
-		{
-			((ISqlExpressionWalkable?)Into)?.Walk(options, func);
-
-			foreach (var t in Items)
-				((ISqlExpressionWalkable)t).Walk(options, func);
-
-			return null;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.InsertClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.Append("VALUES ");
+			writer
+				.Append("INSERT ")
+				.AppendElement(Into)
+				.Append(" VALUES ")
+				.AppendLine();
 
-			((IQueryElement?)Into)?.ToString(sb, dic);
-
-			sb.AppendLine();
-
-			foreach (var e in Items)
+			using (writer.IndentScope())
 			{
-				sb.Append('\t');
-				((IQueryElement)e).ToString(sb, dic);
-				sb.AppendLine();
+				for (var index = 0; index < Items.Count; index++)
+				{
+					var e = Items[index];
+					writer.AppendElement(e);
+					if (index < Items.Count - 1)
+						writer.AppendLine();
+				}
 			}
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

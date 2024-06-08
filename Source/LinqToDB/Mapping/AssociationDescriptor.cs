@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Mapping
 {
 	using Common;
 	using Extensions;
+	using Linq.Builder;
+	using Expressions;
 
 	/// <summary>
 	/// Stores association descriptor.
@@ -28,6 +30,8 @@ namespace LinqToDB.Mapping
 		/// <param name="expressionQueryMethod">Optional name of query method.</param>
 		/// <param name="expressionQuery">Optional query expression.</param>
 		/// <param name="storage">Optional association value storage field or property name.</param>
+		/// <param name="associationSetterExpressionMethod">Optional name of setter method.</param>
+		/// <param name="associationSetterExpression">Optional setter expression.</param>
 		/// <param name="canBeNull">If <c>true</c>, association will generate outer join, otherwise - inner join.</param>
 		/// <param name="aliasName">Optional alias for representation in SQL.</param>
 		public AssociationDescriptor(
@@ -40,14 +44,16 @@ namespace LinqToDB.Mapping
 			string?     expressionQueryMethod,
 			Expression? expressionQuery,
 			string?     storage,
-			bool        canBeNull,
+			string?     associationSetterExpressionMethod,
+			Expression? associationSetterExpression,
+			bool?       canBeNull,
 			string?     aliasName)
 		{
 			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
 			if (thisKey    == null) throw new ArgumentNullException(nameof(thisKey));
 			if (otherKey   == null) throw new ArgumentNullException(nameof(otherKey));
 
-			if (thisKey.Length == 0 && expressionPredicate.IsNullOrEmpty() && predicate == null && expressionQueryMethod.IsNullOrEmpty() && expressionQuery == null)
+			if (thisKey.Length == 0 && string.IsNullOrEmpty(expressionPredicate) && predicate == null && string.IsNullOrEmpty(expressionQueryMethod) && expressionQuery == null)
 				throw new ArgumentOutOfRangeException(
 					nameof(thisKey),
 					$"Association '{type.Name}.{memberInfo.Name}' does not define keys.");
@@ -56,59 +62,69 @@ namespace LinqToDB.Mapping
 				throw new ArgumentException(
 					$"Association '{type.Name}.{memberInfo.Name}' has different number of keys for parent and child objects.");
 
-			MemberInfo            = memberInfo;
-			ThisKey               = thisKey;
-			OtherKey              = otherKey;
-			ExpressionPredicate   = expressionPredicate;
-			Predicate             = predicate;
-			ExpressionQueryMethod = expressionQueryMethod;
-			ExpressionQuery       = expressionQuery;
-			Storage               = storage;
-			CanBeNull             = canBeNull;
-			AliasName             = aliasName;
+			MemberInfo                        = memberInfo;
+			ThisKey                           = thisKey;
+			OtherKey                          = otherKey;
+			ExpressionPredicate               = expressionPredicate;
+			Predicate                         = predicate;
+			ExpressionQueryMethod             = expressionQueryMethod;
+			ExpressionQuery                   = expressionQuery;
+			Storage                           = storage;
+			AssociationSetterExpressionMethod = associationSetterExpressionMethod;
+			AssociationSetterExpression       = associationSetterExpression;
+			CanBeNull                         = canBeNull ?? AnalyzeCanBeNull();
+			AliasName                         = aliasName;
 		}
 
 		/// <summary>
-		/// Gets or sets association member (field, property or method).
+		/// Gets association member (field, property or method).
 		/// </summary>
-		public MemberInfo  MemberInfo          { get; set; }
+		public MemberInfo  MemberInfo          { get; }
 		/// <summary>
-		/// Gets or sets list of names of from (this) key members. Could be empty, if association has predicate expression.
+		/// Gets list of names of from (this) key members. Could be empty, if association has predicate expression.
 		/// </summary>
-		public string[]    ThisKey             { get; set; }
+		public string[]    ThisKey             { get; }
 		/// <summary>
-		/// Gets or sets list of names of to (other) key members. Could be empty, if association has predicate expression.
+		/// Gets list of names of to (other) key members. Could be empty, if association has predicate expression.
 		/// </summary>
-		public string[]    OtherKey            { get; set; }
+		public string[]    OtherKey            { get; }
 		/// <summary>
-		/// Gets or sets optional predicate expression source property or method.
+		/// Gets optional predicate expression source property or method.
 		/// </summary>
-		public string?     ExpressionPredicate { get; set; }
+		public string?     ExpressionPredicate { get; }
 		/// <summary>
-		/// Gets or sets optional query method source property or method.
+		/// Gets optional query method source property or method.
 		/// </summary>
-		public string?     ExpressionQueryMethod { get; set; }
+		public string?     ExpressionQueryMethod { get; }
 		/// <summary>
-		/// Gets or sets optional query expression.
+		/// Gets optional query expression.
 		/// </summary>
-		public Expression? ExpressionQuery     { get; set; }
+		public Expression? ExpressionQuery     { get; }
 		/// <summary>
-		/// Gets or sets optional predicate expression.
+		/// Gets optional predicate expression.
 		/// </summary>
-		public Expression? Predicate           { get; set; }
+		public Expression? Predicate           { get; }
 		/// <summary>
-		/// Gets or sets optional association value storage field or property name. Used with LoadWith.
+		/// Gets optional association value storage field or property name. Used with LoadWith.
 		/// </summary>
-		public string?     Storage             { get; set; }
+		public string?     Storage             { get; }
 		/// <summary>
-		/// Gets or sets join type, generated for current association.
+		/// Gets optional setter method source property or method.
+		/// </summary>
+		public string? AssociationSetterExpressionMethod { get; }
+		/// <summary>
+		/// Gets optional setter expression.
+		/// </summary>
+		public Expression? AssociationSetterExpression { get; }
+		/// <summary>
+		/// Gets join type, generated for current association.
 		/// If <c>true</c>, association will generate outer join, otherwise - inner join.
 		/// </summary>
-		public bool        CanBeNull           { get; set; }
+		public bool        CanBeNull           { get; }
 		/// <summary>
-		/// Gets or sets alias for association. Used in SQL generation process.
+		/// Gets alias for association. Used in SQL generation process.
 		/// </summary>
-		public string? AliasName           { get; set; }
+		public string?     AliasName           { get; }
 
 		/// <summary>
 		/// Parse comma-separated list of association key column members into string array.
@@ -117,7 +133,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns array with names of association key column members.</returns>
 		public static string[] ParseKeys(string? keys)
 		{
-			return keys?.Replace(" ", "").Split(',') ?? Array<string>.Empty;
+			return keys?.Replace(" ", "").Split(',') ?? [];
 		}
 
 		/// <summary>
@@ -126,11 +142,11 @@ namespace LinqToDB.Mapping
 		/// <returns>Generated alias.</returns>
 		public string GenerateAlias()
 		{
-			if (!AliasName.IsNullOrEmpty())
-				return AliasName;
+			if (!string.IsNullOrEmpty(AliasName))
+				return AliasName!;
 
-			if (!Configuration.Sql.AssociationAlias.IsNullOrEmpty())
-				return string.Format(Configuration.Sql.AssociationAlias, MemberInfo.Name);
+			if (Configuration.Sql.AssociationAliasFormat != null)
+				return string.Format(CultureInfo.InvariantCulture, Configuration.Sql.AssociationAliasFormat, MemberInfo.Name);
 
 			return string.Empty;
 		}
@@ -168,12 +184,11 @@ namespace LinqToDB.Mapping
 					return methodInfo.DeclaringType!;
 				}
 
-				throw new LinqToDBException($"Can not retrieve declaring type form member {methodInfo}");
+				throw new LinqToDBException($"Cannot retrieve declaring type form member {methodInfo}");
 			}
 
 			return MemberInfo.DeclaringType!;
 		}
-
 
 		/// <summary>
 		/// Loads predicate expression from <see cref="ExpressionPredicate"/> member.
@@ -223,7 +238,7 @@ namespace LinqToDB.Mapping
 					{
 						if (method.GetParameters().Length > 0)
 							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should have no parameters");
-						var value = method.Invoke(null, Array<object>.Empty);
+						var value = method.Invoke(null, []);
 						if (value == null)
 							return null;
 
@@ -248,8 +263,11 @@ namespace LinqToDB.Mapping
 					throw new LinqToDBException(
 						$"Invalid predicate expression in {type.Name}. Expected: Expression<Func<{parentType.Name}, {objectType.Name}, bool>>");
 
-			if (!lambda.Parameters[0].Type.IsSameOrParentOf(parentType))
+			var firstParameter = lambda.Parameters[0];
+			if (!firstParameter.Type.IsSameOrParentOf(parentType) && !parentType.IsSameOrParentOf(firstParameter.Type))
+			{
 				throw new LinqToDBException($"First parameter of expression predicate should be '{parentType.Name}'");
+			}
 
 			if (lambda.Parameters[1].Type != objectType)
 				throw new LinqToDBException($"Second parameter of expression predicate should be '{objectType.Name}'");
@@ -260,10 +278,9 @@ namespace LinqToDB.Mapping
 			return lambda;
 		}
 
-
 		public bool HasQueryMethod()
 		{
-			return ExpressionQuery != null || !ExpressionQueryMethod.IsNullOrEmpty();
+			return ExpressionQuery != null || !string.IsNullOrEmpty(ExpressionQueryMethod);
 		}
 
 		/// <summary>
@@ -285,8 +302,8 @@ namespace LinqToDB.Mapping
 			if (type == null)
 				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
-			if (!ExpressionQueryMethod.IsNullOrEmpty())
-				queryExpression = type.GetExpressionFromExpressionMember<Expression>(ExpressionQueryMethod);
+			if (!string.IsNullOrEmpty(ExpressionQueryMethod))
+				queryExpression = type.GetExpressionFromExpressionMember<Expression>(ExpressionQueryMethod!);
 			else
 				queryExpression = ExpressionQuery!;
 
@@ -304,9 +321,138 @@ namespace LinqToDB.Mapping
 
 			if (!(typeof(IQueryable<>).IsSameOrParentOf(lambda.ReturnType) &&
 			      lambda.ReturnType.GetGenericArguments()[0].IsSameOrParentOf(objectType)))
-				throw new LinqToDBException("Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
+				throw new LinqToDBException($"Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
 
 			return lambda;
 		}
+
+		private bool AnalyzeCanBeNull()
+		{
+			// Note that nullability of Collections can't be determined from types.
+			// OUTER JOIN are usually materialized in non-nullable, but empty, collections.
+			// For example, `IList<Product> Products` might well require an OUTER JOIN.
+			// Neither `IList<Product>?` nor `IList<Product?>` would be correct.
+			return Configuration.UseNullableTypesMetadata && !IsList && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable)
+				? isNullable
+				: true;
+		}
+
+		#region Assignment helpers
+
+		bool HasAssociationSetterMethod()
+		{
+			return AssociationSetterExpression != null || !string.IsNullOrEmpty(AssociationSetterExpressionMethod);
+		}
+
+		/// <summary>
+		/// Loads setter method expression from <see cref="AssociationSetterExpression"/> member.
+		/// </summary>
+		/// <param name="memberType">Type of the storage member that declares association</param>
+		/// <param name="objectType">Type of object associated with setter method expression</param>
+		/// <returns><c>null</c> if association has no custom setter method expression specified
+		/// by <see cref="AssociationSetterExpressionMethod"/> member.</returns>
+		LambdaExpression? GetAssociationSetterMethod(Type memberType, Type objectType)
+		{
+			if (!HasAssociationSetterMethod())
+				return null;
+
+			Expression setExpression;
+
+			var type = MemberInfo.DeclaringType;
+
+			if (type == null)
+				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
+
+			if (!string.IsNullOrEmpty(AssociationSetterExpressionMethod))
+				setExpression = type.GetExpressionFromExpressionMember<Expression>(AssociationSetterExpressionMethod!);
+			else
+				setExpression = AssociationSetterExpression!;
+
+			var lambda = setExpression as LambdaExpression;
+			if (lambda == null || lambda.Parameters.Count != 2)
+				if (!string.IsNullOrEmpty(AssociationSetterExpressionMethod))
+					throw new LinqToDBException(
+						$"Invalid setter expression in {type.Name}.{AssociationSetterExpressionMethod}. Expected: Expression<Action<{memberType.Name}, {objectType.Name}>>");
+				else
+					throw new LinqToDBException(
+						$"Invalid setter expression in {type.Name}. Expected: Expression<Action<{memberType.Name}, {objectType.Name}>>");
+
+			if (!lambda.Parameters[0].Type.IsSameOrParentOf(memberType))
+				throw new LinqToDBException($"First parameter of setter expression should be '{memberType.Name}'");
+
+			if (lambda.ReturnType != typeof(void))
+				throw new LinqToDBException("Result type of setter expression should be 'void'");
+
+			return lambda;
+		}
+
+		/// <summary>
+		/// Get the association assignment expression, accounting for <see cref="Storage"/> and <see cref="AssociationSetterExpression" />
+		/// </summary>
+		/// <param name="value">Association value expression</param>
+		/// <param name="memberInfo">Member info</param>
+		/// <returns></returns>
+		internal LambdaExpression? GetAssociationAssignmentLambda(Expression value, MemberInfo memberInfo)
+		{
+			if (Storage == null && !HasAssociationSetterMethod())
+				return null;
+
+			var entityParam = Expression.Parameter(memberInfo.DeclaringType!, "e");
+
+			var storageMember = Storage != null
+				? ExpressionHelper.PropertyOrField(entityParam, Storage)
+				: Expression.MakeMemberAccess(entityParam, memberInfo);
+
+			Expression body;
+			if (HasAssociationSetterMethod())
+			{
+				var setMethod = GetAssociationSetterMethod(storageMember.Type, value.Type)!;
+				body = setMethod.GetBody(storageMember, value);
+			}
+			else
+			{
+				body = Expression.Assign(storageMember, value);
+			}
+
+			return Expression.Lambda(body, entityParam);
+		}
+
+		/// <summary>
+		/// Gets the desired type for the association value to be used by the assignment expression
+		/// returned by <see cref="GetAssociationAssignmentLambda" />
+		/// </summary>
+		/// <param name="memberInfo"></param>
+		/// <param name="parentType"></param>
+		/// <param name="objectType"></param>
+		/// <returns></returns>
+		internal Type GetAssociationDesiredAssignmentType(MemberInfo memberInfo, Type parentType, Type objectType)
+		{
+			var storageMember = Storage != null
+				? ExpressionHelper.GetPropertyOrFieldMemberInfo(parentType, Storage)
+				: memberInfo;
+
+			if (HasAssociationSetterMethod())
+			{
+				var defaultSetterValueType = IsList
+					? typeof(IEnumerable<>).MakeGenericType(objectType)
+					: objectType;
+
+				var setterMethod = GetAssociationSetterMethod(
+					storageMember.GetMemberType(),
+					defaultSetterValueType)!;
+
+				return setterMethod.Parameters[1].Type;
+			}
+
+			return storageMember.GetMemberType();
+		}
+
+		public override string ToString()
+		{
+			return MemberInfo.Name;
+		}
+
+		#endregion
+
 	}
 }

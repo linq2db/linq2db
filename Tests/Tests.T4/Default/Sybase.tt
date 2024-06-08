@@ -1,0 +1,14 @@
+<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\AdoNetCore.AseClient.dll"         #>
+<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Sybase.ttinclude" once="true"  #>
+
+<#
+	NamespaceName   = "Default.Sybase";
+	DataContextName = "TestDataDB";
+
+	LoadSybaseMetadata(GetConnectionString("Sybase.Managed"));
+	GenerateModel();
+
+#>

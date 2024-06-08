@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
+using FluentAssertions;
+
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -11,8 +15,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Collections.Generic;
-	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture]
@@ -21,7 +23,7 @@ namespace Tests.Linq
 		// https://github.com/linq2db/linq2db/issues/38
 		//
 		[Test]
-		public void Issue38Test([DataSources(false)] string context)
+		public void Issue38Test([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -46,28 +48,35 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var t1 = db.Types2.First();
+				var saved = db.Types2.First(r => r.ID == 1);
+
+				var t1 = db.Types2.First(r => r.ID == 1);
 
 				t1.BoolValue = !t1.BoolValue;
 
 				db.Update(t1);
 
-				var t2 = db.Types2.First();
+				var t2 = db.Types2.First(r => r.ID == t1.ID);
 
 				Assert.That(t2.BoolValue, Is.EqualTo(t1.BoolValue));
 
 				t1.BoolValue = !t1.BoolValue;
 
 				db.Update(t1);
+
+				var current = db.Types2.First(r => r.ID == 1);
+
+				// If this test fails, Data for MathFunctionsTests will be corrupted.
+				current.Should().Be(saved);
 			}
 		}
 
 		// https://github.com/linq2db/linq2db/issues/60
 		//
 		[Test]
-		public void Issue60Test([IncludeDataSources(TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
+		public void Issue60Test([IncludeDataSources(TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var sp       = db.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(db);
@@ -87,7 +96,7 @@ namespace Tests.Linq
 		// https://github.com/linq2db/linq2db/issues/67
 		//
 		[Test]
-		public void Issue67Test([DataSources] string context)
+		public void Issue67Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -106,7 +115,7 @@ namespace Tests.Linq
 		}
 
 		[Test()]
-		public void Issue75Test([DataSources] string context)
+		public void Issue75Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -187,37 +196,25 @@ namespace Tests.Linq
 		[Test]
 		public void Issue424Test1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderBy(_ => _.ParentID).Take(1),
-					db.Parent.Distinct().OrderBy(_ => _.ParentID).Take(1)
-					);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Take(1));
 		}
 
 		[Test]
 		public void Issue424Test2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1),
-					db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1)
-					);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1));
 		}
 
 		[Test]
 		public void Issue424Test3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1),
-					db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1)
-				);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1));
 		}
 
 		// https://github.com/linq2db/linq2db/issues/498
@@ -250,7 +247,7 @@ namespace Tests.Linq
 				AreEqual(rr, r);
 
 				var sql = r.ToString()!;
-				Assert.Less(0, sql.IndexOf("INNER", 1), sql);
+				Assert.That(sql.IndexOf("INNER", 1), Is.GreaterThan(0), sql);
 			}
 		}
 
@@ -367,12 +364,12 @@ namespace Tests.Linq
 					where p.ID == 1 || p.SecondName == "fail"
 					select p;
 
-				Assert.IsNotNull(q.FirstOrDefault());
+				Assert.That(q.FirstOrDefault(), Is.Not.Null);
 			}
 		}
 
 		[Table]
-		class CustomerBase
+		sealed class CustomerBase
 		{
 			[PrimaryKey, Identity] public int        Id           { get; set; }
 			[Column, NotNull]      public ClientType ClientType   { get; set; }
@@ -400,9 +397,8 @@ namespace Tests.Linq
 			Client
 		}
 
-		[ActiveIssue(535)]
 		[Test]
-		public void Issue535Test2([DataSources] string context)
+		public void Issue535Test2([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable<CustomerBase>())
@@ -476,13 +472,13 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod("MapToDtoExpr1")]
-		public static PersonDto MapToDto(Person376 person)
+		private static PersonDto MapToDto(Person376 person)
 		{
 			return MapToDtoExpr1().CompileExpression()(person);
 		}
 
 		[ExpressionMethod("MapToDtoExpr2")]
-		public static DoctorDto MapToDto(Doctor doctor)
+		private static DoctorDto MapToDto(Doctor doctor)
 		{
 			return MapToDtoExpr2().CompileExpression()(doctor);
 		}
@@ -517,9 +513,12 @@ namespace Tests.Linq
 					.Where(_ => _.Doctor!.Taxonomy.Length >= 0 || _.Doctor.Taxonomy == null)
 					.Select(_ => MapToDto(_)).ToList();
 
-				Assert.IsNotEmpty(l);
-				Assert.IsNotEmpty(l.Where(_ => _.Doc == null));
-				Assert.IsNotEmpty(l.Where(_ => _.Doc != null));
+				Assert.That(l, Is.Not.Empty);
+				Assert.Multiple(() =>
+				{
+					Assert.That(l.Where(_ => _.Doc == null), Is.Not.Empty);
+					Assert.That(l.Where(_ => _.Doc != null), Is.Not.Empty);
+				});
 			}
 		}
 
@@ -536,7 +535,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue88([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Issue88([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -557,10 +556,13 @@ namespace Tests.Linq
 					.GetTable<Person88>()
 					.Where(_ => _.ID == 1 && gender == _.Gender);
 
-				Assert.IsNotEmpty(llc);
-				Assert.IsNotEmpty(lrc);
-				Assert.IsNotEmpty(llp);
-				Assert.IsNotEmpty(lrp);
+				Assert.Multiple(() =>
+				{
+					Assert.That(llc, Is.Not.Empty);
+					Assert.That(lrc, Is.Not.Empty);
+					Assert.That(llp, Is.Not.Empty);
+					Assert.That(lrp, Is.Not.Empty);
+				});
 			}
 
 		}
@@ -622,7 +624,7 @@ namespace Tests.Linq
 			}
 		}
 		[Test]
-		public void Issue909Subquery([DataSources] string context)
+		public void Issue909Subquery([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -646,7 +648,7 @@ namespace Tests.Linq
 
 		[Table("AllTypes")]
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
-		private class InsertIssueTest
+		private sealed class InsertIssueTest
 		{
 			[Column("smallintDataType")]
 			[Column("SMALLINTDATATYPE", Configuration = ProviderName.DB2)]
@@ -691,6 +693,57 @@ namespace Tests.Linq
 			return isNull ? (short?)null : 1234;
 		}
 
-	}
+		[Test]
+		public void Issue2823Guid([IncludeDataSources(false, TestProvName.AllFirebird)] string context, [Values] bool inlineParameters)
+		{
+			using(var db    = (DataConnection)GetDataContext(context))
+			using(var table = db.CreateLocalTable<TableWithGuid>())
+			{
+				Assert.That(db.LastQuery!, Does.Contain("\"Default\"  CHAR(16) CHARACTER SET OCTETS"));
+				Assert.That(db.LastQuery!, Does.Contain("\"Binary\"   CHAR(16) CHARACTER SET OCTETS"));
+				Assert.That(db.LastQuery!, Does.Contain("\"String\"   CHAR(38)"));
+				Assert.That(db.LastQuery!, Does.Contain("\"DefaultN\" CHAR(16) CHARACTER SET OCTETS"));
+				Assert.That(db.LastQuery!, Does.Contain("\"BinaryN\"  CHAR(16) CHARACTER SET OCTETS"));
+				Assert.That(db.LastQuery!, Does.Contain("\"StringN\"  CHAR(38)"));
 
+				db.InlineParameters = inlineParameters;
+
+				table.Insert(() => new TableWithGuid {
+					Default  = TestData.Guid1, Binary  = TestData.Guid2, String  = TestData.Guid3,
+					DefaultN = TestData.Guid4, BinaryN = TestData.Guid5, StringN = TestData.Guid6,
+				});
+				
+				var data = table.ToArray();
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Default, Is.EqualTo(TestData.Guid1));
+					Assert.That(data[0].Binary, Is.EqualTo(TestData.Guid2));
+					Assert.That(data[0].String, Is.EqualTo(TestData.Guid3));
+					Assert.That(data[0].DefaultN, Is.EqualTo(TestData.Guid4));
+					Assert.That(data[0].BinaryN, Is.EqualTo(TestData.Guid5));
+					Assert.That(data[0].StringN, Is.EqualTo(TestData.Guid6));
+
+					Assert.That(table.Where(x => x.Default == TestData.Guid1).Count(), Is.EqualTo(1));
+					Assert.That(table.Where(x => x.Binary == TestData.Guid2).Count(), Is.EqualTo(1));
+					Assert.That(table.Where(x => x.String == TestData.Guid3).Count(), Is.EqualTo(1));
+					Assert.That(table.Where(x => x.DefaultN == TestData.Guid4).Count(), Is.EqualTo(1));
+					Assert.That(table.Where(x => x.BinaryN == TestData.Guid5).Count(), Is.EqualTo(1));
+					Assert.That(table.Where(x => x.StringN == TestData.Guid6).Count(), Is.EqualTo(1));
+				});
+			}
+		}
+
+		[Table]
+		sealed class TableWithGuid
+		{
+			[Column                           ] public Guid Default   { get; set; }
+			[Column(DataType = DataType.Guid) ] public Guid Binary    { get; set; }
+			[Column(DataType = DataType.Char) ] public Guid String    { get; set; }
+
+			[Column                           ] public Guid? DefaultN { get; set; }
+			[Column(DataType = DataType.Guid) ] public Guid? BinaryN  { get; set; }
+			[Column(DataType = DataType.NChar)] public Guid? StringN  { get; set; }
+		}
+	}
 }

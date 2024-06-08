@@ -45,9 +45,9 @@ namespace LinqToDB.Reflection
 
 		#region Items
 
-		public List<MemberAccessor>    Members       { get; } = new List<MemberAccessor>();
+		public List<MemberAccessor>    Members       { get; } = new();
 
-		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new ConcurrentDictionary<string,MemberAccessor>();
+		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new();
 
 		public MemberAccessor this[string memberName] =>
 			_membersByName.GetOrAdd(memberName, name =>
@@ -57,13 +57,18 @@ namespace LinqToDB.Reflection
 				return ma;
 			});
 
+		public MemberAccessor? GetMemberByName(string memberName)
+		{
+			return _membersByName.TryGetValue(memberName, out var accessor) ? accessor : null;
+		}
+
 		public MemberAccessor this[int index] => Members[index];
 
 		#endregion
 
 		#region Static Members
 
-		static readonly ConcurrentDictionary<Type,TypeAccessor> _accessors = new ConcurrentDictionary<Type,TypeAccessor>();
+		static readonly ConcurrentDictionary<Type,TypeAccessor> _accessors = new();
 
 		public static TypeAccessor GetAccessor(Type type)
 		{

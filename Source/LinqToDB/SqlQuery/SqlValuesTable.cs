@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using LinqToDB.Expressions;
+using System.Reflection;
+using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
@@ -17,44 +15,59 @@ namespace LinqToDB.SqlQuery
 		internal SqlValuesTable(ISqlExpression source)
 		{
 			Source        = source;
-			ValueBuilders = new Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>>();
-			FieldsLookup  = new Dictionary<string, SqlField>();
+			FieldsLookup  = new();
+
+			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
 
 		/// <summary>
 		/// Constructor for convert visitor.
 		/// </summary>
-		internal SqlValuesTable(ISqlExpression source, Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>> valueBuilders, SqlField[] fields, IReadOnlyList<ISqlExpression[]>? rows)
+		internal SqlValuesTable(ISqlExpression? source, List<Func<object, ISqlExpression>>? valueBuilders, IEnumerable<SqlField> fields, List<ISqlExpression[]>? rows)
 		{
 			Source        = source;
 			ValueBuilders = valueBuilders;
+			Rows          = rows;
 
 			foreach (var field in fields)
 			{
 				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 				_fields.Add(field);
+				field.Table = this;
 			}
 
-			if (rows != null)
-			{
-				IsRowsBuilt = true;
-				Rows       = rows;
-			}
+			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
 
 		/// <summary>
 		/// Constructor for remote context.
 		/// </summary>
-		internal SqlValuesTable(SqlField[] fields, IReadOnlyList<ISqlExpression[]> rows)
+		internal SqlValuesTable(SqlField[] fields, MemberInfo?[]? members, List<ISqlExpression[]> rows)
 		{
-			IsRowsBuilt = true;
-			Rows       = rows;
+			Rows         = rows;
+			FieldsLookup = new();
 
 			foreach (var field in fields)
 			{
 				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 				_fields.Add(field);
+				field.Table = this;
 			}
+
+			if (members != null)
+			{
+				for (var index = 0; index < fields.Length; index++)
+				{
+					var member = members[index];
+					if (member != null)
+					{
+						var field = fields[index];
+						FieldsLookup.Add(member, field);
+					}
+				}
+			}
+
+			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
 
 		/// <summary>
@@ -65,137 +78,160 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Used only during build.
 		/// </summary>
-		internal Dictionary<string, SqlField>? FieldsLookup { get; }
+		internal Dictionary<MemberInfo, SqlField>? FieldsLookup { get; set; }
 
-		private readonly List<SqlField> _fields = new List<SqlField>();
+		private readonly List<SqlField> _fields = new ();
 
 		// Fields from source, used in query. Columns in rows should have same order.
-		public IList<SqlField> Fields => _fields;
+		public List<SqlField> Fields => _fields;
 
-		internal Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>>? ValueBuilders { get; }
+		internal List<Func<object, ISqlExpression>>? ValueBuilders { get; set; }
 
-		internal void Add(SqlField field, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression> valueBuilder)
+		internal void Add(SqlField field, MemberInfo? memberInfo, Func<object, ISqlExpression> valueBuilder)
 		{
 			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 
 			field.Table = this;
 			_fields.Add(field);
 
-			FieldsLookup !.Add(field.Name, field);
-			ValueBuilders!.Add(field.Name, valueBuilder);
+			if (memberInfo != null)
+				FieldsLookup!.Add(memberInfo, field);
+
+			ValueBuilders ??= new List<Func<object, ISqlExpression>>();
+			ValueBuilders.Add(valueBuilder);
 		}
 
-		internal IReadOnlyList<ISqlExpression[]>? Rows { get; }
+		internal List<ISqlExpression[]>? Rows { get; private set; }
 
-		public bool IsRowsBuilt { get; }
-
-		internal SqlValuesTable BuildRows(EvaluationContext context)
+		internal IReadOnlyList<ISqlExpression[]> BuildRows(EvaluationContext context)
 		{
-			if (IsRowsBuilt || context.ParameterValues == null)
-				return this;
-
-			var parameters = new Dictionary<Expression, ISqlExpression>(ExpressionEqualityComparer.Instance);
+			if (Rows != null)
+				return Rows;
 
 			// rows pre-build for remote context
 
 			if (!(Source?.EvaluateExpression(context) is IEnumerable source))
-				throw new LinqToDBException($"Merge source must be enumerable: {Source}");
+				throw new LinqToDBException($"Source must be enumerable: {Source}");
 
 			var rows = new List<ISqlExpression[]>();
 
-			foreach (var record in source)
+			if (ValueBuilders != null)
 			{
-				if (record == null)
-					throw new LinqToDBException("Merge source cannot hold null records");
-
-				var row = new ISqlExpression[ValueBuilders!.Count];
-				var idx = 0;
-				rows.Add(row);
-
-				foreach (var valueBuilder in ValueBuilders!.Values)
+				foreach (var record in source)
 				{
-					row[idx] = valueBuilder(record, parameters);
-					idx++;
+					if (record == null)
+						throw new LinqToDBException("Merge source cannot hold null records");
+
+					var row = new ISqlExpression[ValueBuilders!.Count];
+					var idx = 0;
+					rows.Add(row);
+
+					foreach (var valueBuilder in ValueBuilders!)
+					{
+						row[idx] = valueBuilder(record);
+						idx++;
+					}
 				}
 			}
 
-
-			return new SqlValuesTable(_fields.Select(f => new SqlField(f)).ToArray(), rows);
+			return rows;
 		}
 
 		#region ISqlTableSource
 		private SqlField? _all;
 		SqlField ISqlTableSource.All => _all ??= SqlField.All(this);
 
-		int ISqlTableSource.SourceID => throw new NotImplementedException();
+		public int SourceID { get; }
 
 		SqlTableType ISqlTableSource.SqlTableType => SqlTableType.Values;
 
-		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty) => throw new NotImplementedException();
+		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty)
+		{
+			return _fields.ToArray();
+		}
+
 		#endregion
 
 		#region ISqlExpression
 
-		bool ISqlExpression.CanBeNull => throw new NotImplementedException();
+		public bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();
 
 		int ISqlExpression.Precedence => throw new NotImplementedException();
 
-		Type ISqlExpression.SystemType => throw new NotImplementedException();
+		Type ISqlExpression.SystemType => typeof(object);
 
 		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
 
 		#endregion
 
-		#region ICloneableElement
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone) => throw new NotImplementedException();
-		#endregion
-
 		#region IQueryElement
+
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
+
 		QueryElementType IQueryElement.ElementType => QueryElementType.SqlValuesTable;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			if (Rows == null)
-				return sb;
-
-			sb.Append("\n\t");
-			var rows = Rows!;
-			for (var i = 0; i < rows.Count; i++)
+			var rows = Rows;
+			if (rows?.Count > 0)
 			{
-				// limit number of printed records
-				if (i == 10)
-				{
-					sb.Append($"-- skipping... total rows: {rows.Count}");
-					break;
-				}
+				writer.Append("VALUES");
+				writer.AppendLine();
 
-				if (i > 0)
-					sb.Append(",\n\t)");
+				using (writer.IndentScope())
+					for (var i = 0; i < rows.Count; i++)
+					{
+						// limit number of printed records
+						if (i == 10)
+						{
+							writer
+								.Append("-- skipping... total rows: ")
+								.Append(rows.Count);
+							break;
+						}
 
-				sb.Append('(');
-				for (var j = 0; j < Fields.Count; j++)
-				{
-					if (j > 0)
-						sb.Append(", ");
+						if (i > 0)
+							writer.AppendLine(',');
 
-					sb = rows[i][j].ToString(sb, dic);
-				}
+						writer.Append('(');
 
-				sb.Append(')');
+						for (var j = 0; j < Fields.Count; j++)
+						{
+							if (j > 0)
+								writer.Append(", ");
+
+							writer.AppendElement(rows[i][j]);
+						}
+
+						writer.Append(')');
+					}
+
+				writer.AppendLine();
+			}
+			else
+			{
+				writer.Append("VALUES (...)");
 			}
 
-			sb.Append('\n');
+			writer.Append('[');
 
-			return sb;
+			for (var i = 0; i < Fields.Count; i++)
+			{
+				if (i > 0)
+					writer.Append(", ");
+				writer.Append(Fields[i].PhysicalName);
+			}
+
+			writer.Append(']');
+
+			return writer;
 		}
 		#endregion
 
 		#region IEquatable
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
-		#endregion
-
-		#region ISqlExpressionWalkable
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func) => throw new NotImplementedException();
 		#endregion
 	}
 }

@@ -1,16 +1,13 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.Linq
+﻿namespace LinqToDB.Linq
 {
 	using SqlQuery;
 
 	public interface IQueryContext
 	{
-		SqlStatement    Statement   { get; }
-		object?         Context     { get; set; }
-		List<string>?   QueryHints  { get; set; }
-
-		SqlParameter[]? Parameters  { get; set; }
-		AliasesContext? Aliases     { get; set; }
+		SqlStatement    Statement       { get; }
+		object?         Context         { get; set; }
+		bool            IsContinuousRun { get; set; }
+		AliasesContext? Aliases         { get; set; }
+		DataOptions?    DataOptions     { get; }
 	}
 }

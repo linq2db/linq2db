@@ -20,7 +20,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -37,17 +37,17 @@ namespace Tests.UserTests
 
 				TestContext.WriteLine(str);
 
-				Assert.False(str.Contains("N'CharValue'"));
-				Assert.False(str.Contains("N'VarCharValue'"));
+				Assert.That(str, Does.Not.Contain("N'CharValue'"));
+				Assert.That(str, Does.Not.Contain("N'VarCharValue'"));
 
-				Assert.True(str.Contains("N'NCharValue'"));
-				Assert.True(str.Contains("N'NVarCharValue'"));
+				Assert.That(str, Does.Contain("N'NCharValue'"));
+				Assert.That(str, Does.Contain("N'NVarCharValue'"));
 			}
 
 		}
 
 		[Test]
-		public void Test2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -69,11 +69,11 @@ namespace Tests.UserTests
 
 				TestContext.WriteLine(str);
 
-				Assert.False(str.Contains("N'CharValue'"));
-				Assert.False(str.Contains("N'VarCharValue'"));
+				Assert.That(str, Does.Not.Contain("N'CharValue'"));
+				Assert.That(str, Does.Not.Contain("N'VarCharValue'"));
 
-				Assert.True(str.Contains("N'NCharValue'"));
-				Assert.True(str.Contains("N'NVarCharValue'"));
+				Assert.That(str, Does.Contain("N'NCharValue'"));
+				Assert.That(str, Does.Contain("N'NVarCharValue'"));
 			}
 		}
 	}

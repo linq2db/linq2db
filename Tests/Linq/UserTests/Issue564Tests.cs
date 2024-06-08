@@ -46,13 +46,13 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<Parent564>())
 			{
 				db.Insert(new Child564A() {StringValue = "SomeValue"});
 				db.Insert(new Child564B() {IntValue    = 911});
 
-				Assert.AreEqual(2, db.GetTable<Parent564>().Count());
+				Assert.That(db.GetTable<Parent564>().Count(), Is.EqualTo(2));
 			}
 		}
 	}

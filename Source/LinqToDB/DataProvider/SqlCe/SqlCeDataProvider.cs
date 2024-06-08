@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,14 +12,16 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
 
 	public class SqlCeDataProvider : DynamicDataProviderBase<SqlCeProviderAdapter>
 	{
 		public SqlCeDataProvider()
-			: this(ProviderName.SqlCe, new SqlCeMappingSchema())
+			: this(ProviderName.SqlCe, SqlCeMappingSchema.Instance)
 		{
 		}
 
@@ -28,11 +32,11 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsCountSubQuerySupported             = false;
 			SqlProviderFlags.IsApplyJoinSupported                 = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported            = false;
-			SqlProviderFlags.IsCrossJoinSupported                 = true;
-			SqlProviderFlags.IsDistinctOrderBySupported           = false;
 			SqlProviderFlags.IsOrderByAggregateFunctionsSupported = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported     = false;
 			SqlProviderFlags.IsUpdateFromSupported                = false;
+			SqlProviderFlags.IsCountDistinctSupported             = false;
+			SqlProviderFlags.IsAggregationDistinctSupported       = false;
 
 			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
@@ -46,14 +50,19 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return new SqlCeSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SqlCeMemberTranslator();
+		}
+
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
+		{
+			return new SqlCeSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions)
 		{
 			return _sqlOptimizer;
 		}
@@ -63,8 +72,13 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new SqlCeSchemaProvider();
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+#if NET6_0_OR_GREATER
+			if (value is DateOnly d)
+				value = d.ToDateTime(TimeOnly.MinValue);
+#endif
+
 			switch (dataType.DataType)
 			{
 				case DataType.Xml :
@@ -80,7 +94,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			SqlDbType? type = null;
 
@@ -98,7 +112,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);
@@ -113,7 +127,8 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.UInt32     : parameter.DbType = DbType.Int64;             return;
 				case DataType.UInt64     : parameter.DbType = DbType.Decimal;           return;
 				case DataType.VarNumeric : parameter.DbType = DbType.Decimal;           return;
-				case DataType.Char       : parameter.DbType = DbType.StringFixedLength; return;
+				case DataType.Char       :
+				case DataType.NChar      : parameter.DbType = DbType.String;            return;
 				case DataType.Date       :
 				case DataType.DateTime2  : parameter.DbType = DbType.DateTime;          return;
 				case DataType.Money      : parameter.DbType = DbType.Currency;          return;
@@ -130,46 +145,49 @@ namespace LinqToDB.DataProvider.SqlCe
 
 #endregion
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
 			return true;
 		}
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
 			return new SqlCeBulkCopy().BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? SqlCeTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SqlCeOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new SqlCeBulkCopy().BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? SqlCeTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SqlCeOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new SqlCeBulkCopy().BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? SqlCeTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SqlCeOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

@@ -8,11 +8,14 @@ namespace Tests.Common
 	public class ReservedWordTest
 	{
 		[Test]
-		public void Test([Values("", ProviderName.PostgreSQL, ProviderName.Oracle)]string providerName)
+		public void Test([Values("", TestProvName.AllPostgreSQL, TestProvName.AllOracle)] string providerName)
 		{
-			Assert.True(ReservedWords.IsReserved("select", providerName));
-			Assert.True(ReservedWords.IsReserved("SELECT", providerName));
-			Assert.True(ReservedWords.IsReserved("Select", providerName));
+			Assert.Multiple(() =>
+			{
+				Assert.That(ReservedWords.IsReserved("select", providerName), Is.True);
+				Assert.That(ReservedWords.IsReserved("SELECT", providerName), Is.True);
+				Assert.That(ReservedWords.IsReserved("Select", providerName), Is.True);
+			});
 		}
 	}
 }

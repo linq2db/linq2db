@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Linq;
+#if NETFRAMEWORK
+using System.ServiceModel;
+#endif
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -11,9 +14,6 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
-#if NET472
-	using System.ServiceModel;
-#endif
 
 	[TestFixture]
 	public class MappingTests : TestBase
@@ -72,8 +72,11 @@ namespace Tests.Linq
 		{
 			var value = ConvertTo<TypeValue>.From(1);
 
-			Assert.AreEqual(TypeValue.Value1, value);
-			Assert.AreEqual(10,               (int)value);
+			Assert.Multiple(() =>
+			{
+				Assert.That(value, Is.EqualTo(TypeValue.Value1));
+				Assert.That((int)value, Is.EqualTo(10));
+			});
 		}
 
 		[Test]
@@ -116,7 +119,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Parent")]
-		class TestParent
+		sealed class TestParent
 		{
 			[Column] public int       ParentID;
 			[Column] public TestValue Value1;
@@ -129,7 +132,7 @@ namespace Tests.Linq
 				db.GetTable<TestParent>().Where(p => p.Value1 == TestValue.Value1).ToList();
 		}
 
-		internal class LinqDataTypes
+		internal sealed class LinqDataTypes
 		{
 			public TestValue ID;
 		}
@@ -180,7 +183,7 @@ namespace Tests.Linq
 		public class ParentObject
 		{
 			[Column]                      public int   ParentID;
-			[Column("Value1", ".Value1")] public Inner Value = new Inner();
+			[Column("Value1", ".Value1")] public Inner Value = new ();
 
 			public class Inner
 			{
@@ -194,8 +197,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1);
-				Assert.AreEqual(1, e.ParentID);
-				Assert.AreEqual(1, e.Value.Value1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(e.ParentID, Is.EqualTo(1));
+					Assert.That(e.Value.Value1, Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -205,8 +211,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1 && p.Value.Value1 == 1);
-				Assert.AreEqual(1, e.ParentID);
-				Assert.AreEqual(1, e.Value.Value1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(e.ParentID, Is.EqualTo(1));
+					Assert.That(e.Value.Value1, Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -226,7 +235,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ChildObject>().First(c => c.Parent!.Value.Value1 == 1);
-				Assert.AreEqual(1, e.ParentID);
+				Assert.That(e.ParentID, Is.EqualTo(1));
 			}
 		}
 
@@ -236,13 +245,13 @@ namespace Tests.Linq
 		}
 
 		[Table(Name="Parent")]
-		class MyParent
+		sealed class MyParent
 		{
 			[Column] public MyInt ParentID;
 			[Column] public int?  Value1;
 		}
 
-		class MyMappingSchema : MappingSchema
+		sealed class MyMappingSchema : MappingSchema
 		{
 			public MyMappingSchema()
 			{
@@ -252,13 +261,14 @@ namespace Tests.Linq
 			}
 		}
 
-		static readonly MyMappingSchema _myMappingSchema = new MyMappingSchema();
+		static readonly MyMappingSchema _myMappingSchema = new ();
 
 		[Test]
 		public void MyType1()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				var _ = db.GetTable<MyParent>().ToList();
 			}
 		}
@@ -266,8 +276,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType2()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				var _ = db.GetTable<MyParent>()
 					.Select(t => new MyParent { ParentID = t.ParentID, Value1 = t.Value1 })
 					.ToList();
@@ -277,8 +288,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType3()
 		{
-			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = (TestDataConnection) new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				try
 				{
 					db.Insert(new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
@@ -293,8 +305,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType4()
 		{
-			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = (TestDataConnection)new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				try
 				{
 					var id = new MyInt { MyValue = 1001 };
@@ -310,8 +323,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType5()
 		{
-			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = (TestDataConnection)new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				try
 				{
 					db.GetTable<MyParent>().Insert(() => new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
@@ -324,7 +338,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Parent")]
-		class MyParent1
+		sealed class MyParent1
 		{
 			[Column] public int  ParentID;
 			[Column] public int? Value1;
@@ -373,12 +387,12 @@ namespace Tests.Linq
 				IQueryable<IDocument> query = db.GetTable<Document>();
 				var idsQuery = query.Select(s => s.Id);
 				var str = idsQuery.ToString(); // Exception
-				Assert.IsNotNull(str);
+				Assert.That(str, Is.Not.Null);
 			}
 		}
 
 		[Table("Person")]
-		class Table171
+		sealed class Table171
 		{
 			[Column] public Gender Gender;
 		}
@@ -407,7 +421,7 @@ namespace Tests.Linq
 			{
 				var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Count();
 
-				Assert.AreEqual(1, results);
+				Assert.That(results, Is.EqualTo(1));
 			}
 		}
 
@@ -418,8 +432,8 @@ namespace Tests.Linq
 			{
 				var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Select(_ => new { _.ChildID }).ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(32, results[0].ChildID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].ChildID, Is.EqualTo(32));
 			}
 		}
 
@@ -440,98 +454,323 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ColumnMappingException1([DataSources] string context)
+		public void ColumnMappingException1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context, testLinqService : false))
+			using (var db = GetDataContext(context, testLinqService : false, suppressSequentialAccess: true))
 			{
-#if NET472
 				if (isLinqService)
 				{
-					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
-					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
+#if NETFRAMEWORK
+					var fe = Assert.Throws<FaultException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+#else
+					var fe = Assert.Throws<Grpc.Core.RpcException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+#endif
+					Assert.That(fe.Message.ToLowerInvariant(), Does.Contain("firstname"));
 				}
 				else
-#endif
 				{
 					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					// field name casing depends on database
-					Assert.AreEqual("firstname", ex.ColumnName!.ToLowerInvariant());
+					Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("firstname"));
 				}
 			}
 		}
 
 		[Test]
-		public void ColumnMappingException2([DataSources] string context)
+		public void ColumnMappingException2([DataSources(ProviderName.SqlCe)] string context)
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
-				Assert.AreEqual("lastname", ex.ColumnName!.ToLower());
+				Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("lastname"));
 			}
 		}
 
-		[Test, ActiveIssue(1592)]
-		public void Issue1592CallbackWithDefaultMappingSchema([DataSources] string context)
+#region Records
+
+		public record Record(int Id, string Value, string BaseValue) : RecordBase(Id, BaseValue);
+		public abstract record RecordBase(int Id, string BaseValue);
+
+		public class RecordLike : RecordLikeBase
 		{
-			bool result = false;
-
-			MappingSchema.Default.EntityDescriptorCreatedCallback = (ms, ed) =>
+			public RecordLike(int Id, string Value, string BaseValue)
+				: base(Id, BaseValue)
 			{
-				result = true;
-			};
-
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<Person>().FirstOrDefault();
-
-				Assert.IsTrue(result);
+				this.Value = Value;
 			}
+
+			public string Value { get; init; }
 		}
 
-		[ActiveIssue(1592)]
+		public abstract class RecordLikeBase
+		{
+			protected RecordLikeBase(int Id, string BaseValue)
+			{
+				this.Id = Id;
+				this.BaseValue = BaseValue;
+			}
+
+			public int    Id        { get; init; }
+			public string BaseValue { get; init; }
+		}
+
+		public class WithInitOnly : WithInitOnlyBase
+		{
+			public string? Value { get; init; }
+		}
+
+		public abstract class WithInitOnlyBase
+		{
+			public int     Id        { get; init; }
+			public string? BaseValue { get; init; }
+		}
+
 		[Test]
-		public void Issue1592CallbackWithContextProperty([DataSources] string context)
+		public void TestRecordMapping([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			bool result = false;
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<Record>()
+					.Property(p => p.Id).IsPrimaryKey()
+					.Property(p => p.Value)
+					.Property(p => p.BaseValue)
+				.Build();
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<Record>())
 			{
-				db.MappingSchema.EntityDescriptorCreatedCallback = (ms, ed) =>
+				db.Insert(new Record(1, "One", "OneBase"));
+				db.Insert(new Record(2, "Two", "TwoBase"));
+
+				var data = table.OrderBy(r => r.Id).ToArray();
+
+				Assert.That(data, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
 				{
-					result = true;
-				};
+					Assert.That(data[0].Id, Is.EqualTo(1));
+					Assert.That(data[0].Value, Is.EqualTo("One"));
+					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(data[1].Id, Is.EqualTo(2));
+					Assert.That(data[1].Value, Is.EqualTo("Two"));
+					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 
-				db.GetTable<Person>().FirstOrDefault();
+				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
-				Assert.IsTrue(result);
+				Assert.That(proj, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(proj[0].Id, Is.EqualTo(1));
+					Assert.That(proj[0].Value, Is.EqualTo("One"));
+					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(proj[1].Id, Is.EqualTo(2));
+					Assert.That(proj[1].Value, Is.EqualTo("Two"));
+					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 			}
 		}
 
-		[Test, ActiveIssue(1592)]
-		public void Issue1592CallbackWithContextConstructor([DataSources] string context)
+		[Test]
+		public void TestRecordLikeMapping([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			bool result = false;
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<RecordLike>()
+					.Property(p => p.Id).IsPrimaryKey()
+					.Property(p => p.Value)
+					.Property(p => p.BaseValue)
+				.Build();
 
-			var mappingSchema = new MappingSchema
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<RecordLike>())
 			{
-				EntityDescriptorCreatedCallback = (ms, ed) =>
+				db.Insert(new RecordLike(1, "One", "OneBase"));
+				db.Insert(new RecordLike(2, "Two", "TwoBase"));
+
+				var data = table.OrderBy(r => r.Id).ToArray();
+
+				Assert.That(data, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
 				{
-					result = true;
-				}
-			};
+					Assert.That(data[0].Id, Is.EqualTo(1));
+					Assert.That(data[0].Value, Is.EqualTo("One"));
+					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(data[1].Id, Is.EqualTo(2));
+					Assert.That(data[1].Value, Is.EqualTo("Two"));
+					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 
-			using (var db = GetDataContext(context, mappingSchema))
-			{
-				db.GetTable<Person>().FirstOrDefault();
+				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
-				Assert.IsTrue(result);
+				Assert.That(proj, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(proj[0].Id, Is.EqualTo(1));
+					Assert.That(proj[0].Value, Is.EqualTo("One"));
+					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(proj[1].Id, Is.EqualTo(2));
+					Assert.That(proj[1].Value, Is.EqualTo("Two"));
+					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 			}
 		}
+
+		[Test]
+		public void TestInitOnly([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<WithInitOnly>()
+					.Property(p => p.Id).IsPrimaryKey()
+					.Property(p => p.Value)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<WithInitOnly>())
+			{
+				db.Insert(new WithInitOnly{Id = 1, Value = "One", BaseValue = "OneBase"});
+				db.Insert(new WithInitOnly{Id = 2, Value = "Two", BaseValue = "TwoBase"});
+
+				var data = table.OrderBy(r => r.Id).ToArray();
+
+				Assert.That(data, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(1));
+					Assert.That(data[0].Value, Is.EqualTo("One"));
+					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(data[1].Id, Is.EqualTo(2));
+					Assert.That(data[1].Value, Is.EqualTo("Two"));
+					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
+
+				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
+
+				Assert.That(proj, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(proj[0].Id, Is.EqualTo(1));
+					Assert.That(proj[0].Value, Is.EqualTo("One"));
+					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(proj[1].Id, Is.EqualTo(2));
+					Assert.That(proj[1].Value, Is.EqualTo("Two"));
+					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
+			}
+		}
+
+		#endregion
+
+		#region Issue 4113
+		public interface IInterface1
+		{
+		}
+
+		public interface IInterface2
+		{
+			Guid Id { get; set; }
+		}
+
+		public interface IInterface3
+		{
+			int Id { get; set; }
+		}
+
+		[Table("Person")]
+		public abstract class BaseModel1
+		{
+			[Column("UNKNOWN")] public virtual Guid Id { get; set; }
+		}
+
+		[Table("Person")]
+		public abstract class BaseModel2: IInterface2
+		{
+			[Column("UNKNOWN")] public virtual Guid Id { get; set; }
+		}
+
+		public sealed class NewModel1 : BaseModel1
+		{
+			[Column("PersonID")] public new int Id { get; set; }
+		}
+
+		public sealed class NewModel2 : BaseModel1, IInterface1
+		{
+			[Column("PersonID")] public new int Id { get; set; }
+		}
+
+		public sealed class NewModel3 : BaseModel2
+		{
+			[Column("PersonID")] public new int Id { get; set; }
+		}
+
+		public sealed class NewModel4 : BaseModel1, IInterface3
+		{
+			[Column("PersonID")] public new int Id { get; set; }
+		}
+
+		public sealed class NewModel5 : BaseModel2, IInterface3
+		{
+			[Column("PersonID")] public new int Id { get; set; }
+		}
+
+		[Test]
+		public void ColumnReplacedWithNew1([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<NewModel1>().Where(c => c.Id == -1).ToList();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel1));
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
+		}
+
+		[Test]
+		public void ColumnReplacedWithNew2([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<NewModel2>().Where(c => c.Id == -1).ToList();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel2));
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
+		}
+
+		[Test]
+		public void ColumnReplacedWithNew3([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<NewModel3>().Where(c => c.Id == -1).ToList();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel3));
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
+		}
+
+		[Test]
+		public void ColumnReplacedWithNew4([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<NewModel4>().Where(c => c.Id == -1).ToList();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel4));
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
+		}
+
+		[Test]
+		public void ColumnReplacedWithNew5([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<NewModel5>().Where(c => c.Id == -1).ToList();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel5));
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
+		}
+		#endregion
 	}
 }

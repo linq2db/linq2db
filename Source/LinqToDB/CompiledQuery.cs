@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Common;
 	using Expressions;
 	using Extensions;
 	using Linq;
-	using LinqToDB.Common;
+	using Linq.Builder;
 
 	/// <summary>
 	/// Provides API for compilation and caching of queries for reuse.
@@ -22,7 +24,7 @@ namespace LinqToDB
 			_query = query;
 		}
 
-		readonly object                   _sync = new object();
+		readonly object                   _sync = new ();
 		readonly LambdaExpression         _query;
 		volatile Func<object?[],object?[]?,object?>? _compiledQuery;
 
@@ -30,8 +32,7 @@ namespace LinqToDB
 		{
 			if (_compiledQuery == null)
 				lock (_sync)
-					if (_compiledQuery == null)
-						_compiledQuery = CompileQuery(_query);
+					_compiledQuery ??= CompileQuery(_query);
 
 			//TODO: pass preambles
 			return (TResult)_compiledQuery(args, null)!;
@@ -49,7 +50,8 @@ namespace LinqToDB
 			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type);
 		}
 
-		class TableHelper<T> : ITableHelper
+		sealed class TableHelper<T> : ITableHelper
+			where T : notnull
 		{
 			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type)
 			{
@@ -68,35 +70,43 @@ namespace LinqToDB
 
 		static Func<object?[],object?[]?,object?> CompileQuery(LambdaExpression query)
 		{
-			var ps = Expression.Parameter(typeof(object[]), "ps");
+			var ps        = ExpressionBuilder.ParametersParam;
 			var preambles = Expression.Parameter(typeof(object[]), "preambles");
 
-			var info = query.Body.Transform(pi =>
+			var info = query.Body.Transform((query, ps, preambles), static (context, pi) =>
 			{
 				switch (pi.NodeType)
 				{
 					case ExpressionType.Parameter :
 						{
-							var idx = query.Parameters.IndexOf((ParameterExpression)pi);
+							var idx = context.query.Parameters.IndexOf((ParameterExpression)pi);
 
 							if (idx >= 0)
-								return Expression.Convert(Expression.ArrayIndex(ps, Expression.Constant(idx)), pi.Type);
+								return Expression.Convert(Expression.ArrayIndex(context.ps, ExpressionInstances.Int32(idx)), pi.Type);
 
 							break;
 						}
+				}
 
+				return pi;
+			});
+
+			info = info.Transform((query, ps, preambles), static (context, pi) =>
+			{
+				switch (pi.NodeType)
+				{
 					case ExpressionType.Call :
 						{
 							var expr = (MethodCallExpression)pi;
 
 							if (expr.Method.DeclaringType == typeof(AsyncExtensions) &&
-								expr.Method.GetCustomAttributes(typeof(AsyncExtensions.ElementAsyncAttribute), true).Length != 0)
+								expr.Method.HasAttribute<AsyncExtensions.ElementAsyncAttribute>())
 							{
 								var type = expr.Type.GetGenericArguments()[0];
 
 								var helper = (ITableHelper)Activator.CreateInstance(typeof(TableHelper<>).MakeGenericType(type))!;
 
-								return helper.CallTable(query, expr, ps, preambles, MethodType.ElementAsync);
+								return helper.CallTable(context.query, expr, context.ps, context.preambles, MethodType.ElementAsync);
 							}
 							else if (expr.IsQueryable())
 							{
@@ -108,7 +118,7 @@ namespace LinqToDB
 								var helper = (ITableHelper)Activator.CreateInstance(
 									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]))!;
 
-								return helper.CallTable(query, expr, ps, preambles, qtype != null ? MethodType.Queryable : MethodType.Element);
+								return helper.CallTable(context.query, expr, context.ps, context.preambles, qtype != null ? MethodType.Queryable : MethodType.Element);
 							}
 
 							if (expr.Method.Name == "GetTable" && expr.Method.DeclaringType == typeof(DataExtensions))
@@ -123,7 +133,7 @@ namespace LinqToDB
 							var helper = (ITableHelper)Activator
 								.CreateInstance(typeof(TableHelper<>)
 								.MakeGenericType(pi.Type.GetGenericArguments()[0]))!;
-							return helper.CallTable(query, pi, ps, preambles, MethodType.Queryable);
+							return helper.CallTable(context.query, pi, context.ps, context.preambles, MethodType.Queryable);
 						}
 
 						break;

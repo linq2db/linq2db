@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -22,6 +22,7 @@ namespace EquatableDataContext
 	public partial class EquatableDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
+		public ITable<AllTypesView>      AllTypesViews       { get { return this.GetTable<AllTypesView>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
 		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
 		public ITable<Dual>              Duals               { get { return this.GetTable<Dual>(); } }
@@ -53,8 +54,15 @@ namespace EquatableDataContext
 			InitMappingSchema();
 		}
 
-		public EquatableDB(LinqToDbConnectionOptions options)
+		public EquatableDB(DataOptions options)
 			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public EquatableDB(DataOptions<EquatableDB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 			InitMappingSchema();
@@ -118,6 +126,36 @@ namespace EquatableDataContext
 		#endregion
 	}
 
+	[Table("AllTypesView", IsView=true)]
+	public partial class AllTypesView
+	{
+		[Column(),                           Identity] public long      ID                       { get; set; } // integer
+		[Column("bigintDataType"),           Nullable] public long?     BigintDataType           { get; set; } // bigint
+		[Column("numericDataType"),          Nullable] public decimal?  NumericDataType          { get; set; } // numeric
+		[Column("bitDataType"),              Nullable] public bool?     BitDataType              { get; set; } // bit
+		[Column("smallintDataType"),         Nullable] public short?    SmallintDataType         { get; set; } // smallint
+		[Column("decimalDataType"),          Nullable] public decimal?  DecimalDataType          { get; set; } // decimal
+		[Column("intDataType"),              Nullable] public int?      IntDataType              { get; set; } // int
+		[Column("tinyintDataType"),          Nullable] public byte?     TinyintDataType          { get; set; } // tinyint
+		[Column("moneyDataType"),            Nullable] public decimal?  MoneyDataType            { get; set; } // money
+		[Column("floatDataType"),            Nullable] public double?   FloatDataType            { get; set; } // float
+		[Column("realDataType"),             Nullable] public double?   RealDataType             { get; set; } // real
+		[Column("datetimeDataType"),         Nullable] public DateTime? DatetimeDataType         { get; set; } // datetime
+		[Column("charDataType"),             Nullable] public char?     CharDataType             { get; set; } // char(1)
+		[Column("char20DataType"),           Nullable] public string?   Char20DataType           { get; set; } // char(20)
+		[Column("varcharDataType"),          Nullable] public string?   VarcharDataType          { get; set; } // varchar(20)
+		[Column("textDataType"),             Nullable] public string?   TextDataType             { get; set; } // text(max)
+		[Column("ncharDataType"),            Nullable] public string?   NcharDataType            { get; set; } // char(20)
+		[Column("nvarcharDataType"),         Nullable] public string?   NvarcharDataType         { get; set; } // nvarchar(20)
+		[Column("ntextDataType"),            Nullable] public string?   NtextDataType            { get; set; } // ntext(max)
+		[Column("binaryDataType"),           Nullable] public byte[]?   BinaryDataType           { get; set; } // binary
+		[Column("varbinaryDataType"),        Nullable] public byte[]?   VarbinaryDataType        { get; set; } // varbinary
+		[Column("imageDataType"),            Nullable] public byte[]?   ImageDataType            { get; set; } // image
+		[Column("uniqueidentifierDataType"), Nullable] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
+		[Column("objectDataType"),           Nullable] public object?   ObjectDataType           { get; set; } // object
+		[Column(),                           Nullable] public object?   Number                   { get; set; }
+	}
+
 	[Table("Child")]
 	public partial class Child
 	{
@@ -134,9 +172,9 @@ namespace EquatableDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_Doctor_0_0 (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -216,9 +254,9 @@ namespace EquatableDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0_0 (PrimaryKeyTable)
 		/// </summary>
-		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_ForeignKeyTable_0_0", BackReferenceName="ForeignKeyTables")]
+		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false)]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
 
 		#endregion
@@ -281,9 +319,9 @@ namespace EquatableDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0_0 (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient_0_0", BackReferenceName="Patient")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -326,15 +364,15 @@ namespace EquatableDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0_BackReference
+		/// FK_Doctor_0_0_BackReference (Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0_BackReference
+		/// FK_Patient_0_0_BackReference (Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -374,9 +412,9 @@ namespace EquatableDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0_BackReference
+		/// FK_ForeignKeyTable_0_0_BackReference (ForeignKeyTable)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true)]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
 
 		#endregion
@@ -553,7 +591,7 @@ namespace EquatableDataContext
 		/// <summary>
 		/// FK_Doctor_0_0
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public static IQueryable<Person> People(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
@@ -562,7 +600,7 @@ namespace EquatableDataContext
 		/// <summary>
 		/// FK_Doctor_0_0
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public static Doctor Person(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID).First();
@@ -575,7 +613,7 @@ namespace EquatableDataContext
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0
 		/// </summary>
-		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_ForeignKeyTable_0_0", BackReferenceName="ForeignKeyTables")]
+		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false)]
 		public static IQueryable<PrimaryKeyTable> PrimaryKeyTables(this ForeignKeyTable obj, IDataContext db)
 		{
 			return db.GetTable<PrimaryKeyTable>().Where(c => c.ID == obj.PrimaryKeyTableID);
@@ -584,7 +622,7 @@ namespace EquatableDataContext
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0
 		/// </summary>
-		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_ForeignKeyTable_0_0", BackReferenceName="ForeignKeyTables")]
+		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false)]
 		public static ForeignKeyTable PrimaryKeyTable(this PrimaryKeyTable obj, IDataContext db)
 		{
 			return db.GetTable<ForeignKeyTable>().Where(c => c.PrimaryKeyTableID == obj.ID).First();
@@ -597,7 +635,7 @@ namespace EquatableDataContext
 		/// <summary>
 		/// FK_Patient_0_0
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient_0_0", BackReferenceName="Patient")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public static IQueryable<Person> People0(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
@@ -606,7 +644,7 @@ namespace EquatableDataContext
 		/// <summary>
 		/// FK_Patient_0_0
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient_0_0", BackReferenceName="Patient")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public static Patient Person0(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Patient>().Where(c => c.PersonID == obj.PersonID).First();
@@ -619,7 +657,7 @@ namespace EquatableDataContext
 		/// <summary>
 		/// FK_Doctor_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public static IQueryable<Doctor> Doctors(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID);
@@ -628,7 +666,7 @@ namespace EquatableDataContext
 		/// <summary>
 		/// FK_Doctor_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public static Person? Doctor(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
@@ -637,7 +675,7 @@ namespace EquatableDataContext
 		/// <summary>
 		/// FK_Patient_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public static IQueryable<Patient> Patients(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Patient>().Where(c => c.PersonID == obj.PersonID);
@@ -646,7 +684,7 @@ namespace EquatableDataContext
 		/// <summary>
 		/// FK_Patient_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public static Person? Patient(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
@@ -659,7 +697,7 @@ namespace EquatableDataContext
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true)]
 		public static IQueryable<ForeignKeyTable> ForeignKeyTables(this PrimaryKeyTable obj, IDataContext db)
 		{
 			return db.GetTable<ForeignKeyTable>().Where(c => c.PrimaryKeyTableID == obj.ID);
@@ -670,5 +708,3 @@ namespace EquatableDataContext
 		#endregion
 	}
 }
-
-#pragma warning restore 1591

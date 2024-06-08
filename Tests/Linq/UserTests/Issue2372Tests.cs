@@ -25,17 +25,18 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Issue2372Test(
-			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			Model.ITestDataContext? db1 = null;
 			try
 			{
 				var ms1 = new MappingSchema();
-				var fmb1 = ms1.GetFluentMappingBuilder();
+				var fmb1 = new FluentMappingBuilder(ms1);
 				fmb1.Entity<InventoryResourceDTO>()
 				  .HasTableName("InventoryResource")
 				  .Property(e => e.Id).IsPrimaryKey()
-				  .Property(e => e.Status).HasDataType(DataType.NVarChar);
+				  .Property(e => e.Status).HasDataType(DataType.NVarChar)
+				  .Build();
 
 				var ms2 = new MappingSchema();
 				ms2.SetConverter<InventoryResourceStatus, string>((obj) =>
@@ -51,15 +52,16 @@ namespace Tests.UserTests
 					return (InventoryResourceStatus)Enum.Parse(typeof(InventoryResourceStatus), txt, true);
 				});
 
-				var fmb2 = ms2.GetFluentMappingBuilder();
+				var fmb2 = new FluentMappingBuilder(ms2);
 				fmb2.Entity<InventoryResourceDTO>()
 				  .HasTableName("InventoryResource")
 				  .Property(e => e.Id).IsPrimaryKey()
-				  .Property(e => e.Status);
+				  .Property(e => e.Status)
+				  .Build();
 
 				db1 = GetDataContext(context, ms1);
 				db1.DropTable<InventoryResourceDTO>(throwExceptionIfNotExists: false);
-				db1.CreateLocalTable<InventoryResourceDTO>();
+				using var t = db1.CreateLocalTable<InventoryResourceDTO>();
 
 				using (var db2 = GetDataContext(context, ms2))
 				{

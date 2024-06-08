@@ -1,21 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
 	public class ExpressionGenerator
 	{
-		private readonly List<ParameterExpression> _variables = new List<ParameterExpression>();
-		private readonly List<Expression> _expressions = new List<Expression>();
-		private readonly TypeMapper _mapper;
+		public static TypeMapper NoOpTypeMapper = new TypeMapper();
+
+		List<ParameterExpression>? _variables;
+		List<Expression>?          _expressions;
+		readonly TypeMapper        _mapper;
 
 		public ExpressionGenerator(TypeMapper mapper)
 		{
 			_mapper = mapper;
 		}
 
-		public ExpressionGenerator() : this(new TypeMapper())
+		public ExpressionGenerator() : this(NoOpTypeMapper)
 		{
 		}
 
@@ -26,6 +29,8 @@ namespace LinqToDB.Expressions
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			var variable = Expression.Variable(type, name);
+
+			_variables ??= new();
 			_variables.Add(variable);
 			return variable;
 		}
@@ -34,6 +39,7 @@ namespace LinqToDB.Expressions
 		{
 			if (variable == null) throw new ArgumentNullException(nameof(variable));
 
+			_variables ??= new();
 			_variables.Add(variable);
 			return variable;
 		}
@@ -42,16 +48,17 @@ namespace LinqToDB.Expressions
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
+			_expressions ??= new();
 			_expressions.Add(expression);
 			return expression;
 		}
 
 		public Expression Build()
 		{
-			if (_variables.Count == 0 && _expressions.Count == 1)
+			if ((_variables?.Count ?? 0) == 0 && _expressions?.Count == 1)
 				return _expressions[0];
 
-			var block = Expression.Block(_variables, _expressions);
+			var block = Expression.Block(_variables, _expressions ?? Enumerable.Empty<Expression>());
 			return block;
 		}
 
@@ -143,16 +150,16 @@ namespace LinqToDB.Expressions
 		public Expression MapExpression<T, TR>(Expression<Func<T, TR>> func, Expression p)
 			=> _mapper.MapExpression(func, p);
 
-		public Expression MapExpression<T1, T2, TR>(Expression<Func<T1, T2, TR>> func, Expression p1, Expression p2) 
+		public Expression MapExpression<T1, T2, TR>(Expression<Func<T1, T2, TR>> func, Expression p1, Expression p2)
 			=> _mapper.MapExpression(func, p1, p2);
 
-		public Expression MapExpression<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func, Expression p1, Expression p2, Expression p3) 
+		public Expression MapExpression<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func, Expression p1, Expression p2, Expression p3)
 			=> _mapper.MapExpression(func, p1, p2, p3);
 
-		public Expression MapExpression<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4) 
+		public Expression MapExpression<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4)
 			=> _mapper.MapExpression(func, p1, p2, p3, p4);
 
-		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5) 
+		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
 			=> _mapper.MapExpression(func, p1, p2, p3, p4, p5);
 
 		#endregion

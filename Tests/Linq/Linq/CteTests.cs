@@ -11,6 +11,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using FluentAssertions;
 	using LinqToDB.Linq;
 	using Model;
 
@@ -18,12 +19,13 @@ namespace Tests.Linq
 	{
 		public static string[] CteSupportedProviders = new[]
 		{
-			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllSqlServer,
 			TestProvName.AllFirebird,
 			TestProvName.AllPostgreSQL,
 			ProviderName.DB2,
 			TestProvName.AllSQLite,
 			TestProvName.AllOracle,
+			TestProvName.AllClickHouse,
 			TestProvName.AllMySqlWithCTE,
 			// TODO: v14
 			//TestProvName.AllInformix,
@@ -76,7 +78,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test2([CteContextSource] string context)
+		public void Test2([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -120,9 +122,55 @@ namespace Tests.Linq
 			}
 		}
 
+		// MariaDB allows CTE ordering but do not respect it
+		[Test]
+		public void WithOrderBy([CteContextSource(TestProvName.AllMariaDB)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent
+					.OrderByDescending(p => p.ParentID)
+					.AsCte();
+
+				if (!db.SqlProviderFlags.IsCTESupportsOrdering)
+					FluentActions.Enumerating(() => query).Should().NotThrow();
+				else
+				{
+					var result = query.ToList();
+
+					var expected = Parent
+						.OrderByDescending(p => p.ParentID)
+						.ToList();
+
+					AreSame(expected, result);
+				}
+			}
+		}
+
+		[Test]
+		public void WithLimitedOrderBy([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent
+					.OrderByDescending(p => p.ParentID)
+					.Take(3)
+					.AsCte();
+
+				var result = query.ToList();
+
+				var expected = Parent
+					.OrderByDescending(p => p.ParentID)
+					.Take(3)
+					.ToList();
+
+				AreSame(expected, result);
+			}
+		}
+
 		static IQueryable<TSource> RemoveCte<TSource>(IQueryable<TSource> source)
 		{
-			var newExpr = source.Expression.Transform(e =>
+			var newExpr = source.Expression.Transform<object?>(null, static (_, e) =>
 			{
 				if (e is MethodCallExpression methodCall && methodCall.Method.Name == "AsCte")
 					return methodCall.Arguments[0];
@@ -269,7 +317,7 @@ namespace Tests.Linq
 						e.EmployeeID,
 						e.LastName,
 						e.FirstName,
-						NumberOfSubordinates = db.Employee.Where(e2 => e2.ReportsTo == e.ReportsTo).Count(),
+						NumberOfSubordinates = db.Employee.Where(e2 => e2.ReportsTo == e.ReportsTo && e2.ReportsTo != null).Count(),
 						e.ReportsTo
 					};
 
@@ -308,7 +356,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class EmployeeHierarchyCTE
+		sealed class EmployeeHierarchyCTE
 		{
 			public int EmployeeID;
 			public string LastName  = null!;
@@ -418,7 +466,7 @@ namespace Tests.Linq
 					join c2 in cte1_ on p.ParentID equals c2.ParentID
 					select p;
 
-				Assert.AreEqual(expected.Count(), query.Count());
+				Assert.That(query.Count(), Is.EqualTo(expected.Count()));
 			}
 		}
 
@@ -454,13 +502,13 @@ namespace Tests.Linq
 
 				var actual = query.AsEnumerable().Select(c => c.Count).First();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 
-		private class CteDMLTests
+		private sealed class CteDMLTests
 		{
-			protected bool Equals(CteDMLTests other)
+			private bool Equals(CteDMLTests other)
 			{
 				return ChildID == other.ChildID && ParentID == other.ParentID;
 			}
@@ -496,17 +544,17 @@ namespace Tests.Linq
 				var cte1 = db.GetTable<Child>().AsCte("CTE1_");
 				var cnt1 = cte1.Count();
 
-				Assert.AreEqual(expected, cnt1);
+				Assert.That(cnt1, Is.EqualTo(expected));
 
 				var query = db.GetTable<Child>().Select(c => new { C = new { c.ChildID }});
 				var cte2 = query.AsCte("CTE1_");
 				var cnt2 = cte2.Count();
 
-				Assert.AreEqual(expected, cnt2);
+				Assert.That(cnt2, Is.EqualTo(expected));
 
 				var any  = cte2.Any();
 
-				Assert.IsTrue(any);
+				Assert.That(any, Is.True);
 			}
 		}
 
@@ -520,6 +568,9 @@ namespace Tests.Linq
 
 				var query = cte.Where(t => t.ChildID == var3 || var3 == null);
 				var str = query.ToString()!;
+
+				TestContext.WriteLine(str);
+
 				Assert.That(str.Contains("WITH"), Is.EqualTo(true));
 			}
 		}
@@ -559,7 +610,7 @@ namespace Tests.Linq
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[Test]
-		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.MariaDB)] string context)
+		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db  = GetDataContext(context))
 			using (var tmp = db.CreateLocalTable("CteChild",
@@ -573,7 +624,7 @@ namespace Tests.Linq
 					select c;
 
 				var recordsAffected = toDelete.Delete();
-				Assert.AreEqual(5, recordsAffected);
+				Assert.That(recordsAffected, Is.EqualTo(5));
 			}
 		}
 
@@ -581,7 +632,7 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
-			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllOracle, TestProvName.MariaDB)]
+			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllMariaDB)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -605,15 +656,15 @@ namespace Tests.Linq
 			}
 		}
 
-		class RecursiveCTE
+		sealed class RecursiveCTE
 		{
-			public int? ParentID;
-			public int? ChildID;
-			public int? GrandChildID;
+			public int? ParentID     { get; set; }
+			public int? ChildID      { get; set; }
+			public int? GrandChildID { get; set; }
 		}
 
 		[Test]
-		public void RecursiveTest([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveTest([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -622,8 +673,8 @@ namespace Tests.Linq
 							from gc1 in db.GrandChild
 							select new RecursiveCTE
 							{
-								ChildID = gc1.ChildID,
-								ParentID = gc1.GrandChildID,
+								ChildID      = gc1.ChildID,
+								ParentID     = gc1.GrandChildID,
 								GrandChildID = gc1.GrandChildID,
 							}
 						)
@@ -635,8 +686,8 @@ namespace Tests.Linq
 							where ct.GrandChildID <= 10
 							select new RecursiveCTE
 							{
-								ChildID = ct.ChildID,
-								ParentID = ct.ParentID,
+								ChildID      = ct.ChildID,
+								ParentID     = ct.ParentID,
 								GrandChildID = ct.ChildID + 1
 							}
 						)
@@ -688,7 +739,7 @@ namespace Tests.Linq
 			};
 		}
 
-		class HierarchyData
+		sealed class HierarchyData
 		{
 			public int Id { get; set; }
 			public int Level { get; set; }
@@ -735,7 +786,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -752,7 +803,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2)] string context)
+		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -772,12 +823,12 @@ namespace Tests.Linq
 
 				var count = query.Count();
 
-				Assert.Greater(count, 0);
+				Assert.That(count, Is.GreaterThan(0));
 			}
 		}
 
 		[Test]
-		public void RecursiveCount([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveCount([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -787,12 +838,12 @@ namespace Tests.Linq
 				var hierarchy = GetHierarchyDown(tree, db);
 				var expected = EnumerateDown(hierarchyData, 0, null);
 
-				Assert.AreEqual(expected.Count(), hierarchy.Count());
+				Assert.That(hierarchy.Count(), Is.EqualTo(expected.Count()));
 			}
 		}
 
 		[Test]
-		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -833,11 +884,11 @@ namespace Tests.Linq
 			}
 		}
 
-		private class TestWrapper
+		private sealed class TestWrapper
 		{
 			public Child? Child { get; set; }
 
-			protected bool Equals(TestWrapper other)
+			private bool Equals(TestWrapper other)
 			{
 				return Equals(Child, other.Child);
 			}
@@ -857,12 +908,12 @@ namespace Tests.Linq
 			}
 		}
 
-		private class TestWrapper2
+		private sealed class TestWrapper2
 		{
 			public Child?  Child   { get; set; }
 			public Parent? Parent { get; set; }
 
-			protected bool Equals(TestWrapper2 other)
+			private bool Equals(TestWrapper2 other)
 			{
 				return Equals(Child, other.Child) && Equals(Parent, other.Parent);
 			}
@@ -908,7 +959,7 @@ namespace Tests.Linq
 					join c in cteQuery on p.ParentID equals c.Child!.ParentID
 					select new {p, c};
 
-				Assert.AreEqual(expected, result);
+				Assert.That(result.OrderBy(_ => _.p.ParentID).ThenBy(_ => _.c.Child?.ChildID), Is.EqualTo(expected.ToList().OrderBy(_ => _.p.ParentID).ThenBy(_ => _.c.Child?.ChildID)));
 			}
 		}
 
@@ -957,7 +1008,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestEmbedded([CteContextSource] string context)
+		public void TestEmbedded([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -971,7 +1022,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCteOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestCteOptimization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -989,9 +1040,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Scalar recursive CTE are not working")]
 		[Test]
-		public void TestRecursiveScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestRecursiveScalar([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1012,13 +1062,13 @@ namespace Tests.Linq
 			}
 		}
 
-		class OrgGroupDepthWrapper
+		sealed class OrgGroupDepthWrapper
 		{
 			public OrgGroup? OrgGroup { get; set; }
 			public int Depth { get; set; }
 		}
 
-		class OrgGroup
+		sealed class OrgGroup
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1026,9 +1076,8 @@ namespace Tests.Linq
 			public string? GroupName { get; set; }
 		}
 
-		[ActiveIssue(1644)]
 		[Test]
-		public void TestRecursiveObjects([CteContextSource] string context)
+		public void TestRecursiveObjects([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllMySqlWithCTE)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<OrgGroup>())
@@ -1072,7 +1121,7 @@ namespace Tests.Linq
 			public string? Property2 { get; set; }
 		}
 
-		class NestingC : NestingB
+		sealed class NestingC : NestingB
 		{
 			public string? Property3 { get; set; }
 		}
@@ -1110,7 +1159,7 @@ namespace Tests.Linq
 
 		#region Issue 2029
 		[Test]
-		public void Issue2029Test([CteContextSource] string context)
+		public void Issue2029Test([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using (new GenerateFinalAliases(true))
 			using (var db = GetDataContext(context))
@@ -1124,11 +1173,11 @@ namespace Tests.Linq
 				var result = from item in wipCte.AllowedNcCode() where item.NcCodeBo == ncCodeBo select item;
 				var sql = ((IExpressionQuery)result).SqlText;
 
-				Assert.True(sql.Replace("\"", "").Replace("`", "").Replace("[", "").Replace("]", "").ToLowerInvariant().Contains("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
+				Assert.That(sql.Replace("\"", "").Replace("`", "").Replace("[", "").Replace("]", "").ToLowerInvariant(), Does.Contain("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
 			}
 		}
 
-		internal class WipCte
+		internal sealed class WipCte
 		{
 			private readonly IDataContext db;
 
@@ -1149,7 +1198,7 @@ namespace Tests.Linq
 						select new AllowedNcCodeOutput { NcCodeBo = ncCode.Handle, NcCode = ncCode.NcCodeColumn, NcCodeDescription = ncCode.Description }).Distinct().AsCte(nameof(AllowedNcCode));
 			}
 
-			internal class AllowedNcCodeOutput
+			internal sealed class AllowedNcCodeOutput
 			{
 				internal string? NcCodeBo          { get; set; }
 				internal string? NcCode            { get; set; }
@@ -1162,10 +1211,10 @@ namespace Tests.Linq
 		{
 			[Column("HANDLE"), NotNull             ] public string    Handle           { get; set; } = null!; // NVARCHAR2(1236)
 			[Column("CHANGE_STAMP"), Nullable      ] public decimal?  ChangeStamp      { get; set; } // NUMBER (38,0)
-			[Column("SITE"), Nullable              ] public string?   Site             { get; set; } // NVARCHAR2(18)
-			[Column("NC_CODE"), Nullable           ] public string?   NcCodeColumn     { get; set; } // NVARCHAR2(48)
-			[Column("DESCRIPTION"), Nullable       ] public string?   Description      { get; set; } // NVARCHAR2(120)
-			[Column("STATUS_BO"), Nullable         ] public string?   StatusBo         { get; set; } // NVARCHAR2(1236)
+			[Column("SITE", Length = 18),          ] public string?   Site             { get; set; } // NVARCHAR2(18)
+			[Column("NC_CODE", Length = 48),       ] public string?   NcCodeColumn     { get; set; } // NVARCHAR2(48)
+			[Column("DESCRIPTION", Length = 120)   ] public string?   Description      { get; set; } // NVARCHAR2(120)
+			[Column("STATUS_BO")                   ] public string?   StatusBo         { get; set; } // NVARCHAR2(1236)
 			[Column("CREATED_DATE_TIME"), Nullable ] public DateTime? CreatedDateTime  { get; set; } // DATE
 			[Column("MODIFIED_DATE_TIME"), Nullable] public DateTime? ModifiedDateTime { get; set; } // DATE
 			[Column("NC_CATEGORY"), Nullable       ] public string?   NcCategory       { get; set; } // NVARCHAR2(60)
@@ -1181,5 +1230,236 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		private sealed class Issue3359Projection
+		{
+			public string FirstName { get; set; } = null!;
+			public string LastName  { get; set; } = null!;
+		}
+
+		[Test(Description = "Test that we generate plain UNION without sub-queries (or query will be invalid)")]
+		public void Issue3359_MultipleSets([CteContextSource(
+			TestProvName.AllClickHouse,
+			TestProvName.AllOracle, // too many unions (ORA-32041: UNION ALL operation in recursive WITH clause must have only two branches)
+			TestProvName.AllPostgreSQL, // too many joins? (42P19: recursive reference to query "cte" must not appear within its non-recursive term)
+			ProviderName.DB2 // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
+			)] string context)
+		{
+			if (context.IsAnyOf(TestProvName.AllSQLite))
+			{
+				using var dc = (TestDataConnection)GetDataContext(context.StripRemote());
+				if (TestUtils.GetSqliteVersion(dc) < new Version(3, 34))
+				{
+					// SQLite Error 1: 'circular reference: cte'.
+					Assert.Inconclusive("SQLite version 3.34.0 or greater required");
+				}
+			}
+
+			using var db = GetDataContext(context);
+
+			var query = db.GetCte<Issue3359Projection>(cte =>
+			{
+				return db.Person.Select(p => new Issue3359Projection() { FirstName = p.FirstName, LastName = p.LastName })
+				.Concat(
+					from p in cte
+					join d in db.Doctor on p.FirstName equals d.Taxonomy
+					select new Issue3359Projection() { FirstName = p.FirstName, LastName = p.LastName }
+					)
+				.Concat(
+					from p in cte
+					join pat in db.Patient on p.FirstName equals pat.Diagnosis
+					select new Issue3359Projection() { FirstName = p.FirstName, LastName = p.LastName }
+					);
+			});
+
+			query.ToArray();
+
+			if (db is TestDataConnection cn)
+				cn.LastQuery!.Should().Contain("SELECT", Exactly.Times(4));
+		}
+
+
+
+		public record class  Issue3357RecordClass (int Id, string FirstName, string LastName);
+		public class Issue3357RecordLike
+		{
+			public Issue3357RecordLike(int Id, string FirstName, string LastName)
+			{
+				this.Id        = Id;
+				this.FirstName = FirstName;
+				this.LastName  = LastName;
+			}
+
+			public int    Id        { get; }
+			public string FirstName { get; }
+			public string LastName  { get; }
+		}
+
+		[Test(Description = "record type support")]
+		public void Issue3357_RecordClass([CteContextSource(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetCte<Issue3357RecordClass>(cte =>
+			{
+				return db.Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))
+				.Concat(
+					from p in cte
+					join r in db.Person on p.FirstName equals r.LastName
+					select new Issue3357RecordClass(r.ID, r.FirstName, r.LastName)
+					);
+			});
+
+			AreEqual(
+				Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName)),
+				query.ToArray());
+		}
+
+		[Test(Description = "record type support")]
+		public void Issue3357_RecordLikeClass([CteContextSource(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetCte<Issue3357RecordLike>(cte =>
+			{
+				return db.Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))
+				.Concat(
+					from p in cte
+					join r in db.Person on p.FirstName equals r.LastName
+					select new Issue3357RecordLike(r.ID, r.FirstName, r.LastName)
+					);
+			});
+
+			AreEqualWithComparer(
+				Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName)),
+				query.ToArray());
+		}
+
+		sealed class CteEntity<TEntity> where TEntity : class
+		{
+			public TEntity Entity   { get; set; } = null!;
+			public Guid    Id       { get; set; }
+			public Guid?   ParentId { get; set; }
+			public int     Level    { get; set; }
+			public string? Label    { get; set; }
+		}
+
+		[Table]
+		sealed class TestFolder
+		{
+			[Column] public Guid        Id       { get; set; }
+			[Column] public string?     Label    { get; set; }
+			[Column] public Guid?       ParentId { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Id))]
+			public TestFolder? Parent { get; set; }
+		}
+
+		[Test(Description = "Recursive common table expression 'CTE' does not contain a top-level UNION ALL operator.")]
+		public void Issue2264([CteContextSource(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestFolder>();
+
+			var query = db.GetCte<CteEntity<TestFolder>>("CTE", cte =>
+			{
+				return (tb
+					.Where(c => c.ParentId == null)
+					.Select(c =>
+						new CteEntity<TestFolder>()
+						{
+							Level     = 0,
+							Id        = c.Id,
+							ParentId  = c.ParentId,
+							Label     = c.Label,
+							Entity    = c
+						}))
+				.Concat(tb
+					.SelectMany(c => cte.InnerJoin(r => c.ParentId == r.Id),
+						(c, r)    => new CteEntity<TestFolder>
+						{
+							Level    = r.Level + 1,
+							Id       = c.Id,
+							ParentId = c.ParentId,
+							Label    = r.Label + '/' + c.Label,
+							Entity   = c
+						}));
+			});
+
+			query.ToArray();
+		}
+
+		[Test]
+		public void Issue3945([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestFolder>();
+
+			var cte = db.GetCte<TestFolder>("CTE", cte => tb.Where(c => c.ParentId != null));
+			var join = from child in cte
+					   join parent in tb on child.ParentId equals parent.Id
+					   select new TestFolder
+					   {
+						   Id = TestData.Guid1,
+						   Label = parent.Label + "/" + child.Label,
+					   };
+			join.Insert(tb, x => x);
+		}
+
+		[Table]
+		private class Issue4167Table
+		{
+			[PrimaryKey] public int      ID        { get; set; }
+			[Column    ] public string?  Value     { get; set; }
+			[Column    ] public TaxType? EnumValue { get; set; }
+
+			public enum TaxType
+			{
+				NoTax       = 0,
+				NonResident = 3,
+			}
+
+			public static readonly Issue4167Table[] Data = new []
+			{
+				new Issue4167Table() { ID = 1, Value = "000001", EnumValue = TaxType.NoTax },
+				new Issue4167Table() { ID = 2, Value = "000001", EnumValue = TaxType.NonResident },
+				new Issue4167Table() { ID = 3, Value = "000001", EnumValue = null },
+				new Issue4167Table() { ID = 4, Value = "000002", EnumValue = TaxType.NoTax },
+			};
+		}
+
+		[Test]
+		public void Issue4167([CteContextSource] string context, [Values] bool withCte)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue4167Table.Data);
+
+			var query = (
+				from t in tb
+				where t.Value == "000001"
+				group t by new { t.Value, t.EnumValue } into g
+				select new
+				{
+					EnumValue = g.Key.EnumValue.GetValueOrDefault(),
+				});
+
+			if (withCte)
+				query = query.AsCte();
+
+			var result = (
+				from r in query
+				select new
+				{
+					r.EnumValue
+				}).OrderBy(r => r.EnumValue)
+				.ToList();
+
+			Assert.That(result, Has.Count.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
+				Assert.That(result[1].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
+				Assert.That(result[2].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NonResident));
+			});
+		}
 	}
 }

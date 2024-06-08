@@ -1,42 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlFromClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
+	public class SqlFromClause : ClauseBase
 	{
 		#region Join
 
-		public class Join : ConditionBase<Join,Join.Next>
+		public class Join
 		{
-			public class Next
-			{
-				internal Next(Join parent)
-				{
-					_parent = parent;
-				}
-
-				readonly Join _parent;
-
-				public Join Or  => _parent.SetOr(true);
-				public Join And => _parent.SetOr(false);
-
-				public static implicit operator Join(Next next)
-				{
-					return next._parent;
-				}
-			}
-
-			protected override SqlSearchCondition Search => JoinedTable.Condition;
-
-			protected override Next GetNext()
-			{
-				return new Next(this);
-			}
-
-			internal Join(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak, ICollection<Join>? joins)
+			internal Join(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak, IReadOnlyCollection<Join>? joins)
 			{
 				JoinedTable = new SqlJoinedTable(joinType, table, alias, isWeak);
 
@@ -52,16 +26,6 @@ namespace LinqToDB.SqlQuery
 
 		internal SqlFromClause(SelectQuery selectQuery) : base(selectQuery)
 		{
-		}
-
-		internal SqlFromClause(
-			SelectQuery selectQuery,
-			SqlFromClause  clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
-		{
-			Tables.AddRange(clone.Tables.Select(ts => (SqlTableSource)ts.Clone(objectTree, doClone)));
 		}
 
 		internal SqlFromClause(IEnumerable<SqlTableSource> tables)
@@ -195,58 +159,38 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		#region Overrides
+		#region QueryElement Members
 
-#if OVERRIDETOSTRING
+		public override QueryElementType ElementType => QueryElementType.FromClause;
 
-			public override string ToString()
-			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-			}
-
-#endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			foreach (var table in Tables)
-				((ISqlExpressionWalkable)table).Walk(options, func);
-
-			return null;
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-		public QueryElementType ElementType => QueryElementType.FromClause;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			if (sb.Length > 10240)
-				return sb;
-
-			sb.Append(" \nFROM \n");
+			writer
+				.Append("FROM ");
 
 			if (Tables.Count > 0)
 			{
-				foreach (IQueryElement ts in Tables)
+				using (writer.IndentScope())
 				{
-					sb.Append('\t');
-					var len = sb.Length;
-					ts.ToString(sb, dic).Replace("\n", "\n\t", len, sb.Length - len);
-					sb.Append(", ");
-				}
+					for (var index = 0; index < Tables.Count; index++)
+					{
+						var ts = Tables[index];
+						writer.AppendElement(ts);
 
-				sb.Length -= 2;
+						if (index < Tables.Count - 1)
+							writer.AppendLine(",");
+					}
+				}
 			}
 
-			return sb;
+			return writer;
 		}
 
 		#endregion
+
+		public void Cleanup()
+		{
+			Tables.Clear();
+		}
 	}
 }

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -11,56 +9,32 @@ namespace LinqToDB.SqlQuery
 			Table = table;
 		}
 
-		public SqlTable Table { get; }
+		public SqlTable Table { get; private set; }
 
 		public override QueryType        QueryType    => QueryType.DropTable;
 		public override QueryElementType ElementType  => QueryElementType.DropTableStatement;
 		public override bool             IsParameterDependent { get => false; set {} }
 		public override SelectQuery?     SelectQuery          { get => null;  set {} }
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public void Modify(SqlTable table)
 		{
-			sb.Append("DROP TABLE ");
-
-			((IQueryElement?)Table)?.ToString(sb, dic);
-
-			sb.AppendLine();
-
-			return sb;
+			Table = table;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			((ISqlExpressionWalkable?)Table)?.Walk(options, func);
+			writer
+				.Append("DROP TABLE ")
+				.AppendElement(Table)
+				.AppendLine();
 
+			return writer;
+		}
+
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
+		{
+			noAlias = false;
 			return null;
-		}
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlDropTableStatement((SqlTable)Table.Clone(objectTree, doClone));
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
-		{
-			return null;
-		}
-
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
-		{
-			if (SelectQuery != null)
-			{
-				var newQuery = func(SelectQuery);
-				if (!ReferenceEquals(newQuery, SelectQuery))
-					SelectQuery = newQuery;
-			}
 		}
 	}
 }

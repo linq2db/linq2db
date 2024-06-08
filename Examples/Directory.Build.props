@@ -1,0 +1,16 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Import Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
+
+	<PropertyGroup>
+		<SignAssembly>False</SignAssembly>
+
+		<!--to avoid conflicts with main solution-->
+		<ArtifactsProjectName>Examples_$(MSBuildProjectName)</ArtifactsProjectName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="$(MSBuildThisFileDirectory)\..\Source\LinqToDB\LinqToDB.csproj" />
+
+		<Compile Remove="$(MSBuildThisFileDirectory)/../Source/Shared/*.cs" />
+	</ItemGroup>
+</Project>

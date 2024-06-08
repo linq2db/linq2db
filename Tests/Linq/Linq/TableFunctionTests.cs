@@ -61,7 +61,7 @@ namespace Tests.Linq
 		[Test]
 		public void CompiledFunc1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q = _f1(db, 1);
 				q.ToList();
@@ -74,7 +74,7 @@ namespace Tests.Linq
 		[Test]
 		public void CompiledFunc2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q = _f2(db, 1);
 				q.ToList();
@@ -113,7 +113,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in Model.Functions.WithTabLock1<Parent>(db).SchemaName("dbo")
+					from p in Functions.WithTabLock1<Parent>(db).SchemaName("dbo")
 					select p;
 
 				q.ToList();
@@ -160,7 +160,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeTextTable1([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeTextTable1([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -175,7 +175,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeTextTable2([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeTextTable2([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -190,7 +190,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeText1([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeText1([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -201,12 +201,12 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeText2([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeText2([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -217,12 +217,12 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeText3([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeText3([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -233,12 +233,12 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeText4([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeText4([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -249,12 +249,12 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
 		[Test]
-		public void WithUpdateLock([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void WithUpdateLock([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -267,7 +267,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void Issue386InnerJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void Issue386InnerJoinWithExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -277,37 +277,37 @@ namespace Tests.Linq
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void Issue386LeftJoinWithText([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void Issue386LeftJoinWithText([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var q = 
+				var q =
 					from t in db.Product
 					from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var q 
+				var q
 					= from t in db.Product
 					from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
 					orderby t.ProductName descending
 					select t;
 				var list = q.ToList();
-				Assert.That(list.Count, Is.GreaterThan(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 	}

@@ -1,19 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System;
-	using System.Data;
-	using System.Linq;
-	using System.Threading;
-	using System.Threading.Tasks;
+	using Common;
 	using Data;
-	using LinqToDB.Common;
-	using LinqToDB.SqlProvider;
+	using SqlProvider;
 
-	class InformixBulkCopy : BasicBulkCopy
+	sealed class InformixBulkCopy : BasicBulkCopy
 	{
-		private readonly InformixDataProvider _provider;
+		protected override int                  MaxSqlLength  => 32767;
+		private readonly   InformixDataProvider _provider;
 
 		public InformixBulkCopy(InformixDataProvider provider)
 		{
@@ -21,28 +22,27 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T>       table,
-			BulkCopyOptions options,
-			IEnumerable<T>  source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
-			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
+			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
+				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 				if (connection != null)
 				{
 					if (_provider.Adapter.InformixBulkCopy != null)
 						return IDSProviderSpecificCopy(
 							table,
-							options,
+							options.BulkCopyOptions,
 							source,
 							dataConnection,
 							connection,
 							_provider.Adapter.InformixBulkCopy);
 					else
-						return DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
+						return DB2.DB2BulkCopyShared.ProviderSpecificCopyImpl(
 							table,
-							options,
+							options.BulkCopyOptions,
 							source,
 							dataConnection,
 							connection,
@@ -55,14 +55,12 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T>         table,
-			BulkCopyOptions   options,
-			IEnumerable<T>    source,
-			CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
+			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
+				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 				if (connection != null)
 				{
@@ -70,15 +68,15 @@ namespace LinqToDB.DataProvider.Informix
 					if (_provider.Adapter.InformixBulkCopy != null)
 						return Task.FromResult(IDSProviderSpecificCopy(
 							table,
-							options,
+							options.BulkCopyOptions,
 							source,
 							dataConnection,
 							connection,
 							_provider.Adapter.InformixBulkCopy));
 					else
-						return Task.FromResult(DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
+						return Task.FromResult(DB2.DB2BulkCopyShared.ProviderSpecificCopyImpl(
 							table,
-							options,
+							options.BulkCopyOptions,
 							source,
 							dataConnection,
 							connection,
@@ -90,36 +88,33 @@ namespace LinqToDB.DataProvider.Informix
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T>           table,
-			BulkCopyOptions     options,
-			IAsyncEnumerable<T> source,
-			CancellationToken   cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null) && table.DataContext is DataConnection dataConnection && dataConnection.Transaction == null)
+			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
+				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 				if (connection != null)
 				{
 					var enumerator = source.GetAsyncEnumerator(cancellationToken);
-					await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					await using (enumerator.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
 						// call the synchronous provider-specific implementation
 						var syncSource = EnumerableHelper.AsyncToSyncEnumerable(enumerator);
 						if (_provider.Adapter.InformixBulkCopy != null)
 							return IDSProviderSpecificCopy(
 								table,
-								options,
+								options.BulkCopyOptions,
 								syncSource,
 								dataConnection,
 								connection,
 								_provider.Adapter.InformixBulkCopy);
 						else
-							return DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
+							return DB2.DB2BulkCopyShared.ProviderSpecificCopyImpl(
 								table,
-								options,
+								options.BulkCopyOptions,
 								syncSource,
 								dataConnection,
 								connection,
@@ -130,24 +125,24 @@ namespace LinqToDB.DataProvider.Informix
 			}
 
 			return await MultipleRowsCopyAsync(table, options, source, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
-#endif
 
-		protected BulkCopyRowsCopied IDSProviderSpecificCopy<T>(
+		private BulkCopyRowsCopied IDSProviderSpecificCopy<T>(
 			ITable<T>                               table,
 			BulkCopyOptions                         options,
 			IEnumerable<T>                          source,
 			DataConnection                          dataConnection,
-			IDbConnection                           connection,
+			DbConnection                            connection,
 			InformixProviderAdapter.BulkCopyAdapter bulkCopy)
+			where T: notnull
 		{
-			var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
-			var rd      = new BulkCopyReader<T>(dataConnection, columns, source);
-			var sqlopt  = InformixProviderAdapter.IfxBulkCopyOptions.Default;
-			var rc      = new BulkCopyRowsCopied();
+			var ed        = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var columns   = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var sb        = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
+			using var rd  = new BulkCopyReader<T>(dataConnection, columns, source);
+			var sqlopt    = InformixProviderAdapter.IfxBulkCopyOptions.Default;
+			var rc        = new BulkCopyRowsCopied();
 
 			if (options.KeepIdentity == true) sqlopt |= InformixProviderAdapter.IfxBulkCopyOptions.KeepIdentity;
 			if (options.TableLock    == true) sqlopt |= InformixProviderAdapter.IfxBulkCopyOptions.TableLock;
@@ -193,30 +188,35 @@ namespace LinqToDB.DataProvider.Informix
 					options.RowsCopiedCallback(rc);
 			}
 
+			if (table.DataContext.CloseAfterUse)
+				table.DataContext.Close();
+
 			return rc;
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
-			using (new InvariantCultureRegion())
+			using ((IDisposable)new InvariantCultureRegion(null))
 				return base.MultipleRowsCopy(table, options, source);
 		}
 
-		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			using (new InvariantCultureRegion())
-				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
+#pragma warning disable CA2000 // Dispose objects before losing scope
+			await using (new InvariantCultureRegion(null).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#pragma warning restore CA2000 // Dispose objects before losing scope
 		}
 
-#if !NETFRAMEWORK
-		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			using (new InvariantCultureRegion())
-				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
+#pragma warning disable CA2000 // Dispose objects before losing scope
+			await using (new InvariantCultureRegion(null).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#pragma warning restore CA2000 // Dispose objects before losing scope
 		}
-#endif
 	}
 }

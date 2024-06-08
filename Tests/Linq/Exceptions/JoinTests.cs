@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -55,7 +58,7 @@ namespace Tests.Exceptions
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.FirstName };
 
-				Assert.Throws(typeof(LinqException), () => q.ToList());
+				FluentActions.Enumerating(() => q.ToList()).Should().Throw<LinqException>();
 			}
 		}
 
@@ -137,7 +140,7 @@ namespace Tests.Exceptions
 		}
 
 		[Test]
-		public void Issue589([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue589([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

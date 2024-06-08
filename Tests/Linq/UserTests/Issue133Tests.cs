@@ -8,11 +8,18 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue133Tests : TestBase
 	{
-		[AttributeUsage(AttributeTargets.Parameter)]
-		public class SupportsAnalyticFunctionsContextAttribute: IncludeDataSourcesAttribute
+		static readonly string[] SupportedProviders = new[]
 		{
-			public SupportsAnalyticFunctionsContextAttribute(bool includeLinqService = true)
-				: base(includeLinqService, TestProvName.AllSqlServer2005Plus, TestProvName.AllOracle)
+			TestProvName.AllSqlServer,
+			TestProvName.AllOracle,
+			TestProvName.AllClickHouse
+		}.SelectMany(_ => _.Split(',')).ToArray();
+
+		[AttributeUsage(AttributeTargets.Parameter)]
+		public class SupportsAnalyticFunctionsContextAttribute : IncludeDataSourcesAttribute
+		{
+			public SupportsAnalyticFunctionsContextAttribute(bool includeLinqService = true, params string[] excludedProviders)
+				: base(includeLinqService, SupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
@@ -34,9 +41,9 @@ namespace Tests.UserTests
 					.Where(_ => _.Sum != 36)
 					.ToList();
 
-				Assert.AreEqual(5, result.Count);
+				Assert.That(result, Has.Count.EqualTo(5));
 
-				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
+				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 			}
 		}
 
@@ -51,8 +58,8 @@ namespace Tests.UserTests
 					.Having(_ => _.Sum != 36)
 					.ToList();
 
-				Assert.AreEqual(5, result.Count);
-				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
+				Assert.That(result, Has.Count.EqualTo(5));
+				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 			}
 		}
 
@@ -71,8 +78,8 @@ namespace Tests.UserTests
 					.Where(_ => _.Sum != 36)
 					.ToList();
 
-				Assert.AreEqual(5, result.Count);
-				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
+				Assert.That(result, Has.Count.EqualTo(5));
+				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 			}
 		}
 
@@ -91,8 +98,8 @@ namespace Tests.UserTests
 					.Having(_ => _.Sum != 36)
 					.ToList();
 
-				Assert.AreEqual(5, result.Count);
-				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
+				Assert.That(result, Has.Count.EqualTo(5));
+				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 			}
 		}
 	}

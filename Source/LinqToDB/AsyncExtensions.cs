@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
 	using Linq;
-	using Async;
 
 	/// <summary>
 	/// Provides helper methods for asynchronous operations.
@@ -67,7 +65,7 @@ namespace LinqToDB
 		#endregion
 
 		[AttributeUsage(AttributeTargets.Method)]
-		internal class ElementAsyncAttribute : Attribute
+		internal sealed class ElementAsyncAttribute : Attribute
 		{
 		}
 
@@ -92,7 +90,7 @@ namespace LinqToDB
 			return new AsyncEnumerableAdapter<TSource>(source);
 		}
 
-		private class AsyncEnumerableAdapter<T> : IAsyncEnumerable<T>
+		private sealed class AsyncEnumerableAdapter<T> : IAsyncEnumerable<T>
 		{
 			private readonly IQueryable<T> _query;
 			public AsyncEnumerableAdapter(IQueryable<T> query)
@@ -100,13 +98,6 @@ namespace LinqToDB
 				_query = query ?? throw new ArgumentNullException(nameof(query));
 			}
 
-#if NETFRAMEWORK
-			IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
-			{
-				return new AsyncEnumeratorImpl<T>(_query.GetEnumerator(), cancellationToken);
-			}
-		}
-#else
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 			async IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -119,7 +110,6 @@ namespace LinqToDB
 				}
 			}
 		}
-#endif
 #endregion
 
 		#region ForEachAsync
@@ -180,9 +170,9 @@ namespace LinqToDB
 			token);
 		}
 
-#endregion
+		#endregion
 
-#region ToListAsync
+		#region ToListAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to a list.
@@ -208,9 +198,9 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
-#region ToArrayAsync
+		#region ToArrayAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to an array.
@@ -244,9 +234,9 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
+		#endregion
 
-#region ToDictionaryAsync
+		#region ToDictionaryAsync
 
 		/// <summary>
 		/// Asynchronously loads data from query to a dictionary.
@@ -370,7 +360,6 @@ namespace LinqToDB
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-#endregion
-
+		#endregion
 	}
 }

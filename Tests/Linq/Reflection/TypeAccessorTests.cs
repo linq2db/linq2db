@@ -7,7 +7,7 @@ namespace Tests.Reflection
 	[TestFixture]
 	public class TypeAccessorTests : TestBase
 	{
-		class TestClass1
+		sealed class TestClass1
 		{
 			public int Prop1
 			{
@@ -25,18 +25,18 @@ namespace Tests.Reflection
 			}
 		}
 
-		class TestClass2
+		sealed class TestClass2
 		{
 			public TestClass3? Class3;
 			public TestStruct1 Struct1;
 		}
 
-		class TestClass3
+		sealed class TestClass3
 		{
 			public TestClass4? Class4;
 		}
 
-		class TestClass4
+		sealed class TestClass4
 		{
 			public int Field1;
 		}
@@ -126,21 +126,31 @@ namespace Tests.Reflection
 		[Test]
 		public void GetterTest()
 		{
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 			var ma = ta["Prop1"];
 
-			Assert.That(ma.HasGetter, Is.True);
-			Assert.That(ma.HasSetter, Is.False);
+			Assert.Multiple(() =>
+			{
+				Assert.That(ma.HasGetter, Is.True);
+				Assert.That(ma.HasSetter, Is.False);
+			});
 		}
 
 		[Test]
 		public void SetterTest()
 		{
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 			var ma = ta["Prop3"];
 
-			Assert.That(ma.HasGetter, Is.False);
-			Assert.That(ma.HasSetter, Is.True);
+			Assert.Multiple(() =>
+			{
+				Assert.That(ma.HasGetter, Is.False);
+				Assert.That(ma.HasSetter, Is.True);
+			});
 		}
 
 	}

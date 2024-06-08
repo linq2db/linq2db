@@ -1,36 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
-		<LangVersion>latest</LangVersion>
-
-		<!--see notes in Directory.Packages.props-->
-		<ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+		<WarningLevel>5</WarningLevel>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="AssemblyInfo.fs" />
 		<Compile Include="Issue2678.fs" />
 		<Compile Include="Models.fs" />
+		<Compile Include="Issue3357.fs" />
 		<Compile Include="WhereTest.fs" />
 		<Compile Include="SelectTest.fs" />
 		<Compile Include="InsertTest.fs" />
 		<Compile Include="MappingSchema.fs" />
+		<Compile Include="Issue3743.fs" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
+
+		<PackageReference Include="FSharp.Core" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="FSharp.Core" Version="5.0.1" />
-		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
-
-		<!--workaround for Directory.Packages.props issue-->
-		<PackageReference Update="Newtonsoft.Json" Version="12.0.3" />
-		<PackageReference Update="System.Collections.Immutable" Version="5.0.0" />
-		<PackageReference Update="NUnit" Version="3.13.1" />
-	</ItemGroup>
 </Project>

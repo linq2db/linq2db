@@ -14,17 +14,29 @@ namespace Tests
 
 		protected override IEnumerable<string> GetProviders()
 		{
-			if (!TestBase.UserProviders.Contains(TestBase.DefaultProvider!))
+			var list = new List<string>();
+
+			try
 			{
-				// initialize default database, even if we don't run tests against it
-				// because it is used as source of test data
-				yield return TestBase.DefaultProvider!;
+				if (!TestBase.UserProviders.Contains(TestBase.DefaultProvider!))
+				{
+					// initialize default database, even if we don't run tests against it
+					// because it is used as source of test data
+					list.Add(TestBase.DefaultProvider!);
+				}
+
+				foreach (var provider in TestBase.UserProviders.Where(p => !Providers.Contains(p) && TestBase.Providers.Contains(p)))
+				{
+					list.Add(provider);
+				}
+			}
+			catch (Exception e)
+			{
+				TestUtils.Log(e);
+				throw;
 			}
 
-			foreach (var provider in TestBase.UserProviders.Where(p => !Providers.Contains(p) && TestBase.Providers.Contains(p)))
-			{
-				yield return provider;
-			}
+			return list;
 		}
 	}
 }

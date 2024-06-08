@@ -5,11 +5,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using SqlQuery;
-	using Mapping;
 	using Expressions;
 	using Linq;
-	using LinqToDB.Common;
+	using SqlQuery;
+	using Common;
+	using Mapping;
 
 	public interface IPostgreSQLExtensions
 	{
@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region Analytic Functions
 
-		class ApplyAggregateModifier: Sql.IExtensionCallBuilder
+		sealed class ApplyAggregateModifier : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -45,19 +45,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		#region array_agg
 
 		[Sql.Extension("ARRAY_AGG({expr})", TokenName = AnalyticFunctions.FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static AnalyticFunctions.IAnalyticFunctionWithoutWindow<T[]> ArrayAggregate<T>(this Sql.ISqlExtension? ext, 
+		public static AnalyticFunctions.IAnalyticFunctionWithoutWindow<T[]> ArrayAggregate<T>(this Sql.ISqlExtension? ext,
 			[ExprParameter] T expr)
 		{
 			throw new LinqException($"'{nameof(ArrayAggregate)}' is server-side method.");
 		}
-		
+
 		[Sql.Extension("ARRAY_AGG({modifier?}{_}{expr})", TokenName = AnalyticFunctions.FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsAggregate = true)]
-		public static AnalyticFunctions.IAnalyticFunctionWithoutWindow<T[]> ArrayAggregate<T>(this Sql.ISqlExtension? ext, 
+		public static AnalyticFunctions.IAnalyticFunctionWithoutWindow<T[]> ArrayAggregate<T>(this Sql.ISqlExtension? ext,
 			[ExprParameter] T expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
 			throw new LinqException($"'{nameof(ArrayAggregate)}' is server-side method.");
 		}
-		
+
 		[Sql.Extension("ARRAY_AGG({modifier?}{_}{expr}{_}{order_by_clause?})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 10)]
 		public static Sql.IAggregateFunctionNotOrdered<TEntity, TV[]> ArrayAggregate<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
@@ -104,7 +104,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region unnest
 
-#if !NET45
 		[ExpressionMethod(nameof(UnnestImpl))]
 		public static IQueryable<T> Unnest<T>(this IDataContext dc, T[] array)
 		{
@@ -116,6 +115,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, array) => dc.FromSqlScalar<T>($"UNNEST({array})");
 		}
+
 		public class Ordinality<T>
 		{
 			[Column(Name = "value")]                  public T    Value = default!;
@@ -133,8 +133,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, array) => dc.FromSql<Ordinality<T>>($"UNNEST({array}) WITH ORDINALITY {Sql.AliasExpr()}(value, idx)");
 		}
-#endif
-		
+
 		#endregion
 
 		#region Arrays
@@ -144,7 +143,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			throw new LinqException($"'{nameof(ConcatArrays)}' is server-side method.");
 		}
-
 
 		[Sql.Extension("{array1} || {array2}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Additive)]
 		public static T[] ConcatArrays<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[][] array2)
@@ -291,7 +289,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			throw new LinqException($"'{nameof(ArrayToString)}' is server-side method.");
 		}
 
-
 		[Sql.Extension("STRING_TO_ARRAY({str}, {delimiter})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static string[] StringToArray(this IPostgreSQLExtensions? ext, [ExprParameter] string str, [ExprParameter] string delimiter)
 		{
@@ -310,11 +307,46 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			throw new LinqException($"'{nameof(ArrayToString)}' is server-side method.");
 		}
 
+		[Sql.Extension("{value} = ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsEqualToAny)}' is server-side method.");
+		}
+
+		[Sql.Extension("{value} < ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsLessThanAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsLessThanAny)}' is server-side method.");
+		}
+
+		[Sql.Extension("{value} <= ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsLessThanOrEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsLessThanOrEqualToAny)}' is server-side method.");
+		}
+
+		[Sql.Extension("{value} > ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsGreaterThanAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsGreaterThanAny)}' is server-side method.");
+		}
+
+		[Sql.Extension("{value} >= ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsGreaterThanOrEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsGreaterThanOrEqualToAny)}' is server-side method.");
+		}
+
+		[Sql.Extension("{value} <> ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		public static bool ValueIsNotEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
+		{
+			throw new LinqException($"'{nameof(ValueIsNotEqualToAny)}' is server-side method.");
+		}
+
 		#endregion
 
 		#region generate_series
 
-#if !NET45
 		static Func<IDataContext, int, int, IQueryable<int>>? _generateSeriesIntFunc;
 
 		[ExpressionMethod(nameof(GenerateSeriesIntImpl))]
@@ -327,7 +359,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, start, stop) => dc.FromSqlScalar<int>($"GENERATE_SERIES({start}, {stop})");
 		}
-
 
 		static Func<IDataContext, int, int, int, IQueryable<int>>? _generateSeriesIntStepFunc;
 
@@ -342,7 +373,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (dc, start, stop, step) => dc.FromSqlScalar<int>($"GENERATE_SERIES({start}, {stop}, {step})");
 		}
 
-
 		static Func<IDataContext, DateTime, DateTime, TimeSpan, IQueryable<DateTime>>? _generateSeriesDateFunc;
 
 		[ExpressionMethod(nameof(GenerateSeriesDateImpl))]
@@ -355,12 +385,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, start, stop, step) => dc.FromSqlScalar<DateTime>($"GENERATE_SERIES({start}, {stop}, {step})");
 		}
-#endif
 		#endregion
 
 		#region generate_subscripts
 
-#if !NET45
 		[ExpressionMethod(nameof(GenerateSubscriptsImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension)
 		{
@@ -384,7 +412,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, array, dimension, reverse) => dc.FromSqlScalar<int>($"GENERATE_SUBSCRIPTS({array}, {dimension}, {reverse})");
 		}
-#endif
 
 		#endregion
 
@@ -445,7 +472,5 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		#endregion
-
-
 	}
 }

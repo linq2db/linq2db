@@ -1,90 +1,126 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlOutputClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlOutputClause : IQueryElement
 	{
-		private List<SqlSetExpression>? _outputItems;
+		List<SqlSetExpression>? _outputItems;
 
-		public SqlTable     SourceTable    { get; set; } = null!;
-		public SqlTable     InsertedTable  { get; set; } = null!;
-		public SqlTable     DeletedTable   { get; set; } = null!;
-		public SqlTable     OutputTable    { get; set; } = null!;
-		public SelectQuery? OutputQuery    { get; set; }
+		public SqlTable?             InsertedTable { get; set; }
+		public SqlTable?             DeletedTable  { get; set; }
+		public SqlTable?             OutputTable   { get; set; }
+		public List<ISqlExpression>? OutputColumns { get; set; }
 
-		public bool                   HasOutputItems => _outputItems != null && _outputItems.Count > 0 || OutputQuery != null;
-		public List<SqlSetExpression> OutputItems    => _outputItems ??= new List<SqlSetExpression>();
+		public bool                   HasOutput      => HasOutputItems || OutputColumns != null;
+		public bool                   HasOutputItems => _outputItems                    != null && _outputItems.Count > 0;
+		public List<SqlSetExpression> OutputItems
+		{
+			get => _outputItems ??= new List<SqlSetExpression>();
+			set => _outputItems = value;
+		}
+
+		public void Modify(SqlTable? insertedTable, SqlTable? deletedTable, SqlTable? outputTable)
+		{
+			InsertedTable = insertedTable;
+			DeletedTable  = deletedTable;
+			OutputTable   = outputTable;
+		}
 
 		#region Overrides
 
 #if OVERRIDETOSTRING
-
-			public override string ToString()
-			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-			}
-
+		public override string ToString()
+		{
+			return this.ToDebugString();
+		}
 #endif
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlOutputClause
-			{
-				SourceTable   = SourceTable,
-				DeletedTable  = DeletedTable,
-				InsertedTable = InsertedTable,
-				OutputTable   = OutputTable
-			};
-
-			if (HasOutputItems)
-			{
-				clone.OutputItems.AddRange(OutputItems.Select(i => (SqlSetExpression)i.Clone(objectTree, doClone)));
-			}
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
-		{
-			((ISqlExpressionWalkable)SourceTable  )?.Walk(options, func);
-			((ISqlExpressionWalkable)DeletedTable )?.Walk(options, func);
-			((ISqlExpressionWalkable)InsertedTable)?.Walk(options, func);
-			((ISqlExpressionWalkable)OutputTable  )?.Walk(options, func);
-
-			if (HasOutputItems)
-				foreach (var t in OutputItems)
-					((ISqlExpressionWalkable)t).Walk(options, func);
-
-			return null;
-		}
 
 		#endregion
 
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.OutputClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.Append("OUTPUT ");
+			writer.AppendLine()
+				.AppendLine("OUTPUT");
 
-			return sb;
+			if (HasOutput)
+			{
+
+				using (writer.IndentScope())
+				{
+					var first = true;
+
+					if (HasOutputItems)
+					{
+						foreach (var oi in OutputItems)
+						{
+							if (!first)
+								writer.AppendLine(',');
+							first = false;
+
+							writer.AppendElement(oi.Expression);
+						}
+
+						writer.AppendLine();
+					}
+				}
+
+				if (OutputColumns != null)
+				{
+					using (writer.IndentScope())
+					{
+						var first = true;
+
+						foreach (var expr in OutputColumns)
+						{
+							if (!first)
+								writer.AppendLine(',');
+
+							first = false;
+
+							writer.AppendElement(expr);
+						}
+					}
+
+					writer.AppendLine();
+				}
+
+				if (OutputTable != null)
+				{
+					writer.Append("INTO ")
+						.AppendLine(OutputTable.TableName.Name)
+						.AppendLine('(');
+
+					using (writer.IndentScope())
+					{
+						var firstColumn = true;
+						if (HasOutputItems)
+						{
+							foreach (var oi in OutputItems)
+							{
+								if (!firstColumn)
+									writer.AppendLine(',');
+								firstColumn = false;
+
+								writer.AppendElement(oi.Column);
+							}
+						}
+
+						writer.AppendLine();
+					}
+
+					writer.AppendLine(")");
+				}
+			}
+
+			return writer;
 		}
 
 		#endregion

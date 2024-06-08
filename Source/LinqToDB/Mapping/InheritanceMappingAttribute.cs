@@ -2,6 +2,8 @@
 
 namespace LinqToDB.Mapping
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Defines to which type linq2db should map record based on discriminator value. You can apply this attribute to
 	/// a base class or insterface, implemented by all child classes.
@@ -13,15 +15,8 @@ namespace LinqToDB.Mapping
 	/// for a list of supported types.
 	/// </remarks>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple=true)]
-	public class InheritanceMappingAttribute : Attribute
+	public class InheritanceMappingAttribute : MappingAttribute
 	{
-		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string? Configuration { get; set; }
-
 		/// <summary>
 		/// Gets or sets discriminator value.
 		/// </summary>
@@ -36,5 +31,11 @@ namespace LinqToDB.Mapping
 		/// Gets or sets type, to which record with current discriminator value should be mapped.
 		/// </summary>
 		public Type   Type          { get; set; } = null!;
+
+		public override string GetObjectID()
+		{
+			var type = IdentifierBuilder.GetObjectID(Type);
+			return $".{Configuration}.{Code}.{(IsDefault?'1':'0')}.{type}.";
+		}
 	}
 }

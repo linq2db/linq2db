@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -27,15 +26,15 @@ namespace LinqToDB.SqlQuery
 #endif
 
 		// meh, nullable...
-		public string?    Name             { get; set; }
-		public DbDataType Type             { get; set; }
-		public bool       IsQueryParameter { get; set; }
-		internal int?     AccessorId       { get; set; }
+		public   string?    Name             { get; set; }
+		public   DbDataType Type             { get; set; }
+		public   bool       IsQueryParameter { get; set; }
+		internal int?       AccessorId       { get; set; }
 
 		Type ISqlExpression.SystemType => Type.SystemType;
 
-		//TODO: Setter used only in EnumerableContext and should be hidden.
-		public object?  Value { get; internal set; }
+		public object? Value     { get; }
+		public bool    NeedsCast { get; set; }
 
 		public object? CorrectParameterValue(object? rawValue)
 		{
@@ -66,8 +65,7 @@ namespace LinqToDB.SqlQuery
 
 		internal void SetTakeConverter(int take)
 		{
-			if (TakeValues == null)
-				TakeValues = new List<int>();
+			TakeValues ??= new List<int>();
 
 			TakeValues.Add(take);
 
@@ -79,9 +77,9 @@ namespace LinqToDB.SqlQuery
 			var conv = _valueConverter;
 
 			if (conv == null)
-				_valueConverter = v => v == null ? null : (object) ((int) v + take);
+				_valueConverter = v => v == null ? null : ((int) v + take);
 			else
-				_valueConverter = v => v == null ? null : (object) ((int) conv(v)! + take);
+				_valueConverter = v => v == null ? null : ((int) conv(v)! + take);
 		}
 
 		#endregion
@@ -92,7 +90,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -102,15 +100,6 @@ namespace LinqToDB.SqlQuery
 		#region ISqlExpression Members
 
 		public int Precedence => SqlQuery.Precedence.Primary;
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
-		{
-			return func(this);
-		}
 
 		#endregion
 
@@ -130,6 +119,8 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+
 		public bool CanBeNull => SqlDataType.TypeCanBeNull(Type.SystemType);
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
@@ -139,37 +130,37 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			// we do not allow parameters cloning 
-			return this;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SqlParameter;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			if (Name?.StartsWith("@") == false)
-				sb.Append('@');
+			if (NeedsCast)
+				writer.Append("$Cast$(");
 
-			sb
+			if (Name?.StartsWith("@") == false)
+				writer.Append('@');
+
+			writer
 				.Append(Name ?? "parameter");
 
 #if DEBUG
-			sb.Append('(').Append(_paramNumber).Append(')');
+			writer.Append('(').Append(_paramNumber).Append(')');
 #endif
 			if (Value != null)
-				sb
+				writer
 					.Append('[')
 					.Append(Value)
 					.Append(']');
-			return sb;
+
+			if (NeedsCast)
+				writer.Append(")");
+
+			return writer;
 		}
 
 		#endregion

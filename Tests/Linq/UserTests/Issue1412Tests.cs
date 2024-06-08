@@ -151,7 +151,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var typeId = TestData.Guid1;
 

@@ -10,18 +10,18 @@ namespace Tests.UserTests
 	public class Issue1268Tests : TestBase
 	{
 		[Table("DynamicColumnTable")]
-		class FullClass
+		sealed class FullClass
 		{
-			[Column, Identity]
+			[Column]
 			         public int     Id        { get; set; }
 			[Column] public string? Name      { get; set; }
 			[Column] public bool    IsDeleted { get; set; }
 		}
 
 		[Table("DynamicColumnTable")]
-		class RepresentTable
+		sealed class RepresentTable
 		{
-			[Column, Identity]
+			[Column]
 			         public int     Id        { get; set; }
 			[Column] public string? Name      { get; set; }
 
@@ -29,33 +29,32 @@ namespace Tests.UserTests
 			public Dictionary<string, object> Values { get; set; } = new Dictionary<string, object>();
 		}
 
-
 		[Test]
-		public void InsertWithDynamicColumn([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void InsertWithDynamicColumn([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<RepresentTable>()
-				.Property(x => Sql.Property<bool>(x, "IsDeleted"));
+				.Property(x => Sql.Property<bool>(x, "IsDeleted"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<FullClass>())
 			{
-				var obj1 = new RepresentTable { Name = "Some1" };
+				var obj1 = new RepresentTable { Id = 1, Name = "Some1" };
 				obj1.Values.Add("IsDeleted", true);
-				db.InsertWithIdentity(obj1);
+				db.Insert(obj1);
 
-				var obj2 = new RepresentTable { Name = "Some2" };
-				db.InsertWithIdentity(obj2);
+				var obj2 = new RepresentTable { Id = 2, Name = "Some2" };
+				db.Insert(obj2);
 
 				var loaded1 = db.GetTable<RepresentTable>().First(e => e.Name == "Some1");
-				Assert.AreEqual(true, loaded1.Values["IsDeleted"]);
+				Assert.That(loaded1.Values["IsDeleted"], Is.EqualTo(true));
 
 
 				var loaded2 = db.GetTable<RepresentTable>().First(e => e.Name == "Some2");
-				Assert.AreEqual(false, loaded2.Values["IsDeleted"]);
+				Assert.That(loaded2.Values["IsDeleted"], Is.EqualTo(false));
 			}
 		}
-
 	}
 }

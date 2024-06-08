@@ -2,39 +2,39 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Common;
+	using Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class WithTableExpressionBuilder : MethodCallBuilder
+	sealed class WithTableExpressionBuilder : MethodCallBuilder
 	{
+		static readonly string[] MethodNames =
+		{
+			nameof(LinqExtensions.With),
+			nameof(LinqExtensions.WithTableExpression)
+		};
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("With", "WithTableExpression");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var table    = (TableBuilder.TableContext)sequence;
-			var value    = (string)methodCall.Arguments[1].EvaluateExpression()!;
+			var table    = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
+			var value    = builder.EvaluateExpression<string>(methodCall.Arguments[1]);
 
 			table.SqlTable.SqlTableType   = SqlTableType.Expression;
-			table.SqlTable.TableArguments = Array<ISqlExpression>.Empty;
+			table.SqlTable.TableArguments = [];
 
 			switch (methodCall.Method.Name)
 			{
-				case "With"                : table.SqlTable.Name = $"{{0}} {{1}} WITH ({value})"; break;
-				case "WithTableExpression" : table.SqlTable.Name = value;                         break;
+				case nameof(LinqExtensions.With)                : table.SqlTable.Expression = $"{{0}} {{1}} WITH ({value})"; break;
+				case nameof(LinqExtensions.WithTableExpression) : table.SqlTable.Expression = value;                         break;
 			}
 
-			return sequence;
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
+			return BuildSequenceResult.FromContext(sequence);
 		}
 	}
 }

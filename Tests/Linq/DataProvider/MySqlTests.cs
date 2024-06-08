@@ -1,8 +1,17 @@
-﻿using System;
+﻿extern alias MySqlData;
+extern alias MySqlConnector;
+
+using System;
 using System.Data.Linq;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -10,25 +19,18 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
+using LinqToDB.DataProvider.MySql;
+using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
-
-using MySqlDataDateTime = MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal  = MySql.Data.Types.MySqlDecimal;
-
-using MySqlConnectorDateTime = MySqlConnector.MySqlDateTime;
+using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
+using MySqlConnectorDecimal = MySqlConnector::MySqlConnector.MySqlDecimal;
 
 namespace Tests.DataProvider
 {
-	using LinqToDB.DataProvider.MySql;
-	using LinqToDB.SqlProvider;
-	using LinqToDB.Tools.Comparers;
 	using Model;
-	using System.Collections;
-	using System.Collections.Generic;
-	using System.Data;
-	using System.Diagnostics;
-	using System.Threading.Tasks;
 
 	[TestFixture]
 	public class MySqlTests : DataProviderTestBase
@@ -36,158 +38,362 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT @p",        new { p =  1  }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<string>("SELECT @p",        new { p = "1" }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<int>   ("SELECT @p",        new { p =  new DataParameter { Value = 1   } }), Is.EqualTo(1));
-				Assert.That(conn.Execute<string>("SELECT @p1",       new { p1 = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<int>   ("SELECT @p1 + ?p2", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
-				Assert.That(conn.Execute<int>   ("SELECT @p2 + ?p1", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<string>("SELECT @p", new { p = 1 }), Is.EqualTo("1"));
+					Assert.That(conn.Execute<string>("SELECT @p", new { p = "1" }), Is.EqualTo("1"));
+					Assert.That(conn.Execute<int>("SELECT @p", new { p = new DataParameter { Value = 1 } }), Is.EqualTo(1));
+					Assert.That(conn.Execute<string>("SELECT @p1", new { p1 = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
+					Assert.That(conn.Execute<int>("SELECT @p1 + ?p2", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
+					Assert.That(conn.Execute<int>("SELECT @p2 + ?p1", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
+				});
 			}
 		}
 
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(TestType<long?>						(conn, "bigintDataType",    DataType.Int64),               Is.EqualTo(1000000));
-				Assert.That(TestType<short?>					(conn, "smallintDataType",  DataType.Int16),               Is.EqualTo(25555));
-				Assert.That(TestType<sbyte?>					(conn, "tinyintDataType",   DataType.SByte),               Is.EqualTo(111));
-				Assert.That(TestType<int?>						(conn, "mediumintDataType", DataType.Int32),               Is.EqualTo(5555));
-				Assert.That(TestType<int?>						(conn, "intDataType",       DataType.Int32),               Is.EqualTo(7777777));
-				Assert.That(TestType<decimal?>					(conn, "numericDataType",   DataType.Decimal),             Is.EqualTo(9999999m));
-				Assert.That(TestType<decimal?>					(conn, "decimalDataType",   DataType.Decimal),             Is.EqualTo(8888888m));
-				Assert.That(TestType<double?>					(conn, "doubleDataType",    DataType.Double),              Is.EqualTo(20.31d));
-				Assert.That(TestType<float?>					(conn, "floatDataType",     DataType.Single),              Is.EqualTo(16.0f));
-				Assert.That(TestType<DateTime?>					(conn, "dateDataType",      DataType.Date),                Is.EqualTo(new DateTime(2012, 12, 12)));
-				Assert.That(TestType<DateTime?>					(conn, "datetimeDataType",  DataType.DateTime),            Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				Assert.That(TestType<DateTime?>					(conn, "datetimeDataType",  DataType.DateTime2),           Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				Assert.That(TestType<DateTime?>					(conn, "timestampDataType", DataType.Timestamp),           Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				Assert.That(TestType<TimeSpan?>					(conn, "timeDataType",      DataType.Time),                Is.EqualTo(new TimeSpan(12, 12, 12)));
-				Assert.That(TestType<int?>						(conn, "yearDataType",      DataType.Int32),               Is.EqualTo(1998));
-				Assert.That(TestType<int?>						(conn, "year2DataType",     DataType.Int32),               Is.EqualTo(context != TestProvName.MySql55 ? 1997 : 97));
-				Assert.That(TestType<int?>						(conn, "year4DataType",     DataType.Int32),               Is.EqualTo(2012));
-
-				Assert.That(TestType<char?>						(conn, "charDataType",      DataType.Char),                Is.EqualTo('1'));
-				Assert.That(TestType<string>					(conn, "charDataType",      DataType.Char),                Is.EqualTo("1"));
-				Assert.That(TestType<string>					(conn, "charDataType",      DataType.NChar),               Is.EqualTo("1"));
-				Assert.That(TestType<string>					(conn, "varcharDataType",   DataType.VarChar),             Is.EqualTo("234"));
-				Assert.That(TestType<string>					(conn, "varcharDataType",   DataType.NVarChar),            Is.EqualTo("234"));
-				Assert.That(TestType<string>					(conn, "textDataType",      DataType.Text),                Is.EqualTo("567"));
-
-				Assert.That(TestType<byte[]>					(conn, "binaryDataType",    DataType.Binary),              Is.EqualTo(new byte[] {  97,  98,  99 }));
-				Assert.That(TestType<byte[]>					(conn, "binaryDataType",    DataType.VarBinary),           Is.EqualTo(new byte[] {  97,  98,  99 }));
-				Assert.That(TestType<byte[]>					(conn, "varbinaryDataType", DataType.Binary),              Is.EqualTo(new byte[] {  99, 100, 101 }));
-				Assert.That(TestType<byte[]>					(conn, "varbinaryDataType", DataType.VarBinary),           Is.EqualTo(new byte[] {  99, 100, 101 }));
-				Assert.That(TestType<Binary>					(conn, "varbinaryDataType", DataType.VarBinary).ToArray(), Is.EqualTo(new byte[] {  99, 100, 101 }));
-				Assert.That(TestType<byte[]>					(conn, "blobDataType",      DataType.Binary),              Is.EqualTo(new byte[] { 100, 101, 102 }));
-				Assert.That(TestType<byte[]>					(conn, "blobDataType",      DataType.VarBinary),           Is.EqualTo(new byte[] { 100, 101, 102 }));
-				Assert.That(TestType<byte[]>					(conn, "blobDataType",      DataType.Blob),                Is.EqualTo(new byte[] { 100, 101, 102 }));
-
-				Assert.That(TestType<ulong?>					(conn, "bitDataType"),                                     Is.EqualTo(5));
-				Assert.That(TestType<string>					(conn, "enumDataType"),                                    Is.EqualTo("Green"));
-				Assert.That(TestType<string>					(conn, "setDataType"),                                     Is.EqualTo("one"));
-
-				if (context != ProviderName.MySqlConnector)
+				Assert.Multiple(() =>
 				{
-					TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
+					Assert.That(TestType<long?>(conn, "bigintDataType", DataType.Int64), Is.EqualTo(1000000));
+					Assert.That(TestType<short?>(conn, "smallintDataType", DataType.Int16), Is.EqualTo(25555));
+					Assert.That(TestType<sbyte?>(conn, "tinyintDataType", DataType.SByte), Is.EqualTo(111));
+					Assert.That(TestType<int?>(conn, "mediumintDataType", DataType.Int32), Is.EqualTo(5555));
+					Assert.That(TestType<int?>(conn, "intDataType", DataType.Int32), Is.EqualTo(7777777));
+					Assert.That(TestType<decimal?>(conn, "numericDataType", DataType.Decimal), Is.EqualTo(9999999m));
+					Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal), Is.EqualTo(8888888m));
+					Assert.That(TestType<double?>(conn, "doubleDataType", DataType.Double), Is.EqualTo(20.31d));
+					Assert.That(TestType<float?>(conn, "floatDataType", DataType.Single), Is.EqualTo(16.0f));
+					Assert.That(TestType<DateTime?>(conn, "dateDataType", DataType.Date), Is.EqualTo(new DateTime(2012, 12, 12)));
+					Assert.That(TestType<DateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+					Assert.That(TestType<DateTime?>(conn, "datetimeDataType", DataType.DateTime2), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+					Assert.That(TestType<DateTime?>(conn, "timestampDataType", DataType.Timestamp), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+					Assert.That(TestType<TimeSpan?>(conn, "timeDataType", DataType.Time), Is.EqualTo(new TimeSpan(12, 12, 12)));
+					Assert.That(TestType<int?>(conn, "yearDataType", DataType.Int32), Is.EqualTo(1998));
 
-					var dt1 = TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime);
-					var dt2 = new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)
+					Assert.That(TestType<char?>(conn, "charDataType", DataType.Char), Is.EqualTo('1'));
+					Assert.That(TestType<string>(conn, "charDataType", DataType.Char), Is.EqualTo("1"));
+					Assert.That(TestType<string>(conn, "charDataType", DataType.NChar), Is.EqualTo("1"));
+					Assert.That(TestType<string>(conn, "varcharDataType", DataType.VarChar), Is.EqualTo("234"));
+					Assert.That(TestType<string>(conn, "varcharDataType", DataType.NVarChar), Is.EqualTo("234"));
+					Assert.That(TestType<string>(conn, "textDataType", DataType.Text), Is.EqualTo("567"));
+
+					Assert.That(TestType<byte[]>(conn, "binaryDataType", DataType.Binary), Is.EqualTo(new byte[] { 97, 98, 99 }));
+					Assert.That(TestType<byte[]>(conn, "binaryDataType", DataType.VarBinary), Is.EqualTo(new byte[] { 97, 98, 99 }));
+					Assert.That(TestType<byte[]>(conn, "varbinaryDataType", DataType.Binary), Is.EqualTo(new byte[] { 99, 100, 101 }));
+					Assert.That(TestType<byte[]>(conn, "varbinaryDataType", DataType.VarBinary), Is.EqualTo(new byte[] { 99, 100, 101 }));
+					Assert.That(TestType<Binary>(conn, "varbinaryDataType", DataType.VarBinary).ToArray(), Is.EqualTo(new byte[] { 99, 100, 101 }));
+					Assert.That(TestType<byte[]>(conn, "blobDataType", DataType.Binary), Is.EqualTo(new byte[] { 100, 101, 102 }));
+					Assert.That(TestType<byte[]>(conn, "blobDataType", DataType.VarBinary), Is.EqualTo(new byte[] { 100, 101, 102 }));
+					Assert.That(TestType<byte[]>(conn, "blobDataType", DataType.Blob), Is.EqualTo(new byte[] { 100, 101, 102 }));
+
+					Assert.That(TestType<ulong?>(conn, "bitDataType"), Is.EqualTo(5));
+					Assert.That(TestType<string>(conn, "enumDataType"), Is.EqualTo("Green"));
+					Assert.That(TestType<string>(conn, "setDataType"), Is.EqualTo("one"));
+				});
+
+				using (new DisableBaseline("Platform-specific baselines"))
+				{
+					if (context.IsAnyOf(TestProvName.AllMySqlData))
 					{
-						TimezoneOffset = dt1!.Value.TimezoneOffset
-					};
+						TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
+						var dt1 = TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime);
+						var dt2 = new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)
+						{
+							TimezoneOffset = dt1!.Value.TimezoneOffset
+						};
 
-					Assert.That(dt1, Is.EqualTo(dt2));
+						Assert.That(dt1, Is.EqualTo(dt2));
+					}
+					else
+					{
+						TestType<MySqlConnectorDecimal?>(conn, "decimalDataType", DataType.Decimal);
+						using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
+							Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
+					}
 				}
-				else
+			}
+		}
+
+		[Table]
+		public class BigDecimalMySqlDataTable
+		{
+			[Column                            ] public int               Id       { get; set; }
+			[Column(DbType = "decimal(65, 30)")] public MySqlDataDecimal  Decimal  { get; set; }
+			[Column(DbType = "decimal(65, 30)")] public MySqlDataDecimal? DecimalN { get; set; }
+		}
+
+		[Test]
+		public void TestMySqlDataBigDecimal([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] BulkCopyType bulkCopyType, [Values] bool inline)
+		{
+			using (var db = new DataConnection(context))
+			using (var tb = db.CreateLocalTable<BigDecimalMySqlDataTable>())
+			{
+				db.InlineParameters = inline;
+
+				// due to internal constructor we should ask provider to create parameter value for us
+				var value1 = db.Execute<MySqlDataDecimal>("SELECT 12345678901234567890123456789012345.123456789012345678901234567891");
+				var value2 = db.Execute<MySqlDataDecimal>("SELECT -12345678901234567890123456789012345.123456789012345678901234567891");
+
+				var testRecord1 = new BigDecimalMySqlDataTable()
 				{
-					using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
-						Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
-				}
+					Id       = 1,
+					Decimal  = value1,
+					DecimalN = value2,
+				};
+				var testRecord2 = new BigDecimalMySqlDataTable()
+				{
+					Id       = 2,
+					Decimal  = value2,
+					DecimalN = null,
+				};
+
+				// test insert
+				db.Insert(testRecord1);
+				db.Insert(testRecord2);
+
+				// test select (not really as it is broken badly in provider)
+				// IsDBNull fails with exception, so we cannot fix it easily
+				Assert.Throws<OverflowException>(() => tb.Single());
+				//var records = tb.OrderBy(_ => _.Id).ToArray();
+				//Assert.AreEqual(1, records[0].Id);
+				//Assert.AreEqual(value1, records[0].Decimal);
+				//Assert.AreEqual(value2, records[0].DecimalN);
+				//Assert.AreEqual(2, records[1].Id);
+				//Assert.AreEqual(value2, records[1].Decimal);
+				//Assert.IsNull(records[1].DecimalN);
+
+				// test insert linq (to force parameters)
+				tb.Delete();
+				tb.Insert(() => new BigDecimalMySqlDataTable()
+				{
+					Id       = 1,
+					Decimal  = value1,
+					DecimalN = value2,
+				});
+				tb.Insert(() => new BigDecimalMySqlDataTable()
+				{
+					Id       = 2,
+					Decimal  = value2,
+					DecimalN = null,
+				});
+
+				// test select (not really as it is broken badly in provider)
+				// IsDBNull fails with exception, so we cannot fix it easily
+				Assert.Throws<OverflowException>(() => tb.Single());
+				//var records = tb.OrderBy(_ => _.Id).ToArray();
+				//Assert.AreEqual(1, records[0].Id);
+				//Assert.AreEqual(value1, records[0].Decimal);
+				//Assert.AreEqual(value2, records[0].DecimalN);
+				//Assert.AreEqual(2, records[1].Id);
+				//Assert.AreEqual(value2, records[1].Decimal);
+				//Assert.IsNull(records[1].DecimalN);
+
+				// test bulk copy
+				tb.Delete();
+				db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bulkCopyType }, new[] { testRecord1, testRecord2 });
+
+				Assert.Throws<OverflowException>(() => tb.Single());
+				//records = tb.OrderBy(_ => _.Id).ToArray();
+				//Assert.AreEqual(1, records[0].Id);
+				//Assert.AreEqual(value1, records[0].Decimal);
+				//Assert.AreEqual(value2, records[0].DecimalN);
+				//Assert.AreEqual(2, records[1].Id);
+				//Assert.AreEqual(value2, records[1].Decimal);
+				//Assert.IsNull(records[1].DecimalN);
+			}
+		}
+
+		[Table]
+		public class BigDecimalMySqlConnectorTable
+		{
+			[Column] public int Id { get; set; }
+			[Column(DbType = "decimal(65, 30)")] public MySqlConnectorDecimal  Decimal  { get; set; }
+			[Column(DbType = "decimal(65, 30)")] public MySqlConnectorDecimal? DecimalN { get; set; }
+		}
+
+		[Test]
+		public void TestMySqlConnectorBigDecimal([IncludeDataSources(TestProvName.AllMySqlConnector)] string context, [Values] BulkCopyType bulkCopyType, [Values] bool inline)
+		{
+			using (var db = new DataConnection(context))
+			using (var tb = db.CreateLocalTable<BigDecimalMySqlConnectorTable>())
+			{
+				db.InlineParameters = inline;
+
+				// due to internal constructor we should ask provider to create parameter value for us
+				// https://github.com/mysql-net/MySqlConnector/issues/1142
+				var value1 = db.Execute<MySqlConnectorDecimal>("SELECT 12345678901234567890123456789012345.123456789012345678901234567891");
+				var value2 = db.Execute<MySqlConnectorDecimal>("SELECT -12345678901234567890123456789012345.123456789012345678901234567891");
+
+				var testRecord1 = new BigDecimalMySqlConnectorTable()
+				{
+					Id       = 1,
+					Decimal  = value1,
+					DecimalN = value2,
+				};
+				var testRecord2 = new BigDecimalMySqlConnectorTable()
+				{
+					Id       = 2,
+					Decimal  = value2,
+					DecimalN = null,
+				};
+
+				// test insert
+				db.Insert(testRecord1);
+				db.Insert(testRecord2);
+
+				// test select
+				var records = tb.OrderBy(_ => _.Id).ToArray();
+				Assert.Multiple(() =>
+				{
+					Assert.That(records[0].Id, Is.EqualTo(1));
+					Assert.That(records[0].Decimal, Is.EqualTo(value1));
+					Assert.That(records[0].DecimalN, Is.EqualTo(value2));
+					Assert.That(records[1].Id, Is.EqualTo(2));
+					Assert.That(records[1].Decimal, Is.EqualTo(value2));
+					Assert.That(records[1].DecimalN, Is.Null);
+				});
+
+				// test insert linq (to force parameters)
+				tb.Delete();
+				tb.Insert(() => new BigDecimalMySqlConnectorTable()
+				{
+					Id       = 1,
+					Decimal  = value1,
+					DecimalN = value2,
+				});
+				tb.Insert(() => new BigDecimalMySqlConnectorTable()
+				{
+					Id       = 2,
+					Decimal  = value2,
+					DecimalN = null,
+				});
+
+				// test select
+				records = tb.OrderBy(_ => _.Id).ToArray();
+				Assert.Multiple(() =>
+				{
+					Assert.That(records[0].Id, Is.EqualTo(1));
+					Assert.That(records[0].Decimal, Is.EqualTo(value1));
+					Assert.That(records[0].DecimalN, Is.EqualTo(value2));
+					Assert.That(records[1].Id, Is.EqualTo(2));
+					Assert.That(records[1].Decimal, Is.EqualTo(value2));
+					Assert.That(records[1].DecimalN, Is.Null);
+				});
+
+				// cannot test filtering as there is no equality/comparison defined on .net type
+
+				// test bulk copy
+				tb.Delete();
+				db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bulkCopyType }, new[] { testRecord1, testRecord2 });
+
+				records = tb.OrderBy(_ => _.Id).ToArray();
+				Assert.Multiple(() =>
+				{
+					Assert.That(records[0].Id, Is.EqualTo(1));
+					Assert.That(records[0].Decimal, Is.EqualTo(value1));
+					Assert.That(records[0].DecimalN, Is.EqualTo(value2));
+					Assert.That(records[1].Id, Is.EqualTo(2));
+					Assert.That(records[1].Decimal, Is.EqualTo(value2));
+					Assert.That(records[1].DecimalN, Is.Null);
+				});
 			}
 		}
 
 		[Test]
 		public void TestDate([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 
-				Assert.That(conn.Execute<DateTime> ("SELECT Cast('2012-12-12' as date)"),                          Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12' as date)"),                          Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime> ("SELECT @p", DataParameter.Date("p", dateTime)),               Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>("SELECT @p", new DataParameter("p", dateTime, DataType.Date)), Is.EqualTo(dateTime));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<DateTime>("SELECT Cast('2012-12-12' as date)"), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12' as date)"), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime>("SELECT @p", DataParameter.Date("p", dateTime)), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime?>("SELECT @p", new DataParameter("p", dateTime, DataType.Date)), Is.EqualTo(dateTime));
+				});
 			}
 		}
 
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
-				Assert.That(conn.Execute<DateTime> ("SELECT Cast('2012-12-12 12:12:12' as datetime)"),                 Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as datetime)"),                 Is.EqualTo(dateTime));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<DateTime>("SELECT Cast('2012-12-12 12:12:12' as datetime)"), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as datetime)"), Is.EqualTo(dateTime));
 
-				Assert.That(conn.Execute<DateTime> ("SELECT @p", DataParameter.DateTime("p", dateTime)),               Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>("SELECT @p", new DataParameter("p", dateTime)),                    Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>("SELECT @p", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime>("SELECT @p", DataParameter.DateTime("p", dateTime)), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime?>("SELECT @p", new DataParameter("p", dateTime)), Is.EqualTo(dateTime));
+					Assert.That(conn.Execute<DateTime?>("SELECT @p", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
+				});
 			}
 		}
 
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<char> ("SELECT Cast('1' as char)"),         Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char)"),         Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT Cast('1' as char(1))"),      Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char(1))"),      Is.EqualTo('1'));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<char>("SELECT Cast('1' as char)"), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT Cast('1' as char)"), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>("SELECT Cast('1' as char(1))"), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT Cast('1' as char(1))"), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char)",    DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char)",    DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1))", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1))", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>("SELECT @p", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>("SELECT Cast(@p as char)", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT Cast(@p as char)", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>("SELECT Cast(@p as char(1))", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1))", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>("SELECT @p", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>("SELECT @p", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>("SELECT @p", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>("SELECT @p", DataParameter.Create("p", '1')), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.Create("p", '1')), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> ("SELECT @p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char>("SELECT @p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
+					Assert.That(conn.Execute<char?>("SELECT @p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
+				});
 			}
 		}
 
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),      Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"), Is.EqualTo("12345"));
+					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"), Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text    ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar   ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText("p", "123")), Is.EqualTo("123"));
+					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
+					Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
+				});
 			}
 		}
 
@@ -196,37 +402,46 @@ namespace Tests.DataProvider
 		{
 			var arr1 = new byte[] { 48, 57 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", arr1)),              Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)),              Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)),              Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)),              Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }),  Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))),  Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))),        Is.EqualTo(arr1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create("p", new Binary(arr1))), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
+				});
 			}
 		}
 
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<string>     ("SELECT '<xml/>'"),            Is.EqualTo("<xml/>"));
-				Assert.That(conn.Execute<XDocument>  ("SELECT '<xml/>'").ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XmlDocument>("SELECT '<xml/>'").InnerXml,   Is.EqualTo("<xml />"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<string>("SELECT '<xml/>'"), Is.EqualTo("<xml/>"));
+					Assert.That(conn.Execute<XDocument>("SELECT '<xml/>'").ToString(), Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XmlDocument>("SELECT '<xml/>'").InnerXml, Is.EqualTo("<xml />"));
+				});
 
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
 
-				Assert.That(conn.Execute<string>     ("SELECT @p", DataParameter.Xml("p", "<xml/>")),        Is.EqualTo("<xml/>"));
-				Assert.That(conn.Execute<XDocument>  ("SELECT @p", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XmlDocument>("SELECT @p", DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XDocument>  ("SELECT @p", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XDocument>  ("SELECT @p", new DataParameter("p", xml)). ToString(), Is.EqualTo("<xml />"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Xml("p", "<xml/>")), Is.EqualTo("<xml/>"));
+					Assert.That(conn.Execute<XDocument>("SELECT @p", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XmlDocument>("SELECT @p", DataParameter.Xml("p", xml)).InnerXml, Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XDocument>("SELECT @p", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XDocument>("SELECT @p", new DataParameter("p", xml)).ToString(), Is.EqualTo("<xml />"));
+				});
 			}
 		}
 
@@ -239,26 +454,32 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<TestEnum> ("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
-				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
-				Assert.That(conn.Execute<TestEnum> ("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
-				Assert.That(conn.Execute<TestEnum?>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<TestEnum>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
+					Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
+					Assert.That(conn.Execute<TestEnum>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
+					Assert.That(conn.Execute<TestEnum?>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
+				});
 			}
 		}
 
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = TestEnum.AA }),            Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<string>("SELECT @p", new { p = TestEnum.AA }), Is.EqualTo("A"));
+					Assert.That(conn.Execute<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
 
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
+					Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
+					Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
+					Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?, string>()!(TestEnum.AA) }), Is.EqualTo("A"));
+				});
 			}
 		}
 
@@ -267,10 +488,6 @@ namespace Tests.DataProvider
 		{
 			[IgnoreComparison]
 			[Column,     Nullable] public int?      yearDataType        { get; set; } // year(4)
-			[IgnoreComparison]
-			[Column,     Nullable] public int?      year2DataType       { get; set; } // year(2)
-			[IgnoreComparison]
-			[Column,     Nullable] public int?      year4DataType       { get; set; } // year(4)
 		}
 
 		// excludes year columns, as they doesn't supported by native bulk copy
@@ -309,9 +526,9 @@ namespace Tests.DataProvider
 			const int records   = 1000;
 			const int batchSize = 500;
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				EnableNativeBulk(conn, context);
+				MySqlTestUtils.EnableNativeBulk(conn, context);
 				DataConnectionTransaction? transaction = null;
 				if (withTransaction)
 					transaction = conn.BeginTransaction();
@@ -336,8 +553,6 @@ namespace Tests.DataProvider
 								timestampDataType   = TestUtils.StripMilliseconds(TestData.DateTime, true),
 								timeDataType        = TestUtils.StripMilliseconds(TestData.DateTime, true).TimeOfDay,
 								yearDataType        = (1000 + n) % 100,
-								year2DataType       = (1000 + n) % 100,
-								year4DataType       = (1000 + n) % 100,
 								charDataType        = 'A',
 								varcharDataType     = "_btest",
 								textDataType        = "test",
@@ -350,7 +565,7 @@ namespace Tests.DataProvider
 								intUnsignedDataType = (uint)(5000 + n),
 							}).ToList();
 
-					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlDataProvider)conn.DataProvider).Adapter.BulkCopy != null;
+					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlProviderAdapter)((MySqlDataProvider)conn.DataProvider).Adapter).BulkCopy != null;
 
 					if (isNativeCopy)
 					{
@@ -361,7 +576,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count, result.Count());
+						Assert.That(result.Count(), Is.EqualTo(source.Count));
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllTypeBaseProviderSpecific>());
 					}
 					else
@@ -373,7 +588,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count, result.Count());
+						Assert.That(result.Count(), Is.EqualTo(source.Count));
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllType>());
 					}
 				}
@@ -395,9 +610,9 @@ namespace Tests.DataProvider
 			const int records   = 1000;
 			const int batchSize = 500;
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				EnableNativeBulk(conn, context);
+				MySqlTestUtils.EnableNativeBulk(conn, context);
 				DataConnectionTransaction? transaction = null;
 				if (withTransaction)
 					transaction = conn.BeginTransaction();
@@ -422,8 +637,6 @@ namespace Tests.DataProvider
 								timestampDataType   = TestUtils.StripMilliseconds(TestData.DateTime, true),
 								timeDataType        = TestUtils.StripMilliseconds(TestData.DateTime, true).TimeOfDay,
 								yearDataType        = (1000 + n) % 100,
-								year2DataType       = (1000 + n) % 100,
-								year4DataType       = (1000 + n) % 100,
 								charDataType        = 'A',
 								varcharDataType     = "_btest",
 								textDataType        = "test",
@@ -436,7 +649,7 @@ namespace Tests.DataProvider
 								intUnsignedDataType = (uint)(5000 + n),
 							}).ToList();
 
-					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlDataProvider)conn.DataProvider).Adapter.BulkCopy != null;
+					var isNativeCopy = bulkCopyType == BulkCopyType.ProviderSpecific && ((MySqlProviderAdapter)((MySqlDataProvider)conn.DataProvider).Adapter).BulkCopy != null;
 
 					if (isNativeCopy)
 					{
@@ -447,7 +660,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count, result.Count());
+						Assert.That(result.Count(), Is.EqualTo(source.Count));
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllTypeBaseProviderSpecific>());
 					}
 					else
@@ -459,7 +672,7 @@ namespace Tests.DataProvider
 
 						// compare only 10 records
 						// as we don't compare all, we must ensure we inserted all records
-						Assert.AreEqual(source.Count, result.Count());
+						Assert.That(result.Count(), Is.EqualTo(source.Count));
 						AreEqual(source.Take(10), result.Take(10), ComparerBuilder.GetEqualityComparer<AllType>());
 					}
 				}
@@ -524,14 +737,8 @@ namespace Tests.DataProvider
 			await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.ProviderSpecific);
 		}
 
-		public static void EnableNativeBulk(DataConnection db, string context)
-		{
-			if (context == ProviderName.MySqlConnector)
-				db.Execute("SET GLOBAL local_infile=ON");
-		}
-
 		[Table("NeedS.esca Pin`g")]
-		class BinaryTypes
+		sealed class BinaryTypes
 		{
 			[Column("ne.eds `escaPing", IsPrimaryKey = true)] public int Id { get; set; }
 
@@ -562,11 +769,10 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyBinaryAndBitTypes([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] BulkCopyType bulkCopyType)
 		{
-			using (var db    = new DataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<BinaryTypes>())
 			{
-				EnableNativeBulk(db, context);
-
+				MySqlTestUtils.EnableNativeBulk(db, context);
 
 				// just to make assert work, as we receive 64 bits from server in ulong value
 				var bit1 = new BitArray(64);
@@ -606,7 +812,7 @@ namespace Tests.DataProvider
 				db.BulkCopy(new BulkCopyOptions { BulkCopyType = bulkCopyType }, data);
 
 				var res = table.OrderBy(_ => _.Id).ToArray();
-				Assert.AreEqual(data.Length, res.Length);
+				Assert.That(res, Has.Length.EqualTo(data.Length));
 
 				AreEqual(data, res, ComparerBuilder.GetEqualityComparer<BinaryTypes>());
 			}
@@ -615,11 +821,10 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyBinaryAndBitTypesAsync([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] BulkCopyType bulkCopyType)
 		{
-			using (var db    = new DataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<BinaryTypes>())
 			{
-				EnableNativeBulk(db, context);
-
+				MySqlTestUtils.EnableNativeBulk(db, context);
 
 				// just to make assert work, as we receive 64 bits from server in ulong value
 				var bit1 = new BitArray(64);
@@ -659,7 +864,7 @@ namespace Tests.DataProvider
 				await db.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = bulkCopyType }, data);
 
 				var res = await table.OrderBy(_ => _.Id).ToArrayAsync();
-				Assert.AreEqual(data.Length, res.Length);
+				Assert.That(res, Has.Length.EqualTo(data.Length));
 
 				AreEqual(data, res, ComparerBuilder.GetEqualityComparer<BinaryTypes>());
 			}
@@ -670,9 +875,9 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
-					EnableNativeBulk(db, context);
+					MySqlTestUtils.EnableNativeBulk(db, context);
 
 					try
 					{
@@ -702,9 +907,9 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
-					EnableNativeBulk(db, context);
+					MySqlTestUtils.EnableNativeBulk(db, context);
 					try
 					{
 						await db.BulkCopyAsync(
@@ -728,7 +933,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void BulkCopyRetrieveSequence(string context, BulkCopyType bulkCopyType)
+		void BulkCopyRetrieveSequence(string context, BulkCopyType bulkCopyType)
 		{
 			var data = new[]
 			{
@@ -739,10 +944,10 @@ namespace Tests.DataProvider
 				new Person { FirstName = "Psychiatry"     , LastName = "test"  }
 			};
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				EnableNativeBulk(db, context);
+				MySqlTestUtils.EnableNativeBulk(db, context);
 				var options = new BulkCopyOptions
 				{
 					MaxBatchSize = 5,
@@ -759,7 +964,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static async Task BulkCopyRetrieveSequenceAsync(string context, BulkCopyType bulkCopyType)
+		async Task BulkCopyRetrieveSequenceAsync(string context, BulkCopyType bulkCopyType)
 		{
 			var data = new[]
 			{
@@ -770,10 +975,10 @@ namespace Tests.DataProvider
 				new Person { FirstName = "Psychiatry"     , LastName = "test"  }
 			};
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				EnableNativeBulk(db, context);
+				MySqlTestUtils.EnableNativeBulk(db, context);
 				var options = new BulkCopyOptions
 				{
 					MaxBatchSize = 5,
@@ -793,7 +998,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTransaction1([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
 
@@ -801,18 +1006,18 @@ namespace Tests.DataProvider
 
 				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = null });
 
-				Assert.IsNull(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1);
+				Assert.That(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1, Is.Null);
 
 				db.RollbackTransaction();
 
-				Assert.That(1, Is.EqualTo(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1));
+				Assert.That(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1, Is.EqualTo(1));
 			}
 		}
 
 		[Test]
 		public void TestTransaction2([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
 
@@ -820,11 +1025,11 @@ namespace Tests.DataProvider
 				{
 					db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = null });
 
-					Assert.IsNull(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1);
+					Assert.That(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1, Is.Null);
 
 					tran.Rollback();
 
-					Assert.That(1, Is.EqualTo(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1));
+					Assert.That(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1, Is.EqualTo(1));
 				}
 			}
 		}
@@ -832,7 +1037,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestBeginTransactionWithIsolationLevel([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
 
@@ -840,11 +1045,11 @@ namespace Tests.DataProvider
 				{
 					db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = null });
 
-					Assert.IsNull(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1);
+					Assert.That(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1, Is.Null);
 
 					tran.Rollback();
 
-					Assert.That(1, Is.EqualTo(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1));
+					Assert.That(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1, Is.EqualTo(1));
 				}
 			}
 		}
@@ -862,7 +1067,7 @@ namespace Tests.DataProvider
 				Assert.That(systemTables.All(_ => _.IsProviderSpecific));
 
 				var views = schema.Tables.Where(_ => _.IsView).ToList();
-				Assert.AreEqual(1, views.Count);
+				Assert.That(views, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -1064,124 +1269,148 @@ namespace Tests.DataProvider
 			// TODO: add aggregate/udf functions test cases
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-
 				var expectedProc = testCase.Schema;
-				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+				expectedProc.CatalogName = TestUtils.GetDatabaseName(db, context);
 
+				var schema     = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
 
-				Assert.AreEqual(1, procedures.Count);
+				Assert.That(procedures, Has.Count.EqualTo(1));
 
 				var procedure = procedures[0];
 
-				Assert.AreEqual(expectedProc.CatalogName.ToLower(), procedure.CatalogName!.ToLower());
-				Assert.AreEqual(expectedProc.SchemaName,            procedure.SchemaName);
-				Assert.AreEqual(expectedProc.MemberName,            procedure.MemberName);
-				Assert.AreEqual(expectedProc.IsTableFunction,       procedure.IsTableFunction);
-				Assert.AreEqual(expectedProc.IsAggregateFunction,   procedure.IsAggregateFunction);
-				Assert.AreEqual(expectedProc.IsDefaultSchema,       procedure.IsDefaultSchema);
-
-				if (GetProviderName(context, out _) == ProviderName.MySqlConnector && procedure.ResultException != null)
+				Assert.Multiple(() =>
 				{
-					Assert.False       (procedure.IsLoaded);
-					Assert.IsInstanceOf(typeof(InvalidOperationException), procedure.ResultException);
-					Assert.AreEqual    ("There is no current result set.", procedure.ResultException.Message);
+					Assert.That(procedure.CatalogName!.ToLowerInvariant(), Is.EqualTo(expectedProc.CatalogName.ToLowerInvariant()));
+					Assert.That(procedure.SchemaName, Is.EqualTo(expectedProc.SchemaName));
+					Assert.That(procedure.MemberName, Is.EqualTo(expectedProc.MemberName));
+					Assert.That(procedure.IsTableFunction, Is.EqualTo(expectedProc.IsTableFunction));
+					Assert.That(procedure.IsAggregateFunction, Is.EqualTo(expectedProc.IsAggregateFunction));
+					Assert.That(procedure.IsDefaultSchema, Is.EqualTo(expectedProc.IsDefaultSchema));
+				});
+
+				if (context.IsAnyOf(TestProvName.AllMySqlConnector) && procedure.ResultException != null)
+				{
+					Assert.Multiple(() =>
+					{
+						Assert.That(procedure.IsLoaded, Is.False);
+						Assert.That(procedure.ResultException, Is.InstanceOf<InvalidOperationException>());
+					});
+					Assert.That(procedure.ResultException.Message, Is.EqualTo("There is no current result set."));
 				}
 				else
 				{
-					Assert.AreEqual(expectedProc.IsLoaded, procedure.IsLoaded);
-					Assert.IsNull(procedure.ResultException);
+					Assert.Multiple(() =>
+					{
+						Assert.That(procedure.IsLoaded, Is.EqualTo(expectedProc.IsLoaded));
+						Assert.That(procedure.ResultException, Is.Null);
+					});
 				}
 
-				Assert.AreEqual(expectedProc.Parameters.Count, procedure.Parameters.Count);
+				Assert.That(procedure.Parameters, Has.Count.EqualTo(expectedProc.Parameters.Count));
 
 				for (var i = 0; i < procedure.Parameters.Count; i++)
 				{
 					var actualParam = procedure.Parameters[i];
 					var expectedParam = expectedProc.Parameters[i];
 
-					Assert.IsNotNull(expectedParam);
+					Assert.Multiple(() =>
+					{
+						Assert.That(expectedParam, Is.Not.Null);
 
-					Assert.AreEqual(expectedParam.SchemaName,           actualParam.SchemaName);
-					Assert.AreEqual(expectedParam.ParameterName,        actualParam.ParameterName);
-					Assert.AreEqual(expectedParam.SchemaType,           actualParam.SchemaType);
-					Assert.AreEqual(expectedParam.IsIn,                 actualParam.IsIn);
-					Assert.AreEqual(expectedParam.IsOut,                actualParam.IsOut);
-					Assert.AreEqual(expectedParam.IsResult,             actualParam.IsResult);
-					Assert.AreEqual(expectedParam.Size,                 actualParam.Size);
-					Assert.AreEqual(expectedParam.ParameterType,        actualParam.ParameterType);
-					Assert.AreEqual(expectedParam.SystemType,           actualParam.SystemType);
-					Assert.AreEqual(expectedParam.DataType,             actualParam.DataType);
-					Assert.AreEqual(expectedParam.ProviderSpecificType, actualParam.ProviderSpecificType);
+						Assert.That(actualParam.SchemaName, Is.EqualTo(expectedParam.SchemaName));
+						Assert.That(actualParam.ParameterName, Is.EqualTo(expectedParam.ParameterName));
+						Assert.That(actualParam.SchemaType, Is.EqualTo(expectedParam.SchemaType));
+						Assert.That(actualParam.IsIn, Is.EqualTo(expectedParam.IsIn));
+						Assert.That(actualParam.IsOut, Is.EqualTo(expectedParam.IsOut));
+						Assert.That(actualParam.IsResult, Is.EqualTo(expectedParam.IsResult));
+						Assert.That(actualParam.Size, Is.EqualTo(expectedParam.Size));
+						Assert.That(actualParam.ParameterType, Is.EqualTo(expectedParam.ParameterType));
+						Assert.That(actualParam.SystemType, Is.EqualTo(expectedParam.SystemType));
+						Assert.That(actualParam.DataType, Is.EqualTo(expectedParam.DataType));
+						Assert.That(actualParam.ProviderSpecificType, Is.EqualTo(expectedParam.ProviderSpecificType));
+					});
 				}
 
 				if (expectedProc.ResultTable == null)
 				{
-					Assert.IsNull(procedure.ResultTable);
+					Assert.Multiple(() =>
+					{
+						Assert.That(procedure.ResultTable, Is.Null);
 
-					// maybe it is worth changing
-					Assert.IsNull(procedure.SimilarTables);
+						// maybe it is worth changing
+						Assert.That(procedure.SimilarTables, Is.Null);
+					});
 				}
 				else
 				{
-					Assert.IsNotNull(procedure.ResultTable);
+					Assert.That(procedure.ResultTable, Is.Not.Null);
 
 					var expectedTable = expectedProc.ResultTable;
 					var actualTable = procedure.ResultTable!;
 
-					Assert.AreEqual(expectedTable.ID,                 actualTable.ID);
-					Assert.AreEqual(expectedTable.CatalogName,        actualTable.CatalogName);
-					Assert.AreEqual(expectedTable.SchemaName,         actualTable.SchemaName);
-					Assert.AreEqual(expectedTable.TableName,          actualTable.TableName);
-					Assert.AreEqual(expectedTable.Description,        actualTable.Description);
-					Assert.AreEqual(expectedTable.IsDefaultSchema,    actualTable.IsDefaultSchema);
-					Assert.AreEqual(expectedTable.IsView,             actualTable.IsView);
-					Assert.AreEqual(expectedTable.IsProcedureResult,  actualTable.IsProcedureResult);
-					Assert.AreEqual(expectedTable.TypeName,           actualTable.TypeName);
-					Assert.AreEqual(expectedTable.IsProviderSpecific, actualTable.IsProviderSpecific);
+					Assert.Multiple(() =>
+					{
+						Assert.That(actualTable.ID, Is.EqualTo(expectedTable.ID));
+						Assert.That(actualTable.CatalogName, Is.EqualTo(expectedTable.CatalogName));
+						Assert.That(actualTable.SchemaName, Is.EqualTo(expectedTable.SchemaName));
+						Assert.That(actualTable.TableName, Is.EqualTo(expectedTable.TableName));
+						Assert.That(actualTable.Description, Is.EqualTo(expectedTable.Description));
+						Assert.That(actualTable.IsDefaultSchema, Is.EqualTo(expectedTable.IsDefaultSchema));
+						Assert.That(actualTable.IsView, Is.EqualTo(expectedTable.IsView));
+						Assert.That(actualTable.IsProcedureResult, Is.EqualTo(expectedTable.IsProcedureResult));
+						Assert.That(actualTable.TypeName, Is.EqualTo(expectedTable.TypeName));
+						Assert.That(actualTable.IsProviderSpecific, Is.EqualTo(expectedTable.IsProviderSpecific));
 
-					Assert.IsNotNull(actualTable.ForeignKeys);
-					Assert.IsEmpty(actualTable.ForeignKeys);
+						Assert.That(actualTable.ForeignKeys, Is.Not.Null);
+					});
+					Assert.Multiple(() =>
+					{
+						Assert.That(actualTable.ForeignKeys, Is.Empty);
 
-					Assert.AreEqual(expectedTable.Columns.Count, actualTable.Columns.Count);
+						Assert.That(actualTable.Columns, Has.Count.EqualTo(expectedTable.Columns.Count));
+					});
 
 					foreach (var actualColumn in actualTable.Columns)
 					{
-						var expectedColumn = expectedTable.Columns
-							.Where(_ => _.ColumnName == actualColumn.ColumnName)
-							.SingleOrDefault()!;
+						var expectedColumn = expectedTable.Columns.SingleOrDefault(_ => _.ColumnName == actualColumn.ColumnName)!;
 
-						Assert.IsNotNull(expectedColumn);
+						Assert.Multiple(() =>
+						{
+							Assert.That(expectedColumn, Is.Not.Null);
 
-						Assert.AreEqual(expectedColumn.ColumnType,           actualColumn.ColumnType);
-						Assert.AreEqual(expectedColumn.IsNullable,           actualColumn.IsNullable);
-						Assert.AreEqual(expectedColumn.IsIdentity,           actualColumn.IsIdentity);
-						Assert.AreEqual(expectedColumn.IsPrimaryKey,         actualColumn.IsPrimaryKey);
-						Assert.AreEqual(expectedColumn.PrimaryKeyOrder,      actualColumn.PrimaryKeyOrder);
-						Assert.AreEqual(expectedColumn.Description,          actualColumn.Description);
-						Assert.AreEqual(expectedColumn.MemberName,           actualColumn.MemberName);
-						Assert.AreEqual(expectedColumn.MemberType,           actualColumn.MemberType);
-						Assert.AreEqual(expectedColumn.ProviderSpecificType, actualColumn.ProviderSpecificType);
-						Assert.AreEqual(expectedColumn.SystemType,           actualColumn.SystemType);
-						Assert.AreEqual(expectedColumn.DataType,             actualColumn.DataType);
-						Assert.AreEqual(expectedColumn.SkipOnInsert,         actualColumn.SkipOnInsert);
-						Assert.AreEqual(expectedColumn.SkipOnUpdate,         actualColumn.SkipOnUpdate);
-						Assert.AreEqual(expectedColumn.Length,               actualColumn.Length);
-						Assert.AreEqual(expectedColumn.Precision,            actualColumn.Precision);
-						Assert.AreEqual(expectedColumn.Scale,                actualColumn.Scale);
-						Assert.AreEqual(actualTable,                         actualColumn.Table);
+							Assert.That(actualColumn.ColumnType, Is.EqualTo(expectedColumn.ColumnType));
+							Assert.That(actualColumn.IsNullable, Is.EqualTo(expectedColumn.IsNullable));
+							Assert.That(actualColumn.IsIdentity, Is.EqualTo(expectedColumn.IsIdentity));
+							Assert.That(actualColumn.IsPrimaryKey, Is.EqualTo(expectedColumn.IsPrimaryKey));
+							Assert.That(actualColumn.PrimaryKeyOrder, Is.EqualTo(expectedColumn.PrimaryKeyOrder));
+							Assert.That(actualColumn.Description, Is.EqualTo(expectedColumn.Description));
+							Assert.That(actualColumn.MemberName, Is.EqualTo(expectedColumn.MemberName));
+							Assert.That(actualColumn.MemberType, Is.EqualTo(expectedColumn.MemberType));
+							Assert.That(actualColumn.ProviderSpecificType, Is.EqualTo(expectedColumn.ProviderSpecificType));
+							Assert.That(actualColumn.SystemType, Is.EqualTo(expectedColumn.SystemType));
+							Assert.That(actualColumn.DataType, Is.EqualTo(expectedColumn.DataType));
+							Assert.That(actualColumn.SkipOnInsert, Is.EqualTo(expectedColumn.SkipOnInsert));
+							Assert.That(actualColumn.SkipOnUpdate, Is.EqualTo(expectedColumn.SkipOnUpdate));
+							Assert.That(actualColumn.Length, Is.EqualTo(expectedColumn.Length));
+						});
+						Assert.Multiple(() =>
+						{
+							Assert.That(actualColumn.Precision, Is.EqualTo(expectedColumn.Precision));
+							Assert.That(actualColumn.Scale, Is.EqualTo(expectedColumn.Scale));
+							Assert.That(actualColumn.Table, Is.EqualTo(actualTable));
+						});
 					}
 
-					Assert.IsNotNull(procedure.SimilarTables);
+					Assert.That(procedure.SimilarTables, Is.Not.Null);
 
 					foreach (var table in procedure.SimilarTables!)
 					{
 						var tbl = expectedProc.SimilarTables!
-							.SingleOrDefault(_ => _.TableName!.ToLower() == table.TableName!.ToLower());
+							.SingleOrDefault(_ => _.TableName!.ToLowerInvariant() == table.TableName!.ToLowerInvariant());
 
-						Assert.IsNotNull(tbl);
+						Assert.That(tbl, Is.Not.Null);
 					}
 				}
 			}
@@ -1193,8 +1422,8 @@ namespace Tests.DataProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				var res = schema.Tables.FirstOrDefault(c => c.ID!.ToLower().Contains("fulltextindex"));
-				Assert.AreNotEqual(null, res);
+				var res = schema.Tables.FirstOrDefault(c => c.ID!.ToLowerInvariant().Contains("fulltextindex"));
+				Assert.That(res, Is.Not.EqualTo(null));
 			}
 		}
 
@@ -1204,11 +1433,14 @@ namespace Tests.DataProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				var table = schema.Tables.FirstOrDefault(t => t.ID!.ToLower().Contains("issue1993"))!;
-				Assert.IsNotNull(table);
-				Assert.AreEqual(2, table.Columns.Count);
-				Assert.AreEqual("id",          table.Columns[0].ColumnName);
-				Assert.AreEqual("description", table.Columns[1].ColumnName);
+				var table = schema.Tables.FirstOrDefault(t => t.ID!.ToLowerInvariant().Contains("issue1993"))!;
+				Assert.That(table, Is.Not.Null);
+				Assert.That(table.Columns, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(table.Columns[0].ColumnName, Is.EqualTo("id"));
+					Assert.That(table.Columns[1].ColumnName, Is.EqualTo("description"));
+				});
 			}
 		}
 
@@ -1249,8 +1481,11 @@ namespace Tests.DataProvider
 
 				var res = db.TestProcedure(123, ref param2, out param1);
 
-				Assert.AreEqual(10, param2);
-				Assert.AreEqual(133, param1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(param2, Is.EqualTo(10));
+					Assert.That(param1, Is.EqualTo(133));
+				});
 				AreEqual(db.GetTable<Person>(), res);
 			}
 		}
@@ -1262,81 +1497,87 @@ namespace Tests.DataProvider
 			{
 				var res = db.TestOutputParametersWithoutTableProcedure("test", out var outParam);
 
-				Assert.AreEqual(123, outParam);
-				Assert.AreEqual(1, res);
+				Assert.Multiple(() =>
+				{
+					Assert.That(outParam, Is.EqualTo(123));
+					Assert.That(res, Is.EqualTo(1));
+				});
 			}
 		}
 
 		[Table]
 		public class CreateTable
 		{
-			[Column                                                            ] public string? VarChar255;
-			[Column(Length = 1)                                                ] public string? VarChar1;
-			[Column(Length = 112)                                              ] public string? VarChar112;
-			[Column                                                            ] public char    Char;
-			[Column(DataType = DataType.Char)                                  ] public string? Char255;
-			[Column(DataType = DataType.Char, Length = 1)                      ] public string? Char1;
-			[Column(DataType = DataType.Char, Length = 112)                    ] public string? Char112;
-			[Column(Length = 1)                                                ] public byte[]? VarBinary1;
-			[Column                                                            ] public byte[]? VarBinary255;
-			[Column(Length = 3)                                                ] public byte[]? VarBinary3;
-			[Column(DataType = DataType.Binary, Length = 1)                    ] public byte[]? Binary1;
-			[Column(DataType = DataType.Binary)                                ] public byte[]? Binary255;
-			[Column(DataType = DataType.Binary, Length = 3)                    ] public byte[]? Binary3;
-			[Column(DataType = DataType.Blob, Length = 200)                    ] public byte[]? TinyBlob;
-			[Column(DataType = DataType.Blob, Length = 2000)                   ] public byte[]? Blob;
-			[Column(DataType = DataType.Blob, Length = 200000)                 ] public byte[]? MediumBlob;
-			[Column(DataType = DataType.Blob)                                  ] public byte[]? BlobDefault;
-			[Column(DataType = DataType.Blob, Length = int.MaxValue)           ] public byte[]? LongBlob;
-			[Column(DataType = DataType.Text, Length = 200)                    ] public string? TinyText;
-			[Column(DataType = DataType.Text, Length = 2000)                   ] public string? Text;
-			[Column(DataType = DataType.Text, Length = 200000)                 ] public string? MediumText;
-			[Column(DataType = DataType.Text, Length = int.MaxValue)           ] public string? LongText;
-			[Column(DataType = DataType.Text)                                  ] public string? TextDefault;
-			[Column(DataType = DataType.Date)                                  ] public DateTime Date;
-			[Column                                                            ] public DateTime DateTime;
-			[NotColumn(Configuration = TestProvName.MySql55)                   ]
-			[Column(Precision = 3)                                             ] public DateTime DateTime3;
+			[Column                                                              ] public string? VarCharDefault;
+			[Column(Length = 1)                                                  ] public string? VarChar1;
+			[Column(Length = 112)                                                ] public string? VarChar112;
+			[Column                                                              ] public char    Char;
+			[Column(DataType = DataType.Char)                                    ] public string? Char255;
+			[Column(DataType = DataType.Char, Length = 1)                        ] public string? Char1;
+			[Column(DataType = DataType.Char, Length = 112)                      ] public string? Char112;
+			[Column(Length = 1)                                                  ] public byte[]? VarBinary1;
+			[Column                                                              ] public byte[]? VarBinary255;
+			[Column(Length = 3)                                                  ] public byte[]? VarBinary3;
+			[Column(DataType = DataType.Binary, Length = 1)                      ] public byte[]? Binary1;
+			[Column(DataType = DataType.Binary)                                  ] public byte[]? Binary255;
+			[Column(DataType = DataType.Binary, Length = 3)                      ] public byte[]? Binary3;
+			[Column(DataType = DataType.Blob, Length = 200)                      ] public byte[]? TinyBlob;
+			[Column(DataType = DataType.Blob, Length = 2000)                     ] public byte[]? Blob;
+			[Column(DataType = DataType.Blob, Length = 200000)                   ] public byte[]? MediumBlob;
+			[Column(DataType = DataType.Blob)                                    ] public byte[]? BlobDefault;
+			[Column(DataType = DataType.Blob, Length = int.MaxValue)             ] public byte[]? LongBlob;
+			[Column(DataType = DataType.Text, Length = 200)                      ] public string? TinyText;
+			[Column(DataType = DataType.Text, Length = 2000)                     ] public string? Text;
+			[Column(DataType = DataType.Text, Length = 200000)                   ] public string? MediumText;
+			[Column(DataType = DataType.Text, Length = int.MaxValue)             ] public string? LongText;
+			[Column(DataType = DataType.Text)                                    ] public string? TextDefault;
+			[Column(DataType = DataType.Date)                                    ] public DateTime Date;
+			[Column                                                              ] public DateTime DateTime;
+			[Column(Precision = 3)                                               ] public DateTime DateTime3;
 			// MySQL.Data provider has issues with timestamps
 			// TODO: look into it later
-			[Column(Configuration = ProviderName.MySqlConnector)               ] public DateTimeOffset TimeStamp;
-			[Column(Precision = 5, Configuration = ProviderName.MySqlConnector)] public DateTimeOffset TimeStamp5;
-			[Column                                                            ] public TimeSpan Time;
-			[NotColumn(Configuration = TestProvName.MySql55)                   ]
-			[Column(Precision = 2)                                             ] public TimeSpan Time2;
-			[Column                                                            ] public sbyte TinyInt;
-			[Column                                                            ] public byte UnsignedTinyInt;
-			[Column                                                            ] public short SmallInt;
-			[Column                                                            ] public ushort UnsignedSmallInt;
-			[Column                                                            ] public int Int;
-			[Column                                                            ] public uint UnsignedInt;
-			[Column                                                            ] public long BigInt;
-			[Column                                                            ] public ulong UnsignedBigInt;
-			[Column                                                            ] public decimal Decimal;
-			[Column(Precision = 15)                                            ] public decimal Decimal15_0;
-			[Column(Scale = 5)                                                 ] public decimal Decimal10_5;
-			[Column(Precision = 20, Scale = 2)                                 ] public decimal Decimal20_2;
-			[Column                                                            ] public float Float;
-			[Column(Precision = 10)                                            ] public float Float10;
-			[Column                                                            ] public double Double;
-			[Column(Precision = 30)                                            ] public double Float30;
-			[Column                                                            ] public bool Bool;
-			[Column(DataType = DataType.BitArray)                              ] public bool Bit1;
-			[Column(DataType = DataType.BitArray)                              ] public byte Bit8;
-			[Column(DataType = DataType.BitArray)                              ] public short Bit16;
-			[Column(DataType = DataType.BitArray)                              ] public int Bit32;
-			[Column(DataType = DataType.BitArray, Length = 10)                 ] public int Bit10;
-			[Column(DataType = DataType.BitArray)                              ] public long Bit64;
-			[NotColumn(Configuration = TestProvName.MySql55)                   ]
-			[Column(DataType = DataType.Json)                                  ] public string? Json;
+			[Column(Configuration = "MySqlConnector.5.7")                        ]
+			[Column(Configuration = "MySqlConnector.8.0")                        ]
+			[Column(Configuration = "MariaDB.11")                                ]
+			                                                                       public DateTimeOffset TimeStamp;
+			[Column(Precision = 5, Configuration = "MySqlConnector.5.7", CreateFormat = "{0}{1}{2}{3} DEFAULT '1970-01-01 00:00:01'")]
+			[Column(Precision = 5, Configuration = "MySqlConnector.8.0")         ]
+			[Column(Precision = 5, Configuration = "MariaDB.11")                 ]
+			                                                                       public DateTimeOffset TimeStamp5;
+			[Column                                                              ] public TimeSpan Time;
+			[Column(Precision = 2)                                               ] public TimeSpan Time2;
+			[Column                                                              ] public sbyte TinyInt;
+			[Column                                                              ] public byte UnsignedTinyInt;
+			[Column                                                              ] public short SmallInt;
+			[Column                                                              ] public ushort UnsignedSmallInt;
+			[Column                                                              ] public int Int;
+			[Column                                                              ] public uint UnsignedInt;
+			[Column                                                              ] public long BigInt;
+			[Column                                                              ] public ulong UnsignedBigInt;
+			[Column                                                              ] public decimal Decimal;
+			[Column(Precision = 15)                                              ] public decimal Decimal15_0;
+			[Column(Scale = 5)                                                   ] public decimal Decimal10_5;
+			[Column(Precision = 20, Scale = 2)                                   ] public decimal Decimal20_2;
+			[Column                                                              ] public float Float;
+			[Column(Precision = 10)                                              ] public float Float10;
+			[Column                                                              ] public double Double;
+			[Column(Precision = 30)                                              ] public double Float30;
+			[Column                                                              ] public bool Bool;
+			[Column(DataType = DataType.BitArray)                                ] public bool Bit1;
+			[Column(DataType = DataType.BitArray)                                ] public byte Bit8;
+			[Column(DataType = DataType.BitArray)                                ] public short Bit16;
+			[Column(DataType = DataType.BitArray)                                ] public int Bit32;
+			[Column(DataType = DataType.BitArray, Length = 10)                   ] public int Bit10;
+			[Column(DataType = DataType.BitArray)                                ] public long Bit64;
+			[Column(DataType = DataType.Json)                                    ] public string? Json;
 			// not mysql type, just mapping testing
-			[Column                                                            ] public Guid Guid;
+			[Column                                                              ] public Guid Guid;
 		}
 
 		[Test]
 		public void TestCreateTable([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
-			var isMySqlConnector = context == ProviderName.MySqlConnector;
+			var isMySqlConnector = context.IsAnyOf(TestProvName.AllMySqlConnector);
 
 			// TODO: Following types not mapped to DataType enum now and should be defined explicitly using DbType:
 			// - ENUM      : https://dev.mysql.com/doc/refman/8.0/en/enum.html
@@ -1353,81 +1594,77 @@ namespace Tests.DataProvider
 			// - floating point (M,D) specifiers
 			// - synonyms (except BOOLEAN)
 			// etc
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// enable configuration use in mapping attributes
-				if (context == TestProvName.MySql55)
-					db.AddMappingSchema(new MappingSchema(context));
+				db.AddMappingSchema(new MappingSchema(context));
 				using (var table = db.CreateLocalTable<CreateTable>())
 				{
 					var sql = db.LastQuery!;
 
-					Assert.True(sql.Contains("\t`VarChar255`       VARCHAR(255)          NULL"));
-					Assert.True(sql.Contains("\t`VarChar1`         VARCHAR(1)            NULL"));
-					Assert.True(sql.Contains("\t`VarChar112`       VARCHAR(112)          NULL"));
-					Assert.True(sql.Contains("\t`Char`             CHAR              NOT NULL"));
-					Assert.True(sql.Contains("\t`Char1`            CHAR                  NULL"));
-					Assert.True(sql.Contains("\t`Char255`          CHAR(255)             NULL"));
-					Assert.True(sql.Contains("\t`Char112`          CHAR(112)             NULL"));
-					Assert.True(sql.Contains("\t`VarBinary1`       VARBINARY(1)          NULL"));
-					Assert.True(sql.Contains("\t`VarBinary255`     VARBINARY(255)        NULL"));
-					Assert.True(sql.Contains("\t`VarBinary3`       VARBINARY(3)          NULL"));
-					Assert.True(sql.Contains("\t`Binary1`          BINARY                NULL"));
-					Assert.True(sql.Contains("\t`Binary255`        BINARY(255)           NULL"));
-					Assert.True(sql.Contains("\t`Binary3`          BINARY(3)             NULL"));
-					Assert.True(sql.Contains("\t`TinyBlob`         TINYBLOB              NULL"));
-					Assert.True(sql.Contains("\t`Blob`             BLOB                  NULL"));
-					Assert.True(sql.Contains("\t`MediumBlob`       MEDIUMBLOB            NULL"));
-					Assert.True(sql.Contains("\t`LongBlob`         LONGBLOB              NULL"));
-					Assert.True(sql.Contains("\t`BlobDefault`      BLOB                  NULL"));
-					Assert.True(sql.Contains("\t`TinyText`         TINYTEXT              NULL"));
-					Assert.True(sql.Contains("\t`Text`             TEXT                  NULL"));
-					Assert.True(sql.Contains("\t`MediumText`       MEDIUMTEXT            NULL"));
-					Assert.True(sql.Contains("\t`LongText`         LONGTEXT              NULL"));
-					Assert.True(sql.Contains("\t`TextDefault`      TEXT                  NULL"));
-					Assert.True(sql.Contains("\t`Date`             DATE              NOT NULL"));
-					Assert.True(sql.Contains("\t`DateTime`         DATETIME          NOT NULL"));
-					if (context != TestProvName.MySql55)
-					{
-						Assert.True(sql.Contains("\t`DateTime3`        DATETIME(3)       NOT NULL"));
-						Assert.True(sql.Contains("\t`Time2`            TIME(2)           NOT NULL"));
-						Assert.True(sql.Contains("\t`Json`             JSON                  NULL"));
-					}
+					Assert.That(sql, Does.Contain("\t`VarCharDefault`   VARCHAR(4000)         NULL"));
+					Assert.That(sql, Does.Contain("\t`VarChar1`         VARCHAR(1)            NULL"));
+					Assert.That(sql, Does.Contain("\t`VarChar112`       VARCHAR(112)          NULL"));
+					Assert.That(sql, Does.Contain("\t`Char`             CHAR              NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Char1`            CHAR                  NULL"));
+					Assert.That(sql, Does.Contain("\t`Char255`          CHAR(255)             NULL"));
+					Assert.That(sql, Does.Contain("\t`Char112`          CHAR(112)             NULL"));
+					Assert.That(sql, Does.Contain("\t`VarBinary1`       VARBINARY(1)          NULL"));
+					Assert.That(sql, Does.Contain("\t`VarBinary255`     VARBINARY(255)        NULL"));
+					Assert.That(sql, Does.Contain("\t`VarBinary3`       VARBINARY(3)          NULL"));
+					Assert.That(sql, Does.Contain("\t`Binary1`          BINARY                NULL"));
+					Assert.That(sql, Does.Contain("\t`Binary255`        BINARY(255)           NULL"));
+					Assert.That(sql, Does.Contain("\t`Binary3`          BINARY(3)             NULL"));
+					Assert.That(sql, Does.Contain("\t`TinyBlob`         TINYBLOB              NULL"));
+					Assert.That(sql, Does.Contain("\t`Blob`             BLOB                  NULL"));
+					Assert.That(sql, Does.Contain("\t`MediumBlob`       MEDIUMBLOB            NULL"));
+					Assert.That(sql, Does.Contain("\t`LongBlob`         LONGBLOB              NULL"));
+					Assert.That(sql, Does.Contain("\t`BlobDefault`      BLOB                  NULL"));
+					Assert.That(sql, Does.Contain("\t`TinyText`         TINYTEXT              NULL"));
+					Assert.That(sql, Does.Contain("\t`Text`             TEXT                  NULL"));
+					Assert.That(sql, Does.Contain("\t`MediumText`       MEDIUMTEXT            NULL"));
+					Assert.That(sql, Does.Contain("\t`LongText`         LONGTEXT              NULL"));
+					Assert.That(sql, Does.Contain("\t`TextDefault`      TEXT                  NULL"));
+					Assert.That(sql, Does.Contain("\t`Date`             DATE              NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`DateTime`         DATETIME          NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`DateTime3`        DATETIME(3)       NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Time2`            TIME(2)           NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Json`             JSON                  NULL"));
 					if (isMySqlConnector)
 					{
-						Assert.True(sql.Contains("\t`TimeStamp`        TIMESTAMP         NOT NULL"));
-						Assert.True(sql.Contains("\t`TimeStamp5`       TIMESTAMP(5)      NOT NULL"));
+						Assert.That(sql, Does.Contain("\t`TimeStamp`        TIMESTAMP         NOT NULL"));
+						Assert.That(sql, Does.Contain("\t`TimeStamp5`       TIMESTAMP(5)      NOT NULL"));
 					}
-					Assert.True(sql.Contains("\t`Time`             TIME              NOT NULL"));
-					Assert.True(sql.Contains("\t`TinyInt`          TINYINT           NOT NULL"));
-					Assert.True(sql.Contains("\t`UnsignedTinyInt`  TINYINT UNSIGNED  NOT NULL"));
-					Assert.True(sql.Contains("\t`SmallInt`         SMALLINT          NOT NULL"));
-					Assert.True(sql.Contains("\t`UnsignedSmallInt` SMALLINT UNSIGNED NOT NULL"));
-					Assert.True(sql.Contains("\t`Int`              INT               NOT NULL"));
-					Assert.True(sql.Contains("\t`UnsignedInt`      INT UNSIGNED      NOT NULL"));
-					Assert.True(sql.Contains("\t`BigInt`           BIGINT            NOT NULL"));
-					Assert.True(sql.Contains("\t`UnsignedBigInt`   BIGINT UNSIGNED   NOT NULL"));
-					Assert.True(sql.Contains("\t`Decimal`          DECIMAL           NOT NULL"));
-					Assert.True(sql.Contains("\t`Decimal15_0`      DECIMAL(15)       NOT NULL"));
-					Assert.True(sql.Contains("\t`Decimal10_5`      DECIMAL(10, 5)    NOT NULL"));
-					Assert.True(sql.Contains("\t`Decimal20_2`      DECIMAL(20, 2)    NOT NULL"));
-					Assert.True(sql.Contains("\t`Float`            FLOAT             NOT NULL"));
-					Assert.True(sql.Contains("\t`Float10`          FLOAT(10)         NOT NULL"));
-					Assert.True(sql.Contains("\t`Double`           DOUBLE            NOT NULL"));
-					Assert.True(sql.Contains("\t`Float30`          FLOAT(30)         NOT NULL"));
-					Assert.True(sql.Contains("\t`Bool`             BOOLEAN           NOT NULL"));
-					Assert.True(sql.Contains("\t`Bit1`             BIT               NOT NULL"));
-					Assert.True(sql.Contains("\t`Bit8`             BIT(8)            NOT NULL"));
-					Assert.True(sql.Contains("\t`Bit16`            BIT(16)           NOT NULL"));
-					Assert.True(sql.Contains("\t`Bit32`            BIT(32)           NOT NULL"));
-					Assert.True(sql.Contains("\t`Bit10`            BIT(10)           NOT NULL"));
-					Assert.True(sql.Contains("\t`Bit64`            BIT(64)           NOT NULL"));
-					Assert.True(sql.Contains("\t`Guid`             CHAR(36)          NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Time`             TIME              NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`TinyInt`          TINYINT           NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`UnsignedTinyInt`  TINYINT UNSIGNED  NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`SmallInt`         SMALLINT          NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`UnsignedSmallInt` SMALLINT UNSIGNED NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Int`              INT               NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`UnsignedInt`      INT UNSIGNED      NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`BigInt`           BIGINT            NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`UnsignedBigInt`   BIGINT UNSIGNED   NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Decimal`          DECIMAL           NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Decimal15_0`      DECIMAL(15)       NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Decimal10_5`      DECIMAL(10, 5)    NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Decimal20_2`      DECIMAL(20, 2)    NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Float`            FLOAT             NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Float10`          FLOAT             NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Double`           DOUBLE            NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Float30`          DOUBLE            NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Bool`             BOOLEAN           NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Bit1`             BIT               NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Bit8`             BIT(8)            NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Bit16`            BIT(16)           NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Bit32`            BIT(32)           NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Bit10`            BIT(10)           NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Bit64`            BIT(64)           NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Guid`             CHAR(36)          NOT NULL"));
 
 					var testRecord = new CreateTable()
 					{
 						VarChar1         = "ы",
-						VarChar255       = "ыsdf",
+						VarCharDefault   = "ыsdf",
 						VarChar112       = "ы123",
 						Char             = 'я',
 						Char1            = "!",
@@ -1479,75 +1716,82 @@ namespace Tests.DataProvider
 						Bit32            = 0xADFE,
 						Bit10            = 0x003F,
 						Bit64            = 0xDEADBEAF,
-						Json             = "{\"x\": 10}",
+						Json             = /*lang=json,strict*/ "{\"x\": 10}",
 						Guid             = TestData.Guid1
 					};
 
 					db.Insert(testRecord);
 					var readRecord = table.Single();
 
-					Assert.AreEqual(testRecord.VarChar1        , readRecord.VarChar1);
-					Assert.AreEqual(testRecord.VarChar255      , readRecord.VarChar255);
-					Assert.AreEqual(testRecord.VarChar112      , readRecord.VarChar112);
-					Assert.AreEqual(testRecord.Char            , readRecord.Char);
-					Assert.AreEqual(testRecord.Char1           , readRecord.Char1);
-					Assert.AreEqual(testRecord.Char255         , readRecord.Char255);
-					Assert.AreEqual(testRecord.Char112         , readRecord.Char112);
-					Assert.AreEqual(testRecord.VarBinary1      , readRecord.VarBinary1);
-					Assert.AreEqual(testRecord.VarBinary255    , readRecord.VarBinary255);
-					Assert.AreEqual(testRecord.VarBinary3      , readRecord.VarBinary3);
-					Assert.AreEqual(testRecord.Binary1         , readRecord.Binary1);
-					// we trim padding only from char fields
-					Assert.AreEqual(testRecord.Binary255.Concat(new byte[252]), readRecord.Binary255);
-					Assert.AreEqual(testRecord.Binary3.Concat(new byte[1]), readRecord.Binary3);
-					Assert.AreEqual(testRecord.TinyBlob        , readRecord.TinyBlob);
-					Assert.AreEqual(testRecord.Blob            , readRecord.Blob);
-					Assert.AreEqual(testRecord.MediumBlob      , readRecord.MediumBlob);
-					Assert.AreEqual(testRecord.BlobDefault     , readRecord.BlobDefault);
-					Assert.AreEqual(testRecord.LongBlob        , readRecord.LongBlob);
-					Assert.AreEqual(testRecord.TinyText        , readRecord.TinyText);
-					Assert.AreEqual(testRecord.Text            , readRecord.Text);
-					Assert.AreEqual(testRecord.MediumText      , readRecord.MediumText);
-					Assert.AreEqual(testRecord.LongText        , readRecord.LongText);
-					Assert.AreEqual(testRecord.TextDefault     , readRecord.TextDefault);
-					Assert.AreEqual(testRecord.Date            , readRecord.Date);
-					Assert.AreEqual(testRecord.DateTime        , readRecord.DateTime);
-					if (context != TestProvName.MySql55)
+					Assert.Multiple(() =>
 					{
-						Assert.AreEqual(testRecord.DateTime3   , readRecord.DateTime3);
-						Assert.AreEqual(testRecord.Time2       , readRecord.Time2);
-						Assert.AreEqual(testRecord.Json        , readRecord.Json);
-					}
+						Assert.That(readRecord.VarChar1, Is.EqualTo(testRecord.VarChar1));
+						Assert.That(readRecord.VarCharDefault, Is.EqualTo(testRecord.VarCharDefault));
+						Assert.That(readRecord.VarChar112, Is.EqualTo(testRecord.VarChar112));
+						Assert.That(readRecord.Char, Is.EqualTo(testRecord.Char));
+						Assert.That(readRecord.Char1, Is.EqualTo(testRecord.Char1));
+						Assert.That(readRecord.Char255, Is.EqualTo(testRecord.Char255));
+						Assert.That(readRecord.Char112, Is.EqualTo(testRecord.Char112));
+						Assert.That(readRecord.VarBinary1, Is.EqualTo(testRecord.VarBinary1));
+						Assert.That(readRecord.VarBinary255, Is.EqualTo(testRecord.VarBinary255));
+						Assert.That(readRecord.VarBinary3, Is.EqualTo(testRecord.VarBinary3));
+						Assert.That(readRecord.Binary1, Is.EqualTo(testRecord.Binary1));
+						// we trim padding only from char fields
+						Assert.That(readRecord.Binary255, Is.EqualTo(testRecord.Binary255.Concat(new byte[252])));
+						Assert.That(readRecord.Binary3, Is.EqualTo(testRecord.Binary3.Concat(new byte[1])));
+						Assert.That(readRecord.TinyBlob, Is.EqualTo(testRecord.TinyBlob));
+						Assert.That(readRecord.Blob, Is.EqualTo(testRecord.Blob));
+						Assert.That(readRecord.MediumBlob, Is.EqualTo(testRecord.MediumBlob));
+						Assert.That(readRecord.BlobDefault, Is.EqualTo(testRecord.BlobDefault));
+						Assert.That(readRecord.LongBlob, Is.EqualTo(testRecord.LongBlob));
+						Assert.That(readRecord.TinyText, Is.EqualTo(testRecord.TinyText));
+						Assert.That(readRecord.Text, Is.EqualTo(testRecord.Text));
+						Assert.That(readRecord.MediumText, Is.EqualTo(testRecord.MediumText));
+						Assert.That(readRecord.LongText, Is.EqualTo(testRecord.LongText));
+						Assert.That(readRecord.TextDefault, Is.EqualTo(testRecord.TextDefault));
+						Assert.That(readRecord.Date, Is.EqualTo(testRecord.Date));
+						Assert.That(readRecord.DateTime, Is.EqualTo(testRecord.DateTime));
+						Assert.That(readRecord.DateTime3, Is.EqualTo(testRecord.DateTime3));
+						Assert.That(readRecord.Time2, Is.EqualTo(testRecord.Time2));
+						Assert.That(readRecord.Json, Is.EqualTo(testRecord.Json));
+					});
 					if (isMySqlConnector)
 					{
-						Assert.AreEqual(testRecord.TimeStamp,  readRecord.TimeStamp);
-						Assert.AreEqual(testRecord.TimeStamp5, readRecord.TimeStamp5);
+						Assert.Multiple(() =>
+						{
+							Assert.That(readRecord.TimeStamp, Is.EqualTo(testRecord.TimeStamp));
+							Assert.That(readRecord.TimeStamp5, Is.EqualTo(testRecord.TimeStamp5));
+						});
 					}
-					Assert.AreEqual(testRecord.Time            , readRecord.Time);
-					Assert.AreEqual(testRecord.TinyInt         , readRecord.TinyInt);
-					Assert.AreEqual(testRecord.UnsignedTinyInt , readRecord.UnsignedTinyInt);
-					Assert.AreEqual(testRecord.SmallInt        , readRecord.SmallInt);
-					Assert.AreEqual(testRecord.UnsignedSmallInt, readRecord.UnsignedSmallInt);
-					Assert.AreEqual(testRecord.Int             , readRecord.Int);
-					Assert.AreEqual(testRecord.UnsignedInt     , readRecord.UnsignedInt);
-					Assert.AreEqual(testRecord.BigInt          , readRecord.BigInt);
-					Assert.AreEqual(testRecord.UnsignedBigInt  , readRecord.UnsignedBigInt);
-					Assert.AreEqual(testRecord.Decimal         , readRecord.Decimal);
-					Assert.AreEqual(testRecord.Decimal15_0     , readRecord.Decimal15_0);
-					Assert.AreEqual(testRecord.Decimal10_5     , readRecord.Decimal10_5);
-					Assert.AreEqual(testRecord.Decimal20_2     , readRecord.Decimal20_2);
-					Assert.AreEqual(testRecord.Float           , readRecord.Float);
-					Assert.AreEqual(testRecord.Float10         , readRecord.Float10);
-					Assert.AreEqual(testRecord.Double          , readRecord.Double);
-					Assert.AreEqual(testRecord.Float30         , readRecord.Float30);
-					Assert.AreEqual(testRecord.Bool            , readRecord.Bool);
-					Assert.AreEqual(testRecord.Bit1            , readRecord.Bit1);
-					Assert.AreEqual(testRecord.Bit8            , readRecord.Bit8);
-					Assert.AreEqual(testRecord.Bit16           , readRecord.Bit16);
-					Assert.AreEqual(testRecord.Bit32           , readRecord.Bit32);
-					Assert.AreEqual(testRecord.Bit10           , readRecord.Bit10);
-					Assert.AreEqual(testRecord.Bit64           , readRecord.Bit64);
-					Assert.AreEqual(testRecord.Guid            , readRecord.Guid);
+
+					Assert.Multiple(() =>
+					{
+						Assert.That(readRecord.Time, Is.EqualTo(testRecord.Time));
+						Assert.That(readRecord.TinyInt, Is.EqualTo(testRecord.TinyInt));
+						Assert.That(readRecord.UnsignedTinyInt, Is.EqualTo(testRecord.UnsignedTinyInt));
+						Assert.That(readRecord.SmallInt, Is.EqualTo(testRecord.SmallInt));
+						Assert.That(readRecord.UnsignedSmallInt, Is.EqualTo(testRecord.UnsignedSmallInt));
+						Assert.That(readRecord.Int, Is.EqualTo(testRecord.Int));
+						Assert.That(readRecord.UnsignedInt, Is.EqualTo(testRecord.UnsignedInt));
+						Assert.That(readRecord.BigInt, Is.EqualTo(testRecord.BigInt));
+						Assert.That(readRecord.UnsignedBigInt, Is.EqualTo(testRecord.UnsignedBigInt));
+						Assert.That(readRecord.Decimal, Is.EqualTo(testRecord.Decimal));
+						Assert.That(readRecord.Decimal15_0, Is.EqualTo(testRecord.Decimal15_0));
+						Assert.That(readRecord.Decimal10_5, Is.EqualTo(testRecord.Decimal10_5));
+						Assert.That(readRecord.Decimal20_2, Is.EqualTo(testRecord.Decimal20_2));
+						Assert.That(readRecord.Float, Is.EqualTo(testRecord.Float));
+						Assert.That(readRecord.Float10, Is.EqualTo(testRecord.Float10));
+						Assert.That(readRecord.Double, Is.EqualTo(testRecord.Double));
+						Assert.That(readRecord.Float30, Is.EqualTo(testRecord.Float30));
+						Assert.That(readRecord.Bool, Is.EqualTo(testRecord.Bool));
+						Assert.That(readRecord.Bit1, Is.EqualTo(testRecord.Bit1));
+						Assert.That(readRecord.Bit8, Is.EqualTo(testRecord.Bit8));
+						Assert.That(readRecord.Bit16, Is.EqualTo(testRecord.Bit16));
+						Assert.That(readRecord.Bit32, Is.EqualTo(testRecord.Bit32));
+						Assert.That(readRecord.Bit10, Is.EqualTo(testRecord.Bit10));
+						Assert.That(readRecord.Bit64, Is.EqualTo(testRecord.Bit64));
+						Assert.That(readRecord.Guid, Is.EqualTo(testRecord.Guid));
+					});
 				}
 			}
 		}
@@ -1555,98 +1799,93 @@ namespace Tests.DataProvider
 		[Table]
 		public class TestSchemaTypesTable
 		{
-			[Column                                                 ] public string? VarChar255;
-			[Column(Length = 1)                                     ] public string? VarChar1;
-			[Column(Length = 112)                                   ] public string? VarChar112;
-			[Column                                                 ] public char    Char;
-			[Column(DataType = DataType.Char)                       ] public string? Char255;
-			[Column(DataType = DataType.Char, Length = 1)           ] public string? Char1;
-			[Column(DataType = DataType.Char, Length = 112)         ] public string? Char112;
-			[Column(Length = 1)                                     ] public byte[]? VarBinary1;
-			[Column                                                 ] public byte[]? VarBinary255;
-			[Column(Length = 3)                                     ] public byte[]? VarBinary3;
-			[Column(DataType = DataType.Binary, Length = 1)         ] public byte[]? Binary1;
-			[Column(DataType = DataType.Binary)                     ] public byte[]? Binary255;
-			[Column(DataType = DataType.Binary, Length = 3)         ] public byte[]? Binary3;
-			[Column(DataType = DataType.Blob, Length = 200)         ] public byte[]? TinyBlob;
-			[Column(DataType = DataType.Blob, Length = 2000)        ] public byte[]? Blob;
-			[Column(DataType = DataType.Blob, Length = 200000)      ] public byte[]? MediumBlob;
-			[Column(DataType = DataType.Blob)                       ] public byte[]? BlobDefault;
-			[Column(DataType = DataType.Blob, Length = int.MaxValue)] public byte[]? LongBlob;
-			[Column(DataType = DataType.Text, Length = 200)         ] public string? TinyText;
-			[Column(DataType = DataType.Text, Length = 2000)        ] public string? Text;
-			[Column(DataType = DataType.Text, Length = 200000)      ] public string? MediumText;
-			[Column(DataType = DataType.Text, Length = int.MaxValue)] public string? LongText;
-			[Column(DataType = DataType.Text)                       ] public string? TextDefault;
-			[Column(DataType = DataType.Date)                       ] public DateTime Date;
-			[Column                                                 ] public DateTime DateTime;
-			[NotColumn(Configuration = TestProvName.MySql55)        ]
-			[Column(Precision = 3)                                  ] public DateTime DateTime3;
-			[Column                                                 ] public DateTimeOffset TimeStamp;
-			[NotColumn(Configuration = TestProvName.MySql55)]
-			[Column(Precision = 5)                                  ] public DateTimeOffset TimeStamp5;
-			[Column                                                 ] public TimeSpan Time;
-			[NotColumn(Configuration = TestProvName.MySql55)        ]
-			[Column(Precision = 2)                                  ] public TimeSpan Time2;
-			[Column                                                 ] public sbyte TinyInt;
-			[Column                                                 ] public byte UnsignedTinyInt;
-			[Column                                                 ] public short SmallInt;
-			[Column                                                 ] public ushort UnsignedSmallInt;
-			[Column                                                 ] public int Int;
-			[Column                                                 ] public uint UnsignedInt;
-			[Column                                                 ] public long BigInt;
-			[Column                                                 ] public ulong UnsignedBigInt;
-			[Column                                                 ] public decimal Decimal;
-			[Column(Precision = 15)                                 ] public decimal Decimal15_0;
-			[Column(Scale = 5)                                      ] public decimal Decimal10_5;
-			[Column(Precision = 20, Scale = 2)                      ] public decimal Decimal20_2;
-			[Column                                                 ] public float Float;
-			[Column(Precision = 10)                                 ] public float Float10;
-			[Column                                                 ] public double Double;
-			[Column(Precision = 30)                                 ] public double Float30;
-			[Column                                                 ] public bool Bool;
-			[Column(DataType = DataType.BitArray)                   ] public bool Bit1;
-			[Column(DataType = DataType.BitArray)                   ] public byte Bit8;
-			[Column(DataType = DataType.BitArray)                   ] public short Bit16;
-			[Column(DataType = DataType.BitArray)                   ] public int Bit32;
-			[Column(DataType = DataType.BitArray, Length = 10)      ] public int Bit10;
-			[Column(DataType = DataType.BitArray)                   ] public long Bit64;
-			[NotColumn(Configuration = TestProvName.MySql55)        ]
-			[Column(DataType = DataType.Json)                       ] public string? Json;
+			[Column                                                  ] public string? VarCharDefault;
+			[Column(Length = 1)                                      ] public string? VarChar1;
+			[Column(Length = 112)                                    ] public string? VarChar112;
+			[Column                                                  ] public char    Char;
+			[Column(DataType = DataType.Char)                        ] public string? Char255;
+			[Column(DataType = DataType.Char, Length = 1)            ] public string? Char1;
+			[Column(DataType = DataType.Char, Length = 112)          ] public string? Char112;
+			[Column(Length = 1)                                      ] public byte[]? VarBinary1;
+			[Column                                                  ] public byte[]? VarBinary255;
+			[Column(Length = 3)                                      ] public byte[]? VarBinary3;
+			[Column(DataType = DataType.Binary, Length = 1)          ] public byte[]? Binary1;
+			[Column(DataType = DataType.Binary)                      ] public byte[]? Binary255;
+			[Column(DataType = DataType.Binary, Length = 3)          ] public byte[]? Binary3;
+			[Column(DataType = DataType.Blob, Length = 200)          ] public byte[]? TinyBlob;
+			[Column(DataType = DataType.Blob, Length = 2000)         ] public byte[]? Blob;
+			[Column(DataType = DataType.Blob, Length = 200000)       ] public byte[]? MediumBlob;
+			[Column(DataType = DataType.Blob)                        ] public byte[]? BlobDefault;
+			[Column(DataType = DataType.Blob, Length = int.MaxValue) ] public byte[]? LongBlob;
+			[Column(DataType = DataType.Text, Length = 200)          ] public string? TinyText;
+			[Column(DataType = DataType.Text, Length = 2000)         ] public string? Text;
+			[Column(DataType = DataType.Text, Length = 200000)       ] public string? MediumText;
+			[Column(DataType = DataType.Text, Length = int.MaxValue) ] public string? LongText;
+			[Column(DataType = DataType.Text)                        ] public string? TextDefault;
+			[Column(DataType = DataType.Date)                        ] public DateTime Date;
+			[Column                                                  ] public DateTime DateTime;
+			[Column(Precision = 3)                                   ] public DateTime DateTime3;
+			[Column                                                  ] public DateTimeOffset TimeStamp;
+			[Column(Precision = 5, Configuration = ProviderName.MySql57, CreateFormat = "{0}{1}{2}{3} DEFAULT '1970-01-01 00:00:01'")]
+			[Column(Precision = 5)                                   ] public DateTimeOffset TimeStamp5;
+			[Column                                                  ] public TimeSpan Time;
+			[Column(Precision = 2)                                   ] public TimeSpan Time2;
+			[Column                                                  ] public sbyte TinyInt;
+			[Column                                                  ] public byte UnsignedTinyInt;
+			[Column                                                  ] public short SmallInt;
+			[Column                                                  ] public ushort UnsignedSmallInt;
+			[Column                                                  ] public int Int;
+			[Column                                                  ] public uint UnsignedInt;
+			[Column                                                  ] public long BigInt;
+			[Column                                                  ] public ulong UnsignedBigInt;
+			[Column                                                  ] public decimal Decimal;
+			[Column(Precision = 15)                                  ] public decimal Decimal15_0;
+			[Column(Scale = 5)                                       ] public decimal Decimal10_5;
+			[Column(Precision = 20, Scale = 2)                       ] public decimal Decimal20_2;
+			[Column                                                  ] public float Float;
+			[Column(Precision = 10)                                  ] public float Float10;
+			[Column                                                  ] public double Double;
+			[Column(Precision = 30)                                  ] public double Float30;
+			[Column                                                  ] public bool Bool;
+			[Column(DataType = DataType.BitArray)                    ] public bool Bit1;
+			[Column(DataType = DataType.BitArray)                    ] public byte Bit8;
+			[Column(DataType = DataType.BitArray)                    ] public short Bit16;
+			[Column(DataType = DataType.BitArray)                    ] public int Bit32;
+			[Column(DataType = DataType.BitArray, Length = 10)       ] public int Bit10;
+			[Column(DataType = DataType.BitArray)                    ] public long Bit64;
+			[Column(DataType = DataType.Json)                        ] public string? Json;
 			// not mysql type, just mapping testing
-			[Column                                                 ] public Guid Guid;
-
-			[Column(DbType = "ENUM('one', 'two')")                  ] public string? Enum;
-			[Column(DbType = "SET('one', 'two')")                   ] public string? Set;
-			[Column(DbType = "YEAR")                                ] public int Year;
-			[Column(DbType = "MEDIUMINT")                           ] public int MediumInt;
-			[Column(DbType = "MEDIUMINT UNSIGNED")                  ] public uint UnsignedMediumInt;
-			[Column(DbType = "GEOMETRY")                            ] public object? Geometry;
-			[Column(DbType = "POINT")                               ] public object? Point;
-			[Column(DbType = "LINESTRING")                          ] public object? LineString;
-			[Column(DbType = "POLYGON")                             ] public object? Polygon;
-			[Column(DbType = "MULTIPOINT")                          ] public object? MultiPoint;
-			[Column(DbType = "MULTILINESTRING")                     ] public object? MultiLineString;
-			[Column(DbType = "MULTIPOLYGON")                        ] public object? MultiPolygon;
-			[Column(DbType = "GEOMETRYCOLLECTION")                  ] public object? GeometryCollection;
+			[Column                                                  ] public Guid Guid;
+			[Column(DbType = "ENUM('one', 'two')")                   ] public string? Enum;
+			[Column(DbType = "SET('one', 'two')")                    ] public string? Set;
+			[Column(DbType = "YEAR")                                 ] public int Year;
+			[Column(DbType = "MEDIUMINT")                            ] public int MediumInt;
+			[Column(DbType = "MEDIUMINT UNSIGNED")                   ] public uint UnsignedMediumInt;
+			[Column(DbType = "GEOMETRY")                             ] public object? Geometry;
+			[Column(DbType = "POINT")                                ] public object? Point;
+			[Column(DbType = "LINESTRING")                           ] public object? LineString;
+			[Column(DbType = "POLYGON")                              ] public object? Polygon;
+			[Column(DbType = "MULTIPOINT")                           ] public object? MultiPoint;
+			[Column(DbType = "MULTILINESTRING")                      ] public object? MultiLineString;
+			[Column(DbType = "MULTIPOLYGON")                         ] public object? MultiPolygon;
+			[Column(DbType = "GEOMETRYCOLLECTION")                   ] public object? GeometryCollection;
 		}
 
 		[Test]
 		public void TestTypesSchema([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// enable configuration use in mapping attributes
-				if (context == TestProvName.MySql55)
-					db.AddMappingSchema(new MappingSchema(context));
+				db.AddMappingSchema(new MappingSchema(context));
 				using (var table = db.CreateLocalTable<TestSchemaTypesTable>())
 				{
 					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetProcedures = false });
 
-					var tableSchema = schema.Tables.Where(t => t.TableName!.ToLower() == "testschematypestable").SingleOrDefault()!;
-					Assert.IsNotNull(tableSchema);
+					var tableSchema = schema.Tables.Where(t => t.TableName!.ToLowerInvariant() == "testschematypestable").SingleOrDefault()!;
+					Assert.That(tableSchema, Is.Not.Null);
 
-					assertColumn("VarChar255"        , "string"  , DataType.VarChar);
+					assertColumn("VarCharDefault"    , "string"  , DataType.VarChar);
 					assertColumn("VarChar1"          , "char?"   , DataType.VarChar);
 					assertColumn("VarChar112"        , "string"  , DataType.VarChar);
 					assertColumn("Char"              , "char"    , DataType.Char);
@@ -1711,24 +1950,24 @@ namespace Tests.DataProvider
 					assertColumn("MultiPolygon"      , "byte[]"  , DataType.Undefined);
 					assertColumn("GeometryCollection", "byte[]"  , DataType.Undefined);
 
-					if (context != TestProvName.MySql55)
-					{
-						assertColumn("DateTime3" , "DateTime", DataType.DateTime);
-						assertColumn("Time2"     , "TimeSpan", DataType.Time);
-						assertColumn("TimeStamp5", "DateTime", DataType.DateTime);
+					assertColumn("DateTime3" , "DateTime", DataType.DateTime);
+					assertColumn("Time2"     , "TimeSpan", DataType.Time);
+					assertColumn("TimeStamp5", "DateTime", DataType.DateTime);
 
-						if (context != TestProvName.MariaDB)
-							assertColumn("Json", "string", DataType.Json);
-						else
-							assertColumn("Json", "string", DataType.Text);
-					}
+					if (context.IsAnyOf(TestProvName.AllMySqlServer))
+						assertColumn("Json", "string", DataType.Json);
+					else
+						assertColumn("Json", "string", DataType.Text);
 
 					void assertColumn(string name, string type, DataType dataType)
 					{
 						var column = tableSchema.Columns.Where(c => c.ColumnName == name).SingleOrDefault()!;
-						Assert.IsNotNull(column);
-						Assert.AreEqual(type, column.MemberType);
-						Assert.AreEqual(dataType, column.DataType);
+						Assert.That(column, Is.Not.Null);
+						Assert.Multiple(() =>
+						{
+							Assert.That(column.MemberType, Is.EqualTo(type));
+							Assert.That(column.DataType, Is.EqualTo(dataType));
+						});
 					}
 				}
 			}
@@ -1737,15 +1976,15 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestProcedureTypesParameters([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
 
 				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Parameters").SingleOrDefault()!;
 
-				Assert.IsNotNull(proc);
+				Assert.That(proc, Is.Not.Null);
 
-				assertParameter("VarChar255"        , "string"   , DataType.VarChar);
+				assertParameter("VarCharDefault"    , "string"   , DataType.VarChar);
 				assertParameter("VarChar1"          , "char?"    , DataType.VarChar);
 				assertParameter("Char255"           , "string"   , DataType.Char);
 				assertParameter("Char1"             , "char?"    , DataType.Char);
@@ -1795,22 +2034,22 @@ namespace Tests.DataProvider
 				assertParameter("MultiPolygon"      , "byte[]"   , DataType.Undefined);
 				assertParameter("GeometryCollection", "byte[]"   , DataType.Undefined);
 
-				if (context != TestProvName.MySql55)
-				{
-					if (context != TestProvName.MariaDB)
-						assertParameter("Json", "string", DataType.Json);
-					else
-						assertParameter("Json", "string", DataType.Text);
-				}
+				if (context.IsAnyOf(TestProvName.AllMySqlServer))
+					assertParameter("Json", "string", DataType.Json);
+				else
+					assertParameter("Json", "string", DataType.Text);
 
 				void assertParameter(string name, string type, DataType dataType)
 				{
 					var parameter = proc.Parameters.Where(c => c.ParameterName == name).SingleOrDefault()!;
 
-					Assert.IsNotNull(parameter);
+					Assert.That(parameter, Is.Not.Null);
 
-					Assert.AreEqual(type, parameter.ParameterType);
-					Assert.AreEqual(dataType, parameter.DataType);
+					Assert.Multiple(() =>
+					{
+						Assert.That(parameter.ParameterType, Is.EqualTo(type));
+						Assert.That(parameter.DataType, Is.EqualTo(dataType));
+					});
 				}
 			}
 		}
@@ -1818,16 +2057,16 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestProcedureTypesResults([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
 
-				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Results").SingleOrDefault()!;
+				var proc = schema.Procedures.SingleOrDefault(t => t.ProcedureName == "Issue2313Results")!;
 
-				Assert.IsNotNull(proc);
-				Assert.IsNotNull(proc.ResultTable);
+				Assert.That(proc, Is.Not.Null);
+				Assert.That(proc.ResultTable, Is.Not.Null);
 
-				assertColumn("VarChar255"        , "string"   , DataType.VarChar);
+				assertColumn("VarCharDefault"    , "string"   , DataType.VarChar);
 				assertColumn("VarChar1"          , "char?"    , DataType.VarChar);
 				assertColumn("Char255"           , "string"   , DataType.Char);
 				assertColumn("Char1"             , "char?"    , DataType.Char);
@@ -1868,7 +2107,7 @@ namespace Tests.DataProvider
 				assertColumn("Year"              , "int?"     , DataType.Int32);
 
 				// mysql.data cannot handle json procedure parameter
-				if (context == ProviderName.MySqlConnector)
+				if (context.IsAnyOf(TestProvName.AllMySqlConnector))
 				{
 					assertColumn("Point"               , "byte[]", DataType.Undefined);
 					assertColumn("LineString"          , "byte[]", DataType.Undefined);
@@ -1877,9 +2116,9 @@ namespace Tests.DataProvider
 					assertColumn("MultiLineString"     , "byte[]", DataType.Undefined);
 					assertColumn("MultiPolygon"        , "byte[]", DataType.Undefined);
 					assertColumn("Geometry"            , "byte[]", DataType.Undefined);
-					assertColumn("GeometryCollection", "byte[]", DataType.Undefined);
+					assertColumn("GeometryCollection"  , "byte[]", DataType.Undefined);
 
-					assertColumn("Json"    , "string", DataType.Json);
+					assertColumn("Json"    , "string", !context.IsAnyOf(TestProvName.AllMySqlServer) ? DataType.Text : DataType.Json);
 					assertColumn("Enum"    , "string", DataType.VarChar);
 					assertColumn("Set"     , "string", DataType.VarChar);
 				}
@@ -1893,43 +2132,171 @@ namespace Tests.DataProvider
 				{
 					// m'kaaaay...
 					name       = "`" + name + "`";
-					var column = proc.ResultTable!.Columns.Where(c => c.ColumnName == name).SingleOrDefault()!;
+					var column = proc.ResultTable!.Columns.SingleOrDefault(c => c.ColumnName == name)!;
 
-					Assert.IsNotNull(column);
+					Assert.That(column, Is.Not.Null);
 
-					Assert.AreEqual(type, column.MemberType);
-					Assert.AreEqual(dataType, column.DataType);
+					Assert.Multiple(() =>
+					{
+						Assert.That(column.MemberType, Is.EqualTo(type));
+						Assert.That(column.DataType, Is.EqualTo(dataType));
+					});
 				}
 			}
+		}
+
+		[Test]
+		public void TestModule([IncludeDataSources(false, TestProvName.AllMariaDB)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.Execute("SET SQL_MODE='ORACLE'");
+
+				try
+				{
+					if (context.IsAnyOf(TestProvName.AllMySqlConnector))
+					{
+						Assert.Multiple(() =>
+						{
+							Assert.That(db.QueryProc<int>("TEST_PROCEDURE", new { i = 1 }).First(), Is.EqualTo(4));
+							Assert.That(db.QueryProc<int>("TEST_PACKAGE1.TEST_PROCEDURE", new { i = 1 }).First(), Is.EqualTo(2));
+							Assert.That(db.QueryProc<int>("TEST_PACKAGE2.TEST_PROCEDURE", new { i = 1 }).First(), Is.EqualTo(3));
+						});
+					}
+					else
+					{
+						Assert.Multiple(() =>
+						{
+							// MySql.Data cannot call package proedures using CommandType.StoredProcedure
+							// and we cannot generate "CALL procedure" statement for it as it will break
+							// SchemaOnly procedure calls with output parameters
+							Assert.That(db.Query<int>("CALL TEST_PROCEDURE(@i)", new { i = 1 }).First(), Is.EqualTo(4));
+							Assert.That(db.Query<int>("CALL TEST_PACKAGE1.TEST_PROCEDURE(@i)", new { i = 1 }).First(), Is.EqualTo(2));
+							Assert.That(db.Query<int>("CALL TEST_PACKAGE2.TEST_PROCEDURE(@i)", new { i = 1 }).First(), Is.EqualTo(3));
+						});
+					}
+
+					Assert.Multiple(() =>
+					{
+						Assert.That(db.Person.Select(p => MariaDBModuleFunctions.TestFunction(1)).First(), Is.EqualTo(4));
+						Assert.That(db.Person.Select(p => MariaDBModuleFunctions.TestFunctionP1(1)).First(), Is.EqualTo(2));
+						Assert.That(db.Person.Select(p => MariaDBModuleFunctions.TestFunctionP2(1)).First(), Is.EqualTo(3));
+					});
+				}
+				finally
+				{
+					db.Execute("set session sql_mode=default");
+				}
+			}
+		}
+
+		sealed class Issue3611Table
+		{
+			[Column(Length = 2000, DataType = DataType.VarChar)]   public string? VarChar   { get; set; }
+			[Column(Length = 2000, DataType = DataType.VarBinary)] public byte[]? VarBinary { get; set; }
+		}
+		[Test]
+		public void Issue3611([IncludeDataSources(false, TestProvName.AllMySql)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.CreateLocalTable<Issue3611Table>())
+			{
+				// VARCHAR/VARBINARY max length depends on many factors:
+				// 1. MySQL version: 255 prior to 5.0.3 and 65535 for 5.0.3+
+				// 2. column encoding: for utf8 it will be 21844
+				// 3. other columns. total row size is limited to 64K
+				Assert.That(db.LastQuery!, Does.Contain("VARCHAR(2000)"));
+				Assert.That(db.LastQuery!, Does.Contain("VARBINARY(2000)"));
+			}
+		}
+	}
+
+	static class MariaDBModuleFunctions
+	{
+		[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
+		public static int TestFunction(int param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+
+		[Sql.Function("TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly = true)]
+		public static int TestFunctionP1(int param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+
+		[Sql.Function("TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly = true)]
+		public static int TestFunctionP2(int param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]
+		public static LinqToDB.ITable<Record> TestTableFunction(IDataContext db, int param1)
+		{
+			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+		}
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE1")]
+		public static LinqToDB.ITable<Record> TestTableFunctionP1(IDataContext db, int param1)
+		{
+			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+		}
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE2")]
+		public static LinqToDB.ITable<Record> TestTableFunctionP2(IDataContext db, int param1)
+		{
+			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+		}
+
+		public sealed class Record
+		{
+			public int O { get; set; }
 		}
 	}
 
 	internal static class MySqlTestFunctions
 	{
-		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string? aInParam, out sbyte? aOutParam)
 		{
-			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
-			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
-			var ret = dataConnection.ExecuteProc($"{dbName}.`TestOutputParametersWithoutTableProcedure`",
-				new DataParameter("aInParam", aInParam, DataType.VarChar),
-				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
+			var parameters = new []
+			{
+				new DataParameter("aInParam",  aInParam,  DataType.VarChar)
+				{
+					Size = 256
+				},
+				new DataParameter("aOutParam", null, DataType.SByte)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
 
-			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
+			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`", parameters);
+
+			aOutParam = Converter.ChangeTypeTo<sbyte?>(parameters[1].Value);
 
 			return ret;
 		}
 
 		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
 		{
-			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
-			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
-			var ret = dataConnection.QueryProc<Person>($"{dbName}.`TestProcedure`",
+			var parameters = new []
+			{
 				new DataParameter("param3", param3, DataType.Int32),
-				new DataParameter("param2", param2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("param1", null, DataType.Int32) { Direction = ParameterDirection.Output }).ToList();
+				new DataParameter("param2", param2, DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("param1", null, DataType.Int32)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
 
-			param2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param2"]).Value);
-			param1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param1"]).Value);
+			var ret = dataConnection.QueryProc<Person>("`TestProcedure`", parameters).ToList();
+
+			param2 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			param1 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 
 			return ret;
 		}

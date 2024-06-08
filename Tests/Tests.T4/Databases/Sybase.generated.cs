@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -21,10 +21,11 @@ using LinqToDB.Mapping;
 
 namespace SybaseDataContext
 {
-	public partial class TestDataDB : LinqToDB.Data.DataConnection
+	public partial class TestDataCoreDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>     CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
 		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
@@ -41,21 +42,28 @@ namespace SybaseDataContext
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestMergeIdentity> TestMergeIdentities { get { return this.GetTable<TestMergeIdentity>(); } }
 
-		public TestDataDB()
+		public TestDataCoreDB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestDataDB(string configuration)
+		public TestDataCoreDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestDataDB(LinqToDbConnectionOptions options)
+		public TestDataCoreDB(DataOptions options)
 			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestDataCoreDB(DataOptions<TestDataCoreDB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 			InitMappingSchema();
@@ -70,30 +78,30 @@ namespace SybaseDataContext
 	{
 		[Column(),                                                              Identity   ] public int       ID                    { get; set; } // int
 		[Column("bigintDataType"),                                                 Nullable] public long?     BigintDataType        { get; set; } // bigint
-		[Column("uBigintDataType"),                                                Nullable] public object?   UBigintDataType       { get; set; } // ubigint
+		[Column("uBigintDataType"),                                                Nullable] public ulong?    UBigintDataType       { get; set; } // ubigint
 		[Column("numericDataType"),                                                Nullable] public decimal?  NumericDataType       { get; set; } // numeric(18, 1)
 		[Column("bitDataType"),                                                 NotNull    ] public bool      BitDataType           { get; set; } // bit
 		[Column("smallintDataType"),                                               Nullable] public short?    SmallintDataType      { get; set; } // smallint
-		[Column("uSmallintDataType"),                                              Nullable] public object?   USmallintDataType     { get; set; } // usmallint
+		[Column("uSmallintDataType"),                                              Nullable] public ushort?   USmallintDataType     { get; set; } // usmallint
 		[Column("decimalDataType"),                                                Nullable] public decimal?  DecimalDataType       { get; set; } // decimal(18, 1)
 		[Column("smallmoneyDataType"),                                             Nullable] public decimal?  SmallmoneyDataType    { get; set; } // smallmoney
 		[Column("intDataType"),                                                    Nullable] public int?      IntDataType           { get; set; } // int
-		[Column("uIntDataType"),                                                   Nullable] public object?   UIntDataType          { get; set; } // uint
+		[Column("uIntDataType"),                                                   Nullable] public uint?     UIntDataType          { get; set; } // uint
 		[Column("tinyintDataType"),                                                Nullable] public sbyte?    TinyintDataType       { get; set; } // tinyint
 		[Column("moneyDataType"),                                                  Nullable] public decimal?  MoneyDataType         { get; set; } // money
 		[Column("floatDataType"),                                                  Nullable] public double?   FloatDataType         { get; set; } // float
 		[Column("realDataType"),                                                   Nullable] public float?    RealDataType          { get; set; } // real
 		[Column("datetimeDataType"),                                               Nullable] public DateTime? DatetimeDataType      { get; set; } // datetime
 		[Column("smalldatetimeDataType"),                                          Nullable] public DateTime? SmalldatetimeDataType { get; set; } // smalldatetime
-		[Column("dateDataType"),                                                   Nullable] public object?   DateDataType          { get; set; } // date
-		[Column("timeDataType"),                                                   Nullable] public object?   TimeDataType          { get; set; } // time
+		[Column("dateDataType"),                                                   Nullable] public DateTime? DateDataType          { get; set; } // date
+		[Column("timeDataType"),                                                   Nullable] public TimeSpan? TimeDataType          { get; set; } // time
 		[Column("charDataType"),                                                   Nullable] public char?     CharDataType          { get; set; } // char(1)
 		[Column("char20DataType"),                                                 Nullable] public string?   Char20DataType        { get; set; } // char(20)
 		[Column("varcharDataType"),                                                Nullable] public string?   VarcharDataType       { get; set; } // varchar(20)
 		[Column("textDataType"),                                                   Nullable] public string?   TextDataType          { get; set; } // text
-		[Column("ncharDataType"),                                                  Nullable] public string?   NcharDataType         { get; set; } // nchar(60)
-		[Column("nvarcharDataType"),                                               Nullable] public string?   NvarcharDataType      { get; set; } // nvarchar(60)
-		[Column("ntextDataType"),                                                  Nullable] public object?   NtextDataType         { get; set; } // unitext
+		[Column("ncharDataType"),                                                  Nullable] public string?   NcharDataType         { get; set; } // nchar(20)
+		[Column("nvarcharDataType"),                                               Nullable] public string?   NvarcharDataType      { get; set; } // nvarchar(20)
+		[Column("ntextDataType"),                                                  Nullable] public string?   NtextDataType         { get; set; } // unitext
 		[Column("binaryDataType"),                                                 Nullable] public byte[]?   BinaryDataType        { get; set; } // binary(1)
 		[Column("varbinaryDataType"),                                              Nullable] public byte[]?   VarbinaryDataType     { get; set; } // varbinary(1)
 		[Column("imageDataType"),                                                  Nullable] public byte[]?   ImageDataType         { get; set; } // image
@@ -107,18 +115,26 @@ namespace SybaseDataContext
 		[Column, Nullable] public int? ChildID  { get; set; } // int
 	}
 
+	[Table(Schema="dbo", Name="CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column, NotNull] public int    Id              { get; set; } // int
+		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
+		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
+	}
+
 	[Table(Schema="dbo", Name="Doctor")]
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
-		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(150)
+		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person
+		/// FK_Doctor_Person (dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -138,7 +154,7 @@ namespace SybaseDataContext
 		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // int
 		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // int
 		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(150)
+		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="InheritanceParent")]
@@ -146,14 +162,14 @@ namespace SybaseDataContext
 	{
 		[PrimaryKey, NotNull    ] public int     InheritanceParentId { get; set; } // int
 		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(150)
+		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="KeepIdentityTest")]
 	public partial class KeepIdentityTest
 	{
-		[Identity          ] public decimal ID    { get; set; } // numeric(12, 0)
-		[Column,   Nullable] public int?    Value { get; set; } // int
+		[Identity          ] public int  ID    { get; set; } // int
+		[Column,   Nullable] public int? Value { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="LinqDataTypes")]
@@ -169,7 +185,7 @@ namespace SybaseDataContext
 		[Column,    Nullable] public short?    SmallIntValue  { get; set; } // smallint
 		[Column,    Nullable] public int?      IntValue       { get; set; } // int
 		[Column,    Nullable] public long?     BigIntValue    { get; set; } // bigint
-		[Column,    Nullable] public string?   StringValue    { get; set; } // nvarchar(150)
+		[Column,    Nullable] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="Parent")]
@@ -183,14 +199,14 @@ namespace SybaseDataContext
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
-		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(768)
+		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person
+		/// FK_Patient_Person (dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -200,23 +216,23 @@ namespace SybaseDataContext
 	public partial class Person
 	{
 		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // int
-		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // nvarchar(150)
-		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // nvarchar(150)
-		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(150)
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // nvarchar(50)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // nvarchar(50)
+		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(50)
 		[Column,     NotNull    ] public char    Gender     { get; set; } // char(1)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference
+		/// FK_Doctor_Person_BackReference (dbo.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference
+		/// FK_Patient_Person_BackReference (dbo.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -256,20 +272,20 @@ namespace SybaseDataContext
 		[Column("hashkey"),   NotNull    ] public int     Hashkey  { get; set; } // int
 		[Column("id"),        NotNull    ] public int     Id       { get; set; } // int
 		[Column("sequence"),  NotNull    ] public short   Sequence { get; set; } // smallint
-		[Column("exec_min"),     Nullable] public object? ExecMin  { get; set; } // ubigint
-		[Column("exec_max"),     Nullable] public object? ExecMax  { get; set; } // ubigint
-		[Column("exec_avg"),     Nullable] public object? ExecAvg  { get; set; } // ubigint
-		[Column("elap_min"),     Nullable] public object? ElapMin  { get; set; } // ubigint
-		[Column("elap_max"),     Nullable] public object? ElapMax  { get; set; } // ubigint
-		[Column("elap_avg"),     Nullable] public object? ElapAvg  { get; set; } // ubigint
-		[Column("lio_min"),      Nullable] public object? LioMin   { get; set; } // ubigint
-		[Column("lio_max"),      Nullable] public object? LioMax   { get; set; } // ubigint
-		[Column("lio_avg"),      Nullable] public object? LioAvg   { get; set; } // ubigint
-		[Column("pio_min"),      Nullable] public object? PioMin   { get; set; } // ubigint
-		[Column("pio_max"),      Nullable] public object? PioMax   { get; set; } // ubigint
-		[Column("pio_avg"),      Nullable] public object? PioAvg   { get; set; } // ubigint
-		[Column("cnt"),          Nullable] public object? Cnt      { get; set; } // ubigint
-		[Column("abort_cnt"),    Nullable] public object? AbortCnt { get; set; } // ubigint
+		[Column("exec_min"),     Nullable] public ulong?  ExecMin  { get; set; } // ubigint
+		[Column("exec_max"),     Nullable] public ulong?  ExecMax  { get; set; } // ubigint
+		[Column("exec_avg"),     Nullable] public ulong?  ExecAvg  { get; set; } // ubigint
+		[Column("elap_min"),     Nullable] public ulong?  ElapMin  { get; set; } // ubigint
+		[Column("elap_max"),     Nullable] public ulong?  ElapMax  { get; set; } // ubigint
+		[Column("elap_avg"),     Nullable] public ulong?  ElapAvg  { get; set; } // ubigint
+		[Column("lio_min"),      Nullable] public ulong?  LioMin   { get; set; } // ubigint
+		[Column("lio_max"),      Nullable] public ulong?  LioMax   { get; set; } // ubigint
+		[Column("lio_avg"),      Nullable] public ulong?  LioAvg   { get; set; } // ubigint
+		[Column("pio_min"),      Nullable] public ulong?  PioMin   { get; set; } // ubigint
+		[Column("pio_max"),      Nullable] public ulong?  PioMax   { get; set; } // ubigint
+		[Column("pio_avg"),      Nullable] public ulong?  PioAvg   { get; set; } // ubigint
+		[Column("cnt"),          Nullable] public ulong?  Cnt      { get; set; } // ubigint
+		[Column("abort_cnt"),    Nullable] public ulong?  AbortCnt { get; set; } // ubigint
 		[Column("qtext"),        Nullable] public string? Qtext    { get; set; } // varchar(510)
 	}
 
@@ -290,17 +306,17 @@ namespace SybaseDataContext
 		[Column,        Nullable] public int?      Field5          { get; set; } // int
 		[Column,        Nullable] public long?     FieldInt64      { get; set; } // bigint
 		[Column,        Nullable] public string?   FieldString     { get; set; } // varchar(20)
-		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(60)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(20)
 		[Column,        Nullable] public char?     FieldChar       { get; set; } // char(1)
-		[Column,        Nullable] public string?   FieldNChar      { get; set; } // nchar(3)
+		[Column,        Nullable] public char?     FieldNChar      { get; set; } // nchar(1)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
 		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public string?   FieldGuid       { get; set; } // char(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // decimal(24, 10)
-		[Column,        Nullable] public object?   FieldDate       { get; set; } // date
-		[Column,        Nullable] public object?   FieldTime       { get; set; } // time
+		[Column,        Nullable] public DateTime? FieldDate       { get; set; } // date
+		[Column,        Nullable] public TimeSpan? FieldTime       { get; set; } // time
 		[Column,        Nullable] public string?   FieldEnumString { get; set; } // varchar(20)
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // int
 	}
@@ -316,17 +332,17 @@ namespace SybaseDataContext
 		[Column,        Nullable] public int?      Field5          { get; set; } // int
 		[Column,        Nullable] public long?     FieldInt64      { get; set; } // bigint
 		[Column,        Nullable] public string?   FieldString     { get; set; } // varchar(20)
-		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(60)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(20)
 		[Column,        Nullable] public char?     FieldChar       { get; set; } // char(1)
-		[Column,        Nullable] public string?   FieldNChar      { get; set; } // nchar(3)
+		[Column,        Nullable] public char?     FieldNChar      { get; set; } // nchar(1)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
 		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public string?   FieldGuid       { get; set; } // char(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // decimal(24, 10)
-		[Column,        Nullable] public object?   FieldDate       { get; set; } // date
-		[Column,        Nullable] public object?   FieldTime       { get; set; } // time
+		[Column,        Nullable] public DateTime? FieldDate       { get; set; } // date
+		[Column,        Nullable] public TimeSpan? FieldTime       { get; set; } // time
 		[Column,        Nullable] public string?   FieldEnumString { get; set; } // varchar(20)
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // int
 	}
@@ -338,16 +354,24 @@ namespace SybaseDataContext
 		[Column,     Nullable] public int? Field { get; set; } // int
 	}
 
-	public static partial class TestDataDBStoredProcedures
+	public static partial class TestDataCoreDBStoredProcedures
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this TestDataDB dataConnection, out int? RETURN_VALUE)
+		public static int AddIssue792Record(this TestDataCoreDB dataConnection, out int? returnValue)
 		{
-			var ret = dataConnection.ExecuteProc("[dbo].[AddIssue792Record]",
-				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.ReturnValue, Size = 10 });
+			var parameters = new []
+			{
+				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.ReturnValue,
+					Size      = 10
+				}
+			};
 
-			RETURN_VALUE = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["RETURN_VALUE"]).Value);
+			var ret = dataConnection.ExecuteProc("[dbo].[AddIssue792Record]", parameters);
+
+			returnValue = Converter.ChangeTypeTo<int?>(parameters[0].Value);
 
 			return ret;
 		}
@@ -356,12 +380,20 @@ namespace SybaseDataContext
 
 		#region PersonSelectAll
 
-		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataDB dataConnection, out int? RETURN_VALUE)
+		public static IEnumerable<PersonSelectAllResult> PersonSelectAll(this TestDataCoreDB dataConnection, out int? returnValue)
 		{
-			var ret = dataConnection.QueryProc<PersonSelectAllResult>("[dbo].[Person_SelectAll]",
-				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.ReturnValue, Size = 10 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.ReturnValue,
+					Size      = 10
+				}
+			};
 
-			RETURN_VALUE = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["RETURN_VALUE"]).Value);
+			var ret = dataConnection.QueryProc<PersonSelectAllResult>("[dbo].[Person_SelectAll]", parameters).ToList();
+
+			returnValue = Converter.ChangeTypeTo<int?>(parameters[0].Value);
 
 			return ret;
 		}
@@ -435,5 +467,3 @@ namespace SybaseDataContext
 		}
 	}
 }
-
-#pragma warning restore 1591

@@ -6,15 +6,15 @@ namespace Tests
 {
 	public class TxtSettings : ILinqToDBSettings
 	{
-		class DataProviderSettings : IDataProviderSettings
+		sealed class DataProviderSettings : IDataProviderSettings
 		{
 			public string                  TypeName   { get; set; } = null!;
 			public string?                 Name       { get; set; }
 			public bool                    Default    { get; set; }
-			public IEnumerable<NamedValue> Attributes => Array<NamedValue>.Empty;
+			public IEnumerable<NamedValue> Attributes => [];
 		}
 
-		class ConnectionStringSettings : IConnectionStringSettings
+		sealed class ConnectionStringSettings : IConnectionStringSettings
 		{
 			public string  ConnectionString { get; set; } = null!;
 			public string  Name             { get; set; } = null!;

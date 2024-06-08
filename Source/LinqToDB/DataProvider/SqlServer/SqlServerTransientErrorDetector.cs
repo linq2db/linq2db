@@ -11,19 +11,18 @@ using System.Diagnostics.CodeAnalysis;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	/// <summary>
-	///     Detects the exceptions caused by SQL Server transient failures.
+	/// Detects the exceptions caused by SQL Server transient failures.
 	/// </summary>
-	public class SqlServerTransientExceptionDetector
+	public static class SqlServerTransientExceptionDetector
 	{
-		private static readonly ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>> _exceptionTypes
-			= new ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>>();
+		private static readonly ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>> _exceptionTypes = new ();
 
 		internal static void RegisterExceptionType(Type type, Func<Exception, IEnumerable<int>> errrorNumbersGetter)
 		{
 			_exceptionTypes.TryAdd(type, errrorNumbersGetter);
 		}
 
-		internal static bool IsHandled(Exception ex, [NotNullWhen(true)] out IEnumerable<int>? errorNumbers)
+		public static bool IsHandled(Exception ex, [NotNullWhen(true)] out IEnumerable<int>? errorNumbers)
 		{
 			if (_exceptionTypes.TryGetValue(ex.GetType(), out var getter))
 			{

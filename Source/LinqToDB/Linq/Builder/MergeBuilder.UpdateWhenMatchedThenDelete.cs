@@ -1,21 +1,24 @@
-﻿using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
+	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 	internal partial class MergeBuilder
 	{
-		internal class UpdateWhenMatchedThenDelete : MethodCallBuilder
+		internal sealed class UpdateWhenMatchedThenDelete : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
-				return methodCall.Method.IsGenericMethod
-					&& LinqExtensions.UpdateWhenMatchedAndThenDeleteMethodInfo == methodCall.Method.GetGenericMethodDefinition();
+				return methodCall.IsSameGenericMethod(UpdateWhenMatchedAndThenDeleteMethodInfo);
 			}
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				// UpdateWhenMatchedAndThenDelete(merge, searchCondition, setter, deleteCondition)
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
@@ -28,54 +31,63 @@ namespace LinqToDB.Linq.Builder
 				var setter          = methodCall.Arguments[2];
 				var deletePredicate = methodCall.Arguments[3];
 
-				if (!(setter is ConstantExpression constSetter) || constSetter.Value != null)
+				if (!setter.IsNullValue())
 				{
-					var setterExpression = (LambdaExpression)setter.Unwrap();
-					UpdateBuilder.BuildSetterWithContext(
-						builder,
-						buildInfo,
-						setterExpression,
-						mergeContext.TargetContext,
-						operation.Items,
-						mergeContext.TargetContext, mergeContext.SourceContext);
+					var setterLambda = setter.UnwrapLambda();
+					var setterExpression = mergeContext.SourceContext.PrepareTargetSource(setterLambda);
+
+					mergeContext.SourceContext.TargetContextRef.Alias = setterLambda.Parameters[0].Name;
+					mergeContext.SourceContext.SourceContextRef.Alias = setterLambda.Parameters[1].Name;
+
+					var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+					UpdateBuilder.ParseSetter(builder,
+						mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type), setterExpression,
+						setterExpressions);
+					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, createColumns : false);
 				}
 				else
 				{
 					// build setters like QueryRunner.Update
 					var sqlTable   = (SqlTable)statement.Target.Source;
-					var param      = Expression.Parameter(sqlTable.ObjectType, "s");
-					var keys       = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
+					var sourceProp = EnsureType(mergeContext.SourceContext.SourcePropAccess, sqlTable.ObjectType);
+					var targetProp = EnsureType(mergeContext.SourceContext.TargetPropAccess, sqlTable.ObjectType);
+					var keys       = (sqlTable.GetKeys(false) ?? Enumerable.Empty<ISqlExpression>()).Cast<SqlField>().ToList();
 
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
-						var expression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
-						var expr       = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
+						var sourceExpr = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, sourceProp);
+						var targetExpr = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetProp);
 
-						operation.Items.Add(new SqlSetExpression(field, expr));
+						var tgtExpr    = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, targetExpr);
+						var srcExpr    = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, sourceExpr);;
+
+						operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 					}
 				}
 
-				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
+				if (!predicate.IsNullValue())
 				{
-					var predicateCondition = (LambdaExpression)predicate.Unwrap();
+					var predicateCondition = predicate.UnwrapLambda();
+					var predicateConditionCorrected = mergeContext.SourceContext.PrepareTargetSource(predicateCondition);
 
-					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, predicateCondition);
+					operation.Where = new SqlSearchCondition();
+
+					builder.BuildSearchCondition(mergeContext.SourceContext, predicateConditionCorrected,
+						ProjectFlags.SQL, operation.Where);
 				}
 
-				if (!(deletePredicate is ConstantExpression constDeletePredicate) || constDeletePredicate.Value != null)
+				if (!deletePredicate.IsNullValue())
 				{
-					var deleteCondition = (LambdaExpression)deletePredicate.Unwrap();
-	
-					operation.WhereDelete = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, deleteCondition);;
+					var deleteCondition = deletePredicate.UnwrapLambda();
+					var deleteConditionCorrected = mergeContext.SourceContext.PrepareTargetSource(deleteCondition);
+
+					operation.WhereDelete = new SqlSearchCondition();
+
+					builder.BuildSearchCondition(mergeContext.SourceContext, deleteConditionCorrected,
+						ProjectFlags.SQL, operation.WhereDelete);
 				}
 
-				return mergeContext;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
+				return BuildSequenceResult.FromContext(mergeContext);
 			}
 		}
 	}

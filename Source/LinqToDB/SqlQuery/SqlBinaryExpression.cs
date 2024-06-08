@@ -1,24 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
+
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	[Serializable, DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SqlBinaryExpression : ISqlExpression
+	public class SqlBinaryExpression : SqlExpressionBase
 	{
-		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence)
+		public SqlBinaryExpression(DbDataType dbDataType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = SqlQuery.Precedence.Unknown)
 		{
 			_expr1     = expr1     ?? throw new ArgumentNullException(nameof(expr1));
 			Operation  = operation ?? throw new ArgumentNullException(nameof(operation));
 			_expr2     = expr2     ?? throw new ArgumentNullException(nameof(expr2));
-			SystemType = systemType;
+			Type       = dbDataType;
 			Precedence = precedence;
 		}
 
-		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2)
-			: this(systemType, expr1, operation, expr2, SqlQuery.Precedence.Unknown)
+		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = SqlQuery.Precedence.Unknown)
+			: this(new DbDataType(systemType), expr1, operation, expr2, precedence)
 		{
 		}
 
@@ -48,44 +46,12 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public Type           SystemType { get; }
-		public int            Precedence { get; }
+		public override QueryElementType ElementType => QueryElementType.SqlBinaryExpression;
 
-		#region Overrides
+		public DbDataType Type { get; }
 
-		public string SqlText => ToString()!;
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
-
-#endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
-		{
-			Expr1 = Expr1.Walk(options, func)!;
-			Expr2 = Expr2.Walk(options, func)!;
-
-			return func(this);
-		}
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return Equals(other, SqlExpression.DefaultComparer);
-		}
-
-		#endregion
+		public override Type SystemType => Type.SystemType;
+		public override int  Precedence { get; }
 
 		int?                   _hashCode;
 
@@ -108,9 +74,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull => Expr1.CanBeNull || Expr2.CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability) => Expr1.CanBeNullable(nullability) || Expr2.CanBeNullable(nullability);
 
-		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;
@@ -126,44 +92,30 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlBinaryExpression(
-					SystemType,
-					(ISqlExpression)Expr1.Clone(objectTree, doClone),
-					Operation,
-					(ISqlExpression)Expr2.Clone(objectTree, doClone),
-					Precedence));
-			}
-
-			return clone;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.SqlBinaryExpression;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			Expr1
-				.ToString(sb, dic)
+			writer
+				//.DebugAppendUniqueId(this)
+				.AppendElement(Expr1)
 				.Append(' ')
 				.Append(Operation)
-				.Append(' ');
+				.Append(' ')
+				.AppendElement(Expr2);
 
-			return Expr2.ToString(sb, dic);
+			return writer;
 		}
 
 		#endregion
+
+		public void Deconstruct(out Type systemType, out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
+		{
+			systemType = SystemType;
+			expr1      = Expr1;
+			operation  = Operation;
+			expr2      = Expr2;
+		}
 
 		public void Deconstruct(out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
 		{

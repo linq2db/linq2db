@@ -22,7 +22,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestInsertDynamic([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestInsertDynamic([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -41,13 +41,16 @@ namespace Tests.UserTests
 
 				var record = t.Single();
 
-				Assert.AreEqual(4, record.SomeValue1);
-				Assert.AreEqual(4, record.SomeValue2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.SomeValue1, Is.EqualTo(4));
+					Assert.That(record.SomeValue2, Is.EqualTo(4));
+				});
 			}
 		}
 
 		[Test]
-		public void TestInsertObject([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestInsertObject([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -66,13 +69,16 @@ namespace Tests.UserTests
 
 				var record = t.Single();
 
-				Assert.AreEqual(4, record.SomeValue1);
-				Assert.AreEqual(4, record.SomeValue2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.SomeValue1, Is.EqualTo(4));
+					Assert.That(record.SomeValue2, Is.EqualTo(4));
+				});
 			}
 		}
 
 		[Test]
-		public void TestUpdateObject([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestUpdateObject([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -94,13 +100,16 @@ namespace Tests.UserTests
 
 				record = t.Single();
 
-				Assert.AreEqual(16, record.SomeValue1);
-				Assert.AreEqual(16, record.SomeValue2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.SomeValue1, Is.EqualTo(16));
+					Assert.That(record.SomeValue2, Is.EqualTo(16));
+				});
 			}
 		}
 
 		[Test]
-		public void TestUpdateSet([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestUpdateSet([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -122,8 +131,11 @@ namespace Tests.UserTests
 
 				var record = t.Single();
 
-				Assert.AreEqual(16, record.SomeValue1);
-				Assert.AreEqual(8, record.SomeValue2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.SomeValue1, Is.EqualTo(16));
+					Assert.That(record.SomeValue2, Is.EqualTo(8));
+				});
 
 				var param = 4;
 				t.Set(r => r.SomeValue2, () => param)
@@ -131,8 +143,11 @@ namespace Tests.UserTests
 
 				record = t.Single();
 
-				Assert.AreEqual(16, record.SomeValue1);
-				Assert.AreEqual(16, record.SomeValue2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.SomeValue1, Is.EqualTo(16));
+					Assert.That(record.SomeValue2, Is.EqualTo(16));
+				});
 			}
 		}
 	}

@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Reflection;
+using System.Linq.Expressions;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using Extensions;
-	using LinqToDB.Common;
+	using Expressions;
+	using Linq.Builder;
 	using SqlQuery;
 
 	partial class Sql
@@ -58,12 +58,36 @@ namespace LinqToDB
 				set => Expression = value;
 			}
 
-			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
+			public override Expression GetExpression<TContext>(
+				TContext              context,
+				IDataContext          dataContext,
+				IExpressionEvaluator  evaluator,
+				SelectQuery           query,
+				Expression            expression,
+				ConvertFunc<TContext> converter)
 			{
-				return new SqlExpression(member.GetMemberType(), Name ?? member.Name, SqlQuery.Precedence.Primary)
+				var name = Name;
+
+				if (name == null)
 				{
-					CanBeNull = GetCanBeNull(Array<ISqlExpression>.Empty)
-				};
+					if (expression is MethodCallExpression mc)
+						name = mc.Method.Name;
+					else if (expression is MemberExpression me)
+						name = me.Member.Name;
+				}
+
+				if (string.IsNullOrEmpty(name))
+					throw new LinqToDBException($"Cannot retrieve property name for expression '{expression}'.");
+
+				var sqlExpr = new SqlExpression(expression.Type, name!, SqlQuery.Precedence.Primary, SqlFlags.IsPure,
+					ToParametersNullabilityType(IsNullable), _canBeNull);
+
+				return ExpressionBuilder.CreatePlaceholder(query, sqlExpr, expression);
+			}
+
+			public override string GetObjectID()
+			{
+				return $"{base.GetObjectID()}.{Name}.";
 			}
 		}
 	}

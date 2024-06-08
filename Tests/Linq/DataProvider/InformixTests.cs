@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Linq;
+using System.Data.Linq;
+using System.Diagnostics;
+using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Informix;
+using LinqToDB.Mapping;
 
-#if NET472
+#if NETFRAMEWORK
 using IBM.Data.Informix;
 #endif
 using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Data.Linq;
-	using System.Diagnostics;
-	using System.Diagnostics.CodeAnalysis;
-	using System.Threading.Tasks;
-	using LinqToDB.DataProvider.Informix;
-	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]
@@ -33,47 +33,56 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				// TimeSpan cannot be passed as parameter if it is not IfxTimeSpan
 				// for Linq queries we handle it by converting parameters to literals, but Execute uses parameters
 				var isIDSProvider = ((InformixDataProvider)conn.DataProvider).Adapter.IsIDSProvider;
 
-				Assert.That(TestType<long?>       (conn, "bigintDataType",   DataType.Int64),     Is.EqualTo(1000000L));
-				Assert.That(TestType<long?>       (conn, "int8DataType",     DataType.Int64),     Is.EqualTo(1000001L));
-				Assert.That(TestType<int?>        (conn, "intDataType",      DataType.Int32),     Is.EqualTo(7777777));
-				Assert.That(TestType<short?>      (conn, "smallintDataType", DataType.Int16),     Is.EqualTo(100));
-				Assert.That(TestType<decimal?>    (conn, "decimalDataType",  DataType.Decimal),   Is.EqualTo(9999999m));
-				Assert.That(TestType<decimal?>    (conn, "moneyDataType",    DataType.Money),     Is.EqualTo(8888888m));
-				Assert.That(TestType<float?>      (conn, "realDataType",     DataType.Single),    Is.EqualTo(20.31f));
-				Assert.That(TestType<double?>     (conn, "floatDataType",    DataType.Double),    Is.EqualTo(16.2d));
+				Assert.Multiple(() =>
+				{
+					Assert.That(TestType<long?>(conn, "bigintDataType", DataType.Int64), Is.EqualTo(1000000L));
+					Assert.That(TestType<long?>(conn, "int8DataType", DataType.Int64), Is.EqualTo(1000001L));
+					Assert.That(TestType<int?>(conn, "intDataType", DataType.Int32), Is.EqualTo(7777777));
+					Assert.That(TestType<short?>(conn, "smallintDataType", DataType.Int16), Is.EqualTo(100));
+					Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal), Is.EqualTo(9999999m));
+					Assert.That(TestType<decimal?>(conn, "moneyDataType", DataType.Money), Is.EqualTo(8888888m));
+					Assert.That(TestType<float?>(conn, "realDataType", DataType.Single), Is.EqualTo(20.31f));
+					Assert.That(TestType<double?>(conn, "floatDataType", DataType.Double), Is.EqualTo(16.2d));
 
-				Assert.That(TestType<bool?>       (conn, "boolDataType",     DataType.Boolean),   Is.EqualTo(true));
+					Assert.That(TestType<bool?>(conn, "boolDataType", DataType.Boolean), Is.EqualTo(true));
 
-				Assert.That(TestType<string>      (conn, "charDataType",     DataType.Char),      Is.EqualTo("1"));
-				Assert.That(TestType<string>      (conn, "varcharDataType",  DataType.VarChar),   Is.EqualTo("234"));
-				Assert.That(TestType<string>      (conn, "ncharDataType",    DataType.NChar),     Is.EqualTo("55645"));
-				Assert.That(TestType<string>      (conn, "nvarcharDataType", DataType.NVarChar),  Is.EqualTo("6687"));
-				Assert.That(TestType<string>      (conn, "lvarcharDataType", DataType.NVarChar),  Is.EqualTo("AAAAA"));
+					Assert.That(TestType<string>(conn, "charDataType", DataType.Char), Is.EqualTo("1"));
+					Assert.That(TestType<string>(conn, "varcharDataType", DataType.VarChar), Is.EqualTo("234"));
+					Assert.That(TestType<string>(conn, "ncharDataType", DataType.NChar), Is.EqualTo("55645"));
+					Assert.That(TestType<string>(conn, "nvarcharDataType", DataType.NVarChar), Is.EqualTo("6687"));
+					Assert.That(TestType<string>(conn, "lvarcharDataType", DataType.NVarChar), Is.EqualTo("AAAAA"));
 
-				Assert.That(TestType<DateTime?>   (conn, "dateDataType",     DataType.Date),      Is.EqualTo(new DateTime(2012, 12, 12)));
-				Assert.That(TestType<DateTime?>   (conn, "datetimeDataType", DataType.DateTime2), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+					Assert.That(TestType<DateTime?>(conn, "dateDataType", DataType.Date), Is.EqualTo(new DateTime(2012, 12, 12)));
+					Assert.That(TestType<DateTime?>(conn, "datetimeDataType", DataType.DateTime2), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				});
 				if (!isIDSProvider)
 					Assert.That(TestType<TimeSpan?>   (conn, "intervalDataType", DataType.Time),      Is.EqualTo(new TimeSpan(12, 12, 12)));
 
-				Assert.That(TestType<string>      (conn, "textDataType",     DataType.Text,      skipPass:true), Is.EqualTo("BBBBB"));
-				Assert.That(TestType<string>      (conn, "textDataType",     DataType.NText,     skipPass:true), Is.EqualTo("BBBBB"));
-				Assert.That(TestType<byte[]>      (conn, "byteDataType",     DataType.Binary,    skipPass:true), Is.EqualTo(new byte[] { 1, 2 }));
-				Assert.That(TestType<byte[]>      (conn, "byteDataType",     DataType.VarBinary, skipPass:true), Is.EqualTo(new byte[] { 1, 2 }));
+				Assert.Multiple(() =>
+				{
+					Assert.That(TestType<string>(conn, "textDataType", DataType.Text, skipPass: true), Is.EqualTo("BBBBB"));
+					Assert.That(TestType<string>(conn, "textDataType", DataType.NText, skipPass: true), Is.EqualTo("BBBBB"));
+					Assert.That(TestType<byte[]>(conn, "byteDataType", DataType.Binary, skipPass: true), Is.EqualTo(new byte[] { 1, 2 }));
+					Assert.That(TestType<byte[]>(conn, "byteDataType", DataType.VarBinary, skipPass: true), Is.EqualTo(new byte[] { 1, 2 }));
+				});
 
-#if NET472
+#if NETFRAMEWORK
 				if (context == ProviderName.Informix)
 				{
 					Assert.That(TestType<IfxDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new IfxDateTime(new DateTime(2012, 12, 12, 12, 12, 12))));
 					if (!isIDSProvider)
 					{
-						Assert.That(TestType<IfxDecimal?> (conn, "decimalDataType" , DataType.Decimal), Is.EqualTo(new IfxDecimal(9999999m)));
-						Assert.That(TestType<IfxTimeSpan?>(conn, "intervalDataType", DataType.Time)   , Is.EqualTo(new IfxTimeSpan(new TimeSpan(12, 12, 12))));
+						Assert.Multiple(() =>
+						{
+							Assert.That(TestType<IfxDecimal?>(conn, "decimalDataType", DataType.Decimal), Is.EqualTo(new IfxDecimal(9999999m)));
+							Assert.That(TestType<IfxTimeSpan?>(conn, "intervalDataType", DataType.Time), Is.EqualTo(new IfxTimeSpan(new TimeSpan(12, 12, 12))));
+						});
 					}
 				}
 #endif
@@ -85,7 +94,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -116,7 +125,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -205,7 +214,7 @@ namespace Tests.DataProvider
 		};
 
 		[Table("LinqDataTypes")]
-		class DataTypes
+		sealed class DataTypes
 		{
 			[Column] public int       ID;
 			[Column] public decimal?  MoneyValue;
@@ -223,7 +232,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypesMultipleRows([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -260,7 +269,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyLinqTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -297,7 +306,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypesProviderSpecific([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -334,7 +343,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyLinqTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -370,7 +379,7 @@ namespace Tests.DataProvider
 
 		void BulkCopyAllTypes(string context, BulkCopyType bulkCopyType)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -394,7 +403,7 @@ namespace Tests.DataProvider
 
 					var list = db.GetTable<AllType>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
 
-					Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
+					Assert.That(list, Has.Count.EqualTo(_allTypeses.Length));
 
 					for (var i = 0; i < list.Count; i++)
 						CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
@@ -408,7 +417,7 @@ namespace Tests.DataProvider
 
 		async Task BulkCopyAllTypesAsync(string context, BulkCopyType bulkCopyType)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.CommandTimeout = 60;
 
@@ -432,7 +441,7 @@ namespace Tests.DataProvider
 
 					var list = await db.GetTable<AllType>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToListAsync();
 
-					Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
+					Assert.That(list, Has.Count.EqualTo(_allTypeses.Length));
 
 					for (var i = 0; i < list.Count; i++)
 						CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
@@ -444,22 +453,20 @@ namespace Tests.DataProvider
 			}
 		}
 
-		void CompareObject<T>(MappingSchema mappingSchema, [DisallowNull] T actual, [DisallowNull] T test)
+		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test)
+			where T: notnull
 		{
 			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
 
 			foreach (var column in ed.Columns)
 			{
-				var actualValue = column.GetValue(actual);
-				var testValue   = column.GetValue(test);
+				var actualValue = column.GetProviderValue(actual);
+				var testValue   = column.GetProviderValue(test);
 
 				Assert.That(actualValue, Is.EqualTo(testValue),
 					actualValue is DateTimeOffset
-						? "Column  : {0} {1:yyyy-MM-dd HH:mm:ss.fffffff zzz} {2:yyyy-MM-dd HH:mm:ss.fffffff zzz}"
-						: "Column  : {0}",
-					column.MemberName,
-					actualValue,
-					testValue);
+						? $"Column  : {column.MemberName} {actualValue:yyyy-MM-dd HH:mm:ss.fffffff zzz} {testValue:yyyy-MM-dd HH:mm:ss.fffffff zzz}"
+						: $"Column  : {column.MemberName}");
 			}
 		}
 
@@ -494,15 +501,16 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateAllTypes([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
-
-				ms.GetFluentMappingBuilder()
+				new FluentMappingBuilder(ms)
 					.Entity<AllType>()
-						.HasTableName("AllTypeCreateTest");
+						.HasTableName("AllTypeCreateTest")
+					.Build();
+
+				db.AddMappingSchema(ms);
 
 				try
 				{

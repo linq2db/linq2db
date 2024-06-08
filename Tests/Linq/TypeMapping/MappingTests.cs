@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common;
@@ -18,14 +19,18 @@ namespace Tests.TypeMapping
 		public delegate string      ReturningDelegate           (string input);
 		public delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
 
-		public class SampleClass
+		public interface ISampleClass
+		{
+		}
+
+		public class SampleClass : ISampleClass
 		{
 			public int     Id       { get; set; }
 			public int     Value    { get; set; }
 			public string? StrValue { get; set; }
 
-			public OtherClass GetOther       (int idx) => new OtherClass { OtherStrProp = "OtherStrValue" + idx        };
-			public OtherClass GetOtherAnother(int idx) => new OtherClass { OtherStrProp = "OtherAnotherStrValue" + idx };
+			public OtherClass GetOther       (int idx) => new () { OtherStrProp = "OtherStrValue" + idx        };
+			public OtherClass GetOtherAnother(int idx) => new () { OtherStrProp = "OtherAnotherStrValue" + idx };
 
 			public void SomeAction() => ++Value;
 
@@ -50,13 +55,19 @@ namespace Tests.TypeMapping
 
 				if (withHandlers)
 				{
-					Assert.AreEqual("event1", strResult);
-					Assert.AreEqual(this, thisResult);
+					Assert.Multiple(() =>
+					{
+						Assert.That(strResult, Is.EqualTo("event1"));
+						Assert.That(thisResult, Is.EqualTo(this));
+					});
 				}
 				else
 				{
-					Assert.IsNull(strResult);
-					Assert.IsNull(thisResult);
+					Assert.Multiple(() =>
+					{
+						Assert.That(strResult, Is.Null);
+						Assert.That(thisResult, Is.Null);
+					});
 				}
 			}
 
@@ -69,6 +80,8 @@ namespace Tests.TypeMapping
 				Id    = id;
 				Value = value;
 			}
+
+			public Task<SampleClass> GetSelfAsync(CancellationToken cancellationToken) => Task.FromResult(this);
 
 			public RegularEnum1 GetRegularEnum1(int raw) => (RegularEnum1)raw;
 			public RegularEnum2 GetRegularEnum2(int raw) => (RegularEnum2)raw;
@@ -131,7 +144,7 @@ namespace Tests.TypeMapping
 			Bits24 = 10
 		}
 
-		internal class SqlError
+		internal sealed class SqlError
 		{
 			public SqlError()
 			{
@@ -139,9 +152,9 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class SqlErrorCollection : IEnumerable
+		internal sealed class SqlErrorCollection : IEnumerable
 		{
-			private List<object> _errors = new List<object>()
+			private List<object> _errors = new ()
 			{
 				new SqlError(),
 				new SqlError()
@@ -161,15 +174,20 @@ namespace Tests.TypeMapping
 		[Wrapper] delegate string      ReturningDelegate           (string input);
 		[Wrapper] delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
 
-		class StringToIntMapper : ICustomMapper
+		sealed class StringToIntMapper : ICustomMapper
 		{
-			public Expression Map(Expression expression)
+			bool ICustomMapper.CanMap(Expression expression)
+			{
+				return expression.Type == typeof(string);
+			}
+
+			Expression ICustomMapper.Map(Expression expression)
 			{
 				return Expression.Property(expression, "Length");
 			}
 		}
 
-		class SampleClass : TypeWrapper
+		sealed class SampleClass : TypeWrapper
 		{
 			private static object[] Wrappers { get; }
 				= new object[]
@@ -254,6 +272,8 @@ namespace Tests.TypeMapping
 			[return: CustomMapper(typeof(StringToIntMapper))]
 			public int ReturnTypeMapper(string value) => ((Func<SampleClass, string, int>)CompiledWrappers[19])(this, value);
 
+			public Task<SampleClass> GetSelfAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+
 			public RegularEnum1 RegularEnum1Property
 			{
 				get => ((Func<SampleClass, RegularEnum1  >)CompiledWrappers[8])(this);
@@ -315,7 +335,7 @@ namespace Tests.TypeMapping
 			internal static string GetOtherStr(this SampleClass sc, int idx) => throw new NotImplementedException();
 		}
 
-		class OtherClass : TypeWrapper
+		sealed class OtherClass : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -331,7 +351,7 @@ namespace Tests.TypeMapping
 			}
 		}
 
-		class CollectionSample : TypeWrapper
+		sealed class CollectionSample : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -352,7 +372,7 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class SqlError : TypeWrapper
+		internal sealed class SqlError : TypeWrapper
 		{
 			public SqlError(object instance) : base(instance, null)
 			{
@@ -360,7 +380,7 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class SqlErrorCollection : TypeWrapper
+		internal sealed class SqlErrorCollection : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -449,7 +469,6 @@ namespace Tests.TypeMapping
 			[Test]
 			public void WrappingTests()
 			{
-
 				var concrete = new Dynamic.SampleClass{ Id = 1, Value = 33 };
 
 				var typeMapper = CreateTypeMapper();
@@ -465,10 +484,13 @@ namespace Tests.TypeMapping
 				var cl3 = (Func<Dynamic.SampleClass, int, Dynamic.OtherClass>)l3.CompileExpression();
 				var cl4 = (Func<Dynamic.SampleClass, int, string>)l4.CompileExpression();
 
-				Assert.That(cl1(concrete), Is.EqualTo(33));
-				Assert.That(cl2(concrete), Is.EqualTo(1));
-				Assert.That(cl3(concrete, 11).OtherStrProp, Is.EqualTo("OtherStrValue11"));
-				Assert.That(cl4(concrete, 22), Is.EqualTo("OtherStrValue22"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(cl1(concrete), Is.EqualTo(33));
+					Assert.That(cl2(concrete), Is.EqualTo(1));
+					Assert.That(cl3(concrete, 11).OtherStrProp, Is.EqualTo("OtherStrValue11"));
+					Assert.That(cl4(concrete, 22), Is.EqualTo("OtherStrValue22"));
+				});
 
 				var dynamicInstance = (object)concrete;
 
@@ -489,8 +511,11 @@ namespace Tests.TypeMapping
 				var newLambda     = Expression.Lambda<Func<Dynamic.SampleClass>>(newExpression);
 				var instance      = newLambda.CompileExpression()();
 
-				Assert.That(instance.Id   , Is.EqualTo(55));
-				Assert.That(instance.Value, Is.EqualTo(77));
+				Assert.Multiple(() =>
+				{
+					Assert.That(instance.Id, Is.EqualTo(55));
+					Assert.That(instance.Value, Is.EqualTo(77));
+				});
 			}
 
 			[Test]
@@ -503,9 +528,34 @@ namespace Tests.TypeMapping
 
 				var instance = memberInitLambda.CompileExpression()();
 
-				Assert.That(instance.Id      , Is.EqualTo(55));
-				Assert.That(instance.Value   , Is.EqualTo(77));
-				Assert.That(instance.StrValue, Is.EqualTo("Str"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(instance.Id, Is.EqualTo(55));
+					Assert.That(instance.Value, Is.EqualTo(77));
+					Assert.That(instance.StrValue, Is.EqualTo("Str"));
+				});
+			}
+
+			[Test]
+			public async Task TestMapTaskMethod()
+			{
+				var typeMapper = CreateTypeMapper();
+
+				var pInstance = Expression.Parameter(typeof(Dynamic.ISampleClass));
+				var pToken    = Expression.Parameter(typeof(CancellationToken));
+
+				var asyncCall = Expression.Lambda<Func<Dynamic.ISampleClass, CancellationToken, Task<SampleClass>>>(
+					typeMapper.MapExpression((Dynamic.ISampleClass instance, CancellationToken cancellationToken) => typeMapper.WrapTask<SampleClass>(((SampleClass)(object)instance).GetSelfAsync(cancellationToken), typeof(Dynamic.SampleClass), cancellationToken), pInstance, pToken),
+					pInstance, pToken);
+
+				var instance = await asyncCall.CompileExpression()(new Dynamic.SampleClass(55, 77) {StrValue = "Str"}, default);
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(instance.Id, Is.EqualTo(55));
+					Assert.That(instance.Value, Is.EqualTo(77));
+					Assert.That(instance.StrValue, Is.Null);
+				});
 			}
 
 			[Test]
@@ -518,9 +568,12 @@ namespace Tests.TypeMapping
 				
 				var instance = (Dynamic.SampleClass)func(1);
 
-				Assert.That(instance.Id      , Is.EqualTo(56));
-				Assert.That(instance.Value   , Is.EqualTo(78));
-				Assert.That(instance.StrValue, Is.EqualTo("Str"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(instance.Id, Is.EqualTo(56));
+					Assert.That(instance.Value, Is.EqualTo(78));
+					Assert.That(instance.StrValue, Is.EqualTo("Str"));
+				});
 			}
 
 			[Test]
@@ -544,8 +597,11 @@ namespace Tests.TypeMapping
 
 				var same = collection.Add(obj);
 
-				Assert.That(same.Id   , Is.EqualTo(1));
-				Assert.That(same.Value, Is.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(same.Id, Is.EqualTo(1));
+					Assert.That(same.Value, Is.EqualTo(2));
+				});
 			}
 
 			[Test]
@@ -567,8 +623,11 @@ namespace Tests.TypeMapping
 				wrapper.ReturningDelegateWithMappingEvent      += handler4;
 				wrapper.Fire(true);
 
-				Assert.AreEqual("param1", strValue1);
-				Assert.AreEqual(5, ((Dynamic.SampleClass)thisValue1!.instance_).Id);
+				Assert.Multiple(() =>
+				{
+					Assert.That(strValue1, Is.EqualTo("param1"));
+					Assert.That(((Dynamic.SampleClass)thisValue1!.instance_).Id, Is.EqualTo(5));
+				});
 
 
 				wrapper.SimpleDelegateEvent                    -= handler1;
@@ -601,47 +660,56 @@ namespace Tests.TypeMapping
 
 				var wrapper  = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 
-				// test in methods
-				//
-				// non-flags enum mapping
-				Assert.AreEqual(RegularEnum1.One,   wrapper.GetRegularEnum1(1));
-				Assert.AreEqual(RegularEnum1.Two,   wrapper.GetRegularEnum1(2));
-				Assert.AreEqual(RegularEnum1.Three, wrapper.GetRegularEnum1(3));
-				Assert.AreEqual(RegularEnum2.One,   wrapper.GetRegularEnum2(1));
-				Assert.AreEqual(RegularEnum2.Two,   wrapper.GetRegularEnum2(2));
-				Assert.AreEqual(RegularEnum2.Three, wrapper.GetRegularEnum2(3));
-				Assert.AreEqual(1, wrapper.SetRegularEnum1(RegularEnum1.One));
-				Assert.AreEqual(2, wrapper.SetRegularEnum1(RegularEnum1.Two));
-				Assert.AreEqual(3, wrapper.SetRegularEnum1(RegularEnum1.Three));
-				Assert.AreEqual(1, wrapper.SetRegularEnum2(RegularEnum2.One));
-				Assert.AreEqual(2, wrapper.SetRegularEnum2(RegularEnum2.Two));
-				Assert.AreEqual(3, wrapper.SetRegularEnum2(RegularEnum2.Three));
+				Assert.Multiple(() =>
+				{
+					// test in methods
+					//
+					// non-flags enum mapping
+					Assert.That(wrapper.GetRegularEnum1(1), Is.EqualTo(RegularEnum1.One));
+					Assert.That(wrapper.GetRegularEnum1(2), Is.EqualTo(RegularEnum1.Two));
+					Assert.That(wrapper.GetRegularEnum1(3), Is.EqualTo(RegularEnum1.Three));
+					Assert.That(wrapper.GetRegularEnum2(1), Is.EqualTo(RegularEnum2.One));
+					Assert.That(wrapper.GetRegularEnum2(2), Is.EqualTo(RegularEnum2.Two));
+					Assert.That(wrapper.GetRegularEnum2(3), Is.EqualTo(RegularEnum2.Three));
+					Assert.That(wrapper.SetRegularEnum1(RegularEnum1.One), Is.EqualTo(1));
+					Assert.That(wrapper.SetRegularEnum1(RegularEnum1.Two), Is.EqualTo(2));
+					Assert.That(wrapper.SetRegularEnum1(RegularEnum1.Three), Is.EqualTo(3));
+					Assert.That(wrapper.SetRegularEnum2(RegularEnum2.One), Is.EqualTo(1));
+					Assert.That(wrapper.SetRegularEnum2(RegularEnum2.Two), Is.EqualTo(2));
+					Assert.That(wrapper.SetRegularEnum2(RegularEnum2.Three), Is.EqualTo(3));
 
-				// flags enum mapping
-				Assert.AreEqual(FlagsEnum.Bit1,                  wrapper.GetFlagsEnum(1));
-				Assert.AreEqual(FlagsEnum.Bit3,                  wrapper.GetFlagsEnum(4));
-				Assert.AreEqual(FlagsEnum.Bits24,                wrapper.GetFlagsEnum(10));
-				Assert.AreEqual(FlagsEnum.Bit1 | FlagsEnum.Bit3, wrapper.GetFlagsEnum(5));
-				Assert.AreEqual(1,  wrapper.SetFlagsEnum(FlagsEnum.Bit1));
-				Assert.AreEqual(4,  wrapper.SetFlagsEnum(FlagsEnum.Bit3));
-				Assert.AreEqual(10, wrapper.SetFlagsEnum(FlagsEnum.Bits24));
-				Assert.AreEqual(5,  wrapper.SetFlagsEnum(FlagsEnum.Bit1 | FlagsEnum.Bit3));
+					// flags enum mapping
+					Assert.That(wrapper.GetFlagsEnum(1), Is.EqualTo(FlagsEnum.Bit1));
+					Assert.That(wrapper.GetFlagsEnum(4), Is.EqualTo(FlagsEnum.Bit3));
+					Assert.That(wrapper.GetFlagsEnum(10), Is.EqualTo(FlagsEnum.Bits24));
+					Assert.That(wrapper.GetFlagsEnum(5), Is.EqualTo(FlagsEnum.Bit1 | FlagsEnum.Bit3));
+					Assert.That(wrapper.SetFlagsEnum(FlagsEnum.Bit1), Is.EqualTo(1));
+					Assert.That(wrapper.SetFlagsEnum(FlagsEnum.Bit3), Is.EqualTo(4));
+					Assert.That(wrapper.SetFlagsEnum(FlagsEnum.Bits24), Is.EqualTo(10));
+					Assert.That(wrapper.SetFlagsEnum(FlagsEnum.Bit1 | FlagsEnum.Bit3), Is.EqualTo(5));
 
 
-				// test in properties
-				//
-				// non-flags enum mapping
-				Assert.AreEqual(RegularEnum1.Two, wrapper.RegularEnum1Property);
+					// test in properties
+					//
+					// non-flags enum mapping
+					Assert.That(wrapper.RegularEnum1Property, Is.EqualTo(RegularEnum1.Two));
+				});
 				wrapper.RegularEnum1Property = RegularEnum1.One;
-				Assert.AreEqual(RegularEnum1.One, wrapper.RegularEnum1Property);
-				Assert.AreEqual(RegularEnum2.Two, wrapper.RegularEnum2Property);
+				Assert.Multiple(() =>
+				{
+					Assert.That(wrapper.RegularEnum1Property, Is.EqualTo(RegularEnum1.One));
+					Assert.That(wrapper.RegularEnum2Property, Is.EqualTo(RegularEnum2.Two));
+				});
 				wrapper.RegularEnum2Property = RegularEnum2.One;
-				Assert.AreEqual(RegularEnum2.One, wrapper.RegularEnum2Property);
+				Assert.Multiple(() =>
+				{
+					Assert.That(wrapper.RegularEnum2Property, Is.EqualTo(RegularEnum2.One));
 
-				// flags enum mapping
-				Assert.AreEqual(FlagsEnum.Bit3, wrapper.FlagsEnumProperty);
+					// flags enum mapping
+					Assert.That(wrapper.FlagsEnumProperty, Is.EqualTo(FlagsEnum.Bit3));
+				});
 				wrapper.FlagsEnumProperty = FlagsEnum.Bits24;
-				Assert.AreEqual(FlagsEnum.Bits24, wrapper.FlagsEnumProperty);
+				Assert.That(wrapper.FlagsEnumProperty, Is.EqualTo(FlagsEnum.Bits24));
 
 				// using setters/getters
 				var typeBuilder         = typeMapper.Type<SampleClass>();
@@ -662,17 +730,23 @@ namespace Tests.TypeMapping
 				var instance = (Dynamic.SampleClass)wrapper.instance_;
 
 				// non-flags enum mapping
-				Assert.AreEqual(RegularEnum1.Two, regular1Getter(instance));
+				Assert.That(regular1Getter(instance), Is.EqualTo(RegularEnum1.Two));
 				regular1Setter(instance, RegularEnum1.One);
-				Assert.AreEqual(RegularEnum1.One, regular1Getter(instance));
-				Assert.AreEqual(RegularEnum2.Two, regular2Getter(instance));
+				Assert.Multiple(() =>
+				{
+					Assert.That(regular1Getter(instance), Is.EqualTo(RegularEnum1.One));
+					Assert.That(regular2Getter(instance), Is.EqualTo(RegularEnum2.Two));
+				});
 				regular2Setter(instance, RegularEnum2.One);
-				Assert.AreEqual(RegularEnum2.One, regular2Getter(instance));
+				Assert.Multiple(() =>
+				{
+					Assert.That(regular2Getter(instance), Is.EqualTo(RegularEnum2.One));
 
-				// flags enum mapping
-				Assert.AreEqual(FlagsEnum.Bit3, flagsGetter(instance));
+					// flags enum mapping
+					Assert.That(flagsGetter(instance), Is.EqualTo(FlagsEnum.Bit3));
+				});
 				flagsSetter(instance, FlagsEnum.Bits24);
-				Assert.AreEqual(FlagsEnum.Bits24, flagsGetter(instance));
+				Assert.That(flagsGetter(instance), Is.EqualTo(FlagsEnum.Bits24));
 			}
 
 			[Test]
@@ -683,7 +757,7 @@ namespace Tests.TypeMapping
 				var wrapped = typeMapper.BuildWrappedFactory(() => new SqlErrorCollection())();
 				var errors  = wrapped.Errors.ToArray();
 
-				Assert.AreEqual(2, errors.Length);
+				Assert.That(errors, Has.Length.EqualTo(2));
 			}
 
 			[Test]
@@ -694,7 +768,7 @@ namespace Tests.TypeMapping
 				var wrapped = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 				var res = wrapped.MethodWithRemappedName2("value");
 
-				Assert.AreEqual("value", res);
+				Assert.That(res, Is.EqualTo("value"));
 			}
 
 			[Test]
@@ -704,7 +778,7 @@ namespace Tests.TypeMapping
 
 				var wrapped = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 
-				Assert.False(wrapped.HasMethodWithWrongReturnType);
+				Assert.That(wrapped.HasMethodWithWrongReturnType, Is.False);
 			}
 
 			[Test]
@@ -714,7 +788,7 @@ namespace Tests.TypeMapping
 
 				var wrapped = typeMapper.BuildWrappedFactory(() => new SampleClass(1, 2))();
 
-				Assert.AreEqual(4, wrapped.ReturnTypeMapper("test"));
+				Assert.That(wrapped.ReturnTypeMapper("test"), Is.EqualTo(4));
 			}
 
 			[Test]
@@ -724,8 +798,11 @@ namespace Tests.TypeMapping
 				var mapper         = new ValueTaskToTaskMapper();
 				var result         = ((ICustomMapper)mapper).Map(taskExpression);
 
-				Assert.AreEqual(typeof(Task<long>), result.Type);
-				Assert.True(typeof(Task<long>).IsAssignableFrom(result.EvaluateExpression()!.GetType()));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Type, Is.EqualTo(typeof(Task<long>)));
+					Assert.That(typeof(Task<long>).IsAssignableFrom(result.EvaluateExpression()!.GetType()), Is.True);
+				});
 			}
 
 			[Test]
@@ -735,8 +812,11 @@ namespace Tests.TypeMapping
 				var mapper         = new ValueTaskToTaskMapper();
 				var result         = ((ICustomMapper)mapper).Map(taskExpression);
 
-				Assert.AreEqual(typeof(Task), result.Type);
-				Assert.True(typeof(Task).IsAssignableFrom(result.EvaluateExpression()!.GetType()));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Type, Is.EqualTo(typeof(Task)));
+					Assert.That(typeof(Task).IsAssignableFrom(result.EvaluateExpression()!.GetType()), Is.True);
+				});
 			}
 
 			[Test]
@@ -745,7 +825,7 @@ namespace Tests.TypeMapping
 				var taskExpression = Expression.Constant(0);
 				var mapper         = new ValueTaskToTaskMapper();
 
-				Assert.Throws(typeof(LinqToDBException), () => ((ICustomMapper)mapper).Map(taskExpression));
+				Assert.That(((ICustomMapper)mapper).CanMap(taskExpression), Is.False);
 			}
 		}
 	}

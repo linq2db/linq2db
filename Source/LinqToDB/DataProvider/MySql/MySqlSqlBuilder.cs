@@ -1,47 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+using System.Data.Common;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Common;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Tools;
 
-	class MySqlSqlBuilder : BasicSqlBuilder
+	class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
-		private readonly MySqlDataProvider? _provider;
-
-		public MySqlSqlBuilder(
-			MySqlDataProvider? provider,
-			MappingSchema      mappingSchema,
-			ISqlOptimizer      sqlOptimizer,
-			SqlProviderFlags   sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-			_provider = provider;
-		}
-
-		// remote context
-		public MySqlSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		static MySqlSqlBuilder()
+		protected MySqlSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
-			ParameterSymbol = '@';
 		}
 
-		protected override bool IsRecursiveCteKeywordRequired   => true;
-		public    override bool IsNestedJoinParenthesisRequired => true;
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
+		}
+
+		protected override bool   IsRecursiveCteKeywordRequired   => true;
+		public    override bool   IsNestedJoinParenthesisRequired => true;
+		protected override bool   IsValuesSyntaxSupported         => false;
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{
@@ -63,11 +52,6 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.AppendLine("SELECT LAST_INSERT_ID()");
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new MySqlSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
-		}
-
 		protected override string LimitFormat(SelectQuery selectQuery)
 		{
 			return "LIMIT {0}";
@@ -75,223 +59,178 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			if (selectQuery.Select.SkipValue == null)
+			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+
+			if (skipExpr == null)
 				base.BuildOffsetLimit(selectQuery);
 			else
 			{
 				AppendIndent()
 					.AppendFormat(
+						CultureInfo.InvariantCulture,
 						"LIMIT {0}, {1}",
-						WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.SkipValue)),
-						selectQuery.Select.TakeValue == null ?
-							long.MaxValue.ToString() :
-							WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.TakeValue).ToString()))
+						WithStringBuilderBuildExpression(skipExpr),
+						takeExpr == null ?
+							(object)long.MaxValue :
+							WithStringBuilderBuildExpression(takeExpr))
 					.AppendLine();
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			// mysql has limited support for types in type-CAST expressions
 			if (!forCreateTable)
 			{
-				switch (type.Type.DataType)
+				switch ((type.DataType, type.Precision, type.Scale, type.Length) switch
 				{
-					case DataType.Boolean       :
-					case DataType.SByte         :
-					case DataType.Int16         :
-					case DataType.Int32         :
-					case DataType.Int64         : StringBuilder.Append("SIGNED");         break;
-					case DataType.BitArray      : // wild guess
-					case DataType.Byte          :
-					case DataType.UInt16        :
-					case DataType.UInt32        :
-					case DataType.UInt64        : StringBuilder.Append("UNSIGNED");       break;
-					case DataType.Money         : StringBuilder.Append("DECIMAL(19, 4)"); break;
-					case DataType.SmallMoney    : StringBuilder.Append("DECIMAL(10, 4)"); break;
-					case DataType.DateTime      :
-					case DataType.DateTime2     :
-					case DataType.SmallDateTime :
-					case DataType.DateTimeOffset: StringBuilder.Append("DATETIME");       break;
-					case DataType.Time          : StringBuilder.Append("TIME");           break;
-					case DataType.Date          : StringBuilder.Append("DATE");           break;
-					case DataType.Json          : StringBuilder.Append("JSON");           break;
-					case DataType.Guid          : StringBuilder.Append("CHAR(36)");       break;
-					// TODO: FLOAT/DOUBLE support in CAST added just recently (v8.0.17)
-					// and needs version sniffing
-					case DataType.Double        :
-					case DataType.Single        : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable); break;
-					case DataType.Decimal       :
-						if (type.Type.Scale != null && type.Type.Scale != 0)
-							StringBuilder.Append($"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})");
-						else if (type.Type.Precision != null && type.Type.Precision != 10)
-							StringBuilder.Append($"DECIMAL({type.Type.Precision})");
-						else
-							StringBuilder.Append("DECIMAL"); break;
-					case DataType.Char          :
-					case DataType.NChar         :
-					case DataType.VarChar       :
-					case DataType.NVarChar      :
-					case DataType.NText         :
-					case DataType.Text          :
-						if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 0)
-							StringBuilder.Append("CHAR(255)");
-						else if (type.Type.Length == 1)
-							StringBuilder.Append("CHAR");
-						else
-							StringBuilder.Append($"CHAR({type.Type.Length})");
-						break;
-					case DataType.VarBinary     :
-					case DataType.Binary        :
-					case DataType.Blob          :
-						if (type.Type.Length == null || type.Type.Length < 0)
-							StringBuilder.Append("BINARY(255)");
-						else if (type.Type.Length == 1)
-							StringBuilder.Append("BINARY");
-						else
-							StringBuilder.Append($"BINARY({type.Type.Length})");
-					break;
-					default                     : base.BuildDataTypeFromDataType(type, forCreateTable); break;
-				}
+					(DataType.Boolean  or
+					 DataType.SByte    or
+					 DataType.Int16    or
+					 DataType.Int32    or
+					 DataType.Int64,          _,                   _,                  _                   ) => "SIGNED",
+					(DataType.BitArray or // wild guess
+					 DataType.Byte     or
+					 DataType.UInt16   or
+					 DataType.UInt32   or
+					 DataType.UInt64,         _,                   _,                  _                   ) => "UNSIGNED",
+					(DataType.Money,          _,                   _,                  _                   ) => "DECIMAL(19, 4)",
+					(DataType.SmallMoney,     _,                   _,                  _                   ) => "DECIMAL(10, 4)",
+					(DataType.DateTime      or
+					 DataType.DateTime2     or
+					 DataType.SmallDateTime or
+					 DataType.DateTimeOffset, _,                   _,                  _                   ) => "DATETIME",
+					(DataType.Time,           _,                   _,                  _                   ) => "TIME",
+					(DataType.Date,           _,                   _,                  _                   ) => "DATE",
+					(DataType.Json,           _,                   _,                  _                   ) => "JSON",
+					(DataType.Guid,           _,                   _,                  _                   ) => "CHAR(36)",
+					(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
+					(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
+					(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
+					(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision})"),
+					(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
+					(DataType.Char      or
+					 DataType.NChar     or
+					 DataType.VarChar   or
+					 DataType.NVarChar  or
+					 DataType.NText     or
+					 DataType.Text,           _,                   _,                  null or > 255 or < 0) => "CHAR(255)",
+					(DataType.Char      or
+					 DataType.NChar     or
+					 DataType.VarChar   or
+					 DataType.NVarChar  or
+					 DataType.NText     or
+					 DataType.Text,           _,                   _,                  1                   ) => "CHAR",
+					(DataType.Char      or
+					 DataType.NChar     or
+					 DataType.VarChar   or
+					 DataType.NVarChar  or
+					 DataType.NText     or
+					 DataType.Text,           _,                   _,                  _                   ) => $"CHAR({type.Length})",
+					(DataType.VarBinary or
+					 DataType.Binary    or
+					 DataType.Blob,           _,                   _,                  null or < 0         ) => "BINARY(255)",
+					(DataType.VarBinary or
+					 DataType.Binary    or
+					 DataType.Blob,           _,                   _,                  1                   ) => "BINARY",
+					(DataType.VarBinary or
+					 DataType.Binary    or
+					 DataType.Blob,           _,                   _,                  _                   ) => $"BINARY({type.Length})",
+					_ => null
+				})
+				{
+					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable, canBeNull); break;
+					case var t       : StringBuilder.Append(t);                                                        break;
+				};
 
 				return;
 			}
 
 			// types for CREATE TABLE statement
-			switch (type.Type.DataType)
+			switch ((type.DataType, type.Precision, type.Scale, type.Length) switch
 			{
-				case DataType.SByte         : StringBuilder.Append("TINYINT");                       break;
-				case DataType.Int16         : StringBuilder.Append("SMALLINT");                      break;
-				case DataType.Int32         : StringBuilder.Append("INT");                           break;
-				case DataType.Int64         : StringBuilder.Append("BIGINT");                        break;
-				case DataType.Byte          : StringBuilder.Append("TINYINT UNSIGNED");              break;
-				case DataType.UInt16        : StringBuilder.Append("SMALLINT UNSIGNED");             break;
-				case DataType.UInt32        : StringBuilder.Append("INT UNSIGNED");                  break;
-				case DataType.UInt64        : StringBuilder.Append("BIGINT UNSIGNED");               break;
-				case DataType.Money         : StringBuilder.Append("DECIMAL(19, 4)");                break;
-				case DataType.SmallMoney    : StringBuilder.Append("DECIMAL(10, 4)");                break;
-				case DataType.Decimal       :
-					if (type.Type.Scale != null && type.Type.Scale != 0)
-						StringBuilder.Append($"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})");
-					else if (type.Type.Precision != null && type.Type.Precision != 10)
-						StringBuilder.Append($"DECIMAL({type.Type.Precision})");
-					else
-						StringBuilder.Append("DECIMAL"); break;
-				case DataType.DateTime      :
-				case DataType.DateTime2     :
-				case DataType.SmallDateTime :
-					if (type.Type.Precision > 0 && type.Type.Precision <= 6)
-						StringBuilder.Append($"DATETIME({type.Type.Precision})");
-					else
-						StringBuilder.Append("DATETIME");
-					break;
-				case DataType.DateTimeOffset:
-					if (type.Type.Precision > 0 && type.Type.Precision <= 6)
-						StringBuilder.Append($"TIMESTAMP({type.Type.Precision})");
-					else
-						StringBuilder.Append("TIMESTAMP");
-					break;
-				case DataType.Time:
-					if (type.Type.Precision > 0 && type.Type.Precision <= 6)
-						StringBuilder.Append($"TIME({type.Type.Precision})");
-					else
-						StringBuilder.Append("TIME");
-					break;
-				case DataType.Boolean       : StringBuilder.Append("BOOLEAN");                       break;
-				case DataType.Double        :
-					if (type.Type.Precision >= 0 && type.Type.Precision <= 53)
-						StringBuilder.Append($"FLOAT({type.Type.Precision})"); // this is correct, FLOAT(p)
-					else
-						StringBuilder.Append("DOUBLE");
-					break;
-				case DataType.Single        :
-					if (type.Type.Precision >= 0 && type.Type.Precision <= 53)
-						StringBuilder.Append($"FLOAT({type.Type.Precision})");
-					else
-						StringBuilder.Append("FLOAT");
-					break;
-				case DataType.BitArray:
+				(DataType.SByte,          _,                   _,                  _                   ) => "TINYINT",
+				(DataType.Int16,          _,                   _,                  _                   ) => "SMALLINT",
+				(DataType.Int32,          _,                   _,                  _                   ) => "INT",
+				(DataType.Int64,          _,                   _,                  _                   ) => "BIGINT",
+				(DataType.Byte,           _,                   _,                  _                   ) => "TINYINT UNSIGNED",
+				(DataType.UInt16,         _,                   _,                  _                   ) => "SMALLINT UNSIGNED",
+				(DataType.UInt32,         _,                   _,                  _                   ) => "INT UNSIGNED",
+				(DataType.UInt64,         _,                   _,                  _                   ) => "BIGINT UNSIGNED",
+				(DataType.Money,          _,                   _,                  _                   ) => "DECIMAL(19, 4)",
+				(DataType.SmallMoney,     _,                   _,                  _                   ) => "DECIMAL(10, 4)",
+				(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
+				(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision})"),
+				(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
+				(DataType.DateTime  or
+				 DataType.DateTime2 or
+				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"DATETIME({type.Precision})"),
+				(DataType.DateTime  or
+				 DataType.DateTime2 or
+				 DataType.SmallDateTime,  _,                   _,                  _                   ) => "DATETIME",
+				(DataType.DateTimeOffset, > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIMESTAMP({type.Precision})"),
+				(DataType.DateTimeOffset, _,                   _,                  _                   ) => "TIMESTAMP",
+				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIME({type.Precision})"),
+				(DataType.Time,           _,                   _,                  _                   ) => "TIME",
+				(DataType.Boolean,        _,                   _,                  _                   ) => "BOOLEAN",
+				(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
+				(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
+				(DataType.BitArray,       _,                   _,                  null                ) =>
+					type.SystemType.ToNullableUnderlying()
+					switch
 					{
-						var length = type.Type.Length;
-						if (length == null)
-						{
-							var columnType = type.Type.SystemType.ToNullableUnderlying();
-							if (columnType == typeof(byte) || columnType == typeof(sbyte))
-								length = 8;
-							else if (columnType == typeof(short) || columnType == typeof(ushort))
-								length = 16;
-							else if (columnType == typeof(int) || columnType == typeof(uint))
-								length = 32;
-							else if (columnType == typeof(long) || columnType == typeof(ulong))
-								length = 64;
-						}
-
-						if (length != null && length != 1 && length >= 0)
-							StringBuilder.Append($"BIT({length})");
-						else
-							StringBuilder.Append("BIT");
+						var t when t == typeof(byte)  || t == typeof(sbyte)  =>  8,
+						var t when t == typeof(short) || t == typeof(ushort) => 16,
+						var t when t == typeof(int)   || t == typeof(uint)   => 32,
+						var t when t == typeof(long)  || t == typeof(ulong)  => 64,
+						_ => 0
 					}
-					break;
-				case DataType.Date          : StringBuilder.Append("DATE");                          break;
-				case DataType.Json          : StringBuilder.Append("JSON");                          break;
-				case DataType.Guid          : StringBuilder.Append("CHAR(36)");                      break;
-				case DataType.Char          :
-				case DataType.NChar         :
-					if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 0)
-						StringBuilder.Append("CHAR(255)");
-					else if (type.Type.Length == 1)
-						StringBuilder.Append("CHAR");
-					else
-						StringBuilder.Append($"CHAR({type.Type.Length})");
-					break;
-				case DataType.VarChar       :
-				case DataType.NVarChar      :
-					if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 0)
-						StringBuilder.Append("VARCHAR(255)");
-					else
-						StringBuilder.Append($"VARCHAR({type.Type.Length})");
-					break;
-				case DataType.Binary:
-					if (type.Type.Length == null || type.Type.Length < 0)
-						StringBuilder.Append("BINARY(255)");
-					else if (type.Type.Length == 1)
-						StringBuilder.Append("BINARY");
-					else
-						StringBuilder.Append($"BINARY({type.Type.Length})");
-					break;
-				case DataType.VarBinary:
-					if (type.Type.Length == null || type.Type.Length < 0)
-						StringBuilder.Append("VARBINARY(255)");
-					else
-						StringBuilder.Append($"VARBINARY({type.Type.Length})");
-					break;
-				case DataType.Blob:
-					if (type.Type.Length == null || type.Type.Length < 0)
-						StringBuilder.Append("BLOB");
-					else if (type.Type.Length <= 255)
-						StringBuilder.Append("TINYBLOB");
-					else if (type.Type.Length <= 65535)
-						StringBuilder.Append("BLOB");
-					else if (type.Type.Length <= 16777215)
-						StringBuilder.Append("MEDIUMBLOB");
-					else
-						StringBuilder.Append("LONGBLOB");
-					break;
-				case DataType.NText:
-				case DataType.Text:
-					if (type.Type.Length == null || type.Type.Length < 0)
-						StringBuilder.Append("TEXT");
-					else if (type.Type.Length <= 255)
-						StringBuilder.Append("TINYTEXT");
-					else if (type.Type.Length <= 65535)
-						StringBuilder.Append("TEXT");
-					else if (type.Type.Length <= 16777215)
-						StringBuilder.Append("MEDIUMTEXT");
-					else
-						StringBuilder.Append("LONGTEXT");
-					break;
-				default: base.BuildDataTypeFromDataType(type, forCreateTable);                       break;
-			}
+					switch
+					{
+						0     => "BIT",
+						var l => FormattableString.Invariant($"BIT({l})")
+					},
+				(DataType.BitArray,       _,                  _,                   not 1 and >= 0      ) => $"BIT({type.Length})",
+				(DataType.BitArray,       _,                  _,                   _                   ) => "BIT",
+				(DataType.Date,           _,                  _,                   _                   ) => "DATE",
+				(DataType.Json,           _,                  _,                   _                   ) => "JSON",
+				(DataType.Guid,           _,                  _,                   _                   ) => "CHAR(36)",
+				(DataType.Char    or
+				 DataType.NChar,          _,                  _,                   null or > 255 or < 0) => "CHAR(255)",
+				(DataType.Char    or
+				 DataType.NChar,          _,                  _,                   1                   ) => "CHAR",
+				(DataType.Char    or
+				 DataType.NChar,          _,                  _,                   _                   ) => $"CHAR({type.Length})",
+				(DataType.VarChar or
+				 DataType.NVarChar,       _,                  _,                   null or > 65535 or < 0) => "VARCHAR(255)",
+				(DataType.VarChar or
+				 DataType.NVarChar,       _,                  _,                   _                   ) => $"VARCHAR({type.Length})",
+				(DataType.Binary,         _,                  _,                   null or < 0         ) => "BINARY(255)",
+				(DataType.Binary,         _,                  _,                   1                   ) => "BINARY",
+				(DataType.Binary,         _,                  _,                   _                   ) => $"BINARY({type.Length})",
+				(DataType.VarBinary,      _,                  _,                   null or < 0         ) => "VARBINARY(255)",
+				(DataType.VarBinary,      _,                  _,                   _                   ) => $"VARBINARY({type.Length})",
+				(DataType.Blob,           _,                  _,                   null or < 0         ) => "BLOB",
+				(DataType.Blob,           _,                  _,                   <= 255              ) => "TINYBLOB",
+				(DataType.Blob,           _,                  _,                   <= 65535            ) => "BLOB",
+				(DataType.Blob,           _,                  _,                   <= 16777215         ) => "MEDIUMBLOB",
+				(DataType.Blob,           _,                  _,                   _                   ) => "LONGBLOB",
+				(DataType.NText or
+				 DataType.Text,           _,                  _,                   null or < 0         ) => "TEXT",
+				(DataType.NText or
+				 DataType.Text,           _,                  _,                   <= 255              ) => "TINYTEXT",
+				(DataType.NText or
+				 DataType.Text,           _,                  _,                   <= 65535            ) => "TEXT",
+				(DataType.NText or
+				 DataType.Text,           _,                  _,                   <= 16777215         ) => "MEDIUMTEXT",
+				(DataType.NText or
+				 DataType.Text,           _,                  _,                   _                   ) => "LONGTEXT",
+				_ => null
+			})
+			{
+				case null  : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
+				case var t : StringBuilder.Append(t);                                         break;
+			};
 		}
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
@@ -300,12 +239,23 @@ namespace LinqToDB.DataProvider.MySql
 				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
 				deleteStatement.SelectQuery.From.Tables[0];
 
+			var alias = GetTableAlias(table);
+
 			AppendIndent().Append("DELETE ");
-			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
+			StartStatementQueryExtensions(deleteStatement.SelectQuery);
+			StringBuilder.Append(' ');
+
+			if (alias != null)
+			{
+				StringBuilder.Append(' ');
+				Convert(StringBuilder, alias, ConvertType.NameToQueryTableAlias);
+			}
+
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
+			SqlUpdateClause                                    updateClause)
 		{
 			var pos = StringBuilder.Length;
 
@@ -313,30 +263,34 @@ namespace LinqToDB.DataProvider.MySql
 
 			StringBuilder.Remove(pos, 4).Insert(pos, "UPDATE");
 
-			base.BuildUpdateSet(selectQuery, updateClause);
+			BuildUpdateSet(selectQuery, updateClause);
 		}
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
+
+			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
-				BuildStep = Step.SelectClause;  BuildSelectClause(statement.SelectQuery);
-				BuildStep = Step.FromClause;    BuildFromClause(statement, statement.SelectQuery);
-				BuildStep = Step.WhereClause;   BuildWhereClause(statement.SelectQuery);
-				BuildStep = Step.GroupByClause; BuildGroupByClause(statement.SelectQuery);
-				BuildStep = Step.HavingClause;  BuildHavingClause(statement.SelectQuery);
-				BuildStep = Step.OrderByClause; BuildOrderByClause(statement.SelectQuery);
-				BuildStep = Step.OffsetLimit;   BuildOffsetLimit(statement.SelectQuery);
+				BuildStep = Step.WithClause;      BuildWithClause        (statement.GetWithClause());
+				BuildStep = Step.SelectClause;    BuildSelectClause      (statement.SelectQuery);
+				BuildStep = Step.FromClause;      BuildFromClause        (statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause;     BuildWhereClause       (statement.SelectQuery);
+				BuildStep = Step.GroupByClause;   BuildGroupByClause     (statement.SelectQuery);
+				BuildStep = Step.HavingClause;    BuildHavingClause      (statement.SelectQuery);
+				BuildStep = Step.OrderByClause;   BuildOrderByClause     (statement.SelectQuery);
+				BuildStep = Step.OffsetLimit;     BuildOffsetLimit       (statement.SelectQuery);
+				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 			}
 
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
 			else
 			{
-				BuildReturningSubclause(statement);
+				BuildOutputSubclause(statement.GetOutputClause());
 			}
 		}
 
@@ -346,57 +300,25 @@ namespace LinqToDB.DataProvider.MySql
 				base.BuildFromClause(statement, selectQuery);
 		}
 
-		public static char ParameterSymbol           { get; set; }
-		public static bool TryConvertParameterSymbol { get; set; }
-
-		private static string _commandParameterPrefix = string.Empty;
-		public  static string  CommandParameterPrefix
-		{
-			get => _commandParameterPrefix;
-			set => _commandParameterPrefix = value ?? string.Empty;
-		}
-
-		private static string _sprocParameterPrefix = string.Empty;
-		public  static string  SprocParameterPrefix
-		{
-			get => _sprocParameterPrefix;
-			set => _sprocParameterPrefix = value ?? string.Empty;
-		}
-
-		private static List<char>? _convertParameterSymbols;
-		public  static List<char>  ConvertParameterSymbols
-		{
-			get => _convertParameterSymbols ??= new List<char>();
-			set => _convertParameterSymbols = value ?? new List<char>();
-		}
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
-				case ConvertType.NameToQueryParameter:
-					return sb.Append(ParameterSymbol).Append(value);
-
+				case ConvertType.NameToQueryParameter  :
 				case ConvertType.NameToCommandParameter:
-					return sb.Append(ParameterSymbol).Append(CommandParameterPrefix).Append(value);
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
 							throw new ArgumentException("Argument 'value' must represent parameter name.");
 
-					if (value[0] == ParameterSymbol)
+					if (value[0] == '@')
 						value = value.Substring(1);
 
-					if (value.StartsWith(SprocParameterPrefix, StringComparison.Ordinal))
-						value = value.Substring(SprocParameterPrefix.Length);
-
-					return sb.Append(ParameterSymbol).Append(SprocParameterPrefix).Append(value);
+					return sb.Append('@').Append(value);
 
 				case ConvertType.SprocParameterToName:
-					value = (value.Length > 0 && (value[0] == ParameterSymbol || (TryConvertParameterSymbol && ConvertParameterSymbols.Contains(value[0])))) ? value.Substring(1) : value;
-
-					if (!string.IsNullOrEmpty(SprocParameterPrefix) && value.StartsWith(SprocParameterPrefix))
-						value = value.Substring(SprocParameterPrefix.Length);
+					value = value.Length > 0 && value[0] == '@' ? value.Substring(1) : value;
 
 					return sb.Append(value);
 
@@ -405,9 +327,11 @@ namespace LinqToDB.DataProvider.MySql
 				case ConvertType.NameToQueryTableAlias:
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToSchema         :
+				case ConvertType.NameToPackage        :
 				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToProcedure      :
 					// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
-					if (value.Contains('`'))
+					if (value.Contains("`"))
 						value = value.Replace("`", "``");
 
 					return sb.Append('`').Append(value).Append('`');
@@ -423,8 +347,7 @@ namespace LinqToDB.DataProvider.MySql
 			ref bool addAlias,
 			bool throwExceptionIfTableNotFound = true)
 		{
-			return base.BuildExpression(
-				expr,
+			return base.BuildExpression(expr,
 				buildTableName && Statement.QueryType != QueryType.InsertOrUpdate,
 				checkParentheses,
 				alias,
@@ -432,8 +355,19 @@ namespace LinqToDB.DataProvider.MySql
 				throwExceptionIfTableNotFound);
 		}
 
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			if (!expr.IsNot)
+				StringBuilder.Append("NOT ");
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			StringBuilder.Append(" <=> ");
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
+			var nullability = new NullabilityContext(insertOrUpdate.SelectQuery);
+
 			var position = StringBuilder.Length;
 
 			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, false);
@@ -492,26 +426,33 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
-			if (database != null && database.Length == 0) database = null;
-
-			if (database != null)
-				sb.Append(database).Append('.');
-
-			return sb.Append(table);
-		}
-
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
-		{
-			if (_provider != null)
+			if (name.Database != null)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
-				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+				(escape ? Convert(sb, name.Database, ConvertType.NameToDatabase) : sb.Append(name.Database))
+					.Append('.');
 			}
 
-			return base.GetProviderTypeName(parameter);
+			if (name.Package != null)
+			{
+				(escape ? Convert(sb, name.Package, ConvertType.NameToPackage) : sb.Append(name.Package))
+					.Append('.');
+			}
+
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
+		}
+
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
+		{
+			if (DataProvider is MySqlDataProvider provider)
+			{
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
+				if (param != null)
+					return string.Format(CultureInfo.InvariantCulture, "{0}", provider.Adapter.GetDbType(param));
+			}
+
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
@@ -532,19 +473,17 @@ namespace LinqToDB.DataProvider.MySql
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
-		protected override void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
+		protected override void BuildGroupByBody(GroupingType groupingType,
+			List<ISqlExpression>                              items)
 		{
-			if (groupingType.In(GroupingType.GroupBySets, GroupingType.Default))
+			if (groupingType == GroupingType.GroupBySets || groupingType == GroupingType.Default)
 			{
 				base.BuildGroupByBody(groupingType, items);
 				return;
 			}
 
-			AppendIndent();
-
-			StringBuilder.Append("GROUP BY");
-
-			StringBuilder.AppendLine();
+			AppendIndent()
+				.AppendLine("GROUP BY");
 
 			Indent++;
 
@@ -552,7 +491,8 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				AppendIndent();
 
-				BuildExpression(items[i]);
+				var expr = items[i];
+				BuildExpression(expr);
 
 				if (i + 1 < items.Count)
 					StringBuilder.AppendLine(Comma);
@@ -605,6 +545,101 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");
+		}
+
+		protected StringBuilder? HintBuilder { get; set; }
+
+		int  _hintPosition;
+		bool _isTopLevelBuilder;
+
+		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
+		{
+			if (HintBuilder == null)
+			{
+				HintBuilder        = new();
+				_isTopLevelBuilder = true;
+				_hintPosition      = StringBuilder.Length;
+
+				if (Statement is SqlInsertStatement)
+					_hintPosition -= " INTO ".Length;
+
+				if (selectQuery?.QueryName is {} queryName)
+					HintBuilder
+						.Append("QB_NAME(")
+						.Append(queryName)
+						.Append(')')
+						;
+			}
+			else if (selectQuery?.QueryName is {} queryName)
+			{
+				StringBuilder
+					.Append(" /*+ QB_NAME(")
+					.Append(queryName)
+					.Append(") */")
+					;
+			}
+		}
+
+		protected override void FinalizeBuildQuery(SqlStatement statement)
+		{
+			base.FinalizeBuildQuery(statement);
+
+			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
+			{
+				if (HintBuilder.Length > 0 && HintBuilder[^1] != ' ')
+					HintBuilder.Append(' ');
+				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
+			}
+
+			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
+			{
+				HintBuilder.Insert(0, " /*+ ");
+				HintBuilder.Append(" */");
+
+				StringBuilder.Insert(_hintPosition, HintBuilder.ToString());
+			}
+		}
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (table.SqlQueryExtensions is not null)
+			{
+				if (HintBuilder is not null)
+					BuildTableExtensions(HintBuilder, table, alias, null, " ", null, ext =>
+						ext.Scope is
+							Sql.QueryExtensionScope.TableHint or
+							Sql.QueryExtensionScope.TablesInScopeHint);
+
+				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null, ext => ext.Scope is Sql.QueryExtensionScope.IndexHint);
+			}
+		}
+
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SelectQuery?.SqlQueryExtensions is not null)
+			{
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+				{
+					var buffer = new char[StringBuilder.Length - len];
+
+					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+
+					prefix += new string(buffer);
+				}
+
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
+			}
+		}
+
+		protected override void BuildSql()
+		{
+			BuildSqlForUnion();
 		}
 	}
 }

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
+	using Common;
+
 	/// <summary>
 	/// Implements base class for typed wrappers over provider-specific type.
 	/// </summary>
@@ -47,7 +48,7 @@ namespace LinqToDB.Expressions
 		protected TypeWrapper(object instance, Delegate[]? wrappers)
 		{
 			instance_        = instance;
-			CompiledWrappers = wrappers ?? Array<Delegate>.Empty;
+			CompiledWrappers = wrappers ?? [];
 		}
 
 		/// <summary>
@@ -56,8 +57,7 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		protected static Expression<Action<TI, TP>> PropertySetter<TI, TP>(Expression<Func<TI, TP>> getter)
 		{
-			if (!(getter.Body is MemberExpression me)
-				|| !(me.Member is PropertyInfo pi))
+			if (getter.Body is not MemberExpression { Member: PropertyInfo pi })
 				throw new LinqToDBException($"Expected property accessor expression");
 
 			var pThis  = Expression.Parameter(typeof(TI));
@@ -68,7 +68,7 @@ namespace LinqToDB.Expressions
 			return Expression.Lambda<Action<TI, TP>>(
 				Expression.Call(
 					pThis,
-					pi.SetMethod,
+					pi.SetMethod!,
 					pValue),
 				pThis, pValue);
 		}

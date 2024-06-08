@@ -9,36 +9,21 @@ namespace LinqToDB.Async
 	/// <summary>
 	/// Provides reflection-based <see cref="DbConnection"/> wrapper with async operations support.
 	/// </summary>
-	internal class ReflectedAsyncDbConnection : AsyncDbConnection
+	internal sealed class ReflectedAsyncDbConnection : AsyncDbConnection
 	{
-		private readonly Func<IDbConnection, CancellationToken, Task>?                                           _openAsync;
-		private readonly Func<IDbConnection, Task>?                                                              _closeAsync;
-#if !NETFRAMEWORK
-		private readonly Func<IDbConnection, CancellationToken, ValueTask<IAsyncDbTransaction>>?                 _beginTransactionAsync;
-		private readonly Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>? _beginTransactionIlAsync;
-		private readonly Func<IDbConnection, ValueTask>?                                                         _disposeAsync;
-#else
-		private readonly Func<IDbConnection, CancellationToken, Task<IAsyncDbTransaction>>?                      _beginTransactionAsync;
-		private readonly Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>?      _beginTransactionIlAsync;
-		private readonly Func<IDbConnection, Task>?                                                              _disposeAsync;
-#endif
+		private readonly Func<DbConnection, CancellationToken, Task>?                                           _openAsync;
+		private readonly Func<DbConnection, Task>?                                                              _closeAsync;
+		private readonly Func<DbConnection, CancellationToken, ValueTask<IAsyncDbTransaction>>?                 _beginTransactionAsync;
+		private readonly Func<DbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>? _beginTransactionIlAsync;
+		private readonly Func<DbConnection, ValueTask>?                                                         _disposeAsync;
 
 		public ReflectedAsyncDbConnection(
-			IDbConnection connection,
-#if !NETFRAMEWORK
-			Func<IDbConnection, CancellationToken, ValueTask<IAsyncDbTransaction>>?                 beginTransactionAsync,
-			Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>? beginTransactionIlAsync,
-#else
-			Func<IDbConnection, CancellationToken, Task<IAsyncDbTransaction>>?                      beginTransactionAsync,
-			Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>?      beginTransactionIlAsync,
-#endif
-			Func<IDbConnection, CancellationToken, Task>?                                           openAsync,
-			Func<IDbConnection, Task>?                                                              closeAsync,
-#if !NETFRAMEWORK
-			Func<IDbConnection, ValueTask>?                                                         disposeAsync)
-#else
-			Func<IDbConnection, Task>?                                                              disposeAsync)
-#endif
+			DbConnection connection,
+			Func<DbConnection, CancellationToken, ValueTask<IAsyncDbTransaction>>?                 beginTransactionAsync,
+			Func<DbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>? beginTransactionIlAsync,
+			Func<DbConnection, CancellationToken, Task>?                                           openAsync,
+			Func<DbConnection, Task>?                                                              closeAsync,
+			Func<DbConnection, ValueTask>?                                                         disposeAsync)
 			: base(connection)
 		{
 			_beginTransactionAsync   = beginTransactionAsync;
@@ -48,20 +33,12 @@ namespace LinqToDB.Async
 			_disposeAsync            = disposeAsync;
 		}
 
-#if !NETFRAMEWORK
 		public override ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
-#else
-		public override Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
-#endif
 		{
 			return _beginTransactionAsync?.Invoke(Connection, cancellationToken) ?? base.BeginTransactionAsync(cancellationToken);
 		}
 
-#if !NETFRAMEWORK
 		public override ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
-#else
-		public override Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
-#endif
 		{
 			return _beginTransactionIlAsync?.Invoke(Connection, isolationLevel, cancellationToken) ?? base.BeginTransactionAsync(isolationLevel, cancellationToken);
 		}
@@ -76,16 +53,9 @@ namespace LinqToDB.Async
 			return _closeAsync?.Invoke(Connection) ?? base.CloseAsync();
 		}
 
-#if NETFRAMEWORK
-		public override Task DisposeAsync()
+		public override ValueTask DisposeAsync()
 		{
 			return _disposeAsync?.Invoke(Connection) ?? base.DisposeAsync();
 		}
-#else
-		public override ValueTask DisposeAsync()
-		{
-			return _disposeAsync != null ? _disposeAsync.Invoke(Connection) : base.DisposeAsync();
-		}
-#endif
 	}
 }

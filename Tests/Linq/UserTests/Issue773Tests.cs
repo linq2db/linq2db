@@ -16,14 +16,14 @@ namespace Tests.UserTests
 	{
 		public static class SqlLite
 		{
-			class MatchBuilder : Sql.IExtensionCallBuilder
+			sealed class MatchBuilder : Sql.IExtensionCallBuilder
 			{
 				public void Build(Sql.ISqExtensionBuilder builder)
 				{
 					var method = (MethodInfo) builder.Member;
 					var arg = method.GetGenericArguments().Single();
 
-					builder.AddParameter("table_field", new SqlTable(builder.Mapping, arg));
+					builder.AddParameter("table_field", new SqlTable(builder.Mapping.GetEntityDescriptor(arg)));
 				}
 			}
 
@@ -47,7 +47,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestAnonymous([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Execute(@"
 DROP TABLE IF EXISTS dataFTS;
@@ -79,7 +79,7 @@ CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastNam
 		[Test]
 		public void TestDirect([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Execute(@"
 DROP TABLE IF EXISTS dataFTS;
@@ -99,15 +99,15 @@ CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastNam
 
 					var list = data.ToList(); // <=THROWS EXCEPTION
 
-					Assert.AreEqual(0, list.Count);
+					Assert.That(list, Is.Empty);
 
 					db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "JohnTheRipper" });
 					db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "DoeJohn"       });
 
 					list = data.ToList(); // <=THROWS EXCEPTION
 
-					Assert.AreEqual(1, list.Count);
-					Assert.AreEqual("JohnTheRipper", list[0].FirstName);
+					Assert.That(list, Has.Count.EqualTo(1));
+					Assert.That(list[0].FirstName, Is.EqualTo("JohnTheRipper"));
 				}
 				finally
 				{

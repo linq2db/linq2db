@@ -5,13 +5,14 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -21,60 +22,65 @@ using LinqToDB.Mapping;
 
 namespace OracleDataContext
 {
-	public partial class XEDB : LinqToDB.Data.DataConnection
+	public partial class XeDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
-		public ITable<BINARYDATA>              Binarydatas              { get { return this.GetTable<BINARYDATA>(); } }
-		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
-		public ITable<DataTypeTest>            DataTypeTests            { get { return this.GetTable<DataTypeTest>(); } }
-		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
-		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>              GrandChildren            { get { return this.GetTable<GrandChild>(); } }
-		public ITable<InheritanceChild>        InheritanceChildren      { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent>       InheritanceParents       { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<Issue2564Table>          Issue2564Tables          { get { return this.GetTable<Issue2564Table>(); } }
-		public ITable<LinqDataType>            LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<LINQDATATYPESBC>         Linqdatatypesbcs         { get { return this.GetTable<LINQDATATYPESBC>(); } }
-		public ITable<LongRawTable>            LongRawTables            { get { return this.GetTable<LongRawTable>(); } }
-		public ITable<OracleBulkCopyTable>     OracleBulkCopyTables     { get { return this.GetTable<OracleBulkCopyTable>(); } }
-		public ITable<Parent>                  Parents                  { get { return this.GetTable<Parent>(); } }
-		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>                  People                   { get { return this.GetTable<Person>(); } }
+		public ITable<AllType>             AllTypes            { get { return this.GetTable<AllType>(); } }
+		public ITable<BINARYDATA>          Binarydatas         { get { return this.GetTable<BINARYDATA>(); } }
+		public ITable<Child>               Children            { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>       CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
+		public ITable<DataTypeTest>        DataTypeTests       { get { return this.GetTable<DataTypeTest>(); } }
+		public ITable<DecimalOverflow>     DecimalOverflows    { get { return this.GetTable<DecimalOverflow>(); } }
+		public ITable<Doctor>              Doctors             { get { return this.GetTable<Doctor>(); } }
+		public ITable<GrandChild>          GrandChildren       { get { return this.GetTable<GrandChild>(); } }
+		public ITable<InheritanceChild>    InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent>   InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<LinqDataType>        LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<LINQDATATYPESBC>     Linqdatatypesbcs    { get { return this.GetTable<LINQDATATYPESBC>(); } }
+		public ITable<LongRawTable>        LongRawTables       { get { return this.GetTable<LongRawTable>(); } }
+		public ITable<Parent>              Parents             { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>             Patients            { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>              People              { get { return this.GetTable<Person>(); } }
 		/// <summary>
 		/// This is matview
 		/// </summary>
-		public ITable<SchemaTestMatView>       SchemaTestMatViews       { get { return this.GetTable<SchemaTestMatView>(); } }
+		public ITable<SchemaTestMatView>   SchemaTestMatViews  { get { return this.GetTable<SchemaTestMatView>(); } }
 		/// <summary>
 		/// This is table
 		/// </summary>
-		public ITable<SchemaTestTable>         SchemaTestTables         { get { return this.GetTable<SchemaTestTable>(); } }
-		public ITable<SchemaTestView>          SchemaTestViews          { get { return this.GetTable<SchemaTestView>(); } }
-		public ITable<SEQUENCETEST>            Sequencetests            { get { return this.GetTable<SEQUENCETEST>(); } }
-		public ITable<StgTradeInformation>     StgTradeInformation      { get { return this.GetTable<StgTradeInformation>(); } }
-		public ITable<StringTest>              StringTests              { get { return this.GetTable<StringTest>(); } }
-		public ITable<TEntity>                 TEntities                { get { return this.GetTable<TEntity>(); } }
-		public ITable<TestIdentity>            TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestMerge1>              TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>              TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
-		public ITable<TestSequenceSchemaTable> TestSequenceSchemaTables { get { return this.GetTable<TestSequenceSchemaTable>(); } }
-		public ITable<TTestUser>               TTestUsers               { get { return this.GetTable<TTestUser>(); } }
-		public ITable<TTestUserContract>       TTestUserContracts       { get { return this.GetTable<TTestUserContract>(); } }
+		public ITable<SchemaTestTable>     SchemaTestTables    { get { return this.GetTable<SchemaTestTable>(); } }
+		public ITable<SchemaTestView>      SchemaTestViews     { get { return this.GetTable<SchemaTestView>(); } }
+		public ITable<SEQUENCETEST>        Sequencetests       { get { return this.GetTable<SEQUENCETEST>(); } }
+		public ITable<StgTradeInformation> StgTradeInformation { get { return this.GetTable<StgTradeInformation>(); } }
+		public ITable<StringTest>          StringTests         { get { return this.GetTable<StringTest>(); } }
+		public ITable<TEntity>             TEntities           { get { return this.GetTable<TEntity>(); } }
+		public ITable<TestIdentity>        TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>          TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>          TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TTestUser>           TTestUsers          { get { return this.GetTable<TTestUser>(); } }
+		public ITable<TTestUserContract>   TTestUserContracts  { get { return this.GetTable<TTestUserContract>(); } }
 
-		public XEDB()
+		public XeDB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public XEDB(string configuration)
+		public XeDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public XEDB(LinqToDbConnectionOptions options)
+		public XeDB(DataOptions options)
 			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public XeDB(DataOptions<XeDB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 			InitMappingSchema();
@@ -82,6 +88,55 @@ namespace OracleDataContext
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#region Table Functions
+
+		#region TestPACKAGE1TestTableFunction
+
+		[Sql.TableFunction(Schema="MANAGED", Package="TEST_PACKAGE1", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult> TestPACKAGE1TestTableFunction(decimal? i)
+		{
+			return this.TableFromExpression(() => TestPACKAGE1TestTableFunction(i));
+		}
+
+		public partial class TestTableFUNCTIONResult
+		{
+			public decimal? O { get; set; }
+		}
+
+		#endregion
+
+		#region TestPACKAGE2TestTableFunction
+
+		[Sql.TableFunction(Schema="MANAGED", Package="TEST_PACKAGE2", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult0> TestPACKAGE2TestTableFunction(decimal? i)
+		{
+			return this.TableFromExpression(() => TestPACKAGE2TestTableFunction(i));
+		}
+
+		public partial class TestTableFUNCTIONResult0
+		{
+			public decimal? O { get; set; }
+		}
+
+		#endregion
+
+		#region TestTableFunction
+
+		[Sql.TableFunction(Schema="MANAGED", Name="TEST_TABLE_FUNCTION")]
+		public ITable<TestTableFUNCTIONResult1> TestTableFunction(decimal? i)
+		{
+			return this.TableFromExpression(() => TestTableFunction(i));
+		}
+
+		public partial class TestTableFUNCTIONResult1
+		{
+			public decimal? O { get; set; }
+		}
+
+		#endregion
+
+		#endregion
 	}
 
 	[Table(Schema="MANAGED", Name="AllTypes")]
@@ -114,7 +169,6 @@ namespace OracleDataContext
 		[Column("bfileDataType",          DbType="BFILE",                             DataType=LinqToDB.DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]?         BfileDataType          { get; set; } // BFILE
 		[Column("guidDataType",           DbType="RAW(16)",                           DataType=LinqToDB.DataType.Binary,         Length=16),                           Nullable         ] public byte[]?         GuidDataType           { get; set; } // RAW(16)
 		[Column("longDataType",           DbType="LONG",                              DataType=LinqToDB.DataType.Long,           Length=0),                            Nullable         ] public string?         LongDataType           { get; set; } // LONG
-		[Column("uriDataType",            DbType="URITYPE",                           DataType=LinqToDB.DataType.Undefined,      Length=256),                          Nullable         ] public object?         UriDataType            { get; set; } // URITYPE
 		[Column("xmlDataType",            DbType="XMLTYPE",                           DataType=LinqToDB.DataType.Xml,            Length=2000),                         Nullable         ] public string?         XmlDataType            { get; set; } // XMLTYPE
 	}
 
@@ -131,6 +185,14 @@ namespace OracleDataContext
 	{
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ParentID { get; set; } // NUMBER
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ChildID  { get; set; } // NUMBER
+	}
+
+	[Table(Schema="MANAGED", Name="CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column(DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), NotNull] public decimal Id              { get; set; } // NUMBER
+		[Column(DbType="VARCHAR2(20)", DataType=LinqToDB.DataType.VarChar, Length=20),          NotNull] public string  CaseSensitive   { get; set; } = null!; // VARCHAR2(20)
+		[Column(DbType="VARCHAR2(20)", DataType=LinqToDB.DataType.VarChar, Length=20),          NotNull] public string  CaseInsensitive { get; set; } = null!; // VARCHAR2(20)
 	}
 
 	[Table(Schema="MANAGED", Name="DataTypeTest")]
@@ -179,9 +241,9 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// Fk_Doctor_Person
+		/// Fk_Doctor_Person (MANAGED.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="Fk_Doctor_Person", BackReferenceName="FkDoctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -210,18 +272,6 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22), PrimaryKey,  NotNull] public decimal  InheritanceParentId { get; set; } // NUMBER
 		[Column(DbType="NUMBER",        DataType=LinqToDB.DataType.Decimal,  Length=22),    Nullable         ] public decimal? TypeDiscriminator   { get; set; } // NUMBER
 		[Column(DbType="NVARCHAR2(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),    Nullable         ] public string?  Name                { get; set; } // NVARCHAR2(50)
-	}
-
-	[Table(Schema="MANAGED", Name="Issue2564Table")]
-	public partial class Issue2564Table
-	{
-		[Column(DbType="NUMBER (19,0)", DataType=LinqToDB.DataType.Decimal,   Length=22, Precision=19, Scale=0), PrimaryKey,  NotNull] public long      Id                     { get; set; } // NUMBER (19,0)
-		[Column(DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),                            NotNull] public DateTime  TimestampGenerated     { get; set; } // TIMESTAMP(6)
-		[Column(DbType="TIMESTAMP(6)",  DataType=LinqToDB.DataType.DateTime2, Length=11, Scale=6),                  Nullable         ] public DateTime? TimestampGone          { get; set; } // TIMESTAMP(6)
-		[Column(DbType="VARCHAR2(255)", DataType=LinqToDB.DataType.VarChar,   Length=255),                          Nullable         ] public string?   MessageClassName       { get; set; } // VARCHAR2(255)
-		[Column(DbType="VARCHAR2(255)", DataType=LinqToDB.DataType.VarChar,   Length=255),                          Nullable         ] public string?   ExternID1              { get; set; } // VARCHAR2(255)
-		[Column(DbType="VARCHAR2(255)", DataType=LinqToDB.DataType.VarChar,   Length=255),                          Nullable         ] public string?   TranslatedMessageGroup { get; set; } // VARCHAR2(255)
-		[Column(DbType="VARCHAR2(255)", DataType=LinqToDB.DataType.VarChar,   Length=255),                          Nullable         ] public string?   TranslatedMessage1     { get; set; } // VARCHAR2(255)
 	}
 
 	[Table(Schema="MANAGED", Name="LinqDataTypes")]
@@ -262,12 +312,6 @@ namespace OracleDataContext
 		[Column("longRawDataType", DbType="LONG RAW", DataType=LinqToDB.DataType.LongRaw, Length=0),     Nullable         ] public byte[]? LongRawDataType { get; set; } // LONG RAW
 	}
 
-	[Table(Schema="MANAGED", Name="OracleBulkCopyTable")]
-	public partial class OracleBulkCopyTable
-	{
-		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), NotNull] public decimal ID { get; set; } // NUMBER
-	}
-
 	[Table(Schema="MANAGED", Name="Parent")]
 	public partial class Parent
 	{
@@ -284,9 +328,9 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// Fk_Patient_Person
+		/// Fk_Patient_Person (MANAGED.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="Fk_Patient_Person", BackReferenceName="FkPatient")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -304,15 +348,15 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// Fk_Doctor_Person_BackReference
+		/// Fk_Doctor_Person_BackReference (MANAGED.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? FkDoctor { get; set; }
 
 		/// <summary>
-		/// Fk_Patient_Person_BackReference
+		/// Fk_Patient_Person_BackReference (MANAGED.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? FkPatient { get; set; }
 
 		#endregion
@@ -381,9 +425,9 @@ namespace OracleDataContext
 	[Table(Schema="MANAGED", Name="t_entity")]
 	public partial class TEntity
 	{
-		[Column("entity_id", DbType="NUMBER",                       DataType=LinqToDB.DataType.Decimal,   Length=22, Scale=0),              PrimaryKey,  NotNull] public decimal   EntityId { get; set; } // NUMBER
-		[Column("time",      DbType="DATE",                         DataType=LinqToDB.DataType.DateTime,  Length=7),                           Nullable         ] public DateTime? Time     { get; set; } // DATE
-		[Column("duration",  DbType="INTERVAL DAY(3) TO SECOND(2)", DataType=LinqToDB.DataType.Undefined, Length=11, Precision=3, Scale=2),    Nullable         ] public object?   Duration { get; set; } // INTERVAL DAY(3) TO SECOND(2)
+		[Column("entity_id", DbType="NUMBER",                       DataType=LinqToDB.DataType.Decimal,  Length=22, Scale=0),              PrimaryKey,  NotNull] public decimal   EntityId { get; set; } // NUMBER
+		[Column("time",      DbType="DATE",                         DataType=LinqToDB.DataType.DateTime, Length=7),                           Nullable         ] public DateTime? Time     { get; set; } // DATE
+		[Column("duration",  DbType="INTERVAL DAY(3) TO SECOND(2)", DataType=LinqToDB.DataType.Time,     Length=11, Precision=3, Scale=2),    Nullable         ] public TimeSpan? Duration { get; set; } // INTERVAL DAY(3) TO SECOND(2)
 	}
 
 	[Table(Schema="MANAGED", Name="TestIdentity")]
@@ -444,12 +488,6 @@ namespace OracleDataContext
 		[Column(DbType="NUMBER",                      DataType=LinqToDB.DataType.Decimal,        Length=22),                            Nullable         ] public decimal?        FieldEnumNumber { get; set; } // NUMBER
 	}
 
-	[Table(Schema="MANAGED", Name="TestSequenceSchemaTable")]
-	public partial class TestSequenceSchemaTable
-	{
-		[Column(DbType="NUMBER (19,0)", DataType=LinqToDB.DataType.Decimal, Length=22, Precision=19, Scale=0), PrimaryKey, NotNull] public long Id { get; set; } // NUMBER (19,0)
-	}
-
 	[Table(Schema="MANAGED", Name="t_test_user")]
 	public partial class TTestUser
 	{
@@ -459,9 +497,9 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00799365_BackReference
+		/// SYS_C007123_BackReference (MANAGED.t_test_user_contract)
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
 
 		#endregion
@@ -478,75 +516,371 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00799365
+		/// SYS_C007123 (MANAGED.t_test_user)
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="SYS_C00799365", BackReferenceName="Syscs")]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false)]
 		public TTestUser User { get; set; } = null!;
 
 		#endregion
 	}
 
-	public static partial class XEDBStoredProcedures
+	public static partial class XeDBStoredProcedures
 	{
-		#region PersonUpdate
+		#region ADDISSUE792RECORD
 
-		public static int PersonUpdate(this XEDB dataConnection, decimal? PPERSONID, string? PFIRSTNAME, string? PLASTNAME, string? PMIDDLENAME, string? PGENDER)
+		public static int ADDISSUE792RECORD(this XeDB dataConnection)
 		{
-			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE",
-				new DataParameter("PPERSONID",   PPERSONID,   LinqToDB.DataType.Decimal),
-				new DataParameter("PFIRSTNAME",  PFIRSTNAME,  LinqToDB.DataType.NVarChar),
-				new DataParameter("PLASTNAME",   PLASTNAME,   LinqToDB.DataType.NVarChar),
-				new DataParameter("PMIDDLENAME", PMIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("PGENDER",     PGENDER,     LinqToDB.DataType.Char));
-		}
-
-		#endregion
-
-		#region PersonDelete
-
-		public static int PersonDelete(this XEDB dataConnection, decimal? PPERSONID)
-		{
-			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE",
-				new DataParameter("PPERSONID", PPERSONID, LinqToDB.DataType.Decimal));
-		}
-
-		#endregion
-
-		#region OUTREFTEST
-
-		public static int OUTREFTEST(this XEDB dataConnection, decimal? PID, out decimal? POUTPUTID, ref decimal? PINPUTOUTPUTID, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
-		{
-			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST",
-				new DataParameter("PID",             PID,             LinqToDB.DataType.Decimal),
-				new DataParameter("POUTPUTID", null,       LinqToDB.DataType.Decimal) { Direction = ParameterDirection.Output, Size = 22 },
-				new DataParameter("PINPUTOUTPUTID",  PINPUTOUTPUTID,  LinqToDB.DataType.Decimal) { Direction = ParameterDirection.InputOutput, Size = 22 },
-				new DataParameter("PSTR",            PSTR,            LinqToDB.DataType.NVarChar),
-				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output },
-				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.InputOutput });
-
-			POUTPUTID       = Converter.ChangeTypeTo<decimal?>(((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTID"]).      Value);
-			PINPUTOUTPUTID  = Converter.ChangeTypeTo<decimal?>(((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTID"]). Value);
-			POUTPUTSTR      = Converter.ChangeTypeTo<string?> (((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTSTR"]).     Value);
-			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?> (((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTSTR"]).Value);
-
-			return ret;
+			return dataConnection.ExecuteProc("MANAGED.ADDISSUE792RECORD");
 		}
 
 		#endregion
 
 		#region OUTREFENUMTEST
 
-		public static int OUTREFENUMTEST(this XEDB dataConnection, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
+		public static int OUTREFENUMTEST(this XeDB dataConnection, string? pSTR, out string? pOUTPUTSTR, ref string? pINPUTOUTPUTSTR)
 		{
-			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST",
-				new DataParameter("PSTR",            PSTR,            LinqToDB.DataType.NVarChar),
-				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output },
-				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.InputOutput });
+			var parameters = new []
+			{
+				new DataParameter("PSTR",            pSTR,            LinqToDB.DataType.NVarChar),
+				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output
+				},
+				new DataParameter("PINPUTOUTPUTSTR", pINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			POUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTSTR"]).     Value);
-			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTSTR"]).Value);
+			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST", parameters);
+
+			pOUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			pINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
 
 			return ret;
+		}
+
+		#endregion
+
+		#region OUTREFTEST
+
+		public static int OUTREFTEST(this XeDB dataConnection, decimal? pID, out decimal? pOUTPUTID, ref decimal? pINPUTOUTPUTID, string? pSTR, out string? pOUTPUTSTR, ref string? pINPUTOUTPUTSTR)
+		{
+			var parameters = new []
+			{
+				new DataParameter("PID",             pID,             LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("POUTPUTID", null,       LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 22
+				},
+				new DataParameter("PINPUTOUTPUTID",  pINPUTOUTPUTID,  LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 22
+				},
+				new DataParameter("PSTR",            pSTR,            LinqToDB.DataType.NVarChar),
+				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output
+				},
+				new DataParameter("PINPUTOUTPUTSTR", pINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
+
+			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST", parameters);
+
+			pOUTPUTID       = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			pINPUTOUTPUTID  = Converter.ChangeTypeTo<decimal?>(parameters[2].Value);
+			pOUTPUTSTR      = Converter.ChangeTypeTo<string?> (parameters[4].Value);
+			pINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?> (parameters[5].Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region PersonDelete
+
+		public static int PersonDelete(this XeDB dataConnection, decimal? pPERSONID)
+		{
+			var parameters = new []
+			{
+				new DataParameter("PPERSONID", pPERSONID, LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				}
+			};
+
+			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE", parameters);
+		}
+
+		#endregion
+
+		#region PersonUpdate
+
+		public static int PersonUpdate(this XeDB dataConnection, decimal? pPERSONID, string? pFIRSTNAME, string? pLASTNAME, string? pMIDDLENAME, string? pGENDER)
+		{
+			var parameters = new []
+			{
+				new DataParameter("PPERSONID",   pPERSONID,   LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("PFIRSTNAME",  pFIRSTNAME,  LinqToDB.DataType.NVarChar),
+				new DataParameter("PLASTNAME",   pLASTNAME,   LinqToDB.DataType.NVarChar),
+				new DataParameter("PMIDDLENAME", pMIDDLENAME, LinqToDB.DataType.NVarChar),
+				new DataParameter("PGENDER",     pGENDER,     LinqToDB.DataType.Char)
+			};
+
+			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE", parameters);
+		}
+
+		#endregion
+
+		#region RESULTSETTEST
+
+		public static IEnumerable<RESULTSETTESTResult> RESULTSETTEST(this XeDB dataConnection, out object? mR, out object? sR)
+		{
+			var parameters = new []
+			{
+				new DataParameter("MR", null, LinqToDB.DataType.Cursor)
+				{
+					Direction = ParameterDirection.Output
+				},
+				new DataParameter("SR", null, LinqToDB.DataType.Cursor)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
+
+			var ret = dataConnection.QueryProc<RESULTSETTESTResult>("MANAGED.RESULTSETTEST", parameters).ToList();
+
+			mR = Converter.ChangeTypeTo<object?>(parameters[0].Value);
+			sR = Converter.ChangeTypeTo<object?>(parameters[1].Value);
+
+			return ret;
+		}
+
+		public partial class RESULTSETTESTResult
+		{
+			public decimal? MASTERID { get; set; }
+		}
+
+		#endregion
+
+		#region TestPACKAGE1TestProcedure
+
+		public static int TestPACKAGE1TestProcedure(this XeDB dataConnection, decimal? i, out decimal? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("O", null, LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 22
+				}
+			};
+
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region TestPACKAGE2TestProcedure
+
+		public static int TestPACKAGE2TestProcedure(this XeDB dataConnection, decimal? i, out decimal? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("O", null, LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 22
+				}
+			};
+
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region TestProcedure
+
+		public static int TestProcedure(this XeDB dataConnection, decimal? i, out decimal? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("O", null, LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 22
+				}
+			};
+
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PROCEDURE", parameters);
+
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+
+			return ret;
+		}
+
+		#endregion
+	}
+
+	public static partial class SqlFunctions
+	{
+		#region PatientSelectall
+
+		[Sql.Function(Name="MANAGED.PATIENT_SELECTALL", ServerSideOnly=true)]
+		public static object? PatientSelectall()
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PatientSelectbyname
+
+		[Sql.Function(Name="MANAGED.PATIENT_SELECTBYNAME", ServerSideOnly=true)]
+		public static object? PatientSelectbyname(string? pFIRSTNAME, string? pLASTNAME)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonInsert
+
+		[Sql.Function(Name="MANAGED.PERSON_INSERT", ServerSideOnly=true)]
+		public static object? PersonInsert(string? pFIRSTNAME, string? pLASTNAME, string? pMIDDLENAME, string? pGENDER)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonSelectall
+
+		[Sql.Function(Name="MANAGED.PERSON_SELECTALL", ServerSideOnly=true)]
+		public static object? PersonSelectall()
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonSelectallbygender
+
+		[Sql.Function(Name="MANAGED.PERSON_SELECTALLBYGENDER", ServerSideOnly=true)]
+		public static object? PersonSelectallbygender(string? pGENDER)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonSelectbykey
+
+		[Sql.Function(Name="MANAGED.PERSON_SELECTBYKEY", ServerSideOnly=true)]
+		public static object? PersonSelectbykey(decimal? pID)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonSelectbyname
+
+		[Sql.Function(Name="MANAGED.PERSON_SELECTBYNAME", ServerSideOnly=true)]
+		public static object? PersonSelectbyname(string? pFIRSTNAME, string? pLASTNAME)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region PersonSelectlistbyname
+
+		[Sql.Function(Name="MANAGED.PERSON_SELECTLISTBYNAME", ServerSideOnly=true)]
+		public static object? PersonSelectlistbyname(string? pFIRSTNAME, string? pLASTNAME)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region ScalarDatareader
+
+		[Sql.Function(Name="MANAGED.SCALAR_DATAREADER", ServerSideOnly=true)]
+		public static object? ScalarDatareader()
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region ScalarReturnparameter
+
+		[Sql.Function(Name="MANAGED.SCALAR_RETURNPARAMETER", ServerSideOnly=true)]
+		public static int? ScalarReturnparameter()
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region TestFunction
+
+		[Sql.Function(Name="MANAGED.TEST_FUNCTION", ServerSideOnly=true)]
+		public static decimal? TestFunction(decimal? i)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region TestPACKAGE1TestFunction
+
+		[Sql.Function(Name="MANAGED.TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly=true)]
+		public static decimal? TestPACKAGE1TestFunction(decimal? i)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region TestPACKAGE2TestFunction
+
+		[Sql.Function(Name="MANAGED.TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly=true)]
+		public static decimal? TestPACKAGE2TestFunction(decimal? i)
+		{
+			throw new InvalidOperationException();
 		}
 
 		#endregion
@@ -588,12 +922,6 @@ namespace OracleDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
-		}
-
-		public static Issue2564Table? Find(this ITable<Issue2564Table> table, long Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
 		}
 
 		public static LongRawTable? Find(this ITable<LongRawTable> table, decimal ID)
@@ -656,12 +984,6 @@ namespace OracleDataContext
 				t.Id == Id);
 		}
 
-		public static TestSequenceSchemaTable? Find(this ITable<TestSequenceSchemaTable> table, long Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
 		public static TTestUser? Find(this ITable<TTestUser> table, decimal UserId)
 		{
 			return table.FirstOrDefault(t =>
@@ -675,5 +997,3 @@ namespace OracleDataContext
 		}
 	}
 }
-
-#pragma warning restore 1591

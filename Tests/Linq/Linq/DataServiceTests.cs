@@ -1,13 +1,12 @@
-﻿#if NET472
+﻿#if NETFRAMEWORK
 using System.Data.Services.Providers;
-
-using LinqToDB.ServiceModel;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
 	using Model;
+	using LinqToDB.Remote;
 
 	[TestFixture]
 	public class DataServiceTests

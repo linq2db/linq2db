@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -8,95 +7,54 @@ using JetBrains.Annotations;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Data;
-	using LinqToDB.Configuration;
 
 	[PublicAPI]
 	public static class FirebirdTools
 	{
-		private static readonly Lazy<IDataProvider> _firebirdDataProvider = new Lazy<IDataProvider>(() =>
+		internal static FirebirdProviderDetector ProviderDetector = new();
+
+		public static bool AutoDetectProvider
 		{
-			var provider = new FirebirdDataProvider();
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
-		{
-			if (css.ProviderName == ProviderName.Firebird
-				|| css.ProviderName == FirebirdProviderAdapter.ClientNamespace
-				|| css.Name.Contains("Firebird"))
-			{
-				return _firebirdDataProvider.Value;
-			}
-
-			return null;
+			get => ProviderDetector.AutoDetectProvider;
+			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider()
+		public static IDataProvider GetDataProvider(FirebirdVersion version = FirebirdVersion.AutoDetect, string? connectionString = null)
 		{
-			return _firebirdDataProvider.Value;
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version);
 		}
 
 		public static void ResolveFirebird(string path)
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
-			new AssemblyResolver(path, FirebirdProviderAdapter.AssemblyName);
+			_ = new AssemblyResolver(path, FirebirdProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveFirebird(Assembly assembly)
 		{
 			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-			new AssemblyResolver(assembly, FirebirdProviderAdapter.AssemblyName);
+			_ = new AssemblyResolver(assembly, FirebirdProviderAdapter.AssemblyName);
 		}
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString)
+		public static DataConnection CreateDataConnection(string connectionString, FirebirdVersion version = FirebirdVersion.AutoDetect)
 		{
-			return new DataConnection(_firebirdDataProvider.Value, connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(DbConnection connection, FirebirdVersion version = FirebirdVersion.AutoDetect)
 		{
-			return new DataConnection(_firebirdDataProvider.Value, connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), default, version), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, FirebirdVersion version = FirebirdVersion.AutoDetect)
 		{
-			return new DataConnection(_firebirdDataProvider.Value, transaction);
-		}
-
-		#endregion
-
-		#region BulkCopy
-
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int                         maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), default, version), transaction);
 		}
 
 		#endregion
 
-		#region ClearAllPools
-
-		public static void ClearAllPools() => FirebirdProviderAdapter.GetInstance().ClearAllPools();
-
-		#endregion
+		public static void ClearAllPools() => FirebirdProviderAdapter.Instance.ClearAllPools();
 	}
 }

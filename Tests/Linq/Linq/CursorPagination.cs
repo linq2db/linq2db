@@ -24,7 +24,7 @@ namespace Tests.Linq
 			public List<T> Items      { get; set; } = default!;
 		}
 
-		class CteBody<T, TCursor>
+		sealed class CteBody<T, TCursor>
 		{
 			public long?   TotalCount;
 			public long    RowNumber;
@@ -32,7 +32,7 @@ namespace Tests.Linq
 			public T       Data        = default!;
 		}
 
-		static Expression? Unwrap(Expression? ex)
+		static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)
 				return null;
@@ -234,7 +234,7 @@ namespace Tests.Linq
 	public class CursorPagination : TestBase
 	{
 		[Table]
-		class Booking
+		sealed class Booking
 		{
 			[Column] public int BookingID        { get; set; }
 			[Column] public DateTime ServiceDate { get; set; }
@@ -242,7 +242,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PaginationViaCursor([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		public void PaginationViaCursor([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			var take = 12;
 			var sampleData = Enumerable.Range(1, 100).Select(i => new Booking

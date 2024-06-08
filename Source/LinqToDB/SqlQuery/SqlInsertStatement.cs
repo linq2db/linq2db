@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -12,7 +9,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlInsertStatement(SelectQuery selectQuery) : base(selectQuery)
+		public SqlInsertStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}
 
@@ -28,6 +25,8 @@ namespace LinqToDB.SqlQuery
 			set => _insert = value;
 		}
 
+		internal bool HasInsert => _insert != null;
+
 		#endregion
 
 		#region Output
@@ -36,49 +35,20 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			((IQueryElement?)_insert)?.ToString(sb, dic);
-			return sb;
+			return writer
+				.AppendElement(_insert)
+				.AppendLine()
+				.AppendElement(SelectQuery)
+				.AppendElement(Output);
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
-			With?.Walk(options, func);
-			((ISqlExpressionWalkable?)_insert)?.Walk(options, func);
+			noAlias = false;
 
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
-
-			return null;
-		}
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlInsertStatement((SelectQuery)SelectQuery.Clone(objectTree, doClone));
-
-			if (_insert != null)
-				clone._insert = (SqlInsertClause)_insert.Clone(objectTree, doClone);
-
-			if (With != null)
-				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		public override IEnumerable<IQueryElement> EnumClauses()
-		{
-			if (_insert != null)
-				yield return _insert;
-		}
-
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
-		{
-			if (_insert?.Into == table)
+			if (ReferenceEquals(_insert?.Into, table))
 				return table;
 
 			return SelectQuery!.GetTableSource(table);

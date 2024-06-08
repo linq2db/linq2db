@@ -1,24 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using LinqToDB.Mapping;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
+	using Mapping;
+
 	//TODO: Investigate how to implement only ISqlTableSource interface
-	public class SqlRawSqlTable : SqlTable, IQueryElement
+	public class SqlRawSqlTable : SqlTable
 	{
 		public string SQL { get; }
 
-		public ISqlExpression[] Parameters { get; }
+		public ISqlExpression[] Parameters { get; private set; }
 
 		public SqlRawSqlTable(
-			MappingSchema mappingSchema,
-			Type objectType,
-			string sql,
-			params ISqlExpression[] parameters)
-			: base(mappingSchema, objectType)
+			EntityDescriptor endtityDescriptor,
+			string           sql,
+			ISqlExpression[] parameters)
+			: base(endtityDescriptor)
 		{
 			SQL        = sql        ?? throw new ArgumentNullException(nameof(sql));
 			Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
@@ -32,65 +30,43 @@ namespace LinqToDB.SqlQuery
 			SqlField[]       fields,
 			string           sql,
 			ISqlExpression[] parameters)
-			: base(id, string.Empty, alias, null, null, null, string.Empty, objectType, null, fields, SqlTableType.RawSql, null, TableOptions.NotSet)
+			: base(id, string.Empty, alias, new (string.Empty), objectType, null, fields, SqlTableType.RawSql, null, TableOptions.NotSet, null)
 		{
 			SQL        = sql;
 			Parameters = parameters;
 		}
 
-		public SqlRawSqlTable(SqlRawSqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] parameters)
+		public SqlRawSqlTable(SqlRawSqlTable table, ISqlExpression[] parameters)
+			: base(table.ObjectType, null, table.TableName)
 		{
 			Alias              = table.Alias;
-			Server             = table.Server;
-			Database           = table.Database;
-			Schema             = table.Schema;
 
-			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
+
+			AddRange(table.Fields.Select(f => new SqlField(f)));
 
 			SQL                = table.SQL;
 			Parameters         = parameters;
-
-			AddRange(fields);
 		}
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return sb
+			writer
+				.DebugAppendUniqueId(this)
 				.AppendLine("(")
 				.Append(SQL)
 				.Append(')')
 				.AppendLine();
-		}
 
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return writer;
 		}
 
 		#region IQueryElement Members
 
-		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+		public string SqlText => this.ToDebugString();
 
 		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
-		{
-			if (Parameters != null)
-				for (var i = 0; i < Parameters.Length; i++)
-					Parameters[i] = Parameters[i].Walk(options, func)!;
-
-			return func(this);
-		}
-
-		#endregion
-
 	}
 }

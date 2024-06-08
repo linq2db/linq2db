@@ -1,4 +1,20 @@
-﻿DROP PROCEDURE "AddIssue792Record";             COMMIT;
+﻿-- SKIP Firebird.2.5 BEGIN
+DROP PACKAGE TEST_PACKAGE1;                     COMMIT;
+DROP PACKAGE TEST_PACKAGE2;                     COMMIT;
+DROP PROCEDURE TEST_PROCEDURE;                  COMMIT;
+DROP PROCEDURE TEST_TABLE_FUNCTION;             COMMIT;
+DROP FUNCTION TEST_FUNCTION;
+-- SKIP Firebird.3 BEGIN
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.5 BEGIN
+SELECT 1 FROM rdb$database
+-- SKIP Firebird.5 END
+-- SKIP Firebird.4 END
+-- SKIP Firebird.3 END
+COMMIT;
+-- SKIP Firebird.2.5 END
+
+DROP PROCEDURE "AddIssue792Record";             COMMIT;
 DROP PROCEDURE "Person_SelectByKey";            COMMIT;
 DROP PROCEDURE "Person_SelectAll";              COMMIT;
 DROP PROCEDURE "Person_SelectByName";           COMMIT;
@@ -13,6 +29,17 @@ DROP PROCEDURE "OutRefEnumTest";                COMMIT;
 DROP PROCEDURE "Scalar_DataReader";             COMMIT;
 DROP PROCEDURE "Scalar_OutputParameter";        COMMIT;
 DROP PROCEDURE "Scalar_ReturnParameter";        COMMIT;
+-- SKIP Firebird.2.5 BEGIN
+-- SKIP Firebird.3 BEGIN
+DROP PROCEDURE test_v4_types;
+-- SKIP Firebird.2.5 END
+-- SKIP Firebird.3 END
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.5 BEGIN
+SELECT 1 FROM rdb$database
+-- SKIP Firebird.4 END
+-- SKIP Firebird.5 END
+COMMIT;
 
 DROP VIEW "PersonView";                         COMMIT;
 
@@ -144,21 +171,30 @@ COMMIT;
 Data definitions according to:
 http://www.firebirdsql.org/manual/migration-mssql-data-types.html
 
-BUT! BLOB is ised for BINARY data! not CHAR
+BUT! BLOB is used for BINARY data! not CHAR
 */
 
 CREATE TABLE "DataTypeTest"
 (
 	"DataTypeID"      INTEGER NOT NULL PRIMARY KEY,
 	"Binary_"         BLOB,
+-- SKIP Firebird.2.5 BEGIN
+	"Boolean_"        BOOLEAN,
+-- SKIP Firebird.2.5 END
+-- SKIP Firebird.3 BEGIN
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.5 BEGIN
 	"Boolean_"        CHAR(1),
+-- SKIP Firebird.5 END
+-- SKIP Firebird.4 END
+-- SKIP Firebird.3 END
 	"Byte_"           SMALLINT,
 	"Bytes_"          BLOB,
 	CHAR_             CHAR(1),
 	"DateTime_"       TIMESTAMP,
 	"Decimal_"        DECIMAL(10, 2),
 	"Double_"         DOUBLE PRECISION,
-	"Guid_"           CHAR(38),
+	"Guid_"           CHAR(16) CHARACTER SET OCTETS,
 	"Int16_"          SMALLINT,
 	"Int32_"          INTEGER,
 	"Int64_"          NUMERIC(11),
@@ -200,8 +236,19 @@ INSERT INTO "DataTypeTest"
 	 "Single_",	"Stream_",	"String_", "UInt16_", "UInt32_",	"UInt64_",
 	 "Xml_")
 VALUES
-	('dddddddddddddddd', 1,  255,'dddddddddddddddd', 'B', 'NOW', 12345.67,
-	1234.567, 'dddddddddddddddddddddddddddddddd', 32767, 32768, 1000000, 12.3456, 127,
+	('dddddddddddddddd',
+-- SKIP Firebird.2.5 BEGIN
+	TRUE
+-- SKIP Firebird.2.5 END
+-- SKIP Firebird.3 BEGIN
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.5 BEGIN
+	'1'
+-- SKIP Firebird.5 END
+-- SKIP Firebird.4 END
+-- SKIP Firebird.3 END
+	,255,'dddddddddddddddd', 'B', 'NOW', 12345.67,
+	1234.567, X'dddddddddddddddddddddddddddddddd', 32767, 32768, 1000000, 12.3456, 127,
 	1234.123, 'dddddddddddddddd', 'string', 32767, 32768, 200000000,
 	'<root><element strattr="strvalue" intattr="12345"/></root>');
 COMMIT;
@@ -225,8 +272,17 @@ CREATE TABLE "LinqDataTypes"
 	"MoneyValue"     decimal(10,4),
 	"DateTimeValue"  timestamp,
 	"DateTimeValue2" timestamp,
+-- SKIP Firebird.2.5 BEGIN
+	"BoolValue"      BOOLEAN,
+-- SKIP Firebird.2.5 END
+-- SKIP Firebird.3 BEGIN
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.5 BEGIN
 	"BoolValue"      char(1),
-	"GuidValue"      char(38),
+-- SKIP Firebird.5 END
+-- SKIP Firebird.4 END
+-- SKIP Firebird.3 END
+	"GuidValue"      CHAR(16) CHARACTER SET OCTETS,
 	"BinaryValue"    blob,
 	"SmallIntValue"  smallint,
 	"IntValue"       int,
@@ -295,6 +351,7 @@ CREATE TABLE "AllTypes"
 	"intDataType"              int,
 	"floatDataType"            float,
 	"realDataType"             real,
+	"doubleDataType"           double precision,
 
 	"timestampDataType"        timestamp,
 
@@ -304,6 +361,16 @@ CREATE TABLE "AllTypes"
 	"textDataType"             blob sub_type TEXT,
 	"ncharDataType"            char(20) character set UNICODE_FSS,
 	"nvarcharDataType"         varchar(20) character set UNICODE_FSS,
+
+-- SKIP Firebird.2.5 BEGIN
+-- SKIP Firebird.3 BEGIN
+	"timestampTZDataType"      timestamp with time zone,
+	"timeTZDataType"           time with time zone,
+	"decfloat16DataType"       decfloat(16),
+	"decfloat34DataType"       decfloat,
+	"int128DataType"           int128,
+-- SKIP Firebird.3 END
+-- SKIP Firebird.2.5 END
 
 	"blobDataType"             blob
 );
@@ -330,15 +397,26 @@ VALUES
 	NULL,
 	NULL,
 	NULL,
-
 	NULL,
 
 	NULL,
+
 	NULL,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+
+-- SKIP Firebird.2.5 BEGIN
+-- SKIP Firebird.3 BEGIN
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+-- SKIP Firebird.3 END
+-- SKIP Firebird.2.5 END
 
 	NULL
 );
@@ -355,6 +433,7 @@ VALUES
 	7777777,
 	20.31,
 	16,
+	16.17,
 
 	Cast('2012-12-12 12:12:12' as timestamp),
 
@@ -364,6 +443,16 @@ VALUES
 	'567',
 	'23233',
 	'3323',
+
+-- SKIP Firebird.2.5 BEGIN
+-- SKIP Firebird.3 BEGIN
+	'2020-12-12 12:24:35 Europe/Andorra',
+	'12:13 Australia/Hobart',
+	1234567890.123456,
+	123456789012345678901234567890.1234,
+	170141183460469231731687303715884105727,
+-- SKIP Firebird.3 END
+-- SKIP Firebird.2.5 END
 
 	'12345'
 );
@@ -724,7 +813,16 @@ CREATE TABLE "TestMerge1"
 	"Field5" INTEGER,
 
 	"FieldInt64"      BIGINT,
+-- SKIP Firebird.2.5 BEGIN
+	"FieldBoolean"    BOOLEAN,
+-- SKIP Firebird.2.5 END
+-- SKIP Firebird.3 BEGIN
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.5 BEGIN
 	"FieldBoolean"    CHAR(1),
+-- SKIP Firebird.5 END
+-- SKIP Firebird.4 END
+-- SKIP Firebird.3 END
 	"FieldString"     VARCHAR(20),
 	"FieldNString"    VARCHAR(20) CHARACTER SET UNICODE_FSS,
 	"FieldChar"       CHAR(1),
@@ -733,7 +831,7 @@ CREATE TABLE "TestMerge1"
 	"FieldDouble"     DOUBLE PRECISION,
 	"FieldDateTime"   TIMESTAMP,
 	"FieldBinary"     BLOB(20),
-	"FieldGuid"       CHAR(38),
+	"FieldGuid"       CHAR(16) CHARACTER SET OCTETS,
 	"FieldDecimal"    DECIMAL(18, 10),
 	"FieldDate"       DATE,
 	"FieldTime"       TIMESTAMP,
@@ -752,7 +850,16 @@ CREATE TABLE "TestMerge2"
 	"Field5" INTEGER,
 
 	"FieldInt64"      BIGINT,
+-- SKIP Firebird.2.5 BEGIN
+	"FieldBoolean"    BOOLEAN,
+-- SKIP Firebird.2.5 END
+-- SKIP Firebird.3 BEGIN
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.5 BEGIN
 	"FieldBoolean"    CHAR(1),
+-- SKIP Firebird.5 END
+-- SKIP Firebird.4 END
+-- SKIP Firebird.3 END
 	"FieldString"     VARCHAR(20),
 	"FieldNString"    VARCHAR(20) CHARACTER SET UNICODE_FSS,
 	"FieldChar"       CHAR(1),
@@ -761,7 +868,7 @@ CREATE TABLE "TestMerge2"
 	"FieldDouble"     DOUBLE PRECISION,
 	"FieldDateTime"   TIMESTAMP,
 	"FieldBinary"     BLOB(20),
-	"FieldGuid"       CHAR(38),
+	"FieldGuid"       CHAR(16) CHARACTER SET OCTETS,
 	"FieldDecimal"    DECIMAL(18, 10),
 	"FieldDate"       DATE,
 	"FieldTime"       TIMESTAMP,
@@ -774,6 +881,154 @@ CREATE PROCEDURE "AddIssue792Record"
 AS
 BEGIN
 	INSERT INTO "AllTypes"("char20DataType") VALUES('issue792');
-	SUSPEND;
 END;
+COMMIT;
+
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.5 BEGIN
+SELECT 1 FROM rdb$database
+-- SKIP Firebird.5 END
+-- SKIP Firebird.4 END
+
+-- SKIP Firebird.2.5 BEGIN
+-- SKIP Firebird.3 BEGIN
+CREATE PROCEDURE test_v4_types
+(
+	tstz       timestamp with time zone,
+	ttz        time with time zone,
+	decfloat16 decfloat(16),
+	decfloat34 decfloat,
+	int_128    int128
+)
+RETURNS
+(
+	col_tstz       timestamp with time zone,
+	col_ttz        time with time zone,
+	col_decfloat16 decfloat(16),
+	col_decfloat34 decfloat,
+	col_int_128    int128
+)
+AS
+BEGIN
+	FOR SELECT FIRST 1 :tstz, :ttz, :decfloat16, :decfloat34, :int_128 FROM rdb$database
+	INTO
+		:col_tstz,
+		:col_ttz,
+		:col_decfloat16,
+		:col_decfloat34,
+		:col_int_128
+	DO SUSPEND;
+END;
+-- SKIP Firebird.3 END
+-- SKIP Firebird.2.5 END
+COMMIT;
+
+DROP TABLE "CollatedTable"
+COMMIT;
+
+CREATE TABLE "CollatedTable"
+(
+	"Id"				INT NOT NULL,
+	"CaseSensitive"		VARCHAR(20) CHARACTER SET UTF8 COLLATE UNICODE,
+	"CaseInsensitive"	VARCHAR(20) CHARACTER SET UTF8 COLLATE UNICODE_CI
+)
+COMMIT;
+
+-- SKIP Firebird.2.5 BEGIN
+
+CREATE OR ALTER PACKAGE TEST_PACKAGE1
+AS
+BEGIN
+	PROCEDURE	TEST_PROCEDURE(I INT)	RETURNS (O INT);
+	PROCEDURE	TEST_TABLE_FUNCTION(I INT)	RETURNS (O INT);
+	FUNCTION	TEST_FUNCTION(I INT)	RETURNS INT;
+END
+COMMIT;
+
+RECREATE PACKAGE BODY TEST_PACKAGE1
+AS
+BEGIN
+	PROCEDURE TEST_PROCEDURE(I INT) RETURNS (O INT)
+	AS
+	BEGIN
+		O = I + 1;
+	END
+	PROCEDURE TEST_TABLE_FUNCTION(I INT) RETURNS (O INT)
+	AS
+	BEGIN
+		FOR SELECT :I + 1 FROM "Person"
+		INTO :O
+		DO SUSPEND;
+	END
+	FUNCTION TEST_FUNCTION(I INT) RETURNS INT
+	AS
+	BEGIN
+		RETURN I + 1;
+	END
+END
+COMMIT;
+
+CREATE OR ALTER PACKAGE TEST_PACKAGE2
+AS
+BEGIN
+	PROCEDURE TEST_PROCEDURE(I INT) RETURNS (O INT);
+	PROCEDURE TEST_TABLE_FUNCTION(I INT) RETURNS (O INT);
+	FUNCTION TEST_FUNCTION(I INT) RETURNS INT;
+END
+COMMIT;
+
+RECREATE PACKAGE BODY TEST_PACKAGE2
+AS
+BEGIN
+	PROCEDURE TEST_PROCEDURE(I INT) RETURNS (O INT)
+	AS
+	BEGIN
+		O = I + 2;
+	END
+	PROCEDURE TEST_TABLE_FUNCTION(I INT) RETURNS (O INT)
+	AS
+	BEGIN
+		FOR SELECT :I + 2 FROM "Person"
+		INTO :O
+		DO SUSPEND;
+	END
+	FUNCTION TEST_FUNCTION(I INT) RETURNS INT
+	AS
+	BEGIN
+		RETURN I + 2;
+	END
+END
+COMMIT;
+
+CREATE  PROCEDURE TEST_PROCEDURE(I INT) RETURNS (O INT)
+AS
+	BEGIN
+		O = I + 3;
+	END
+COMMIT;
+
+CREATE PROCEDURE TEST_TABLE_FUNCTION(I INT)
+RETURNS (O INT)
+AS
+BEGIN
+	FOR SELECT :I + 3 FROM "Person"
+	INTO :O 
+	DO SUSPEND;
+END
+COMMIT;
+
+CREATE  FUNCTION TEST_FUNCTION(I INT) RETURNS INT
+AS
+	BEGIN
+		RETURN I + 3;
+	END
+
+-- SKIP Firebird.2.5 END
+-- SKIP Firebird.3 BEGIN
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.5 BEGIN
+SELECT 1 FROM rdb$database
+-- SKIP Firebird.5 END
+-- SKIP Firebird.4 END
+-- SKIP Firebird.3 END
 COMMIT;

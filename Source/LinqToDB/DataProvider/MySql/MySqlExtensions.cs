@@ -1,9 +1,10 @@
-﻿using LinqToDB.Expressions;
-using LinqToDB.Linq;
-using System;
+﻿using System;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Expressions;
+	using Linq;
+
 	public interface IMySqlExtensions
 	{
 	}
@@ -13,7 +14,7 @@ namespace LinqToDB.DataProvider.MySql
 		public static IMySqlExtensions? MySql(this Sql.ISqlExtension? ext) => null;
 
 		#region FTS
-		class ModifierBuilder : Sql.IExtensionCallBuilder
+		sealed class ModifierBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

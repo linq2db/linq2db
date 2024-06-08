@@ -9,12 +9,13 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB;
 	using Model;
 
 	[TestFixture]
 	public class PreprocessorTests : TestBase
 	{
-		class PostProcessorDataConnection : DataConnection, IExpressionPreprocessor
+		sealed class PostProcessorDataConnection : DataConnection, IExpressionPreprocessor
 		{
 			public PostProcessorDataConnection(string configurationString) : base(configurationString)
 			{
@@ -22,7 +23,7 @@ namespace Tests.Linq
 
 			public Expression ProcessExpression(Expression expression)
 			{
-				var result = expression.Transform(e =>
+				var result = expression.Transform<object?>(null, static (_, e) =>
 				{
 					if (e.NodeType == ExpressionType.Constant)
 					{
@@ -48,7 +49,7 @@ namespace Tests.Linq
 				for (int i = 0; i < 3; i++)
 				{
 					var newId = db.GetTable<Parent>().Where(p => p.ParentID == 1).Select(p => p.ParentID).First();
-					Assert.AreEqual(2, newId);
+					Assert.That(newId, Is.EqualTo(2));
 				}
 			}
 		}

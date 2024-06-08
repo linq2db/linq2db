@@ -1,0 +1,34 @@
+﻿<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\linq2db.Tests.Base.dll" #>
+<#@ import namespace="System.IO"                                                   #>
+<#+
+	string GetConnectionString(string config)
+	{
+		var path = System.IO.Path.GetFullPath(Host.ResolvePath(@"."));
+
+		var settings = Tests.Tools.SettingsReader.Deserialize(
+			"NETFX",
+			File.ReadAllText(GetFilePath(path, "DataProviders.json")),
+			File.ReadAllText(GetFilePath(path, "UserDataProviders.json")));
+
+		return settings.Connections[config].ConnectionString;
+	}
+
+	string GetFilePath(string basePath, string findFileName)
+	{
+		var fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
+
+		string path = basePath;
+
+		while (!File.Exists(fileName))
+		{
+			path = Path.GetDirectoryName(path);
+
+			if (path == null)
+				return null;
+
+			fileName = Path.GetFullPath(Path.Combine(path, findFileName));
+		}
+
+		return fileName;
+	}
+#>

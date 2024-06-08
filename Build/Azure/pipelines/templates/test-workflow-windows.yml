@@ -1,77 +1,209 @@
 parameters:
-  isCore: false
-  artifacts: ''
-  framework: ''
-  titleFramework: ''
   with_baselines: false
-  installnet5: false # temporary flag
 
 steps:
 - checkout: none
 
+# .NET 6 and 8 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
+# so we need to install only x86 versions
+
 - task: UseDotNet@2
-  displayName: 'Install .net 5'
+  displayName: 'Install .NET 6 (x86)'
   inputs:
     packageType: sdk
-    version: 5.x
-  condition: eq('${{ parameters.installnet5 }}', 'true')
+    version: 6.x
+  condition: and(variables.title, eq(variables.net60, 'true'), eq(variables.x86, 'true'), succeeded())
+  env:
+    PROCESSOR_ARCHITECTURE: x86
+
+- task: UseDotNet@2
+  displayName: 'Install .NET 8 (x86)'
+  inputs:
+    packageType: sdk
+    version: 8.x
+  condition: and(variables.title, eq(variables.net80, 'true'), eq(variables.x86, 'true'), succeeded())
+  env:
+    PROCESSOR_ARCHITECTURE: x86
 
 - task: CmdLine@2
   inputs:
     script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Checkout test baselines
-  condition: and(variables.title, ${{ parameters.with_baselines }})
+  condition: and(variables.title, ${{ parameters.with_baselines }}, succeeded())
 
 - task: DownloadPipelineArtifact@2
   inputs:
-    artifactName: ${{ parameters.artifacts }}
+    artifactName: test_artifacts
     targetPath: '$(System.DefaultWorkingDirectory)'
-  condition: variables.title
+  condition: and(variables.title, succeeded())
+  displayName: Extract test files
 
 - task: CmdLine@2
   inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json UserDataProviders.json'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  displayName: Copy test config
-  condition: variables.title
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\netfx\$(config).json $(System.DefaultWorkingDirectory)\netfx\UserDataProviders.json'
+  displayName: Copy .NET FW x86 test config
+  condition: and(variables.title, eq(variables.netfx, 'true'), eq(variables.x86, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)\scripts\$(script)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  condition: and(variables.title, variables.script)
-  displayName: Setup tests
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\netfx\$(config).json $(System.DefaultWorkingDirectory)\netfxx64\UserDataProviders.json'
+  displayName: Copy .NET FW x64 test config
+  condition: and(variables.title, eq(variables.netfx, 'true'), ne(variables.x86, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net60\$(config).json $(System.DefaultWorkingDirectory)\net60\UserDataProviders.json'
+  displayName: Copy .NET 6 x64 test config
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net60\$(config).json $(System.DefaultWorkingDirectory)\net60x86\UserDataProviders.json'
+  displayName: Copy .NET 6 x86 test config
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net80\$(config).json $(System.DefaultWorkingDirectory)\net80\UserDataProviders.json'
+  displayName: Copy .NET 8 x64 test config
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net80\$(config).json $(System.DefaultWorkingDirectory)\net80x86\UserDataProviders.json'
+  displayName: Copy .NET 8 x86 test config
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_global)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\scripts'
+  condition: and(variables.title, variables.script_global, succeeded())
+  displayName: Execute Global Setup Script
 
 - task: PowerShell@2
   inputs:
-    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  condition: and(variables.title, variables.psscript, ne(${{ parameters.isCore }}, False))
-  displayName: Setup tests
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_global)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\scripts'
+  condition: and(variables.title, variables.psscript_global, succeeded())
+  displayName: Execute Global PowerShell Setup Script
 
-- task: VSTest@2
+- task: CmdLine@2
   inputs:
-    testAssemblyVer2: linq2db.Tests.dll
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-    testFilterCriteria: 'TestCategory != SkipCI'
-    otherConsoleOptions: '/Framework:.NETFramework,Version=v4.7.2'
-    testRunTitle: 'Windows / ${{ parameters.titleFramework }} / $(title)'
-  displayName: '$(title)'
-  condition: and(eq('${{ parameters.framework }}', 'net472'), variables.title)
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\netfx'
+  condition: and(variables.title, eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.script_local, succeeded())
+  displayName: Execute NETFX x86 Setup Script
 
-- script: dotnet test linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:${{ parameters.framework }} /logger:trx
-  displayName: 'Execute tests: $(title)'
-  condition: and(ne('${{ parameters.framework }}', 'net472'), variables.title, succeeded())
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\netfx'
+  condition: and(variables.title, eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.psscript_local, succeeded())
+  displayName: Execute NETFX x86 PowerShell Setup Script
+
+- script: dotnet test netfx\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx $(extra)
+  displayName: 'Tests (NETFX): $(title)'
+  condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\netfxx64'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.script_local, succeeded())
+  displayName: Execute NETFX x64 Setup Script
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\netfxx64'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.psscript_local, succeeded())
+  displayName: Execute NETFX x64 PowerShell Setup Script
+
+- script: dotnet test netfxx64\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64
+  displayName: 'Tests (NETFX x64): $(title)'
+  condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net60'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local, succeeded())
+  displayName: Execute NET 6 (x64) Setup Script
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net60x86'
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local, succeeded())
+  displayName: Execute NET 6 (x86) Setup Script
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net60'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local, succeeded())
+  displayName: Execute NET 6 (x64) PowerShell Setup Script
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net60x86'
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local, succeeded())
+  displayName: Execute NET 6 (x86) PowerShell Setup Script
+
+- script: dotnet test net60\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx
+  displayName: 'Tests (NET60): $(title)'
+  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+
+- script: dotnet test net60x86\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx
+  displayName: 'Tests (NET60 x86): $(title)'
+  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net80'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local, succeeded())
+  displayName: Execute NET 8 (x64) Setup Script
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net80x86'
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local, succeeded())
+  displayName: Execute NET 8 (x86) Setup Script
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net80'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
+  displayName: Execute NET 8 (x64) PowerShell Setup Script
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net80x86'
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
+  displayName: Execute NET 8 (x86) PowerShell Setup Script
+
+- script: dotnet test net80\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx
+  displayName: 'Tests (.NET 8 x64): $(title)'
+  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+
+- script: dotnet test net80x86\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx
+  displayName: 'Tests (.NET 8 x86): $(title)'
+  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
 - task: PublishTestResults@2
-  condition: and(ne('${{ parameters.framework }}', 'net472'), variables.title, succeededOrFailed())
+  condition: and(variables.title, succeededOrFailed())
   inputs:
     testRunner: VsTest
     testResultsFiles: '**/*.trx'
-    testRunTitle: 'Windows / ${{ parameters.titleFramework }} / $(title)'
-
+    testRunTitle: 'Windows / $(title)'
+    failTaskOnMissingResultsFile: true
 
 - task: PowerShell@2
   inputs:
@@ -84,7 +216,7 @@ steps:
           exit 1
       }
       Write-Host "Create commit"
-      $output = git commit -m "[Windows / ${{ parameters.titleFramework }} / $(title)] baselines"
+      $output = git commit -m "[Windows / $(title)] baselines"
       if ($output -match "nothing to commit") {
           Write-Host "No baselines changes detected"
           exit 0
@@ -99,6 +231,13 @@ steps:
           $output = git pull --rebase
           if ($LASTEXITCODE -ne 0) {
               Write-Host "Failed to rebase. Error code ${LASTEXITCODE}, output: ${output}"
+              Write-Host "Display conflict diff"
+              $output = git diff ORIG_HEAD FETCH_HEAD
+              if ($LASTEXITCODE -ne 0) {
+                  Write-Host "Failed to render diff. Error code ${LASTEXITCODE}, output: ${output}"
+                  exit 1
+              }
+              Write-Host "${output}"
               exit 1
           }
           Write-Host "Push baselines to server"
@@ -120,9 +259,3 @@ steps:
     EMAIL: azp@linq2db.com
     GIT_AUTHOR_NAME: Azure Pipelines Bot
     GIT_COMMITTER_NAME: Azure Pipelines Bot
-
-#    - powershell: Get-OdbcDriver | Select Name, Platform
-#      displayName: List ODBC providers
-
-#    - powershell: '[System.Data.OleDb.OleDbEnumerator]::GetRootEnumerator() | % { $_.GetValue(0) + " => " + $_.GetValue(2) }'
-#      displayName: List OLEDB providers

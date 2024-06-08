@@ -1,12 +1,13 @@
 ﻿using System;
-using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	public interface IQueryRunner: IDisposable
+	using Data;
+
+	public interface IQueryRunner: IDisposable, IAsyncDisposable
 	{
 		/// <summary>
 		/// Executes query and returns number of affected records.
@@ -22,7 +23,7 @@ namespace LinqToDB.Linq
 		/// Executes query and returns data reader.
 		/// </summary>
 		/// <returns>Data reader with query results.</returns>
-		IDataReader           ExecuteReader  ();
+		DataReaderWrapper     ExecuteReader  ();
 
 		/// <summary>
 		/// Executes query asynchronously and returns number of affected records.
@@ -47,12 +48,12 @@ namespace LinqToDB.Linq
 		/// Returns SQL text for query.
 		/// </summary>
 		/// <returns>Query SQL text.</returns>
-		string                GetSqlText           ();
+		string                 GetSqlText          ();
 
-		Expression     Expression       { get; set; }
-		IDataContext   DataContext      { get; set; }
-		object?[]?     Parameters       { get; set; }
-		object?[]?     Preambles        { get; set; }
+		Expression     Expression       { get; }
+		IDataContext   DataContext      { get; }
+		object?[]?     Parameters       { get; }
+		object?[]?     Preambles        { get; }
 		Expression?    MapperExpression { get; set; }
 		int            RowsCount        { get; set; }
 		int            QueryNumber      { get; set; }

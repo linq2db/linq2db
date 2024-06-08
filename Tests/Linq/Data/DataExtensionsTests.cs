@@ -6,17 +6,18 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Data
 {
+	using Model;
+
 	[TestFixture]
 	public class DataExtensionsTests : TestBase
 	{
 		[Test]
-		public void TestScalar1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestScalar1([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query(rd => rd[0], "SELECT 1").ToList();
 
@@ -25,9 +26,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestScalar2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestScalar2([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query<int>("SELECT 1").ToList();
 
@@ -38,15 +39,15 @@ namespace Tests.Data
 		[Test]
 		public void TestScalar3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query<DateTimeOffset>("SELECT CURRENT_TIMESTAMP").ToList();
 
-				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list, Has.Count.EqualTo(1));
 			}
 		}
 
-		class QueryObject
+		sealed class QueryObject
 		{
 			public int      Column1;
 			public DateTime Column2;
@@ -55,18 +56,18 @@ namespace Tests.Data
 		[Test]
 		public void TestObject1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query<QueryObject>("SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
-				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list, Has.Count.EqualTo(1));
 			}
 		}
 
 		[Test]
 		public void TestObject2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query(
 					new
@@ -76,7 +77,7 @@ namespace Tests.Data
 					},
 					"SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
-				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -88,8 +89,11 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr1 }), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr2 }), Is.EqualTo(arr2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr1 }), Is.EqualTo(arr1));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr2 }), Is.EqualTo(arr2));
+				});
 			}
 		}
 
@@ -122,10 +126,10 @@ namespace Tests.Data
 		[Test]
 		public void TestObject51([DataSources(false)] string context)
 		{
-			using (var conn = new TestDataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.InlineParameters = true;
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.FirstName).Take(1).ToString()!;
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("--")));
 				var res = conn.Execute<string>(sql);
@@ -152,7 +156,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestObjectLeftJoinProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestObjectLeftJoinProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -171,6 +175,49 @@ namespace Tests.Data
 			}
 		}
 
+		[Test]
+		public void TestGrouping1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (new GuardGrouping(false))
+			using (new PreloadGroups(false))
+			using (var dc = new DataContext(context))
+			{
+				var dictionary = dc.GetTable<Person>()
+					.GroupBy(p => p.FirstName)
+					.ToDictionary(p => p.Key);
+
+				var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
+			}
+		}
+
+		[Test]
+		public void TestGrouping2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (new GuardGrouping(false))
+			using (new PreloadGroups(false))
+			{
+				using (var dc = new DataContext(context))
+				{
+					var query =
+						from p in dc.GetTable<Person>()
+						group p by new { p.FirstName } into g
+						select new
+						{
+							g.Key.FirstName,
+							List = g.Select(k => k.ID),
+						};
+
+					var array = query.ToArray();
+					Assert.That(array, Is.Not.Empty);
+
+					foreach (var row in array)
+					{
+						var ids = row.List.ToArray();
+						Assert.That(ids, Is.Not.Empty);
+					}
+				}
+			}
+		}
 
 		[Test]
 		public void TestObject6()
@@ -197,32 +244,32 @@ namespace Tests.Data
 		[Test]
 		public void TestStruct1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query<QueryStruct>("SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
-				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list, Has.Count.EqualTo(1));
 			}
 		}
 
 		[Test]
 		public void TestDataReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn   = new DataConnection(context))
+			using (var conn   = GetDataConnection(context))
 			using (var reader = conn.ExecuteReader("SELECT 1; SELECT '2'"))
 			{
 				var n = reader.Execute<int>();
 
-				Assert.AreEqual(1, n);
+				Assert.That(n, Is.EqualTo(1));
 
 				var s = reader.Query<string>();
 
-				Assert.AreEqual("2", s.First());
+				Assert.That(s.First(), Is.EqualTo("2"));
 			}
 		}
 
 		[ScalarType]
-		class TwoValues
+		sealed class TwoValues
 		{
 			public int Value1;
 			public int Value2;
@@ -237,16 +284,18 @@ namespace Tests.Data
 			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 16 | tv.Value2 });
 #pragma warning restore CS0675
 
-			using (var conn = new DataConnection().AddMappingSchema(ms))
+			using (var conn = new DataConnection())
 			{
+				conn.AddMappingSchema(ms);
 				var n = conn.Execute<long>("SELECT @p", new { p = new TwoValues { Value1 = 1, Value2 = 2 } });
 
-				Assert.AreEqual(1L << 16 | 2, n);
+				Assert.That(n, Is.EqualTo(1L << 16 | 2));
 			}
 		}
 
+		[ActiveIssue("Poor parameters support", Configuration = ProviderName.ClickHouseClient)]
 		[Test]
-		public void TestDataParameterMapping2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDataParameterMapping2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -258,12 +307,13 @@ namespace Tests.Data
 			{
 				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
 
-				Assert.AreEqual(null, n);
+				Assert.That(n, Is.EqualTo(null));
 			}
 		}
 
+		[ActiveIssue("Poor parameters support", Configuration = ProviderName.ClickHouseClient)]
 		[Test]
-		public void TestDataParameterMapping3([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDataParameterMapping3([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -281,14 +331,14 @@ namespace Tests.Data
 			{
 				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
 
-				Assert.AreEqual(null, n);
+				Assert.That(n, Is.EqualTo(null));
 			}
 		}
 
 		[Test]
-		public void CacheTest([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void CacheTest([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
-			using (var dc= new DataConnection(context))
+			using (var dc= GetDataConnection(context))
 			{
 				dc.Execute("CREATE TABLE #t1(v1 int not null)");
 				dc.Execute("INSERT INTO #t1(v1) values (1)");

@@ -8,7 +8,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue1585Tests : TestBase
 	{
-		class Test1585
+		sealed class Test1585
 		{
 			public int Id { get; set; }
 		}
@@ -17,17 +17,18 @@ namespace Tests.UserTests
 		{
 			var ms            = new MappingSchema();
 			var tableName     = nameof(Test1585);
-			var fluentBuilder = ms.GetFluentMappingBuilder();
+			var fluentBuilder = new FluentMappingBuilder(ms);
 
 			fluentBuilder.Entity<Test1585>()
 				.HasTableName(tableName)
-				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
+				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey()
+				.Build();
 
 			return ms;
 		}
 
 		[Test]
-		public void TestEntityDescriptor([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestEntityDescriptor([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = SetFluentMappings();
 
@@ -38,14 +39,14 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					db.DropTable<Test1585>();
+					db.DropTable<Test1585>(tableOptions: TableOptions.DropIfExists);
 				}
 				catch
 				{ }
 
 				db.CreateTable<Test1585>();
 				var data = db.GetTable<Test1585>();
-				ed1 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));	
+				ed1 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));
 			}
 			using (var db = GetDataContext(context, ms))
 			{
@@ -53,7 +54,7 @@ namespace Tests.UserTests
 				ed2 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));
 			}
 
-			Assert.AreEqual(ed1, ed2);
+			Assert.That(ed2, Is.EqualTo(ed1));
 		}
 	}
 }

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -24,59 +21,31 @@ namespace LinqToDB.SqlQuery
 			set => _update = value;
 		}
 
+		internal bool HasInsert => _insert != null;
+		internal bool HasUpdate => _update != null;
+
 		public SqlInsertOrUpdateStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			((IQueryElement)Insert).ToString(sb, dic);
-			((IQueryElement)Update).ToString(sb, dic);
-			return sb;
+			writer
+				.AppendElement(Insert)
+				.AppendElement(Update);
+			return writer;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
-			With?.Walk(options, func);
-			((ISqlExpressionWalkable?)_insert)?.Walk(options, func);
-			((ISqlExpressionWalkable?)_update)?.Walk(options, func);
-
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
-
-			return null;
-		}
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			var clone = new SqlInsertOrUpdateStatement((SelectQuery)SelectQuery.Clone(objectTree, doClone));
-
-			if (_insert != null)
-				clone._insert = (SqlInsertClause)_insert.Clone(objectTree, doClone);
-
-			if (_update != null)
-				clone._update = (SqlUpdateClause)_update.Clone(objectTree, doClone);
-
-			if (With != null)
-				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		public override IEnumerable<IQueryElement> EnumClauses()
-		{
-			if (_insert != null)
-				yield return _insert;
-			if (_update != null)
-				yield return _update;
-		}
-
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
-		{
-			if (_update?.Table == table)
+			if (Equals(_update?.Table, table))
+			{
+				noAlias = true;
 				return table;
-			if (_insert?.Into == table)
+			}
+
+			noAlias = false;
+			if (Equals(_insert?.Into, table))
 				return table;
 
 			return SelectQuery!.GetTableSource(table);

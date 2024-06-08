@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
@@ -11,7 +13,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Linq.Expressions;
 	using Model;
 
 	[TestFixture]
@@ -128,17 +129,17 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void Test13([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    ParentInheritance4
-					join c in    Child on p.ParentID equals c.ParentID
-					select p,
-					from p in db.ParentInheritance4
-					join c in db.Child on p.ParentID equals c.ParentID
-					select p);
-		}
+		//public void Test13([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			from p in    ParentInheritance4
+		//			join c in    Child on p.ParentID equals c.ParentID
+		//			select p,
+		//			from p in db.ParentInheritance4
+		//			join c in db.Child on p.ParentID equals c.ParentID
+		//			select p);
+		//}
 
 		[Test]
 		public void TestGetBaseClass([DataSources] string context)
@@ -148,7 +149,7 @@ namespace Tests.Linq
 				var q = db.GetTable<ParentInheritanceBase3>()
 					.Where(x => x is ParentInheritance13)
 					.ToList();
-				Assert.AreEqual(2, q.Count);
+				Assert.That(q, Has.Count.EqualTo(2));
 			}
 		}
 
@@ -206,9 +207,8 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				Assert.AreEqual(
-					dd.DiscontinuedProduct.FirstOrDefault()!.ProductID,
-					db.DiscontinuedProduct.FirstOrDefault()!.ProductID);
+				Assert.That(
+					db.DiscontinuedProduct.FirstOrDefault()!.ProductID, Is.EqualTo(dd.DiscontinuedProduct.FirstOrDefault()!.ProductID));
 			}
 		}
 
@@ -230,10 +230,10 @@ namespace Tests.Linq
 					await db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>().ToListAsync());
 		}
 
-		class ParentEx : Parent
+		sealed class ParentEx : Parent
 		{
 			[NotColumn]
-			protected bool Field1;
+			public bool Field1;
 
 			public static void Test(InheritanceTests inheritance, string context)
 			{
@@ -251,15 +251,15 @@ namespace Tests.Linq
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
-		class PersonEx : Person
+		sealed class PersonEx : Person
 		{
 		}
 
 		[Test]
 		public void SimplTest()
 		{
-			using (var db = new TestDataConnection())
-				Assert.AreEqual(1, db.GetTable<PersonEx>().Where(_ => _.FirstName == "John").Select(_ => _.ID).Single());
+			using (var db = new DataConnection())
+				Assert.That(db.GetTable<PersonEx>().Where(_ => _.FirstName == "John").Select(_ => _.ID).Single(), Is.EqualTo(1));
 		}
 
 		[InheritanceMapping(Code = 1, Type = typeof(Parent222))]
@@ -284,13 +284,13 @@ namespace Tests.Linq
 		[Test]
 		public void InheritanceMappingIssueTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var q1 = db.GetTable<Parent222>();
 				var q  = q1.Where(_ => _.Value.ID == 1);
 
 				var sql = ((IExpressionQuery<Parent222>)q).SqlText;
-				Assert.IsNotEmpty(sql);
+				Assert.That(sql, Is.Not.Empty);
 			}
 		}
 
@@ -318,7 +318,7 @@ namespace Tests.Linq
 					.OrderBy(x => x)
 					.ToList();
 
-				Assert.IsTrue(childIDs.SequenceEqual(new [] {11, 21} ), "{0}: {1}, {2}", childIDs.Count, childIDs[0], childIDs[1]);
+				Assert.That(childIDs.SequenceEqual(new [] {11, 21} ), Is.True, $"{childIDs.Count}: {childIDs[0]}, {childIDs[1]}");
 			}
 		}
 
@@ -334,16 +334,19 @@ namespace Tests.Linq
 
 				var list = result.ToList();
 
-				Assert.AreEqual(330, list.Count);
+				Assert.That(list, Has.Count.EqualTo(330));
 
 				foreach (var item in list)
 				{
-					Assert.IsNotNull(item);
-					Assert.IsNotNull(item.Order);
-					Assert.IsNotNull(item.Product);
-					Assert.IsTrue(
+					Assert.That(item, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(item.Order, Is.Not.Null);
+						Assert.That(item.Product, Is.Not.Null);
+					});
+					Assert.That(
 						 item.Product.Discontinued && item.Product is Northwind.DiscontinuedProduct ||
-						!item.Product.Discontinued && item.Product is Northwind.ActiveProduct);
+						!item.Product.Discontinued && item.Product is Northwind.ActiveProduct, Is.True);
 				}
 			}
 		}
@@ -356,9 +359,12 @@ namespace Tests.Linq
 				var result   = db.Product.         Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
 				var expected = db.Product.ToList().Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
 
-				Assert.That(result.Count,                    Is.GreaterThan(0));
-				Assert.That(expected.Count,                  Is.EqualTo(result.Count));
-				Assert.That(result.Contains(null),           Is.True);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result, Is.Not.Empty);
+					Assert.That(expected, Has.Count.EqualTo(result.Count));
+				});
+				Assert.That(result, Does.Contain(null));
 				Assert.That(result.Select(x => x == null ? (int?)null : x.ProductID).Except(expected.Select(x => x == null ? (int?)null : x.ProductID)).Count(), Is.EqualTo(0));
 			}
 		}
@@ -373,9 +379,9 @@ namespace Tests.Linq
 
 				var list = result.ToList();
 
-				Assert.Greater(list.Count, 0);
-				Assert.AreEqual(expected.Count(), list.Count);
-				Assert.IsTrue(list.Except(expected).Count() == 0);
+				Assert.That(list, Is.Not.Empty);
+				Assert.That(list, Has.Count.EqualTo(expected.Count()));
+				Assert.That(list.Except(expected).Count(), Is.EqualTo(0));
 			}
 		}
 
@@ -389,8 +395,11 @@ namespace Tests.Linq
 				var result   = db.Product.Where(x => x is Northwind.DiscontinuedProduct).ToList();
 				var expected = dd.Product.Where(x => x is Northwind.DiscontinuedProduct).ToList();
 
-				Assert.Greater(result.Count, 0);
-				Assert.AreEqual(result.Count, expected.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result, Is.Not.Empty);
+					Assert.That(expected, Has.Count.EqualTo(result.Count));
+				});
 			}
 		}
 
@@ -402,7 +411,7 @@ namespace Tests.Linq
 		}
 
 		[Table(Name="Child")]
-		class ChildTest14 : IChildTest14
+		sealed class ChildTest14 : IChildTest14
 		{
 			[PrimaryKey] public int ChildID { get; set; }
 
@@ -436,7 +445,7 @@ namespace Tests.Linq
 				var result   = db.DiscontinuedProduct.Select(p => p).ToList();
 				var expected = dd.DiscontinuedProduct.Select(p => p).ToList();
 
-				Assert.That(result.Count, Is.Not.EqualTo(0).And.EqualTo(expected.Count));
+				Assert.That(result, Has.Count.EqualTo(expected.Count));
 			}
 		}
 
@@ -450,7 +459,7 @@ namespace Tests.Linq
 				var result   = db.DiscontinuedProduct.ToList();
 				var expected = dd.DiscontinuedProduct.ToList();
 
-				Assert.That(result.Count, Is.Not.EqualTo(0).And.EqualTo(expected.Count));
+				Assert.That(result, Has.Count.EqualTo(expected.Count));
 			}
 		}
 
@@ -513,7 +522,7 @@ namespace Tests.Linq
 		[Test]
 		public void GuidTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var list = db.GetTable<InheritanceA>().Where(a => a.Bs.Any()).ToList();
 			}
@@ -555,7 +564,7 @@ namespace Tests.Linq
 			{
 				var db = (TestDataConnection)context;
 				db.GetTable<Test17Person>().OfType<Test17John>().ToList();
-				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("lastname"), "Why select LastName field??");
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Not.Contain("lastname"), "Why select LastName field??");
 			}
 		}
 
@@ -717,12 +726,18 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(BaseTable.Data))
 			{
 					var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
-					Assert.AreEqual(1, baseTableRecordById?.Id);
-					Assert.AreEqual(100, baseTableRecordById?.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecordById?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecordById?.Value, Is.EqualTo(100));
+				});
 
-					var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.Value == 100);
-					Assert.AreEqual(1, baseTableRecordWithValuePredicate?.Id);
-					Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value);
+				var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.Value == 100);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecordWithValuePredicate?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecordWithValuePredicate?.Value, Is.EqualTo(100));
+				});
 			}
 		}
 
@@ -733,16 +748,22 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(BaseTable.Data))
 			{
 				var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
-				Assert.AreEqual(1, baseTableRecordById?.Id);
-				Assert.AreEqual(100, baseTableRecordById?.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecordById?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecordById?.Value, Is.EqualTo(100));
+				});
 
 				var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == 100);
-				Assert.AreEqual(1, baseTableRecordWithValuePredicate?.Id);
-				Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecordWithValuePredicate?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecordWithValuePredicate?.Value, Is.EqualTo(100));
+				});
 			}
 		}
 
-		[ActiveIssue(Details = "Invalid mappings?")]
+		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
 		[Test]
 		public void Issue2429PropertiesTest2([DataSources] string context)
 		{
@@ -753,15 +774,18 @@ namespace Tests.Linq
 				//var derivedTableRecord = db.GetTable<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == (100 * -1 ));
 				var derivedTableRecord = db.GetTable<BaseTable2>().OfType<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == (100 * -1 ));
 
-				Assert.AreEqual(1, baseTableRecord?.Id);
-				Assert.AreEqual(100, baseTableRecord?.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecord?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecord?.Value, Is.EqualTo(100));
 
-				Assert.AreEqual(1, derivedTableRecord?.Id);
-				Assert.AreEqual(100, derivedTableRecord?.Value * -1);
+					Assert.That(derivedTableRecord?.Id, Is.EqualTo(1));
+					Assert.That(derivedTableRecord?.Value * -1, Is.EqualTo(100));
+				});
 			}
 		}
 
-		[ActiveIssue(Details = "Invalid mappings?")]
+		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
 		[Test]
 		public void Issue2429MethodsTest2([DataSources] string context)
 		{
@@ -772,12 +796,141 @@ namespace Tests.Linq
 				//var derivedTableRecord = db.GetTable<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == (100 * -1 ));
 				var derivedTableRecord = db.GetTable<BaseTable2>().OfType<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == (100 * -1 ));
 
-				Assert.AreEqual(1, baseTableRecord?.Id);
-				Assert.AreEqual(100, baseTableRecord?.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(baseTableRecord?.Id, Is.EqualTo(1));
+					Assert.That(baseTableRecord?.Value, Is.EqualTo(100));
 
-				Assert.AreEqual(1, derivedTableRecord?.Id);
-				Assert.AreEqual(100, derivedTableRecord?.Value * -1);
+					Assert.That(derivedTableRecord?.Id, Is.EqualTo(1));
+					Assert.That(derivedTableRecord?.Value * -1, Is.EqualTo(100));
+				});
 			}
+		}
+		#endregion
+
+		#region issue4280
+
+		[InheritanceMapping(Code = "DISPLAY", Type = typeof(Issue4280T1))]
+		[InheritanceMapping(Code = "TV", Type = typeof(Issue4280T2))]
+		[Table("Issue4280")]
+		public abstract class Issue4280Base
+		{
+			[PrimaryKey                    ] public          int     Id           { get; set; }
+			[Column                        ] public          string? SerialNumber { get; set; }
+			[Column(IsDiscriminator = true)] public abstract string  DeviceType   { get; set; }
+		}
+
+		public class Issue4280T1 : Issue4280Base
+		{
+			public override string DeviceType { get; set; } = "DISPLAY";
+		}
+
+		public class Issue4280T2 : Issue4280Base
+		{
+			public override string DeviceType { get; set; } = "TV";
+
+			[Column]
+			public string? Location { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4280")]
+		public void TestIssue4280AsBase([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4280Base>();
+
+			var displayDevice = new Issue4280T1 { Id = 1, SerialNumber = "Disp00001" };
+			var tvDevice      = new Issue4280T2 { Id = 2, SerialNumber = "TV00001", Location = "Something" };
+
+			db.Insert<Issue4280Base>(tvDevice);
+			db.Insert<Issue4280Base>(displayDevice);
+
+			var data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
+				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00001"));
+				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00001"));
+				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Something"));
+			});
+
+			displayDevice.SerialNumber = "Disp00002";
+			tvDevice.SerialNumber      = "TV00002";
+			tvDevice.Location          = "Anything";
+
+			db.Update<Issue4280Base>(tvDevice);
+			db.Update<Issue4280Base>(displayDevice);
+
+			data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
+				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00002"));
+				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00002"));
+				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Anything"));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4280")]
+		public void TestIssue4280AsIs([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4280Base>();
+
+			var displayDevice = new Issue4280T1 { Id = 1, SerialNumber = "Disp00001" };
+			var tvDevice      = new Issue4280T2 { Id = 2, SerialNumber = "TV00001", Location = "Something" };
+
+			db.Insert(tvDevice);
+			db.Insert(displayDevice);
+
+			var data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
+				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00001"));
+				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00001"));
+				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Something"));
+			});
+
+			displayDevice.SerialNumber = "Disp00002";
+			tvDevice.SerialNumber      = "TV00002";
+			tvDevice.Location          = "Anything";
+
+			db.Update(tvDevice);
+			db.Update(displayDevice);
+
+			data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
+				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00002"));
+				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00002"));
+				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Anything"));
+			});
 		}
 		#endregion
 	}

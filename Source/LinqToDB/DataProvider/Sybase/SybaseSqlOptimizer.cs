@@ -1,61 +1,72 @@
-﻿namespace LinqToDB.DataProvider.Sybase
+﻿using System;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.Sybase
 {
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
-	class SybaseSqlOptimizer : BasicSqlOptimizer
+	sealed class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
 		public SybaseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 
-		protected static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
-
-		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
-
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
-			func = ConvertFunctionParameters(func, false);
+			return new SybaseSqlExpressionConvertVisitor(allowModify);
+		}
 
-			switch (func.Name)
+		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			if (statement.QueryType is QueryType.Update or QueryType.Delete)
 			{
-				case "$Replace$": return new SqlFunction(func.SystemType, "Str_Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				if (statement.SelectQuery!.Select.TakeValue != null && !statement.SelectQuery.Select.OrderBy.IsEmpty)
+					throw new LinqToDBException($"The Sybase ASE does not support the {(statement.QueryType == QueryType.Update ? "UPDATE" : "DELETE")} statement with the TOP + ORDER BY clause.");
 
-				case "CharIndex":
-				{
-					if (func.Parameters.Length == 3)
-						return Add<int>(
-							new SqlFunction(func.SystemType, "CharIndex",
-								func.Parameters[0],
-								new SqlFunction(typeof(string), "Substring",
-									func.Parameters[1],
-									func.Parameters[2],
-									new SqlFunction(typeof(int), "Len", func.Parameters[1]))),
-							Sub(func.Parameters[2], 1));
-					break;
-				}
-
-				case "Stuff":
-				{
-					if (func.Parameters[3] is SqlValue value)
-					{
-						if (value.Value is string @string && string.IsNullOrEmpty(@string))
-							return new SqlFunction(
-								func.SystemType,
-								func.Name,
-								false,
-								func.Precedence,
-								func.Parameters[0],
-								func.Parameters[1],
-								func.Parameters[1],
-								new SqlValue(value.ValueType, null));
-					}
-
-					break;
-				}
+				if (statement.SelectQuery.Select.SkipValue != null)
+					throw new LinqToDBException($"The Sybase ASE does not support the {(statement.QueryType == QueryType.Update ? "UPDATE" : "DELETE")} statement with the SKIP clause.");
 			}
 
-			return base.ConvertFunction(func);
+			if (statement.QueryType == QueryType.Update)
+				return CorrectSybaseUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema);
+
+			return base.FinalizeUpdate(statement, dataOptions, mappingSchema);
+		}
+
+		SqlUpdateStatement CorrectSybaseUpdate(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			CorrectUpdateSetters(statement);
+
+			var isInCompatible = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery).Any(t =>
+			{
+				if (t != statement.SelectQuery && t is SelectQuery)
+					return true;
+				if (t is SqlTable table && !ReferenceEquals(table, statement.Update.Table) && QueryHelper.IsEqualTables(table, statement.Update.Table))
+					return true;
+				return false;
+			});
+
+			if (isInCompatible)
+			{
+				statement = GetAlternativeUpdate(statement, dataOptions, mappingSchema);
+			}
+			else
+			{
+				var hasTableInQuery = QueryHelper.HasTableInQuery(statement.SelectQuery, statement.Update.Table!);
+				if (hasTableInQuery && !RemoveUpdateTableIfPossible(statement.SelectQuery, statement.Update.Table!, out _))
+					statement = GetAlternativeUpdate(statement, dataOptions, mappingSchema);
+			}
+
+			return statement;
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			statement = CorrectMultiTableQueries(statement);
+
+			return base.TransformStatement(statement, dataOptions, mappingSchema);
 		}
 	}
 }

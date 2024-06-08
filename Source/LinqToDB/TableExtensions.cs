@@ -1,16 +1,18 @@
 ﻿using System;
-
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Data;
+	using DataProvider;
 	using Expressions;
 
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
 	/// </summary>
 	[PublicAPI]
-	public static partial class TableExtensions
+	public static class TableExtensions
 	{
 		#region Table Helpers
 
@@ -26,6 +28,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> IsTemporary<T>(this ITable<T> table, [SqlQueryDependent] bool isTemporary)
+			where T : notnull
 		{
 			return ((ITableMutable<T>)table).ChangeTableOptions(isTemporary
 				? table.TableOptions |  LinqToDB.TableOptions.IsTemporary
@@ -43,6 +46,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> IsTemporary<T>(this ITable<T> table)
+			where T : notnull
 		{
 			return ((ITableMutable<T>)table).ChangeTableOptions(table.TableOptions | LinqToDB.TableOptions.IsTemporary);
 		}
@@ -58,10 +62,63 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TableOptions<T>(this ITable<T> table, [SqlQueryDependent] TableOptions options)
+			where T : notnull
 		{
 			return ((ITableMutable<T>)table).ChangeTableOptions(options);
 		}
 
+		/// <summary>
+		/// Builds table name for <paramref name="table"/>.
+		/// </summary>
+		/// <typeparam name="T">Table record type.</typeparam>
+		/// <param name="table">Table instance.</param>
+		/// <returns>Table name.</returns>
+		public static string GetTableName<T>(this ITable<T> table)
+			where T : notnull
+		{
+			return table.DataContext.CreateSqlProvider()
+				.BuildObjectName(new (), new (table.TableName, Server: table.ServerName, Database: table.DatabaseName, Schema: table.SchemaName), tableOptions: table.TableOptions)
+				.ToString();
+		}
+
 		#endregion
+
+		// internal API
+		internal static IDataProvider GetDataProvider<T>(this ITable<T> table)
+			where T : notnull
+		{
+			if (table.DataContext is DataConnection dataConnection)
+				return dataConnection.DataProvider;
+			if (table.DataContext is DataContext dataContext)
+				return dataContext.DataProvider;
+
+			throw new ArgumentException($"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.", nameof(table));
+		}
+
+		// internal API
+		internal static DataConnection GetDataConnection<T>(this ITable<T> table)
+			where T : notnull
+		{
+			if (table.DataContext is DataConnection dataConnection)
+				return dataConnection;
+			if (table.DataContext is DataContext dataContext)
+				return dataContext.GetDataConnection();
+
+			throw new ArgumentException($"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.", nameof(table));
+		}
+
+		// internal API
+		internal static bool TryGetDataConnection<T>(this ITable<T> table, [NotNullWhen(true)] out DataConnection? dataConnection)
+			where T : notnull
+		{
+			if (table.DataContext is DataConnection dc)
+				dataConnection = dc;
+			else if (table.DataContext is DataContext dataContext)
+				dataConnection = dataContext.GetDataConnection();
+			else
+				dataConnection = null;
+
+			return dataConnection != null;
+		}
 	}
 }

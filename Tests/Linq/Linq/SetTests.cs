@@ -1,19 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+
+using FluentAssertions;
+
+using LinqToDB;
+using LinqToDB.Linq;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB;
 	using Model;
 
 	[TestFixture]
 	public class SetTests : TestBase
 	{
 		[Test]
-		public void Except1([DataSources(ProviderName.SqlServer2000)] string context)
+		public void Except1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -22,18 +28,17 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void Except2([DataSources(ProviderName.SqlServer2000)] string context)
-		{
-			var ids = new[] { 1, 2 };
+		//public void Except2([DataSources] string context)
+		//{
+		//	var ids = new[] { 1, 2 };
 
-			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Where(c => c.GrandChildren.Select(_ => _.ParentID ?? 0).Except(ids).Count() == 0),
-					db.Child.Where(c => c.GrandChildren.Select(_ => _.ParentID ?? 0).Except(ids).Count() == 0));
-		}
+		//	using (var db = GetDataContext(context))
+		//		Assert.That(
+		//			db.Child.Where(c => c.GrandChildren.Select(_ => _.ParentID ?? 0).Except(ids).Count() == 0), Is.EqualTo(Child.Where(c => c.GrandChildren.Select(_ => _.ParentID ?? 0).Except(ids).Count() == 0)));
+		//}
 
 		[Test]
-		public void Intersect([DataSources(ProviderName.SqlServer2000)] string context)
+		public void Intersect([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -42,7 +47,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains1([DataSources] string context)
+		public void Contains1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -51,7 +56,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains2([DataSources] string context)
+		public void Contains2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -60,7 +65,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains201([DataSources] string context)
+		public void Contains201([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -69,7 +74,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains3([DataSources] string context)
+		public void Contains3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -78,7 +83,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains4([DataSources] string context)
+		public void Contains4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -87,7 +92,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains5([DataSources] string context)
+		public void Contains5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -96,7 +101,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains6([DataSources] string context)
+		public void Contains6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var n = 1;
 
@@ -110,18 +115,17 @@ namespace Tests.Linq
 		public void Contains7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Select(c => c.ParentID).Contains(11),
-					db.Child.Select(c => c.ParentID).Contains(11));
+				Assert.That(
+					db.Child.Select(c => c.ParentID).Contains(11), Is.EqualTo(Child.Select(c => c.ParentID).Contains(11)));
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Contains701([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Select(c => c.Parent).Contains(new Parent { ParentID = 11, Value1 = 11}),
-					db.Child.Select(c => c.Parent).Contains(new Parent { ParentID = 11, Value1 = 11}));
+				Assert.That(
+					db.Child.Select(c => c.Parent).Contains(new Parent { ParentID = 11, Value1 = 11}), Is.EqualTo(Child.Select(c => c.Parent).Contains(new Parent { ParentID = 11, Value1 = 11})));
 		}
 
 		[Test]
@@ -328,9 +332,8 @@ namespace Tests.Linq
 
 		void TestContains(ITestDataContext db, Parent1 parent)
 		{
-			Assert.AreEqual(
-				   Parent1.Where(p => p.ParentID == 1).Contains(parent),
-				db.Parent1.Where(p => p.ParentID == 1).Contains(parent));
+			Assert.That(
+				db.Parent1.Where(p => p.ParentID == 1).Contains(parent), Is.EqualTo(Parent1.Where(p => p.ParentID == 1).Contains(parent)));
 		}
 
 		[Test]
@@ -373,7 +376,7 @@ namespace Tests.Linq
 
 			foreach (var g in r1)
 			{
-				Assert.AreEqual(d.First()!.Value, g.ParentID);
+				Assert.That(g.ParentID, Is.EqualTo(d.First()!.Value));
 			}
 		}
 
@@ -384,6 +387,37 @@ namespace Tests.Linq
 			{
 				GetData(db, new List<int?> { 2 });
 				GetData(db, new List<int?> { 3 });
+			}
+		}
+
+		[Test, Retry(3)]
+		public void Issue3017([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using var scope = new DisableBaseline("Multithreading");
+
+			var tasks = new List<Task>();
+
+			for (var i = 0; i < 30; i++)
+			{
+				var local = i;
+				tasks.Add(Task.Run(() => Issue3017Action(context)));
+			}
+
+			Task.WaitAll(tasks.ToArray());
+
+			foreach (var task in tasks)
+				Assert.That(task.IsFaulted, Is.False);
+		}
+
+		private async Task Issue3017Action(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var targets = db.Person.ToArray();
+
+				var keys = targets.Select(r => new { r.ID, r.FirstName, r.LastName });
+
+				await db.Person.Where(r => new { r.ID, r.FirstName, r.LastName }.In(keys)).ToListAsync();
 			}
 		}
 	}

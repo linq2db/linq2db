@@ -1,44 +1,45 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB.Async
 {
+	using Data.RetryPolicy;
+
 	/// <summary>
-	/// Asynchronous version of the <see cref="IDbConnection"/> interface, allowing asynchronous operations, missing from <see cref="IDbConnection"/>.
+	/// Wrapper over <see cref="DbConnection"/> instance which contains all operations that could have custom implementation like:
+	/// <list type="bullet">
+	/// <item><see cref="IRetryPolicy"/> support</item>
+	/// <item>asynchronous operations, missing from <see cref="DbConnection"/> but provided by data provider implementation.</item>.
+	/// </list>
 	/// </summary>
 	[PublicAPI]
-	public interface IAsyncDbConnection : IDbConnection
-#if !NETFRAMEWORK
-		, IAsyncDisposable
-#endif
+	public interface IAsyncDbConnection : IDisposable, IAsyncDisposable
 	{
 		/// <summary>
-		/// Starts new transaction asynchronously for current connection with default isolation level.
+		/// Gets underlying connection instance.
 		/// </summary>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Database transaction object.</returns>
-#if !NETFRAMEWORK
-		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
-#else
-		Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
-#endif
+		DbConnection Connection { get; }
 
-		/// <summary>
-		/// Starts new transaction asynchronously for current connection with specified isolation level.
-		/// </summary>
-		/// <param name="isolationLevel">Transaction isolation level.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Database transaction object.</returns>
-#if !NETFRAMEWORK
-		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default);
-#else
-		Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default);
-#endif
+		/// <inheritdoc cref="DbConnection.ConnectionString"/>
+		string ConnectionString { get; set; }
 
+		/// <inheritdoc cref="DbConnection.State"/>
+		ConnectionState State { get; }
+
+		/// <inheritdoc cref="DbConnection.CreateCommand"/>
+		DbCommand CreateCommand();
+
+		/// <inheritdoc cref="DbConnection.Open"/>
+		void Open();
+		/// <inheritdoc cref="DbConnection.OpenAsync(CancellationToken)"/>
+		Task OpenAsync(CancellationToken cancellationToken);
+
+		/// <inheritdoc cref="DbConnection.Close"/>
+		void Close();
 		/// <summary>
 		/// Closes current connection asynchonously.
 		/// </summary>
@@ -46,28 +47,31 @@ namespace LinqToDB.Async
 		Task CloseAsync();
 
 		/// <summary>
-		/// Opens current connection asynchonously.
+		/// Starts new transaction for current connection with default isolation level.
+		/// </summary>
+		/// <returns>Database transaction object.</returns>
+		IAsyncDbTransaction BeginTransaction();
+
+		/// <summary>
+		/// Starts new transaction for current connection with specified isolation level.
+		/// </summary>
+		/// <param name="isolationLevel">Transaction isolation level.</param>
+		/// <returns>Database transaction object.</returns>
+		IAsyncDbTransaction BeginTransaction(IsolationLevel isolationLevel);
+
+		/// <summary>
+		/// Starts new transaction asynchronously for current connection with default isolation level.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Async operation task.</returns>
-		Task OpenAsync(CancellationToken cancellationToken = default);
-
-#if NETFRAMEWORK
-		/// <summary>
-		/// Disposes current connection asynchonously.
-		/// </summary>
-		/// <returns>Async operation task.</returns>
-		Task DisposeAsync();
-#endif
+		/// <returns>Database transaction object.</returns>
+		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
 
 		/// <summary>
-		/// Gets underlying connection instance.
+		/// Starts new transaction asynchronously for current connection with specified isolation level.
 		/// </summary>
-		IDbConnection Connection { get; }
-
-		/// <summary>
-		/// Returns cloned connection instance, if underlying provider supports cloning or null otherwise.
-		/// </summary>
-		IAsyncDbConnection? TryClone();
+		/// <param name="isolationLevel">Transaction isolation level.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Database transaction object.</returns>
+		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken);
 	}
 }

@@ -3,87 +3,104 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlProvider
 {
-	using LinqToDB.Common;
+	using Common;
 	using SqlQuery;
 
-	public abstract partial class BasicSqlBuilder : ISqlBuilder
+	public abstract partial class BasicSqlBuilder
 	{
 		/// <summary>
 		/// If true, provider supports column aliases specification after table alias.
 		/// E.g. as table_alias (column_alias1, column_alias2).
 		/// </summary>
-		protected virtual bool MergeSupportsColumnAliasesInSource => true;
+		protected virtual bool SupportsColumnAliasesInSource => true;
+
+		/// <summary>
+		/// If true, provider require column aliases for each  column.
+		/// E.g. as table_alias (column_alias1, column_alias2).
+		/// </summary>
+		protected virtual bool RequiresConstantColumnAliases => false;
 
 		/// <summary>
 		/// If true, provider supports list of VALUES as a source element of merge command.
 		/// </summary>
-		protected virtual bool MergeSupportsSourceDirectValues => true;
+		protected virtual bool IsValuesSyntaxSupported => true;
 
 		/// <summary>
 		/// If true, builder will generate command for empty enumerable source;
 		/// Otherwise exception will be generated.
 		/// </summary>
-		protected virtual bool MergeEmptySourceSupported => true;
+		protected virtual bool IsEmptyValuesSourceSupported => true;
 
 		/// <summary>
-		/// If <see cref="MergeSupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
-		/// FROM clause, this property should contain name of table with single record.
+		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
+		/// FROM clause, this property should contain name of table (or equivalent SQL) with single record.
+		/// IMPORTANT: as this property could return SQL, we don't escape it, so it should contain only valid SQL/identifiers.
 		/// </summary>
 		protected virtual string? FakeTable => null;
 
 		/// <summary>
-		/// If <see cref="MergeSupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
+		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property could contain name of schema for table with single record.
+		/// Returned name should be already escaped if escaping required.
 		/// </summary>
 		protected virtual string? FakeTableSchema => null;
 
 		protected virtual void BuildMergeStatement(SqlMergeStatement merge)
 		{
-			BuildMergeInto(merge);
-			BuildMergeSource(merge);
-			BuildMergeOn(merge);
+			var nullability = new NullabilityContext(merge.SelectQuery);
+
+			BuildTag(merge);
+
+			BuildWithClause(merge.With);
+			BuildMergeInto(nullability, merge);
+			BuildMergeSource(nullability, merge);
+			BuildMergeOn(nullability, merge);
 
 			foreach (var operation in merge.Operations)
-				BuildMergeOperation(operation);
+				BuildMergeOperation(nullability, operation);
 
-			BuildMergeTerminator(merge);
+			BuildOutputSubclause(merge.Output);
+
+			BuildSubQueryExtensions(merge);
+			BuildQueryExtensions   (merge);
+			BuildMergeTerminator   (nullability, merge);
 		}
 
 		/// <summary>
 		/// Allows to add text after generated merge command. E.g. to specify command terminator if provider requires it.
 		/// </summary>
-		protected virtual void BuildMergeTerminator(SqlMergeStatement merge)
+		protected virtual void BuildMergeTerminator(NullabilityContext nullability, SqlMergeStatement merge)
 		{
 		}
 
-		private void BuildMergeOperation(SqlMergeOperationClause operation)
+		private void BuildMergeOperation(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			switch (operation.OperationType)
 			{
 				case MergeOperationType.Update:
-					BuildMergeOperationUpdate(operation);
+					BuildMergeOperationUpdate(nullability, operation);
 					break;
 				case MergeOperationType.Delete:
-					BuildMergeOperationDelete(operation);
+					BuildMergeOperationDelete(nullability, operation);
 					break;
 				case MergeOperationType.Insert:
-					BuildMergeOperationInsert(operation);
+					BuildMergeOperationInsert(nullability, operation);
 					break;
 				case MergeOperationType.UpdateWithDelete:
-					BuildMergeOperationUpdateWithDelete(operation);
+					BuildMergeOperationUpdateWithDelete(nullability, operation);
 					break;
 				case MergeOperationType.DeleteBySource:
-					BuildMergeOperationDeleteBySource(operation);
+					BuildMergeOperationDeleteBySource(nullability, operation);
 					break;
 				case MergeOperationType.UpdateBySource:
-					BuildMergeOperationUpdateBySource(operation);
+					BuildMergeOperationUpdateBySource(nullability, operation);
 					break;
 				default:
 					throw new InvalidOperationException($"Unknown merge operation type: {operation.OperationType}");
 			}
 		}
 
-		protected virtual void BuildMergeOperationUpdate(SqlMergeOperationClause operation)
+		protected virtual void BuildMergeOperationUpdate(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			StringBuilder
 				.AppendLine()
@@ -92,7 +109,7 @@ namespace LinqToDB.SqlProvider
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition : true);
 			}
 
 			StringBuilder.AppendLine(" THEN");
@@ -100,10 +117,16 @@ namespace LinqToDB.SqlProvider
 
 			var update = new SqlUpdateClause();
 			update.Items.AddRange(operation.Items);
+
+			var saveStep = BuildStep;
+			BuildStep = Step.MergeUpdateClause;
+
 			BuildUpdateSet(null, update);
+
+			BuildStep = saveStep;
 		}
 
-		protected virtual void BuildMergeOperationDelete(SqlMergeOperationClause operation)
+		protected virtual void BuildMergeOperationDelete(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			StringBuilder
 				.Append("WHEN MATCHED");
@@ -111,13 +134,13 @@ namespace LinqToDB.SqlProvider
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition : true);
 			}
 
 			StringBuilder.AppendLine(" THEN DELETE");
 		}
 
-		protected virtual void BuildMergeOperationInsert(SqlMergeOperationClause operation)
+		protected virtual void BuildMergeOperationInsert(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			StringBuilder
 				.AppendLine()
@@ -126,64 +149,66 @@ namespace LinqToDB.SqlProvider
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition : true);
 			}
 
 			StringBuilder
 				.AppendLine(" THEN")
 				.Append("INSERT");
 
-
 			var insertClause = new SqlInsertClause();
 			insertClause.Items.AddRange(operation.Items);
 
+			var saveStep = BuildStep;
+
+			BuildStep = Step.MergeInsertClause;
+
 			BuildInsertClause(new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
+
+			BuildStep = saveStep;
 		}
 
-		protected virtual void BuildMergeOperationUpdateWithDelete(SqlMergeOperationClause operation)
+		protected virtual void BuildMergeOperationUpdateWithDelete(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			// Oracle-specific operation
 			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
-		protected virtual void BuildMergeOperationDeleteBySource(SqlMergeOperationClause operation)
+		protected virtual void BuildMergeOperationDeleteBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			// SQL Server-specific operation
 			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
-		protected virtual void BuildMergeOperationUpdateBySource(SqlMergeOperationClause operation)
+		protected virtual void BuildMergeOperationUpdateBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			// SQL Server-specific operation
 			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
-		protected virtual void BuildMergeOn(SqlMergeStatement mergeStatement)
+		protected virtual void BuildMergeOn(NullabilityContext nullability, SqlMergeStatement mergeStatement)
 		{
 			StringBuilder.Append("ON (");
 
-			BuildSearchCondition(Precedence.Unknown, mergeStatement.On, wrapCondition: true);
+			BuildSearchCondition(Precedence.Unknown, mergeStatement.On, wrapCondition : true);
 
 			StringBuilder.AppendLine(")");
 		}
 
-		protected virtual void BuildMergeSourceQuery(SqlMergeSourceTable mergeSource)
+		protected virtual void BuildMergeSourceQuery(NullabilityContext nullability, SqlTableLikeSource mergeSource)
 		{
-			mergeSource = ConvertElement(mergeSource);
-			
 			BuildPhysicalTable(mergeSource.Source, null);
 
-			BuildMergeAsSourceClause(mergeSource);
+			BuildMergeAsSourceClause(nullability, mergeSource);
 		}
 
-		private void BuildMergeAsSourceClause(SqlMergeSourceTable mergeSource)
+		private void BuildMergeAsSourceClause(NullabilityContext nullability, SqlTableLikeSource mergeSource)
 		{
-			mergeSource = ConvertElement(mergeSource);
 			StringBuilder.Append(' ');
 
-			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name, TableOptions.NotSet);
+			BuildObjectName(StringBuilder, new (mergeSource.Name), ConvertType.NameToQueryTable, true, TableOptions.NotSet);
 
-			if (MergeSupportsColumnAliasesInSource)
+			if (SupportsColumnAliasesInSource)
 			{
 				StringBuilder.AppendLine();
 				StringBuilder.AppendLine(OpenParens);
@@ -209,27 +234,27 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		private void BuildMergeSourceEnumerable(SqlMergeStatement merge)
+		private void BuildMergeSourceEnumerable(NullabilityContext nullability, SqlMergeStatement merge)
 		{
-			merge = ConvertElement(merge);
-			var rows = merge.Source.SourceEnumerable!.Rows!;
+			var sourceEnumerable = ConvertElement(merge.Source.SourceEnumerable);
+			var rows             = sourceEnumerable!.BuildRows(OptimizationContext.EvaluationContext);
 			if (rows.Count > 0)
 			{
 				StringBuilder.Append('(');
 
-				if (MergeSupportsSourceDirectValues)
-					BuildValues(merge.Source.SourceEnumerable, rows);
+				if (IsValuesSyntaxSupported)
+					BuildValues(sourceEnumerable, rows);
 				else
-					BuildValuesAsSelectsUnion(merge.Source.SourceFields, merge.Source.SourceEnumerable, rows);
+					BuildValuesAsSelectsUnion(merge.Source.SourceFields, sourceEnumerable, rows);
 
 				StringBuilder.Append(')');
 			}
-			else if (MergeEmptySourceSupported)
+			else if (IsEmptyValuesSourceSupported)
 				BuildMergeEmptySource(merge);
 			else
 				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
 
-			BuildMergeAsSourceClause(merge.Source);
+			BuildMergeAsSourceClause(nullability, merge.Source);
 		}
 
 		/// <summary>
@@ -240,20 +265,28 @@ namespace LinqToDB.SqlProvider
 		/// <param name="row">Index of data row to check. Could contain -1 to indicate that this is a check for empty source NULL value.</param>
 		/// <param name="column">Index of data column to check in row.</param>
 		/// <returns>Returns <c>true</c>, if generated SQL should include type information for value at specified position, otherwise <c>false</c> returned.</returns>
-		protected virtual bool MergeSourceValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => false;
+		protected virtual bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => false;
 
 		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
 		{
-			var columnTypes = new SqlDataType[sourceFields.Count];
+			var columnTypes = new DbDataType[sourceFields.Count];
 			for (var i = 0; i < sourceFields.Count; i++)
-				columnTypes[i] = new SqlDataType(sourceFields[i]);
+				columnTypes[i] = sourceFields[i].Type;
+
+			StringBuilder
+				.AppendLine();
+			AppendIndent();
 
 			for (var i = 0; i < rows.Count; i++)
 			{
 				if (i > 0)
+				{
 					StringBuilder
-						.AppendLine()
-						.AppendLine("\tUNION ALL");
+						.AppendLine();
+					AppendIndent();
+					StringBuilder.AppendLine("\tUNION ALL");
+					AppendIndent();
+				}
 
 				// build record select
 				StringBuilder.Append("\tSELECT ");
@@ -265,15 +298,15 @@ namespace LinqToDB.SqlProvider
 					if (j > 0)
 						StringBuilder.Append(InlineComma);
 
-					if (MergeSourceValueTypeRequired(source, rows, i, j))
+					if (IsSqlValuesTableValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);
 					else
 						BuildExpression(value);
 
 					// add aliases only for first row
-					if (!MergeSupportsColumnAliasesInSource && i == 0)
+					if (RequiresConstantColumnAliases || i == 0)
 					{
-						StringBuilder.Append(' ');
+						StringBuilder.Append(" AS ");
 						Convert(StringBuilder, sourceFields[j].PhysicalName, ConvertType.NameToQueryField);
 					}
 				}
@@ -300,12 +333,12 @@ namespace LinqToDB.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(InlineComma);
 
-				if (MergeSourceValueTypeRequired(merge.Source.SourceEnumerable!, Array<ISqlExpression[]>.Empty, -1, i))
-					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type!.Value, null));
+				if (IsSqlValuesTableValueTypeRequired(merge.Source.SourceEnumerable!, [], -1, i))
+					BuildTypedExpression(field.Type, new SqlValue(field.Type, null));
 				else
-					BuildExpression(new SqlValue(field.Type!.Value, null));
+					BuildExpression(new SqlValue(field.Type, null));
 
-				if (!MergeSupportsColumnAliasesInSource)
+				if (!SupportsColumnAliasesInSource)
 				{
 					StringBuilder.Append(' ');
 					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
@@ -330,55 +363,87 @@ namespace LinqToDB.SqlProvider
 			if (FakeTable == null)
 				return false;
 
-			BuildTableName(StringBuilder, null, null, FakeTableSchema, FakeTable, TableOptions.NotSet);
+			// NO ESCAPING!
+			BuildObjectName(StringBuilder, new (FakeTable, Schema: FakeTableSchema), ConvertType.NameToQueryTable, false, TableOptions.NotSet);
 			return true;
 		}
 
-		private void BuildValues(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
+		protected void BuildValues(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
 		{
-			var columnTypes = new SqlDataType[source.Fields.Count];
+			if (rows.Count == 0)
+				return;
+
+			var columnTypes = new DbDataType[source.Fields.Count];
 			for (var i = 0; i < source.Fields.Count; i++)
-				columnTypes[i] = new SqlDataType(source.Fields[i]);
+				columnTypes[i] = source.Fields[i].Type;
+
+			StringBuilder.AppendLine("VALUES");
+
+			++Indent;
+
+			AppendIndent();
+
+			var currentRowLength = 0;
 
 			for (var i = 0; i < rows.Count; i++)
 			{
+				var currentPos = StringBuilder.Length;
+				StringBuilder.Append(OpenParens);
 				var row = rows[i];
 
-				if (i != 0)
-					StringBuilder.AppendLine(Comma);
-				else
-					StringBuilder.AppendLine("\tVALUES");
-
-				StringBuilder.Append("\t\t(");
-				for (var j = 0; j < row.Length; j++)
+				for (var j = 0; j < columnTypes.Length; j++)
 				{
 					var value = row[j];
 					if (j > 0)
-						StringBuilder.Append(InlineComma);
+						StringBuilder.Append(Comma);
 
-					if (MergeSourceValueTypeRequired(source, rows, i, j))
+					if (IsSqlValuesTableValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);
 					else
 						BuildExpression(value);
 				}
 
 				StringBuilder.Append(')');
+
+				var rowLength = StringBuilder.Length - currentPos;
+
+				currentRowLength += rowLength;
+
+				if (i < rows.Count - 1)
+				{
+					if (currentRowLength + rowLength / 2 > 50)
+					{
+						StringBuilder.Append(Comma).AppendLine();
+						currentRowLength = 0;
+						AppendIndent();
+					}
+					else
+					{
+						StringBuilder.Append(InlineComma);
+					}
+				}
 			}
+
+			--Indent;
+
+			StringBuilder.AppendLine();
+			AppendIndent();
+
 		}
 
-		private void BuildMergeSource(SqlMergeStatement merge)
+		private void BuildMergeSource(NullabilityContext nullability, SqlMergeStatement merge)
 		{
 			StringBuilder.Append("USING ");
 
 			if (merge.Source.SourceQuery != null)
-				BuildMergeSourceQuery(merge.Source);
+				BuildMergeSourceQuery(nullability, merge.Source);
 			else
-				BuildMergeSourceEnumerable(merge);
+				BuildMergeSourceEnumerable(nullability, merge);
 
 			StringBuilder.AppendLine();
 		}
 
-		protected virtual void BuildMergeInto(SqlMergeStatement merge)
+		protected virtual void BuildMergeInto(NullabilityContext nullability, SqlMergeStatement merge)
 		{
 			StringBuilder.Append("MERGE INTO ");
 			BuildTableName(merge.Target, true, true);

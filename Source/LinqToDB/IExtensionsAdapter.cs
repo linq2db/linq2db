@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB
 {
-	using Async;
-
 	/// <summary>
 	/// Interface to override default implementation of LINQ To DB async operations.
 	/// </summary>
@@ -131,25 +129,25 @@ namespace LinqToDB
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
-		Task<TSource> MinAsync<TSource>(
+		Task<TSource?> MinAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken   token);
 
-		Task<TResult> MinAsync<TSource,TResult>(
+		Task<TResult?> MinAsync<TSource,TResult>(
 			IQueryable<TSource>               source,
 			Expression<Func<TSource,TResult>> selector,
 			CancellationToken                 token);
 
-		Task<TSource> MaxAsync<TSource>(
+		Task<TSource?> MaxAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken   token);
 
-		Task<TResult> MaxAsync<TSource,TResult>(
+		Task<TResult?> MaxAsync<TSource,TResult>(
 			IQueryable<TSource>               source,
 			Expression<Func<TSource,TResult>> selector,
 			CancellationToken                 token);
 
-		#region SumAsync
+#region SumAsync
 
 		Task<int> SumAsync(
 			IQueryable<int>   source,
@@ -241,9 +239,9 @@ namespace LinqToDB
 			Expression<Func<TSource,decimal?>> selector,
 			CancellationToken                  token);
 
-		#endregion SumAsync
+#endregion SumAsync
 
-		#region AverageAsync
+#region AverageAsync
 
 		Task<double> AverageAsync(
 			IQueryable<int>   source,
@@ -335,6 +333,6 @@ namespace LinqToDB
 			Expression<Func<TSource,decimal?>> selector,
 			CancellationToken                  token);
 
-		#endregion AverageAsync
+#endregion AverageAsync
 	}
 }

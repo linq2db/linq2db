@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,43 +9,41 @@ namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
 	using Data;
-	using LinqToDB.Linq.Internal;
+	using Linq.Internal;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
-	using SqlQuery;
+	using Translation;
 
-	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
+	sealed class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix,    InformixProvider.Informix) {} }
+	sealed class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2, InformixProvider.DB2     ) {} }
+
+	public abstract class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
-		public InformixDataProvider(string providerName)
-			: base(
-				providerName,
-				GetMappingSchema(providerName, InformixProviderAdapter.GetInstance(providerName).MappingSchema),
-				InformixProviderAdapter.GetInstance(providerName))
-
+		protected InformixDataProvider(string name, InformixProvider provider)
+			: base(name, GetMappingSchema(provider), InformixProviderAdapter.GetInstance(provider))
 		{
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
-			SqlProviderFlags.IsGroupByExpressionSupported      = false;
-			SqlProviderFlags.IsCrossJoinSupported              = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.IsGroupByColumnRequred            = true;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
+			SqlProviderFlags.IsExistsPreferableForContains     = true;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR",  DataTools.GetCharExpression);
 			SetCharFieldToType<char>("NCHAR", DataTools.GetCharExpression);
 
-			SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
-			SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
-			SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
+			SetProviderField<DbDataReader, float,  float  >((r,i) => GetFloat  (r, i));
+			SetProviderField<DbDataReader, double, double >((r,i) => GetDouble (r, i));
+			SetProviderField<DbDataReader, decimal,decimal>((r,i) => GetDecimal(r, i));
 
-			SetField<IDataReader, float  >((r, i) => GetFloat  (r, i));
-			SetField<IDataReader, double >((r, i) => GetDouble (r, i));
-			SetField<IDataReader, decimal>((r, i) => GetDecimal(r, i));
+			SetField<DbDataReader, float  >((r, i) => GetFloat  (r, i));
+			SetField<DbDataReader, double >((r, i) => GetDouble (r, i));
+			SetField<DbDataReader, decimal>((r, i) => GetDecimal(r, i));
 
 			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags);
 
@@ -57,31 +56,33 @@ namespace LinqToDB.DataProvider.Informix
 			if (Adapter.TimeSpanType != null) SetProviderField(Adapter.TimeSpanType, typeof(TimeSpan), Adapter.GetTimeSpanReaderMethod, dataReaderType: Adapter.DataReaderType);
 		}
 
-		[ColumnReader(1)]
-		static float GetFloat(IDataReader dr, int idx)
+		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			using (new InvariantCultureRegion())
+			return new InformixMemberTranslator();
+		}
+
+		[ColumnReader(1)]
+		static float GetFloat(DbDataReader dr, int idx)
+		{
+			using (new InvariantCultureRegion(null))
 				return dr.GetFloat(idx);
 		}
 
 		[ColumnReader(1)]
-		static double GetDouble(IDataReader dr, int idx)
+		static double GetDouble(DbDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetDouble(idx);
 		}
 
 		[ColumnReader(1)]
-		static decimal GetDecimal(IDataReader dr, int idx)
+		static decimal GetDecimal(DbDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetDecimal(idx);
 		}
 
-		public override IDisposable ExecuteScope(DataConnection dataConnection)
-		{
-			return new InvariantCultureRegion();
-		}
+		public override IExecutionScope ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(null);
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |
@@ -90,14 +91,14 @@ namespace LinqToDB.DataProvider.Informix
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new InformixSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new InformixSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions)
 		{
 			return _sqlOptimizer;
 		}
@@ -107,7 +108,7 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSchemaProvider(this);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is TimeSpan ts)
 			{
@@ -118,15 +119,19 @@ namespace LinqToDB.DataProvider.Informix
 			}
 			else if (value is Guid || value == null && dataType.DataType == DataType.Guid)
 			{
-				value    = value?.ToString();
+				value    = value == null ? null : string.Format(CultureInfo.InvariantCulture, "{0}", value);
 				dataType = dataType.WithDataType(DataType.Char);
+			}
+			else if (value is byte byteValue && dataType.DataType == DataType.Int16)
+			{
+				value = (short)byteValue;
 			}
 			else if (value is bool b)
 			{
 				// IDS provider needs short values for bulk copy, but chars still for regular SQL
 				if (parameter is BulkCopyReader.Parameter)
 				{
-					value    = (short)(b == true ? 1 : 0);
+					value    = (short)(b ? 1 : 0);
 					dataType = dataType.WithDataType(DataType.Int16);
 				}
 				else
@@ -135,11 +140,17 @@ namespace LinqToDB.DataProvider.Informix
 					dataType = dataType.WithDataType(DataType.Char);
 				}
 			}
+#if NET6_0_OR_GREATER
+			else if (value is DateOnly d)
+			{
+				value = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -158,7 +169,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (idsType != null && db2Type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					if (Adapter.SetIfxType != null)
@@ -183,65 +194,53 @@ namespace LinqToDB.DataProvider.Informix
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		static class MappingSchemaInstance
+		static MappingSchema GetMappingSchema(InformixProvider provider)
 		{
-			public static readonly MappingSchema IfxMappingSchema = new InformixMappingSchema.IfxMappingSchema();
-			public static readonly MappingSchema DB2MappingSchema = new InformixMappingSchema.DB2MappingSchema();
-
-			public static MappingSchema Get(string providerName, MappingSchema providerSchema)
+			return provider switch
 			{
-				return providerName switch
-				{
-					ProviderName.InformixDB2 => new MappingSchema(DB2MappingSchema, providerSchema),
-					_                        => new MappingSchema(IfxMappingSchema, providerSchema),
-				};
-			}
-		}
-
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
-		{
-			return name switch
-			{
-				ProviderName.Informix => new InformixMappingSchema.IfxMappingSchema(providerSchema),
-				_                     => new InformixMappingSchema.DB2MappingSchema(providerSchema),
+				InformixProvider.Informix => new InformixMappingSchema.IfxMappingSchema(),
+				_                         => new InformixMappingSchema.DB2MappingSchema(),
 			};
 		}
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
 			return new InformixBulkCopy(this).BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(InformixOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new InformixBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(InformixOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new InformixBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(InformixOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

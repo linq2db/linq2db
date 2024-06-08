@@ -1,16 +1,27 @@
-﻿using JetBrains.Annotations;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Configuration;
 
 	[UsedImplicitly]
-	class SQLiteFactory: IDataProviderFactory
+	sealed class SQLiteFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return SQLiteTools.GetDataProvider();
+			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
+
+			var provider = assemblyName switch
+			{
+				SQLiteProviderAdapter.SystemDataSQLiteAssemblyName    => SQLiteProvider.System,
+				SQLiteProviderAdapter.MicrosoftDataSQLiteAssemblyName => SQLiteProvider.Microsoft,
+				_                                                     => SQLiteProvider.AutoDetect
+			};
+
+			return SQLiteTools.GetDataProvider(provider);
 		}
 	}
 }

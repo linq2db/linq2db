@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -13,14 +14,14 @@ namespace Tests.UserTests
 	public class Issue2560Tests : TestBase
 	{
 		[Table]
-		class DataClass
+		sealed class DataClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public LocalDateTime Value { get; set; }
 		}
 
 		[Test]
-		public void TestNodaTimeInsert([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNodaTimeInsert([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -44,7 +45,7 @@ namespace Tests.UserTests
 					var d1 = new DateTime(d.Year, d.Month, d.Day, d.Hour,
 						d.Minute, d.Second, d.Millisecond);
 
-					sb.Append('\'').Append(d1.ToString()).Append('\'');
+					sb.Append($"'{d1}'");
 				}
 			);
 
@@ -53,7 +54,7 @@ namespace Tests.UserTests
 			{
 				var item = new DataClass
 				{
-					Value = LocalDateTime.FromDateTime(DateTime.Now),
+					Value = LocalDateTime.FromDateTime(TestData.DateTime),
 				};
 
 				db.Insert(item);

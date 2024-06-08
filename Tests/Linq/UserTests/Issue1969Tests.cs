@@ -55,9 +55,12 @@ namespace Tests.UserTests
 					select c;
 				var res = query.ToArray();
 
-				Assert.That(res.Length,     Is.EqualTo(2));
-				Assert.That(res[0].CountOf, Is.EqualTo(2));
-				Assert.That(res[1].CountOf, Is.EqualTo(2));
+				Assert.That(res, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].CountOf, Is.EqualTo(2));
+					Assert.That(res[1].CountOf, Is.EqualTo(2));
+				});
 			}
 		}
 	}

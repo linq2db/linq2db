@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -8,6 +10,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Data;
 	using Model;
 
 
@@ -93,15 +96,16 @@ namespace Tests.Linq
 		[Test]
 		public void Concat4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+
 				AreEqual(
 					(from c in    Child where c.ParentID == 1 select c).Concat(
-					(from c in    Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 }).
-					Where(c => c.ChildID != 1032))
+				(from c in    Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 })
+				.Where(c => c.ChildID != 1032))
 					,
 					(from c in db.Child where c.ParentID == 1 select c).Concat(
-					(from c in db.Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 })).
-					Where(c => c.ChildID != 1032));
+				(from c in db.Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 }))
+				.Where(c => c.ChildID != 1032));
 		}
 
 		[Test]
@@ -118,8 +122,9 @@ namespace Tests.Linq
 					Where(c => c.ChildID != 1032));
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void Concat5([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void Concat5([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -132,8 +137,9 @@ namespace Tests.Linq
 					Where(c => c.ChildID != 1032));
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void Concat501([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void Concat501([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -147,7 +153,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat502([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void Concat502([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -161,7 +167,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat6([DataSources(ProviderName.SqlCe)] string context)
+		public void Concat6([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -236,6 +242,7 @@ namespace Tests.Linq
 					db.Child. Select(c => new { ID1 = c.ParentID, ID2 = c.ParentID + 1, ID3 = c.ChildID,  })));
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3360", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat851([DataSources] string context)
 		{
@@ -291,15 +298,44 @@ namespace Tests.Linq
 					db.Parent.Select(c => new Parent { ParentID = c.ParentID, Value1   = c.Value1   })));
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3360", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat89([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					   Child. Select(c => new Parent { Value1   = c.ParentID, ParentID = c.ParentID }).Concat(
-					   Parent.Select(c => new Parent { ParentID = c.ParentID                        })),
-					db.Child. Select(c => new Parent { Value1   = c.ParentID, ParentID = c.ParentID }).Concat(
-					db.Parent.Select(c => new Parent { ParentID = c.ParentID                        })));
+					   Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Concat(
+					   Parent.Select(c => new Parent {                      ParentID = c.ParentID })),
+					db.Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Concat(
+					db.Parent.Select(c => new Parent {                      ParentID = c.ParentID })));
+		}
+
+		[Test]
+		public void Concat891([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Union(
+					   Parent.Select(c => new Parent {                      ParentID = c.ParentID })).Concat(
+					   Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID })/*.Union(
+					   Parent.Select(c => new Parent {                      ParentID = c.ParentID }))*/),
+					db.Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID }).Union(
+					db.Parent.Select(c => new Parent {                      ParentID = c.ParentID })).Concat(
+					db.Child. Select(c => new Parent { Value1 = c.ParentID, ParentID = c.ParentID })/*.Union(
+					db.Parent.Select(c => new Parent {                      ParentID = c.ParentID }))*/),
+					sort: x => x.OrderBy(_ => _.ParentID).ThenBy(_ => _.Value1));
+		}
+
+		[Test]
+		public void Concat892([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.Select(c => new Parent {Value1 = c.ParentID, ParentID = c.ParentID})
+				.Union(db.Parent.Select(c => new Parent {                     ParentID = c.ParentID}))
+				.Concat(db.Child.Select(c => new Parent {Value1 = c.ParentID, ParentID = c.ParentID}));
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -487,28 +523,43 @@ namespace Tests.Linq
 					(from p2 in db.Parent select new Parent { Value1   = p2.Value1   })));
 		}
 
-		//[Test]
+		[Test]
 		public void Union54([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+
 				AreEqual(
 					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })),
+				(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() })),
 					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })));
+				(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() })), sort: e => e.OrderBy(x => x.ch == null).ThenBy(x => x.ParentID));
 		}
 
-		//[Test]
+		[Test]
+		public void ConcatWithDifferentProjections([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+					(from p1 in db.Parent select new { ParentID = p1.ParentID, p = p1 })
+				.Concat(
+					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null })
+					);
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void Union541([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() }))
+					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() }))
 					.Select(p => new { p.ParentID, p.p, p.ch })
 					,
 					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() }))
+					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.OrderByDescending(x => x.ChildID).FirstOrDefault() }))
 					.Select(p => new { p.ParentID, p.p, p.ch }));
 		}
 
@@ -523,7 +574,7 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select p2)));
 		}
 
-		//////[Test]
+		[Test]
 		public void ObjectUnion2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -545,7 +596,7 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = p2 })));
 		}
 
-		//////[Test]
+		[Test]
 		public void ObjectUnion4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -556,7 +607,49 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, p2.ParentID } })));
 		}
 
-		//////[Test]
+		[Test]
+		public void TupleUnion([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = 
+					(from p1 in db.Parent where p1.ParentID > 3 select Tuple.Create(p1.ParentID, p1.Value1))
+				.Union(
+					from p2 in db.Parent where p2.ParentID <= 3 select Tuple.Create(p2.ParentID, p2.Value1));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void TupleUnionProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				(from p1 in db.Parent where p1.ParentID > 3 select Tuple.Create((int?)p1.ParentID, p1.Value1))
+				.Union(
+					from p2 in db.Parent where p2.ParentID <= 3 select Tuple.Create(p2.Value1, (int?)p2.ParentID))
+				.Select(x => new { x.Item2, x.Item1 });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void TupleConcatIncompatibleProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				(from p1 in db.Parent where p1.ParentID > 3 select Tuple.Create((int?)p1.ParentID, p1.Value1))
+				.Concat(
+					from p2 in db.Parent where p2.ParentID <= 3 select default(Tuple<int?, int?>))
+				.Select(x => new { x.Item2, x.Item1 });
+
+			AssertQuery(query);
+		}
+
+
+		[Test]
 		public void ObjectUnion5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -609,7 +702,7 @@ namespace Tests.Linq
 		[Test]
 		public void Concat90()
 		{
-			using(var context = new TestDataConnection())
+			using(var context = new DataConnection())
 			{
 				var join1 =
 					from t1 in context.GetTable<TestEntity1>()
@@ -620,7 +713,7 @@ namespace Tests.Linq
 					select new { t1, t2 };
 
 				var join1Sql = join1.ToString();
-				Assert.IsNotNull(join1Sql);
+				Assert.That(join1Sql, Is.Not.Null);
 
 				var join2 =
 					from t2 in context.GetTable<TestEntity2>()
@@ -632,16 +725,17 @@ namespace Tests.Linq
 					select new { t1, t2 };
 
 				var join2Sql = join2.ToString();
-				Assert.IsNotNull(join2Sql);
+				Assert.That(join2Sql, Is.Not.Null);
 
 				var fullJoin = join1.Concat(join2);
 
 				var fullJoinSql = fullJoin.ToString(); // BLToolkit.Data.Linq.LinqException : Types in Concat are constructed incompatibly.
-				Assert.IsNotNull(fullJoinSql);
+				Assert.That(fullJoinSql, Is.Not.Null);
+
+				TestContext.Write(fullJoinSql);
 			}
 		}
 
-		[ActiveIssue("Not supported")]
 		[Test]
 		public void AssociationUnion1([DataSources] string context)
 		{
@@ -655,7 +749,6 @@ namespace Tests.Linq
 					select p.ParentID);
 		}
 
-		[ActiveIssue("Not supported")]
 		[Test]
 		public void AssociationUnion2([DataSources] string context)
 		{
@@ -667,7 +760,6 @@ namespace Tests.Linq
 					select c.Parent!.ParentID);
 		}
 
-		[ActiveIssue("Not supported")]
 		[Test]
 		public void AssociationConcat2([DataSources] string context)
 		{
@@ -711,6 +803,26 @@ namespace Tests.Linq
 						)
 					)
 				);
+		}
+
+		[Test]
+		public void ConcatDefaultIfEmpty([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 =
+				from p in db.Parent.LoadWith(p => p.Children)
+				where p.ParentID == 1
+				select p.Children.FirstOrDefault();
+
+			var query2 =
+				from p in db.Parent
+				where p.ParentID != 1
+				select (Child?)null;
+
+			var query = query1.Concat(query2);
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -771,7 +883,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UnionGroupByTest1([DataSources] string context)
+		public void UnionGroupByTest1([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -842,6 +954,20 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("UNION in subquery not supported by Access. We should transform it if we want to support such cases", Configuration = TestProvName.AllAccess)]
+		[Test]
+		public void ConcatInAny([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Parent.Select(p => p.ParentID)
+					.Concat(db.Parent.Select(p => p.ParentID))
+					.Any();
+
+				result.Should().BeTrue();
+			}
+		}
+
 		[Table("ConcatTest")]
 		[InheritanceMapping(Code = 0, Type = typeof(BaseEntity), IsDefault = true)]
 		[InheritanceMapping(Code = 1, Type = typeof(DerivedEntity))]
@@ -856,12 +982,12 @@ namespace Tests.Linq
 		}
 
 		[Table("ConcatTest")]
-		class DerivedEntity : BaseEntity
+		sealed class DerivedEntity : BaseEntity
 		{
 		}
 
 		[Test]
-		public void TestConcatInheritance([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+		public void TestConcatInheritance([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = new[]
 			{
@@ -890,7 +1016,6 @@ namespace Tests.Linq
 
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void TestConcatWithParameterProjection([DataSources] string context)
 		{
@@ -943,6 +1068,7 @@ namespace Tests.Linq
 				true,
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -960,6 +1086,7 @@ namespace Tests.Linq
 				true,
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -969,6 +1096,772 @@ namespace Tests.Linq
 				var q = q1.Concat(q2);
 				var f = q.Select(t => new { rn = Sql.Ext.DenseRank().Over().OrderBy(t.ID).ToValue(), t.ID }).ToList();
 			}
+		}
+
+		[Test]
+		public void SelectWithNulls([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.GetTable<LinqDataTypes>();
+			var query2 = db.GetTable<LinqDataTypes>().Select(d => new LinqDataTypes { });
+
+			var query = query1.UnionAll(query2);
+
+			query.Invoking(q => q.ToArray()).Should().NotThrow();
+		}
+
+		[Test]
+		public void SelectWithNulls2([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.GetTable<LinqDataTypes2>();
+			var query2 = db.GetTable<LinqDataTypes2>().Select(d => new LinqDataTypes2 { });
+
+			var query = query1.UnionAll(query2);
+
+			query.Invoking(q => q.ToArray()).Should().NotThrow();
+		}
+
+		[Test]
+		public void SelectWithBooleanNulls([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = from x in db.Parent
+				select new {a = db.Child.Any(), b = (bool?)(x.ParentID != 0)};
+
+			var query2 = from x in db.Parent
+				select new {a = db.Child.Any(), b = (bool?)null};
+
+			var query = query1.UnionAll(query2);
+
+			query.Invoking(q => q.ToList()).Should().NotThrow();
+		}
+
+		[Test(Description = "Test that we generate plain UNION without sub-queries")]
+		public void Issue3359_MultipleSets([DataSources(false)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			var query1 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query2 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query3 = db.Person.Select(p => new { p.FirstName, p.LastName });
+
+			query1.Concat(query2).Concat(query3).ToArray();
+
+			db.LastQuery!.Should().Contain("SELECT", Exactly.Thrice());
+		}
+
+		[Test(Description = "Test that we generate plain UNION without sub-queries")]
+		public void Issue3359_MultipleSetsCombined([DataSources(false)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			var query1 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query2 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query3 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query4 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query5 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query6 = db.Person.Select(p => new { p.FirstName, p.LastName });
+
+			query1.Concat(query2.Concat(query3)).Concat(query4.Concat(query5).Concat(query6)).ToArray();
+
+			db.LastQuery!.Should().Contain("SELECT", Exactly.Times(6));
+		}
+
+		// only pgsql and CH support all 6 operators right now
+		[Test(Description = "Test that we generate sub-queries for incompatible set operators and order queries properly")]
+		public void Issue3359_MultipleSetsCombined_DifferentOperators([IncludeDataSources(TestProvName.AllPostgreSQL/*, TestProvName.AllClickHouse*/)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			var query1 = db.Person.Select(p => new { FirstName = p.FirstName + "q1", p.LastName });
+			var query2 = db.Person.Select(p => new { FirstName = p.FirstName + "q2", p.LastName });
+			var query3 = db.Person.Select(p => new { FirstName = p.FirstName + "q3", p.LastName });
+			var query4 = db.Person.Select(p => new { FirstName = p.FirstName + "q4", p.LastName });
+			var query5 = db.Person.Select(p => new { FirstName = p.FirstName + "q5", p.LastName });
+			var query6 = db.Person.Select(p => new { FirstName = p.FirstName + "q6", p.LastName });
+
+			query1.Union(query2.UnionAll(query3)).Intersect(query4.IntersectAll(query5).Except(query6)).ToArray();
+
+			var sql = db.LastQuery!;
+			// 6 main queries and 4 subqueries for incompatible operators
+			sql.Should().Contain("SELECT", Exactly.Times(6 + 4));
+
+			// operators generated
+			sql.Should().Contain("UNION ALL", Exactly.Once());
+			sql.Should().Contain("UNION", Exactly.Twice());
+			sql.Should().Contain("INTERSECT", Exactly.Twice());
+			sql.Should().Contain("INTERSECT ALL", Exactly.Once());
+			sql.Should().Contain("EXCEPT", Exactly.Once());
+
+			// operators order correct
+			var i1 = sql.IndexOf("UNION");
+			var i2 = sql.IndexOf("UNION ALL");
+			var i3 = sql.IndexOf("INTERSECT");
+			var i4 = sql.IndexOf("INTERSECT ALL");
+			var i5 = sql.IndexOf("EXCEPT");
+			Assert.That(i1, Is.Not.EqualTo(-1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(i1, Is.LessThan(i2));
+				Assert.That(i2, Is.LessThan(i3));
+				Assert.That(i3, Is.LessThan(i4));
+				Assert.That(i4, Is.LessThan(i5));
+			});
+
+			// queries order correct
+			i1 = sql.IndexOf("q1");
+			i2 = sql.IndexOf("q2");
+			i3 = sql.IndexOf("q3");
+			i4 = sql.IndexOf("q4");
+			i5 = sql.IndexOf("q5");
+			Assert.That(i1, Is.Not.EqualTo(-1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(i1, Is.LessThan(i2));
+				Assert.That(i2, Is.LessThan(i3));
+				Assert.That(i3, Is.LessThan(i4));
+				Assert.That(i4, Is.LessThan(i5));
+			});
+		}
+
+		public record class RecordClass (int Id, string FirstName, string LastName);
+
+		public class RecordLikeClass
+		{
+			public RecordLikeClass(int Id, string FirstName, string LastName)
+			{
+				this.Id        = Id;
+				this.FirstName = FirstName;
+				this.LastName  = LastName;
+			}
+
+			public int    Id        { get; }
+			public string FirstName { get; }
+			public string LastName  { get; }
+		}
+
+		public record class NameRecord (string FirstName, string LastName);
+
+		public record class RecordClassWithNestedRecord (int Id, NameRecord Name);
+
+		[Test(Description = "record type support")]
+		public void ConcatRecordClass([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = 
+				db.Person.Select(p => new RecordClass(p.ID, p.FirstName, p.LastName))
+				.Concat(db.Person.Select(p => new RecordClass(p.ID, p.FirstName, p.LastName)));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "record type support")]
+		public void ConcatRecordClassNested([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person.Select(p => new RecordClassWithNestedRecord(p.ID, new NameRecord(p.FirstName, p.LastName)))
+				.Concat(db.Person.Select(p => new RecordClassWithNestedRecord(p.ID, new NameRecord(p.LastName, p.FirstName))));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "record type support")]
+		public void ConcatRecordLikeClass([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqualWithComparer(
+				Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))
+				.Concat(Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))),
+
+				db.Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))
+				.Concat(db.Person.Select(p => new RecordLikeClass(p.ID, p.FirstName, p.LastName))));
+		}
+
+		[Table]
+		public class Issue3323Table
+		{
+			[PrimaryKey                      ] public int     Id       { get; set; }
+			[Column(SkipOnEntityFetch = true)] public string? FistName { get; set; }
+			[Column(SkipOnEntityFetch = true)] public string? LastName { get; set; }
+			[Column(CanBeNull = false)       ] public string  Text     { get; set; } = null!;
+
+			[ExpressionMethod(nameof(FullNameExpr), IsColumn = true)]
+			public string FullName { get; set; } = null!;
+
+			private static Expression<Func<Issue3323Table, string>> FullNameExpr() => entity => entity.FistName + " " + entity.LastName;
+		}
+
+		[Test(Description = "calculated column in set select")]
+		public void Issue3323([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3323Table>();
+			tb.Insert(() => new Issue3323Table()
+			{
+				Id       = 1,
+				FistName = "one",
+				LastName = "two",
+				Text     = "text"
+			});
+
+			var res = tb.Concat(tb).ToArray();
+
+			Assert.That(res, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].FullName, Is.EqualTo("one two"));
+				Assert.That(res[1].FullName, Is.EqualTo("one two"));
+			});
+		}
+
+		[Test(Description = "calculated column in set select")]
+		public void Issue3323_Mixed([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3323Table>();
+			tb.Insert(() => new Issue3323Table()
+			{
+				Id       = 1,
+				FistName = "one",
+				LastName = "two",
+				Text     = "text"
+			});
+
+			var query1 = tb.Select(r => new { r.Id, Text = r.FullName });
+			var query2 = tb.Select(r => new { Id = r.Id + 1, Text = r.Text });
+
+			var res = query1.Concat(query2).ToArray().OrderBy(r => r.Id).ToArray();
+
+			Assert.That(res, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].Text, Is.EqualTo("one two"));
+				Assert.That(res[1].Text, Is.EqualTo("text"));
+			});
+
+			res = query2.Concat(query1).ToArray().OrderBy(r => r.Id).ToArray();
+
+			Assert.That(res, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].Text, Is.EqualTo("one two"));
+				Assert.That(res[1].Text, Is.EqualTo("text"));
+			});
+		}
+
+		[Test(Description = "NullReferenceException : Object reference not set to an instance of an object.")]
+		public void Issue2505([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var src = db.Person.AsQueryable();
+
+			var query1 = src.Select(i => new
+			{
+				Person = i,
+				Gender = i.MiddleName == null ? Gender.Male : Gender.Other,
+			});
+
+			var query2 = src.Select(i => new
+			{
+				Person = i,
+				Gender = i.MiddleName == null ? Gender.Male : Gender.Other,
+			});
+
+			query1
+				.UnionAll(query2)
+				.Select(i => new
+				{
+					Person = i.Person,
+					Gender = i.Gender,
+				})
+				.Where(i => i.Gender == Gender.Other)
+				.OrderByDescending(i => i.Person.FirstName)
+				.Select(i => new
+				{
+					Account = i.Person.LastName
+				})
+				.ToList();
+		}
+
+		[Table]
+		[Column(MemberName = $"{nameof(Name)}.{nameof(FullName.FirstName)}")]
+		[Column(MemberName = $"{nameof(Name)}.{nameof(FullName.LastName)}")]
+		public class ComplexPerson
+		{
+			[PrimaryKey] public int       Id   { get; set; }
+			             public FullName? Name { get; set; }
+		}
+
+		public class FullName
+		{
+			public string? FirstName { get; set; }
+			public string? LastName  { get; set; }
+		}
+
+		[Test(Description = "composite columns in union (also tests create table)")]
+		public void Issue3346_ProjectionBuild([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<ComplexPerson>();
+
+			var query1 = from x in tb
+						 where x.Id < 10
+						 select x;
+
+			var query2 = from x in tb
+						 where x.Id < 20
+						 select x;
+
+			query1.Union(query2).ToArray();
+		}
+
+		[Test(Description = "composite columns in union (also tests create table)")]
+		public void Issue3346_Count([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<ComplexPerson>();
+
+			var query1 = from x in tb
+						 where x.Id < 10
+						 select x;
+
+			var query2 = from x in tb
+						 where x.Id < 20
+						 select x;
+
+			query1.Union(query2).Count();
+		}
+
+		[Test(Description = "preserve constant columns")]
+		public void Issue3150([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Where(p => p.ID == 1).Select(p => new { p.ID, Name = new { p.FirstName, Marker = "id=1" } });
+			var query2 = db.Person.Where(p => p.ID == 2).Select(p => new { p.ID, Name = new { p.FirstName, Marker = "id=2" } });
+
+			var result = query1.Concat(query2).AsEnumerable().OrderBy(x => x.ID).ToArray();
+
+			result.Should().HaveCount(2);
+			result[0].Name.Marker.Should().Be("id=1");
+			result[1].Name.Marker.Should().Be("id=2");
+		}
+
+		public class Issue2948MyModel
+		{
+			public int    Id   { get; set; }
+			public string Name { get; set; } = null!;
+		}
+
+		public class Issue2948RankData<T>
+		{
+			public long Rank  { get; set; }
+			public T    Model { get; set; } = default!;
+		}
+
+		[Test(Description = "InvalidCastException : Unable to cast object of type 'System.Linq.Expressions.MemberMemberBinding' to type 'System.Linq.Expressions.MemberAssignment'.")]
+		public void Issue2948([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var main = (from p in db.Person
+						select new Issue2948RankData<Issue2948MyModel>()
+						{
+							Model = { Id = p.ID, Name = p.FirstName },
+							Rank  = Sql.Ext.RowNumber().Over().PartitionBy(p.ID).OrderBy(p.ID).ToValue()
+				}).Where(x => x.Rank == 1).Select(x => x.Model);
+
+			var first  = main.Where(x => x.Id != 2);
+			var second = main.Where(x => x.Id == 2).OrderByDescending(x => x.Name).Take(1);
+			var third  = main.Where(x => x.Id != 3).OrderBy(x => x.Name).Take(1);
+
+			var res = first.Concat(second).Concat(third).ToList();
+
+			// order is not guaranted by DB
+			res = res.OrderBy(r => r.Id).ToList();
+
+			res.Should().HaveCount(5);
+			res[0].Id.Should().Be(1);
+			res[0].Name.Should().Be("John");
+		}
+
+		[Test(Description = "invalid SQL for Any() subquery")]
+		public void Issue2932_Broken([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.Select(p => new { p.ChildID, Sub = p.GrandChildren.Any() });
+
+			query.Concat(query).ToArray();
+		}
+
+		[Test(Description = "invalid SQL for Any() subquery")]
+		public void Issue2932_Works([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.Select(p => new { p.ChildID, Sub = p.GrandChildren.Any() ? true : false });
+
+			query.Concat(query).ToArray();
+		}
+
+		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
+		public void Issue2619_Query1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = ((from item in db.Person select item)
+				.OrderBy(i => i.ID))
+				.Union((from item in db.Person select item));
+
+			var sql = query.ToString()!;
+
+			sql.Should().NotContain("ORDER BY");
+
+			query.ToList();
+		}
+
+		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
+		public void Issue2619_Query2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from item in db.Person select item)
+				.Union((from item in db.Person select item)
+				.OrderBy(i => i.ID));
+
+			var sql = query.ToString()!;
+
+			sql.Should().NotContain("ORDER BY");
+
+			query.ToList();
+		}
+
+		// disabled databases doesn't support order by in specified position
+		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
+		public void Issue2619_Query3([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = ((from item in db.Person select item)
+				.OrderBy(i => i.ID))
+				.UnionAll((from item in db.Person select item));
+
+			var sql = query.ToString()!;
+
+			sql.Should().Contain("ORDER BY", Exactly.Once());
+			sql.Substring(sql.IndexOf("ORDER BY")).Should().Contain("UNION", Exactly.Once());
+
+			query.ToList();
+		}
+
+		// disabled databases doesn't support order by in specified position
+		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
+		public void Issue2619_Query4([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from item in db.Person select item)
+				.UnionAll((from item in db.Person select item)
+				.OrderBy(i => i.ID));
+
+			var sql = query.ToString()!;
+
+			sql.Should().Contain("ORDER BY", Exactly.Once());
+			sql.Should().Contain("UNION", Exactly.Once());
+			sql.Substring(sql.IndexOf("ORDER BY")).Should().NotContain("UNION");
+
+			query.ToList();
+		}
+
+		[Test(Description = "ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than the size of the collection.")]
+		public void Issue2511_Query1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var res = db.Person.LoadWith(p => p.Patient).Concat(db.Person.LoadWith(p => p.Patient).Take(2)).ToArray();
+
+			Assert.That(res, Has.Length.EqualTo(6));
+			Assert.That(res.Where(r => r.ID == 2).Count(), Is.EqualTo(2));
+			var pat = res.Where(r => r.ID == 2).First();
+			Assert.That(pat.Patient, Is.Not.Null);
+			Assert.That(pat.Patient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
+			pat = res.Where(r => r.ID == 2).Skip(1).First();
+			Assert.That(pat.Patient, Is.Not.Null);
+			Assert.That(pat.Patient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
+		}
+
+		[Test(Description = "Associations with Concat/Union or other Set operations are not supported")]
+		public void Issue2511_Query2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var res = db.Person.LoadWith(p => p.Patient)
+				.Select(p => new Person()
+				{
+					ID         = p.ID,
+					FirstName  = p.FirstName,
+					LastName   = p.LastName,
+					MiddleName = p.MiddleName,
+					Gender     = p.Gender,
+					Patient    = p.Patient
+				}).Take(2)
+				.Concat(db.Person.LoadWith(p => p.Patient))
+				.ToArray();
+
+			res.Should().HaveCount(6);
+
+			var pat = res.Where(r => r.ID == 2).First();
+			pat.Patient.Should().NotBeNull();
+
+			pat = res.Where(r => r.ID == 2).Skip(1).Single();
+			pat.Patient.Should().NotBeNull();
+
+			pat.Patient!.Diagnosis.Should().Be("Hallucination with Paranoid Bugs' Delirium of Persecution");
+		}
+
+		[Test(Description = "Working version of Issue2511_Query2")]
+		public void Issue2511_Query3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var res = db.Person.LoadWith(p => p.Patient)
+				.Select(p => new Person()
+				{
+					ID         = p.ID,
+					FirstName  = p.FirstName,
+					LastName   = p.LastName,
+					MiddleName = p.MiddleName,
+					Gender     = p.Gender,
+				}).Take(2)
+				.Concat(db.Person.LoadWith(p => p.Patient))
+				.OrderBy(x => x.ID)
+				.ToArray();
+
+			res.Should().HaveCount(6);
+
+			var patients = res.Where(r => r.ID == 2).ToList();
+			patients.Any(p => p.Patient != null).Should().BeTrue();
+			patients.Any(p => p.Patient == null).Should().BeTrue();
+		}
+
+		[Test]
+		public void ConcatEntities([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = 
+					(from p in db.Parent where p.ParentID == 1 select p).Concat(
+					(from p in db.Parent where p.ParentID == 2 select p));
+
+				AssertQuery(query);
+			}
+		}
+
+		class ConcatEntity
+		{
+			public int? IntValue { get; set; }
+
+			public class ConcatSubEntity
+			{
+				public int Id { get; set; }
+				public int? Value { get; set; }
+			}
+
+			public ConcatSubEntity? Entity { get; set; }
+		}
+
+		[Test]
+		public void ConcatEqualSelects([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					(from p in db.Parent
+					where p.ParentID == 1
+					select new ConcatEntity
+					{
+						IntValue = p.ParentID + 1,
+						Entity = new ConcatEntity.ConcatSubEntity
+						{
+							Id = p.ParentID
+						}, 
+					})
+					.Concat(
+					from p in db.Parent
+					where p.ParentID == 2
+					select new ConcatEntity
+					{
+						Entity = new ConcatEntity.ConcatSubEntity
+						{
+							Id = p.ParentID
+						}, 
+					});
+
+				AssertQuery(query);
+			}
+		}
+
+
+		[InheritanceMapping(Code = 1, Type = typeof(SetEntityA))]
+		[InheritanceMapping(Code = 2, Type = typeof(SetEntityB))]
+		[InheritanceMapping(Code = 3, Type = typeof(SetEntityC))]
+		abstract class SetEntityBase
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public abstract int Discriminator { get; }
+		}
+
+		class SetEntityA : SetEntityBase
+		{
+			[Column]
+			public          int? IntValue      { get; set; }
+
+			public override int  Discriminator => 1;
+		}
+
+		class SetEntityB : SetEntityBase
+		{
+			[Column]
+			public          string? StrValue      { get; set; }
+
+			public override int  Discriminator => 2;
+		}
+
+		class SetEntityC : SetEntityBase
+		{
+			[Column]
+			public double? DoubleValue { get; set; }
+
+			public override int Discriminator => 3;
+		}
+
+		[Test]
+		public void ConcatInheritance([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var items = new SetEntityBase[]
+			{
+				new SetEntityA{Id = 1, IntValue = 11},
+				new SetEntityB{Id = 2, StrValue = "Str22" },
+				new SetEntityC{Id = 3, DoubleValue = 33.33 }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(items))
+			{
+				var query =
+					(from t1 in table.Where(x => x.Id == 1) select t1)
+					.Concat(
+						from t2 in table.Where(x => x.Id == 2) select t2)
+					.Concat(
+						from t3 in table.Where(x => x.Id == 3) select t3);
+
+				var result = query.ToList();
+				result[0].Should().BeOfType<SetEntityA>();
+				result[1].Should().BeOfType<SetEntityB>();
+				result[2].Should().BeOfType<SetEntityC>();
+			}
+		}
+
+		[Test]
+		public void ConcatBrokenInheritance([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var items = new SetEntityBase[]
+			{
+				new SetEntityA{Id = 1, IntValue    = 11},
+				new SetEntityB{Id = 2, StrValue    = "Str22" },
+				new SetEntityC{Id = 3, DoubleValue = 33.33 }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(items))
+			{
+				var query =
+					(from t1 in table.Where(x => x.Id == 1) select t1)
+					.Concat(
+						from t2 in table.Where(x => x.Id == 2) select t2)
+					.Concat(
+						from t3 in table.Where(x => x.Id == 3) select new SetEntityC
+						{
+							Id = t3.Id,
+							DoubleValue = 4.44
+						});
+
+				var result = query.ToList();
+				result[0].Should().BeOfType<SetEntityA>();
+				result[1].Should().BeOfType<SetEntityB>();
+				result[2].Should().BeOfType<SetEntityC>();
+			}
+		}
+
+		// ClickHouse developers themself doesn't know how their aliases work, so there will be no workaround
+		// from our side. User should use names carefully in queries
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
+		[Test]
+		public void Issue3369Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = from x in db.Person
+					 where x.ID == 1
+					 select new
+					 {
+						 x.ID,
+						 FirstName = "A",
+						 OK = x.FirstName == "123" ? "Y" : "N",
+					 };
+			var q2 = from x in db.Person
+					 where x.ID == 2
+					 select new
+					 {
+						 x.ID,
+						 x.FirstName,
+						 OK = "N"
+					 };
+			var query = q1.Union(q2);
+			var q3 = from x in query
+					 from y in db.Person.LeftJoin(t => t.ID == x.ID)
+					 where x.ID == 3
+					 select new
+					 {
+						 x.ID,
+						 x.OK,
+						 FirstName = x.FirstName == "ddd" ? y.FirstName : x.FirstName,
+					 };
+
+			q3.ToList();
+		}
+
+		[Test]
+		public void Issue3738Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(x => new
+			{
+				Id     = (string?)("I-" + x.ID),
+				Name   = x.FirstName
+			});
+			var query2 = db.Person.Select(x => new
+			{
+				Id   = (string?)null,
+				Name = "QUASI-" + x.FirstName,
+			});
+
+			var resultingQuery = query1.Concat(query2);
+
+			resultingQuery.ToList();
 		}
 	}
 }

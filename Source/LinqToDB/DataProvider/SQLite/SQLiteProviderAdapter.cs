@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Expressions;
+
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _systemSyncRoot = new object();
-		private static readonly object _msSyncRoot     = new object();
+		private static readonly object _systemSyncRoot = new ();
+		private static readonly object _msSyncRoot     = new ();
 
 		private static SQLiteProviderAdapter? _systemDataSQLite;
 		private static SQLiteProviderAdapter? _microsoftDataSQLite;
@@ -17,21 +21,28 @@ namespace LinqToDB.DataProvider.SQLite
 		public const string MicrosoftDataSQLiteClientNamespace = "Microsoft.Data.Sqlite";
 
 		private SQLiteProviderAdapter(
-			Type connectionType,
-			Type dataReaderType,
-			Type parameterType,
-			Type commandType,
-			Type transactionType,
-			bool disposeCommandOnError)
+			Type                       connectionType,
+			Type                       dataReaderType,
+			Type                       parameterType,
+			Type                       commandType,
+			Type                       transactionType,
+			Func<string, DbConnection> connectionFactory,
+			bool                       supportsDateOnly,
+			Action?                    clearAllPulls)
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			TransactionType    = transactionType;
+			_connectionFactory = connectionFactory;
 
-			DisposeCommandOnError = disposeCommandOnError;
+			SupportsDateOnly      = supportsDateOnly;
+
+			ClearAllPools      = clearAllPulls;
 		}
+
+#region IDynamicProviderAdapter
 
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
@@ -39,11 +50,15 @@ namespace LinqToDB.DataProvider.SQLite
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		/// <summary>
-		/// Enables workaround for https://github.com/aspnet/EntityFrameworkCore/issues/17521
-		/// for Microsoft.Data.Sqlite v3.0.0.
-		/// </summary>
-		internal bool DisposeCommandOnError { get; }
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
+
+		// Classic driver does not store dates correctly
+		internal bool SupportsDateOnly { get; }
+
+		public Action? ClearAllPools { get; }
 
 		private static SQLiteProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string prefix)
 		{
@@ -57,7 +72,44 @@ namespace LinqToDB.DataProvider.SQLite
 			var commandType     = assembly.GetType($"{clientNamespace}.{prefix}Command"    , true)!;
 			var transactionType = assembly.GetType($"{clientNamespace}.{prefix}Transaction", true)!;
 
-			var disposeCommandOnError = connectionType.AssemblyQualifiedName == "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60";
+			var version = assembly.GetName().Version;
+
+			var typeMapper = new TypeMapper();
+			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			{
+				typeMapper.RegisterTypeWrapper<SqliteConnection>(connectionType);
+			}
+			else
+			{
+				typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
+			}
+			typeMapper.FinalizeMappings();
+
+			Action? clearAllPools = null;
+
+			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			{
+				if (version >= ClearPoolsMinVersionMDS)
+				{
+					clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SqliteConnection.ClearAllPools()));
+				}
+			}
+			else if (version >= ClearPoolsMinVersionSDS)
+			{
+				clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SQLiteConnection.ClearAllPools()));
+			}
+
+			var supportsDateOnly   = clientNamespace == MicrosoftDataSQLiteClientNamespace && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
+
+			Func<string, DbConnection> connectionFactory;
+			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			{
+				connectionFactory = typeMapper.BuildTypedFactory<string, SqliteConnection, DbConnection>((string connectionString) => new SqliteConnection(connectionString));
+			}
+			else
+			{
+				connectionFactory = typeMapper.BuildTypedFactory<string, SQLiteConnection, DbConnection>((string connectionString) => new SQLiteConnection(connectionString));
+			}
 
 			return new SQLiteProviderAdapter(
 				connectionType,
@@ -65,29 +117,60 @@ namespace LinqToDB.DataProvider.SQLite
 				parameterType,
 				commandType,
 				transactionType,
-				disposeCommandOnError);
+				connectionFactory,
+				supportsDateOnly,
+				clearAllPools);
 		}
 
-		public static SQLiteProviderAdapter GetInstance(string name)
+		private static readonly Version ClearPoolsMinVersionMDS       = new (6, 0, 0);
+		private static readonly Version ClearPoolsMinVersionSDS       = new (1, 0, 55);
+		private static readonly Version MinDateOnlyAssemblyVersionMDS = new (6, 0, 0);
+		
+		public static SQLiteProviderAdapter GetInstance(SQLiteProvider provider)
 		{
-			if (name == ProviderName.SQLiteClassic)
+			if (provider == SQLiteProvider.System)
 			{
 				if (_systemDataSQLite == null)
+				{
 					lock (_systemSyncRoot)
-						if (_systemDataSQLite == null)
-							_systemDataSQLite = CreateAdapter(SystemDataSQLiteAssemblyName, SystemDataSQLiteClientNamespace, "SQLite");
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_systemDataSQLite ??= CreateAdapter(SystemDataSQLiteAssemblyName, SystemDataSQLiteClientNamespace, "SQLite");
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _systemDataSQLite;
 			}
 			else
 			{
 				if (_microsoftDataSQLite == null)
+				{
 					lock (_msSyncRoot)
-						if (_microsoftDataSQLite == null)
-							_microsoftDataSQLite = CreateAdapter(MicrosoftDataSQLiteAssemblyName, MicrosoftDataSQLiteClientNamespace, "Sqlite");
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_microsoftDataSQLite ??= CreateAdapter(MicrosoftDataSQLiteAssemblyName, MicrosoftDataSQLiteClientNamespace, "Sqlite");
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _microsoftDataSQLite;
 			}
 		}
+
+		#region wrappers
+		[Wrapper]
+		private sealed class SqliteConnection
+		{
+			public SqliteConnection(string connectionString) => throw new NotImplementedException();
+
+			public static void ClearAllPools() => throw new NotImplementedException();
+		}
+
+		[Wrapper]
+		private sealed class SQLiteConnection
+		{
+			public SQLiteConnection(string connectionString) => throw new NotImplementedException();
+
+			public static void ClearAllPools() => throw new NotImplementedException();
+		}
+
+		#endregion
 	}
 }

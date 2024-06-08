@@ -17,6 +17,10 @@ namespace LinqToDB.SchemaProvider
 		/// Name of procedure schema/owner.
 		/// </summary>
 		public string? SchemaName          { get; set; }
+		/// <summary>
+		/// Name of procedure package/library/module.
+		/// </summary>
+		public string? PackageName         { get; set; }
 
 		/// <summary>
 		/// Procedure or function name.

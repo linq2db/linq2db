@@ -1,107 +1,93 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.DataProvider.MySql
+﻿namespace LinqToDB.DataProvider.MySql
 {
-	using Extensions;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
-	class MySqlSqlOptimizer : BasicSqlOptimizer
+	sealed class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
 		public MySqlSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 
-		public override bool CanCompareSearchConditions => true;
-		
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
+		{
+			return new MySqlSqlExpressionConvertVisitor(allowModify);
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement),
+				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema),
+				QueryType.Delete => PrepareDelete     ((SqlDeleteStatement)statement),
 				_                => statement,
 			};
 		}
 
-		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement)
+		SqlStatement PrepareDelete(SqlDeleteStatement statement)
 		{
-			if (statement.SelectQuery.Select.SkipValue != null)
-				throw new LinqToDBException("MySql does not support Skip in update query");
+			var tables = statement.SelectQuery.From.Tables;
 
-			statement = CorrectUpdateTable(statement);
-
-			if (!statement.SelectQuery.OrderBy.IsEmpty)
-				statement.SelectQuery.OrderBy.Items.Clear();
+			if (tables.Count == 1 && tables[0].Joins.Count == 0
+				&& !statement.SelectQuery.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported))
+				tables[0].Alias = "$";
 
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
-			EvaluationContext context)
+		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			if (statement.SelectQuery.Select.SkipValue != null)
+				throw new LinqToDBException("MySql does not support Skip in update query");
 
-			if (expression is SqlBinaryExpression be)
+			statement = CorrectUpdateTable(statement, leaveUpdateTableInQuery: true, dataOptions, mappingSchema);
+
+			// Mysql do not allow Update table usage in FROM clause. Moving it to subquery
+			// https://stackoverflow.com/a/14302701/10646316
+			// See UpdateIssue319Regression test
+			var changed = false;
+			statement.SelectQuery.VisitParentFirst(e =>
 			{
-				switch (be.Operation)
+				// Skip root query FROM clause
+				if (ReferenceEquals(e, statement.SelectQuery.From))
 				{
-					case "+":
-						if (be.SystemType == typeof(string))
-						{
-							if (be.Expr1 is SqlFunction func)
-							{
-								if (func.Name == "Concat")
-								{
-									var list = new List<ISqlExpression>(func.Parameters) { be.Expr2 };
-									return new SqlFunction(be.SystemType, "Concat", list.ToArray());
-								}
-							}
-							else if (be.Expr1 is SqlBinaryExpression && be.Expr1.SystemType == typeof(string) && ((SqlBinaryExpression)be.Expr1).Operation == "+")
-							{
-								var list = new List<ISqlExpression> { be.Expr2 };
-								var ex   = be.Expr1;
-
-								while (ex is SqlBinaryExpression && ex.SystemType == typeof(string) && ((SqlBinaryExpression)be.Expr1).Operation == "+")
-								{
-									var bex = (SqlBinaryExpression)ex;
-
-									list.Insert(0, bex.Expr2);
-									ex = bex.Expr1;
-								}
-
-								list.Insert(0, ex);
-
-								return new SqlFunction(be.SystemType, "Concat", list.ToArray());
-							}
-
-							return new SqlFunction(be.SystemType, "Concat", be.Expr1, be.Expr2);
-						}
-
-						break;
+					return false;
 				}
-			}
-			else if (expression is SqlFunction func)
+
+				if (e is SqlTableSource ts)
+				{
+					if (ts.Source is SqlTable table 
+						&& !ReferenceEquals(table, statement.Update.Table) 
+						&& QueryHelper.IsEqualTables(table, statement.Update.Table))
+					{
+						var subQuery = new SelectQuery
+						{
+							DoNotRemove = true,
+						};
+						subQuery.From.Tables.Add(new SqlTableSource(table, ts.Alias));
+						ts.Source = subQuery;
+						changed = true;
+
+						return false;
+					}
+				}
+
+				return true;
+			});
+
+			//if (!statement.SelectQuery.OrderBy.IsEmpty)
+			//	statement.SelectQuery.OrderBy.Items.Clear();
+
+			CorrectUpdateSetters(statement);
+
+			if (changed)
 			{
-				switch (func.Name)
-				{
-					case "Convert" :
-						var ftype = func.SystemType.ToUnderlying();
-
-						if (ftype == typeof(bool))
-						{
-							var ex = AlternativeConvertToBoolean(func, 1);
-							if (ex != null)
-								return ex;
-						}
-
-						if ((ftype == typeof(double) || ftype == typeof(float)) && func.Parameters[1].SystemType!.ToUnderlying() == typeof(decimal))
-							return func.Parameters[1];
-
-						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
-				}
+				var corrector = new SqlQueryColumnNestingCorrector();
+				corrector.CorrectColumnNesting(statement);
 			}
 
-			return expression;
+			return statement;
 		}
 	}
 }

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	public class SqlGroupingSet : ISqlExpression
 	{
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.GroupingSet;
 
 		public SqlGroupingSet()
@@ -19,27 +20,26 @@ namespace LinqToDB.SqlQuery
 			Items.AddRange(items);
 		}
 
-
 #if OVERRIDETOSTRING
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			sb.Append('(');
+			writer.Append('(');
 			for (int i = 0; i < Items.Count; i++)
 			{
-				Items[i].ToString(sb, dic);
+				Items[i].ToString(writer);
 				if (i < Items.Count - 1)
-					sb.Append(", ");
+					writer.Append(", ");
 			}
-			sb.Append(')');
-			return sb;
+			writer.Append(')');
+			return writer;
 		}
 
 		public bool Equals(ISqlExpression? other)
@@ -62,28 +62,6 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
-		{
-			for (var i = 0; i < Items.Count; i++)
-				Items[i] = Items[i].Walk(options, func)!;
-
-			return func(this);
-		}
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				clone = new SqlGroupingSet();
-				((SqlGroupingSet)clone).Items.AddRange(Items.Select(i => (ISqlExpression)i.Clone(objectTree, doClone)));
-			}
-
-			return clone;
-		}
-
 		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (this == other)
@@ -103,6 +81,8 @@ namespace LinqToDB.SqlQuery
 
 			return true;
 		}
+
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
 
 		public bool  CanBeNull  => true;
 		public int   Precedence => SqlQuery.Precedence.Primary;

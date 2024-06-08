@@ -67,12 +67,12 @@ namespace Tests.UserTests
 			}
 		}
 
-		public static void MapEnumToString<T>() where T : struct
+		private static void MapEnumToString<T>() where T : struct
 		{
 			MapEnumToString(typeof(T));
 		}
 
-		public static void MapEnumToString(Type type)
+		private static void MapEnumToString(Type type)
 		{
 			var param  = Expression.Parameter(type, "enum");
 			var values = Enum.GetValues(type);
@@ -90,7 +90,7 @@ namespace Tests.UserTests
 
 			var toStringMethod = type.GetMethods().First(m => m.Name == "ToString" && m.GetParameters().Length == 0);
 
-			Expressions.MapMember(toStringMethod, lambda);
+			Expressions.MapMember(type, toStringMethod, lambda);
 		}
 
 
@@ -103,7 +103,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Issue2468Test(
-			[IncludeDataSources(TestProvName.AllSQLite)]
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)]
 			string context)
 		{
 
@@ -125,7 +125,7 @@ namespace Tests.UserTests
 					)
 					.ToList();
 
-				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list, Has.Count.EqualTo(1));
 			}
 		}
 	}

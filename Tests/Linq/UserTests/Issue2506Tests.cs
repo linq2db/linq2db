@@ -20,7 +20,7 @@ namespace Tests.UserTests
 			/// <summary>
 			/// FK_ItemText_Item_BackReference
 			/// </summary>
-			[Association(ThisKey = "Id", OtherKey = "ItemId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "ItemId", CanBeNull = true)]
 			public IEnumerable<ItemText> ItemTexts { get; set; } = null!;
 
 			#endregion
@@ -38,14 +38,14 @@ namespace Tests.UserTests
 			/// <summary>
 			/// FK_ItemText_Item
 			/// </summary>
-			[Association(ThisKey = "ItemId", OtherKey = "Id", CanBeNull = false, Relationship = Relationship.ManyToOne, KeyName = "FK_ItemText_Item", BackReferenceName = "ItemTexts")]
+			[Association(ThisKey = "ItemId", OtherKey = "Id", CanBeNull = false)]
 			public Item Item { get; set; } = null!;
 
 			#endregion
 		}
 
 		[Test]
-		public void ParameterizedEagerLoad([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values("en", "de")] string lang)
+		public void ParameterizedEagerLoad([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values("en", "de")] string lang)
 		{
 			var items = new Item[]
 			{

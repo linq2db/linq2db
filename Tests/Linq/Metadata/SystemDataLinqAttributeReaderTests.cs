@@ -1,4 +1,4 @@
-﻿#if NET472
+﻿#if NETFRAMEWORK
 using LinqToDB;
 using LinqToDB.Metadata;
 using NUnit.Framework;
@@ -106,16 +106,20 @@ namespace Tests.Metadata
 		[Test]
 		public void ParseTableAttribute() {
 			var rd     = new SystemDataLinqAttributeReader();
-			var attrs = rd.GetAttributes<LinqToDB.Mapping.TableAttribute>(typeof(Shipper), true);
+			var attrs = rd.GetAttributes(typeof(Shipper))
+				.OfType<LinqToDB.Mapping.TableAttribute>().ToArray();
 
-			Assert.NotNull(attrs);
-			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("Shippers", attrs[0].Name);
-			Assert.AreEqual("dbo",      attrs[0].Schema);
+			Assert.That(attrs, Is.Not.Null);
+			Assert.That(attrs, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(attrs[0].Name, Is.EqualTo("Shippers"));
+				Assert.That(attrs[0].Schema, Is.EqualTo("dbo"));
+			});
 		}
 
 		[Test]
-		public void SmokeSelect([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void SmokeSelect([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

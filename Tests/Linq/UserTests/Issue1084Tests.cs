@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	public class Issue1084Tests : TestBase
 	{
 		[Table("i1084_person")]
-		class Issue1084Person
+		sealed class Issue1084Person
 		{
 			public Issue1084Person(Issue1084Person k)
 			{
@@ -24,7 +24,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("i1084_person")]
-		class Issue1084Personv2
+		sealed class Issue1084Personv2
 		{
 			public Issue1084Personv2()
 			{
@@ -39,7 +39,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("i1084_person")]
-		class Issue1084Personv3
+		sealed class Issue1084Personv3
 		{
 			public bool Default;
 			public bool Copy;
@@ -68,7 +68,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("i1084_student")]
-		class Issue1084Student
+		sealed class Issue1084Student
 		{
 			[Column] public int     Id            { get; set; }
 			[Column] public string? Number        { get; set; }
@@ -82,7 +82,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestInstantiation([DataSources] string context)
+		public void TestInstantiation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Issue1084Personv3.Data))
@@ -100,11 +100,14 @@ namespace Tests.UserTests
 							 };
 
 				var res = result.ToList();
-				Assert.AreEqual(2, res.Count);
-				Assert.False(res[0].Default);
-				Assert.False(res[1].Default);
-				Assert.True(res[0].Copy);
-				Assert.True(res[1].Copy);
+				Assert.That(res, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].Default, Is.False);
+					Assert.That(res[1].Default, Is.False);
+					Assert.That(res[0].Copy, Is.True);
+					Assert.That(res[1].Copy, Is.True);
+				});
 			}
 		}
 
@@ -127,12 +130,12 @@ namespace Tests.UserTests
 							 };
 
 				// because for k we need default constructor, which is missing
-				Assert.Throws<ArgumentException>(() => result.ToList());
+				Assert.Throws<InvalidOperationException>(() => result.ToList());
 			}
 		}
 
 		[Test]
-		public void TestTupleFactoryWithDefaultConstructor([DataSources] string context)
+		public void TestTupleFactoryWithDefaultConstructor([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1084Personv2>())
@@ -154,7 +157,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestTupleConstructorWithDefaultConstructor([DataSources] string context)
+		public void TestTupleConstructorWithDefaultConstructor([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1084Personv2>())

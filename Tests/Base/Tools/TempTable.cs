@@ -8,11 +8,13 @@ namespace Tests.Tools
 	public static class TempTable
 	{
 		public static TempTable<T> Create<T>(IDataContext db, string tableName)
+			where T : notnull
 		{
 			return new TempTable<T>(db, tableName);
 		}
 
 		public static TempTable<T> Create<T>(IDataContext db, IEnumerable<T> data, string tableName)
+			where T : notnull
 		{
 			var table = new TempTable<T>(db, tableName);
 			table.Table.BulkCopy(data);
@@ -21,6 +23,7 @@ namespace Tests.Tools
 	}
 
 	public class TempTable<T> : IDisposable
+		where T : notnull
 	{
 		public ITable<T> Table { get; }
 

@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.Base</AssemblyName>
@@ -7,29 +6,25 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectCapability Remove="TestContainer" />
+
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
-		<PackageReference Include="NUnit3TestAdapter" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
-		<PackageReference Include="FastExpressionCompiler" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit.Analyzers" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
-		<None Update="SqlServerTypes\x64\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462' ">
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.ServiceModel" />
 
-		<PackageReference Include="Microsoft.SqlServer.Types" />
-
+		<PackageReference Include="MiniProfiler.Shared" />
+		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
+		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
+		<PackageReference Include="MiniProfiler.Minimal" />
+	</ItemGroup>
+
 </Project>

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -25,51 +23,28 @@ namespace LinqToDB.SqlQuery
 			set {}
 		}
 
+		public void Modify(SqlTable table)
+		{
+			Table = table;
+		}
+
 		public override SelectQuery? SelectQuery { get => null; set {}}
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			sb.Append("CREATE TABLE ");
+			writer
+				.Append("CREATE TABLE ")
+				.AppendElement(Table)
+				.AppendLine();
 
-			((IQueryElement?)Table)?.ToString(sb, dic);
-
-			sb.AppendLine();
-
-			return sb;
+			return writer;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
-			Table = (SqlTable)((ISqlExpressionWalkable)Table).Walk(options, func)!;
-
+			noAlias = false;
 			return null;
 		}
 
-		public override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlCreateTableStatement((SqlTable)Table.Clone(objectTree, doClone));
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
-		{
-			return null;
-		}
-
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
-		{
-			if (SelectQuery != null)
-			{
-				var newQuery = func(SelectQuery);
-				if (!ReferenceEquals(newQuery, SelectQuery))
-					SelectQuery = newQuery;
-			}
-		}
 	}
 }

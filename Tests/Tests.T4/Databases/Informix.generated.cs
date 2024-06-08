@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -18,10 +18,11 @@ using LinqToDB.Mapping;
 
 namespace InformixDataContext
 {
-	public partial class TestdataidsDB : LinqToDB.Data.DataConnection
+	public partial class Testdatadb2DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
+		public ITable<Collatedtable>     Collatedtables     { get { return this.GetTable<Collatedtable>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
@@ -37,21 +38,28 @@ namespace InformixDataContext
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
 		public ITable<Testunique>        Testuniques        { get { return this.GetTable<Testunique>(); } }
 
-		public TestdataidsDB()
+		public Testdatadb2DB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestdataidsDB(string configuration)
+		public Testdatadb2DB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestdataidsDB(LinqToDbConnectionOptions options)
+		public Testdatadb2DB(DataOptions options)
 			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public Testdatadb2DB(DataOptions<Testdatadb2DB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 			InitMappingSchema();
@@ -94,6 +102,14 @@ namespace InformixDataContext
 		[Column("childid"),  Nullable] public int? Childid  { get; set; } // INTEGER
 	}
 
+	[Table(Schema="informix", Name="collatedtable")]
+	public partial class Collatedtable
+	{
+		[Column("id"),              NotNull] public int    Id              { get; set; } // INTEGER
+		[Column("casesensitive"),   NotNull] public string Casesensitive   { get; set; } = null!; // VARCHAR(20)
+		[Column("caseinsensitive"), NotNull] public string Caseinsensitive { get; set; } = null!; // NVARCHAR(20)
+	}
+
 	[Table(Schema="informix", Name="doctor")]
 	public partial class Doctor
 	{
@@ -103,9 +119,9 @@ namespace InformixDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_doctor_person
+		/// FK_doctor_person (informix.person)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_doctor_person", BackReferenceName="Doctor")]
+		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -168,9 +184,9 @@ namespace InformixDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_patient_person
+		/// FK_patient_person (informix.person)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_patient_person", BackReferenceName="Patient")]
+		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -188,15 +204,15 @@ namespace InformixDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_doctor_person_BackReference
+		/// FK_doctor_person_BackReference (informix.doctor)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_patient_person_BackReference
+		/// FK_patient_person_BackReference (informix.patient)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -223,15 +239,15 @@ namespace InformixDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_testfkunique_testunique_1
+		/// FK_testfkunique_testunique_1 (informix.testunique)
 		/// </summary>
-		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_testfkunique_testunique_1", BackReferenceName="FkTestfkuniqueTestunique1BackReferences")]
+		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=false)]
 		public Testunique FkTestfkuniqueTestunique1 { get; set; } = null!;
 
 		/// <summary>
-		/// FK_testfkunique_testunique
+		/// FK_testfkunique_testunique (informix.testunique)
 		/// </summary>
-		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_testfkunique_testunique", BackReferenceName="Testfkuniques")]
+		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=false)]
 		public Testunique Testunique { get; set; } = null!;
 
 		#endregion
@@ -302,15 +318,15 @@ namespace InformixDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_testfkunique_testunique_1_BackReference
+		/// FK_testfkunique_testunique_1_BackReference (informix.testfkunique)
 		/// </summary>
-		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=true)]
 		public IEnumerable<Testfkunique> FkTestfkuniqueTestunique1BackReferences { get; set; } = null!;
 
 		/// <summary>
-		/// FK_testfkunique_testunique_BackReference
+		/// FK_testfkunique_testunique_BackReference (informix.testfkunique)
 		/// </summary>
-		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=true)]
 		public IEnumerable<Testfkunique> Testfkuniques { get; set; } = null!;
 
 		#endregion
@@ -380,5 +396,3 @@ namespace InformixDataContext
 		}
 	}
 }
-
-#pragma warning restore 1591

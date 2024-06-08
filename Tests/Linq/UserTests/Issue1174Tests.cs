@@ -14,19 +14,19 @@ namespace Tests.UserTests
 	{
 		public class MyDB : DataConnection
 		{
-			public static Func<MyDB> CreateFactory(string configuration, int retryCount, TimeSpan delay)
+			public static Func<MyDB> CreateFactory(string configuration, int retryCount, TimeSpan delay, double randomFactor, double exponentialBase, TimeSpan coefficient)
 			{
 				return () =>
 				{
 					var db = new MyDB(configuration)
 					{
 						// No exception if policy removed
-						RetryPolicy = new SqlServerRetryPolicy(retryCount, delay, null)
+						RetryPolicy = new SqlServerRetryPolicy(retryCount, delay, randomFactor, exponentialBase, coefficient, null)
 					};
 					return db;
 				};
 			}
-			public ITable<User> Users => GetTable<User>();
+			public ITable<User> Users => this.GetTable<User>();
 
 			public MyDB()
 			{
@@ -48,9 +48,9 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestConcurrentSelect([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestConcurrentSelect([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
-			var dbFactory = MyDB.CreateFactory(context, 1, TimeSpan.FromSeconds(1));
+			var dbFactory = MyDB.CreateFactory(context, 1, TimeSpan.FromSeconds(1), LinqToDB.Common.Configuration.RetryPolicy.DefaultRandomFactor, LinqToDB.Common.Configuration.RetryPolicy.DefaultExponentialBase, LinqToDB.Common.Configuration.RetryPolicy.DefaultCoefficient);
 
 			var users = new[]
 			{
@@ -70,8 +70,11 @@ namespace Tests.UserTests
 
 					Assert.DoesNotThrowAsync(() => Task.WhenAll(user1Task, user2Task));
 
-					Assert.IsNotNull(user1Task.Result);
-					Assert.IsNotNull(user2Task.Result);
+					Assert.Multiple(() =>
+					{
+						Assert.That(user1Task.Result, Is.Not.Null);
+						Assert.That(user2Task.Result, Is.Not.Null);
+					});
 				}
 			}
 		}

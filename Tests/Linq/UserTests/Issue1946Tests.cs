@@ -24,7 +24,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new[]{new User{Id = 1, Version = UserVersion.FirstRelease} }))
@@ -36,7 +36,7 @@ namespace Tests.UserTests
 					select u.Id;
 
 				var ids1 = query.ToArray();
-				Assert.That(ids1.Length, Is.EqualTo(1));
+				Assert.That(ids1, Has.Length.EqualTo(1));
 			}
 		}
 	}

@@ -40,7 +40,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDynamicInColumns([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDynamicInColumns([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []{ new PersonPrototype
@@ -51,7 +51,7 @@ namespace Tests.UserTests
 			}}))
 			{
 				var result = db.GetTable<PersonTest>().Where(p => p.Type == 4 || p.Type == 5).ToList();
-				Assert.That(result.Count, Is.EqualTo(1));
+				Assert.That(result, Has.Count.EqualTo(1));
 			}
 		}
 	}

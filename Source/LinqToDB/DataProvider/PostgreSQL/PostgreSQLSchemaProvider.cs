@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -9,14 +12,15 @@ using System.Text.RegularExpressions;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
+	using Common.Internal;
 	using Data;
 	using SchemaProvider;
-	using System.Data;
-	using System.Net;
 	using SqlQuery;
 
 	public class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
+		private static readonly IReadOnlyList<string> _schemaSchemas = new[] { "pg_catalog", "information_schema" };
+
 		private readonly PostgreSQLDataProvider _provider;
 
 		public PostgreSQLSchemaProvider(PostgreSQLDataProvider provider)
@@ -43,7 +47,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "float8",                      DataType = typeof(double).        AssemblyQualifiedName! },
 				new DataTypeInfo { TypeName = "boolean",                     DataType = typeof(bool).          AssemblyQualifiedName! },
 				new DataTypeInfo { TypeName = "bool",                        DataType = typeof(bool).          AssemblyQualifiedName! },
-				new DataTypeInfo { TypeName = "regproc",                     DataType = typeof(object).        AssemblyQualifiedName! },
+				new DataTypeInfo { TypeName = "regproc",                     DataType = typeof(string).        AssemblyQualifiedName! },
 				new DataTypeInfo { TypeName = "money",                       DataType = typeof(decimal).       AssemblyQualifiedName! },
 				new DataTypeInfo { TypeName = "text",                        DataType = typeof(string).        AssemblyQualifiedName! },
 				new DataTypeInfo { TypeName = "xml",                         DataType = typeof(string).        AssemblyQualifiedName! },
@@ -75,7 +79,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var provider = (PostgreSQLDataProvider)dataConnection.DataProvider;
 
 			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
+
+			if (provider.Adapter.NpgsqlCidrType != null)
+			{
+				list.Add(new DataTypeInfo { TypeName = "cidr", DataType = provider.Adapter.NpgsqlCidrType.AssemblyQualifiedName!, ProviderSpecific = true });
+			}
+			else
+			{
+				list.Add(new DataTypeInfo { TypeName = "cidr", DataType = provider.Adapter.NpgsqlInetType.AssemblyQualifiedName!, ProviderSpecific = true });
+			}
+
 			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Adapter.NpgsqlPointType.   AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Adapter.NpgsqlLineType.    AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Adapter.NpgsqlLSegType.    AssemblyQualifiedName!, ProviderSpecific = true });
@@ -83,16 +96,28 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.Adapter.NpgsqlPathType.    AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.Adapter.NpgsqlPolygonType. AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.Adapter.NpgsqlCircleType.  AssemblyQualifiedName!, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.Adapter.NpgsqlDateType.    AssemblyQualifiedName!, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "interval"                   , DataType = provider.Adapter.NpgsqlTimeSpanType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "interval({0})"                    , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamptz"                , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp"                  , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
-			list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
 
+			if (provider.Adapter.NpgsqlDateType != null)
+				list.Add(new DataTypeInfo { TypeName = "date"    , DataType = provider.Adapter.NpgsqlDateType.    AssemblyQualifiedName!, ProviderSpecific = true });
+			if (provider.Adapter.NpgsqlTimeSpanType != null)
+				list.Add(new DataTypeInfo { TypeName = "interval", DataType = provider.Adapter.NpgsqlTimeSpanType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "interval({0})", CreateParameters = "precision" });
+			if (provider.Adapter.NpgsqlIntervalType != null)
+				list.Add(new DataTypeInfo { TypeName = "interval", DataType = provider.Adapter.NpgsqlIntervalType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "interval({0})", CreateParameters = "precision" });
+
+			if (provider.Adapter.NpgsqlDateTimeType != null)
+			{
+				list.Add(new DataTypeInfo { TypeName = "timestamptz"                , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
+				list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
+				list.Add(new DataTypeInfo { TypeName = "timestamp"                  , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
+				list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
+			}
 
 			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).      AssemblyQualifiedName!       });
-			list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+			if (provider.Adapter.NpgsqlCidrType != null)
+				list.Add(new DataTypeInfo { TypeName = "cidr"               , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Byte, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+			else
+				list.Add(new DataTypeInfo { TypeName = "cidr"               , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+
 			list.Add(new DataTypeInfo { TypeName = "date"                   , DataType = typeof(DateTime).       AssemblyQualifiedName! });
 			list.Add(new DataTypeInfo { TypeName = "timetz"                 , DataType = typeof(DateTimeOffset). AssemblyQualifiedName!, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
 			list.Add(new DataTypeInfo { TypeName = "time without time zone" , DataType = typeof(TimeSpan).       AssemblyQualifiedName!, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
@@ -111,7 +136,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var defaultSchema = ToDatabaseLiteral(dataConnection, options?.DefaultSchema ?? "public");
-			
+
 			var sql = $@"
 				SELECT
 					t.table_catalog || '.' || t.table_schema || '.' || t.table_name            as TableID,
@@ -186,51 +211,51 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		static string ToDatabaseLiteral(DataConnection dataConnection, string? str)
 		{
-			var sb = new StringBuilder();
-			dataConnection.MappingSchema.ValueToSqlConverter.Convert(sb, SqlDataType.DbText, str);
-			return sb.ToString();
+			using var sb = Pools.StringBuilder.Allocate();
+			dataConnection.MappingSchema.ValueToSqlConverter.Convert(sb.Value, dataConnection.MappingSchema, SqlDataType.DbText.Type, dataConnection.Options, str);
+			return sb.Value.ToString();
 		}
 
 		string GenerateSchemaFilter(DataConnection dataConnection, string schemaColumnName)
 		{
 			var excludeSchemas =
 				new HashSet<string?>(
-					ExcludedSchemas.Where(s => !s.IsNullOrEmpty()).Union(new[] { "pg_catalog", "information_schema" }),
+					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(_schemaSchemas),
 					StringComparer.OrdinalIgnoreCase);
-			
-			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !s.IsNullOrEmpty()), StringComparer.OrdinalIgnoreCase);
-			
+
+			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !string.IsNullOrEmpty(s)), StringComparer.OrdinalIgnoreCase);
+
 			if (includeSchemas.Count > 0)
 			{
 				foreach (var toInclude in IncludedSchemas)
-		{
+				{
 					excludeSchemas.Remove(toInclude);
 				}
 			}
-			
+
 			if (excludeSchemas.Count == 0 && IncludedSchemas.Count == 0)
 				return "1 = 1";
-			
+
 			var schemaFilter = "";
 
 			if (excludeSchemas.Count > 0)
 			{
 				var schemasToExcludeStr =
-					string.Join(", ", excludeSchemas.Select(s => ToDatabaseLiteral(dataConnection, s)));
+					string.Join(", ", excludeSchemas.OrderBy(s => s).Select(s => ToDatabaseLiteral(dataConnection, s)));
 				schemaFilter = $@"{schemaColumnName} NOT IN ({schemasToExcludeStr})";
 			}
 
 			if (includeSchemas.Count > 0)
 			{
 				var schemasToIncludeStr =
-					string.Join(", ", includeSchemas.Select(s => ToDatabaseLiteral(dataConnection, s)));
-				if (!schemaFilter.IsNullOrEmpty())
+					string.Join(", ", includeSchemas.OrderBy(s => s).Select(s => ToDatabaseLiteral(dataConnection, s)));
+				if (!string.IsNullOrEmpty(schemaFilter))
 					schemaFilter += " AND ";
 				schemaFilter += $@"{schemaColumnName} IN ({schemasToIncludeStr})";
 			}
 
 			return schemaFilter;
-			}
+		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
@@ -253,7 +278,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				       columns.IsIdentity OR COALESCE(columns.DefaultValue ~* 'nextval', false) AS IsIdentity,
 				       columns.SkipOnInsert,
 				       columns.SkipOnUpdate,
-				       columns.Description
+				       columns.Description,
+				       columns.IsCustomEnum,
+				       columns.IsCustomRange
 				FROM (
 				         SELECT current_database() || '.' || ns.nspname || '.' || cls.relname                            AS TableID,
 				                attr.attname                                                                             AS Name,
@@ -264,13 +291,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				                        CASE
 				                            WHEN nbt.nspname = 'pg_catalog'::name THEN format_type(typ.typbasetype, attr.atttypmod)
 				                            ELSE 'USER-DEFINED'::text
-				                            END
+				                        END
 				                    ELSE
 				                        CASE
-				                            WHEN nt.nspname = 'pg_catalog'::name THEN format_type(attr.atttypid, attr.atttypmod)
+				                            WHEN nt.nspname = 'pg_catalog'::name or typ.typtype = 'e'::""char"" or typ.typtype = 'r'::""char"" THEN format_type(attr.atttypid, attr.atttypmod)
 				                            ELSE 'USER-DEFINED'::text
-				                            END
+				                        END
 				                    END                                                                                  AS DataType,
+				                typ.typtype = 'e'::""char"" and nt.nspname <> 'pg_catalog'::name                           AS IsCustomEnum,
+				                typ.typtype = 'r'::""char"" and nt.nspname <> 'pg_catalog'::name                           AS IsCustomRange,
 				                attr.attndims                                                                            AS ArrayDimensions,
 				                information_schema._pg_char_max_length(information_schema._pg_truetypid(attr.*, typ.*),
 				                                                       information_schema._pg_truetypmod(attr.*, typ.*)) AS Length,
@@ -349,6 +378,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							}
 						}
 
+						int? length       = rd.IsDBNull(6) ? null : rd.GetInt32(6);
+						int? precision    = rd.IsDBNull(7) ? null : rd.GetInt32(7);
+						int? scale        = rd.IsDBNull(8) ? null : rd.GetInt32(8);
+						var isIdentity    = rd.GetBoolean(9);
+						var skipOnInsert  = rd.GetBoolean(10);
+						var skipOnUpdate  = rd.GetBoolean(11);
+						var description   = rd.IsDBNull(12) ? null : rd.GetString(12);
+						// currently mapped to string
+						var isCustomEnum  = rd.GetBoolean(13);
+						// not used currently
+						var isCustomRange = rd.GetBoolean(14);
+
 						return new ColumnInfo()
 						{
 							TableID      = tableId,
@@ -356,13 +397,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							IsNullable   = isNullable,
 							Ordinal      = ordinal,
 							DataType     = dataType,
-							Length       = rd.IsDBNull(6) ? (int?)null : rd.GetInt32(6),
-							Precision    = rd.IsDBNull(7) ? (int?)null : rd.GetInt32(7),
-							Scale        = rd.IsDBNull(8) ? (int?)null : rd.GetInt32(8),
-							IsIdentity   = rd.GetBoolean(9),
-							SkipOnInsert = rd.GetBoolean(10),
-							SkipOnUpdate = rd.GetBoolean(11),
-							Description  = rd.IsDBNull(12) ? null : rd.GetString(12),
+							Length       = length,
+							Precision    = precision,
+							Scale        = scale,
+							IsIdentity   = isIdentity,
+							SkipOnInsert = skipOnInsert,
+							SkipOnUpdate = skipOnUpdate,
+							Description  = description,
+							Type         = isCustomEnum ? DataType.Enum : null
 						};
 					}, sql)
 					.ToList();
@@ -434,9 +476,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			(
 				from item in data
 
-				let name         = Convert.ToString(item.name)
-				let thisTableID  = Convert.ToString (item.thisTable)
-				let otherTableID = Convert.ToString (item.otherTable)
+				let name         = Convert.ToString(item.name, CultureInfo.InvariantCulture)
+				let thisTableID  = Convert.ToString (item.thisTable, CultureInfo.InvariantCulture)
+				let otherTableID = Convert.ToString (item.otherTable, CultureInfo.InvariantCulture)
 
 				from col in item.thisColumns
 					.Zip(item.otherColumns, (thisColumn,otherColumn) => new { thisColumn, otherColumn })
@@ -447,14 +489,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					Name         = name,
 					ThisTableID  = thisTableID,
 					OtherTableID = otherTableID,
-					ThisColumn   = Convert.ToString(col.thisColumn)!,
-					OtherColumn  = Convert.ToString(col.otherColumn)!,
+					ThisColumn   = Convert.ToString(col.thisColumn, CultureInfo.InvariantCulture)!,
+					OtherColumn  = Convert.ToString(col.otherColumn, CultureInfo.InvariantCulture)!,
 					Ordinal      = col.ordinal
 				}
 			).ToList();
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			if (dataType == null)
 				return DataType.Undefined;
@@ -533,28 +575,29 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "timestamp"                   :
 				case "timestamptz"                 :
 				case "timestamp with time zone"    :
-				case "timestamp without time zone" : return _provider.Adapter.NpgsqlDateTimeType.Name;
-				case "date"                        : return _provider.Adapter.NpgsqlDateType    .Name;
-				case "point"                       : return _provider.Adapter.NpgsqlPointType   .Name;
-				case "lseg"                        : return _provider.Adapter.NpgsqlLSegType    .Name;
-				case "box"                         : return _provider.Adapter.NpgsqlBoxType     .Name;
-				case "circle"                      : return _provider.Adapter.NpgsqlCircleType  .Name;
-				case "path"                        : return _provider.Adapter.NpgsqlPathType    .Name;
-				case "polygon"                     : return _provider.Adapter.NpgsqlPolygonType .Name;
-				case "line"                        : return _provider.Adapter.NpgsqlLineType    .Name;
-				case "cidr"                        :
-				case "inet"                        : return _provider.Adapter.NpgsqlInetType    .Name;
+				case "timestamp without time zone" : return _provider.Adapter.NpgsqlDateTimeType?.Name;
+				case "date"                        : return _provider.Adapter.NpgsqlDateType?    .Name;
+				case "interval"                    : return _provider.Adapter.NpgsqlIntervalType?.Name;
+				case "point"                       : return _provider.Adapter.NpgsqlPointType    .Name;
+				case "lseg"                        : return _provider.Adapter.NpgsqlLSegType     .Name;
+				case "box"                         : return _provider.Adapter.NpgsqlBoxType      .Name;
+				case "circle"                      : return _provider.Adapter.NpgsqlCircleType   .Name;
+				case "path"                        : return _provider.Adapter.NpgsqlPathType     .Name;
+				case "polygon"                     : return _provider.Adapter.NpgsqlPolygonType  .Name;
+				case "line"                        : return _provider.Adapter.NpgsqlLineType     .Name;
+				case "cidr"                        : return (_provider.Adapter.NpgsqlCidrType ?? _provider.Adapter.NpgsqlInetType).Name;
+				case "inet"                        : return _provider.Adapter.NpgsqlInetType     .Name;
 				case "geometry"                    : return "PostgisGeometry";
 			}
 
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		static Regex _matchArray = new Regex(@"^(.*)(\[\]){1}$", RegexOptions.Compiled);
-		static Regex _matchType  = new Regex(@"^(.*)(\(\d+(,\s*\d+)?\))(.*){1}$", RegexOptions.Compiled);
+		static Regex _matchArray = new (@"^(.*)(\[\]){1}$", RegexOptions.Compiled);
+		static Regex _matchType  = new (@"^(.*)(\(\d+(,\s*\d+)?\))(.*){1}$", RegexOptions.Compiled);
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo,
-			long? length, int? precision, int? scale, GetSchemaOptions options)
+			int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			var foundType = base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 			if (foundType != null)
@@ -566,7 +609,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var match = _matchArray.Match(dataType);
 				if (match.Success)
 				{
-					var elementType = GetSystemType(match.Groups[1].Value, null, GetDataType(match.Groups[1].Value, options), null, null, null, options);
+					var elementType = GetSystemType(match.Groups[1].Value, null, GetDataType(match.Groups[1].Value, null, options), null, null, null, options);
 					if (elementType != null)
 					{
 						foundType = elementType.MakeArrayType();
@@ -577,32 +620,58 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					var simplified = SimplifyDataType(dataType);
 					if (simplified != dataType)
 					{
-						foundType = GetSystemType(simplified, null, GetDataType(simplified, options), null, null, null, options);
+						foundType = GetSystemType(simplified, null, GetDataType(simplified, null, options), null, null, null, options);
 						if (foundType != null)
 							return foundType;
 					}
 				}
 			}
 
+			// built-in (multi)ranges
+			switch (dataType)
+			{
+				case "int4range": return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(int));
+				case "int8range": return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(long));
+				case "numrange" : return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(decimal));
+				case "daterange": return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime));
+				case "tsrange"  : return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime));
+				case "tstzrange": return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime));
+
+				case "int4multirange": return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(int)));
+				case "int8multirange": return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(long)));
+				case "nummultirange" : return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(decimal)));
+				case "datemultirange": return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime)));
+				case "tsmultirange"  : return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime)));
+				case "tstzmultirange": return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime)));
+			}
+
 			return foundType;
 		}
 
-		protected override DataTypeInfo? GetDataType(string? typeName, GetSchemaOptions options)
+		protected override DataTypeInfo? GetDataType(string? typeName, DataType? dataType, GetSchemaOptions options)
 		{
 			if (typeName == null)
 				return null;
 
-			var typInfo = base.GetDataType(typeName, options);
+			if (dataType == DataType.Enum)
+				return new DataTypeInfo()
+				{
+					DataType = "System.String",
+					TypeName = typeName
+
+				};
+
+			var typInfo = base.GetDataType(typeName, dataType, options);
 			if (typInfo == null)
 			{
 				var simplified = SimplifyDataType(typeName);
 				if (simplified != typeName)
-					typInfo = base.GetDataType(simplified, options);
+					typInfo = base.GetDataType(simplified, dataType, options);
 			}
 
 			return typInfo;
-				}
-		
+		}
+
 		static string SimplifyDataType(string dataType)
 		{
 			var typeMatch = _matchType.Match(dataType);
@@ -611,7 +680,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				// ignore generated length, precision, scale
 				dataType = typeMatch.Groups[1].Value.Trim();
 				var suffix = typeMatch.Groups[4].Value?.Trim();
-				if (!suffix.IsNullOrEmpty())
+				if (!string.IsNullOrEmpty(suffix))
 					dataType = dataType + " " + suffix;
 			}
 
@@ -821,7 +890,7 @@ SELECT	r.ROUTINE_CATALOG,
 
 					let columnName   = r.Field<string>("ColumnName")
 					let columnType   = Converter.ChangeTypeTo<string>(r["DataTypeName"])
-					let dataType     = GetDataType(columnType, options)
+					let dataType     = GetDataType(columnType, null, options)
 					// AllowDBNull not set even with KeyInfo behavior suggested here:
 					// https://github.com/npgsql/npgsql/issues/1693
 					let isNullable   = r.IsNull("AllowDBNull")      ? true       : r.Field<bool>("AllowDBNull")

@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Linq.Expressions;
-	using System.Reflection;
-	using LinqToDB.Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Common;
+	using Expressions;
+	using Mapping;
 
 	internal static class SqlServerTypes
 	{
@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			catch { }
 
-			return Array<TypeInfo>.Empty;
+			return [];
 		}, true);
 
 		public static bool UpdateTypes()
@@ -75,15 +75,15 @@ namespace LinqToDB.DataProvider.SqlServer
 				var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Property(type, "Null"), typeof(object))).CompileExpression();
 
 				return new TypeInfo()
-				{ 
+				{
 					Type     = type,
-					TypeName = type.Name.Substring(3).ToLower(),
+					TypeName = type.Name.Substring(3).ToLowerInvariant(),
 					Null     = getNullValue()
 				};
 			}
 		}
 
-		class TypeInfo
+		sealed class TypeInfo
 		{
 			public string  TypeName { get; set; } = null!;
 			public Type    Type     { get; set; } = null!;

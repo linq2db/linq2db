@@ -1,13 +1,14 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Collections.Generic;
-	using System.Linq;
 	using Configuration;
 
 	[UsedImplicitly]
-	class DB2Factory : IDataProviderFactory
+	sealed class DB2Factory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

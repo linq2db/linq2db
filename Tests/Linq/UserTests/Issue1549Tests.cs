@@ -22,13 +22,13 @@ namespace Tests.UserTests
 			/// <summary>
 			/// FK_billing.DevReadingType_billing.devtypes_DevTypeId_BackReference
 			/// </summary>
-			[Association(ThisKey = "Devtypeid", OtherKey = "DevTypeId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
+			[Association(ThisKey = "Devtypeid", OtherKey = "DevTypeId", CanBeNull = true)]
 			public IEnumerable<billing_DevReadingType> BillingDevReadingTypebillingdevtypesDevTypeIds { get; set; } = null!;
 
 			/// <summary>
 			/// fk_devices_devtypeid_devtypes_devtypeid_BackReference
 			/// </summary>
-			[Association(ThisKey = "Devtypeid", OtherKey = "Devtypeid", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
+			[Association(ThisKey = "Devtypeid", OtherKey = "Devtypeid", CanBeNull = true)]
 			public IEnumerable<billing_Device> Fkdevicesdevtypeiddevtypeids { get; set; } = null!;
 
 			#endregion
@@ -47,20 +47,21 @@ namespace Tests.UserTests
 			/// <summary>
 			/// FK_billing.TempReading_billing.devices_devid_BackReference
 			/// </summary>
-			[Association(ThisKey = "Devid", OtherKey = "Devid", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
+			[Association(ThisKey = "Devid", OtherKey = "Devid", CanBeNull = true)]
 			public IEnumerable<billing_TempReading> BillingTempReadingbillingdevicesdevids { get; set; } = null!;
 
 			/// <summary>
 			/// fk_devices_devtypeid_devtypes_devtypeid
 			/// </summary>
-			[Association(ThisKey = "Devtypeid", OtherKey = "Devtypeid", CanBeNull = false, Relationship = Relationship.ManyToOne, KeyName = "fk_devices_devtypeid_devtypes_devtypeid", BackReferenceName = "Fkdevicesdevtypeiddevtypeids")]
+			[Association(ThisKey = "Devtypeid", OtherKey = "Devtypeid", CanBeNull = false)]
 			public billing_Devtype Devtype { get; set; } = null!;
 
 			#endregion
 		}
 
-		// default name hits 31-length limit for generator name (till FB 4.0)
-		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird)]
+		// FB: default name hits 31-length limit for generator name (till FB 4.0)
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird25)]
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird3)]
 		[Table(Name = "billing_DevReadingType")]
 		public partial class billing_DevReadingType
 		{
@@ -74,13 +75,13 @@ namespace Tests.UserTests
 			/// <summary>
 			/// FK_billing.TempReading_billing.DevReadingType_DevReadingTypeId_BackReference
 			/// </summary>
-			[Association(ThisKey = "Id", OtherKey = "DevReadingTypeId", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "DevReadingTypeId", CanBeNull = true)]
 			public IEnumerable<billing_TempReading> BillingTempReadingbillingDevReadingTypeDevReadingTypeIds { get; set; } = null!;
 
 			/// <summary>
 			/// FK_billing.DevReadingType_billing.devtypes_DevTypeId
 			/// </summary>
-			[Association(ThisKey = "DevTypeId", OtherKey = "Devtypeid", CanBeNull = true, Relationship = Relationship.ManyToOne, KeyName = "FK_billing.DevReadingType_billing.devtypes_DevTypeId", BackReferenceName = "BillingDevReadingTypebillingdevtypesDevTypeIds")]
+			[Association(ThisKey = "DevTypeId", OtherKey = "Devtypeid", CanBeNull = true)]
 			public billing_Devtype? DevType { get; set; }
 			#endregion
 		}
@@ -106,20 +107,20 @@ namespace Tests.UserTests
 			/// <summary>
 			/// FK_billing.TempReading_billing.devices_devid
 			/// </summary>
-			[Association(ThisKey = "Devid", OtherKey = "Devid", CanBeNull = true, Relationship = Relationship.ManyToOne, KeyName = "FK_billing.TempReading_billing.devices_devid", BackReferenceName = "BillingTempReadingbillingdevicesdevids")]
+			[Association(ThisKey = "Devid", OtherKey = "Devid", CanBeNull = true)]
 			public billing_Device? Dev { get; set; }
 
 			/// <summary>
 			/// FK_billing.TempReading_billing.DevReadingType_DevReadingTypeId
 			/// </summary>
-			[Association(ThisKey = "DevReadingTypeId", OtherKey = "Id", CanBeNull = true, Relationship = Relationship.ManyToOne, KeyName = "FK_billing.TempReading_billing.DevReadingType_DevReadingTypeId", BackReferenceName = "BillingTempReadingbillingDevReadingTypeDevReadingTypeIds")]
+			[Association(ThisKey = "DevReadingTypeId", OtherKey = "Id", CanBeNull = true)]
 			public billing_DevReadingType? DevReadingType { get; set; }
 
 			#endregion
 		}
 
 		[Test]
-		public void UpdateTest([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllOracle)] string context)
+		public void UpdateTest([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<billing_Devtype>())

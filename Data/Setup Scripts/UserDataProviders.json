@@ -1,0 +1,70 @@
+﻿{
+	"NETFX" :
+	{
+		"BasedOn"              : "User.Providers",
+		"DefaultConfiguration" : "SQLite.MS",
+		"Providers"            :
+		[
+			"- Access.Odbc",
+			"- ClickHouse.*",
+			"- Oracle.11.Native",
+			"- Oracle.19.Native",
+			"DB2"
+		]
+	},
+
+	"NET60" :
+	{
+		"BasedOn"              : "User.Providers",
+		"DefaultConfiguration" : "SQLite.MS",
+		"Providers"            :
+		[
+			"- Access*"
+		]
+	},
+
+	"NET80" :
+	{
+		"BasedOn" : "NET60"
+	},
+
+	"User.Providers":
+	{
+		"BasedOn"   : "LocalConnectionStrings",
+		"Providers" :
+		[
+			"---", // remove all providers
+			"+++", // add all tested providers
+			"- Informix",
+			"- *.Devart.*",
+			"- Oracle.12.*",
+			"- Oracle.18.*",
+			"- Oracle.21.*",
+			"- Oracle.23.*",
+			"- PostgreSQL.10",
+			"- PostgreSQL.11",
+			"- PostgreSQL.12",
+			"- PostgreSQL.13",
+			"- PostgreSQL.14",
+			"- SapHana.Odbc",
+			"- SqlServer.Azure*",
+			"- Sybase",
+
+			// not available as a docker image
+			"- SqlServer.2005*",
+			"- SqlServer.2008*",
+			"- SqlServer.2012*",
+			"- SqlServer.2014*",
+			"- SqlServer.2016*",
+
+			"SqlServer.Northwind",
+			"SqlServer.Northwind.MS",
+			"Northwind.SQLite",
+			"Northwind.SQLite.MS",
+			"TestNoopProvider"
+		],
+		"Connections" :
+		{
+		}
+	}
+}

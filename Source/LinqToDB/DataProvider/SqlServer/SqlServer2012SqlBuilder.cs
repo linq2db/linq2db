@@ -1,19 +1,23 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlQuery;
-	using SqlProvider;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	partial class SqlServer2012SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2012SqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SqlServer2012SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		public SqlServer2012SqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(null, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected SqlServer2012SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SqlServer2012SqlBuilder(this);
 		}
 
 		protected override string? LimitFormat(SelectQuery selectQuery)
@@ -28,18 +32,17 @@
 
 		protected override bool OffsetFirst => true;
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SqlServer2012SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
-		}
-
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, null);
 			StringBuilder.AppendLine(";");
 		}
 
-		public override string  Name => ProviderName.SqlServer2012;
+		protected override void BuildSqlConditionExpression(SqlConditionExpression conditionExpression)
+		{
+			BuildSqlConditionExpressionAsFunction("IIF", conditionExpression);
+		}
 
+		public override string  Name => ProviderName.SqlServer2012;
 	}
 }

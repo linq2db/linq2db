@@ -7,7 +7,7 @@ namespace Tests.Mapping
 	[TestFixture]
 	public class FluentMappingAliasTests : TestBase
 	{
-		class InstanceClass : IProjected
+		sealed class InstanceClass : IProjected
 		{
 			public int     Id       { get; set; }
 			public int     Value    { get; set; }
@@ -30,7 +30,7 @@ namespace Tests.Mapping
 		MappingSchema CreateMappingSchemaWithAlias()
 		{
 			var schema = new MappingSchema();
-			var fluent = schema.GetFluentMappingBuilder();
+			var fluent = new FluentMappingBuilder(schema);
 
 			fluent.Entity<InstanceClass>().IsColumnRequired()
 				.IsColumnRequired()
@@ -38,7 +38,8 @@ namespace Tests.Mapping
 				.Property(e => e.Value)
 				.Property(e => e.ValueStr).HasLength(10)
 				.Member(e => e.EntityValue).IsAlias(e => e.Value)
-				.Member(e => e.EntityValueStr).IsAlias("ValueStr");
+				.Member(e => e.EntityValueStr).IsAlias("ValueStr")
+				.Build();
 
 			return fluent.MappingSchema;
 		}

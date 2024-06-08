@@ -13,7 +13,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class DropTableTests : TestBase
 	{
-		class DropTableTest
+		sealed class DropTableTest
 		{
 			public int ID { get; set; }
 		}
@@ -34,17 +34,17 @@ namespace Tests.xUpdate
 
 				table.Drop();
 
-				Assert.NotNull(data);
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(123, data[0].ID);
+				Assert.That(data, Is.Not.Null);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.That(data[0].ID, Is.EqualTo(123));
 
 				// check that table dropped
 				var exception = Assert.Catch(() => table.ToList());
-				Assert.IsNotNull(exception);
+				Assert.That(exception, Is.Not.Null);
 			}
 		}
 
-		class DropTableTestID
+		sealed class DropTableTestID
 		{
 			[Identity, PrimaryKey]
 			public int ID  { get; set; }
@@ -52,7 +52,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DropCurrentDatabaseTableWIthIdentityTest([DataSources] string context)
+		public void DropCurrentDatabaseTableWithIdentityTest([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -75,24 +75,24 @@ namespace Tests.xUpdate
 
 				// check that table dropped
 				var exception = Assert.Catch(() => table.ToList());
-				Assert.IsNotNull(exception);
+				Assert.That(exception, Is.Not.Null);
 			}
 		}
 
 		[Test]
 		public void DropSpecificDatabaseTableTest([DataSources(false, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// cleanup
 				db.DropTable<DropTableTest>(throwExceptionIfNotExists: false);
 
-				var schema = TestUtils.GetSchemaName(db);
-				var database = TestUtils.GetDatabaseName(db);
+				var schema = TestUtils.GetSchemaName(db, context);
+				var database = TestUtils.GetDatabaseName(db, context);
 
 				// no idea why, but Access ODBC needs database set in CREATE TABLE for INSERT to work
 				// still it doesn't distinguish CREATE TABLE with and without database name
-				var table = db.CreateTable<DropTableTest>(databaseName: context == ProviderName.AccessOdbc ? database : null)
+				var table = db.CreateTable<DropTableTest>(databaseName: context.IsAnyOf(ProviderName.AccessOdbc) ? database : null)
 					.SchemaName(schema)
 					.DatabaseName(database);
 
@@ -101,9 +101,9 @@ namespace Tests.xUpdate
 
 				var data = table.ToList();
 
-				Assert.NotNull(data);
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(123, data[0].ID);
+				Assert.That(data, Is.Not.Null);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.That(data[0].ID, Is.EqualTo(123));
 
 				table.Drop();
 
@@ -111,16 +111,16 @@ namespace Tests.xUpdate
 
 				// check that table dropped
 				var exception = Assert.Catch(() => table.ToList());
-				Assert.True(exception is Exception);
+				Assert.That(exception is Exception, Is.True);
 
 				// TODO: we need better assertion here
 				// Right now we just check generated sql query, not that it is
 				// executed properly as we use only one test database
 				if (database != TestUtils.NO_DATABASE_NAME)
-					Assert.True(sql.Contains(database));
+					Assert.That(sql, Does.Contain(database));
 
 				if (schema != TestUtils.NO_SCHEMA_NAME)
-				    Assert.True(sql.Contains(schema));
+					Assert.That(sql, Does.Contain(schema));
 			}
 		}
 	}
