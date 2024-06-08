@@ -22,7 +22,7 @@
 		<PackageReference Include="Net5.IBM.Data.Db2-osx" Version="5.0.0.500" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
+	<ItemGroup>
 		<PackageReference Include="Net.IBM.Data.Db2" Version="7.0.0.200" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 		<PackageReference Include="Net.IBM.Data.Db2-lnx" Version="7.0.0.200" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
 		<PackageReference Include="Net.IBM.Data.Db2-osx" Version="7.0.0.200" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>

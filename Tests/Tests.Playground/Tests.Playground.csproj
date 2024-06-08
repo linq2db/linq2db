@@ -3,6 +3,7 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.Playground</AssemblyName>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -80,8 +80,8 @@ namespace Tests
 			var target = "core31";
 #elif NET6_0
 			var target = "net60";
-#elif NET7_0
-			var target = "net70";
+#elif NET8_0
+			var target = "net80";
 #else
 #error "Build Target must be specified here."
 #endif
