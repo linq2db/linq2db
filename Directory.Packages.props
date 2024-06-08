@@ -14,6 +14,7 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="9.0.0-preview.24216.2" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="3.11.0-beta1.24216.2"  />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="8.0.0"                 />
+		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="3.1.0-beta"            />
 	</ItemGroup>
 	
 	<ItemGroup Label="Polyfills">
@@ -53,7 +54,7 @@
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"                />
 		<PackageVersion Include="ClickHouse.Client"                                     Version="7.5.0"                 />
-		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.3.20"               />
+		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.3.21"               />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"                 />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.2.0"                />
