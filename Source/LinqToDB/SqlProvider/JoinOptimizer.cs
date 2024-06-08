@@ -196,7 +196,7 @@ namespace LinqToDB.SqlProvider
 			public bool Dependent;
 		}
 
-		bool HasDependencyWithParent(SqlJoinedTable parent, SqlJoinedTable child)
+		static bool HasDependencyWithParent(SqlJoinedTable parent, SqlJoinedTable child)
 		{
 			var sources = new HashSet<int>(child.Table.GetTables().Select(t => t.SourceID));
 			var ctx     = new HasDependencyWithParentContext(child, sources);
@@ -613,7 +613,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		Dictionary<string, VirtualField> GetFields(ISqlTableSource source)
+		static Dictionary<string, VirtualField> GetFields(ISqlTableSource source)
 		{
 			var res = new Dictionary<string, VirtualField>();
 
@@ -661,7 +661,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		int GetSourceIndex(SqlTableSource? table, int sourceId)
+		static int GetSourceIndex(SqlTableSource? table, int sourceId)
 		{
 			if (table == null || table.SourceID == sourceId || sourceId == -1)
 				return 0;
@@ -721,7 +721,7 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		/// <param name="tableSource"></param>
 		/// <returns>List of unique keys</returns>
-		List<VirtualField[]>? GetKeysInternal(SqlTableSource tableSource)
+		static List<VirtualField[]>? GetKeysInternal(SqlTableSource tableSource)
 		{
 			var knownKeys = new List<IList<ISqlExpression>>();
 			QueryHelper.CollectUniqueKeys(tableSource, knownKeys);
@@ -1335,11 +1335,11 @@ namespace LinqToDB.SqlProvider
 				return Equals((VirtualField) obj);
 			}
 
-			string GetSourceString(ISqlTableSource source)
+			static string GetSourceString(ISqlTableSource source)
 			{
 				if (source is SqlTable table)
 				{
-					var res = $"({source.SourceID}).{table.NameForLogging}";
+					var res = FormattableString.Invariant($"({source.SourceID}).{table.NameForLogging}");
 					if (table.Alias != table.NameForLogging && !string.IsNullOrEmpty(table.Alias))
 						res = res + "(" + table.Alias + ")";
 
@@ -1349,7 +1349,7 @@ namespace LinqToDB.SqlProvider
 				using var sb = Pools.StringBuilder.Allocate();
 				source.ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>());
 
-				return $"({source.SourceID}).{sb.Value}";
+				return FormattableString.Invariant($"({source.SourceID}).{sb.Value}");
 			}
 
 			public string DisplayString()

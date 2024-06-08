@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Linq.Expressions;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Expressions
 {
 	using Common;
@@ -61,7 +63,9 @@ namespace LinqToDB.Expressions
 
 		public Expression Reduce(IDataContext dataContext, DbDataReader dataReader)
 		{
-			dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dataReader) ?? dataReader;
+			if (dataContext.UnwrapDataObjectInterceptor is {} interceptor)
+				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+					dataReader = interceptor.UnwrapDataReader(dataContext, dataReader);
 
 			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, _dataReaderParam, forceNullCheck: false);
 		}
@@ -73,7 +77,7 @@ namespace LinqToDB.Expressions
 
 		static Expression ConvertExpressionToType(Expression current, Type toType, MappingSchema mappingSchema)
 		{
-			var toConvertExpression = mappingSchema.GetConvertExpression(current.Type, toType, false, current.Type != toType);
+			var toConvertExpression = mappingSchema.GetConvertExpression(current.Type, toType, false, current.Type != toType, ConversionType.FromDatabase);
 
 			if (toConvertExpression == null)
 				return current;
@@ -144,8 +148,8 @@ namespace LinqToDB.Expressions
 				{
 					// Use only defined convert
 					var econv =
-						mappingSchema.GetConvertExpression(ex.Type, type,     false, false) ??
-						mappingSchema.GetConvertExpression(ex.Type, mapType!, false)!;
+						mappingSchema.GetConvertExpression(ex.Type, type,     false, false, ConversionType.FromDatabase) ??
+						mappingSchema.GetConvertExpression(ex.Type, mapType!, false, true,  ConversionType.ToDatabase)!;
 
 					ex = InternalExtensions.ApplyLambdaToExpression(econv, ex);
 				}

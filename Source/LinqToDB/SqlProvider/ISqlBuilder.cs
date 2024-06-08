@@ -20,8 +20,9 @@ namespace LinqToDB.SqlProvider
 		/// <param name="objectType">Type of database object, used to select proper name converter.</param>
 		/// <param name="escape">If <c>true</c>, apply required escaping to name components. Must be <c>true</c> except rare cases when escaping is not needed.</param>
 		/// <param name="tableOptions">Table options if called for table. Used to properly generate names for temporary tables.</param>
+		/// <param name="withoutSuffix">If object name have suffix, which could be detached from main name, this parameter disables suffix generation (enables generation of only main name part).</param>
 		/// <returns><paramref name="sb"/> parameter value.</returns>
-		StringBuilder    BuildObjectName               (StringBuilder sb, SqlObjectName name, ConvertType objectType = ConvertType.NameToQueryTable, bool escape = true, TableOptions tableOptions = TableOptions.NotSet);
+		StringBuilder BuildObjectName               (StringBuilder sb, SqlObjectName name, ConvertType objectType = ConvertType.NameToQueryTable, bool escape = true, TableOptions tableOptions = TableOptions.NotSet, bool withoutSuffix = false);
 		StringBuilder    BuildDataType                 (StringBuilder sb, SqlDataType dataType);
 		string           ConvertInline                 (string value, ConvertType convertType);
 		StringBuilder    Convert                       (StringBuilder sb, string value, ConvertType convertType);

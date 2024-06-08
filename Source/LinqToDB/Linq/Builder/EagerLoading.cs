@@ -11,8 +11,8 @@ namespace LinqToDB.Linq.Builder
 	using Async;
 	using Common;
 	using Common.Internal;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
@@ -97,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpression  = Expression.New(constructor);
 			var initExpression = Expression.MemberInit(newExpression,
-				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty("Item" + (i + 1))!, a)));
+				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty(FormattableString.Invariant($"Item{i + 1}"))!, a)));
 			return initExpression;
 		}
 
@@ -152,15 +152,17 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression? ConstructMemberPath(IEnumerable<AccessorMember> memberPath, Expression ob, bool throwOnError)
 		{
-			Expression result = ob;
+			var result = ob;
+
 			foreach (var memberInfo in memberPath)
 			{
-				if (result.Type != memberInfo.MemberInfo.DeclaringType)
+				if (memberInfo.MemberInfo.DeclaringType?.IsSameOrParentOf(result.Type) == false)
 				{
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.MemberInfo.Name}.");
 					return null;
 				}
+
 				if (memberInfo.MemberInfo.IsMethodEx())
 				{
 					var methodInfo = (MethodInfo)memberInfo.MemberInfo;
@@ -181,10 +183,11 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression? ConstructMemberPath(IEnumerable<MemberInfo> memberPath, Expression ob, bool throwOnError)
 		{
-			Expression result = ob;
+			var result = ob;
+
 			foreach (var memberInfo in memberPath)
 			{
-				if (!memberInfo.DeclaringType!.IsSameOrParentOf(result.Type))
+				if (memberInfo.DeclaringType?.IsSameOrParentOf(result.Type) == false)
 				{
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
@@ -850,7 +853,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					masterKeys.AddRange(ExtractKeys(extractContext, masterParam));
 				}
-				
+
 				var desiredType = association.GetAssociationDesiredAssignmentType(associationMember.MemberInfo, parentType, objectType);
 				ExtractNotSupportedPart(mappingSchema, detailQuery, desiredType, out detailQuery, out finalExpression, out replaceParam);
 

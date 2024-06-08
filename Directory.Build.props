@@ -5,7 +5,7 @@
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</Authors>
 		<Company>linq2db.net</Company>
-		<Copyright>2002-2023 linq2db.net</Copyright>
+		<Copyright>2002-2024 linq2db.net</Copyright>
 		<RepositoryUrl>https://github.com/linq2db/linq2db</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 
@@ -39,6 +39,9 @@
 
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
 		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+
+		<!--temporary suppress netcoreapp3.1 warnings-->
+		<CheckEolTargetFramework>false</CheckEolTargetFramework>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
@@ -55,14 +58,14 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0'">
+	<PropertyGroup>
 		<DefineConstants>NETSTANDARD2_1PLUS;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="PolySharp" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
-		<AdditionalFiles Include="$(MSBuildThisFileDirectory)/Build/BannedSymbols.txt" />
+		<PackageReference Include="Meziantou.Analyzer" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
 			<PrivateAssets>all</PrivateAssets>
@@ -73,5 +76,4 @@
 	<ItemGroup Condition="'$(Language)'=='C#'">
 		<Compile Include="$(MSBuildThisFileDirectory)/Source/Shared/*.cs" LinkBase="Compatibility" />
 	</ItemGroup>
-
 </Project>

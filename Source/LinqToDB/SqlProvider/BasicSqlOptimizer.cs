@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 // ReSharper disable InconsistentNaming
@@ -78,7 +79,6 @@ namespace LinqToDB.SqlProvider
 					}
 				);
 			}
-
 
 //statement.EnsureFindTables();
 			if (dataOptions.LinqOptions.OptimizeJoins)
@@ -212,7 +212,7 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		bool FixRootSelect(SqlStatement statement)
+		static bool FixRootSelect(SqlStatement statement)
 		{
 			if (statement.SelectQuery is {} query         &&
 				query.Select.HasModifier == false         &&
@@ -1087,7 +1087,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
+		static ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
 		{
 			//TODO: refactor CASE optimization
 
@@ -1109,7 +1109,7 @@ namespace LinqToDB.SqlProvider
 			return isTrue;
 		}
 
-		ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, EvaluationContext context)
+		static ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, EvaluationContext context)
 		{
 			SqlFunction? func;
 			var valueFirst = expr.Expr1.TryEvaluateExpression(context, out var value);
@@ -1663,11 +1663,11 @@ namespace LinqToDB.SqlProvider
 					{
 						switch (value1)
 						{
-							case short   h when h == 0  :
-							case int     i when i == 0  :
-							case long    l when l == 0  :
-							case decimal d when d == 0  :
-							case string  s when s == "" : return be.Expr2;
+							case short   h when h == 0        :
+							case int     i when i == 0        :
+							case long    l when l == 0        :
+							case decimal d when d == 0        :
+							case string  s when s.Length == 0 : return be.Expr2;
 						}
 					}
 
@@ -1716,7 +1716,7 @@ namespace LinqToDB.SqlProvider
 								break;
 							}
 
-							case string vs when vs == "" : return be.Expr1;
+							case string vs when vs.Length == 0: return be.Expr1;
 							case string vs when
 								be.Expr1    is SqlBinaryExpression be1 &&
 								//be1.Operation == "+"                   &&
@@ -1735,7 +1735,7 @@ namespace LinqToDB.SqlProvider
 					if (v1 && v2)
 					{
 						if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 + i2, be);
-						if (value1 is string || value2 is string) return CreateSqlValue(value1?.ToString() + value2, be);
+						if (value1 is string || value2 is string) return CreateSqlValue(string.Format(CultureInfo.InvariantCulture, "{0}{1}", value1, value2), be);
 					}
 
 					break;
@@ -2138,23 +2138,88 @@ namespace LinqToDB.SqlProvider
 			if (optimizationContext.IsOptimized(element, out var newElement))
 				return newElement!;
 
-			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, dataOptions, !withConversion,
-				static (visitor, e) =>
+			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, dataOptions, !withConversion, Optimize);
+
+			static IQueryElement Optimize(ConvertVisitor<RunOptimizationContext> visitor, IQueryElement e)
+			{
+				var ne = e;
+
+				if (ne is ISqlExpression expr1)
+					ne = visitor.Context.Optimizer.OptimizeExpression(expr1, visitor);
+
+				if (ne is ISqlPredicate pred1)
 				{
-					var ne = e;
-					if (ne is ISqlExpression expr1)
-						ne = visitor.Context.Optimizer.OptimizeExpression(expr1, visitor);
+					ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context, visitor.Context.DataOptions);
+				}
+				else if (ne is SqlCondition(var isNot, var predicate, var isOr))
+				{
+					switch (
+						      visitor.Context.DataOptions.LinqOptions.CompareNullsAsValues,
+						             isNot,
+						                    predicate)
+					{
+						//           NOT IN                                                                 NULL (value)                                 NOT NULL (subquery)
+						case (true,  true,  SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: false}]}) inSubQuery, var isOr1)]))
+							:
+							return new SqlCondition(false, new SqlSearchCondition().Expr(inSubQuery.Expr1).IsNull.Or.Add(new SqlCondition(true, inSubQuery, isOr1)), isOr);
 
-					if (ne is ISqlPredicate pred1)
-						ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context, visitor.Context.DataOptions);
+						//           IN                                                                     NULL (value)                                 NULL (subquery)
+						case (true,  false, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: true} col]} subQuery) inSubQuery, _) cond]))
+							:
+							return ConvertNullInNullSubquery(subQuery, col, inSubQuery, cond, isOr);
 
-					if (!ReferenceEquals(ne, e))
-						return ne;
+						//           NOT IN for previous case.
+						case (true,  true,  SqlSearchCondition([{ OptimizationTag:1 } cond]))
+							:
+						{
+							var f = new SqlFunction(typeof(bool), "CASE", [(SqlSearchCondition)cond.Predicate, new SqlValue(true), new SqlValue(false)]) { DoNotOptimize = true };
 
-					ne = visitor.Context.Optimizer.OptimizeQueryElement(visitor, ne);
+							var sc = new SqlSearchCondition(
+								new SqlCondition(false, new SqlPredicate.ExprExpr(f, SqlPredicate.Operator.Equal, new SqlValue(false), false), false));
 
+							return new SqlCondition(false, sc, isOr);
+						}
+					}
+
+					static SqlCondition ConvertNullInNullSubquery(
+						SelectQuery subQuery, SqlColumn col, SqlPredicate.InSubQuery inSubQuery, SqlCondition cond, bool isOr)
+					{
+						var newQuery = subQuery.Convert((subQuery, col.Expression, HasAggregate: QueryHelper.ContainsAggregationFunctionOneLevel(col.Expression)), static (v, e) =>
+						{
+							if (ReferenceEquals(e, v.Context.Expression))
+								return new SqlValue(1);
+
+							if (e is SqlWhereClause w && w == (v.Context.HasAggregate ? v.Context.subQuery.Having : v.Context.subQuery.Where))
+							{
+								var wc = new SqlWhereClause(new SqlSearchCondition(w.SearchCondition.Conditions));
+								wc.SearchCondition.Conditions.Add(new(
+									false,
+									new SqlPredicate.IsNull(v.Context.Expression, false)));
+								return wc;
+							}
+
+							return e;
+						});
+
+						var sc = new SqlSearchCondition(
+						[
+							new (false, new SqlPredicate.IsNull    (inSubQuery.Expr1, false),           false),
+							new (false, new SqlPredicate.InSubQuery(new SqlValue(1),  false, newQuery), true),
+							new (false, new SqlPredicate.IsNull    (inSubQuery.Expr1, true),            false),
+							cond
+						]);
+
+						return new SqlCondition(false, sc, isOr) { OptimizationTag = 1 };
+					}
+				}
+
+				if (!ReferenceEquals(ne, e))
 					return ne;
-				});
+
+				ne = visitor.Context.Optimizer.OptimizeQueryElement(visitor, ne);
+
+				return ne;
+			}
 
 			if (withConversion)
 			{
@@ -2172,8 +2237,8 @@ namespace LinqToDB.SqlProvider
 						if (!ReferenceEquals(ne, e))
 							return ne;
 
-						if (ne is ISqlPredicate pred3)
-							ne = visitor.Context.Optimizer.ConvertPredicateImpl(pred3, visitor);
+						if (ne is ISqlPredicate predicate)
+							ne = visitor.Context.Optimizer.ConvertPredicateImpl(predicate, visitor);
 
 						return ne;
 					});
@@ -2334,7 +2399,7 @@ namespace LinqToDB.SqlProvider
 				&& Converter.TryConvertToString(patternRaw, out var patternRawValue))
 			{
 				if (patternRawValue == null)
-					return new SqlPredicate.IsTrue(new SqlValue(true), new SqlValue(true), new SqlValue(false), null, predicate.IsNot);
+					return new SqlPredicate.IsTrue(new SqlValue(true), new SqlValue(true), new SqlValue(false), null, predicate.IsNot, true);
 
 				var patternValue = LikeIsEscapeSupported
 					? EscapeLikeCharacters(patternRawValue, LikeEscapeCharacter)
@@ -2926,67 +2991,67 @@ namespace LinqToDB.SqlProvider
 
 				if (processUniversalUpdate)
 				{
-				foreach (var item in updateStatement.Update.Items)
-				{
-					var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
-						v.Context.TryGetValue(expr, out var newValue)
-							? newValue
-							: expr);
-
-					var usedSources = new HashSet<ISqlTableSource>();
-					QueryHelper.GetUsedSources(ex, usedSources);
-					usedSources.Remove(tableToUpdate);
-					if (objectTree.TryGetValue(tableToUpdate, out var replaced))
-						usedSources.Remove((ISqlTableSource)replaced);
-
-					if (usedSources.Count > 0)
+					foreach (var item in updateStatement.Update.Items)
 					{
-						// it means that update value column depends on other tables and we have to generate more complicated query
+						var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
+							v.Context.TryGetValue(expr, out var newValue)
+								? newValue
+								: expr);
 
-						var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
+						var usedSources = new HashSet<ISqlTableSource>();
+						QueryHelper.GetUsedSources(ex, usedSources);
+						usedSources.Remove(tableToUpdate);
+						if (objectTree.TryGetValue(tableToUpdate, out var replaced))
+							usedSources.Remove((ISqlTableSource)replaced);
 
-						innerQuery.ParentSelect = sql;
+						if (usedSources.Count > 0)
+						{
+							// it means that update value column depends on other tables and we have to generate more complicated query
 
-						innerQuery.Select.Columns.Clear();
+							var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
 
-						var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
-							static (v, e) =>
-							{
-								if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
+							innerQuery.ParentSelect = sql;
+
+							innerQuery.Select.Columns.Clear();
+
+							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
+								static (v, e) =>
 								{
-									e = n;
-									v.Context.objectTree.Remove(e);
-									v.Context.objectTree.Add(e, n);
-								}
-
-								if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
-								{
-										var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
-											(ISqlExpression)e, false);
-									if (column != null)
+									if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
 									{
+										e = n;
 										v.Context.objectTree.Remove(e);
-										v.Context.objectTree.Add(e, column);
-										return column;
+										v.Context.objectTree.Add(e, n);
 									}
-								}
 
-								return e;
+									if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
+									{
+											var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
+												(ISqlExpression)e, false);
+										if (column != null)
+										{
+											v.Context.objectTree.Remove(e);
+											v.Context.objectTree.Add(e, column);
+											return column;
+										}
+									}
 
-							});
+									return e;
 
-						innerQuery.Select.AddNew(remapped);
-							innerQuery.RemoveNotUnusedColumns();
-						ex = innerQuery;
+								});
+
+							innerQuery.Select.AddNew(remapped);
+								innerQuery.RemoveNotUnusedColumns();
+							ex = innerQuery;
+						}
+
+							item.Column = tableToUpdate.FindFieldByMemberName(QueryHelper.GetUnderlyingField(item.Column)!.Name)
+										  ?? throw new LinqException(
+											  $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
+							item.Expression = ex;
+							newUpdateStatement.Update.Items.Add(item);
+						}
 					}
-
-						item.Column = tableToUpdate.FindFieldByMemberName(QueryHelper.GetUnderlyingField(item.Column)!.Name)
-						              ?? throw new LinqException(
-							              $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
-						item.Expression = ex;
-						newUpdateStatement.Update.Items.Add(item);
-					}
-				}
 
 					if (updateStatement.Output != null)
 					{
@@ -3024,7 +3089,7 @@ namespace LinqToDB.SqlProvider
 			return updateStatement;
 		}
 
-		void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
+		static void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
 		{
 			element?.Walk(WalkOptions.Default, (replacing, withTable), static (ctx, e) =>
 			{
@@ -3759,7 +3824,7 @@ namespace LinqToDB.SqlProvider
 						orderByItems = context.supportsEmptyOrderBy ? Array<SqlOrderByItem>.Empty : new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
 
 					var orderBy = string.Join(", ",
-						orderByItems.Select(static (oi, i) => oi.IsDescending ? $"{{{i}}} DESC" : $"{{{i}}}"));
+						orderByItems.Select(static (oi, i) => oi.IsDescending ? FormattableString.Invariant($"{{{i}}} DESC") : FormattableString.Invariant($"{{{i}}}")));
 
 					var parameters = orderByItems.Select(static oi => oi.Expression).ToArray();
 
@@ -3828,13 +3893,13 @@ namespace LinqToDB.SqlProvider
 
 						var orderByItems = q.Select.OrderBy.Items;
 
-						var partitionBy = string.Join(", ", columnItems.Select(static (oi, i) => $"{{{i}}}"));
+						var partitionBy = string.Join(", ", columnItems.Select(static (oi, i) => FormattableString.Invariant($"{{{i}}}")));
 
 						var columns = new string[orderByItems.Count];
 						for (var i = 0; i < columns.Length; i++)
 							columns[i] = orderByItems[i].IsDescending
-								? $"{{{i + columnItems.Count}}} DESC"
-								: $"{{{i + columnItems.Count}}}";
+								? FormattableString.Invariant($"{{{i + columnItems.Count}}} DESC")
+								: FormattableString.Invariant($"{{{i + columnItems.Count}}}");
 						var orderBy = string.Join(", ", columns);
 
 						var parameters = columnItems.Concat(orderByItems.Select(static oi => oi.Expression)).ToArray();

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -269,7 +270,7 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Function("Convert", 0, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter)]
-		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = ProviderName.ClickHouse)]
+		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = PN.ClickHouse)]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -285,7 +286,7 @@ namespace LinqToDB
 		// TODO: v5 remove. bltoolkit legacy which duplicates Convert function above (without ServerSideOnly, but it shouldn't matter)
 		[CLSCompliant(false)]
 		[Function("Convert", 0, 1, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter)]
-		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = ProviderName.ClickHouse)]
+		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = PN.ClickHouse)]
 		public static TTo Convert2<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -962,30 +963,28 @@ namespace LinqToDB
 		[Function(PseudoFunctions.TO_LOWER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Lower(string? str)
 		{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
-			return str?.ToLower();
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
+			return str?.ToLower(CultureInfo.CurrentCulture);
 		}
 
 		[Function(PseudoFunctions.TO_UPPER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Upper(string? str)
 		{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
-			return str?.ToUpper();
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
+			return str?.ToUpper(CultureInfo.CurrentCulture);
 		}
 
 		[Expression("Lpad({0},{1},'0')",                                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.Access, "Format({0}, String('0', {1}))",                                                     IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.Sybase, "right(replicate('0',{1}) + cast({0} as varchar(255)),{1})",                         IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.PostgreSQL, "Lpad({0}::text,{1},'0')",                                                       IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Expression(PN.SqlServer, "format({0}, 'd{1}')",                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.SQLite, "printf('%0{1}d', {0})",                                                             IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.ClickHouse, "leftPadUTF8(toString({0}), toUInt32({1}), '0')",                                IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.SqlCe, "REPLICATE('0', {1} - LEN(CAST({0} as NVARCHAR({1})))) + CAST({0} as NVARCHAR({1}))", IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.SqlServer, "format({0}, 'd{1}')",                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.SqlServer2005, "REPLICATE('0', CASE WHEN LEN(CAST({0} as NVARCHAR)) > {1} THEN 0 ELSE ({1} - LEN(CAST({0} as NVARCHAR))) END) + CAST({0} as NVARCHAR)", IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.SqlServer2008, "REPLICATE('0', CASE WHEN LEN(CAST({0} as NVARCHAR)) > {1} THEN 0 ELSE ({1} - LEN(CAST({0} as NVARCHAR))) END) + CAST({0} as NVARCHAR)", IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static string? ZeroPad(int? val, int length)
 		{
-			return val?.ToString("d" + length);
+			return val?.ToString(FormattableString.Invariant($"d{length}"), NumberFormatInfo.InvariantInfo);
 		}
 
 		sealed class ConcatAttribute : ExpressionAttribute

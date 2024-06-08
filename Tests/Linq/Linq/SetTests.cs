@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+
+using LinqToDB;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Threading.Tasks;
-	using LinqToDB;
-	using LinqToDB.Tools;
 	using Model;
 
 	[TestFixture]

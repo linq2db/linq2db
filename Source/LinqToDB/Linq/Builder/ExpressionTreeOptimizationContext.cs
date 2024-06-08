@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -9,8 +10,8 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
@@ -800,7 +801,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var args  = method.GetGenericArguments();
 						var names = args.Select(t => (object)t.Name).ToArray();
-						var name  = string.Format(attr.MethodName, names);
+						var name  = string.Format(CultureInfo.InvariantCulture, attr.MethodName, names);
 
 						expr = Expression.Call(
 							mi.DeclaringType!,

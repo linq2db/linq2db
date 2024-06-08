@@ -869,6 +869,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Nothing to see here, it just broke after new ClickHouse release (broken in: 24.2.2)", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void LastIndexOf2([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
@@ -883,6 +884,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Nothing to see here, it just broke after new ClickHouse release (broken in: 24.2.2)", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void LastIndexOf3([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
@@ -1223,9 +1225,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToLower() == "john" && p.ID == 1 select p;
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -1236,9 +1236,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var param = "JOHN";
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToLower() == param.ToLower() && p.ID == 1 select p;
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -1248,9 +1246,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToUpper() == "JOHN" && p.ID == 1 select p;
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -1261,9 +1257,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var param = "john";
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToUpper() == param.ToUpper() && p.ID == 1 select p;
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}

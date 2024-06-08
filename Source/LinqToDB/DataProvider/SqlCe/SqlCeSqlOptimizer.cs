@@ -127,7 +127,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return like;
 		}
 
-		void CorrectInsertParameters(SqlStatement statement)
+		static void CorrectInsertParameters(SqlStatement statement)
 		{
 			//SlqCe do not support parameters in columns for insert
 			//
@@ -147,7 +147,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		void CorrectSkipAndColumns(SqlStatement statement)
+		static void CorrectSkipAndColumns(SqlStatement statement)
 		{
 			statement.Visit(static e =>
 			{
@@ -191,7 +191,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			});
 		}
 
-		void CorrectFunctionParameters(SqlStatement statement, DataOptions options)
+		static void CorrectFunctionParameters(SqlStatement statement, DataOptions options)
 		{
 			if (!options.FindOrDefault(SqlCeOptions.Default).InlineFunctionParameters)
 				return;
@@ -230,7 +230,7 @@ namespace LinqToDB.DataProvider.SqlCe
 						query.Select.Where.EnsureConjunction();
 						query.Select.Where.SearchCondition.Conditions.Add(new SqlCondition(false,
 							new SqlPredicate.IsTrue(query.Select.Columns[0].Expression, isTruePredicate.TrueValue,
-								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot)));
+								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot, true)));
 						query.Select.Columns.Clear();
 
 						return new SqlPredicate.FuncLike(SqlFunction.CreateExists(query));

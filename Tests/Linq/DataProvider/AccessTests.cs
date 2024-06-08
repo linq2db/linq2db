@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -17,7 +18,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Threading.Tasks;
 	using Model;
 
 	[TestFixture]
@@ -107,7 +107,7 @@ namespace Tests.DataProvider
 				{
 					var sqlValue = expectedValue is bool ? (bool)(object)expectedValue ? 1 : 0 : (object)expectedValue;
 
-					var sql = string.Format(CultureInfo.InvariantCulture, "SELECT {0}({1})", sqlType, sqlValue ?? "NULL");
+					var sql = string.Format(CultureInfo.InvariantCulture, "SELECT {0}({1})", sqlType, sqlValue);
 
 					Debug.WriteLine(sql + " -> " + typeof(T));
 

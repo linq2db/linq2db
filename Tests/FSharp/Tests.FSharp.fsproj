@@ -3,12 +3,12 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
-		<LangVersion>latest</LangVersion>
 		<WarningLevel>5</WarningLevel>
-		
+
 		<!--https://github.com/dotnet/fsharp/issues/12315-->
 		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
 		<NoWarn>$(NoWarn);NU1507</NoWarn>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>

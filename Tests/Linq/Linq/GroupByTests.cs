@@ -2065,7 +2065,7 @@ namespace Tests.Linq
 			[Column, Nullable    ] public string? ImageFullUrl { get; set; } // nvarchar(255)
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -2124,13 +2124,11 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
 				{
 					Name = re.FirstName,
 					Roles = ri.ToList().Select(p => p.Diagnosis)
 				}).Where(p => p.Name.ToLower().Contains(input.ToLower())).ToList();
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
 
@@ -2139,13 +2137,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
 				{
 					Name = re.FirstName,
 					Roles = ri.ToList().Select(p => p.Diagnosis)
 				}).Where(p => p.Name.ToLower().Contains("test".ToLower())).ToList();
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
 
@@ -2755,5 +2751,78 @@ namespace Tests.Linq
 				)
 				select new { pmp });
 		}
+
+		#region issue 4256
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
+		[Test]
+		public void TestIssue4256AnonymousClass([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(
+				db.Types
+					.Select(it => new
+					{
+						IsActive = true,
+						Other    = Convert.ToBoolean(it.SmallIntValue)
+					})
+					.GroupBy(it  => it)
+					.Select(it   => it.Key));
+		}
+
+		class GroupByTypeTestClass
+		{
+			public required bool IsActive { get; set; }
+			public required bool Other    { get; set; }
+
+			// needed for client-side group-by by AssertQuery
+			public override bool Equals(object? obj) => obj is GroupByTypeTestClass other && IsActive == other.IsActive && Other == other.Other;
+			public override int GetHashCode() => IsActive.GetHashCode() ^ Other.GetHashCode();
+		}
+
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
+		[Test]
+		public void TestIssue4256Class([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(
+				db.Types
+					.Select(it => new GroupByTypeTestClass()
+					{
+						IsActive = true,
+						Other    = Convert.ToBoolean(it.SmallIntValue)
+					})
+					.GroupBy(it  => it)
+					.Select(it   => it.Key));
+		}
+
+		class GroupByTypeTestClassNullable
+		{
+			public required bool? IsActive { get; set; }
+			public required bool  Other    { get; set; }
+
+			// needed for client-side group-by by AssertQuery
+			public override bool Equals(object? obj) => obj is GroupByTypeTestClassNullable other && IsActive == other.IsActive && Other == other.Other;
+			public override int GetHashCode() => (IsActive?.GetHashCode() ?? 0) ^ Other.GetHashCode();
+		}
+
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
+		[Test]
+		public void TestIssue4256ClassNullableFlag([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(
+				db.Types
+					.Select(it => new GroupByTypeTestClassNullable()
+					{
+						IsActive = true,
+						Other    = Convert.ToBoolean(it.SmallIntValue)
+					})
+					.GroupBy(it  => it)
+					.Select(it   => it.Key));
+		}
+		#endregion
 	}
 }

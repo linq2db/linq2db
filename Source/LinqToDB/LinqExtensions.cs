@@ -3629,7 +3629,7 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(AsQueryable, source, dataContext),
 					Expression.Constant(source),
-					Expression.Constant(dataContext)
+					Expression.Constant(null, typeof(IDataContext))
 				));
 
 			return query;
@@ -3941,9 +3941,10 @@ namespace LinqToDB
 		/// <param name="query">Query to test.</param>
 		/// <param name="mangleNames">Should we use real names for used types, members and namespace or generate obfuscated names.</param>
 		/// <returns>Test source code.</returns>
-		public static string GenerateTestString(this IQueryable query, bool mangleNames = false)
+		public static string GenerateTestString<T>(this IQueryable<T> query, bool mangleNames = false)
 		{
-			return new ExpressionTestGenerator(mangleNames).GenerateSourceString(query.Expression);
+			return new ExpressionTestGenerator(mangleNames, Internals.GetDataContext(query) ?? throw new ArgumentException("Query is not a Linq To DB query", nameof(query)))
+				.GenerateSourceString(query.Expression);
 		}
 
 		#endregion

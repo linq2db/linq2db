@@ -543,8 +543,8 @@ namespace LinqToDB.Expressions
 			{
 				if (arg1.NodeType == ExpressionType.Constant && arg2.NodeType == ExpressionType.Constant)
 				{
-					var query1 = ((Sql.IQueryableContainer)arg1.EvaluateExpression()!).Query;
-					var query2 = ((Sql.IQueryableContainer)arg2.EvaluateExpression()!).Query;
+					var query1 = arg1.EvaluateExpression<Sql.IQueryableContainer>(info.DataContext)!.Query;
+					var query2 = arg2.EvaluateExpression<Sql.IQueryableContainer>(info.DataContext)!.Query;
 					return EqualsTo(query1.Expression, query2.Expression, info);
 				}
 			}

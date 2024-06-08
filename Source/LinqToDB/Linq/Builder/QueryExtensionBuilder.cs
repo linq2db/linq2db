@@ -53,9 +53,9 @@ namespace LinqToDB.Linq.Builder
 						var ex = ae.Expressions[j];
 
 						if (evaluateElements)
-							ex = Expression.Constant(ex.EvaluateExpression());
+							ex = Expression.Constant(ex.EvaluateExpression(builder.DataContext));
 
-						list.Add(new($"{name}.{j}", ex, p, j));
+						list.Add(new(FormattableString.Invariant($"{name}.{j}"), ex, p, j));
 					}
 				}
 				else
@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 					var ex   = methodCall.Arguments[i];
 
 					if (p.HasAttribute<SqlQueryDependentAttribute>())
-						ex = Expression.Constant(ex.EvaluateExpression());
+						ex = Expression.Constant(ex.EvaluateExpression(builder.DataContext));
 
 					list.Add(new(name, ex, p));
 				}
@@ -130,7 +130,10 @@ namespace LinqToDB.Linq.Builder
 					}
 					case Sql.QueryExtensionScope.SubQueryHint:
 					{
-						attr.ExtendSubQuery(sequence.SelectQuery.SqlQueryExtensions ??= new(), list);
+						if (sequence is SetOperationBuilder.SetOperationContext { SubQuery.SelectQuery : { HasSetOperators: true } q })
+							attr.ExtendSubQuery(q.SetOperators[^1].SelectQuery.SqlQueryExtensions ??= new(), list);
+						else
+							attr.ExtendSubQuery(sequence.SelectQuery.SqlQueryExtensions ??= new(), list);
 						break;
 					}
 					case Sql.QueryExtensionScope.QueryHint:

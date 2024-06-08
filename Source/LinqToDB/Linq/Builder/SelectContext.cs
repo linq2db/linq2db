@@ -7,8 +7,8 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 	using Common;
 	using Mapping;
@@ -48,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery)
 		{
 			Parent      = parent;
-			Sequence    = Array<IBuildContext>.Empty;
+			Sequence    = [];
 			Builder     = builder;
 			Lambda      = lambda;
 			Body        = lambda.Body;
@@ -112,7 +112,7 @@ namespace LinqToDB.Linq.Builder
 #endif
 		{
 			{
-				var key = Tuple.Create(expression, level, ConvertFlags.Field);
+				var key = (expression, level, ConvertFlags.Field);
 
 				if (_expressionIndex.TryGetValue(key, out var info))
 				{
@@ -177,7 +177,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				switch (levelExpression.NodeType)
-				{	
+				{
 					case ExpressionType.MemberAccess :
 						{
 							var memberInfo = ((MemberExpression)levelExpression).Member;
@@ -278,7 +278,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (e.Method.DeclaringType == typeof(Enumerable) && !typeof(IGrouping<,>).IsSameOrParentOf(e.Arguments[0].Type))
 				{
-					return new[] { new SqlInfo(Builder.SubQueryToSql(this, e)) };
+					return [new SqlInfo(Builder.SubQueryToSql(this, e))];
 				}
 			}
 
@@ -307,7 +307,7 @@ namespace LinqToDB.Linq.Builder
 								expression,
 								level,
 								static (context, ctx, ex, l) => ctx!.ConvertToSql(ex, l, context.flags),
-								static context => new[] { new SqlInfo(context.context.Builder.ConvertToSql(context.context, context.expression)) }, true);
+								static context => [new SqlInfo(context.context.Builder.ConvertToSql(context.context, context.expression))], true);
 						}
 				}
 			}
@@ -318,6 +318,7 @@ namespace LinqToDB.Linq.Builder
 					if (flags != ConvertFlags.Field)
 					{
 						var list = new List<SqlInfo>();
+
 						foreach (var mi in Members)
 							if (!(mi.Key is MethodInfo || flags == ConvertFlags.Key && EagerLoading.IsDetailsMember(this, mi.Value)))
 								list.AddRange(ConvertMember(mi.Key, mi.Value, flags));
@@ -441,11 +442,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertToIndex
 
-		readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new ();
+		readonly Dictionary<(Expression?,int,ConvertFlags),SqlInfo[]> _expressionIndex = new ();
 
 		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			var key = Tuple.Create(expression, level, flags);
+			var key = (expression, level, flags);
 
 			if (!_expressionIndex.TryGetValue(key, out var info))
 			{
@@ -477,12 +478,6 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new ();
-
-		sealed class SqlData
-		{
-			public SqlInfo[]  Sql    = null!;
-			public MemberInfo Member = null!;
-		}
 
 		SqlInfo[] ConvertToIndexInternal(Expression? expression, int level, ConvertFlags flags)
 		{
@@ -547,7 +542,7 @@ namespace LinqToDB.Linq.Builder
 									}
 								}
 
-								return list?.ToArray() ?? Array<SqlInfo>.Empty;
+								return list?.ToArray() ?? [];
 							}
 					}
 				}
@@ -814,7 +809,7 @@ namespace LinqToDB.Linq.Builder
 
 								case ExpressionType.Parameter    :
 									{
-										var sequence  = GetSequence(expression, level);
+										var sequence = GetSequence(expression, level);
 
 										if (sequence == null)
 										{
@@ -923,7 +918,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Parameter    :
 						{
-							var sequence  = GetSequence(expression, level)!;
+							var sequence   = GetSequence(expression, level)!;
 							var paramIndex = Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence);
 							var parameter  = paramIndex >= 0 ? Lambda.Parameters[paramIndex] : null;
 

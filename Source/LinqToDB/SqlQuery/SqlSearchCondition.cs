@@ -42,7 +42,13 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression  ToExpr() { return _parent; }
 		}
 
-		public   List<SqlCondition>  Conditions { get; } = new List<SqlCondition>();
+		public List<SqlCondition>  Conditions { get; } = new List<SqlCondition>();
+
+		public SqlSearchCondition Add(SqlCondition condition)
+		{
+			Conditions.Add(condition);
+			return this;
+		}
 
 		protected override SqlSearchCondition Search => this;
 
@@ -185,5 +191,10 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out List<SqlCondition> conditions)
+		{
+			conditions = Conditions;
+		}
 	}
 }

@@ -158,7 +158,9 @@ namespace LinqToDB.Linq.Builder
 			var element = new SelectContext (buildInfo.Parent, elementSelector, sequence/*, key*/);
 			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, element, builder.IsGroupingGuardDisabled);
 
+#if DEBUG
 			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
+#endif
 
 			return groupBy;
 		}

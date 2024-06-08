@@ -213,7 +213,11 @@ namespace LinqToDB.CodeModel
 			for (var i = 0; i < @namespace.Name.Count; i++)
 			{
 				var name = @namespace.Name[i];
-				var fullName = FixName(_globalTypeNames, name, n => string.Join(".", @namespace.Name.Take(i)) + (i > 0 ? "." : null) + n, false);
+				var fullName = FixName(
+					_globalTypeNames,
+					name,
+					n => string.Join(".", @namespace.Name.Take(i).Select(n => string.Format(CultureInfo.InvariantCulture, "{0}", n))) + (i > 0 ? "." : null) + n,
+					false);
 				_globalNames.Add(fullName);
 			}
 
@@ -293,7 +297,7 @@ namespace LinqToDB.CodeModel
 			// counter to use in name for conflict resolution
 			var cnt = 0;
 			// repeat until non-empty unique name generated
-			while (fullName == string.Empty || scopeNames.Contains(fullName))
+			while (fullName.Length == 0 || scopeNames.Contains(fullName))
 			{
 				// generate base name only if we need to generate new name
 				identifierName = baseName ??= GetBaseIdentifierName(name.Name, name.FixOptions, name.Position);

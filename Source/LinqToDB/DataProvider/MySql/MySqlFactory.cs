@@ -1,8 +1,9 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Generic;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Collections.Generic;
 	using Configuration;
 
 	[UsedImplicitly]

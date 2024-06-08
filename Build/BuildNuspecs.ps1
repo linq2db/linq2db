@@ -52,7 +52,7 @@ if ($version) {
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('copyright', $nsUri)
-		$child.InnerText = 'Copyright © 2023 ' + $authors
+		$child.InnerText = 'Copyright © 2024 ' + $authors
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('authors', $nsUri)
@@ -87,7 +87,7 @@ if ($version) {
 
 		$child = $xml.CreateElement('file', $nsUri)
 		$attr = $xml.CreateAttribute('src')
-		$attr.Value = '..\NuGet\icon64.png'
+		$attr.Value = '..\NuGet\icon.png'
 		$child.Attributes.Append($attr)
 		$attr = $xml.CreateAttribute('target')
 		$attr.Value = 'images\icon.png'

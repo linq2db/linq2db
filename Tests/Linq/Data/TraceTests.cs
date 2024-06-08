@@ -126,7 +126,7 @@ namespace Tests.Data
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
 				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
+				Assert.That(events[TraceInfoStep.Completed]!.Command, Is.Null);
 				Assert.NotNull(command);
 
 				// steps called once

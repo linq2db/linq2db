@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case var providerName when providerName.Contains("PostgreSQL") || providerName.Contains(NpgsqlProviderAdapter.AssemblyName):
 					if (options.ConfigurationString != null)
 					{
-						if (options.ConfigurationString.Contains("15"))
+						if (options.ConfigurationString.Contains("15") || options.ConfigurationString.Contains("16"))
 							return _postgreSQLDataProvider15.Value;
 
 						if (options.ConfigurationString.Contains("92") || options.ConfigurationString.Contains("9.2"))

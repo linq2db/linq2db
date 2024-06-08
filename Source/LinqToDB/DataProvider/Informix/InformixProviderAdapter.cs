@@ -169,16 +169,24 @@ namespace LinqToDB.DataProvider.Informix
 			if (name == ProviderName.Informix)
 			{
 				if (_ifxAdapter == null)
+				{
 					lock (_ifxSyncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_ifxAdapter ??= CreateIfxAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _ifxAdapter;
 			}
 			else
 			{
 				if (_db2Adapter == null)
+				{
 					lock (_db2SyncRoot)
-						_db2Adapter ??= new (DB2ProviderAdapter.Instance);
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_db2Adapter ??= new(DB2ProviderAdapter.Instance);
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _db2Adapter;
 			}

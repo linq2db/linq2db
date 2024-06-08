@@ -9,10 +9,10 @@ using System.Reflection;
 namespace LinqToDB.Data
 {
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Linq.Builder;
 	using Common;
-	using Extensions;
 	using Mapping;
 	using Reflection;
 
@@ -59,8 +59,6 @@ namespace LinqToDB.Data
 				? BuildDefaultConstructor(entityDescriptor, objectType)
 				: BuildRecordConstructor (entityDescriptor, objectType, recordType);
 
-			expr = ProcessExpression(expr);
-
 			if (!buildBlock)
 				return expr;
 
@@ -69,7 +67,7 @@ namespace LinqToDB.Data
 
 		private ParameterExpression BuildVariable(Expression expr, string? name = null)
 		{
-			name ??= expr.Type.Name + ++_varIndex;
+			name ??= FormattableString.Invariant($"{expr.Type.Name}{++_varIndex}");
 
 			var variable = Expression.Variable(
 				expr.Type,
@@ -164,7 +162,7 @@ namespace LinqToDB.Data
 				{
 					if (m.column.MemberAccessor.IsComplex)
 					{
-						exprs.Add(m.column.MemberAccessor.SetterExpression.GetBody(obj, m.expr));
+						exprs.Add(m.column.MemberAccessor.GetSetterExpression(obj, m.expr));
 					}
 				}
 
@@ -310,11 +308,6 @@ namespace LinqToDB.Data
 			var expr = Expression.New(ctor, parms);
 
 			return expr;
-		}
-
-		private Expression ProcessExpression(Expression expression)
-		{
-			return expression;
 		}
 
 		sealed class ReadColumnInfo

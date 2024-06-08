@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using LinqToDB.Common.Internal;
-using LinqToDB.Extensions;
+using System.Globalization;
 
 namespace LinqToDB.Common
 {
+	using Extensions;
+	using Internal;
+
 	internal static class ConvertUtils
 	{
 		private static readonly IDictionary<Type, ISet<Type>> _alwaysConvert = new Dictionary<Type, ISet<Type>>()
@@ -105,7 +107,7 @@ namespace LinqToDB.Common
 
 			if (_alwaysConvert.TryGetValue(from, out var types) && types.Contains(to))
 			{
-				convertedValue = Convert.ChangeType(value, to);
+				convertedValue = Convert.ChangeType(value, to, CultureInfo.InvariantCulture);
 				return true;
 			}
 
@@ -116,7 +118,7 @@ namespace LinqToDB.Common
 			if (   ranges.Item1.CompareTo(value) <= 0
 				&& ranges.Item2.CompareTo(value) >= 0)
 			{
-				convertedValue = Convert.ChangeType(value, to);
+				convertedValue = Convert.ChangeType(value, to, CultureInfo.InvariantCulture);
 				return true;
 			}
 

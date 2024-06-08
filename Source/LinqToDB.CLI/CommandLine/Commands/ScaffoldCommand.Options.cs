@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using LinqToDB.DataModel;
@@ -1115,13 +1116,15 @@ If you don't specify some property, CLI will use default value for current optio
 
 			private static NamingCliOption DefineNamingOption(string option, string help, NormalizationOptions? defaults, NormalizationOptions? t4defaults)
 			{
+#pragma warning disable CA1863 // Use 'CompositeFormat'
 				return new NamingCliOption(
 					option,
 					help,
 					NAMING_HELP,
-					new[] { string.Format(NAMING_EXAMPLE_TEMPLATE, option) },
+					new[] { string.Format(CultureInfo.InvariantCulture, NAMING_EXAMPLE_TEMPLATE, option) },
 					defaults,
 					t4defaults);
+#pragma warning restore CA1863 // Use 'CompositeFormat'
 			}
 		}
 
@@ -1363,7 +1366,7 @@ string // also you can put table name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-tables\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles tables",
 						/*lang=json*/
-						"{ \"schema\": { \"include-tables\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix"
+						"{ \"schema\": { \"include-tables\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix"
 					});
 
 			/// <summary>
@@ -1400,7 +1403,7 @@ string // also you can put table name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-tables\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles tables ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-tables\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix ignored"
+						"{ \"schema\": { \"exclude-tables\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix ignored"
 					});
 
 			/// <summary>
@@ -1437,7 +1440,7 @@ string // also you can put view name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-views\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles views",
 						/*lang=json*/
-						"{ \"schema\": { \"include-views\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix"
+						"{ \"schema\": { \"include-views\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix"
 					});
 
 			/// <summary>
@@ -1474,7 +1477,7 @@ string // also you can put view name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-views\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles views ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-views\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix ignored"
+						"{ \"schema\": { \"exclude-views\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix ignored"
 					});
 
 			/// <summary>
@@ -1511,7 +1514,7 @@ string // also you can put procedure name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"procedures-with-schema\": [ \"GetUsers\", { \"name\": \"LoadPermissions\", \"schema\": \"dbo\" } ] } } // GetUsers and dbo.LoadPermissions procedures",
 						/*lang=json*/
-						"{ \"schema\": { \"procedures-with-schema\": [ { \"regex\": \"^Load.$+\", \"schema\": \"dbo\" } ] } } // all procedures starting from Load prefix"
+						"{ \"schema\": { \"procedures-with-schema\": [ { \"regex\": \"^Load.+$\", \"schema\": \"dbo\" } ] } } // all procedures starting from Load prefix"
 					});
 
 			/// <summary>
@@ -1548,7 +1551,7 @@ string // also you can put procedure name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"procedures-without-schema\": [ \"DropAllTables\", { \"name\": \"FormatAllDrives\", \"schema\": \"dbo\" } ] } } // DropAllTables and dbo.FormatAllDrives procedures schema not loaded",
 						/*lang=json*/
-						"{ \"schema\": { \"procedures-without-schema\": [ { \"regex\": \"^Delete.$+\", \"schema\": \"dbo\" } ] } } // all procedures starting from Delete prefix"
+						"{ \"schema\": { \"procedures-without-schema\": [ { \"regex\": \"^Delete.+$\", \"schema\": \"dbo\" } ] } } // all procedures starting from Delete prefix"
 					});
 
 			/// <summary>
@@ -1585,7 +1588,7 @@ string // also you can put stored procedure name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-stored-procedures\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers procedures",
 						/*lang=json*/
-						"{ \"schema\": { \"include-stored-procedures\": [ { \"regex\": \"^Query.$+\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Query prefix"
+						"{ \"schema\": { \"include-stored-procedures\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Query prefix"
 					});
 
 			/// <summary>
@@ -1622,7 +1625,7 @@ string // also you can put stored procedure name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-stored-procedure\": [ \"TestProcedure\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestProcedure and dbo.CheckDb procedures ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-stored-procedure\": [ { \"regex\": \"^Audit.$+\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Audit prefix ignored"
+						"{ \"schema\": { \"exclude-stored-procedure\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Audit prefix ignored"
 					});
 
 			/// <summary>
@@ -1659,7 +1662,7 @@ string // also you can put table function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-table-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
 						/*lang=json*/
-						"{ \"schema\": { \"include-table-functions\": [ { \"regex\": \"^Query.$+\", \"schema\": \"dbo\" } ] } } // all table functions starting from Query prefix"
+						"{ \"schema\": { \"include-table-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all table functions starting from Query prefix"
 					});
 
 			/// <summary>
@@ -1696,7 +1699,7 @@ string // also you can put table function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-table-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-table-functions\": [ { \"regex\": \"^Audit.$+\", \"schema\": \"dbo\" } ] } } // all table functions starting from Audit prefix ignored"
+						"{ \"schema\": { \"exclude-table-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all table functions starting from Audit prefix ignored"
 					});
 
 			/// <summary>
@@ -1733,7 +1736,7 @@ string // also you can put scalar function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-scalar-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
 						/*lang=json*/
-						"{ \"schema\": { \"include-scalar-functions\": [ { \"regex\": \"^Query.$+\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Query prefix"
+						"{ \"schema\": { \"include-scalar-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Query prefix"
 					});
 
 			/// <summary>
@@ -1770,7 +1773,7 @@ string // also you can put scalar function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-scalar-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-scalar-functions\": [ { \"regex\": \"^Audit.$+\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Audit prefix ignored"
+						"{ \"schema\": { \"exclude-scalar-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Audit prefix ignored"
 					});
 
 			/// <summary>
@@ -1807,7 +1810,7 @@ string // also you can put aggregateaggregate function name as string directly t
 						/*lang=json*/
 						"{ \"schema\": { \"include-aggregate-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
 						/*lang=json*/
-						"{ \"schema\": { \"include-aggregate-functions\": [ { \"regex\": \"^Query.$+\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Query prefix"
+						"{ \"schema\": { \"include-aggregate-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Query prefix"
 					});
 
 			/// <summary>
@@ -1844,7 +1847,7 @@ string // also you can put aggregate function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-aggregate-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-aggregate-functions\": [ { \"regex\": \"^Audit.$+\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Audit prefix ignored"
+						"{ \"schema\": { \"exclude-aggregate-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Audit prefix ignored"
 					});
 		}
 

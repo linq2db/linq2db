@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
@@ -157,7 +158,7 @@ WHERE
 				if (sql != null)
 					sql += "\nUNION ALL";
 
-				sql += string.Format(baseSql, i);
+				sql += string.Format(CultureInfo.InvariantCulture, baseSql, i);
 			}
 
 			sql = "SELECT * FROM (" + sql + ") as t WHERE ThisColumn IS NOT NULL";

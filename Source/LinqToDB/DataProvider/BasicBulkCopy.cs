@@ -3,8 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+
+#if NETFRAMEWORK || NETCOREAPP3_1 || NETSTANDARD2_0 || NETSTANDARD2_1
+using System.Text;
+#endif
 
 namespace LinqToDB.DataProvider
 {
@@ -380,9 +385,17 @@ namespace LinqToDB.DataProvider
 						helper.StringBuilder.Length = helper.LastRowStringIndex;
 						helper.RowsCopied.RowsCopied--;
 					}
+
 					finishFunction(helper);
+
 					if (!helper.Execute())
+					{
+						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+							helper.OriginalContext.Close();
+
 						return helper.RowsCopied;
+					}
+
 					if (needRemove && !isSingle)
 					{
 						addFunction(helper, item!, from);
@@ -395,6 +408,9 @@ namespace LinqToDB.DataProvider
 				finishFunction(helper);
 				helper.Execute();
 			}
+
+			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+				helper.OriginalContext.Close();
 
 			return helper.RowsCopied;
 		}
@@ -435,7 +451,12 @@ namespace LinqToDB.DataProvider
 					}
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					{
+						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 						return helper.RowsCopied;
+					}
 					if (needRemove && !isSingle)
 					{
 						addFunction(helper, item!, from);
@@ -448,6 +469,9 @@ namespace LinqToDB.DataProvider
 				finishFunction(helper);
 				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
+
+			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return helper.RowsCopied;
 		}
@@ -489,7 +513,12 @@ namespace LinqToDB.DataProvider
 					}
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					{
+						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 						return helper.RowsCopied;
+					}
 					if (needRemove && !isSingle)
 					{
 						addFunction(helper, item!, from);
@@ -502,6 +531,9 @@ namespace LinqToDB.DataProvider
 				finishFunction(helper);
 				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
+
+			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return helper.RowsCopied;
 		}
@@ -534,7 +566,7 @@ namespace LinqToDB.DataProvider
 		private void MultipleRowsCopy1Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -602,7 +634,7 @@ namespace LinqToDB.DataProvider
 		private void MultipleRowsCopy2Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -655,7 +687,7 @@ namespace LinqToDB.DataProvider
 		private void MultipleRowsCopy3Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
 				.Append('(');
 
 			foreach (var column in helper.Columns)

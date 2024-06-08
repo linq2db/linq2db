@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -744,7 +746,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Issue3975Test([DataSources] string context)
-		{				
+		{
 			using (var db = GetDataContext(context))
 			{
 				// we want to make sure the conversion is not possible because we want to bypass
@@ -759,7 +761,7 @@ namespace Tests.Linq
 				Assert.That(value.Children.Value, Is.Not.Null);
 			}
 		}
-		
+
 		[Test]
 		public void TestGenericAssociation1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{
@@ -1358,7 +1360,7 @@ namespace Tests.Linq
 			public bool Actual { get; set; }
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue1096Test([DataSources] string context)
 		{

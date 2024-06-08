@@ -5,6 +5,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
@@ -206,9 +208,9 @@ namespace LinqToDB.Linq.Builder
 						if (member.Info.MemberInfo.IsDynamicColumnPropertyEx())
 						{
 							var typeAcc = TypeAccessor.GetAccessor(member.Info.MemberInfo.ReflectedType!);
-							var setter  = new MemberAccessor(typeAcc, member.Info.MemberInfo, EntityDescriptor).SetterExpression;
+							var setter  = new MemberAccessor(typeAcc, member.Info.MemberInfo, EntityDescriptor).GetSetterExpression(parentObject, ex);
 
-							exprs.Add(Expression.Invoke(setter, parentObject, ex));
+							exprs.Add(setter);
 						}
 						else
 						{
@@ -224,7 +226,7 @@ namespace LinqToDB.Linq.Builder
 
 			ParameterExpression? _variable;
 
-			Expression BuildTableExpression(bool buildBlock, Type objectType, Tuple<int, SqlField?>[] index)
+			Expression BuildTableExpression(bool buildBlock, Type objectType, (int, SqlField?)[] index)
 			{
 				if (buildBlock && _variable != null)
 					return _variable;
@@ -255,10 +257,13 @@ namespace LinqToDB.Linq.Builder
 
 			static object OnEntityCreated(IDataContext context, object entity, TableOptions tableOptions, string? tableName, string? schemaName, string? databaseName, string? serverName)
 			{
-				return context is IInterceptable<IEntityServiceInterceptor> entityService ?
-					entityService.Interceptor?.EntityCreated(new(context, tableOptions, tableName, schemaName, databaseName, serverName), entity) ?? entity :
-					entity;
-				}
+				if (context is not IInterceptable<IEntityServiceInterceptor> { Interceptor: {} interceptor })
+					return entity;
+
+				using (ActivityService.Start(ActivityID.EntityServiceInterceptorEntityCreated))
+					return interceptor.EntityCreated(
+						new(context, tableOptions, tableName, schemaName, databaseName, serverName), entity);
+			}
 
 			static readonly MethodInfo _onEntityCreatedMethodInfo = MemberHelper.MethodOf(() =>
 				OnEntityCreated(null!, null!, TableOptions.NotSet, null, null, null, null));
@@ -318,7 +323,7 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Block(new[] { variable }, expressions);
 			}
 
-			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index)
+			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, (int, SqlField?)[] index)
 			{
 				var members = new List<(ColumnDescriptor column, MemberInfo storage, ConvertFromDataReaderExpression expr)>();
 
@@ -369,7 +374,7 @@ namespace LinqToDB.Linq.Builder
 					if (hasComplex)
 						foreach (var (column, _, exp) in members)
 							if (column.MemberAccessor.IsComplex)
-								exprs.Add(column.MemberAccessor.SetterExpression.GetBody(obj, exp));
+								exprs.Add(column.MemberAccessor.GetSetterExpression(obj, exp));
 
 					if (loadWith != null)
 						SetLoadWithBindings(objectType, obj, exprs);
@@ -492,7 +497,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			ConstructorInfo SelectParameterizedConstructor(Type objectType)
+			static ConstructorInfo SelectParameterizedConstructor(Type objectType)
 			{
 				var constructors = objectType.GetConstructors();
 
@@ -559,7 +564,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index, RecordType recordType)
+			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, (int, SqlField?)[] index, RecordType recordType)
 			{
 				var columns = new List<ColumnInfo>();
 				foreach (var idx in index)
@@ -592,7 +597,7 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 			}
 
-			Tuple<int, SqlField?>[] BuildIndex(Tuple<int, SqlField?>[] index, Type objectType)
+			(int, SqlField?)[] BuildIndex((int, SqlField?)[] index, Type objectType)
 			{
 				var names = new Dictionary<string,int>();
 				var n     = 0;
@@ -611,7 +616,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var result = new Tuple<int, SqlField?>[q.Count];
+				var result = new (int, SqlField?)[q.Count];
 
 				var idx = 0;
 				foreach (var r in q.OrderBy(static r => r.sort))
@@ -672,10 +677,10 @@ namespace LinqToDB.Linq.Builder
 					info = matchedFields.ToArray();
 				}
 
-				var index = new Tuple<int, SqlField?>[info.Length];
+				var index = new (int, SqlField?)[info.Length];
 
 				for (var i = 0; i < info.Length; i++)
-					index[i] = Tuple.Create(ConvertToParentIndex(info[i].Index, this), QueryHelper.GetUnderlyingField(info[i].Sql));
+					index[i] = (ConvertToParentIndex(info[i].Index, this), QueryHelper.GetUnderlyingField(info[i].Sql));
 
 				if (ObjectType != tableType || InheritanceMapping.Count == 0)
 					return BuildTableExpression(!Builder.IsBlockDisable, tableType, index);
@@ -1103,7 +1108,7 @@ namespace LinqToDB.Linq.Builder
 								return IsExpressionResult.False;
 
 							if (contextInfo.Field != null)
-								return IsExpressionResult.True;
+								return new (contextInfo.Field);
 
 							if (contextInfo.CurrentExpression == null
 								|| contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
@@ -1759,7 +1764,7 @@ namespace LinqToDB.Linq.Builder
 					var ed = Builder.MappingSchema.GetEntityDescriptor(m.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 					if (ed.FindAssociationDescriptor(memberInfo) is AssociationDescriptor inheritedAssociationDescriptor)
 						return inheritedAssociationDescriptor;
-				}	
+				}
 
 				return null;
 			}

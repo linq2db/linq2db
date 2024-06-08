@@ -7,8 +7,9 @@ namespace SqlServerTypes
 	/// <summary>
 	/// Utility methods related to CLR Types for SQL Server 
 	/// </summary>
-	public class Utilities
+	public static class Utilities
 	{
+		[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
 		[DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
 		private static extern IntPtr LoadLibrary(string libname);
 

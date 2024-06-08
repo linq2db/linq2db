@@ -16,7 +16,6 @@ namespace LinqToDB.Benchmarks.Queries
 {
 	public class ConcurrentBenchmark
 	{
-		private const int                                            _threadsMultiplier = 2;
 		private Thread[]                                             _threads           = null!;
 		private EventWaitHandle                                      _startJob          = new ManualResetEvent(false);
 		private EventWaitHandle                                      _endJob            = new ManualResetEvent(false);

@@ -151,7 +151,14 @@ namespace LinqToDB.DataProvider.MySql
 			// this is needed, because MySql fails on big batches, so users should be able to limit batch size
 			foreach (var batch in EnumerableHelper.Batch(source, options.MaxBatchSize ?? int.MaxValue))
 			{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 				var rd = new BulkCopyReader<T>(dataConnection, columns, batch);
+#pragma warning restore CA2000 // Dispose objects before losing scope
+#if NATIVE_ASYNC
+				await using var _ = rd.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#else
+				await using var _ = rd;
+#endif
 
 				await TraceActionAsync(
 					dataConnection,
@@ -171,6 +178,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
+
+			if (table.DataContext.CloseAfterUse)
+				await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return rc;
 		}
@@ -220,7 +230,7 @@ namespace LinqToDB.DataProvider.MySql
 			// this is needed, because MySql fails on big batches, so users should be able to limit batch size
 			foreach (var batch in EnumerableHelper.Batch(source, options.MaxBatchSize ?? int.MaxValue))
 			{
-				var rd = new BulkCopyReader<T>(dataConnection, columns, batch);
+				using var rd = new BulkCopyReader<T>(dataConnection, columns, batch);
 
 				TraceAction(
 					dataConnection,
@@ -236,6 +246,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
+
+			if (table.DataContext.CloseAfterUse)
+				table.DataContext.Close();
 
 			return rc;
 		}
@@ -285,7 +298,10 @@ namespace LinqToDB.DataProvider.MySql
 			var batches = EnumerableHelper.Batch(source, options.MaxBatchSize ?? int.MaxValue);
 			await foreach (var batch in batches.WithCancellation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 				var rd = new BulkCopyReader<T>(dataConnection, columns, batch, cancellationToken);
+#pragma warning restore CA2000 // Dispose objects before losing scope
+				await using var _ = rd.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				await TraceActionAsync(
 					dataConnection,
@@ -303,6 +319,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
+
+			if (table.DataContext.CloseAfterUse)
+				await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return rc;
 		}

@@ -7,8 +7,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -112,19 +112,19 @@ namespace LinqToDB.CodeModel
 			/// <summary>
 			/// <see cref="object.GetHashCode()"/> method reference.
 			/// </summary>
-			public static CodeIdentifier Object_GetHashCode { get; } = new CodeIdentifier(nameof(global::System.Object.GetHashCode), true);
+			public static CodeIdentifier Object_GetHashCode { get; } = new CodeIdentifier(nameof(GetHashCode), true);
 
 			/// <summary>
 			/// <see cref="object.Equals(object)"/> method reference.
 			/// </summary>
-			public static CodeIdentifier Object_Equals      { get; } = new CodeIdentifier(nameof(global::System.Object.Equals), true);
+			public static CodeIdentifier Object_Equals      { get; } = new CodeIdentifier(nameof(Equals), true);
 
 			/// <summary>
 			/// <see cref="object.Equals(object)"/> parameter name.
 			/// </summary>
 			public static CodeIdentifier Object_Equals_Parameter { get; } = new CodeIdentifier("obj", true);
 
-			public class Reflection
+			public static class Reflection
 			{
 				/// <summary>
 				/// <see cref="MethodInfo"/> type descriptor.
@@ -479,7 +479,7 @@ namespace LinqToDB.CodeModel
 				public static IType Converter { get; } = Parser.Parse(typeof(Converter));
 
 				/// <summary>
-				/// <see cref="Converter.ChangeTypeTo{T}(object?, MappingSchema?)"/> method reference.
+				/// <see cref="Converter.ChangeTypeTo{T}(object?, MappingSchema?,ConversionType)"/> method reference.
 				/// </summary>
 				public static CodeIdentifier Converter_ChangeTypeTo { get; } = new CodeIdentifier(nameof(global::LinqToDB.Common.Converter.ChangeTypeTo), true);
 			}
@@ -594,7 +594,7 @@ namespace LinqToDB.CodeModel
 				public static IType MappingSchema        { get; } = Parser.Parse<MappingSchema>();
 
 				/// <summary>
-				/// <see cref="MappingSchema.SetConvertExpression(DbDataType, DbDataType, LambdaExpression, bool)"/> method reference.
+				/// <see cref="MappingSchema.SetConvertExpression(DbDataType, DbDataType, LambdaExpression, bool, ConversionType)"/> method reference.
 				/// </summary>
 				public static CodeIdentifier MappingSchema_SetConvertExpression { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.MappingSchema.SetConvertExpression), true);
 

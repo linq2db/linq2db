@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -280,7 +281,7 @@ namespace LinqToDB
 
 				if (Extension != null)
 				{
-					str = $"{paramPrefix}('{Name ?? ""}', {Extension.ChainPrecedence}): {Extension.Expr}";
+					str = FormattableString.Invariant($"{paramPrefix}('{Name ?? ""}', {Extension.ChainPrecedence}): {Extension.Expr}");
 				}
 				else if (Expression != null)
 				{
@@ -379,7 +380,7 @@ namespace LinqToDB
 								return GetValue<T>(i);
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
+					throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Argument '{0}' not found", argName));
 				}
 
 				public object GetObjectValue(int index)
@@ -399,7 +400,7 @@ namespace LinqToDB
 								return GetObjectValue(i);
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
+					throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression GetExpression(int index, bool unwrap)
@@ -421,7 +422,7 @@ namespace LinqToDB
 						}
 					}
 
-					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
+					throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Argument '{0}' not found", argName));
 				}
 
 				public ISqlExpression ConvertToSqlExpression()
@@ -599,7 +600,7 @@ namespace LinqToDB
 							{
 								if (typeof(IQueryableContainer).IsSameOrParentOf(current.Type))
 								{
-									next = ((IQueryableContainer)current.EvaluateExpression()!).Query.Expression;
+									next = current.EvaluateExpression<IQueryableContainer>(dataContext)!.Query.Expression;
 								}
 								break;
 							}
@@ -690,8 +691,12 @@ namespace LinqToDB
 										foreach (var pair
 											in TypeHelper.EnumTypeRemapping(elementType, argElementType, templateGenericArguments))
 										{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+											descriptorMapping.TryAdd(pair.Item1, descriptor);
+#else
 											if (!descriptorMapping.ContainsKey(pair.Item1))
 												descriptorMapping.Add(pair.Item1, descriptor);
+#endif
 										}
 									}
 								}
@@ -801,7 +806,7 @@ namespace LinqToDB
 							{
 								if (p.Expression != null)
 								{
-									paramValue = string.Format("{{{0}}}", newParams.Count);
+									paramValue = string.Format(CultureInfo.InvariantCulture, "{{{0}}}", newParams.Count);
 									newParams.Add(p.Expression);
 								}
 							}
@@ -917,7 +922,7 @@ namespace LinqToDB
 				foreach (var c in replacementMap)
 				{
 					var first = c.UnderName[0];
-					if (c.Name == "" || first.Extension == null)
+					if (c.Name.Length == 0 || first.Extension == null)
 					{
 						for (var i = 0; i < c.UnderName.Length; i++)
 						{
@@ -955,7 +960,7 @@ namespace LinqToDB
 
 			public override string GetObjectID()
 			{
-				return $"{base.GetObjectID()}.{TokenName}.{IdentifierBuilder.GetObjectID(BuilderType)}.{BuilderValue}.{ChainPrecedence}.";
+				return FormattableString.Invariant($"{base.GetObjectID()}.{TokenName}.{IdentifierBuilder.GetObjectID(BuilderType)}.{BuilderValue}.{ChainPrecedence}.");
 			}
 		}
 	}

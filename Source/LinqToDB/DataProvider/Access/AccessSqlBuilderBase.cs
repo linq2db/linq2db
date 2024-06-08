@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.Access
 						{
 							switch (sc.Conditions[0].Predicate)
 							{
-								case SqlPredicate.FuncLike p when p.Function.Name == "EXISTS":
+								case SqlPredicate.FuncLike { Function.Name: "EXISTS" } :
 									BuildAnyAsCount(selectQuery);
 									return;
 								case SqlPredicate.InSubQuery:
@@ -230,7 +230,24 @@ namespace LinqToDB.DataProvider.Access
 				case "Convert"   :
 					switch (func.SystemType.ToUnderlying().GetTypeCodeEx())
 					{
-						case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]); break;
+						case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr" , func.Parameters[1]); break;
+						case TypeCode.Boolean  :
+						{
+							var newFunc = new SqlFunction(func.SystemType, "CBool", func.Parameters[1]);
+							if (func.Parameters[1].CanBeNull)
+							{
+								var isNull = new SqlSearchCondition();
+								isNull.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[1], false)));
+
+								newFunc = new SqlFunction(func.SystemType, "CASE", false, true, isNull, new SqlValue(func.SystemType, null), newFunc)
+								{
+									CanBeNull = true
+								};
+							}
+
+							func = newFunc;
+							break;
+						}
 						case TypeCode.DateTime :
 							if (IsDateDataType(func.Parameters[0], "Date"))
 								func = new SqlFunction(func.SystemType, "DateValue", func.Parameters[1]);
@@ -259,13 +276,18 @@ namespace LinqToDB.DataProvider.Access
 		{
 			var len = parameters.Length - start;
 
-			if (len < 3)
+			if (len < 2)
 				throw new SqlException("CASE statement is not supported by the {0}.", GetType().Name);
 
-			if (len == 3)
-				return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], parameters[start + 2]);
-
-			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
+			return new SqlFunction(systemType, "Iif",
+				parameters[start],
+				parameters[start + 1],
+				len switch
+				{
+					2 => parameters[start                          + 1],
+					3 => parameters[start                          + 2],
+					_ => ConvertCase(systemType, parameters, start + 2)
+				});
 		}
 
 		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -308,9 +330,6 @@ namespace LinqToDB.DataProvider.Access
 					if (value.Length > 0 && value[0] == '[')
 							return sb.Append(value);
 
-					if (value.IndexOf('.') > 0)
-						value = string.Join("].[", value.Split('.'));
-
 					return sb.Append('[').Append(value).Append(']');
 
 				case ConvertType.SprocParameterToName:
@@ -335,7 +354,7 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			if (name.Database != null)
 			{
@@ -357,11 +376,8 @@ namespace LinqToDB.DataProvider.Access
 			return sb;
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
 		{
-			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null);
-
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
 				var len = StringBuilder.Length;
@@ -379,8 +395,14 @@ namespace LinqToDB.DataProvider.Access
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
 			}
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 		}
 
 		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)

@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	using Common;
+	using Common.Internal;
 
 	public class SqlValue : ISqlExpression
 	{
 		public SqlValue(Type systemType, object? value)
 		{
-			_valueType    = new DbDataType(systemType);
-			Value         = value;
+			_valueType = new DbDataType(value != null && value is not DBNull ? systemType.UnwrapNullableType() : systemType);
+			Value      = value;
 		}
 
 		public SqlValue(DbDataType valueType, object? value)
@@ -136,7 +138,7 @@ namespace LinqToDB.SqlQuery
 						.Append(strVal.Replace("\'", "''"))
 						.Append('\'')
 				:
-					sb.Append(Value);
+					sb.Append(CultureInfo.InvariantCulture, $"{Value}");
 		}
 
 		#endregion

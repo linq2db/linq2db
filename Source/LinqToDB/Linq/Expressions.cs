@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -339,9 +340,9 @@ namespace LinqToDB.Linq
 						{
 							expr = new LazyExpressionInfo();
 
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
+#pragma warning disable CA1304, MA0011 // use CultureInfo
 							((LazyExpressionInfo)expr).SetExpression(L<string,string,bool,int>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
+#pragma warning restore CA1304, MA0011 // use CultureInfo
 
 							Members[""].Add(memberKey, expr);
 						}
@@ -485,8 +486,12 @@ namespace LinqToDB.Linq
 			get
 			{
 				if (_members == null)
+				{
 					lock (_memberSync)
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_members ??= LoadMembers();
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _members;
 			}
@@ -551,7 +556,7 @@ namespace LinqToDB.Linq
 		static readonly Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> _commonMembers = new()
 		{
 			#region ToString
-
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ MT<bool   >(() => ((bool)   true).ToString()), N(() => L<bool,    string>((bool    p0) => Sql.ConvertTo<string>.From(p0) )) },
 			{ MT<byte   >(() => ((byte)    0)  .ToString()), N(() => L<byte,    string>((byte    p0) => Sql.ConvertTo<string>.From(p0) )) },
 			{ MT<char   >(() => ((char)   '0') .ToString()), N(() => L<char,    string>((char    p0) => Sql.ConvertTo<string>.From(p0) )) },
@@ -582,8 +587,10 @@ namespace LinqToDB.Linq
 
 
 			// handle all other as default
+#pragma warning disable MA0107 // object.ToString is bad, m'kay?
 			{ MT<object>(() => ((object)0).ToString()!), N(() => L<object, string>((object   p0) => Sql.ConvertTo<string>.From(p0) )) },
-
+#pragma warning restore MA0107 // object.ToString is bad, m'kay?
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			#endregion
 
 			#region string
@@ -620,16 +627,18 @@ namespace LinqToDB.Linq
 #endif
 			{ M(() => "".TrimEnd    ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimRight(obj, ch))) },
 			{ M(() => "".TrimStart  ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimLeft (obj, ch))) },
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
+#pragma warning disable CA1304, MA0011 // use CultureInfo
 			{ M(() => "".ToLower    ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Lower(obj))) },
 			{ M(() => "".ToUpper    ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Upper(obj))) },
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
+#pragma warning restore CA1304, MA0011 // use CultureInfo
 			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((string obj,string p0)                    => ConvertToCaseCompareTo(obj, p0)!.Value)) },
+#pragma warning disable MA0107 // object.ToString is bad, m'kay?
 			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((string obj,object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
 
 			{ M(() => string.Concat((object)null!)                             ), N(() => L<object,string?>                    ((object p0)                               => p0.ToString()))           },
 			{ M(() => string.Concat((object)null!,(object)null!)               ), N(() => L<object,object,string>              ((object p0,object p1)                     => p0.ToString() + p1))      },
 			{ M(() => string.Concat((object)null!,(object)null!,(object)null!) ), N(() => L<object,object,object,string>       ((object p0,object p1,object p2)           => p0.ToString() + p1 + p2)) },
+#pragma warning restore MA0107 // object.ToString is bad, m'kay?
 			{ M(() => string.Concat((object[])null!)                           ), N(() => L<object[],string>                   ((object[] ps)                             => Sql.Concat(ps)))          },
 			{ M(() => string.Concat("","")                                     ), N(() => L<string,string,string>              ((string p0,string p1)                     => p0 + p1))                 },
 			{ M(() => string.Concat("","","")                                  ), N(() => L<string,string,string,string>       ((string p0,string p1,string p2)           => p0 + p1 + p2))            },
@@ -642,12 +651,12 @@ namespace LinqToDB.Linq
 			{ M(() => string.CompareOrdinal("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((string s1,int i1,string s2,int i2,int l)                     => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","")),                                          N(() => L<string,string,int>                             ((string s1,string s2)                                         => s1.CompareTo(s2))) },
 			{ M(() => string.Compare       ("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((string s1,int i1,string s2,int i2,int l)                     => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
+#pragma warning disable CA1304, MA0011 // use CultureInfo
 			{ M(() => string.Compare       ("","",true)),                                     N(() => L<string,string,bool,int>                        ((string s1,string s2,bool b)                                  => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
 			{ M(() => string.Compare       ("",0,"",0,0,true)),                               N(() => L<string,int,string,int,int,bool,int>            ((string s1,int i1,string s2,int i2,int l,bool b)              => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("",0,"",0,0,StringComparison.OrdinalIgnoreCase)), N(() => L<string,int,string,int,int,StringComparison,int>((string s1,int i1,string s2,int i2,int l,StringComparison sc) => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","",StringComparison.OrdinalIgnoreCase)),       N(() => L<string,string,StringComparison,int>            ((string s1,string s2,StringComparison sc)                     => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
+#pragma warning restore CA1304, MA0011 // use CultureInfo
 
 			{ M(() => AltStuff("",0,0,"")), N(() => L<string,int?,int?,string,string>((string p0,int? p1,int ?p2,string p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1)))) },
 
@@ -746,8 +755,11 @@ namespace LinqToDB.Linq
 			#region Parse
 
 			{ M(() => bool.    Parse("")), N(() => L<string,bool>    ((string p0) => Sql.ConvertTo<bool>.    From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => byte.    Parse("")), N(() => L<string,byte>    ((string p0) => Sql.ConvertTo<byte>.    From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => char.    Parse("")), N(() => L<string,char>    ((string p0) => Sql.ConvertTo<char>.    From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => DateTime.Parse("")), N(() => L<string,DateTime>((string p0) => Sql.ConvertTo<DateTime>.From(p0))) },
 			{ M(() => decimal. Parse("")), N(() => L<string,decimal> ((string p0) => Sql.ConvertTo<decimal>. From(p0))) },
 			{ M(() => double.  Parse("")), N(() => L<string,double>  ((string p0) => Sql.ConvertTo<double>.  From(p0))) },
@@ -759,9 +771,12 @@ namespace LinqToDB.Linq
 			{ M(() => ushort.  Parse("")), N(() => L<string,ushort>  ((string p0) => Sql.ConvertTo<ushort>.  From(p0))) },
 			{ M(() => uint.    Parse("")), N(() => L<string,uint>    ((string p0) => Sql.ConvertTo<uint>.    From(p0))) },
 			{ M(() => ulong.   Parse("")), N(() => L<string,ulong>   ((string p0) => Sql.ConvertTo<ulong>.   From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 
 #if NET6_0_OR_GREATER
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => DateOnly.Parse("")), N(() => L<string,DateOnly>((string p0) => Sql.ConvertTo<DateOnly>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 #endif
 
 			#endregion
@@ -778,7 +793,9 @@ namespace LinqToDB.Linq
 //			{ M(() => ((long)   0)   .ToString()), N(() => L<long,    string>((long    p0) => Sql.ConvertTo<string>.From(p0))) },
 //			{ M(() => ((sbyte)   0)  .ToString()), N(() => L<sbyte,   string>((sbyte   p0) => Sql.ConvertTo<string>.From(p0))) },
 //			{ M(() => ((float)   0)  .ToString()), N(() => L<float,   string>((float   p0) => Sql.ConvertTo<string>.From(p0))) },
+#pragma warning disable MA0044 // Remove useless ToString call
 			{ M(() => ((string) "0") .ToString()), N(() => L<string,  string>((string  p0) => p0                            )) },
+#pragma warning restore MA0044 // Remove useless ToString call
 //			{ M(() => ((ushort)  0)  .ToString()), N(() => L<ushort,  string>((ushort  p0) => Sql.ConvertTo<string>.From(p0))) },
 //			{ M(() => ((uint)  0)    .ToString()), N(() => L<uint,    string>((uint    p0) => Sql.ConvertTo<string>.From(p0))) },
 //			{ M(() => ((ulong)  0)  .ToString()), N(() => L<ulong,    string>((ulong   p0) => Sql.ConvertTo<string>.From(p0))) },
@@ -798,7 +815,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToBoolean((short)   0 )), N(() => L<short,   bool>((short    p0) => Sql.ConvertTo<bool>.From(p0))) },
 			{ M(() => Convert.ToBoolean((int)     0 )), N(() => L<int,     bool>((int      p0) => Sql.ConvertTo<bool>.From(p0))) },
 			{ M(() => Convert.ToBoolean((long)    0 )), N(() => L<long,    bool>((long     p0) => Sql.ConvertTo<bool>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToBoolean((object)  0 )), N(() => L<object,  bool>((object   p0) => Sql.ConvertTo<bool>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToBoolean((sbyte)   0 )), N(() => L<sbyte,   bool>((sbyte    p0) => Sql.ConvertTo<bool>.From(p0))) },
 			{ M(() => Convert.ToBoolean((float)   0 )), N(() => L<float,   bool>((float    p0) => Sql.ConvertTo<bool>.From(p0))) },
 			{ M(() => Convert.ToBoolean((string) "0")), N(() => L<string,  bool>((string   p0) => Sql.ConvertTo<bool>.From(p0))) },
@@ -819,10 +838,14 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToByte((short)   0)  ), N(() => L<short,   byte>((short    p0) => Sql.ConvertTo<byte>.From(p0))) },
 			{ M(() => Convert.ToByte((int)     0)  ), N(() => L<int,     byte>((int      p0) => Sql.ConvertTo<byte>.From(p0))) },
 			{ M(() => Convert.ToByte((long)    0)  ), N(() => L<long,    byte>((long     p0) => Sql.ConvertTo<byte>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToByte((object)  0)  ), N(() => L<object,  byte>((object   p0) => Sql.ConvertTo<byte>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToByte((sbyte)   0)  ), N(() => L<sbyte,   byte>((sbyte    p0) => Sql.ConvertTo<byte>.From(p0))) },
 			{ M(() => Convert.ToByte((float)   0)  ), N(() => L<float,   byte>((float    p0) => Sql.ConvertTo<byte>.From(Sql.RoundToEven(p0)))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToByte((string) "0") ), N(() => L<string,  byte>((string   p0) => Sql.ConvertTo<byte>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToByte((ushort)  0)  ), N(() => L<ushort,  byte>((ushort   p0) => Sql.ConvertTo<byte>.From(p0))) },
 			{ M(() => Convert.ToByte((uint)    0)  ), N(() => L<uint,    byte>((uint     p0) => Sql.ConvertTo<byte>.From(p0))) },
 			{ M(() => Convert.ToByte((ulong)   0)  ), N(() => L<ulong,   byte>((ulong    p0) => Sql.ConvertTo<byte>.From(p0))) },
@@ -840,7 +863,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToChar((short)   0)  ), N(() => L<short,   char>((short    p0) => Sql.ConvertTo<char>.From(p0))) },
 			{ M(() => Convert.ToChar((int)     0)  ), N(() => L<int,     char>((int      p0) => Sql.ConvertTo<char>.From(p0))) },
 			{ M(() => Convert.ToChar((long)    0)  ), N(() => L<long,    char>((long     p0) => Sql.ConvertTo<char>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToChar((object)  0)  ), N(() => L<object,  char>((object   p0) => Sql.ConvertTo<char>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToChar((sbyte)   0)  ), N(() => L<sbyte,   char>((sbyte    p0) => Sql.ConvertTo<char>.From(p0))) },
 			{ M(() => Convert.ToChar((float)   0)  ), N(() => L<float,   char>((float    p0) => Sql.ConvertTo<char>.From(Sql.RoundToEven(p0)))) },
 			{ M(() => Convert.ToChar((string) "0") ), N(() => L<string,  char>((string   p0) => Sql.ConvertTo<char>.From(p0))) },
@@ -852,8 +877,10 @@ namespace LinqToDB.Linq
 
 			#region ToDateTime
 
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToDateTime((object)  0)  ), N(() => L<object,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 			{ M(() => Convert.ToDateTime((string) "0") ), N(() => L<string,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToDateTime((bool)   true)), N(() => L<bool,    DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 			{ M(() => Convert.ToDateTime((byte)    0)  ), N(() => L<byte,    DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 			{ M(() => Convert.ToDateTime((char)   '0') ), N(() => L<char,    DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
@@ -882,10 +909,14 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToDecimal((short)   0)  ), N(() => L<short,   decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((int)     0)  ), N(() => L<int,     decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((long)    0)  ), N(() => L<long,    decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToDecimal((object)  0)  ), N(() => L<object,  decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToDecimal((sbyte)   0)  ), N(() => L<sbyte,   decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((float)   0)  ), N(() => L<float,   decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToDecimal((string) "0") ), N(() => L<string,  decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToDecimal((ushort)  0)  ), N(() => L<ushort,  decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((uint)    0)  ), N(() => L<uint,    decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((ulong)   0)  ), N(() => L<ulong,   decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
@@ -903,10 +934,14 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToDouble((short)   0)  ), N(() => L<short,   double>(p0 => Sql.ConvertTo<double>.From(p0))) },
 			{ M(() => Convert.ToDouble((int)     0)  ), N(() => L<int,     double>(p0 => Sql.ConvertTo<double>.From(p0))) },
 			{ M(() => Convert.ToDouble((long)    0)  ), N(() => L<long,    double>(p0 => Sql.ConvertTo<double>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToDouble((object)  0)  ), N(() => L<object,  double>(p0 => Sql.ConvertTo<double>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToDouble((sbyte)   0)  ), N(() => L<sbyte,   double>(p0 => Sql.ConvertTo<double>.From(p0))) },
 			{ M(() => Convert.ToDouble((float)   0)  ), N(() => L<float,   double>(p0 => Sql.ConvertTo<double>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToDouble((string) "0") ), N(() => L<string,  double>(p0 => Sql.ConvertTo<double>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToDouble((ushort)  0)  ), N(() => L<ushort,  double>(p0 => Sql.ConvertTo<double>.From(p0))) },
 			{ M(() => Convert.ToDouble((uint)    0)  ), N(() => L<uint,    double>(p0 => Sql.ConvertTo<double>.From(p0))) },
 			{ M(() => Convert.ToDouble((ulong)   0)  ), N(() => L<ulong,   double>(p0 => Sql.ConvertTo<double>.From(p0))) },
@@ -924,10 +959,14 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToInt64((short)   0)  ), N(() => L<short,   long>(p0 => Sql.ConvertTo<long>.From(p0))) },
 			{ M(() => Convert.ToInt64((int)     0)  ), N(() => L<int,     long>(p0 => Sql.ConvertTo<long>.From(p0))) },
 			{ M(() => Convert.ToInt64((long)    0)  ), N(() => L<long,    long>(p0 => Sql.ConvertTo<long>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt64((object)  0)  ), N(() => L<object,  long>(p0 => Sql.ConvertTo<long>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt64((sbyte)   0)  ), N(() => L<sbyte,   long>(p0 => Sql.ConvertTo<long>.From(p0))) },
 			{ M(() => Convert.ToInt64((float)   0)  ), N(() => L<float,   long>(p0 => Sql.ConvertTo<long>.From(Sql.RoundToEven(p0)))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt64((string) "0") ), N(() => L<string,  long>(p0 => Sql.ConvertTo<long>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt64((ushort)  0)  ), N(() => L<ushort,  long>(p0 => Sql.ConvertTo<long>.From(p0))) },
 			{ M(() => Convert.ToInt64((uint)    0)  ), N(() => L<uint,    long>(p0 => Sql.ConvertTo<long>.From(p0))) },
 			{ M(() => Convert.ToInt64((ulong)   0)  ), N(() => L<ulong,   long>(p0 => Sql.ConvertTo<long>.From(p0))) },
@@ -945,10 +984,14 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToInt32((short)   0)  ), N(() => L<short,   int>(p0 => Sql.ConvertTo<int>.From(p0))) },
 			{ M(() => Convert.ToInt32((int)     0)  ), N(() => L<int,     int>(p0 => Sql.ConvertTo<int>.From(p0))) },
 			{ M(() => Convert.ToInt32((long)    0)  ), N(() => L<long,    int>(p0 => Sql.ConvertTo<int>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt32((object)  0)  ), N(() => L<object,  int>(p0 => Sql.ConvertTo<int>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt32((sbyte)   0)  ), N(() => L<sbyte,   int>(p0 => Sql.ConvertTo<int>.From(p0))) },
 			{ M(() => Convert.ToInt32((float)   0)  ), N(() => L<float,   int>(p0 => Sql.ConvertTo<int>.From(Sql.RoundToEven(p0)))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt32((string) "0") ), N(() => L<string,  int>(p0 => Sql.ConvertTo<int>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt32((ushort)  0)  ), N(() => L<ushort,  int>(p0 => Sql.ConvertTo<int>.From(p0))) },
 			{ M(() => Convert.ToInt32((uint)    0)  ), N(() => L<uint,    int>(p0 => Sql.ConvertTo<int>.From(p0))) },
 			{ M(() => Convert.ToInt32((ulong)   0)  ), N(() => L<ulong,   int>(p0 => Sql.ConvertTo<int>.From(p0))) },
@@ -966,10 +1009,14 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToInt16((short)   0)  ), N(() => L<short,   short>(p0 => Sql.ConvertTo<short>.From(p0))) },
 			{ M(() => Convert.ToInt16((int)     0)  ), N(() => L<int,     short>(p0 => Sql.ConvertTo<short>.From(p0))) },
 			{ M(() => Convert.ToInt16((long)    0)  ), N(() => L<long,    short>(p0 => Sql.ConvertTo<short>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt16((object)  0)  ), N(() => L<object,  short>(p0 => Sql.ConvertTo<short>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt16((sbyte)   0)  ), N(() => L<sbyte,   short>(p0 => Sql.ConvertTo<short>.From(p0))) },
 			{ M(() => Convert.ToInt16((float)   0)  ), N(() => L<float,   short>(p0 => Sql.ConvertTo<short>.From(Sql.RoundToEven(p0)))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt16((string) "0") ), N(() => L<string,  short>(p0 => Sql.ConvertTo<short>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToInt16((ushort)  0)  ), N(() => L<ushort,  short>(p0 => Sql.ConvertTo<short>.From(p0))) },
 			{ M(() => Convert.ToInt16((uint)    0)  ), N(() => L<uint,    short>(p0 => Sql.ConvertTo<short>.From(p0))) },
 			{ M(() => Convert.ToInt16((ulong)   0)  ), N(() => L<ulong,   short>(p0 => Sql.ConvertTo<short>.From(p0))) },
@@ -987,10 +1034,14 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToSByte((short)   0)  ), N(() => L<short,   sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
 			{ M(() => Convert.ToSByte((int)     0)  ), N(() => L<int,     sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
 			{ M(() => Convert.ToSByte((long)    0)  ), N(() => L<long,    sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToSByte((object)  0)  ), N(() => L<object,  sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToSByte((sbyte)   0)  ), N(() => L<sbyte,   sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
 			{ M(() => Convert.ToSByte((float)   0)  ), N(() => L<float,   sbyte>(p0 => Sql.ConvertTo<sbyte>.From(Sql.RoundToEven(p0)))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToSByte((string) "0") ), N(() => L<string,  sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToSByte((ushort)  0)  ), N(() => L<ushort,  sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
 			{ M(() => Convert.ToSByte((uint)    0)  ), N(() => L<uint,    sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
 			{ M(() => Convert.ToSByte((ulong)   0)  ), N(() => L<ulong,   sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
@@ -1008,10 +1059,14 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToSingle((short)   0)  ), N(() => L<short,   float>(p0 => Sql.ConvertTo<float>.From(p0))) },
 			{ M(() => Convert.ToSingle((int)     0)  ), N(() => L<int,     float>(p0 => Sql.ConvertTo<float>.From(p0))) },
 			{ M(() => Convert.ToSingle((long)    0)  ), N(() => L<long,    float>(p0 => Sql.ConvertTo<float>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToSingle((object)  0)  ), N(() => L<object,  float>(p0 => Sql.ConvertTo<float>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToSingle((sbyte)   0)  ), N(() => L<sbyte,   float>(p0 => Sql.ConvertTo<float>.From(p0))) },
 			{ M(() => Convert.ToSingle((float)   0)  ), N(() => L<float,   float>(p0 => Sql.ConvertTo<float>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToSingle((string) "0") ), N(() => L<string,  float>(p0 => Sql.ConvertTo<float>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToSingle((ushort)  0)  ), N(() => L<ushort,  float>(p0 => Sql.ConvertTo<float>.From(p0))) },
 			{ M(() => Convert.ToSingle((uint)    0)  ), N(() => L<uint,    float>(p0 => Sql.ConvertTo<float>.From(p0))) },
 			{ M(() => Convert.ToSingle((ulong)   0)  ), N(() => L<ulong,   float>(p0 => Sql.ConvertTo<float>.From(p0))) },
@@ -1021,6 +1076,7 @@ namespace LinqToDB.Linq
 			#region ToString
 
 			{ M(() => Convert.ToString((bool)   true)), N(() => L<bool,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
+#pragma warning disable RS0030, CA1305 // Do not used banned APIs
 			{ M(() => Convert.ToString((byte)    0)  ), N(() => L<byte,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
 			{ M(() => Convert.ToString((char)   '0') ), N(() => L<char,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
 			{ M(() => Convert.ToString(DateTime.Now) ), N(() => L<DateTime,string>(p0 => Sql.ConvertTo<string>.From(p0))) },
@@ -1036,6 +1092,7 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToString((ushort)  0)  ), N(() => L<ushort,  string>(p0 => Sql.ConvertTo<string>.From(p0))) },
 			{ M(() => Convert.ToString((uint)    0)  ), N(() => L<uint,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
 			{ M(() => Convert.ToString((ulong)   0)  ), N(() => L<ulong,   string>(p0 => Sql.ConvertTo<string>.From(p0))) },
+#pragma warning restore RS0030, CA1305 // Do not used banned APIs
 			#endregion
 
 			#region ToUInt16
@@ -1049,10 +1106,14 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToUInt16((short)   0)  ), N(() => L<short,   ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
 			{ M(() => Convert.ToUInt16((int)     0)  ), N(() => L<int,     ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
 			{ M(() => Convert.ToUInt16((long)    0)  ), N(() => L<long,    ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt16((object)  0)  ), N(() => L<object,  ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt16((sbyte)   0)  ), N(() => L<sbyte,   ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
 			{ M(() => Convert.ToUInt16((float)   0)  ), N(() => L<float,   ushort>(p0 => Sql.ConvertTo<ushort>.From(Sql.RoundToEven(p0)))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt16((string) "0") ), N(() => L<string,  ushort>(p0 => Sql.ConvertTo<ushort>.From(p0)) ) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt16((ushort)  0)  ), N(() => L<ushort,  ushort>(p0 => Sql.ConvertTo<ushort>.From(p0)) ) },
 			{ M(() => Convert.ToUInt16((uint)    0)  ), N(() => L<uint,    ushort>(p0 => Sql.ConvertTo<ushort>.From(p0)) ) },
 			{ M(() => Convert.ToUInt16((ulong)   0)  ), N(() => L<ulong,   ushort>(p0 => Sql.ConvertTo<ushort>.From(p0)) ) },
@@ -1070,10 +1131,14 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToUInt32((short)   0)  ), N(() => L<short,   uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
 			{ M(() => Convert.ToUInt32((int)     0)  ), N(() => L<int,     uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
 			{ M(() => Convert.ToUInt32((long)    0)  ), N(() => L<long,    uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt32((object)  0)  ), N(() => L<object,  uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt32((sbyte)   0)  ), N(() => L<sbyte,   uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
 			{ M(() => Convert.ToUInt32((float)   0)  ), N(() => L<float,   uint>(p0 => Sql.ConvertTo<uint>.From(Sql.RoundToEven(p0)))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt32((string) "0") ), N(() => L<string,  uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt32((ushort)  0)  ), N(() => L<ushort,  uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
 			{ M(() => Convert.ToUInt32((uint)    0)  ), N(() => L<uint,    uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
 			{ M(() => Convert.ToUInt32((ulong)   0)  ), N(() => L<ulong,   uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
@@ -1091,10 +1156,14 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToUInt64((short)   0)  ), N(() => L<short,   ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
 			{ M(() => Convert.ToUInt64((int)     0)  ), N(() => L<int,     ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
 			{ M(() => Convert.ToUInt64((long)    0)  ), N(() => L<long,    ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt64((object)  0)  ), N(() => L<object,  ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt64((sbyte)   0)  ), N(() => L<sbyte,   ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
 			{ M(() => Convert.ToUInt64((float)   0)  ), N(() => L<float,   ulong>(p0 => Sql.ConvertTo<ulong>.From(Sql.RoundToEven(p0)))) },
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt64((string) "0") ), N(() => L<string,  ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => Convert.ToUInt64((ushort)  0)  ), N(() => L<ushort,  ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
 			{ M(() => Convert.ToUInt64((uint)    0)  ), N(() => L<uint,    ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
 			{ M(() => Convert.ToUInt64((ulong)   0)  ), N(() => L<ulong,   ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
@@ -1243,7 +1312,12 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.Types.DateTime2,
 						Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2) + " " +
 						Sql.ZeroPad(h, 2) + ":" + Sql.ZeroPad(mm, 2) + ":" + Sql.ZeroPad(s, 2), 120))) },
-					{ M(() => DateTime.Parse("")), N(() => L<string,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) )) },
+					{
+#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
+						M(() => DateTime.Parse("")),
+#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
+						N(() => L<string,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) ))
+					},
 				}},
 
 				#endregion
@@ -1779,7 +1853,7 @@ namespace LinqToDB.Linq
 		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? VarChar(object? obj, int? size)
 		{
-			return obj?.ToString();
+			return obj == null ? null : string.Format(CultureInfo.InvariantCulture, "{0}", obj);
 		}
 
 		// DB2

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Linq;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
@@ -9,7 +10,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Expressions;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
 
 	public sealed class OracleMappingSchema : LockedMappingSchema
 	{
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SetValueToSqlConverter(typeof(Guid),           (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Guid)   v).ToByteArray()));
 			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
-			SetValueToSqlConverter(typeof(string)        , (sb, _,_,v) => ConvertStringToSql  (sb,     v.ToString()!));
+			SetValueToSqlConverter(typeof(string)        , (sb, _,_,v) => ConvertStringToSql  (sb,     (string)v));
 			SetValueToSqlConverter(typeof(char)          , (sb, _,_,v) => ConvertCharToSql    (sb,     (char)v));
 			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Binary)v).ToArray()));
@@ -97,11 +97,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
 		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)

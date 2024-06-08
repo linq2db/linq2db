@@ -133,6 +133,7 @@ jobs:
 - job: test_windows_job
   pool:
     vmImage: 'windows-2022'
+
   displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
@@ -199,7 +200,7 @@ jobs:
 #################
 - job: test_macos_job
   pool:
-    vmImage: 'macOS-10.15'
+    vmImage: 'macOS-13'
   displayName: 'Tests: MacOS'
   dependsOn: create_baselines_branch
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))

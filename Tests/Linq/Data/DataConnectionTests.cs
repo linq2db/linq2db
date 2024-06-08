@@ -358,6 +358,28 @@ namespace Tests.Data
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
+		[Test]
+		public void TestServiceCollection_Issue4326_Positive([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDBContext<IDataContext, DbConnection1>((serviceProvider, options) => options.UseConfigurationString(context));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<IDataContext>()!;
+			Assert.That(con, Is.TypeOf<DbConnection1>());
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
+		[Test]
+		public void TestServiceCollection_Issue4326_Compat([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDBContext<IDataContext, DbConnection4>((serviceProvider, options) => options.UseConfigurationString(context));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<IDataContext>()!;
+			Assert.That(con, Is.TypeOf<DbConnection4>());
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
 		public class DbConnection1 : DataConnection
 		{
 			public DbConnection1(DataOptions<DbConnection1> options) : base(options.Options)
@@ -377,6 +399,13 @@ namespace Tests.Data
 		public class DbConnection3 : DataConnection
 		{
 			public DbConnection3(DummyService service, DataOptions options) : base(options)
+			{
+			}
+		}
+
+		public class DbConnection4 : DataConnection
+		{
+			public DbConnection4(DataOptions<IDataContext> options) : base(options.Options)
 			{
 			}
 		}
@@ -1192,11 +1221,11 @@ namespace Tests.Data
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				context == ProviderName.DB2            ||
-				context == ProviderName.InformixDB2    ||
-				context == ProviderName.SapHanaNative  ||
-				context == ProviderName.SqlCe          ||
-				context == ProviderName.Sybase         ||
+				context == ProviderName.DB2                     ||
+				context == ProviderName.InformixDB2             ||
+				context == ProviderName.SapHanaNative           ||
+				context == ProviderName.SqlCe                   ||
+				context == ProviderName.Sybase                  ||
 				context.IsAnyOf(TestProvName.AllMySqlConnector) ||
 				context.IsAnyOf(TestProvName.AllClickHouse)     ||
 				context.IsAnyOf(TestProvName.AllFirebird)       ||
@@ -1220,22 +1249,12 @@ namespace Tests.Data
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope or doesn't support DDL in distributed transactions");
 			}
 
-			TransactionScope? scope = withScope ? new TransactionScope() : null;
-			try
+			using var scope = withScope ? new TransactionScope() : null;
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable(Category.Data))
+			using (db.CreateLocalTable(Product.Data))
 			{
-				using (var db = GetDataContext(context))
-				using (db.CreateLocalTable(Category.Data))
-				using (db.CreateLocalTable(Product.Data))
-				{
-					var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
-
-					scope?.Dispose();
-					scope = null;
-				}
-			}
-			finally
-			{
-				scope?.Dispose();
+				var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
 			}
 		}
 

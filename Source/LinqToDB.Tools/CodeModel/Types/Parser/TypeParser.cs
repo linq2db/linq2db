@@ -83,7 +83,7 @@ namespace LinqToDB.CodeModel
 							continue;
 						case ParserState.SearchForIdentifierStart              : // identifier cannot start with .
 						case ParserState.ParseTrailingSpaces                   : // only spaces allowed after type
-							throw new InvalidOperationException($"Cannot parse name \"{name}\": unexpected dot found at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse name \"{name}\": unexpected dot found at {position}"));
 						default:
 							throw new InvalidOperationException($"Invalid name parser state: {parserState}");
 					}
@@ -106,7 +106,7 @@ namespace LinqToDB.CodeModel
 							currentIdentifier.Append(chr);
 							continue;
 						case ParserState.ParseTrailingSpaces                   : // spaces expected
-							throw new InvalidOperationException($"Cannot parse name \"{name}\": unexpected character at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse name \"{name}\": unexpected character at {position}"));
 						default:
 							throw new InvalidOperationException($"Invalid name parser state: {parserState}");
 					}
@@ -183,11 +183,19 @@ namespace LinqToDB.CodeModel
 			var isParent          = false;
 			var currentIdentifier = new StringBuilder();
 			var parserState       = parentType != null ? ParserState.ParseTypeNameOrParentTypeName : ParserState.SearchForIdentifierStart;
+			var skip              = 0;
+			var isTypeArgument    = false;
 
 			// use state machine for type parsing
 			foreach (var (chr, cat) in typeName.EnumerateCharacters())
 			{
 				position += chr.Length;
+
+				if (skip > 0)
+				{
+					skip -= chr.Length;
+					continue;
+				}
 
 				// there are several characters that could trigger parser state change:
 				// " " (as filler before/after type or type arguments)
@@ -199,6 +207,7 @@ namespace LinqToDB.CodeModel
 				// "?" (as nullable type marker)
 				// other characters expected to be valid namespace/type name characters with regrards to their position in name
 				// (like first character or rest character)
+				
 				if (chr == " ")
 				{
 					switch (parserState)
@@ -243,7 +252,7 @@ namespace LinqToDB.CodeModel
 						case ParserState.ParseNullablity                       : // type cannot end with .
 						case ParserState.ParseTrailingSpaces                   : // only spaces allowed after type
 						case ParserState.SearchNextTypeArgument                : // type arguments list cannot have .
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected dot found at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected dot found at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -264,11 +273,15 @@ namespace LinqToDB.CodeModel
 							currentIdentifier.Clear();
 							isParent = true;
 							break;
-						case ParserState.ParseTrailingSpaces                   : // space expected
 						case ParserState.ParseNullablity                       : // ? or space expected
+						{
+							isParent = true;
+							break;
+						}
+						case ParserState.ParseTrailingSpaces                   : // space expected
 						case ParserState.SearchForIdentifierStart              : // identifier start character expected or space
 						case ParserState.SearchNextTypeArgument                : // ,> or identifier start character expected
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected + found at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected + found at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -288,7 +301,7 @@ namespace LinqToDB.CodeModel
 							currentIdentifier.Clear();
 
 							// parse first type argument
-							var (typeArg, len) = ParseTypeInternal(null, typeName.Substring(position), false, true);
+							(var typeArg, skip) = ParseTypeInternal(null, typeName.Substring(position), false, true);
 							if (typeArg == null)
 							{
 								// no type arguments - open generic type with 1 argument
@@ -304,7 +317,7 @@ namespace LinqToDB.CodeModel
 						case ParserState.ParseTrailingSpaces                   :
 						case ParserState.SearchForIdentifierStart              :
 						case ParserState.SearchNextTypeArgument                :
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected < found at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected < found at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -327,6 +340,7 @@ namespace LinqToDB.CodeModel
 
 							// reset position to include only current type name (so parent parser will resume parsing from ,)
 							position -= chr.Length;
+							isTypeArgument = true;
 							break;
 						case ParserState.ParseNullablity                       : // type argument has no nullability marker
 						case ParserState.ParseTrailingSpaces                   : // skipped trailing spaces for previous type argument
@@ -335,10 +349,11 @@ namespace LinqToDB.CodeModel
 
 							// reset position to include only current type name (so parent parser will resume parsing from ,)
 							position -= chr.Length;
+							isTypeArgument = true;
 							break;
 						case ParserState.SearchNextTypeArgument                : // found next type argument start
 							// parse next type argument
-							var (typeArg, len) = ParseTypeInternal(null, typeName.Substring(position), false, true);
+							(var typeArg, skip) = ParseTypeInternal(null, typeName.Substring(position), false, true);
 							// empty position found
 							if (typeArg == null)
 							{
@@ -357,7 +372,11 @@ namespace LinqToDB.CodeModel
 							}
 							continue;
 						case ParserState.SearchForIdentifierStart              : // unexpected comma outside of generic type arguments list
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected identifier at {position}");
+							if (!typeArgument)
+								throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected identifier at {position}"));
+
+							// emtpy type argument position (open generic type argument)
+							return (null, position - chr.Length);
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -376,11 +395,32 @@ namespace LinqToDB.CodeModel
 							// check for generic type nullability marker
 							parserState = ParserState.ParseNullablity;
 							continue;
+
+						case ParserState.ParseNamespaceTypeNameOrParentTypeName: // current identifier is a type name for generic type argument
+						case ParserState.ParseTypeNameOrParentTypeName         : // current identifier is a type name for generic type argument
+							if (!typeArgument)
+								throw new InvalidOperationException($"Cannot parse type name \"{typeName}\": \",\" found outside of generic type arguments list");
+
+							if (currentIdentifier.Length == 0)
+								throw new InvalidOperationException($"Cannot parse type name \"{typeName}\": , found but name expected");
+
+							// save type name
+							name = new CodeIdentifier(currentIdentifier.ToString(), true);
+							currentIdentifier.Clear();
+
+							// reset position to include only current type name (so parent parser will resume parsing from ,)
+							position -= chr.Length;
+							isTypeArgument = true;
+							break;
 						case ParserState.ParseNullablity                       : // only spaces or ? expected after type
+							if (typeArgument)
+							{
+								isTypeArgument = true;
+								break;
+							}
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected > at {position}"));
 						case ParserState.ParseTrailingSpaces                   : // only spaces expected after type
-						case ParserState.ParseNamespaceTypeNameOrParentTypeName: // identifier cannot contain >
-						case ParserState.ParseTypeNameOrParentTypeName         : // identifier cannot contain >
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected > at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected > at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -400,13 +440,18 @@ namespace LinqToDB.CodeModel
 						case ParserState.ParseNullablity                       : // looking for nullability marker
 							// mark type nullable
 							nullable    = true;
+							if (typeArgument)
+							{
+								isTypeArgument = true;
+								break;
+							}
 							// remove any trailing spaces
 							parserState = ParserState.ParseTrailingSpaces;
 							continue;
 						case ParserState.SearchNextTypeArgument                : // type argument or , or > expected
 						case ParserState.ParseTrailingSpaces                   : // only spaces expected
 						case ParserState.SearchForIdentifierStart              : // identifier expected
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected ? at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected ? at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -432,10 +477,15 @@ namespace LinqToDB.CodeModel
 						case ParserState.SearchNextTypeArgument                : // < or , expected
 						case ParserState.ParseNullablity                       : // ? or space expected
 						case ParserState.ParseTrailingSpaces                   : // spaces expected
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected character at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected character at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
+				}
+
+				if (isParent || isTypeArgument)
+				{
+					break;
 				}
 			}
 
@@ -512,7 +562,10 @@ namespace LinqToDB.CodeModel
 			}
 
 			if (isParent)
-				return ParseTypeInternal(parsedType, typeName.Substring(position), valueType, typeArgument);
+			{
+				var (t, l) = ParseTypeInternal(parsedType, typeName.Substring(position), valueType, typeArgument);
+				return (t, l + position);
+			}
 
 			return (parsedType, position);
 		}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.Globalization;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -111,7 +112,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (command.ExecuteScalar() is string result)
 			{
-				var version = int.Parse(result.Split('.')[0]);
+				var version = int.Parse(result.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 
 				if (version <= 11)
 					return OracleVersion.v11;

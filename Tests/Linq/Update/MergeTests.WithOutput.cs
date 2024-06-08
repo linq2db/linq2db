@@ -302,7 +302,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
 				PrepareData(db);
 
@@ -343,7 +343,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
 				PrepareData(db);
 
@@ -384,7 +384,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
 				PrepareData(db);
 
@@ -425,7 +425,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable", tableOptions: TableOptions.IsTemporary);
+				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable", tableOptions: TableOptions.IsTemporary);
 
 				PrepareData(db);
 
@@ -461,7 +461,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42", tableOptions: TableOptions.IsTemporary);
+				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42", tableOptions: TableOptions.IsTemporary);
 				var tempRef = db.GetTable<InsertTempTable>()
 					.TableOptions(TableOptions.IsTemporary)
 					.TableName(temp.TableName);
@@ -535,7 +535,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
 				PrepareData(db);
 
@@ -571,7 +571,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
+				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
 				var tempRef = db.GetTable<InsertTempTable>()
 					.TableOptions(TableOptions.IsTemporary)
 					.TableName(temp.TableName);
@@ -610,7 +610,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
+				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
 				var tempRef = db.GetTable<InsertTempTable>()
 					.TableOptions(TableOptions.IsTemporary)
 					.TableName(temp.TableName);
@@ -654,7 +654,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
+				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
 				var tempRef = db.GetTable<InsertTempTable>()
 					.TableOptions(TableOptions.IsTemporary)
 					.TableName(temp.TableName);

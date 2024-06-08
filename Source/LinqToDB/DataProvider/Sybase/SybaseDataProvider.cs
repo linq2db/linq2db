@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Xml;
 using System.Xml.Linq;
 using System.Threading.Tasks;
@@ -11,10 +12,10 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using Extensions;
 
 	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
 	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
@@ -129,13 +130,13 @@ namespace LinqToDB.DataProvider.Sybase
 
 				case DataType.Xml        :
 					dataType = dataType.WithDataType(DataType.NVarChar);
-						 if (value is XDocument      ) value = value.ToString();
+						 if (value is XDocument  xdoc) value = xdoc.ToString();
 					else if (value is XmlDocument xml) value = xml.InnerXml;
 					break;
 
 				case DataType.Guid       :
 					if (value != null)
-						value = value.ToString();
+						value = string.Format(CultureInfo.InvariantCulture, "{0}", value);
 					dataType = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;
@@ -148,8 +149,8 @@ namespace LinqToDB.DataProvider.Sybase
 				case DataType.Char       :
 				case DataType.NChar      :
 					if (Name == ProviderName.Sybase)
-						if (value is char)
-							value = value.ToString();
+						if (value is char chr)
+							value = chr.ToString();
 					break;
 
 #if NET6_0_OR_GREATER

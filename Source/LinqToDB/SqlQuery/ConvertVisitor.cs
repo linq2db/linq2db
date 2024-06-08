@@ -12,7 +12,7 @@ namespace LinqToDB.SqlQuery
 	public class ConvertVisitor<TContext>
 	{
 		// when true, only changed (and explicitly added) elements added to VisitedElements
-		// greatly reduce memory allocation for majority of cases, where there is nothing to replace
+		// greatly reduce memory allocation for the majority of cases, where there is nothing to replace
 		private bool                                                       _visitAll;
 		private Func<ConvertVisitor<TContext>,IQueryElement,IQueryElement> _convert;
 		private Func<ConvertVisitor<TContext>, bool>?                      _parentAction;
@@ -65,7 +65,7 @@ namespace LinqToDB.SqlQuery
 			_stack?          .Clear();
 		}
 
-		void CorrectQueryHierarchy(SelectQuery? parentQuery)
+		static void CorrectQueryHierarchy(SelectQuery? parentQuery)
 		{
 			if (parentQuery == null)
 				return;
@@ -461,7 +461,7 @@ namespace LinqToDB.SqlQuery
 							t != null && !ReferenceEquals(p.TrueValue, t) ||
 							f != null && !ReferenceEquals(p.FalseValue, f)
 							)
-							newElement = new SqlPredicate.IsTrue(e ?? p.Expr1, t ?? p.TrueValue, f ?? p.FalseValue, p.WithNull, p.IsNot);
+							newElement = new SqlPredicate.IsTrue(e ?? p.Expr1, t ?? p.TrueValue, f ?? p.FalseValue, p.WithNull, p.IsNot, p.OptimizeNull);
 
 						break;
 					}
@@ -826,7 +826,7 @@ namespace LinqToDB.SqlQuery
 
 						if (ts != null && !ReferenceEquals(fc.Tables, ts))
 						{
-							newElement = new SqlFromClause(ts ?? fc.Tables);
+							newElement = new SqlFromClause(ts);
 							((SqlFromClause)newElement).SetSqlQuery(fc.SelectQuery);
 						}
 
@@ -840,7 +840,7 @@ namespace LinqToDB.SqlQuery
 
 						if (cond != null && !ReferenceEquals(wc.SearchCondition, cond))
 						{
-							newElement = new SqlWhereClause(cond ?? wc.SearchCondition);
+							newElement = new SqlWhereClause(cond);
 							((SqlWhereClause)newElement).SetSqlQuery(wc.SelectQuery);
 						}
 
@@ -854,7 +854,7 @@ namespace LinqToDB.SqlQuery
 
 						if (es != null && !ReferenceEquals(gc.Items, es))
 						{
-							newElement = new SqlGroupByClause(gc.GroupingType, es ?? gc.Items);
+							newElement = new SqlGroupByClause(gc.GroupingType, es);
 							((SqlGroupByClause)newElement).SetSqlQuery(gc.SelectQuery);
 						}
 
@@ -867,7 +867,7 @@ namespace LinqToDB.SqlQuery
 						var es = Convert(gc.Items);
 
 						if (es != null && !ReferenceEquals(gc.Items, es))
-							newElement = new SqlGroupingSet(es ?? gc.Items);
+							newElement = new SqlGroupingSet(es);
 
 						break;
 					}
@@ -879,7 +879,7 @@ namespace LinqToDB.SqlQuery
 
 						if (es != null && !ReferenceEquals(oc.Items, es))
 						{
-							newElement = new SqlOrderByClause(es ?? oc.Items);
+							newElement = new SqlOrderByClause(es);
 							((SqlOrderByClause)newElement).SetSqlQuery(oc.SelectQuery);
 						}
 
@@ -910,7 +910,7 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.SqlQuery:
 					{
-						var q = (SelectQuery)element;
+						var q  = (SelectQuery)element;
 						var fc = (SqlFromClause?)   ConvertInternal(q.From   ) ?? q.From;
 						var sc = (SqlSelectClause?) ConvertInternal(q.Select ) ?? q.Select;
 						var wc = (SqlWhereClause?)  ConvertInternal(q.Where  ) ?? q.Where;
@@ -1260,7 +1260,7 @@ namespace LinqToDB.SqlQuery
 
 						if (targs != null && !ReferenceEquals(table.Parameters, targs))
 						{
-							var newTable = new SqlRawSqlTable(table, targs ?? table.Parameters!);
+							var newTable = new SqlRawSqlTable(table, targs);
 							newElement   = newTable;
 
 							AddVisited(table.All, newTable.All);

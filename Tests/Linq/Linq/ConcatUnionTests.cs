@@ -810,6 +810,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void UnionGroupByTest1([DataSources] string context)
 		{
@@ -1013,6 +1014,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void SelectWithNulls([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -1026,6 +1028,7 @@ namespace Tests.Linq
 			query.Invoking(q => q.ToArray()).Should().NotThrow();
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void SelectWithNulls2([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -1054,7 +1057,7 @@ namespace Tests.Linq
 			var query = query1.UnionAll(query2);
 
 			query.Invoking(q => q.ToList()).Should().NotThrow();
-		}		
+		}
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
 		public void Issue3359_MultipleSets([DataSources(false)] string context)
@@ -1471,7 +1474,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var res = db.Person.LoadWith(p => p.Patient).Concat(db.Person.LoadWith(p => p.Patient).Take(2)).ToArray();
-			
+
 			Assert.AreEqual(6, res.Length);
 			Assert.AreEqual(2, res.Where(r => r.ID == 2).Count());
 			var pat = res.Where(r => r.ID == 2).First();

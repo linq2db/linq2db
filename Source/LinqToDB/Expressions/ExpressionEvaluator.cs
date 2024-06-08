@@ -1,20 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
-	using Reflection;
-	using Linq;
-	using Linq.Builder;
-	using Mapping;
-	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
+	using Extensions;
+
+	using Common;
 
 	/// <summary>
 	/// Internal API.
@@ -22,73 +16,91 @@ namespace LinqToDB.Expressions
 	public static class ExpressionEvaluator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T? EvaluateExpression<T>(this Expression? expr)
+		public static T? EvaluateExpression<T>(this Expression? expr, IDataContext? dataContext = null)
 			where T : class
 		{
-			return expr.EvaluateExpression() as T;
+			return expr.EvaluateExpression(dataContext) as T;
 		}
 
-		public static object? EvaluateExpression(this Expression? expr)
+		public static object? EvaluateExpression(this Expression? expr, IDataContext? dataContext = null)
 		{
 			if (expr == null)
 				return null;
 
-			switch (expr.NodeType)
+			if (dataContext != null)
 			{
-				case ExpressionType.Default:
-					return !expr.Type.IsNullableType() ? Activator.CreateInstance(expr.Type) : null;
-
-				case ExpressionType.Constant:
-					return ((ConstantExpression)expr).Value;
-
-				case ExpressionType.Convert:
-				case ExpressionType.ConvertChecked:
-				{
-					var unary = (UnaryExpression)expr;
-					var operand = unary.Operand.EvaluateExpression();
-					if (operand == null)
-						return null;
-					break;
-				}
-
-				case ExpressionType.MemberAccess:
-				{
-					var member = (MemberExpression) expr;
-
-					if (member.Member.IsFieldEx())
-						return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression());
-
-					if (member.Member is PropertyInfo propertyInfo)
-					{
-						var obj = member.Expression.EvaluateExpression();
-						if (obj == null)
-						{
-							if (propertyInfo.IsNullableValueMember())
-								return null;
-							if (propertyInfo.IsNullableHasValueMember())
-								return false;
-						}
-						return propertyInfo.GetValue(obj, null);
-					}
-
-					break;
-				}
-
-				case ExpressionType.Call:
-				{
-					var mc = (MethodCallExpression)expr;
-					var arguments = mc.Arguments.Select(EvaluateExpression).ToArray();
-					var instance  = mc.Object.EvaluateExpression();
-
-					if (instance == null && mc.Method.IsNullableGetValueOrDefault())
-						return null;
-
-					return mc.Method.Invoke(instance, arguments);
-				}
+				expr = expr.Transform(
+					dataContext,
+					static (dc, e) => e is ConstantExpression { Value: null, Type: var t } && t == typeof(IDataContext) ? Expression.Constant(dc) : e);
 			}
 
-			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
-			return value;
+			return Evaluate(expr, dataContext);
+
+			static object? Evaluate(Expression? expr, IDataContext? dataContext)
+			{
+				if (expr == null)
+					return null;
+
+				switch (expr.NodeType)
+				{
+					case ExpressionType.Default:
+						return expr.Type.GetDefaultValue();
+
+					case ExpressionType.Constant:
+					{
+						var c = ((ConstantExpression)expr);
+						return c.Type == typeof(IDataContext) && c.Value == null ? dataContext : c.Value;
+					}
+
+					case ExpressionType.Convert:
+					case ExpressionType.ConvertChecked:
+					{
+						var unary = (UnaryExpression)expr;
+						var operand = Evaluate(unary.Operand, dataContext);
+						if (operand == null)
+							return null;
+						break;
+					}
+
+					case ExpressionType.MemberAccess:
+					{
+						var member = (MemberExpression) expr;
+
+						if (member.Member.IsFieldEx())
+							return ((FieldInfo)member.Member).GetValue(Evaluate(member.Expression, dataContext));
+
+						if (member.Member is PropertyInfo propertyInfo)
+						{
+							var obj = Evaluate(member.Expression, dataContext);
+							if (obj == null)
+							{
+								if (propertyInfo.IsNullableValueMember())
+									return null;
+								if (propertyInfo.IsNullableHasValueMember())
+									return false;
+							}
+							return propertyInfo.GetValue(obj, null);
+						}
+
+						break;
+					}
+
+					case ExpressionType.Call:
+					{
+						var mc        = (MethodCallExpression)expr;
+						var arguments = mc.Arguments.Select(a => Evaluate(a, dataContext)).ToArray();
+						var instance  = Evaluate(mc.Object, dataContext);
+
+						if (instance == null && mc.Method.IsNullableGetValueOrDefault())
+							return null;
+
+						return mc.Method.Invoke(instance, arguments);
+					}
+				}
+
+				var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
+				return value;
+			}
 		}
 	}
 }

@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Globalization;
+using System.Reflection;
 using System.Text;
 
 namespace LinqToDB.Extensions
 {
-	using System.Reflection;
 	using Common;
 	using Mapping;
 	using SqlQuery;
@@ -31,7 +32,7 @@ namespace LinqToDB.Extensions
 
 						if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) &&
 						    mappingSchema.GetMapValues(underlyingType)             == null)
-							return new SqlValue(type, originalValue!.ToString());
+							return new SqlValue(type, string.Format(CultureInfo.InvariantCulture, "{0}", originalValue));
 
 						return new SqlValue(type, Converter.ChangeType(originalValue, type, mappingSchema));
 					}
@@ -66,7 +67,7 @@ namespace LinqToDB.Extensions
 
 						if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) &&
 						    mappingSchema.GetMapValues(underlyingType)             == null)
-							value = value.ToString();
+							value = string.Format(CultureInfo.InvariantCulture, "{0}", value);
 						else
 							value = Converter.ChangeType(value, type, mappingSchema);
 					}

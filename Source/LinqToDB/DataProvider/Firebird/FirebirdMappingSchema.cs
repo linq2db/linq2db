@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, DataOptions options, string value)
 		{
-			if (value == string.Empty)
+			if (value.Length == 0)
 				stringBuilder.Append("''");
 			else
 			{
@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider.Firebird
 			stringBuilder.Append("_utf8 x'");
 
 			foreach (var bt in bytes)
-				stringBuilder.AppendFormat("{0:X2}", bt);
+				stringBuilder.Append(CultureInfo.InvariantCulture, $"{bt:X2}");
 
 			stringBuilder.Append('\'');
 		}

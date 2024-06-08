@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -99,13 +100,13 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Type.Precision == 6 || type.Type.Precision == null)
 						StringBuilder.Append("timestamp");
 					else
-						StringBuilder.Append($"timestamp({type.Type.Precision})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Type.Precision})");
 					break;
 				case DataType.DateTimeOffset :
 					if (type.Type.Precision == 6 || type.Type.Precision == null)
 						StringBuilder.Append("timestamp with time zone");
 					else
-						StringBuilder.Append($"timestamp({type.Type.Precision}) with time zone");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Type.Precision}) with time zone");
 					break;
 				case DataType.UInt32         :
 				case DataType.Int64          : StringBuilder.Append("Number(19)");                break;
@@ -117,13 +118,13 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 						StringBuilder.Append("VarChar(4000)");
 					else
-						StringBuilder.Append($"VarChar({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar({type.Type.Length})");
 					break;
 				case DataType.NVarChar       :
 					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 						StringBuilder.Append("VarChar2(4000)");
 					else
-						StringBuilder.Append($"VarChar2({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar2({type.Type.Length})");
 					break;
 				case DataType.Boolean        : StringBuilder.Append("Char(1)");                   break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;
@@ -134,7 +135,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Type.Length == null || type.Type.Length == 0)
 						StringBuilder.Append("BLOB");
 					else
-						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(')');
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"Raw({type.Type.Length})");
 					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);         break;
 			}
@@ -262,7 +263,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return $"SELECT {ConvertInline(sequenceName, ConvertType.SequenceName)}.nextval ID from DUAL connect by level <= {count}";
+			return FormattableString.Invariant($"SELECT {ConvertInline(sequenceName, ConvertType.SequenceName)}.nextval ID from DUAL connect by level <= {count}");
 		}
 
 		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
@@ -422,7 +423,9 @@ namespace LinqToDB.DataProvider.Oracle
 				case SqlTruncateTableStatement truncate:
 					var sequenceName = ConvertInline(MakeIdentitySequenceName(truncate.Table!.TableName.Name), ConvertType.SequenceName);
 					StringBuilder
-						.AppendFormat(@"DECLARE
+						.AppendFormat(
+						CultureInfo.InvariantCulture,
+						@"DECLARE
 	l_value number;
 BEGIN
 	-- Select the next value of the sequence
@@ -461,7 +464,7 @@ END;",
 						Convert(StringBuilder, MakeIdentityTriggerName(createTable.Table!.TableName.Name), ConvertType.TriggerName);
 						StringBuilder
 							.AppendLine()
-							.AppendFormat("BEFORE INSERT ON ");
+							.Append("BEFORE INSERT ON ");
 
 						BuildPhysicalTable(createTable.Table, null);
 
@@ -490,7 +493,7 @@ END;",
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			if (name.Schema != null)
 			{
@@ -509,6 +512,14 @@ END;",
 			else
 				sb.Append(name.Name);
 
+			if (name.Server != null && !withoutSuffix)
+				BuildObjectNameSuffix(sb, name, escape);
+
+			return sb;
+		}
+
+		protected override StringBuilder BuildObjectNameSuffix(StringBuilder sb, SqlObjectName name, bool escape)
+		{
 			if (name.Server != null)
 			{
 				sb.Append('@');
@@ -711,9 +722,9 @@ END;",
 
 			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
 			{
-				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')
+				if (HintBuilder.Length > 0 && HintBuilder[^1] != ' ')
 					HintBuilder.Append(' ');
-				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null);
+				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 			}
 
 			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
@@ -721,7 +732,7 @@ END;",
 				HintBuilder.Insert(0, " /*+ ");
 				HintBuilder.Append(" */");
 
-				StringBuilder.Insert(_hintPosition, HintBuilder);
+				StringBuilder.Insert(_hintPosition, HintBuilder.ToString());
 			}
 		}
 

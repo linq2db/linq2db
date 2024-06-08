@@ -16,6 +16,7 @@ namespace LinqToDB.Data
 	using Linq;
 	using SqlQuery;
 	using SqlProvider;
+	using Tools;
 
 	public partial class DataConnection
 	{
@@ -41,7 +42,6 @@ namespace LinqToDB.Data
 
 			bool        _isAsync;
 			Expression? _mapperExpression;
-			DataReaderWrapper? _dataReader;
 
 			public override Expression? MapperExpression
 			{
@@ -128,15 +128,13 @@ namespace LinqToDB.Data
 					_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, _isAsync)
 					{
 						TraceLevel       = TraceLevel.Info,
-						Command          = _dataReader?.Command ?? _dataConnection.CurrentCommand,
+						Command          = _dataConnection.CurrentCommand,
 						MapperExpression = MapperExpression,
 						StartTime        = _startedOn,
 						ExecutionTime    = _stopwatch.Elapsed,
 						RecordsAffected  = RowsCount
 					});
 				}
-
-				_dataReader = null;
 
 				base.Dispose();
 			}
@@ -201,7 +199,8 @@ namespace LinqToDB.Data
 					return new PreparedQuery((CommandWithParameters[])query.Context, query.Statement, dataConnection.GetNextCommandHints(!forGetSqlText));
 				}
 
-				var sql = query.Statement;
+				var sql     = query.Statement;
+				var options = query.DataOptions ?? dataConnection.Options;
 
 				// custom query handling
 				var preprocessContext = new EvaluationContext(parameterValues);
@@ -213,8 +212,8 @@ namespace LinqToDB.Data
 					sql.IsParameterDependent = true;
 				}
 
-				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
-				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (dataConnection.Options);
+				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
+				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (options);
 
 				var cc = sqlBuilder.CommandCount(sql);
 				using var sb = Pools.StringBuilder.Allocate();
@@ -239,7 +238,9 @@ namespace LinqToDB.Data
 					var optimizationContext = new OptimizationContext(evaluationContext, aliases, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent, dataConnection.DataProvider.GetQueryParameterNormalizer);
 					sb.Value.Length = 0;
 
-					sqlBuilder.BuildSql(i, sql, sb.Value, optimizationContext, startIndent);
+					using (ActivityService.Start(ActivityID.BuildSql))
+						sqlBuilder.BuildSql(i, sql, sb.Value, optimizationContext, startIndent);
+
 					commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
 					optimizationContext.ClearParameters();
 				}
@@ -623,7 +624,7 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				return _dataReader = _dataConnection.ExecuteReader();
+				return _dataConnection.ExecuteReader();
 			}
 
 			#endregion
@@ -679,9 +680,9 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				_dataReader = await _dataConnection.ExecuteDataReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var dataReader = await _dataConnection.ExecuteDataReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return new DataReaderAsync(_dataReader);
+				return new DataReaderAsync(dataReader);
 			}
 
 			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
