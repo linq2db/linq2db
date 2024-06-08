@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -68,12 +69,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, func)!;
+				Parameters[i] = Parameters[i].Walk(options, context, func)!;
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -147,27 +148,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlExpression(
-					SystemType,
-					Expr,
-					Precedence,
-					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
-			}
-
-			return clone;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public QueryElementType ElementType => QueryElementType.SqlExpression;
@@ -186,7 +166,15 @@ namespace LinqToDB.SqlQuery
 			if (Parameters.Length == 0)
 				return sb.Append(Expr);
 
-			return sb.AppendFormat(Expr, ss.ToArray());
+			if (Expr.Contains("{"))
+				sb.AppendFormat(CultureInfo.InvariantCulture, Expr, ss.ToArray());
+			else
+				sb.Append(Expr)
+					.Append('{')
+					.Append(string.Join(", ", ss.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
+					.Append('}');
+
+			return sb;
 		}
 
 		#endregion
@@ -199,13 +187,14 @@ namespace LinqToDB.SqlQuery
 			{
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlField    :
+				case QueryElementType.SqlQuery    :
 				case QueryElementType.Column      : return true;
 				case QueryElementType.SqlExpression:
 				{
 					var expr = (SqlExpression)ex;
 					if (expr.IsPredicate)
 						return false;
-					if (QueryHelper.IsTransitiveExpression(expr))
+					if (QueryHelper.IsTransitiveExpression(expr, checkNullability: true))
 						return NeedsEqual(expr.Parameters[0]);
 					return true;
 				}

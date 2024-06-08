@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateWithConditionDelete([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -110,8 +110,12 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateWithConditionDeleteWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllSqlServer2008Plus,
-			TestProvName.AllOracle, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird, ProviderName.Sybase)]
+			TestProvName.AllPostgreSQL15Plus,
+			TestProvName.AllOracle,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
+			ProviderName.Firebird,
+			ProviderName.Sybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -238,7 +242,10 @@ namespace Tests.xUpdate
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete([MergeDataContextSource(
 			TestProvName.AllSqlServer2008Plus,
 			TestProvName.AllOracle,
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllPostgreSQL15Plus,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
+			ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -262,7 +269,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(5, rows, context);
 
-				if (context != ProviderName.Sybase)
+				if (!context.IsAnyOf(ProviderName.Sybase))
 				{
 					Assert.AreEqual(4, result.Count);
 
@@ -310,7 +317,10 @@ namespace Tests.xUpdate
 		public void UpdateWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			TestProvName.AllSqlServer2008Plus,
-			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllPostgreSQL15Plus,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
+			ProviderName.Firebird)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -377,7 +387,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -440,7 +450,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertUpdateWithConditionDeleteWithCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -508,7 +518,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertDeleteWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -545,7 +555,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateWithConditionInsertDeleteWithCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -582,7 +592,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateWithConditionDeleteWithConditionInsert([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -619,7 +629,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteWithConditionUpdateWithConditionInsert([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -656,7 +666,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteWithConditionInsertUpdateWithCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -717,6 +727,51 @@ namespace Tests.xUpdate
 				AssertRow(InitialSourceData[0], result[2], null, 203);
 				AssertRow(InitialSourceData[2], result[3], null, null);
 				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		[Table]
+		sealed class PKOnlyTable
+		{
+			[PrimaryKey] public int ID { get; set; }
+		}
+
+
+		[Test]
+		public void InsertUpdatePKOnly([MergeDataContextSource] string context)
+		{
+			var src = new []
+				{
+					new PKOnlyTable() { ID = 1 },
+					new PKOnlyTable() { ID = 2 },
+					new PKOnlyTable() { ID = 3 }
+				};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(src.Skip(1).Take(1)))
+			{
+				var rows = table
+					.Merge()
+					.Using(src)
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.UpdateWhenMatched()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.ID).ToList();
+
+				if (context.IsAnyOf(TestProvName.AllSybase))
+					Assert.AreEqual(3, rows);
+				else if (context.IsAnyOf(TestProvName.AllOracleNative))
+					Assert.AreEqual(-1, rows);
+				else
+					Assert.AreEqual(2, rows);
+
+				Assert.AreEqual(3, result.Count);
+
+				Assert.AreEqual(1, result[0].ID);
+				Assert.AreEqual(2, result[1].ID);
+				Assert.AreEqual(3, result[2].ID);
 			}
 		}
 	}

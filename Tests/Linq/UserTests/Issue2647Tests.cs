@@ -10,7 +10,7 @@ namespace Tests.UserTests
 	public class Issue2647Tests : TestBase
 	{
 		[Table("Issue2647Table")]
-		class IssueClass
+		sealed class IssueClass
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -21,7 +21,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void OrderBySybqueryTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void OrderBySubqueryTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<IssueClass>())

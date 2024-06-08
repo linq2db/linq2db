@@ -41,12 +41,14 @@ namespace Tests.UserTests
 		[Test]
 		public void TestWithoutTransaction([DataSources(false,
 			// those providers doesn't support stored procedures
-			ProviderName.SqlCe, TestProvName.AllSQLite,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
 			// those providers miss procedure schema load implementation for now
 			TestProvName.AllInformix)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
 
@@ -54,7 +56,7 @@ namespace Tests.UserTests
 
 				try
 				{
-					var schemaName = TestUtils.GetSchemaName(db);
+					var schemaName = TestUtils.GetSchemaName(db, context);
 					var schema     = sp.GetSchema(db, new GetSchemaOptions()
 					{
 						GetTables       = false,
@@ -67,7 +69,7 @@ namespace Tests.UserTests
 					Assert.AreEqual(recordsBefore, recordsAfter);
 
 					// schema provider should find our procedure for real
-					Assert.AreEqual(1, schema.Procedures.Count(p => p.ProcedureName.ToUpper() == "ADDISSUE792RECORD"));
+					Assert.AreEqual(1, schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"));
 				}
 				finally
 				{
@@ -82,23 +84,25 @@ namespace Tests.UserTests
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
 			// those providers miss procedure schema load implementation for now
 			TestProvName.AllInformix,
 			// those providers cannot load schema when in transaction
 			ProviderName.DB2,
 			ProviderName.Access,
 			TestProvName.AllMySql,
+			TestProvName.AllOracle,
 			TestProvName.AllSqlServer)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
 
 				var sp = db.DataProvider.GetSchemaProvider();
 
-				var schemaName = TestUtils.GetSchemaName(db);
+				var schemaName = TestUtils.GetSchemaName(db, context);
 				var schema     = sp.GetSchema(db, new GetSchemaOptions()
 				{
 					GetTables       = false,
@@ -111,7 +115,7 @@ namespace Tests.UserTests
 				Assert.AreEqual(recordsBefore, recordsAfter);
 
 				// schema provider should find our procedure for real
-				Assert.AreEqual(1, schema.Procedures.Count(p => p.ProcedureName.ToUpper() == "ADDISSUE792RECORD"));
+				Assert.AreEqual(1, schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"));
 			}
 		}
 
@@ -121,7 +125,7 @@ namespace Tests.UserTests
 			TestProvName.AllSqlServer)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
@@ -134,14 +138,17 @@ namespace Tests.UserTests
 				}))!;
 
 				Assert.IsInstanceOf<InvalidOperationException>(ex);
-				Assert.IsTrue(ex.Message.Contains("requires the command to have a transaction"));
+				Assert.IsTrue(
+					ex.Message.Contains("requires the command to have a transaction")
+					|| ex.Message.Contains("команда имела транзакцию") //for those who accidentally installed a russian localization of Sql Server :)
+					);
 			}
 		}
 
 		[Test]
 		public void TestWithTransactionThrowsFromLinqToDB([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();

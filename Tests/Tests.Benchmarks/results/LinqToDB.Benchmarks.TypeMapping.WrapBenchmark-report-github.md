@@ -1,34 +1,40 @@
-``` ini
+```
 
-BenchmarkDotNet=v0.12.1, OS=Windows 10.0.16299.125 (1709/FallCreatorsUpdate/Redstone3)
-Intel Core i7-3770K CPU 3.50GHz (Ivy Bridge), 1 CPU, 8 logical and 4 physical cores
-Frequency=3417995 Hz, Resolution=292.5692 ns, Timer=TSC
-  [Host]     : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
-  Job-FSMYUH : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
-  Job-TSQXSD : .NET Core 2.1.17 (CoreCLR 4.6.28619.01, CoreFX 4.6.28619.01), X64 RyuJIT
-  Job-OUTKHJ : .NET Core 3.1.3 (CoreCLR 4.700.20.11803, CoreFX 4.700.20.12001), X64 RyuJIT
+BenchmarkDotNet v0.13.9+228a464e8be6c580ad9408e98f18813f6407fb5a, Windows 10 (10.0.17763.4644/1809/October2018Update/Redstone5) (Hyper-V)
+AMD Ryzen 9 5950X, 2 CPU, 32 logical and 16 physical cores
+.NET SDK 7.0.401
+  [Host]     : .NET 7.0.11 (7.0.1123.42427), X64 RyuJIT AVX2
+  Job-DAXXNM : .NET 6.0.22 (6.0.2223.42425), X64 RyuJIT AVX2
+  Job-SLTPYD : .NET 7.0.11 (7.0.1123.42427), X64 RyuJIT AVX2
+  Job-YOWJJJ : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
+  Job-OZLLFF : .NET Framework 4.8 (4.8.4645.0), X64 RyuJIT VectorSize=256
 
-Jit=RyuJit  Platform=X64  MaxIterationCount=5  
-MinIterationCount=3  WarmupCount=2  
+Jit=RyuJit  Platform=X64  
 
 ```
-|                      Method |       Runtime |       Mean |  Ratio |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-|---------------------------- |-------------- |-----------:|-------:|-------:|------:|------:|----------:|
-|            TypeMapperString |    .NET 4.6.2 |  13.386 ns |  12.49 |      - |     - |     - |         - |
-|          DirectAccessString |    .NET 4.6.2 |   1.072 ns |   1.00 |      - |     - |     - |         - |
-|   TypeMapperWrappedInstance |    .NET 4.6.2 |  59.660 ns |  55.72 | 0.0076 |     - |     - |      32 B |
-| DirectAccessWrappedInstance |    .NET 4.6.2 |   1.047 ns |   0.98 |      - |     - |     - |         - |
-|     TypeMapperGetEnumerator |    .NET 4.6.2 | 145.496 ns | 136.06 | 0.0134 |     - |     - |      56 B |
-|   DirectAccessGetEnumerator |    .NET 4.6.2 | 129.819 ns | 121.19 | 0.0134 |     - |     - |      56 B |
-|            TypeMapperString | .NET Core 2.1 |   7.834 ns |   7.28 |      - |     - |     - |         - |
-|          DirectAccessString | .NET Core 2.1 |   2.680 ns |   2.49 |      - |     - |     - |         - |
-|   TypeMapperWrappedInstance | .NET Core 2.1 |  45.563 ns |  42.39 | 0.0076 |     - |     - |      32 B |
-| DirectAccessWrappedInstance | .NET Core 2.1 |   1.078 ns |   1.00 |      - |     - |     - |         - |
-|     TypeMapperGetEnumerator | .NET Core 2.1 | 167.759 ns | 157.26 | 0.0074 |     - |     - |      32 B |
-|   DirectAccessGetEnumerator | .NET Core 2.1 | 160.129 ns | 150.60 | 0.0074 |     - |     - |      32 B |
-|            TypeMapperString | .NET Core 3.1 |   5.679 ns |   5.30 |      - |     - |     - |         - |
-|          DirectAccessString | .NET Core 3.1 |   1.339 ns |   1.25 |      - |     - |     - |         - |
-|   TypeMapperWrappedInstance | .NET Core 3.1 |  45.044 ns |  42.11 | 0.0076 |     - |     - |      32 B |
-| DirectAccessWrappedInstance | .NET Core 3.1 |   1.102 ns |   1.03 |      - |     - |     - |         - |
-|     TypeMapperGetEnumerator | .NET Core 3.1 | 121.994 ns | 113.85 | 0.0076 |     - |     - |      32 B |
-|   DirectAccessGetEnumerator | .NET Core 3.1 | 121.486 ns | 114.36 | 0.0076 |     - |     - |      32 B |
+| Method                      | Runtime              | Mean        | Allocated |
+|---------------------------- |--------------------- |------------:|----------:|
+| TypeMapperString            | .NET 6.0             |   2.2438 ns |         - |
+| DirectAccessString          | .NET 6.0             |   1.3245 ns |         - |
+| TypeMapperWrappedInstance   | .NET 6.0             |  27.1528 ns |      32 B |
+| DirectAccessWrappedInstance | .NET 6.0             |   0.8133 ns |         - |
+| TypeMapperGetEnumerator     | .NET 6.0             |  63.4075 ns |      32 B |
+| DirectAccessGetEnumerator   | .NET 6.0             |  34.5480 ns |      32 B |
+| TypeMapperString            | .NET 7.0             |   6.0528 ns |         - |
+| DirectAccessString          | .NET 7.0             |   2.4339 ns |         - |
+| TypeMapperWrappedInstance   | .NET 7.0             |  45.8062 ns |      32 B |
+| DirectAccessWrappedInstance | .NET 7.0             |   1.6763 ns |         - |
+| TypeMapperGetEnumerator     | .NET 7.0             |  57.8984 ns |      32 B |
+| DirectAccessGetEnumerator   | .NET 7.0             |  52.4231 ns |      32 B |
+| TypeMapperString            | .NET Core 3.1        |   5.7207 ns |         - |
+| DirectAccessString          | .NET Core 3.1        |   1.9452 ns |         - |
+| TypeMapperWrappedInstance   | .NET Core 3.1        |  53.8521 ns |      32 B |
+| DirectAccessWrappedInstance | .NET Core 3.1        |   3.5635 ns |         - |
+| TypeMapperGetEnumerator     | .NET Core 3.1        | 132.0469 ns |      32 B |
+| DirectAccessGetEnumerator   | .NET Core 3.1        | 122.9845 ns |      32 B |
+| TypeMapperString            | .NET Framework 4.7.2 |  23.7130 ns |         - |
+| DirectAccessString          | .NET Framework 4.7.2 |   1.3215 ns |         - |
+| TypeMapperWrappedInstance   | .NET Framework 4.7.2 |  89.4689 ns |      32 B |
+| DirectAccessWrappedInstance | .NET Framework 4.7.2 |   0.6974 ns |         - |
+| TypeMapperGetEnumerator     | .NET Framework 4.7.2 | 185.9241 ns |      56 B |
+| DirectAccessGetEnumerator   | .NET Framework 4.7.2 | 148.6151 ns |      56 B |

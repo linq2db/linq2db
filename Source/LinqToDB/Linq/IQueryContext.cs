@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.Linq
+﻿namespace LinqToDB.Linq
 {
 	using SqlQuery;
 
@@ -8,9 +6,7 @@ namespace LinqToDB.Linq
 	{
 		SqlStatement    Statement   { get; }
 		object?         Context     { get; set; }
-		List<string>?   QueryHints  { get; set; }
-
-		SqlParameter[]? Parameters  { get; set; }
 		AliasesContext? Aliases     { get; set; }
+		DataOptions?    DataOptions { get; }
 	}
 }

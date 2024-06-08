@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
+	using Common;
 	using Expressions;
 	using Metadata;
 
@@ -12,7 +15,19 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	public class FluentMappingBuilder
 	{
+		private Dictionary<Type, List<MappingAttribute>>       _typeAttributes   = new();
+		private Dictionary<MemberInfo, List<MappingAttribute>> _memberAttributes = new();
+		private List<MemberInfo>                               _orderedMembers   = new();
+
 		#region Init
+
+		/// <summary>
+		/// Creates new MappingSchema and fluent mapping builder for it.
+		/// </summary>
+		public FluentMappingBuilder()
+		{
+			MappingSchema = new ();
+		}
 
 		/// <summary>
 		/// Creates fluent mapping builder for specified mapping schema.
@@ -20,47 +35,58 @@ namespace LinqToDB.Mapping
 		/// <param name="mappingSchema">Mapping schema.</param>
 		public FluentMappingBuilder(MappingSchema mappingSchema)
 		{
-			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
-
-			MappingSchema = mappingSchema;
-			MappingSchema.AddMetadataReader(_reader);
+			MappingSchema = mappingSchema ?? throw new ArgumentNullException(nameof(mappingSchema));
 		}
 
 		/// <summary>
 		/// Gets builder's mapping schema.
 		/// </summary>
-		public MappingSchema MappingSchema { get; private set; }
-
-		readonly FluentMetadataReader _reader = new FluentMetadataReader();
+		public MappingSchema MappingSchema { get; }
 
 		#endregion
+
+		/// <summary>
+		/// Adds configured mappings to builder's mapping schema.
+		/// </summary>
+		public FluentMappingBuilder Build()
+		{
+			if (_typeAttributes.Count > 0 || _memberAttributes.Count > 0)
+			{
+				MappingSchema.AddMetadataReader(new FluentMetadataReader(_typeAttributes, _memberAttributes, _orderedMembers));
+				_typeAttributes.Clear();
+				_memberAttributes.Clear();
+				_orderedMembers.Clear();
+			}
+
+			return this;
+		}
 
 		#region GetAtributes
 
 		/// <summary>
 		/// Gets attributes of type <typeparamref name="T"/>, applied to specified type.
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type.</typeparam>
 		/// <param name="type">Type with attributes.</param>
 		/// <returns>Returns attributes of specified type, applied to <paramref name="type"/>.</returns>
-		public T[] GetAttributes<T>(Type type)
-			where T : Attribute
+		internal IEnumerable<T> GetAttributes<T>(Type type)
+			where T : MappingAttribute
 		{
-			return _reader.GetAttributes<T>(type, false);
+			return _typeAttributes.TryGetValue(type, out var attributes) ? attributes.OfType<T>() : Array<T>.Empty;
 		}
 
 		/// <summary>
 		/// Gets attributes of type <typeparamref name="T"/>, applied to specified member. Search for member in specified
 		/// type or it's parents.
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type.</typeparam>
 		/// <param name="type">Member owner type.</param>
 		/// <param name="memberInfo">Member descriptor.</param>
 		/// <returns>Returns attributes of specified type, applied to <paramref name="memberInfo"/>.</returns>
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
-			where T : Attribute
+		internal IEnumerable<T> GetAttributes<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
 		{
-			return _reader.GetAttributes<T>(type, memberInfo);
+			return _memberAttributes.TryGetValue(memberInfo, out var attributes) ? attributes.OfType<T>() : Array<T>.Empty;
 		}
 
 		#endregion
@@ -73,9 +99,9 @@ namespace LinqToDB.Mapping
 		/// <param name="type">Target type.</param>
 		/// <param name="attribute">Mapping attribute to add to specified type.</param>
 		/// <returns>Returns current fluent mapping builder.</returns>
-		public FluentMappingBuilder HasAttribute(Type type, Attribute attribute)
+		public FluentMappingBuilder HasAttribute(Type type, MappingAttribute attribute)
 		{
-			_reader.AddAttribute(type, attribute);
+			AddAttribute(type, attribute);
 			return this;
 		}
 
@@ -85,9 +111,9 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="T">Target type.</typeparam>
 		/// <param name="attribute">Mapping attribute to add to specified type.</param>
 		/// <returns>Returns current fluent mapping builder.</returns>
-		public FluentMappingBuilder HasAttribute<T>(Attribute attribute)
+		public FluentMappingBuilder HasAttribute<T>(MappingAttribute attribute)
 		{
-			_reader.AddAttribute(typeof(T), attribute);
+			AddAttribute(typeof(T), attribute);
 			return this;
 		}
 
@@ -97,9 +123,9 @@ namespace LinqToDB.Mapping
 		/// <param name="memberInfo">Target member.</param>
 		/// <param name="attribute">Mapping attribute to add to specified member.</param>
 		/// <returns>Returns current fluent mapping builder.</returns>
-		public FluentMappingBuilder HasAttribute(MemberInfo memberInfo, Attribute attribute)
+		public FluentMappingBuilder HasAttribute(MemberInfo memberInfo, MappingAttribute attribute)
 		{
-			_reader.AddAttribute(memberInfo, attribute);
+			AddAttribute(memberInfo, attribute);
 			return this;
 		}
 
@@ -109,10 +135,10 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Target member, specified using lambda expression.</param>
 		/// <param name="attribute">Mapping attribute to add to specified member.</param>
 		/// <returns>Returns current fluent mapping builder.</returns>
-		public FluentMappingBuilder HasAttribute(LambdaExpression func, Attribute attribute)
+		public FluentMappingBuilder HasAttribute(LambdaExpression func, MappingAttribute attribute)
 		{
 			var memberInfo = MemberHelper.GetMemberInfo(func);
-			_reader.AddAttribute(memberInfo, attribute);
+			AddAttribute(memberInfo, attribute);
 			return this;
 		}
 
@@ -123,10 +149,10 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Target member, specified using lambda expression.</param>
 		/// <param name="attribute">Mapping attribute to add to specified member.</param>
 		/// <returns>Returns current fluent mapping builder.</returns>
-		public FluentMappingBuilder HasAttribute<T>(Expression<Func<T,object?>> func, Attribute attribute)
+		public FluentMappingBuilder HasAttribute<T>(Expression<Func<T,object?>> func, MappingAttribute attribute)
 		{
 			var memberInfo = MemberHelper.MemberOf(func);
-			_reader.AddAttribute(memberInfo, attribute);
+			AddAttribute(memberInfo, attribute);
 			return this;
 		}
 
@@ -141,7 +167,26 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns entity fluent mapping builder.</returns>
 		public EntityMappingBuilder<T> Entity<T>(string? configuration = null)
 		{
-			return new EntityMappingBuilder<T>(this, configuration);
+			return new (this, configuration);
+		}
+
+		private void AddAttribute(Type owner, MappingAttribute attribute)
+		{
+			if (!_typeAttributes.TryGetValue(owner, out var attributes))
+				_typeAttributes.Add(owner, attributes = new());
+
+			attributes.Add(attribute);
+		}
+
+		private void AddAttribute(MemberInfo memberInfo, MappingAttribute attribute)
+		{
+			if (!_memberAttributes.TryGetValue(memberInfo, out var attributes))
+			{
+				_memberAttributes.Add(memberInfo, attributes = new());
+				_orderedMembers.Add(memberInfo);
+			}
+
+			attributes.Add(attribute);
 		}
 	}
 }

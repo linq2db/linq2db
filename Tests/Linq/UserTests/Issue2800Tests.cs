@@ -30,15 +30,16 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(2839, Configuration = TestProvName.AllFirebird)]
 		[Test]
 		public void TestExpressionMethod([DataSources] string context)
 		{
-			var fluentMappingBuilder = new MappingSchema().GetFluentMappingBuilder();
+			var fluentMappingBuilder = new FluentMappingBuilder(new MappingSchema());
 
 			var carBuilder = fluentMappingBuilder.Entity<Car>();
 			carBuilder.Property(x => x.Id).IsPrimaryKey();
 			carBuilder.Property(x => x.Name).HasLength(50);
+
+			fluentMappingBuilder.Build();
 
 			var records = new Car[]
 			{

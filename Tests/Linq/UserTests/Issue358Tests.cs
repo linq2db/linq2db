@@ -5,6 +5,8 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	using LinqToDB;
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -16,7 +18,7 @@ namespace Tests.UserTests
 			Value2
 		}
 
-		class TestIssue358Class
+		sealed class TestIssue358Class
 		{
 			public TestIssue358Enum? MyEnum;
 			public TestIssue358Enum  MyEnum2;
@@ -25,7 +27,7 @@ namespace Tests.UserTests
 		[Test]
 		public void HasIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var qry =
 					from p in db.GetTable<TestIssue358Class>()
@@ -42,7 +44,7 @@ namespace Tests.UserTests
 		[Test]
 		public void ContainsDoesNotHaveIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var filter = new[] {TestIssue358Enum.Value2};
 
@@ -61,7 +63,7 @@ namespace Tests.UserTests
 		[Test]
 		public void NoIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var qry =
 					from p in db.GetTable<TestIssue358Class>()
@@ -78,7 +80,7 @@ namespace Tests.UserTests
 		[Test]
 		public void ContainsNoIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var filter = new[] {TestIssue358Enum.Value2};
 
@@ -96,10 +98,12 @@ namespace Tests.UserTests
 
 		static LinqDataTypes2 FixData(LinqDataTypes2 data)
 		{
+			data = data.Clone();
 			data.StringValue = null;
 			return data;
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test1([DataSources] string context)
 		{
@@ -111,6 +115,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test2([DataSources] string context)
 		{
@@ -122,6 +127,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test3([DataSources] string context)
 		{
@@ -133,6 +139,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test4([DataSources] string context)
 		{
@@ -146,20 +153,20 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test4WithoutComparasionNullCheck([DataSources] string context)
 		{
-			using (new WithoutComparisonNullCheck())
-			using (var db = GetDataContext(context))
-			{
-				var bigintFilter = new long?[] {2};
+			using var _  = new CompareNullsAsValuesOption(false);
+			using var db = GetDataContext(context);
+			var bigintFilter = new long?[] {2};
 
-				AreEqual(FixData,
-					   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue) && _.BigIntValue != null),
-					db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
-			}
+			AreEqual(FixData,
+				   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue) && _.BigIntValue != null),
+				db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test5([DataSources] string context)
 		{
@@ -173,6 +180,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test6([DataSources] string context)
 		{
@@ -186,6 +194,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test7([DataSources] string context)
 		{
@@ -199,6 +208,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test8([DataSources] string context)
 		{
@@ -212,6 +222,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test9([DataSources] string context)
 		{
@@ -225,6 +236,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test81([DataSources] string context)
 		{
@@ -238,6 +250,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test91([DataSources] string context)
 		{
@@ -251,6 +264,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test82([DataSources] string context)
 		{
@@ -264,6 +278,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test92([DataSources] string context)
 		{

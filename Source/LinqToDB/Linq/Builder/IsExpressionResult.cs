@@ -1,16 +1,18 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
 	/// <summary>
 	/// Contains result of <see cref="IBuildContext.IsExpression"/> function call.
 	/// </summary>
-	struct IsExpressionResult
+	readonly struct IsExpressionResult
 	{
 		/// <summary>
 		/// Indicates when test or request was successful.
 		/// </summary>
-		public readonly bool           Result;
+		public   readonly bool           Result;
 
 		/// <summary>
 		/// Stores found Context during <see cref="RequestFor.Table"/> request.
@@ -21,6 +23,11 @@ namespace LinqToDB.Linq.Builder
 		/// Stores found expression request.
 		/// </summary>
 		public readonly Expression?    Expression;
+
+		/// <summary>
+		/// Stores found expression request.
+		/// </summary>
+		public readonly ISqlExpression? SqlExpression;
 
 		public IsExpressionResult(bool result, Expression? expression = null)
 		{
@@ -36,14 +43,25 @@ namespace LinqToDB.Linq.Builder
 			Expression = expression;
 		}
 
+		public IsExpressionResult(ISqlExpression expression)
+		{
+			Result        = true;
+			SqlExpression = expression;
+		}
+
 		/// <summary>
 		/// Static value for indicating successful test.
 		/// </summary>
-		public static IsExpressionResult True  = new IsExpressionResult(true);
+		public static readonly IsExpressionResult True  = new (true);
 
 		/// <summary>
 		/// Static value for indicating unsuccessful test.
 		/// </summary>
-		public static IsExpressionResult False = new IsExpressionResult(false);
+		public static readonly IsExpressionResult False = new (false);
+
+		/// <summary>
+		/// Returns cached instance of <see cref="IsExpressionResult"/> without expression and context.
+		/// </summary>
+		public static IsExpressionResult GetResult(bool result) => result ? True : False;
 	}
 }

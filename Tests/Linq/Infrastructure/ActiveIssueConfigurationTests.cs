@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System;
+
+using LinqToDB;
 
 using NUnit.Framework;
 
@@ -26,8 +28,7 @@ namespace Tests.Infrastructure
 			{
 				case TestProvName.NoopProvider:
 					return;
-				case TestProvName.Firebird3:
-				case ProviderName.Firebird:
+				case string when configuration.IsAnyOf(TestProvName.AllFirebird):
 					Assert.Fail("This test should be available only for explicit run");
 					break;
 			}
@@ -46,8 +47,7 @@ namespace Tests.Infrastructure
 			{
 				case TestProvName.NoopProvider:
 					return;
-				case TestProvName.Firebird3:
-				case ProviderName.Firebird:
+				case string when configuration.IsAnyOf(TestProvName.AllFirebird):
 					Assert.Fail("This test should be available only for explicit run");
 					break;
 			}
@@ -65,13 +65,10 @@ namespace Tests.Infrastructure
 		{
 			switch (configuration)
 			{
-				case ProviderName.Access:
-				case ProviderName.Access + ".LinqService":
-				case TestProvName.NoopProvider + ".LinqService":
+				case string when configuration.IsAnyOf(ProviderName.Access):
 					return;
-				case TestProvName.NoopProvider:
-				case ProviderName.SQLiteClassic:
-				case ProviderName.SQLiteClassic + ".LinqService":
+				case string when configuration.IsAnyOf(TestProvName.NoopProvider):
+				case string when configuration.IsAnyOf(ProviderName.SQLiteClassic):
 					Assert.Fail("This test should be available only for explicit run");
 					break;
 			}
@@ -87,13 +84,10 @@ namespace Tests.Infrastructure
 		{
 			switch (configuration)
 			{
-				case ProviderName.Access:
-				case ProviderName.Access + ".LinqService":
-				case ProviderName.SQLiteClassic:
-				case ProviderName.SQLiteClassic + ".LinqService":
-				case TestProvName.NoopProvider + ".LinqService":
+				case string when configuration.IsAnyOf(ProviderName.Access):
+				case string when configuration.IsAnyOf(ProviderName.SQLiteClassic):
 					return;
-				case TestProvName.NoopProvider:
+				case string when configuration.IsAnyOf(TestProvName.NoopProvider):
 					Assert.Fail("This test should be available only for explicit run");
 					break;
 			}
@@ -112,10 +106,9 @@ namespace Tests.Infrastructure
 		{
 			switch (configuration)
 			{
-				case ProviderName.Access:
-				case ProviderName.Access + ".LinqService":
-				case ProviderName.SQLiteClassic + ".LinqService":
-				case TestProvName.NoopProvider + ".LinqService":
+				case string when configuration.IsAnyOf(ProviderName.Access):
+				case ProviderName.SQLiteClassic + LinqServiceSuffix:
+				case TestProvName.NoopProvider + LinqServiceSuffix:
 					return;
 				case TestProvName.NoopProvider:
 				case ProviderName.SQLiteClassic:
@@ -137,13 +130,12 @@ namespace Tests.Infrastructure
 		{
 			switch (configuration)
 			{
-				case ProviderName.Access:
-				case ProviderName.Access + ".LinqService":
+				case string when configuration.IsAnyOf(ProviderName.Access):
 				case TestProvName.NoopProvider:
 				case ProviderName.SQLiteClassic:
 					return;
-				case TestProvName.NoopProvider + ".LinqService":
-				case ProviderName.SQLiteClassic + ".LinqService":
+				case TestProvName.NoopProvider + LinqServiceSuffix:
+				case ProviderName.SQLiteClassic + LinqServiceSuffix:
 					Assert.Fail("This test should be available only for explicit run");
 					break;
 			}

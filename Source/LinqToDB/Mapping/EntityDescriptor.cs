@@ -1,19 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Expressions;
 	using Extensions;
 	using Linq;
+	using LinqToDB.SqlQuery;
 	using Reflection;
-	using System.Linq.Expressions;
-	using System.Reflection;
 
 	/// <summary>
 	/// Stores mapping entity descriptor.
 	/// </summary>
+	[DebuggerDisplay("{TypeAccessor.Type.Name} (\"{TableName.Name}\")")]
 	public class EntityDescriptor : IEntityChangeDescriptor
 	{
 		/// <summary>
@@ -21,66 +25,48 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema, associated with descriptor.</param>
 		/// <param name="type">Mapping class type.</param>
-		public EntityDescriptor(MappingSchema mappingSchema, Type type)
+		public EntityDescriptor(MappingSchema mappingSchema, Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
 		{
 			MappingSchema = mappingSchema;
 			TypeAccessor  = TypeAccessor.GetAccessor(type);
-			Associations  = new List<AssociationDescriptor>();
-			Columns       = new List<ColumnDescriptor>();
 
-			Init();
-			InitInheritanceMapping();
+			Init(onEntityDescriptorCreated);
 		}
 
 		internal MappingSchema MappingSchema { get; }
 
 		/// <summary>
-		/// Gets or sets mapping type accessor.
+		/// Gets mapping type accessor.
 		/// </summary>
-		public TypeAccessor TypeAccessor { get; set; }
+		public TypeAccessor TypeAccessor { get; }
 
 		/// <summary>
 		/// Gets name of table or view in database.
 		/// </summary>
-		public string TableName { get; private set; } = null!;
+		public SqlObjectName Name { get; private set; }
 
 		string IEntityChangeDescriptor.TableName
 		{
-			get => TableName;
-			set => TableName = value;
+			get => Name.Name;
+			set => Name = Name with { Name = value };
 		}
-
-		/// <summary>
-		/// Gets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
-		/// </summary>
-		public string? SchemaName { get; private set; }
 
 		string? IEntityChangeDescriptor.SchemaName
 		{
-			get => SchemaName;
-			set => SchemaName = value;
+			get => Name.Schema;
+			set => Name = Name with { Schema = value };
 		}
-
-		/// <summary>
-		/// Gets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
-		/// </summary>
-		public string? DatabaseName { get; private set; }
 
 		string? IEntityChangeDescriptor.DatabaseName
 		{
-			get => DatabaseName;
-			set => DatabaseName = value;
+			get => Name.Database;
+			set => Name = Name with { Database = value };
 		}
-
-		/// <summary>
-		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
-		/// </summary>
-		public string? ServerName { get; private set; }
 
 		string? IEntityChangeDescriptor.ServerName
 		{
-			get => ServerName;
-			set => ServerName = value;
+			get => Name.Server;
+			set => Name = Name with { Server = value };
 		}
 
 		/// <summary>
@@ -113,27 +99,31 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public SkipModification SkipModificationFlags { get; private set; }
 
+		readonly List<ColumnDescriptor> _columns = new ();
 		/// <summary>
 		/// Gets list of column descriptors for current entity.
 		/// </summary>
-		public List<ColumnDescriptor> Columns { get; private set; }
+		public IReadOnlyList<ColumnDescriptor> Columns => _columns;
 
-		IEnumerable<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns => Columns;
+		IEnumerable<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns => _columns;
 
+		readonly List<AssociationDescriptor> _associations = new ();
 		/// <summary>
 		/// Gets list of association descriptors for current entity.
 		/// </summary>
-		public List<AssociationDescriptor> Associations { get; private set; }
+		public IReadOnlyList<AssociationDescriptor> Associations => _associations;
 
+		Dictionary<string, string>? _aliases;
 		/// <summary>
 		/// Gets mapping dictionary to map column aliases to target columns or aliases.
 		/// </summary>
-		public Dictionary<string, string?>? Aliases { get; private set; }
+		public IReadOnlyDictionary<string, string>? Aliases => _aliases;
 
+		List<MemberAccessor>? _calculatedMembers;
 		/// <summary>
 		/// Gets list of calculated column members (properties with <see cref="ExpressionMethodAttribute.IsColumn"/> set to <c>true</c>).
 		/// </summary>
-		public List<MemberAccessor>? CalculatedMembers { get; private set; }
+		public IReadOnlyList<MemberAccessor>? CalculatedMembers => _calculatedMembers;
 
 		/// <summary>
 		/// Returns <c>true</c>, if entity has calculated columns.
@@ -141,11 +131,16 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool HasCalculatedMembers => CalculatedMembers != null && CalculatedMembers.Count > 0;
 
-		private List<InheritanceMapping> _inheritanceMappings = null!;
+		private InheritanceMapping[] _inheritanceMappings = Array<InheritanceMapping>.Empty;
 		/// <summary>
 		/// Gets list of inheritance mapping descriptors for current entity.
 		/// </summary>
-		public List<InheritanceMapping> InheritanceMapping => _inheritanceMappings;
+		public IReadOnlyList<InheritanceMapping> InheritanceMapping => _inheritanceMappings;
+
+		/// <summary>
+		/// For entity descriptor with inheritance mapping gets descriptor of root (base) entity.
+		/// </summary>
+		public EntityDescriptor? InheritanceRoot { get; private set; }
 
 		/// <summary>
 		/// Gets mapping class type.
@@ -159,18 +154,27 @@ namespace LinqToDB.Mapping
 
 		public Delegate? QueryFilterFunc { get; private set; }
 
-		void Init()
+		bool HasInheritanceMapping()
 		{
-			var ta = MappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
+			return TypeAccessor.Type.BaseType != null && MappingSchema.HasAttribute<InheritanceMappingAttribute>(TypeAccessor.Type.BaseType);
+		}
+
+		void Init(Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
+		{
+			var hasInheritanceMapping = HasInheritanceMapping();
+			var ta = MappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type);
 
 			string? tableName = null;
+			string? schema    = null;
+			string? database  = null;
+			string? server    = null;
 
 			if (ta != null)
 			{
-				tableName                 = ta.Name!;
-				SchemaName                = ta.Schema;
-				DatabaseName              = ta.Database;
-				ServerName                = ta.Server;
+				tableName                 = ta.Name;
+				schema                    = ta.Schema;
+				database                  = ta.Database;
+				server                    = ta.Server;
 				TableOptions              = ta.TableOptions;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
@@ -183,7 +187,7 @@ namespace LinqToDB.Mapping
 					tableName = tableName.Substring(1);
 			}
 
-			TableName = tableName;
+			Name = new SqlObjectName(tableName, Server: server, Database: database, Schema: schema);
 
 			var qf = MappingSchema.GetAttribute<QueryFilterAttribute>(TypeAccessor.Type);
 
@@ -192,26 +196,36 @@ namespace LinqToDB.Mapping
 				QueryFilterFunc = qf.FilterFunc;
 			}
 
-			InitializeDynamicColumnsAccessors();
+			InitializeDynamicColumnsAccessors(hasInheritanceMapping);
 
-			var attrs = new List<ColumnAttribute>();
+			List<ColumnAttribute>? attrs = null;
 			var members = TypeAccessor.Members.Concat(
 				MappingSchema.GetDynamicColumns(ObjectType).Select(dc => new MemberAccessor(TypeAccessor, dc, this)));
 
 			foreach (var member in members)
 			{
-				var aa = MappingSchema.GetAttribute<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var aa = MappingSchema.GetAttribute<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo);
 
 				if (aa != null)
 				{
-					Associations.Add(new AssociationDescriptor(
-						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(),
-						aa.ExpressionPredicate, aa.Predicate, aa.QueryExpressionMethod, aa.QueryExpression, aa.Storage, aa.CanBeNull,
+					_associations.Add(new AssociationDescriptor(
+						TypeAccessor.Type, 
+						member.MemberInfo, 
+						aa.GetThisKeys(), 
+						aa.GetOtherKeys(),
+						aa.ExpressionPredicate, 
+						aa.Predicate, 
+						aa.QueryExpressionMethod, 
+						aa.QueryExpression,
+						aa.Storage,
+						aa.AssociationSetterExpressionMethod,
+						aa.AssociationSetterExpression,
+						aa.ConfiguredCanBeNull,
 						aa.AliasName));
 					continue;
 				}
 
-				var columnAttributes = MappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var columnAttributes = MappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo);
 
 				if (columnAttributes.Length > 0)
 				{
@@ -222,11 +236,11 @@ namespace LinqToDB.Mapping
 						{
 							if (ca.MemberName != null)
 							{
-								attrs.Add(new ColumnAttribute(member.Name, ca));
+								(attrs ??= new()).Add(new ColumnAttribute(member.Name, ca));
 							}
 							else
 							{
-								var cd = new ColumnDescriptor(MappingSchema, ca, member);
+								var cd = new ColumnDescriptor(MappingSchema, this, ca, member, hasInheritanceMapping);
 								AddColumn(cd);
 								_columnNames.Add(member.Name, cd);
 							}
@@ -235,43 +249,50 @@ namespace LinqToDB.Mapping
 				}
 				else if (
 					!IsColumnAttributeRequired && MappingSchema.IsScalarType(member.Type) ||
-					MappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
-					MappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
+					MappingSchema.HasAttribute<IdentityAttribute  >(TypeAccessor.Type, member.MemberInfo) ||
+					MappingSchema.HasAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo))
 				{
-					var cd = new ColumnDescriptor(MappingSchema, null, member);
+					var cd = new ColumnDescriptor(MappingSchema, this, null, member, hasInheritanceMapping);
 					AddColumn(cd);
 					_columnNames.Add(member.Name, cd);
 				}
 
-				var caa = MappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var caa = MappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo);
 
 				if (caa != null)
 				{
-					if (Aliases == null)
-						Aliases = new Dictionary<string, string?>();
+					_aliases ??= new Dictionary<string, string>();
 
-					Aliases.Add(member.Name, caa.MemberName);
+					_aliases.Add(
+						member.Name,
+						caa.MemberName ?? throw new LinqToDBException($"The {nameof(ColumnAliasAttribute)} attribute of the '{TypeAccessor.Type}.{member.MemberInfo.Name}' must have MemberName."));
 				}
 
-				var ma = MappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var ma = MappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo);
 				if (ma != null && ma.IsColumn)
 				{
-					if (CalculatedMembers == null)
-						CalculatedMembers = new List<MemberAccessor>();
-					CalculatedMembers.Add(member);
+					_calculatedMembers ??= new List<MemberAccessor>();
+					_calculatedMembers.Add(member);
 				}
 			}
 
-			var typeColumnAttrs = MappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
+			var typeColumnAttrs = MappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type);
 
-			foreach (var attr in typeColumnAttrs.Concat(attrs))
+			foreach (var attr in typeColumnAttrs)
 				if (attr.IsColumn)
-					SetColumn(attr);
+					SetColumn(attr, hasInheritanceMapping);
+			if (attrs != null)
+				foreach (var attr in attrs)
+					if (attr.IsColumn)
+						SetColumn(attr, hasInheritanceMapping);
 
 			SkipModificationFlags = Columns.Aggregate(SkipModification.None, (s, c) => s | c.SkipModificationFlags);
+
+			if (!hasInheritanceMapping)
+				InitInheritanceMapping(onEntityDescriptorCreated);
 		}
 
-		void SetColumn(ColumnAttribute attr)
+		void SetColumn(ColumnAttribute attr, bool hasInheritanceMapping)
 		{
 			if (attr.MemberName == null)
 				throw new LinqToDBException($"The Column attribute of the '{TypeAccessor.Type}' type must have MemberName.");
@@ -279,22 +300,22 @@ namespace LinqToDB.Mapping
 			if (attr.MemberName.IndexOf('.') < 0)
 			{
 				var ex = TypeAccessor[attr.MemberName];
-				var cd = new ColumnDescriptor(MappingSchema, attr, ex);
+				var cd = new ColumnDescriptor(MappingSchema, this, attr, ex, hasInheritanceMapping);
 
 				if (_columnNames.Remove(attr.MemberName))
-					Columns.RemoveAll(c => c.MemberName == attr.MemberName);
+					_columns.RemoveAll(c => c.MemberName == attr.MemberName);
 
 				AddColumn(cd);
 				_columnNames.Add(attr.MemberName, cd);
 			}
 			else
 			{
-				var cd = new ColumnDescriptor(MappingSchema, attr, new MemberAccessor(TypeAccessor, attr.MemberName, this));
+				var cd = new ColumnDescriptor(MappingSchema, this, attr, new MemberAccessor(TypeAccessor, attr.MemberName, this), hasInheritanceMapping);
 
 				if (!string.IsNullOrWhiteSpace(attr.MemberName))
 				{
 					if (_columnNames.Remove(attr.MemberName))
-						Columns.RemoveAll(c => c.MemberName == attr.MemberName);
+						_columns.RemoveAll(c => c.MemberName == attr.MemberName);
 
 					AddColumn(cd);
 					_columnNames.Add(attr.MemberName, cd);
@@ -302,7 +323,7 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		readonly Dictionary<string, ColumnDescriptor> _columnNames = new Dictionary<string, ColumnDescriptor>();
+		readonly Dictionary<string, ColumnDescriptor> _columnNames = new ();
 
 		/// <summary>
 		/// Gets column descriptor by member name.
@@ -315,68 +336,64 @@ namespace LinqToDB.Mapping
 			{
 				if (!_columnNames.TryGetValue(memberName, out var cd))
 					if (Aliases != null && Aliases.TryGetValue(memberName, out var alias) && memberName != alias)
-						return this[alias!];
+						return this[alias];
 
 				return cd;
 			}
 		}
 
-		internal void InitInheritanceMapping()
+		void InitInheritanceMapping(Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
 		{
-			var mappingAttrs = MappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration, false);
-			var result = new List<InheritanceMapping>(mappingAttrs.Length);
+			var mappingAttrs = MappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType);
 
-			if (mappingAttrs.Length > 0)
+			if (mappingAttrs.Length == 0)
+				return;
+
+			_inheritanceMappings = new InheritanceMapping[mappingAttrs.Length];
+			InheritanceRoot      = this;
+
+			for (var i = 0; i < mappingAttrs.Length; i++)
 			{
-				foreach (var m in mappingAttrs)
+				var m = mappingAttrs[i];
+
+				var mapping = new InheritanceMapping()
 				{
-					var mapping = new InheritanceMapping
-					{
-						Code      = m.Code,
-						IsDefault = m.IsDefault,
-						Type      = m.Type,
-					};
+					Code      = m.Code,
+					IsDefault = m.IsDefault,
+					Type      = m.Type,
+				};
 
-					var ed = mapping.Type.Equals(ObjectType)
-						? this
-						: MappingSchema.GetEntityDescriptor(mapping.Type);
-
-					//foreach (var column in this.Columns)
-					//{
-					//	if (ed.Columns.All(f => f.MemberName != column.MemberName))
-					//		ed.AddColumn(column);
-					//}
-
-					foreach (var column in ed.Columns)
-					{
-						if (Columns.All(f => f.MemberName != column.MemberName))
-							AddColumn(column);
-
-						if (column.IsDiscriminator)
-							mapping.Discriminator = column;
-					}
-
-					mapping.Discriminator ??= Columns.FirstOrDefault(x => x.IsDiscriminator);
-
-					result.Add(mapping);
-				}
-
-				var discriminator = result.Select(m => m.Discriminator).FirstOrDefault(d => d != null);
-
-				if (discriminator == null)
-					throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", ObjectType);
-
-				foreach (var mapping in result)
-					if (mapping.Discriminator == null)
-						mapping.Discriminator = discriminator;
+				_inheritanceMappings[i] = mapping;
 			}
 
-			_inheritanceMappings = result;
+			var allColumnMemberNames = new HashSet<string>();
+
+			foreach (var cd in Columns)
+				allColumnMemberNames.Add(cd.MemberName);
+
+			foreach (var m in _inheritanceMappings)
+			{
+				if (m.Type == ObjectType)
+					continue;
+
+				var ed = MappingSchema.GetEntityDescriptor(m.Type, onEntityDescriptorCreated);
+				ed.InheritanceRoot = this;
+
+				foreach (var cd in ed.Columns)
+					if (allColumnMemberNames.Add(cd.MemberName))
+						AddColumn(cd);
+			}
+
+			var discriminator = Columns.FirstOrDefault(x => x.IsDiscriminator)
+				?? throw new LinqException($"Inheritance Discriminator is not defined for the '{ObjectType}' hierarchy.");
+
+			foreach (var m in _inheritanceMappings)
+				m.Discriminator = discriminator;
 		}
 
-		internal void AddColumn(ColumnDescriptor columnDescriptor)
+		void AddColumn(ColumnDescriptor columnDescriptor)
 		{
-			Columns.Add(columnDescriptor);
+			_columns.Add(columnDescriptor);
 
 			if (columnDescriptor.MemberAccessor.IsComplex)
 				HasComplexColumns = true;
@@ -390,6 +407,16 @@ namespace LinqToDB.Mapping
 		public ColumnDescriptor? FindColumnDescriptor(MemberInfo memberInfo)
 		{
 			return Columns.FirstOrDefault(c => c.MemberInfo == memberInfo);
+		}
+
+		/// <summary>
+		/// Returns association descriptor based on its MemberInfo
+		/// </summary>
+		/// <param name="memberInfo"></param>
+		/// <returns></returns>
+		public AssociationDescriptor? FindAssociationDescriptor(MemberInfo memberInfo)
+		{
+			return Associations.FirstOrDefault(a => a.MemberInfo.EqualsTo(memberInfo));
 		}
 
 		#region Dynamic Columns
@@ -414,35 +441,38 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal LambdaExpression? DynamicColumnSetter { get; private set; }
 
-		private void InitializeDynamicColumnsAccessors()
+		private void InitializeDynamicColumnsAccessors(bool hasInheritanceMapping)
 		{
 			// initialize dynamic columns store accessors
-			var dynamicStoreAttributes = new List<IConfigurationProvider>();
-			var accessors = MappingSchema.GetAttribute<DynamicColumnAccessorAttribute>(TypeAccessor.Type, attr => attr.Configuration);
+			List<MappingAttribute>?                                   dynamicStoreAttributes = null;
+			Dictionary<DynamicColumnsStoreAttribute, MemberAccessor>? storeMembers           = null;
+
+			var accessors = MappingSchema.GetAttribute<DynamicColumnAccessorAttribute>(TypeAccessor.Type);
 			if (accessors != null)
 			{
-				dynamicStoreAttributes.Add(accessors);
+#pragma warning disable CA1508 // Avoid dead conditional code : analyzer bug
+				(dynamicStoreAttributes ??= new()).Add(accessors);
+#pragma warning restore CA1508 // Avoid dead conditional code
 			}
-			var storeMembers = new Dictionary<DynamicColumnsStoreAttribute, MemberAccessor>();
 
 			foreach (var member in TypeAccessor.Members)
 			{
 				// dynamic columns store property
-				var dcsProp = MappingSchema.GetAttribute<DynamicColumnsStoreAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var dcsProp = MappingSchema.GetAttribute<DynamicColumnsStoreAttribute>(TypeAccessor.Type, member.MemberInfo);
 
 				if (dcsProp != null)
 				{
-					dynamicStoreAttributes.Add(dcsProp);
-					storeMembers.Add(dcsProp, member);
+					(dynamicStoreAttributes ??= new()).Add(dcsProp);
+					(storeMembers ??= new()).Add(dcsProp, member);
 				}
 			}
 
-			if (dynamicStoreAttributes.Count > 0)
+			if (dynamicStoreAttributes != null)
 			{
-				IConfigurationProvider dynamicStoreAttribute;
+				MappingAttribute dynamicStoreAttribute;
 				if (dynamicStoreAttributes.Count > 1)
 				{
-					var orderedAttributes = MappingSchema.SortByConfiguration(attr => attr.Configuration, dynamicStoreAttributes).ToArray();
+					var orderedAttributes = MappingSchema.SortByConfiguration(dynamicStoreAttributes).Take(2).ToArray();
 
 					if (orderedAttributes[1].Configuration == orderedAttributes[0].Configuration)
 						throw new LinqToDBException($"Multiple dynamic store configuration attributes with same configuration found for {TypeAccessor.Type}");
@@ -459,8 +489,8 @@ namespace LinqToDB.Mapping
 
 				if (dynamicStoreAttribute is DynamicColumnsStoreAttribute storeAttribute)
 				{
-					var member          = storeMembers[storeAttribute];
-					DynamicColumnsStore = new ColumnDescriptor(MappingSchema, new ColumnAttribute(member.Name), member);
+					var member          = storeMembers![storeAttribute];
+					DynamicColumnsStore = new ColumnDescriptor(MappingSchema, this, new ColumnAttribute(member.Name), member, hasInheritanceMapping);
 
 					// getter expression
 					var storageType = member.MemberInfo.GetMemberType();
@@ -499,7 +529,7 @@ namespace LinqToDB.Mapping
 								Expression.IfThen(
 									Expression.ReferenceEqual(
 										Expression.MakeMemberAccess(objParam, member.MemberInfo),
-										Expression.Constant(null)),
+										ExpressionInstances.UntypedNull),
 									Expression.Assign(
 										Expression.MakeMemberAccess(objParam, member.MemberInfo),
 										Expression.New(typeof(Dictionary<string, object>)))),

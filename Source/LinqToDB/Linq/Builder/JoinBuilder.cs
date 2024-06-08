@@ -8,15 +8,17 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class JoinBuilder : MethodCallBuilder
+	sealed class JoinBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "Join", "GroupJoin" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			if (methodCall.Method.DeclaringType == typeof(LinqExtensions) || !methodCall.IsQueryable("Join", "GroupJoin"))
+			if (methodCall.Method.DeclaringType == typeof(LinqExtensions) || !methodCall.IsQueryable(MethodNames))
 				return false;
 
 			// other overload for Join
-			if (!(methodCall.Arguments[2].Unwrap() is LambdaExpression lambda))
+			if (methodCall.Arguments[2].Unwrap() is not LambdaExpression lambda)
 				return false;
 
 			var body = lambda.Body.Unwrap();
@@ -44,6 +46,14 @@ namespace LinqToDB.Linq.Builder
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
+			List<SqlQueryExtension>? extensions = null;
+
+			if (innerContext is QueryExtensionBuilder.JoinHintContext jhc)
+			{
+				innerContext = jhc.Context;
+				extensions   = jhc.Extensions;
+			}
+
 			var context  = new SubQueryContext(outerContext);
 			innerContext = isGroup ? new GroupJoinSubQueryContext(innerContext) : new SubQueryContext(innerContext);
 
@@ -51,6 +61,9 @@ namespace LinqToDB.Linq.Builder
 			var sql  = context.SelectQuery;
 
 			sql.From.Tables[0].Joins.Add(join.JoinedTable);
+
+			if (extensions != null)
+				join.JoinedTable.SqlQueryExtensions = extensions;
 
 			var selector = (LambdaExpression)methodCall.Arguments[4].Unwrap();
 
@@ -121,16 +134,16 @@ namespace LinqToDB.Linq.Builder
 					buildInfo.Parent, selector, context, inner, methodCall.Arguments[1], outerKeyLambda, innerKeyLambda);
 			}
 
-			return new JoinContext(buildInfo.Parent, selector, context, innerContext)
+			return new AllJoinsLinqBuilder.JoinContext(buildInfo.Parent, selector, context, innerContext)
 #if DEBUG
 			{
-				MethodCall = methodCall
+				Debug_MethodCall = methodCall
 			}
 #endif
 				;
 		}
 
-		IBuildContext GetSubQueryContext(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
+		static IBuildContext GetSubQueryContext(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
 			SelectQuery sql,
 			LambdaExpression innerKeyLambda,
 			Expression outerKeySelector,
@@ -192,12 +205,6 @@ namespace LinqToDB.Linq.Builder
 			return subQueryContext;
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		internal static void BuildJoin(
 			ExpressionBuilder builder,
 			SqlSearchCondition condition,
@@ -209,14 +216,11 @@ namespace LinqToDB.Linq.Builder
 				outerKeyContext, outerKeySelector,
 				innerKeyContext, innerKeySelector);
 
-			if (predicate == null)
-			{
-				predicate = new SqlPredicate.ExprExpr(
-					builder.ConvertToSql(outerKeyContext, outerKeySelector),
-					SqlPredicate.Operator.Equal,
-					builder.ConvertToSql(innerKeyContext, innerKeySelector), 
-					Common.Configuration.Linq.CompareNullsAsValues ? true : (bool?)null);
-			}
+			predicate ??= new SqlPredicate.ExprExpr(
+				builder.ConvertToSql(outerKeyContext, outerKeySelector),
+				SqlPredicate.Operator.Equal,
+				builder.ConvertToSql(innerKeyContext, innerKeySelector),
+				builder.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 
 			condition.Conditions.Add(new SqlCondition(false, predicate));
 		}
@@ -232,19 +236,16 @@ namespace LinqToDB.Linq.Builder
 				outerKeyContext, outerKeySelector,
 				subQueryKeyContext, innerKeySelector);
 
-			if (predicate == null)
-			{
-				predicate = new SqlPredicate.ExprExpr(
-					builder.ConvertToSql(outerKeyContext, outerKeySelector),
-					SqlPredicate.Operator.Equal,
-					builder.ConvertToSql(subQueryKeyContext, innerKeySelector),
-					Common.Configuration.Linq.CompareNullsAsValues ? true : (bool?)null);
-			}
+			predicate ??= new SqlPredicate.ExprExpr(
+				builder.ConvertToSql(outerKeyContext, outerKeySelector),
+				SqlPredicate.Operator.Equal,
+				builder.ConvertToSql(subQueryKeyContext, innerKeySelector),
+				builder.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 
 			subQuerySelect.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
 		}
 
-		internal class InnerKeyContext : ExpressionContext
+		internal sealed class InnerKeyContext : ExpressionContext
 		{
 			public InnerKeyContext(IBuildContext? parent, IBuildContext sequence, LambdaExpression lambda)
 				: base(parent, sequence, lambda)
@@ -265,19 +266,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal class JoinContext : SelectContext
-		{
-			public JoinContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext)
-				: base(parent, lambda, outerContext, innerContext)
-			{
-			}
-
-			public override void CompleteColumns()
-			{
-			}
-		}
-
-		internal class GroupJoinContext : JoinContext
+		internal sealed class GroupJoinContext : SelectContext
 		{
 			public GroupJoinContext(
 				IBuildContext?           parent,
@@ -296,17 +285,18 @@ namespace LinqToDB.Linq.Builder
 				innerContext.GroupJoin = this;
 			}
 
-			readonly Expression       _innerExpression;
+			readonly Expression        _innerExpression;
+			private  Expression?       _groupExpression;
+
 			public   LambdaExpression  OuterKeyLambda { get; }
 			public   LambdaExpression  InnerKeyLambda { get; }
-			private  Expression?       _groupExpression;
 
 			interface IGroupJoinHelper
 			{
 				Expression GetGroupJoin(GroupJoinContext context);
 			}
 
-			class GroupJoinHelper<TKey,TElement> : IGroupJoinHelper
+			sealed class GroupJoinHelper<TKey,TElement> : IGroupJoinHelper
 			{
 				public Expression GetGroupJoin(GroupJoinContext context)
 				{
@@ -319,28 +309,30 @@ namespace LinqToDB.Linq.Builder
 
 					// Convert inner condition.
 					//
-					var parameters = context.Builder.CurrentSqlParameters
+					var parameters = context.Builder.ParametersContext.CurrentSqlParameters
 						.Select((p,i) => new { p, i })
 						.ToDictionary(_ => _.p.Expression, _ => _.i);
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
 
-					var innerKey = context.InnerKeyLambda.Body.Transform(e =>
-					{
-						if (parameters.TryGetValue(e, out var idx))
+					var innerKey = context.InnerKeyLambda.Body.Transform(
+						(parameters, paramArray),
+						static (context, e) =>
 						{
-							return Expression.Convert(
-								Expression.ArrayIndex(paramArray, Expression.Constant(idx)),
-								e.Type);
-						}
+							if (context.parameters.TryGetValue(e, out var idx))
+							{
+								return Expression.Convert(
+									Expression.ArrayIndex(context.paramArray, ExpressionInstances.Int32(idx)),
+									e.Type);
+							}
 
-						return e;
-					});
+							return e;
+						});
 
 					// Item reader.
 					//
 					var expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TElement,bool>>)null!)),
+						MemberHelper.MethodOf(() => Queryable.Where(null!, (Expression<Func<TElement,bool>>)null!)),
 						context._innerExpression,
 						Expression.Lambda<Func<TElement,bool>>(
 							ExpressionBuilder.Equal(context.Builder.MappingSchema, innerKey, outerParam),
@@ -356,23 +348,25 @@ namespace LinqToDB.Linq.Builder
 
 					return Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => GetGrouping(null!, null!, default!, null!)),
+						MemberHelper.MethodOf(() => GetGrouping(null!, null!, null!, default!, null!)),
 						new[]
 						{
+							Expression.Constant(context.Builder.DataContext.Options),
 							ExpressionBuilder.QueryRunnerParam,
-							Expression.Constant(context.Builder.CurrentSqlParameters),
+							Expression.Constant(context.Builder.ParametersContext.CurrentSqlParameters),
 							outerKey,
 							Expression.Constant(itemReader),
 						});
 				}
 
 				static IEnumerable<TElement> GetGrouping(
-					IQueryRunner             runner,
-					List<ParameterAccessor>  parameterAccessor,
-					TKey                     key,
+					DataOptions                                             dataOptions,
+					IQueryRunner                                            runner,
+					List<ParameterAccessor>                                 parameterAccessor,
+					TKey                                                    key,
 					Func<IDataContext,TKey,object?[]?,IQueryable<TElement>> itemReader)
 				{
-					return new GroupByBuilder.GroupByContext.Grouping<TKey,TElement>(key, runner, parameterAccessor, itemReader);
+					return new GroupByBuilder.GroupByContext.Grouping<TKey,TElement>(dataOptions, key, runner, parameterAccessor, itemReader);
 				}
 			}
 
@@ -381,13 +375,13 @@ namespace LinqToDB.Linq.Builder
 				Expression GetGroupJoinCall(GroupJoinContext context);
 			}
 
-			class GroupJoinCallHelper<T> : IGroupJoinCallHelper
+			sealed class GroupJoinCallHelper<T> : IGroupJoinCallHelper
 			{
 				public Expression GetGroupJoinCall(GroupJoinContext context)
 				{
 					var expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<T,bool>>)null!)),
+						MemberHelper.MethodOf(() => Queryable.Where(null!, (Expression<Func<T,bool>>)null!)),
 						context._innerExpression,
 						Expression.Lambda<Func<T,bool>>(
 							ExpressionBuilder.Equal(
@@ -448,7 +442,7 @@ namespace LinqToDB.Linq.Builder
 						var helper = (IGroupJoinCallHelper)Activator.CreateInstance(gtype)!;
 						var expr   = helper.GetGroupJoinCall(this);
 
-						expr = call.Transform(e => e == replaceExpression ? expr : e);
+						expr = call.Replace(replaceExpression, expr);
 
 						return Builder.BuildExpression(this, expr, enforceServerSide);
 					}
@@ -459,10 +453,9 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal class GroupJoinSubQueryContext : SubQueryContext
+		internal sealed class GroupJoinSubQueryContext : SubQueryContext
 		{
 			public SqlJoinedTable?      Join;
-			public SelectQuery?         CounterSelect;
 			public GroupJoinContext?    GroupJoin;
 			public Func<IBuildContext>? GetSubQueryContext;
 

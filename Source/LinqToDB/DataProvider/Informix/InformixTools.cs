@@ -1,40 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.IO;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.IO;
+	using Common;
+	using Configuration;
 	using Data;
-	using LinqToDB.Common;
-	using LinqToDB.Configuration;
-	using LinqToDB.DataProvider.DB2;
+	using DB2;
 
 	public static class InformixTools
 	{
 #if NETFRAMEWORK
-		private static readonly Lazy<IDataProvider> _informixDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new InformixDataProvider(ProviderName.Informix);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _informixDataProvider = DataConnection.CreateDataProvider<InformixDataProviderInformix>();
 #endif
 
-		private static readonly Lazy<IDataProvider> _informixDB2DataProvider = new Lazy<IDataProvider>(() =>
+		static readonly Lazy<IDataProvider> _informixDB2DataProvider = DataConnection.CreateDataProvider<InformixDataProviderDB2>();
+
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			var provider = new InformixDataProvider(ProviderName.InformixDB2);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
-		{
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
 				case ProviderName.InformixDB2:
 					return _informixDB2DataProvider.Value;
@@ -48,11 +35,11 @@ namespace LinqToDB.DataProvider.Informix
 				case DB2ProviderAdapter.CoreClientNamespace :
 
 					// this check used by both Informix and DB2 providers to avoid conflicts
-					if (css.Name.Contains("Informix"))
+					if (options.ConfigurationString?.Contains("Informix") == true)
 						goto case ProviderName.Informix;
 					break;
 				case ProviderName.Informix   :
-					if (css.Name.Contains("DB2"))
+					if (options.ConfigurationString?.Contains("DB2") == true)
 						return _informixDB2DataProvider.Value;
 
 #if NETFRAMEWORK
@@ -98,46 +85,34 @@ namespace LinqToDB.DataProvider.Informix
 #endif
 		}
 
-#region CreateDataConnection
+		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
-#endregion
+		#endregion
 
-#region BulkCopy
+		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int                         maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
+		[Obsolete("Use InformixOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
 		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
+			get => InformixOptions.Default.BulkCopyType;
+			set => InformixOptions.Default = InformixOptions.Default with { BulkCopyType = value };
 		}
 
-#endregion
+		#endregion
 	}
 }

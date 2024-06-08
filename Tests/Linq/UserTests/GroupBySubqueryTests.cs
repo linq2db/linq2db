@@ -6,12 +6,13 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using Model;
+	using LinqToDB;
+	using LinqToDB.Data;
 
 	[TestFixture]
 	public class GroupBySubqueryTests : TestBase
 	{
-		class Table1
+		sealed class Table1
 		{
 			public long Field1 { get; set; }
 			public int  Field2 { get; set; }
@@ -29,13 +30,13 @@ namespace Tests.UserTests
 			public Table2? Ref3 { get; set; }
 		}
 
-		class Table2
+		sealed class Table2
 		{
 			public int     Field2 { get; set; }
 			public string? Field4 { get; set; }
 		}
 
-		class Table3
+		sealed class Table3
 		{
 			public int  Field5 { get; set; }
 			public long Field1 { get; set; }
@@ -44,7 +45,7 @@ namespace Tests.UserTests
 			public Table4 Ref4 { get; set; } = null!;
 		}
 
-		class Table4
+		sealed class Table4
 		{
 			public int Field5 { get; set; }
 			public int Field6 { get; set; }
@@ -69,7 +70,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var q1 = (
 					from t1 in db.GetTable<Table1>()

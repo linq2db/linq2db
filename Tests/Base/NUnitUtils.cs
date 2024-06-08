@@ -18,9 +18,9 @@
 					{
 						var context = (string)test.Arguments[i]!;
 
-						if (context.EndsWith(".LinqService"))
+						if (context.IsRemote())
 						{
-							return (context.Replace(".LinqService", ""), true);
+							return (context.StripRemote(), true);
 						}
 
 						return (context, false);

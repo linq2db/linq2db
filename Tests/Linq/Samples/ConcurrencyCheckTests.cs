@@ -6,6 +6,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+using LinqToDB.Extensions;
 
 using NUnit.Framework;
 
@@ -14,7 +15,7 @@ namespace Tests.Samples
 	[TestFixture]
 	public class ConcurrencyCheckTests : TestBase
 	{
-		class InterceptDataConnection : DataConnection
+		sealed class InterceptDataConnection : DataConnection
 		{
 			public InterceptDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
 			{
@@ -36,6 +37,23 @@ namespace Tests.Samples
 				return clone;
 			}
 
+			static SqlTable? GetUpdateTable(SqlStatement statement)
+			{
+				if (statement is SqlUpdateStatement update)
+					return QueryHelper.GetUpdateTable(update);
+
+				if (statement.SelectQuery == null)
+					return null;
+
+				if (statement.SelectQuery.From.Tables.Count > 0 &&
+				    statement.SelectQuery?.From.Tables[0].Source is SqlTable source)
+				{
+					return source;
+				}
+
+				return null;
+			}
+
 			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 			{
 				#region Update
@@ -43,20 +61,24 @@ namespace Tests.Samples
 				if (statement.QueryType == QueryType.Update || statement.QueryType == QueryType.InsertOrUpdate)
 				{
 					var query = statement.SelectQuery!;
-					if (!(query.From.Tables[0].Source is SqlTable source))
+
+					SqlTable? updateTable = GetUpdateTable(statement);
+
+					if (updateTable == null)
 						return statement;
 
-					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType!);
+					var descriptor = MappingSchema.GetEntityDescriptor(updateTable.ObjectType);
 					if (descriptor == null)
 						return statement;
 
-					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
+					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.MemberInfo.HasAttribute<RowVersionAttribute>());
 					if (rowVersion == null)
 						return statement;
 
 					var newStatment = Clone(statement);
-					source        = (SqlTable)newStatment.SelectQuery!.From.Tables[0].Source;
-					var field     = source[rowVersion.ColumnName] ?? throw new InvalidOperationException();
+					updateTable = GetUpdateTable(newStatment) ?? throw new InvalidOperationException();
+
+					var field = updateTable.FindFieldByMemberName(rowVersion.ColumnName) ?? throw new InvalidOperationException();
 
 					// get real value of RowVersion
 					var updateColumn = newStatment.RequireUpdateClause().Items.FirstOrDefault(ui => ui.Column is SqlField fld && fld.Equals(field));
@@ -79,8 +101,8 @@ namespace Tests.Samples
 				else if (statement.QueryType == QueryType.Insert || statement.QueryType == QueryType.InsertOrUpdate)
 				{
 					var source          = statement.RequireInsertClause().Into!;
-					var descriptor      = MappingSchema.GetEntityDescriptor(source.ObjectType!);
-					var rowVersion      = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
+					var descriptor      = MappingSchema.GetEntityDescriptor(source.ObjectType);
+					var rowVersion      = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.MemberInfo.HasAttribute<RowVersionAttribute>());
 
 					if (rowVersion == null)
 						return statement;
@@ -88,7 +110,7 @@ namespace Tests.Samples
 
 					var newInsertStatement = Clone(statement);
 					var insertClause       = newInsertStatement.RequireInsertClause();
-					var field              = insertClause.Into![rowVersion.ColumnName]!;
+					var field              = insertClause.Into!.FindFieldByMemberName(rowVersion.ColumnName)!;
 
 					var versionColumn = (from i in insertClause.Items
 										 let f = i.Column as SqlField
@@ -133,11 +155,7 @@ namespace Tests.Samples
 		[OneTimeSetUp]
 		public void SetUp()
 		{
-#if !NET472
-			_connection = new InterceptDataConnection(ProviderName.SQLiteMS, "Data Source=:memory:;");
-#else
 			_connection = new InterceptDataConnection(ProviderName.SQLiteClassic, "Data Source=:memory:;");
-#endif
 
 			_connection.CreateTable<TestTable>();
 

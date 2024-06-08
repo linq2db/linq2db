@@ -1,35 +1,43 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.Base</AssemblyName>
 		<RootNamespace>Tests</RootNamespace>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
-		<PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="7.5.0" />
-		<PackageReference Include="FastExpressionCompiler" Version="3.0.0-preview-07" />
+		<PackageReference Include="NUnit" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectCapability Remove="TestContainer" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
-		<None Update="SqlServerTypes\x64\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.ServiceModel" />
+		<PackageReference Include="MiniProfiler.Shared" />
 
-		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
-
+		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+		<!--netcoreapp31 needed due to very old transient depndency from oracle 2.19 provider-->
+		<PackageReference Include="System.Text.Json" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
+		<PackageReference Include="MiniProfiler.Minimal" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="TestProviders\TestNoopProvider.cs">
+			<SubType>Source</SubType>
+		</Compile>
+	</ItemGroup>
+
 </Project>

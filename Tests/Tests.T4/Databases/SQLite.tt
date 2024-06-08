@@ -4,7 +4,39 @@
 <#@ include file="..\Shared.ttinclude"                                          once="true"  #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude" once="true"  #>
 <#
+	LoadDatabaseSchema = (dataConnection, schemaOptions) =>
+	{
+		var sp = dataConnection.DataProvider.GetSchemaProvider();
+		var schema = sp.GetSchema(dataConnection, schemaOptions);
+
+		// setup testcase for https://github.com/linq2db/linq2db/issues/4058
+		var table      = schema.Tables.First(t => t.TableName == "AllTypes");
+		table.TypeName = "class";
+
+		return schema;
+	};
+
+	// setup testcase for https://github.com/linq2db/linq2db/issues/4058
+	ConvertToCompilable = (name, mayRemoveUnderscore) =>
+	{
+		if (name == "class")
+			name = "struct";
+		return ConvertToCompilableDefault(name, mayRemoveUnderscore);
+	};
+
+	// setup testcase for https://github.com/linq2db/linq2db/issues/4058
+	ToValidName = (name, mayRemoveUnderscore) =>
+	{
+		if (name == "struct")
+			name = "event";
+		var result = ToValidNameDefault(name, mayRemoveUnderscore);
+		if (result == "Event")
+			result = "namespace";
+		return result;
+	};
+
 	NamespaceName = "SQLiteDataContext";
+	BaseDataContextClass = "LinqToDB.DataContext";
 
 	GenerateAssociationExtensions = true;
 

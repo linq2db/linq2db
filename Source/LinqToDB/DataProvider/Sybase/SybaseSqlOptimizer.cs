@@ -1,15 +1,29 @@
-﻿namespace LinqToDB.DataProvider.Sybase
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.Sybase
 {
+	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
 
-	class SybaseSqlOptimizer : BasicSqlOptimizer
+	sealed class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
 		public SybaseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 
-		protected static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		{
+			return statement.QueryType switch
+			{
+				QueryType.Update => PrepareUpdateStatement((SqlUpdateStatement)statement),
+				_ => statement,
+			};
+		}
+
+		private static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 
@@ -19,7 +33,7 @@
 
 			switch (func.Name)
 			{
-				case "$Replace$": return new SqlFunction(func.SystemType, "Str_Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case PseudoFunctions.REPLACE: return new SqlFunction(func.SystemType, "Str_Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
 
 				case "CharIndex":
 				{
@@ -53,9 +67,68 @@
 
 					break;
 				}
+
+				case PseudoFunctions.CONVERT:
+				{
+					var ftype = func.SystemType.ToUnderlying();
+					if (ftype == typeof(string))
+					{
+						var stype = func.Parameters[2].SystemType!.ToUnderlying();
+
+						if (stype == typeof(DateTime)
+#if NET6_0_OR_GREATER
+							|| stype == typeof(DateOnly)
+#endif
+							)
+						{
+							return new SqlFunction(func.SystemType, "convert", false, true, func.Parameters[0], func.Parameters[2], new SqlValue(23))
+							{
+								CanBeNull = func.CanBeNull
+							};
+						}
+					}
+
+					break;
+				}
 			}
 
 			return base.ConvertFunction(func);
+		}
+
+		static SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
+		{
+			var tableToUpdate = statement.Update.Table;
+
+			if (tableToUpdate == null)
+				return statement;
+
+			if (statement.SelectQuery.From.Tables.Count > 0)
+			{
+				if (tableToUpdate == statement.SelectQuery.From.Tables[0].Source)
+					return statement;
+
+				var sourceTable = statement.SelectQuery.From.Tables[0];
+
+				for (int i = 0; i < sourceTable.Joins.Count; i++)
+				{
+					var join = sourceTable.Joins[i];
+					if (join.Table.Source == tableToUpdate)
+					{
+						var sources = new HashSet<ISqlTableSource>() { tableToUpdate };
+						if (sourceTable.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOn(j, sources)))
+							break;
+						statement.SelectQuery.From.Tables.Insert(0, join.Table);
+						statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
+							.Add(new SqlCondition(false, join.Condition));
+
+						sourceTable.Joins.RemoveAt(i);
+
+						break;
+					}
+				}
+			}
+
+			return statement;
 		}
 	}
 }

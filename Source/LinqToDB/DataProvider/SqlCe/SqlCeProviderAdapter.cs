@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using System.Linq.Expressions;
 	using LinqToDB.Expressions;
 
 	public class SqlCeProviderAdapter : IDynamicProviderAdapter
@@ -21,8 +22,8 @@ namespace LinqToDB.DataProvider.SqlCe
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
-			Action<IDbDataParameter, SqlDbType>   dbTypeSetter,
-			Func  <IDbDataParameter, SqlDbType>   dbTypeGetter,
+			Action<DbParameter, SqlDbType>   dbTypeSetter,
+			Func  <DbParameter, SqlDbType>   dbTypeGetter,
 			Func  <string,           SqlCeEngine> sqlCeEngineCreator)
 		{
 			ConnectionType  = connectionType;
@@ -43,16 +44,19 @@ namespace LinqToDB.DataProvider.SqlCe
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Action<IDbDataParameter, SqlDbType> SetDbType { get; }
-		public Func  <IDbDataParameter, SqlDbType> GetDbType { get; }
+		public Action<DbParameter, SqlDbType> SetDbType { get; }
+		public Func  <DbParameter, SqlDbType> GetDbType { get; }
 
 		public Func<string, SqlCeEngine> CreateSqlCeEngine { get; }
 
 		public static SqlCeProviderAdapter GetInstance()
 		{
 			if (_instance == null)
+			{
 				lock (_syncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 					if (_instance == null)
+#pragma warning restore CA1508 // Avoid dead conditional code
 					{
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
@@ -71,8 +75,8 @@ namespace LinqToDB.DataProvider.SqlCe
 						typeMapper.FinalizeMappings();
 
 						var dbTypeBuilder = typeMapper.Type<SqlCeParameter>().Member(p => p.SqlDbType);
-						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
-						var typeGetter    = dbTypeBuilder.BuildGetter<IDbDataParameter>();
+						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
+						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
 						_instance = new SqlCeProviderAdapter(
 							connectionType,
@@ -84,6 +88,7 @@ namespace LinqToDB.DataProvider.SqlCe
 							typeGetter,
 							typeMapper.BuildWrappedFactory((string connectionString) => new SqlCeEngine(connectionString))!);
 					}
+			}
 
 			return _instance;
 		}
@@ -113,7 +118,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		[Wrapper]
-		private class SqlCeParameter
+		private sealed class SqlCeParameter
 		{
 			public SqlDbType SqlDbType { get; set; }
 		}

@@ -1,30 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Configuration;
 	using Data;
-	using LinqToDB.Configuration;
 
 	public static class SqlCeTools
 	{
-		private static readonly Lazy<IDataProvider> _sqlCeDataProvider = new Lazy<IDataProvider>(() =>
+		static readonly Lazy<IDataProvider> _sqlCeDataProvider = DataConnection.CreateDataProvider<SqlCeDataProvider>();
+
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			var provider = new SqlCeDataProvider();
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
-		{
-			if (css.ProviderName?.Contains("SqlCe") == true
-				|| css.ProviderName?.Contains("SqlServerCe") == true
-				|| css.Name.Contains("SqlCe")
-				|| css.Name.Contains("SqlServerCe"))
+			if (options.ProviderName?.Contains("SqlCe") == true
+				|| options.ProviderName?.Contains("SqlServerCe") == true
+				|| options.ConfigurationString?.Contains("SqlCe") == true
+				|| options.ConfigurationString?.Contains("SqlServerCe") == true)
 				return _sqlCeDataProvider.Value;
 
 			return null;
@@ -34,12 +26,12 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static void ResolveSqlCe(string path)
 		{
-			new AssemblyResolver(path, SqlCeProviderAdapter.AssemblyName);
+			_ = new AssemblyResolver(path, SqlCeProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveSqlCe(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName!);
+			_ = new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		#region CreateDataConnection
@@ -49,12 +41,12 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new DataConnection(_sqlCeDataProvider.Value, connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(DbConnection connection)
 		{
 			return new DataConnection(_sqlCeDataProvider.Value, connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(DbTransaction transaction)
 		{
 			return new DataConnection(_sqlCeDataProvider.Value, transaction);
 		}
@@ -83,23 +75,11 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection               dataConnection,
-			IEnumerable<T>               source,
-			int                          maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>?  rowsCopiedCallback = null)
-			where T : class
+		[Obsolete("Use SqlCeOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
 		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
+			get => SqlCeOptions.Default.BulkCopyType;
+			set => SqlCeOptions.Default = SqlCeOptions.Default with { BulkCopyType = value };
 		}
 
 		#endregion

@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	public class Issue2769Tests : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int? NullValue { get; set; }

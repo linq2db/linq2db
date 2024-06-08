@@ -2,6 +2,26 @@
 
 docker run -d --name sybase -e SYBASE_DB=TestDataCore -p 5000:5000 datagrip/sybase:16.0
 docker ps -a
+
+# add trace flag to server startup procedure
+cat <<-EOL > start_fixed.sh
+#!/bin/sh
+/opt/sybase/ASE-16_0/bin/dataserver -T11889 \
+-d/opt/sybase/data/master.dat \
+-e/opt/sybase/ASE-16_0/install/MYSYBASE.log \
+-c/opt/sybase/ASE-16_0/MYSYBASE.cfg \
+-M/opt/sybase/ASE-16_0 \
+-N/opt/sybase/ASE-16_0/sysam/MYSYBASE.properties \
+-i/opt/sybase \
+-sMYSYBASE
+EOL
+
+docker cp start_fixed.sh sybase:/opt/sybase/ASE-16_0/install/RUN_MYSYBASE
+docker exec sybase chmod +x /opt/sybase/ASE-16_0/install/RUN_MYSYBASE
+
+# restart container to take effect
+docker restart sybase
+
 sleep 45
 
 retries=0
@@ -16,22 +36,21 @@ until docker logs sybase | grep -q 'SYBASE INITIALIZED'; do
     echo 'Waiting for sybase'
 done
 
-echo Generate CREATE DATABASE script
-cat <<-EOSQL > sybase_init.sql
-USE master
-GO
-disk resize name='master', size='200m'
-GO
-IF EXISTS(SELECT * FROM dbo.sysdatabases WHERE name = 'TestDataCore')
-  DROP DATABASE TestDataCore
-GO
-CREATE DATABASE TestDataCore ON master = '102400K'
-GO
-EOSQL
+# enable utf8
+docker exec -e SYBASE=/opt/sybase -e LD_LIBRARY_PATH=/opt/sybase/OCS-16_0/lib3p64/ sybase /opt/sybase/ASE-16_0/bin/charset -Usa -PmyPassword -SMYSYBASE binary.srt utf8
 
-cat sybase_init.sql
-docker cp sybase_init.sql sybase:/init.sql
-docker exec -e SYBASE=/opt/sybase sybase /opt/sybase/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i"/init.sql" -e --retserverror
+cat <<-EOL > sybase-utf8.sql
+sp_configure 'default sortorder id', 50, 'utf8'
+go
+EOL
 
-echo PRINTING DOCKER LOGS
+docker cp sybase-utf8.sql sybase:/opt/sybase/sybase.sql
+docker exec -e SYBASE=/opt/sybase sybase /opt/sybase/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i"/opt/sybase/sybase.sql"
+
+# restart container to take effect (at least twice!)
+docker restart sybase
+sleep 10
+docker restart sybase
+sleep 10
+
 docker logs sybase

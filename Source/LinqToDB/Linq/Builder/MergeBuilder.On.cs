@@ -1,24 +1,22 @@
-﻿using LinqToDB.Expressions;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+
+	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 	internal partial class MergeBuilder
 	{
-		internal class On : MethodCallBuilder
+		internal sealed class On : MethodCallBuilder
 		{
+			static readonly MethodInfo[] _supportedMethods = {OnMethodInfo1, OnMethodInfo2, OnTargetKeyMethodInfo};
+
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
-				if (methodCall.Method.IsGenericMethod)
-				{
-					var genericMethod = methodCall.Method.GetGenericMethodDefinition();
-					return  LinqExtensions.OnMethodInfo1         == genericMethod
-						 || LinqExtensions.OnMethodInfo2         == genericMethod
-						 || LinqExtensions.OnTargetKeyMethodInfo == genericMethod;
-				}
-
-				return false;
+				return methodCall.IsSameGenericMethod(_supportedMethods);
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -77,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 
 						for (var i = 0; i < mi1.Bindings.Count; i++)
 						{
-							var binding2 = (MemberAssignment)mi2.Bindings.Where(b => b.Member == mi1.Bindings[i].Member).FirstOrDefault();
+							var binding2 = (MemberAssignment?)mi2.Bindings.FirstOrDefault(b => b.Member == mi1.Bindings[i].Member);
 							if (binding2 == null)
 								throw new LinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
 
@@ -98,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 					var targetType       = statement.Target.SystemType!;
 					var pTarget          = Expression.Parameter(targetType, "t");
 					var pSource          = Expression.Parameter(targetType, "s");
-					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType);
+					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 					Expression? ex = null;
 
@@ -127,12 +125,6 @@ namespace LinqToDB.Linq.Builder
 
 				mergeContext.SourceContext.MatchBuilt();
 				return mergeContext;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 	}

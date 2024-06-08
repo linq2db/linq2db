@@ -12,7 +12,7 @@ namespace Tests.UserTests
 	public class Issue1196Tests : TestBase
 	{
 		[Table(Name ="Requests")]
-		class Request
+		sealed class Request
 		{
 			[Column] public int Id { get; set; }
 			[Column] public int FirmId { get; set; }
@@ -28,7 +28,7 @@ namespace Tests.UserTests
 		}
 
 		[Table(Name ="FirmInfo")]
-		class FirmInfo
+		sealed class FirmInfo
 		{
 			[Column]public int Id { get; set; }
 
@@ -37,7 +37,7 @@ namespace Tests.UserTests
 		}
 
 		[Table(Name ="Assignments")]
-		class Assignment
+		sealed class Assignment
 		{
 			[PrimaryKey, Identity] public int Id { get; set; } // Int
 			[Column, NotNull] public Guid DirectionId { get; set; }
@@ -46,7 +46,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestAssociation([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestAssociation([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

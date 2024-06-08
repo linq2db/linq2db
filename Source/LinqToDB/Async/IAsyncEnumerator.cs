@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK
-using System;
+﻿#if !NATIVE_ASYNC
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,7 +27,7 @@ namespace LinqToDB.Async
 		Task<bool> MoveNextAsync();
 	}
 
-	internal class AsyncEnumeratorImpl<T> : IAsyncEnumerator<T>
+	internal sealed class AsyncEnumeratorImpl<T> : IAsyncEnumerator<T>
 	{
 		private readonly IEnumerator<T>    _enumerator;
 		private readonly CancellationToken _cancellationToken;

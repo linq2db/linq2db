@@ -1,16 +1,16 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.AspNet.Logging
 {
 	using Data;
 
-	public class LinqToDbLoggerFactoryAdapter
+	public class LinqToDBLoggerFactoryAdapter
 	{
 		private readonly ILoggerFactory          _loggerFactory;
 		private readonly ILogger<DataConnection> _logger;
 
-		public LinqToDbLoggerFactoryAdapter(ILoggerFactory loggerFactory)
+		public LinqToDBLoggerFactoryAdapter(ILoggerFactory loggerFactory)
 		{
 			_loggerFactory = loggerFactory;
 			_logger        = _loggerFactory.CreateLogger<DataConnection>();
@@ -27,7 +27,7 @@ namespace LinqToDB.AspNet.Logging
 				_                  => LogLevel.None,
 			};
 
-			_logger.Log(logLevel, 0, message, null, (s, exception) => s);
+			_logger.Log(logLevel, 0, message, null, (s, exception) => s ?? string.Empty);
 		}
 	}
 }

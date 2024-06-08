@@ -18,4 +18,19 @@ until docker logs oracle | grep -q 'Database ready to use'; do
     fi;
 done
 
+cat <<-EOL > setup.sql
+create user test identified by test;
+grant unlimited  tablespace to test;
+grant all privileges to test identified by test;
+GRANT SELECT ON sys.dba_users TO test;
+EXIT;
+EOL
+
+docker cp setup.sql oracle:/setup.sql
+docker exec oracle sqlplus sys/oracle@localhost as sysdba @/setup.sql
+
+docker exec oracle mkdir /home/oracle
+echo -n 12345 > bfile.txt
+docker cp bfile.txt oracle:/home/oracle/bfile.txt
+
 docker logs oracle

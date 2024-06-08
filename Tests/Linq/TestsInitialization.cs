@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Reflection;
-using NUnit.Framework;
 
-#if !NET472
-using System.IO;
-#endif
+using LinqToDB.Common;
+using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Tools;
+using LinqToDB.Tools.Activity;
+
+using NUnit.Framework;
 
 using Tests;
 
@@ -16,16 +19,44 @@ using Tests;
 [SetUpFixture]
 public class TestsInitialization
 {
+	static bool _doMetrics;
+
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+#if DEBUG
+		ActivityService.AddFactory(ActivityHierarchyFactory);
+
+		static IActivity? ActivityHierarchyFactory(ActivityID activityID)
+		{
+			var ctx = CustomTestContext.Get();
+
+			if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
+				return new ActivityHierarchy(activityID, s => Debug.WriteLine(s));
+			return null;
+		}
+
+		_doMetrics = true;
+#else
+		_doMetrics = TestBase.StoreMetrics == true;
+#endif
+
+		if (_doMetrics)
+		{
+			Configuration.TraceMaterializationActivity = true;
+			ActivityService.AddFactory(ActivityStatistics.Factory);
+		}
+
+		// required for tests expectations
+		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
+
 		// uncomment it to run tests with SeqentialAccess command behavior
 		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
 		//DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
-		RegisterSapHanaFactory();
+		CopySQLiteRuntime();
 		RegisterSqlCEFactory();
 
 #if NET472 && !AZURE
@@ -54,26 +85,27 @@ public class TestsInitialization
 
 		// uncomment to run FEC for all tests and comment reset line in TestBase.OnAfterTest
 		//LinqToDB.Common.Compilation.SetExpressionCompiler(_ => FastExpressionCompiler.ExpressionCompiler.CompileFast(_, true));
+
+		//custom initialization logic
+		CustomizationSupport.Init();
 	}
 
-	private void RegisterSapHanaFactory()
+	// workaround for
+	// https://github.com/ericsink/SQLitePCL.raw/issues/389
+	// https://github.com/dotnet/efcore/issues/19396
+	private void CopySQLiteRuntime()
 	{
-#if !NET472
-		try
-		{
-			// woo-hoo, hardcoded pathes! default install location on x64 system
-			var srcPath = @"c:\Program Files (x86)\sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll";
-			var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory!, Path.GetFileName(srcPath));
-			if (File.Exists(srcPath))
-			{
-				// original path contains spaces which breaks broken native dlls discovery logic in SAP provider
-				// if you run tests from path with spaces - it will not help you
-				File.Copy(srcPath, targetPath, true);
-				var sapHanaAssembly = Assembly.LoadFrom(targetPath);
-				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory")!);
-			}
-		}
-		catch { }
+#if NET472
+		const string runtimeFile = "e_sqlite3.dll";
+		var destPath             = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, runtimeFile);
+		var sourcePath           = System.IO.Path.Combine(
+			AppDomain.CurrentDomain.BaseDirectory,
+			"runtimes",
+			IntPtr.Size == 4 ? "win-x86" : "win-x64",
+			"native",
+			runtimeFile);
+
+		System.IO.File.Copy(sourcePath, destPath, true);
 #endif
 	}
 
@@ -96,5 +128,15 @@ public class TestsInitialization
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
+		if (_doMetrics)
+		{
+			var str = ActivityStatistics.GetReport();
+
+			Debug.WriteLine(str);
+			TestContext.Progress.WriteLine(str);
+
+			if (TestBase.StoreMetrics == true)
+				BaselinesWriter.WriteMetrics(TestBase.BaselinesPath!, str);
+		}
 	}
 }

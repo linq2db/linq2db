@@ -10,7 +10,7 @@ namespace Tests.Linq
 	public class SetOperatorTests : TestBase
 	{
 		[Table]
-		class SampleData
+		sealed class SampleData
 		{
 			[PrimaryKey]
 			[Column] public int Id     { get; set; }
@@ -20,8 +20,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestExcept([DataSources(ProviderName.SqlServer2000)] string context)
+		public void TestExcept([DataSources] string context)
 		{
+			var isDistinct = !context.IsAnyOf(TestProvName.AllClickHouse);
+
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(testData))
@@ -35,6 +37,10 @@ namespace Tests.Linq
 				e1 = e1.Concat(e1);
 				var e2 = testData.Where(t => t.Id % 4 == 0);
 				var expected = e1.Except(e2).ToArray();
+
+				if (!isDistinct)
+					query = query.Distinct();
+
 				var actual = query.ToArray();
 
 				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
@@ -42,7 +48,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestExceptAll([DataSources()] string context)
+		public void TestExceptAll([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
@@ -59,13 +65,13 @@ namespace Tests.Linq
 				var expected = e1.Where(e => !e2.Contains(e, ComparerBuilder.GetEqualityComparer<SampleData>())).ToArray();
 				var actual = query.ToArray();
 
-				if (!context.Contains(ProviderName.PostgreSQL)) // postgres has a bug?
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL)) // postgres has a bug?
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
 
 		[Test]
-		public void TestIntersectAll([DataSources] string context)
+		public void TestIntersectAll([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
@@ -82,13 +88,13 @@ namespace Tests.Linq
 				var expected = e1.Where(e => e2.Contains(e, ComparerBuilder.GetEqualityComparer<SampleData>())).ToArray();
 				var actual = query.ToArray();
 
-				if (!context.Contains(ProviderName.PostgreSQL)) // postgres has a bug?
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL)) // postgres has a bug?
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
 
 		[Test]
-		public void TestExceptProjection([DataSources(ProviderName.SqlServer2000)] string context)
+		public void TestExceptProjection([DataSources] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
@@ -112,8 +118,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestIntersect([DataSources(ProviderName.SqlServer2000)] string context)
+		public void TestIntersect([DataSources] string context)
 		{
+			var isDistinct = !context.IsAnyOf(TestProvName.AllClickHouse);
+
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(testData))
@@ -127,6 +135,10 @@ namespace Tests.Linq
 				e1 = e1.Concat(e1);
 				var e2 = testData.Where(t => t.Id % 4 == 0);
 				var expected = e1.Intersect(e2).ToArray();
+
+				if (!isDistinct)
+					query = query.Distinct();
+
 				var actual = query.ToArray();
 
 				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
@@ -134,7 +146,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestUnionAll([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestUnionAll([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
@@ -154,7 +166,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestUnionAllExpr([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestUnionAllExpr([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))

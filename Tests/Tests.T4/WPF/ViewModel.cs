@@ -2,6 +2,9 @@
 
 namespace Tests.T4.Wpf
 {
+	/// <summary>
+	/// 
+	/// </summary>
 	partial class ViewModel
 	{
 		static readonly Brush _normalBrushes   = new SolidColorBrush(Colors.Black);

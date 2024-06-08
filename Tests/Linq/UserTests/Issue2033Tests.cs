@@ -535,7 +535,7 @@ namespace Tests.UserTests
 	        [Column("AIN_MODEL_EXTERNAL_ID"), Nullable] public string? AinModelExternalId { get; set; } // NVARCHAR2(120)
 	    }
 
-		internal class WipCte
+		internal sealed class WipCte
 		{
 			private readonly WipDB db;
 
@@ -757,27 +757,27 @@ namespace Tests.UserTests
 			{
 			}
 
-			public ITable<NcCode> NcCode => GetTable<NcCode>();
-			public ITable<NcGroupMember> NcGroupMember => GetTable<NcGroupMember>();
-			public ITable<SfcRouting> SfcRouting => GetTable<SfcRouting>();
-			public ITable<SfcRouter> SfcRouter => GetTable<SfcRouter>();
-			public ITable<RouterStep> RouterStep => GetTable<RouterStep>();
-			public ITable<RouterOperation> RouterOperation => GetTable<RouterOperation>();
-			public ITable<CustomFields> CustomFields => GetTable<CustomFields>();
-			public ITable<Router> Router => GetTable<Router>();
-			public ITable<SfcStep> SfcStep => GetTable<SfcStep>();
-			public ITable<Operation> Operation => GetTable<Operation>();
-			public ITable<Sfc> Sfc => GetTable<Sfc>();
-			public ITable<NcData> NcData => GetTable<NcData>();
-			public ITable<Site> Site => GetTable<Site>();
-			public ITable<Usr> Usr => GetTable<Usr>();
-			public ITable<ShopOrder> ShopOrder => GetTable<ShopOrder>();
-			public ITable<Resrce> Resrce => GetTable<Resrce>();
-			public ITable<WorkCenter> WorkCenter => GetTable<WorkCenter>();
-			public ITable<WorkCenterMember> WorkCenterMember => GetTable<WorkCenterMember>();
-			public ITable<Item> Item => GetTable<Item>();
-			public ITable<ItemGroupMember> ItemGroupMember => GetTable<ItemGroupMember>();
-			public ITable<ItemGroup> ItemGroup => GetTable<ItemGroup>();
+			public ITable<NcCode> NcCode => this.GetTable<NcCode>();
+			public ITable<NcGroupMember> NcGroupMember => this.GetTable<NcGroupMember>();
+			public ITable<SfcRouting> SfcRouting => this.GetTable<SfcRouting>();
+			public ITable<SfcRouter> SfcRouter => this.GetTable<SfcRouter>();
+			public ITable<RouterStep> RouterStep => this.GetTable<RouterStep>();
+			public ITable<RouterOperation> RouterOperation => this.GetTable<RouterOperation>();
+			public ITable<CustomFields> CustomFields => this.GetTable<CustomFields>();
+			public ITable<Router> Router => this.GetTable<Router>();
+			public ITable<SfcStep> SfcStep => this.GetTable<SfcStep>();
+			public ITable<Operation> Operation => this.GetTable<Operation>();
+			public ITable<Sfc> Sfc => this.GetTable<Sfc>();
+			public ITable<NcData> NcData => this.GetTable<NcData>();
+			public ITable<Site> Site => this.GetTable<Site>();
+			public ITable<Usr> Usr => this.GetTable<Usr>();
+			public ITable<ShopOrder> ShopOrder => this.GetTable<ShopOrder>();
+			public ITable<Resrce> Resrce => this.GetTable<Resrce>();
+			public ITable<WorkCenter> WorkCenter => this.GetTable<WorkCenter>();
+			public ITable<WorkCenterMember> WorkCenterMember => this.GetTable<WorkCenterMember>();
+			public ITable<Item> Item => this.GetTable<Item>();
+			public ITable<ItemGroupMember> ItemGroupMember => this.GetTable<ItemGroupMember>();
+			public ITable<ItemGroup> ItemGroup => this.GetTable<ItemGroup>();
 		}
 
 

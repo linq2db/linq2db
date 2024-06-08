@@ -7,14 +7,20 @@ using System.Linq;
 namespace LinqToDB.SqlQuery
 {
 	using Common;
+	using Common.Internal;
+	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
-	public abstract class SqlStatement: IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable, IQueryExtendible
 	{
-		public string SqlText =>
-			((IQueryElement) this)
-				.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-				.ToString();
+		public string SqlText
+		{
+			get
+			{
+				using var sb = Pools.StringBuilder.Allocate();
+				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			}
+		}
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		protected string DebugSqlText => Tools.ToDebugDisplay(SqlText);
@@ -28,15 +34,17 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public SqlStatement? ParentStatement { get; set; }
 
+		// TODO: V6: used by tests only -> move to test helpers
+		[Obsolete("API will be removed in future versions")]
 		public SqlParameter[] CollectParameters()
 		{
 			var parametersHash = new HashSet<SqlParameter>();
 
-			new QueryVisitor().VisitAll(this, expr =>
+			this.VisitAll(parametersHash, static (parametersHash, expr) =>
 			{
 				switch (expr.ElementType)
 				{
-					case QueryElementType.SqlParameter :
+					case QueryElementType.SqlParameter:
 					{
 						var p = (SqlParameter)expr;
 						if (p.IsQueryParameter)
@@ -52,6 +60,8 @@ namespace LinqToDB.SqlQuery
 
 		public abstract SelectQuery? SelectQuery { get; set; }
 
+		public SqlComment?              Tag                { get; internal set; }
+		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
 		#region IQueryElement
 
@@ -62,70 +72,53 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression>
 
-		public abstract ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func);
-
-		#endregion
-
-		#region ICloneableElement
-
-		public abstract ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone);
-
-		#endregion
-
-		public virtual IEnumerable<IQueryElement> EnumClauses()
+		public virtual ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			yield break;
+			if (SqlQueryExtensions != null)
+				foreach (var e in SqlQueryExtensions)
+					e.Walk(options, context, func);
+			return null;
 		}
+
+		#endregion
 
 		#region Aliases
 
-		static string? NormalizeParameterName(string? name)
+		private sealed class PrepareQueryAndAliasesContext
 		{
-			if (string.IsNullOrEmpty(name))
-				return name;
+			public PrepareQueryAndAliasesContext(AliasesContext? prevAliasContext)
+			{
+				PrevAliasContext = prevAliasContext;
+			}
 
-			name = name!.Replace(' ', '_');
-			const string vbPrefix = "$VB$";
-			if (name.StartsWith(vbPrefix))
-				name = name.Substring(vbPrefix.Length, name.Length - vbPrefix.Length);
+			public HashSet<SqlTableSource>? TablesVisited;
 
-			return name;
+			public readonly AliasesContext? PrevAliasContext;
+			public readonly AliasesContext  NewAliases = new ();
+			public readonly HashSet<string> AllAliases = new (StringComparer.OrdinalIgnoreCase);
 		}
 
 		public static void PrepareQueryAndAliases(SqlStatement statement, AliasesContext? prevAliasContext, out AliasesContext newAliasContext)
 		{
-			var allAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-			HashSet<string>? allParameterNames = null;
+			if (statement.SelectQuery != null && !(statement is SqlSelectStatement && statement.SelectQuery.From.Tables.Count == 0))
+				statement.SelectQuery.DoNotSetAliases = true;
 
-			HashSet<SqlParameter>?   paramsVisited = null;
-			HashSet<SqlTableSource>? tablesVisited = null;
+			var ctx = new PrepareQueryAndAliasesContext(prevAliasContext);
 
-			var newAliases = new AliasesContext();
-
-			new QueryVisitor().VisitAll(statement, expr =>
+			statement.VisitAll(ctx, static (context, expr) =>
 			{
-				if (prevAliasContext != null && prevAliasContext.IsAliased(expr))
+				if (context.PrevAliasContext != null && context.PrevAliasContext.IsAliased(expr))
 				{
 					// Copy aliased from previous run
 					//
-					newAliases.RegisterAliased(expr);
+					context.NewAliases.RegisterAliased(expr);
 
 					// Remember already used aliases from previous run
 					if (expr.ElementType == QueryElementType.TableSource)
 					{
 						var alias = ((SqlTableSource)expr).Alias;
 						if (!string.IsNullOrEmpty(alias))
-							allAliases.Add(alias!);
-					}
-					else if (expr.ElementType == QueryElementType.SqlParameter)
-					{
-						var alias = ((SqlParameter)expr).Name;
-						if (!string.IsNullOrEmpty(alias))
-						{
-							allParameterNames ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-							allParameterNames.Add(alias!);
-						}
+							context.AllAliases.Add(alias!);
 					}
 
 					return;
@@ -133,9 +126,9 @@ namespace LinqToDB.SqlQuery
 
 				switch (expr.ElementType)
 				{
-					case QueryElementType.MergeSourceTable:
+					case QueryElementType.SqlTableLikeSource:
 						{
-							var source = (SqlMergeSourceTable)expr;
+							var source = (SqlTableLikeSource)expr;
 
 							Utils.MakeUniqueNames(
 								source.SourceFields,
@@ -146,7 +139,7 @@ namespace LinqToDB.SqlQuery
 								f =>
 								{
 									var a = f.PhysicalName;
-									return a.IsNullOrEmpty()
+									return string.IsNullOrEmpty(a)
 										? "c1"
 										: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 								},
@@ -157,7 +150,7 @@ namespace LinqToDB.SqlQuery
 								for (var i = 0; i < source.SourceFields.Count; i++)
 									source.SourceQuery.Select.Columns[i].Alias = source.SourceFields[i].PhysicalName;
 
-							newAliases.RegisterAliased(expr);
+							context.NewAliases.RegisterAliased(expr);
 
 							break;
 						}
@@ -165,13 +158,13 @@ namespace LinqToDB.SqlQuery
 						{
 							var query = (SelectQuery)expr;
 
-							if (query.Select.Columns.Count > 0)
+							if (query.DoNotSetAliases == false && query.Select.Columns.Count > 0)
 							{
 								Utils.MakeUniqueNames(
 									query.Select.Columns.Where(c => c.Alias != "*"),
 									null,
-									(n, a) => !ReservedWords.IsReserved(n), 
-									c => c.Alias, 
+									(n, a) => !ReservedWords.IsReserved(n),
+									c => c.Alias,
 									(c, n, a) =>
 									{
 										a?.Add(n);
@@ -180,7 +173,7 @@ namespace LinqToDB.SqlQuery
 									c =>
 									{
 										var a = c.Alias;
-										return a.IsNullOrEmpty()
+										return string.IsNullOrEmpty(a)
 											? "c1"
 											: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 									},
@@ -201,44 +194,30 @@ namespace LinqToDB.SqlQuery
 								}
 							}
 
-							newAliases.RegisterAliased(query);
-
-							break;
-						}
-					case QueryElementType.SqlParameter:
-						{
-							var p = (SqlParameter)expr;
-							paramsVisited ??= new HashSet<SqlParameter>();
-							if (paramsVisited.Add(p))
-							{
-								p.Name = NormalizeParameterName(p.Name);
-							}
-
-							newAliases.RegisterAliased(expr);
+							context.NewAliases.RegisterAliased(query);
 
 							break;
 						}
 					case QueryElementType.TableSource:
 						{
 							var table = (SqlTableSource)expr;
-							tablesVisited ??= new HashSet<SqlTableSource>();
-							if (tablesVisited.Add(table))
+							if ((context.TablesVisited ??= new()).Add(table))
 							{
 								if (table.Source is SqlTable sqlTable)
-									allAliases.Add(sqlTable.PhysicalName!);
+									context.AllAliases.Add(sqlTable.TableName.Name);
 							}
 
-							newAliases.RegisterAliased(expr);
+							context.NewAliases.RegisterAliased(expr);
 
 							break;
 						}
 				}
 			});
 
-			if (tablesVisited != null)
+			if (ctx.TablesVisited != null)
 			{
-				Utils.MakeUniqueNames(tablesVisited,
-					allAliases,
+				Utils.MakeUniqueNames(ctx.TablesVisited,
+					ctx.AllAliases,
 					(n, a) => !a!.Contains(n) && !ReservedWords.IsReserved(n), ts => ts.Alias, (ts, n, a) =>
 					{
 						ts.Alias = n;
@@ -246,41 +225,30 @@ namespace LinqToDB.SqlQuery
 					ts =>
 					{
 						var a = ts.Alias;
-						return a.IsNullOrEmpty() ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+						return string.IsNullOrEmpty(a) ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
 					},
 					StringComparer.OrdinalIgnoreCase);
 			}
 
-			if (paramsVisited != null)
-			{
-				Utils.MakeUniqueNames(
-					paramsVisited,
-					allParameterNames,
-					(n, a) => a?.Contains(n) != true && !ReservedWords.IsReserved(n), p => p.Name, (p, n, a) =>
-					{
-						p.Name = n;
-					},
-					p => p.Name.IsNullOrEmpty() ? "p_1" :
-						char.IsDigit(p.Name[p.Name.Length - 1]) ? p.Name : p.Name + "_1",
-					StringComparer.OrdinalIgnoreCase);
-			}
+			newAliasContext = ctx.NewAliases;
 
-			newAliasContext = newAliases;
+			if (statement is SqlUpdateStatement updateStatement)
+				updateStatement.AfterSetAliases();
 		}
 
 		#endregion
 
 		public abstract ISqlTableSource? GetTableSource(ISqlTableSource table);
 
-		public abstract void WalkQueries(Func<SelectQuery, SelectQuery> func);
+		public abstract void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func);
 
 		internal void EnsureFindTables()
 		{
-			new QueryVisitor().Visit(this, e =>
+			this.Visit(this, static (statement, e) =>
 			{
 				if (e is SqlField f)
 				{
-					var ts = SelectQuery?.GetTableSource(f.Table!) ?? GetTableSource(f.Table!);
+					var ts = statement.SelectQuery?.GetTableSource(f.Table!) ?? statement.GetTableSource(f.Table!);
 
 					if (ts == null && f != f.Table!.All)
 						throw new SqlException("Table '{0}' not found.", f.Table);

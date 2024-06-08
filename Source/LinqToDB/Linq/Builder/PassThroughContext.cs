@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext Context { get; set; }
 
 #if DEBUG
-		string? IBuildContext._sqlQueryText => Context._sqlQueryText;
+		string? IBuildContext.SqlQueryText => Context.SqlQueryText;
 		public string Path => this.GetPath();
 #endif
 
@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 			return Context.ConvertToParentIndex(index, context);
 		}
 
-		public virtual void SetAlias(string alias)
+		public virtual void SetAlias(string? alias)
 		{
 			Context.SetAlias(alias);
 		}

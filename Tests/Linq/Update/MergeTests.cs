@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Tests.Model;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -21,8 +23,9 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess,
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
-				TestProvName.AllSqlServer2005Minus,
-				TestProvName.AllPostgreSQL,
+				TestProvName.AllSqlServer2005,
+				TestProvName.AllClickHouse,
+				TestProvName.AllPostgreSQL14Minus,
 				TestProvName.AllMySql,
 			}.SelectMany(_ => _.Split(',')).ToList();
 
@@ -42,32 +45,24 @@ namespace Tests.xUpdate
 		{
 			static string[] Supported = new[]
 			{
-				ProviderName.Sybase,
-				ProviderName.SybaseManaged,
-				ProviderName.SqlServer2008,
-				ProviderName.SqlServer2012,
-				ProviderName.SqlServer2014,
-				TestProvName.SqlServer2016,
-				ProviderName.SqlServer2017,
-				TestProvName.SqlServer2019,
-				TestProvName.SqlServer2019SequentialAccess,
-				TestProvName.SqlServer2019FastExpressionCompiler,
-				TestProvName.SqlAzure
-			};
+				TestProvName.AllSybase,
+				TestProvName.AllSqlServer2008Plus,
+				TestProvName.AllPostgreSQL15Plus,
+			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
-				: base(true, Supported.Except(except).ToArray())
+				: base(true, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 
 			public IdentityInsertMergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
-				: base(includeLinqService, Supported.Except(except).ToArray())
+				: base(includeLinqService, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
 
 		[Table("merge1")]
-		class TestMapping1
+		internal sealed class TestMapping1
 		{
 			[Column("Id")]
 			[PrimaryKey]
@@ -94,7 +89,8 @@ namespace Tests.xUpdate
 
 		[Table("TestMergeIdentity", Configuration = ProviderName.Sybase)]
 		[Table("TestMergeIdentity", Configuration = ProviderName.SqlServer)]
-		class TestMappingWithIdentity
+		[Table("TestMergeIdentity", Configuration = ProviderName.PostgreSQL)]
+		sealed class TestMappingWithIdentity
 		{
 			[Column("Id", SkipOnInsert = true, IsIdentity = true)]
 			public int Id;
@@ -104,7 +100,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("merge2")]
-		class TestMapping2
+		internal sealed class TestMapping2
 		{
 			[Column("Id")]
 			[PrimaryKey]
@@ -232,11 +228,10 @@ namespace Tests.xUpdate
 
 		private void AssertRowCount(int expected, int actual, string context)
 		{
-			var provider = GetProviderName(context, out var _);
 			// another sybase quirk, nothing surprising
-			if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
+			if (context.IsAnyOf(TestProvName.AllSybase))
 				Assert.LessOrEqual(expected, actual);
-			else if ((provider == ProviderName.OracleNative || provider == TestProvName.Oracle11Native) && actual == -1)
+			else if (context.IsAnyOf(TestProvName.AllOracleNative) && actual == -1)
 			{ }
 			else
 				Assert.AreEqual(expected, actual);

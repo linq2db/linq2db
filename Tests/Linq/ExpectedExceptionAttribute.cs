@@ -23,7 +23,7 @@ namespace Tests
 
 		public string? ExpectedMessage;
 
-		class ExpectedExceptionCommand : DelegatingTestCommand
+		sealed class ExpectedExceptionCommand : DelegatingTestCommand
 		{
 			readonly Type    _expectedType;
 			readonly string? _expectedMessage;

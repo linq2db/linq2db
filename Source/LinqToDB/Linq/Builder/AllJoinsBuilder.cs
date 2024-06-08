@@ -6,8 +6,11 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class AllJoinsBuilder : MethodCallBuilder
+	sealed class AllJoinsBuilder : MethodCallBuilder
 	{
+		private static readonly string[] RightNullableOnlyMethodNames    = { "RightJoin", "FullJoin" };
+		private static readonly string[] NotRightNullableOnlyMethodNames = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return IsMatchingMethod(methodCall, false);
@@ -17,8 +20,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			return
 				methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 3
-				|| !rightNullableOnly && methodCall.IsQueryable("InnerJoin", "LeftJoin", "RightJoin", "FullJoin") && methodCall.Arguments.Count == 2
-				|| rightNullableOnly && methodCall.IsQueryable("RightJoin", "FullJoin") && methodCall.Arguments.Count == 2;
+				|| !rightNullableOnly && methodCall.IsQueryable(NotRightNullableOnlyMethodNames) && methodCall.Arguments.Count == 2
+				|| rightNullableOnly  && methodCall.IsQueryable(RightNullableOnlyMethodNames)    && methodCall.Arguments.Count == 2;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -37,13 +40,13 @@ namespace LinqToDB.Linq.Builder
 				default:
 					conditionIndex = 2;
 
-					joinType = (SqlJoinType) methodCall.Arguments[1].EvaluateExpression()! switch
+					joinType = (SqlJoinType) methodCall.Arguments[1].EvaluateExpression(builder.DataContext)! switch
 					{
 						SqlJoinType.Inner => JoinType.Inner,
 						SqlJoinType.Left  => JoinType.Left,
 						SqlJoinType.Right => JoinType.Right,
 						SqlJoinType.Full  => JoinType.Full,
-						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[1].EvaluateExpression()!}")
+						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[1].EvaluateExpression(builder.DataContext)!}")
 					};
 					break;
 			}
@@ -65,12 +68,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return sequence;
-		}
-
-		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression? param)
-		{
-			return null;
 		}
 	}
 }

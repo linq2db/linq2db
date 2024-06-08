@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Reflection;
+using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Extensions;
+	using Mapping;
 	using SqlQuery;
 
 	partial class Sql
@@ -22,7 +22,7 @@ namespace LinqToDB
 		{
 			/// <summary>
 			/// Defines an SQL Function, which
-			/// shall be the same as the name as the function called. 
+			/// shall be the same as the name as the function called.
 			/// </summary>
 			public FunctionAttribute()
 				: base(null)
@@ -87,14 +87,25 @@ namespace LinqToDB
 				set => Expression = value;
 			}
 
-			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
+			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
-				var sqlExpressions = ConvertArgs(member, args);
+				var expressionStr = Expression;
+				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes, converter);
 
-				return new SqlFunction(member.GetMemberType(), Name ?? member.Name, IsAggregate, sqlExpressions)
+				if (string.IsNullOrEmpty(expressionStr))
+					throw new LinqToDBException($"Cannot retrieve function name for expression '{expression}'.");
+
+				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
+
+				return new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, parameters)
 				{
-					CanBeNull = GetCanBeNull(sqlExpressions)
+					CanBeNull = GetCanBeNull(parameters)
 				};
+			}
+
+			public override string GetObjectID()
+			{
+				return $"{base.GetObjectID()}.{Name}.";
 			}
 		}
 	}

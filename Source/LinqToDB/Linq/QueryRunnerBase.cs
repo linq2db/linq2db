@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Data;
+﻿using System;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Data;
 	using SqlQuery;
 
 	abstract class QueryRunnerBase : IQueryRunner
@@ -22,17 +22,15 @@ namespace LinqToDB.Linq
 
 		protected readonly Query    Query;
 
-		protected List<string>?     QueryHints;
-
-		public IDataContext         DataContext      { get; set; }
-		public Expression           Expression       { get; set; }
-		public object?[]?           Parameters       { get; set; }
-		public object?[]?           Preambles        { get; set; }
+		public IDataContext         DataContext      { get; }
+		public Expression           Expression       { get; }
+		public object?[]?           Parameters       { get; }
+		public object?[]?           Preambles        { get; }
 		public abstract Expression? MapperExpression { get; set; }
 
 		public abstract int                    ExecuteNonQuery();
 		public abstract object?                ExecuteScalar  ();
-		public abstract IDataReader            ExecuteReader  ();
+		public abstract DataReaderWrapper      ExecuteReader  ();
 		public abstract Task<object?>          ExecuteScalarAsync  (CancellationToken cancellationToken);
 		public abstract Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken);
 		public abstract Task<int>              ExecuteNonQueryAsync(CancellationToken cancellationToken);
@@ -46,32 +44,35 @@ namespace LinqToDB.Linq
 				DataContext.Close();
 		}
 
-		protected virtual void SetCommand(bool clearQueryHints)
+#if !NATIVE_ASYNC
+		public virtual Task DisposeAsync()
 		{
-			if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))
-			{
-				var queryContext = Query.Queries[QueryNumber];
+			if (DataContext.CloseAfterUse)
+				return DataContext.CloseAsync();
 
-				queryContext.QueryHints = new List<string>(DataContext.QueryHints);
-				queryContext.QueryHints.AddRange(DataContext.NextQueryHints);
+			return TaskEx.CompletedTask;
+		}
+#else
+		public virtual ValueTask DisposeAsync()
+		{
+			if (DataContext.CloseAfterUse)
+				return new ValueTask(DataContext.CloseAsync());
 
-				if (QueryHints == null)
-					QueryHints = new List<string>(DataContext.QueryHints.Count + DataContext.NextQueryHints.Count);
+			return default;
+		}
+#endif
 
-				QueryHints.AddRange(DataContext.QueryHints);
-				QueryHints.AddRange(DataContext.NextQueryHints);
 
-				if (clearQueryHints)
-					DataContext.NextQueryHints.Clear();
-			}
-
+		protected virtual void SetCommand(bool forGetSqlText)
+		{
 			var parameterValues = new SqlParameterValues();
+
 			QueryRunner.SetParameters(Query, Expression, DataContext, Parameters, QueryNumber, parameterValues);
 
-			SetQuery(parameterValues);
+			SetQuery(parameterValues, forGetSqlText);
 		}
 
-		protected abstract void SetQuery(IReadOnlyParameterValues parameterValues);
+		protected abstract void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText);
 
 		public    abstract string GetSqlText();
 	}

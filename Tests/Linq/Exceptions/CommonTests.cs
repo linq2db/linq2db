@@ -14,7 +14,7 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class CommonTests : TestBase
 	{
-		class MyDataConnection : TestDataConnection
+		sealed class MyDataConnection : TestDataConnection
 		{
 			public MyDataConnection(string context) : base(context)
 			{
@@ -22,15 +22,15 @@ namespace Tests.Exceptions
 
 			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 			{
-				if (statement.IsInsert() && statement.RequireInsertClause().Into!.Name == "Parent")
+				if (statement.IsInsert() && statement.RequireInsertClause().Into!.TableName.Name == "Parent")
 				{
 					var expr =
-						new QueryVisitor().Find(statement.RequireInsertClause(), e =>
+						statement.RequireInsertClause().Find(static e =>
 						{
 							if (e.ElementType == QueryElementType.SetExpression)
 							{
 								var se = (SqlSetExpression)e;
-								return ((SqlField)se.Column).Name == "ParentID";
+								return ((SqlField)se.Column!).Name == "ParentID";
 							}
 
 							return false;
@@ -45,25 +45,25 @@ namespace Tests.Exceptions
 							var tableName = "Parent1";
 							var dic       = new Dictionary<IQueryElement,IQueryElement>();
 
-							statement = ConvertVisitor.Convert(statement, (v, e) =>
+							statement = statement.Convert(new { dic, tableName }, static (v, e) =>
 							{
 								if (e.ElementType == QueryElementType.SqlTable)
 								{
 									var oldTable = (SqlTable)e;
 
-									if (oldTable.Name == "Parent")
+									if (oldTable.TableName.Name == "Parent")
 									{
-										var newTable = new SqlTable(oldTable) { Name = tableName, PhysicalName = tableName };
+										var newTable = new SqlTable(oldTable) { TableName = new (v.Context.tableName) };
 
 										foreach (var field in oldTable.Fields)
-											dic.Add(field, newTable[field.Name] ?? throw new InvalidOperationException());
+											v.Context.dic.Add(field, newTable.FindFieldByMemberName(field.Name) ?? throw new InvalidOperationException());
 
 										return newTable;
 									}
 								}
 
 								IQueryElement? ex;
-								return dic.TryGetValue(e, out ex) ? ex : e;
+								return v.Context.dic.TryGetValue(e, out ex) ? ex : e;
 							});
 						}
 					}

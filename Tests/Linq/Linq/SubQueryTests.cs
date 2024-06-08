@@ -15,7 +15,7 @@ namespace Tests.Linq
 	public class SubQueryTests : TestBase
 	{
 		[Test]
-		public void Test1([DataSources] string context)
+		public void Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -28,7 +28,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test2([DataSources] string context)
+		public void Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -41,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test3([DataSources] string context)
+		public void Test3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -55,7 +55,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test4([DataSources] string context)
+		public void Test4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -70,7 +70,7 @@ namespace Tests.Linq
 		static int _testValue = 3;
 
 		[Test]
-		public void Test5([DataSources] string context)
+		public void Test5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -107,7 +107,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test6([DataSources] string context)
+		public void Test6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -147,7 +147,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test7([DataSources] string context)
+		public void Test7([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -156,7 +156,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test8([DataSources] string context)
+		public void Test8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -214,6 +214,7 @@ namespace Tests.Linq
 		[Test]
 		public void Contains1([DataSources(
 			TestProvName.AllInformix,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
 			TestProvName.AllAccess,
@@ -234,6 +235,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Contains2([DataSources(
+			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
@@ -255,6 +257,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubSub1([DataSources(
+			TestProvName.AllClickHouse,
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
 			TestProvName.AllOracle)]
 			string context)
@@ -294,10 +297,10 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub2([DataSources(
 			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
 			ProviderName.DB2,
 			TestProvName.AllOracle,
 			TestProvName.AllMySql,
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana)]
@@ -389,6 +392,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub21([DataSources(
 			ProviderName.SqlCe, ProviderName.DB2,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle,
 			ProviderName.Access)]
 			string context)
@@ -436,6 +440,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub211([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle)]
 			string context)
 		{
@@ -484,6 +489,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub212([DataSources(
 			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.DB2,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle)]
 			string context)
 		{
@@ -530,6 +536,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub22([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle, TestProvName.AllSapHana)]
 			string context)
 		{
@@ -576,7 +583,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count1([DataSources(ProviderName.SqlCe)] string context)
+		public void Count1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -601,7 +608,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count2([DataSources(ProviderName.SqlCe)] string context)
+		public void Count2([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -626,7 +633,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count3([DataSources(ProviderName.SqlCe)] string context)
+		public void Count3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -654,7 +661,7 @@ namespace Tests.Linq
 		[Test, ActiveIssue(1601)]
 		public void Issue1601([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var query = from q in db.Types
 							let datePlus2 = q.DateTimeValue.AddDays(2)
@@ -672,7 +679,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Contract_Distributor_Agent
+		sealed class Contract_Distributor_Agent
 		{
 			[Column] public int Agent_Id { get; set; }
 			[Column] public int Distributor_Id { get; set; }
@@ -688,7 +695,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Agent
+		sealed class Agent
 		{
 			[Column] public int Agent_Id { get; set; }
 			[Column] public string? First_Name { get; set; }
@@ -701,7 +708,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Distributor
+		sealed class Distributor
 		{
 			[Column] public int Distributor_Id { get; set; }
 			[Column] public string? Type_Code { get; set; }
@@ -714,7 +721,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Distributor_Commercial_Propert
+		sealed class Distributor_Commercial_Propert
 		{
 			[Column] public int Distributor_Id { get; set; }
 			[Column] public int Commercial_Property_Id { get; set; }
@@ -727,15 +734,15 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Commercial_Property
+		sealed class Commercial_Property
 		{
-			[Column] public int Commercial_Property_Id { get; set; }
-			[Column] public string? Street_Number { get; set; }
-			[Column] public string? Street_Name { get; set; }
-			[Column] public string? State { get; set; }
-			[Column] public string? Zip_Code { get; set; }
-			[Column] public string? Zip_Plus_4 { get; set; }
-			[Column] public string? City_Code { get; set; }
+			[Column              ] public int     Commercial_Property_Id { get; set; }
+			[Column(Length = 100)] public string? Street_Number          { get; set; }
+			[Column(Length = 100)] public string? Street_Name            { get; set; }
+			[Column(Length = 100)] public string? State                  { get; set; }
+			[Column(Length = 100)] public string? Zip_Code               { get; set; }
+			[Column(Length = 100)] public string? Zip_Plus_4             { get; set; }
+			[Column(Length = 100)] public string? City_Code              { get; set; }
 
 			public static readonly Commercial_Property[] Data = new[]
 			{
@@ -744,7 +751,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Contract_Dates
+		sealed class Contract_Dates
 		{
 			[Column] public int Contract_Id { get; set; }
 			[Column] public string? Type_Code { get; set; }
@@ -757,7 +764,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Cities
+		sealed class Cities
 		{
 			[Column] public string? City_Code { get; set; }
 			[Column] public string? City_Name { get; set; }
@@ -769,7 +776,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue383Test1([DataSources(false)] string context)
+		public void Issue383Test1([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))
@@ -817,7 +824,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue383Test2([DataSources(false)] string context)
+		public void Issue383Test2([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))

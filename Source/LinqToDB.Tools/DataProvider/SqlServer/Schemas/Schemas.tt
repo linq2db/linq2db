@@ -1,0 +1,503 @@
+﻿<#@ template debug="true" hostspecific="true" language="C#" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true" #>
+<#@ output extension=".generated.cs" #>
+<#@ include file="..\..\..\..\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"   once="true" #>
+<#@ include file="..\..\..\..\LinqToDB.Templates\PluralizationService.ttinclude" once="true" #>
+<#@ assembly name="System.Xml" #>
+<#@ assembly name="System.Xml.Linq" #>
+<#@ assembly name="$(SolutionDir)\Source\LinqToDB\bin\Debug\net46\linq2db.dll" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Xml.Linq" #>
+<#@ import namespace="LinqToDB" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="LinqToDB.DataProvider.SqlServer" #>
+<#@ import namespace="LinqToDB.Reflection" #>
+<#
+	NamespaceName                     = "LinqToDB.Tools.DataProvider.SqlServer.Schemas";
+	DataContextName                   = "SystemDB";
+	EnableNullableReferenceTypes      = true;
+	GenerateSchemaAsType              = true;
+	GenerateDatabaseNameFromTable     = true;
+	OneToManyAssociationType          = "IList<{0}>";
+	SingularizeClassNames             = true;
+	PluralizeDataContextPropertyNames = true;
+	NormalizeNamesWithoutUnderscores  = true;
+	PluralizeForeignKeyNames          = false;
+	SingularizeForeignKeyNames        = true;
+	LoadDatabaseSchema                = LoadSystemDatabaseSchema;
+
+	LoadSqlServerMetadata(".", "master", SqlServerVersion.v2012);
+
+	GetTable("sys.events").  TypeName = "Event";
+	GetTable("sys.objects"). TypeName = "Object";
+	GetTable("sys.systypes").TypeName = "TypeTable";
+
+	foreach (var table in Tables.Values)
+	{
+		foreach (var pref in new[]
+		{
+			new { TablePref = "syspolicy_",         TypePref = "Syspolicy"        },
+			new { TablePref = "sysmail_",           TypePref = "Sysmail"          },
+			new { TablePref = "syscollector_",      TypePref = "Syscollector"     },
+			new { TablePref = "pdw_",               TypePref = "Pdw"              },
+			new { TablePref = "sysdac_",            TypePref = "Sysdac"           },
+			new { TablePref = "fulltext_",          TypePref = "Fulltext"         },
+			new { TablePref = "resource_governor_", TypePref = "ResourceGovernor" },
+		})
+		if (table.TableName.StartsWith(pref.TablePref))
+		{
+			table.DataContextPropertyName = table.DataContextPropertyName.Replace(pref.TypePref, "");
+			table.TypeName                = table.TypeName.               Replace(pref.TypePref, "");
+		}
+
+		if (table.TableSchema.GroupName == "Compatibility" && table.TableName.StartsWith("sys"))
+		{
+			table.DataContextPropertyName = ToUpper(0, table.DataContextPropertyName.Substring(3, table.DataContextPropertyName.Length - 3));
+			table.TypeName                = ToUpper(0, table.TypeName.               Substring(3, table.TypeName.               Length - 3));
+		}
+
+		foreach (var suff in new[]
+		{
+			"Object",      "Objects",
+			"File",        "Files",
+			"Info",        "Infoes",
+			"DBUser",      "DBUsers",
+			"Config",      "Configs",
+			"Group",       "Groups",
+			"Key",         "Keys",
+			"TextCatalog", "TextCatalogs",
+			"Login",       "Logins",
+			"WebMethod",   "WebMethods",
+			"Item",        "Items",
+			"Attachment",  "Attachments",
+			"StopWord",    "StopWords",
+
+		})
+		if (table.DataContextPropertyName.EndsWith(suff, StringComparison.OrdinalIgnoreCase))
+		{
+			table.DataContextPropertyName = table.DataContextPropertyName.Substring(0, table.DataContextPropertyName.Length - suff.Length) + suff;
+		}
+		else if (table.TypeName.EndsWith(suff, StringComparison.OrdinalIgnoreCase))
+		{
+			table.TypeName = table.TypeName.Substring(0, table.TypeName.Length - suff.Length) + suff;
+		}
+
+		foreach (var pref in new[]
+		{
+			"FileTable",
+			"FullText",
+			"StopWord",
+		})
+		if (table.TypeName.StartsWith(pref, StringComparison.OrdinalIgnoreCase))
+		{
+			table.TypeName                = pref + table.TypeName.               Substring(pref.Length);
+			table.DataContextPropertyName = pref + table.DataContextPropertyName.Substring(pref.Length);
+		}
+
+		if (table.TypeName == "Databas") table.TypeName = "Database";
+
+		var columnNameSuffix = new[]
+		{
+			"ID", "DHCP", "IP", "SID", "MB", "UID", "RowGuidCol"
+		};
+
+		var memberNameSuffix = new[]
+		{
+			"IPAddress", "DTULimit", "IORequest", "IOBytesRead", "IOBytesWritten", "HoBTID", "MSShipped",
+			"GroupID", "MaxSize", "FileName", "DbID", "BucketID", "ObjID", "ObjType", "DbIDExec",
+			"RefCounts", "UseCounts", "PagesUsed", "LangID", "DateFormat", "ExecTime", "LastTime", "LastReads",
+			"LastWrites", "Bytes", "CSID", "Definition", "XType", "TypeStat", "XUserType", "XPrec", "XScale",
+			"XOffset", "BitPos", "ColStat", "CDefault", "ColorDer", "AutoVal", "CollationID", "UserType",
+			"PrintFmt", "IsComputed", "IsOutParam", "IsNullable", "TextType", "DepID", "Number", "Admin",
+			"SiteID", "ResultObj", "ReadObj", "Policy", "FKeyID", "RKeyID", "FKey", "RKey", "KeyNo", "FTCatID",
+			"MinLen", "KeyCnt", "RowCnt", "DPages", "Months", "IDUsed", "StopWord", "FileTable",
+
+		};
+
+		var columnReplacement = new[]
+		{
+			new[] { "class",     "Class"              }, new[] { "uid",       "UID"          }, new[] { "setopts",     "SetOptions" },
+			new[] { "colid",     "ColumnID"           }, new[] { "constid",   "ConstraintID" }, new[] { "type",        "TypeColumn" },
+			new[] { "cmptlevel", "CompatibilityLevel" }, new[] { "deptype",   "DepType"      }, new[] { "selall",      "SelectAll"  },
+			new[] { "cntrltype", "ControllerType"     }, new[] { "phyname",   "PhysicalName" }, new[] { "groupname",   "GroupName"  },
+			new[] { "indid",     "IndexID"            }, new[] { "rowmodctr", "RowModCtr"    }, new[] { "xmaxlen",     "XMaxLen"    },
+			new[] { "maxirow",   "MaxiRow"            }, new[] { "impid",     "ImpID"        }, new[] { "pgmodctr",    "PgModCtr"   },
+			new[] { "statblob",  "StatBlob"           }, new[] { "maxlen",    "MaxLen"       }, new[] { "ctext",       "CText"      },
+			new[] { "dbname",    "DbName"             }, new[] { "fileid",    "FileID"       }, new[] { "mailitem_id", "MailItemID" },
+			new[] { "filesize",  "FileSize"           }, new[] { "operator",  "Operator"     }, new[] { "namespace",   "Namespace"  },
+		};
+
+		foreach (var col in table.Columns.Values)
+		{
+			foreach (var r in columnReplacement)
+				if (col.ColumnName == r[0])
+					col.MemberName = r[1];
+
+			foreach (var suff in columnNameSuffix)
+				if (col.ColumnName == suff.ToLower() || col.ColumnName.EndsWith("_" + suff.ToLower()))
+					col.MemberName = col.MemberName.Substring(0, col.MemberName.Length - suff.Length) + suff;
+
+			foreach (var suff in memberNameSuffix)
+				if (col.MemberName.ToLower().EndsWith(suff.ToLower()))
+					col.MemberName = col.MemberName.Substring(0, col.MemberName.Length - suff.Length) + suff;
+
+			if (table.TypeName == col.MemberName)
+				col.MemberName += "Column";
+		}
+	}
+
+	GenerateModel();
+
+	GenerationEnvironment
+		.Replace("&lt;",                                 "<")
+		.Replace("&gt;",                                 ">")
+		.Replace("&apos;",                               "'")
+		.Replace("<br />",                               "<br/>")
+		.Replace("<network_subnet_option>",              "&lt;network_subnet_option&gt;")
+		.Replace("<database_family_guid>",               "&lt;database_family_guid&gt;")
+		.Replace("<random_password_guid>",               "&lt;random_password_guid&gt;")
+		.Replace("<thumbprint>",                         "&lt;thumbprint&gt;")
+		.Replace(">0",                                   "&gt;0")
+		.Replace("\\<0",                                 "&lt;0")
+		.Replace("<strong&gt;0",                         "<strong>0")
+		.Replace("&quot;",                               "'")
+		.Replace("\\<principal>",                        "&lt;principal&gt;")
+		.Replace("<br/&gt;0",                            "<br/>0")
+		.Replace("\\<choice>",                           "&lt;choice&gt;")
+		.Replace("\\<sequence>",                         "&lt;sequence&gt;")
+		.Replace("\\<all>",                              "&lt;all&gt;")
+		.Replace("\\<schema>",                           "&lt;schema&gt;")
+		.Replace("\\<hobt_id, partition_id, column_id>", "&lt;hobt_id, partition_id, column_id&gt;")
+		.Replace("<segment_id>",                         "&lt;segment_id&gt;")
+		.Replace("<value>",                              "&lt;value&gt;")
+		.Replace("<database>",                           "&lt;database&gt;")
+		.Replace("<interval>",                           "&lt;interval&gt;")
+		.Replace("<size>",                               "&lt;size&gt;")
+		.Replace("<version><length>[<key>",              "&lt;version&gt;&lt;length&gt;[&lt;key&gt;")
+		.Replace("<hobt_id, partition_id, column_id>",   "&lt;hobt_id, partition_id, column_id&gt;")
+		.Replace("<sys.internal_table_name>",            "&lt;sys.internal_table_name&gt;")
+		.Replace("\\<other value>",                      "&lt;other value&gt;")
+		.Replace("= <n>)",                               "= &lt;n&gt;")
+		.Replace("<c&gt;0.0.0.0</c>",                    "<c>0.0.0.0</c>")
+		.Replace(", one of:< LOW ",                      ", one of: LOW ")
+		;
+#>
+<#+
+string ToUpper(int pos, string str)
+{
+	return str.Substring(0, pos) + char.ToUpper(str[pos]) + str.Substring(pos + 1);
+}
+
+DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchemaOptions schemaOptions)
+{
+	var xmlFile = Path.Combine(Path.GetDirectoryName(Host.TemplateFile)!, "Schemas.xml");
+	var xml     =
+	(
+		from t in XDocument.Load(xmlFile, LoadOptions.PreserveWhitespace).Root.Elements("table")
+		select new
+		{
+			Database    = t.Attribute("database")?.Value,
+			Category    = t.Attribute("category").Value,
+			Name        = t.Attribute("name").Value,
+			Uri         = t.Attribute("uri").Value,
+			Description = t.Element("description").Value,
+			Columns     =
+			(
+				from c in t?.Elements("column")
+				select new
+				{
+					Name    = c.Attribute("name").Value,
+					Type    = c.Attribute("type").Value,
+					Content = c.Value
+				}
+				into c
+				group c by c.Name into g
+				select new
+				{
+					Name    = g.Key,
+					Type    = g.First().Type,
+					Content = g.First().Content,
+					Items   = g.ToList()
+				}
+			)
+			.ToDictionary(c => c.Name, c => c)
+		}
+		into t
+		group t by new { t.Name } into g
+		select new
+		{
+			g.Key.Name,
+			g.First().Database,
+			g.First().Category,
+			g.First().Uri,
+			g.First().Description,
+			g.First().Columns,
+			Items = g.ToList()
+		}
+	)
+	.ToDictionary(t => t.Name, t => t);
+
+	var columns = dataConnection.Query(new
+	{
+		schema_name = null as string,
+		view_name   = null as string,
+		column_name = null as string,
+		column_id   = 0,
+		type_name   = null as string,
+		max_length  = null as int?,
+		precision   = 0,
+		scale       = 0,
+		is_nullable = false
+	}, @"
+	select
+		OBJECT_SCHEMA_NAME(o.object_id) schema_name,
+		o.name                          view_name,
+		c.name                          column_name,
+		c.column_id,
+		t.name                          type_name,
+		c.max_length,
+		c.precision,
+		c.scale,
+		c.is_nullable
+	from sys.system_objects o
+	join sys.system_views v on o.object_id = v.object_id
+	join sys.system_columns c on o.object_id = c.object_id
+	join sys.types t on c.user_type_id = t.user_type_id
+	where o.is_ms_shipped = 1
+	order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id");
+
+	var tables =
+	(
+		from  c in columns
+		where c.schema_name != "dbo"
+		group c by new { c.schema_name, c.view_name } into gs
+		let name = $"{gs.Key.schema_name}.{gs.Key.view_name}"
+		let doc  = xml.ContainsKey(name) ? xml[name] : null
+		select new TableSchema
+		{
+			ID          = $"[{gs.Key.schema_name}].[{gs.Key.view_name}]",
+			SchemaName  = gs.Key.schema_name,
+			TableName   = gs.Key.view_name,
+			Description = doc != null ? $"{doc.Description}<br/>\r\n<para>See <a href='{doc.Uri}'>{name}</a>.</para>" : null,
+			TypeName    = gs.Key.view_name,
+			IsView      = true,
+			Columns     =
+			(
+				from c in gs
+				let cn = doc?.Columns.ContainsKey(c.column_name) == true ? doc?.Columns[c.column_name] : null
+				orderby c.column_id
+				select new ColumnSchema
+				{
+					ColumnName           = c.column_name,
+					Description          = cn?.Content,
+					ColumnType           = cn?.Type ?? c.type_name switch
+					{
+						"int"              => "int",
+						"tinyint"          => "tinyint",
+						"smallint"         => "smallint",
+						"bigint"           => "bigint",
+						"datetime"         => "datetime",
+						"datetime2"        => c.scale == 0 ? "datetime2"      : $"datetime2({c.scale})",
+						"datetimeoffset"   => c.scale == 0 ? "datetimeoffset" : $"datetimeoffset({c.scale})",
+						"time"             => c.scale == 0 ? "time"           : $"time({c.scale})",
+						"sql_variant"      => "sql_variant",
+						"sysname"          => "sysname",
+						"bit"              => "bit",
+						"uniqueidentifier" => "uniqueidentifier",
+						"numeric"          => $"numeric({c.precision},{c.scale})",
+						"float"            => "float",
+						"real"             => "real",
+						"char"             => $"char({(     c.max_length == null ? "max" : c.max_length)})",
+						"nchar"            => $"nchar({(    c.max_length == null ? "max" : c.max_length / 2)})",
+						"nvarchar"         => $"nvarchar({( c.max_length == null ? "max" : c.max_length / 2)})",
+						"varchar"          => $"varchar({(  c.max_length == null ? "max" : c.max_length)})",
+						"varbinary"        => $"varbinary({(c.max_length == null ? "max" : c.max_length)})",
+						"binary"           => $"binary({(   c.max_length == null ? "max" : c.max_length)})",
+						"image"            => $"image({(    c.max_length == null ? "max" : c.max_length)})",
+						var t              => throw new NotImplementedException($"Not implemented type {t}")
+					},
+					IsNullable           = c.is_nullable,
+					MemberName           = c.column_name,
+					MemberType           = c.type_name switch
+					{
+						"int"              => "int",
+						"tinyint"          => "byte",
+						"smallint"         => "short",
+						"bigint"           => "long",
+						"datetime"         => "DateTime",
+						"datetime2"        => "DateTime",
+						"datetimeoffset"   => "DateTimeOffset",
+						"time"             => "TimeSpan",
+						"sql_variant"      => "object",
+						"sysname"          => "string",
+						"bit"              => "bool",
+						"uniqueidentifier" => "Guid",
+						"numeric"          => "decimal",
+						"float"            => "double",
+						"real"             => "float",
+						"char"             => "string",
+						"nchar"            => "string",
+						"nvarchar"         => "string",
+						"varchar"          => "string",
+						"varbinary"        => "byte[]",
+						"binary"           => "byte[]",
+						"image"            => "byte[]",
+						var t              => throw new NotImplementedException($"Not implemented type {t}")
+					} + (c.is_nullable ? "?" : ""),
+					SystemType           = typeof(int),
+					DataType             = DataType.Char,
+					Length               = c.max_length / 2,
+					Precision            = c.precision,
+					Scale                = c.scale,
+				}
+			).ToList(),
+			ForeignKeys = new(),
+		}
+	).ToList();
+	//var tables = new List<TableSchema>();
+
+	var tableDic = tables.ToDictionary(t => t.SchemaName + "." + t.TableName);
+
+	tables =
+	(
+		from c in xml.Values
+		let table = tableDic.ContainsKey(c.Name) ? tableDic[c.Name] : null
+		let ns    = c.Name.Split('.')
+		where ns.Length == 2
+		orderby c.Name
+		select new TableSchema
+		{
+			ID          = c.Name,
+			GroupName   = c.Category,
+			CatalogName = c.Database,
+			SchemaName  = ns[0],
+			TableName   = ns[1],
+			Description = (table != null ? "" : null) + $"{c.Description}<br/>\r\n<para>See <a href='{c.Uri}'>{c.Name}</a>.</para>",
+			TypeName    = ns[1],
+			IsView      = true,
+			Columns     =
+			(
+				from cn in c.Columns.Values
+				let c = table?.Columns.FirstOrDefault(cc => cc.ColumnName.ToLower() == cn.Name.ToLower())
+				select new ColumnSchema
+				{
+					ColumnName           = c?.ColumnName ?? cn.Name,
+					Description          = cn.Content,// + (c != null ? "<br/>+" : null),
+					ColumnType           = (cn.Type.Length > 0 ? cn.Type : c?.ColumnType) ?? "object",
+					IsNullable           = c?.IsNullable == true,
+					MemberName           = cn.Name,
+					MemberType           = ((cn.Type.Length > 0 ? cn.Type : c?.ColumnType) ?? "").Split('(')[0] switch
+					{
+						"int"              => "int",
+						"tinyint"          => "byte",
+						"smallint"         => "short",
+						"bigint"           => "long",
+						"datetime"         => "DateTime",
+						"datetime2"        => "DateTime",
+						"datetimeoffset"   => "DateTimeOffset",
+						"time"             => "TimeSpan",
+						"sql_variant"      => "object",
+						"sysname"          => "string",
+						"bit"              => "bool",
+						"uniqueidentifier" => "Guid",
+						"numeric"          => "decimal",
+						"float"            => "double",
+						"real"             => "float",
+						"char"             => "string",
+						"nchar"            => "string",
+						"nvarchar"         => "string",
+						"varchar"          => "string",
+						"varbinary"        => "byte[]",
+						"binary"           => "byte[]",
+						"image"            => "byte[]",
+						var t              => "object" //throw new NotImplementedException($"Not implemented type {t}")
+					} + (c?.IsNullable == true ? "?" : ""),
+					SystemType           = typeof(int),
+					DataType             = DataType.Char,
+					Length               = c?.Length / 2,
+					Precision            = c?.Precision,
+					Scale                = c?.Scale,
+				}
+			).ToList(),
+			ForeignKeys = new(),
+		}
+	).ToList();
+
+	SetForeignKeys("sys.all_objects",    "object_id", "AllObject",    t => t.TableName!.StartsWith("all_"),    "all_views");
+	SetForeignKeys("sys.system_objects", "object_id", "SystemObject", t => t.TableName!.StartsWith("system_"), "system_views");
+	SetForeignKeys("sys.objects",        "object_id", "Object",       t => !t.TableName!.StartsWith("all_") && !t.TableName!.StartsWith("system_"),
+		// http://t-sql.ru/Download/SystemViewsPoster/2008.pdf
+		"assembly_modules",    // sys.objects.type in ('TA', 'PC', 'FS', 'FT')
+		"default_constraints", // sys.objects.type in ('D')
+		"check_constraints",   // sys.objects.type in ('C')
+		"foreign_keys",        // sys.objects.type in ('F')
+		"key_constraints",     // sys.objects.type in (‘UQ’, ‘PK’) AND sys.key_constraints.parent_object_id is not null
+		"service_queues",      // sys.objects.type in ('SQ')
+		"synonyms",            // sys.objects.type in ('SN')
+		"tables",              // sys.objects.type in ('U')
+		"views"                // sys.objects.type in ('V')
+		);
+
+	void SetForeignKeys(string masterTableID, string columnName, string memberName, Func<TableSchema,bool> filter, params string[] oneToOneTableNames)
+	{
+		var masterTable    = tables.First(t => t.ID == masterTableID);
+		var masterColumn   = masterTable.Columns.First(c => c.ColumnName == columnName);
+		var oneToOneTables = new HashSet<string>(oneToOneTableNames);
+
+		foreach (var t in tables)
+		{
+			if (t != masterTable && filter(t))
+			{
+				var column = t.Columns.FirstOrDefault(c => c.ColumnName == columnName);
+
+				if (column != null)
+				{
+					var isOneToOneTables = oneToOneTables.Contains(t.TableName!);
+
+					var backReference = new ForeignKeySchema
+					{
+						KeyName         = t.TableName!,
+						OtherTable      = t,
+						ThisColumns     = new (new[] { masterColumn }),
+						OtherColumns    = new (new[] { column }),
+						CanBeNull       = true,
+						MemberName      = t.TypeName,
+						AssociationType = isOneToOneTables
+							? LinqToDB.SchemaProvider.AssociationType.OneToOne
+							: LinqToDB.SchemaProvider.AssociationType.OneToMany,
+					};
+
+					masterTable.ForeignKeys.Add(backReference);
+
+					t.ForeignKeys.Add(new()
+					{
+						KeyName         = masterTable.TableName!,
+						OtherTable      = masterTable,
+						ThisColumns     = new (new[] { column }),
+						OtherColumns    = new (new[] { masterColumn }),
+						CanBeNull       = false,
+						MemberName      = memberName,
+						BackReference   = backReference,
+						AssociationType = isOneToOneTables
+							? LinqToDB.SchemaProvider.AssociationType.OneToOne
+							: LinqToDB.SchemaProvider.AssociationType.ManyToOne,
+					});
+				}
+			}
+		}
+	}
+
+	var dbc = (System.Data.Common.DbConnection)dataConnection.Connection;
+
+	return new()
+	{
+		DataSource      = dbc.DataSource!,
+		Database        = dbc.Database,
+		ServerVersion   = dbc.ServerVersion!,
+		Tables          = tables,
+		Procedures      = new(),
+		DataTypesSchema = new(),
+	};
+}
+#>

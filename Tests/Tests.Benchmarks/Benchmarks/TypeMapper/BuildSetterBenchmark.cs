@@ -7,7 +7,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// shows small performance degradation due to indirect call
 	public class BuildSetterBenchmark
 	{
-		private static readonly string Parameter = "TestString";
+		private const string Parameter = "TestString";
 
 		private Original.TestClass _classInstance = new Original.TestClass();
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using LinqToDB.Benchmarks.Models;
@@ -6,7 +7,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.Firebird;
 
-namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
+namespace LinqToDB.Benchmarks.QueryGeneration
 {
 	public class QueryGenerationBenchmark
 	{
@@ -21,8 +22,9 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 			if (_dataProviders.Count > 0)
 				return;
 
-			_dataProviders.Add(ProviderName.Access,                new AccessOleDbDataProvider());
-			_dataProviders.Add(ProviderName.Firebird,              new FirebirdDataProvider());
+			_dataProviders.Add(ProviderName.Access,   new AccessOleDbDataProvider());
+			_dataProviders.Add(ProviderName.Firebird, new FirebirdDataProvider());
+
 			/*
 			_dataProviders.Add(ProviderName.SQLiteMS,              new SQLiteDataProvider(ProviderName.SQLiteMS));
 			_dataProviders.Add(ProviderName.SQLiteClassic,         new SQLiteDataProvider(ProviderName.SQLiteClassic));
@@ -33,7 +35,6 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 			//_dataProviders.Add(ProviderName.DB2LUW,                new DB2DataProvider(ProviderName.DB2, DB2Version.LUW));
 			//_dataProviders.Add(ProviderName.DB2zOS,                new DB2DataProvider(ProviderName.DB2, DB2Version.zOS));
 			_dataProviders.Add(ProviderName.PostgreSQL,            new PostgreSQLDataProvider(ProviderName.PostgreSQL, PostgreSQLVersion.v95));
-			_dataProviders.Add(ProviderName.SqlServer2000,         new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000));
 			_dataProviders.Add(ProviderName.SqlServer2005,         new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005));
 			_dataProviders.Add(ProviderName.SqlServer2008,         new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008));
 			_dataProviders.Add(ProviderName.SqlServer2012,         new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012));
@@ -41,12 +42,12 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 		*/
 		}
 
-		Dictionary<string, IDataProvider> _dataProviders = new Dictionary<string, IDataProvider>();
+		Dictionary<string, IDataProvider> _dataProviders = new ();
 
 		public IEnumerable<string> ValuesForDataProvider => _dataProviders.Keys;
 
 		[ParamsSource(nameof(ValuesForDataProvider))]
-		public string DataProvider { get; set; } = ProviderName.SQLiteMS;
+		public string DataProvider { get; set; } = ProviderName.Access;
 
 		private NorthwindDB GetDataConnection(string providerName)
 		{

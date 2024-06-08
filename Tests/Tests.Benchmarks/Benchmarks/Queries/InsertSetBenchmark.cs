@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
+
 using BenchmarkDotNet.Attributes;
+
 using LinqToDB.Benchmarks.Mappings;
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
@@ -13,10 +14,10 @@ namespace LinqToDB.Benchmarks.Queries
 {
 	public class InsertSetBenchmark
 	{
-		private readonly int _batchSize = 100;
-		private IEnumerable<CreditCard> _data = null!;
-		private QueryResult _result = null!;
-		private IDataProvider _provider = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient);
+		readonly int            _batchSize = 100;
+		IEnumerable<CreditCard> _data      = null!;
+		QueryResult             _result    = null!;
+		IDataProvider           _provider  = SqlServerTools.GetDataProvider(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient);
 
 		[GlobalSetup]
 		public void Setup()

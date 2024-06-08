@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -7,17 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Expressions;
-
-#if NETFRAMEWORK
-using LinqToDB.Async;
-namespace System
-{
-	// Magic (see https://github.com/dotnet/roslyn/issues/45111)
-	internal class IAsyncDisposable
-	{
-	}
-}
-#endif
 
 namespace Tests.Linq
 {
@@ -99,7 +89,8 @@ namespace Tests.Linq
 
 		#region Helpers
 
-		static Expression? Unwrap(Expression? ex)
+		[return: NotNullIfNotNull(nameof(ex))]
+		static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)
 				return null;
@@ -229,7 +220,7 @@ namespace Tests.Linq
 			return path.Split('.').Aggregate(objExpression, Expression.PropertyOrField);
 		}
 
-		private class Envelope<T>
+		private sealed class Envelope<T>
 		{
 			public int TotalCount { get; set; }
 			public T Data { get; set; } = default!;
@@ -303,7 +294,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class RownNumberHolder<T>
+		sealed class RownNumberHolder<T>
 		{
 			public T Data = default!;
 			public long RowNumber;

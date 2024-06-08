@@ -11,9 +11,8 @@ namespace Tests.UserTests
 	public class Issue2566Tests : TestBase
 	{
 		[Table]
-		class DataClass
+		sealed class DataClass
 		{
-			
 			[Column] [PrimaryKey] public int Id { get; set; }
 
 			private string? _value;
@@ -63,7 +62,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestCustomType([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestCustomType([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var items = new[]
 			{
@@ -93,7 +92,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestCustomTypeConversion([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestCustomTypeConversion([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var items = new[]
 			{
@@ -102,8 +101,8 @@ namespace Tests.UserTests
 			};
 
 			var ms = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
-			builder.Entity<DataClass>().Property(e => e.Value).HasConversion(v => v!.Value, s => new AnredeAuswahlliste(s));
+			var builder = new FluentMappingBuilder(ms);
+			builder.Entity<DataClass>().Property(e => e.Value).HasConversion(v => v!.Value, s => new AnredeAuswahlliste(s)).Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var dataClasses = db.CreateLocalTable(items))

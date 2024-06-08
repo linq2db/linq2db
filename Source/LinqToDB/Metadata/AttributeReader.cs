@@ -1,37 +1,32 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Metadata
 {
+	using Common;
+	using Extensions;
+	using Mapping;
+
 	public class AttributeReader : IMetadataReader
 	{
-		public T[] GetAttributes<T>(Type type, bool inherit = true)
-			where T : Attribute
-		{
-			var attrs = type.GetCustomAttributes(typeof(T), inherit);
-			var arr   = new T[attrs.Length];
+		readonly static MappingAttributesCache _cache = new (
+			static (_, source) =>
+			{
+				var res = source.GetAttributes<MappingAttribute>(inherit: false);
+				// API returns object[] for old frameworks and typed array for new
+				return res.Length == 0 ? Array<MappingAttribute>.Empty : res is MappingAttribute[] attrRes ? attrRes : res.Cast<MappingAttribute>().ToArray();
+			});
 
-			for (var i = 0; i < attrs.Length; i++)
-				arr[i] = (T)attrs[i];
+		public MappingAttribute[] GetAttributes(Type type)
+			=> _cache.GetMappingAttributes<MappingAttribute>(type);
 
-			return arr;
-		}
-
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
-			where T : Attribute
-		{
-			var attrs = memberInfo.GetCustomAttributes(typeof(T), inherit);
-			var arr   = new T[attrs.Length];
-
-			for (var i = 0; i < attrs.Length; i++)
-				arr[i] = (T)attrs[i];
-
-			return arr;
-		}
+		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+			=> _cache.GetMappingAttributes<MappingAttribute>(type, memberInfo);
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type)
-			=> Array<MemberInfo>.Empty;
+		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
+
+		public string GetObjectID() => $".{nameof(AttributeReader)}.";
 	}
 }

@@ -1,48 +1,37 @@
-﻿﻿using System.Data;
+﻿using System;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Access
 {
 	using Mapping;
 	using SqlProvider;
 
-	class AccessOleDbSqlBuilder : AccessSqlBuilderBase
+	sealed class AccessOleDbSqlBuilder : AccessSqlBuilderBase
 	{
-		private readonly AccessOleDbDataProvider? _provider;
-
-		public AccessOleDbSqlBuilder(
-			AccessOleDbDataProvider? provider,
-			MappingSchema            mappingSchema,
-			ISqlOptimizer            sqlOptimizer,
-			SqlProviderFlags         sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public AccessOleDbSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
 		}
 
-		// remote context
-		public AccessOleDbSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		AccessOleDbSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new AccessOleDbSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new AccessOleDbSqlBuilder(this);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (_provider != null)
+			if (DataProvider is AccessOleDbDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 	}
 }

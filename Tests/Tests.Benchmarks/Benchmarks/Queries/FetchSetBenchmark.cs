@@ -1,22 +1,23 @@
-﻿using System.Linq;
-using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
 using BenchmarkDotNet.Attributes;
+
 using LinqToDB.Benchmarks.Mappings;
 using LinqToDB.Benchmarks.TestProvider;
-using System;
-using System.Collections.Generic;
-using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SqlServer;
 
 namespace LinqToDB.Benchmarks.Queries
 {
 	public class FetchSetBenchmark
 	{
-		private string ConnectionString = "test";
-		private Func<Db, IQueryable<SalesOrderHeader>> _compiled = null!;
-		private QueryResult _result = null!;
-		private string CommandText = "SELECT [SalesOrderID],[RevisionNumber],[OrderDate],[DueDate],[ShipDate],[Status],[OnlineOrderFlag],[SalesOrderNumber],[PurchaseOrderNumber],[AccountNumber],[CustomerID],[SalesPersonID],[TerritoryID],[BillToAddressID],[ShipToAddressID],[ShipMethodID],[CreditCardID],[CreditCardApprovalCode],[CurrencyRateID],[SubTotal],[TaxAmt],[Freight],[TotalDue],[Comment],[rowguid],[ModifiedDate] FROM [Sales].[SalesOrderHeader]";
-		private IDataProvider _provider = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient);
+		string                                ConnectionString = "test";
+		Func<Db,IQueryable<SalesOrderHeader>> _compiled        = null!;
+		QueryResult                           _result          = null!;
+		string                                CommandText      = "SELECT [SalesOrderID],[RevisionNumber],[OrderDate],[DueDate],[ShipDate],[Status],[OnlineOrderFlag],[SalesOrderNumber],[PurchaseOrderNumber],[AccountNumber],[CustomerID],[SalesPersonID],[TerritoryID],[BillToAddressID],[ShipToAddressID],[ShipMethodID],[CreditCardID],[CreditCardApprovalCode],[CurrencyRateID],[SubTotal],[TaxAmt],[Freight],[TotalDue],[Comment],[rowguid],[ModifiedDate] FROM [Sales].[SalesOrderHeader]";
+		IDataProvider                         _provider        = SqlServerTools.GetDataProvider(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient);
 
 		[GlobalSetup]
 		public void Setup()
@@ -53,7 +54,8 @@ namespace LinqToDB.Benchmarks.Queries
 		[Benchmark(Baseline = true)]
 		public object? RawAdoNet()
 		{
-			return MaterializeSet(new MockDbCommand(CommandText, _result));
+			using var cmd = new MockDbCommand(CommandText, _result);
+			return MaterializeSet(cmd);
 		}
 
 		private IEnumerable<SalesOrderHeader> MaterializeSet(MockDbCommand toExecute)
@@ -68,7 +70,7 @@ namespace LinqToDB.Benchmarks.Queries
 				{
 					var soh = new SalesOrderHeader();
 					// using IsDBNull(ordinal) is slow, however it allows the usage of the typed Get<type>(ordinal) methods. This avoids
-					// boxing / unboxing of the value again, which enhances performance more than IsDBNull can slow it down. 
+					// boxing / unboxing of the value again, which enhances performance more than IsDBNull can slow it down.
 					soh.SalesOrderID = reader.GetInt32(0);
 					if (!reader.IsDBNull(1))
 					{

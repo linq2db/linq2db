@@ -40,7 +40,7 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets parameter type size.
 		/// </summary>
-		public long?    Size                 { get; set; }
+		public int?     Size                 { get; set; }
 
 		/// <summary>
 		/// Gets parameter description.
@@ -59,7 +59,7 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets .net type for parameter.
 		/// </summary>
-		public Type     SystemType           { get; set; } = null!;
+		public Type?    SystemType           { get; set; }
 		/// <summary>
 		/// Gets parameter type as <see cref="DataType"/> enumeration value.
 		/// </summary>

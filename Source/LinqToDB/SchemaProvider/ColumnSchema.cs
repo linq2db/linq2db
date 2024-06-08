@@ -51,7 +51,7 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets .net column type.
 		/// </summary>
-		public Type        SystemType           { get; set; } = null!;
+		public Type?       SystemType           { get; set; }
 		/// <summary>
 		/// Gets column type as <see cref="DataType"/> enumeration value.
 		/// </summary>
@@ -67,7 +67,7 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets column type length.
 		/// </summary>
-		public long?       Length               { get; set; }
+		public int?        Length               { get; set; }
 		/// <summary>
 		/// Gets column type precision.
 		/// </summary>
@@ -76,6 +76,11 @@ namespace LinqToDB.SchemaProvider
 		/// Gets column type scale.
 		/// </summary>
 		public int?        Scale                { get; set; }
+
+		/// <summary>
+		/// Column ordinal.
+		/// </summary>
+		public int?        Ordinal              { get; set; }
 
 		/// <summary>
 		/// Gets column owner schema.

@@ -1,22 +1,20 @@
-﻿using System.Data.SqlTypes;
+﻿using System;
+using System.Data.Linq;
+using System.Data.SqlTypes;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using System.Data.Linq;
 	using Common;
 	using Mapping;
 	using SqlQuery;
 
-	public class SqlCeMappingSchema : MappingSchema
+	public sealed class SqlCeMappingSchema : LockedMappingSchema
 	{
-		public SqlCeMappingSchema() : this(ProviderName.SqlCe)
-		{
-		}
-
-		protected SqlCeMappingSchema(string configuration) : base(configuration)
+		public SqlCeMappingSchema() : base(ProviderName.SqlCe)
 		{
 			SetConvertExpression<SqlXml,XmlReader>(
 				s => s.IsNull ? DefaultValue<XmlReader>.Value : s.CreateReader(),
@@ -54,10 +52,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
-			SetValueToSqlConverter(typeof(string), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char),   (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -67,23 +65,22 @@ namespace LinqToDB.DataProvider.SqlCe
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("nchar(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"nchar({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
+
+		internal static readonly SqlCeMappingSchema Instance = new ();
 	}
 }

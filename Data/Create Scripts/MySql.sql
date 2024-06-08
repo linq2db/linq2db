@@ -122,6 +122,10 @@ CREATE TABLE Parent     (ParentID int, Value1 int)
 GO
 CREATE TABLE Child      (ParentID int, ChildID int)
 GO
+CREATE INDEX IX_ChildIndex ON Child (ParentID)
+GO
+CREATE INDEX IX_ChildIndex2 ON Child (ParentID DESC)
+GO
 CREATE TABLE GrandChild (ParentID int, ChildID int, GrandChildID int)
 GO
 
@@ -131,7 +135,9 @@ CREATE TABLE LinqDataTypes
 	MoneyValue     decimal(10,4),
 	DateTimeValue  datetime
 -- SKIP MySql55 BEGIN
+-- SKIP MySql55Connector BEGIN
 	(3)
+-- SKIP MySql55Connector END
 -- SKIP MySql55 END
 	,
 	DateTimeValue2 datetime NULL,
@@ -173,12 +179,14 @@ CREATE TABLE `AllTypes`
 -- SKIP MySql BEGIN
 -- SKIP MySqlConnector BEGIN
 -- SKIP MariaDB BEGIN
-	year2DataType       year(2)                      NULL,
--- SKIP MySql END
--- SKIP MySqlConnector END
--- SKIP MariaDB END
--- SKIP MySql55 BEGIN
 	year2DataType       year(4)                      NULL,
+-- SKIP MariaDB END
+-- SKIP MySqlConnector END
+-- SKIP MySql END
+-- SKIP MySql55 BEGIN
+-- SKIP MySql55Connector BEGIN
+	year2DataType       year(4)                      NULL,
+-- SKIP MySql55Connector END
 -- SKIP MySql55 END
 	year4DataType       year(4)                      NULL,
 
@@ -462,12 +470,12 @@ CREATE TABLE FullTextIndexTest (
 	FULLTEXT idx_field2 (TestField2)
 )
 -- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
 -- SKIP MySqlConnector BEGIN
+-- SKIP MariaDB BEGIN
 	ENGINE=MyISAM
--- SKIP MySql END
 -- SKIP MariaDB END
 -- SKIP MySqlConnector END
+-- SKIP MySql END
 ;
 GO
 INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('this is text1', 'this is text2');
@@ -480,7 +488,7 @@ CREATE TABLE Issue1993 (
 PRIMARY KEY(id));
 GO
 CREATE PROCEDURE `Issue2313Parameters`(
-	IN `VarChar255` VARCHAR(255),
+	IN `VarCharDefault` VARCHAR(255),
 	IN `VarChar1` VARCHAR(1),
 	IN `Char255` CHAR(255),
 	IN `Char1` CHAR(1),
@@ -499,7 +507,9 @@ CREATE PROCEDURE `Issue2313Parameters`(
 	IN `TimeStamp` TIMESTAMP,
 	IN `Time` TIME,
 -- SKIP MySql55 BEGIN
+-- SKIP MySql55Connector BEGIN
 	IN `Json` JSON,
+-- SKIP MySql55Connector END
 -- SKIP MySql55 END
 	IN `TinyInt` TINYINT,
 	IN `TinyIntUnsigned` TINYINT UNSIGNED,
@@ -535,7 +545,7 @@ CREATE PROCEDURE `Issue2313Parameters`(
 )
 BEGIN
 	SELECT
-	`VarChar255`,
+	`VarCharDefault`,
 	`VarChar1`,
 	`Char255`,
 	`Char1`,
@@ -554,7 +564,9 @@ BEGIN
 	`TimeStamp`,
 	`Time`,
 -- SKIP MySql55 BEGIN
+-- SKIP MySql55Connector BEGIN
 	`Json`,
+-- SKIP MySql55Connector END
 -- SKIP MySql55 END
 	`TinyInt`,
 	`TinyIntUnsigned`,
@@ -591,7 +603,7 @@ BEGIN
 END
 GO
 CREATE PROCEDURE `Issue2313Results`(
-	IN `VarChar255` VARCHAR(255),
+	IN `VarCharDefault` VARCHAR(4000),
 	IN `VarChar1` VARCHAR(1),
 	IN `Char255` CHAR(255),
 	IN `Char1` CHAR(1),
@@ -633,9 +645,14 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `Set` ENUM('one', 'two'),
 
 -- SKIP MySql55 BEGIN
+-- SKIP MySql55Connector BEGIN
 -- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
 	IN `Json` JSON,
+-- SKIP MySql END
+-- SKIP MySql55Connector END
+-- SKIP MySql55 END
+-- SKIP MySql55 BEGIN
+-- SKIP MySql BEGIN
 	IN `Geometry` GEOMETRY,
 	IN `Point` POINT,
 	IN `LineString` LINESTRING,
@@ -644,7 +661,6 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `MultiLineString` MULTILINESTRING,
 	IN `MultiPolygon` MULTIPOLYGON,
 	IN `GeometryCollection` GEOMETRYCOLLECTION,
--- SKIP MariaDB END
 -- SKIP MySql END
 -- SKIP MySql55 END
 
@@ -652,7 +668,7 @@ CREATE PROCEDURE `Issue2313Results`(
 )
 BEGIN
 	SELECT
-	`VarChar255`,
+	`VarCharDefault`,
 	`VarChar1`,
 	`Char255`,
 	`Char1`,
@@ -695,10 +711,15 @@ BEGIN
 	`Year`
 
 -- SKIP MySql55 BEGIN
+-- SKIP MySql55Connector BEGIN
 -- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
-	,`Json`,
-	`Geometry`,
+	,`Json`
+-- SKIP MySql END
+-- SKIP MySql55Connector END
+-- SKIP MySql55 END
+-- SKIP MySql55 BEGIN
+-- SKIP MySql BEGIN
+	,`Geometry`,
 	`Point`,
 	`LineString`,
 	`Polygon`,
@@ -706,11 +727,79 @@ BEGIN
 	`MultiLineString`,
 	`MultiPolygon`,
 	`GeometryCollection`
--- SKIP MariaDB END
 -- SKIP MySql END
 -- SKIP MySql55 END
-
 
 	FROM Person;
 END
 GO
+
+DROP TABLE `CollatedTable`
+GO
+CREATE TABLE `CollatedTable`
+(
+	`Id`				INT NOT NULL,
+	`CaseSensitive`		VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+	`CaseInsensitive`	VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
+)
+GO
+
+-- SKIP MySql BEGIN
+-- SKIP MySqlConnector BEGIN
+-- SKIP MySql55 BEGIN
+-- SKIP MySql55Connector BEGIN
+
+CREATE OR REPLACE FUNCTION TEST_FUNCTION(i INT) RETURNS INT RETURN i + 3
+
+GO
+
+CREATE OR REPLACE PROCEDURE TEST_PROCEDURE (IN i INT)
+SELECT i + 3;
+GO
+
+SET SQL_MODE='ORACLE';
+GO
+
+CREATE OR REPLACE PACKAGE TEST_PACKAGE1 AS
+	FUNCTION TEST_FUNCTION (i INT) RETURN INT;
+	PROCEDURE TEST_PROCEDURE (i INT);
+END;
+GO
+
+CREATE OR REPLACE PACKAGE BODY TEST_PACKAGE1 AS
+	FUNCTION TEST_FUNCTION (i INT) RETURN INT AS
+	BEGIN 
+		RETURN i + 1;
+	END TEST_FUNCTION;
+	PROCEDURE TEST_PROCEDURE (i INT) AS
+	BEGIN 
+		SELECT i + 1;
+	END TEST_PROCEDURE;
+END TEST_PACKAGE1;
+GO
+
+CREATE OR REPLACE PACKAGE TEST_PACKAGE2 AS
+	FUNCTION TEST_FUNCTION (i INT) RETURN INT;
+	PROCEDURE TEST_PROCEDURE (i INT);
+END;
+GO
+
+CREATE OR REPLACE PACKAGE BODY TEST_PACKAGE2 AS
+	FUNCTION TEST_FUNCTION (i INT) RETURN INT AS
+	BEGIN 
+		RETURN i + 2;
+	END TEST_FUNCTION;
+	PROCEDURE TEST_PROCEDURE (i INT) AS
+	BEGIN 
+		SELECT i + 2;
+	END TEST_PROCEDURE;
+END TEST_PACKAGE2;
+GO
+
+set session sql_mode=default
+GO
+
+-- SKIP MySql55Connector END
+-- SKIP MySql55 END
+-- SKIP MySqlConnector END
+-- SKIP MySql END

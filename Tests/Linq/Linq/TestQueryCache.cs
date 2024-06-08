@@ -12,13 +12,15 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
 	[TestFixture]
 	public class TestQueryCache : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			public int Id         { get; set; }
 			public string? StrKey { get; set; }
@@ -26,7 +28,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SampleClassWithIdentity
+		sealed class SampleClassWithIdentity
 		{
 			[Identity]
 			public int Id         { get; set; }
@@ -34,7 +36,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class ManyFields
+		sealed class ManyFields
 		{
 			[PrimaryKey]
 			public int  Id     { get; set; }
@@ -76,11 +78,11 @@ namespace Tests.Linq
 				db.Delete(new SampleClass() { Id = 1, StrKey = "K1" });
 				db.Update(new SampleClass() { Id = 2, StrKey = "K2", Value = "VU" });
 
-				var found = null != new QueryVisitor().Find(table.GetSelectQuery(),
-					            e => e is SqlField f && f.PhysicalName == columnName);
+				var found = null != table.GetSelectQuery().Find(columnName,
+								static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
 
-				var foundKey = null != new QueryVisitor().Find(table.GetSelectQuery(),
-					               e => e is SqlField f && f.PhysicalName == columnName);
+				var foundKey = null != table.GetSelectQuery().Find(columnName,
+					               static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
 
 				Assert.IsTrue(found);
 				Assert.IsTrue(foundKey);
@@ -106,11 +108,11 @@ namespace Tests.Linq
 				await db.DeleteAsync(new SampleClass() { Id = 1, StrKey = "K1" });
 				await db.UpdateAsync(new SampleClass() { Id = 2, StrKey = "K2", Value = "VU" });
 
-				var found = null != new QueryVisitor().Find(table.GetSelectQuery(),
-					            e => e is SqlField f && f.PhysicalName == columnName);
+				var found = null != table.GetSelectQuery().Find(columnName,
+					            static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
 
-				var foundKey = null != new QueryVisitor().Find(table.GetSelectQuery(),
-					            e => e is SqlField f && f.PhysicalName == columnName);
+				var foundKey = null != table.GetSelectQuery().Find(columnName,
+								static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
 
 				Assert.IsTrue(found);
 				Assert.IsTrue(foundKey);
@@ -120,7 +122,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSchema([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		public void TestSchema([IncludeDataSources(ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
 		{
 			void TestMethod(string columnName, string? schemaName = null)
 			{
@@ -138,28 +140,31 @@ namespace Tests.Linq
 			TestMethod("Value2");
 
 			TestMethod("ValueF1", "FAIL");
-			Assert.Throws(Is.AssignableTo(typeof(Exception)), () => TestMethod("ValueF2", "FAIL"));
+			// Fluent mapping makes schema unique.
+			TestMethod("ValueF2", "FAIL");
 		}
 
 		private static MappingSchema CreateMappingSchema(string columnName, string? schemaName = null)
 		{
 			var ms = new MappingSchema(schemaName);
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 
 			builder.Entity<SampleClass>()
 				.Property(e => e.Id).IsPrimaryKey()
-				.Property(e => e.StrKey).IsPrimaryKey().HasColumnName("Key" + columnName).HasLength(50)
+				.Property(e => e.StrKey).IsNullable(false).IsPrimaryKey().HasColumnName("Key" + columnName).HasLength(50)
 				.Property(e => e.Value).HasColumnName(columnName).HasLength(50);
 
 			builder.Entity<SampleClassWithIdentity>()
 				.Property(e => e.Id).IsPrimaryKey()
 				.Property(e => e.Value).HasColumnName(columnName).HasLength(50);
 
+			builder.Build();
+
 			return ms;
 		}
 
 		[Test]
-		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ManyFields>())
@@ -196,5 +201,23 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void TestContextLeak([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var ctxRef = ExecuteQuery(context);
+
+			GC.Collect();
+			Assert.That(ctxRef.TryGetTarget(out _), Is.False);
+
+			WeakReference<IDataContext> ExecuteQuery(string context)
+			{
+				Query<Person>.ClearCache();
+				using var db = GetDataContext(context);
+
+				db.Person.FirstOrDefault();
+
+				return new WeakReference<IDataContext>(db);
+			}
+		}
 	}
 }

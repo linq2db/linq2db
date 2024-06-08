@@ -1,22 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using System;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Common;
-	using SqlQuery;
 
-	class LoadWithBuilder : MethodCallBuilder
+	sealed class LoadWithBuilder : MethodCallBuilder
 	{
+		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("LoadWith", "ThenLoad", "LoadWithAsTable");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)
@@ -24,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 			var propType = expectedType;
 			if (EagerLoading.IsEnumerableType(expectedType, mappingSchema))
 				propType = EagerLoading.GetEnumerableElementType(expectedType, mappingSchema);
-			var itemType = typeof(Expression<>).IsSameOrParentOf(filterType) ? 
+			var itemType = typeof(Expression<>).IsSameOrParentOf(filterType) ?
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0] :
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0];
 			if (propType != itemType)
@@ -79,8 +80,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				if (table.LoadWith == null)
-					table.LoadWith = new List<LoadWithInfo[]>();
+				table.LoadWith ??= new List<LoadWithInfo[]>();
 
 				if (methodCall.Arguments.Count == 3)
 				{
@@ -97,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 			return loadWithSequence;
 		}
 
-		TableBuilder.TableContext GetTableContext(IBuildContext ctx, Expression path, out Expression? stopExpression)
+		static TableBuilder.TableContext GetTableContext(IBuildContext ctx, Expression path, out Expression? stopExpression)
 		{
 			stopExpression = null;
 
@@ -109,16 +109,12 @@ namespace LinqToDB.Linq.Builder
 			if (ctx is LoadWithContext lwCtx)
 				return lwCtx.TableContext;
 
-			if (table == null)
+			var isTableResult = ctx.IsExpression(null, 0, RequestFor.Table);
+			if (isTableResult.Result)
 			{
-				var isTableResult = ctx.IsExpression(null, 0, RequestFor.Table);
-				if (isTableResult.Result)
-				{
-					table = isTableResult.Context as TableBuilder.TableContext;
-					if (table != null)
-						return table;
-				}
-
+				table = isTableResult.Context as TableBuilder.TableContext;
+				if (table != null)
+					return table;
 			}
 
 			var maxLevel = path.GetLevel(ctx.Builder.MappingSchema);
@@ -126,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 			while (level <= maxLevel)
 			{
 				var levelExpression = path.GetLevelExpression(ctx.Builder.MappingSchema, level);
-				var isTableResult = ctx.IsExpression(levelExpression, 1, RequestFor.Table);
+				isTableResult       = ctx.IsExpression(levelExpression, 1, RequestFor.Table);
 				if (isTableResult.Result)
 				{
 					table = isTableResult.Context switch
@@ -150,7 +146,6 @@ namespace LinqToDB.Linq.Builder
 
 			throw new LinqToDBException(
 				$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{expr.Type.Name}>() method.");
-	
 		}
 
 		static IEnumerable<LoadWithInfo> ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
@@ -216,7 +211,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (lastMember == null)
 								goto default;
-							
+
 							var expr  = cexpr.Object;
 
 							if (expr == null)
@@ -243,20 +238,22 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.MemberAccess :
 						{
-							var mexpr  = (MemberExpression)expression;
-							var member = lastMember = mexpr.Member;
-							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType!, member);
-							if (attr == null)
+							var mexpr         = (MemberExpression)expression;
+							var member        = lastMember = mexpr.Member;
+							var isAssociation = builder.MappingSchema.HasAttribute<AssociationAttribute>(member.ReflectedType!, member);
+
+							if (!isAssociation)
 							{
-								member = mexpr.Expression.Type.GetMemberEx(member)!;
-								attr = builder.MappingSchema.GetAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
-							}	
-							if (attr == null)
+								member        = mexpr.Expression!.Type.GetMemberEx(member)!;
+								isAssociation = builder.MappingSchema.HasAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
+							}
+
+							if (!isAssociation)
 								throw new LinqToDBException($"Member '{expression}' is not an association.");
 
 							yield return member;
 
-							expression = mexpr.Expression;
+							expression = mexpr.Expression!;
 
 							break;
 						}
@@ -292,13 +289,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
-		class LoadWithContext : PassThroughContext
+		internal sealed class LoadWithContext : PassThroughContext
 		{
 			private readonly TableBuilder.TableContext _tableContext;
 

@@ -89,7 +89,7 @@ namespace Tests.Common
 				sb,
 				"&",
 				startPrefix,
-				(strb, c) => strb.AppendFormat("chr({0})", c.ToString(CultureInfo.InvariantCulture)),
+				(strb, c) => strb.Append(CultureInfo.InvariantCulture, $"chr({c})"),
 				testString,
 				extraEscapes);
 

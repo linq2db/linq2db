@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -18,17 +17,6 @@ namespace LinqToDB.SqlQuery
 
 		internal SqlGroupByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
-		}
-
-		internal SqlGroupByClause(
-			SelectQuery   selectQuery,
-			SqlGroupByClause clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
-		{
-			GroupingType = clone.GroupingType;
-			Items.AddRange(clone.Items.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)));
 		}
 
 		internal SqlGroupByClause(GroupingType groupingType, IEnumerable<ISqlExpression> items) : base(null)
@@ -91,10 +79,10 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var i = 0; i < Items.Count; i++)
-				Items[i] = Items[i].Walk(options, func)!;
+				Items[i] = Items[i].Walk(options, context, func)!;
 
 			return null;
 		}

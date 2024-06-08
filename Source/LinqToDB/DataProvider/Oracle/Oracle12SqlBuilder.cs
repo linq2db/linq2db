@@ -1,32 +1,37 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿using System;
+
+namespace LinqToDB.DataProvider.Oracle
 {
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
-	partial class Oracle12SqlBuilder : Oracle11SqlBuilder
+	sealed class Oracle12SqlBuilder : OracleSqlBuilderBase
 	{
-		public Oracle12SqlBuilder(
-			OracleDataProvider? provider,
-			MappingSchema       mappingSchema,
-			ISqlOptimizer       sqlOptimizer,
-			SqlProviderFlags    sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public Oracle12SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		// remote context
-		public Oracle12SqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		Oracle12SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new Oracle12SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new Oracle12SqlBuilder(this) { HintBuilder = HintBuilder };
+		}
+
+		protected override bool CanSkipRootAliases(SqlStatement statement)
+		{
+			if (statement.SelectQuery != null)
+			{
+				// https://github.com/linq2db/linq2db/issues/2785
+				// https://stackoverflow.com/questions/57787579/
+				return statement.SelectQuery.Select.TakeValue == null && statement.SelectQuery.Select.SkipValue == null;
+			}
+
+			return true;
 		}
 
 		protected override bool BuildWhere(SelectQuery selectQuery)

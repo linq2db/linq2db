@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlTypes;
+using System.Data.Common;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Globalization;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -10,23 +13,24 @@ namespace LinqToDB.DataProvider.DB2
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
+	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
-		protected DB2DataProvider? Provider { get; }
+		public override bool CteFirst => false;
 
-		protected DB2SqlBuilderBase(
-			DB2DataProvider? provider,
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
-			Provider = provider;
+		}
+
+		protected DB2SqlBuilderBase(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
 		}
 
 		SqlField? _identityField;
 
 		protected abstract DB2Version Version { get; }
+
+		protected override bool SupportsNullInColumn => false;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -51,7 +55,7 @@ namespace LinqToDB.DataProvider.DB2
 				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
+				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
 				StringBuilder.Append(" ALTER ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" RESTART WITH 1");
@@ -66,6 +70,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			var table = truncateTable.Table!;
 
+			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
 			BuildPhysicalTable(table, null);
@@ -127,7 +132,7 @@ namespace LinqToDB.DataProvider.DB2
 			return selectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null;
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -135,26 +140,37 @@ namespace LinqToDB.DataProvider.DB2
 				case DataType.DateTime2 :
 					StringBuilder.Append("timestamp");
 					if (type.Type.Precision != null && type.Type.Precision != 6)
-						StringBuilder.Append($"({type.Type.Precision})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision})");
 					return;
 				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
 				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
-				case DataType.NVarChar:
+				case DataType.NVarChar  :
 					if (type.Type.Length == null || type.Type.Length > 8168 || type.Type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(8168)");
+						StringBuilder.Append("NVarChar(8168)");
 						return;
 					}
 
 					break;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
-		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
+		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
+		{
+			if (field.CanBeNull && field.Type.DataType == DataType.Guid)
+				return;
+
+			base.BuildCreateTableNullAttribute(field, defaultNullable);
+		}
+
+		[Obsolete("Use DB2Options.Default.IdentifierQuoteMode instead.")]
+		public static DB2IdentifierQuoteMode IdentifierQuoteMode
+		{
+			get => DB2Options.Default.IdentifierQuoteMode;
+			set => DB2Options.Default = DB2Options.Default with { IdentifierQuoteMode = value };
+		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
@@ -172,18 +188,22 @@ namespace LinqToDB.DataProvider.DB2
 						? sb.Append(value.Substring(1))
 						: sb.Append(value);
 
-				case ConvertType.NameToQueryField:
+				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
-				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToProcedure      :
+				case ConvertType.NameToPackage        :
+				case ConvertType.NameToSchema         :
+				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToQueryTableAlias:
-					if (IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
+					if (ProviderOptions.IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
 							return sb.Append(value);
 
-						if (IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
-							value.StartsWith("_") ||
-							value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+						if (ProviderOptions.IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
+						    value.StartsWith("_") ||
+						    value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}
 
@@ -213,40 +233,56 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
-			if (database != null && database.Length == 0) database = null;
-			if (schema   != null && schema.  Length == 0) schema   = null;
+			var schemaName = name.Schema;
+			if (schemaName == null && tableOptions.IsTemporaryOptionSet())
+				schemaName = "SESSION";
 
 			// "db..table" syntax not supported
-			if (database != null && schema == null)
+			if (name.Database != null && schemaName == null)
 				throw new LinqToDBException("DB2 requires schema name if database name provided.");
 
-			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
+			if (name.Database != null)
+			{
+				(escape ? Convert(sb, name.Database, ConvertType.NameToDatabase) : sb.Append(name.Database))
+					.Append('.');
+				if (schemaName == null)
+					sb.Append('.');
+			}
+
+			if (schemaName != null)
+			{
+				(escape ? Convert(sb, schemaName, ConvertType.NameToSchema) : sb.Append(schemaName))
+					.Append('.');
+			}
+
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal decValue)
 			{
 				var d = new SqlDecimal(decValue);
-				return "(" + d.Precision + InlineComma + d.Scale + ")";
+				return string.Format(CultureInfo.InvariantCulture, "({0}{1}{2})", d.Precision, InlineComma, d.Scale);
 			}
 
-			if (Provider != null)
+			if (DataProvider is DB2DataProvider provider)
 			{
-				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return Provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table!;
+			var table = dropTable.Table;
 
+			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				AppendIndent().Append(@"BEGIN
@@ -300,7 +336,7 @@ END");
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
 				AppendIndent().AppendLine(@"BEGIN");
 
@@ -319,7 +355,16 @@ END");
 		{
 			base.BuildEndCreateTableStatement(createTable);
 
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			var table = createTable.Table;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				AppendIndent().AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
+					? "ON COMMIT DELETE ROWS"
+					: "ON COMMIT PRESERVE ROWS");
+			}
+
+			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
 				Indent--;
 
@@ -333,9 +378,19 @@ END");
 			}
 		}
 
-		public override string? GetTableSchemaName(SqlTable table)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
-			return table.Schema == null && table.TableOptions.IsTemporaryOptionSet() ? "SESSION" : base.GetTableSchemaName(table);
+			// DB2 doesn't support constraints on temp tables
+			if (createTable.Table.TableOptions.IsTemporaryOptionSet())
+			{
+				var idx = StringBuilder.Length - 1;
+				while (idx >= 0 && StringBuilder[idx] != ',')
+					idx--;
+				StringBuilder.Length = idx == -1 ? 0 : idx;
+				return;
+			}
+
+			base.BuildCreateTablePrimaryKey(createTable, pkName, fieldNames);
 		}
 	}
 }

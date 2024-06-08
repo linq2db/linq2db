@@ -2,6 +2,7 @@
 
 open Tests.FSharp.Models
 
+open System.Linq
 open LinqToDB
 open Tests.Tools
 
@@ -43,3 +44,26 @@ let SelectLeftJoin (db : IDataContext) =
     }
 
     NUnitAssert.IsNotNull(child)
+
+let Issue3699Test (db : IDataContext) =
+    let children = db.GetTable<Parent>()
+    let parents = db.GetTable<Parent>()
+    let pets = db.GetTable<Parent>()
+
+    let q =
+        parents
+            .Join(children,
+                (fun p -> p.ParentID),
+                (fun c -> c.ParentID),
+                (fun p c -> {| p = p; c = c |})
+            )
+            .GroupJoin(pets,
+                (fun o -> o.p.ParentID),
+                (fun pet -> pet.ParentID),
+                (fun o pets -> {| p = o.p; c = o.c; pets = pets |})
+            )
+            .SelectMany((fun o -> o.pets.DefaultIfEmpty()),
+                (fun o pet -> {| p = o.p; c = o.c; pet = pet |})
+            )
+
+    NUnitAssert.IsNotNull(q.ToList())

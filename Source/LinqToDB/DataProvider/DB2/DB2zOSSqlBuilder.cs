@@ -1,33 +1,44 @@
-﻿namespace LinqToDB.DataProvider.DB2
+﻿using System.Globalization;
+#if NETFRAMEWORK || NETCOREAPP3_1 || NETSTANDARD2_0 || NETSTANDARD2_1
+using System.Text;
+#endif
+
+namespace LinqToDB.DataProvider.DB2
 {
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
-	class DB2zOSSqlBuilder : DB2SqlBuilderBase
+	sealed class DB2zOSSqlBuilder : DB2SqlBuilderBase
 	{
-		public DB2zOSSqlBuilder(
-			DB2DataProvider? provider,
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public DB2zOSSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		// remote context
-		public DB2zOSSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(null, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		DB2zOSSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new DB2zOSSqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new DB2zOSSqlBuilder(this);
 		}
 
 		protected override DB2Version Version => DB2Version.zOS;
+
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		{
+			switch (type.Type.DataType)
+			{
+				case DataType.VarBinary:
+					// https://www.ibm.com/docs/en/db2-for-zos/12?topic=strings-varying-length-binary
+					var length =type.Type.Length == null || type.Type.Length > 32704 || type.Type.Length < 1 ? 32704 : type.Type.Length;
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARBINARY({length})");
+					return;
+			}
+
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
+		}
 	}
 }

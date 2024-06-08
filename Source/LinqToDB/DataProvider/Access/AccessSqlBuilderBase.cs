@@ -11,11 +11,12 @@ namespace LinqToDB.DataProvider.Access
 
 	abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{
-		protected AccessSqlBuilderBase(
-			MappingSchema       mappingSchema,
-			ISqlOptimizer       sqlOptimizer,
-			SqlProviderFlags    sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected AccessSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
+		{
+		}
+
+		protected AccessSqlBuilderBase(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
@@ -33,7 +34,7 @@ namespace LinqToDB.DataProvider.Access
 				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
+				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
 				StringBuilder.Append(" ALTER COLUMN ");
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 				StringBuilder.AppendLine(" COUNTER(1, 1)");
@@ -44,8 +45,9 @@ namespace LinqToDB.DataProvider.Access
 			}
 		}
 
-		public override bool IsNestedJoinSupported => false;
-		public override bool WrapJoinCondition     => true;
+		public override    bool IsNestedJoinSupported   => false;
+		public override    bool WrapJoinCondition       => true;
+		protected override bool IsValuesSyntaxSupported => false;
 
 		#region Skip / Take Support
 
@@ -57,6 +59,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override void BuildSql()
 		{
 			var selectQuery = Statement.SelectQuery;
+
 			if (selectQuery != null)
 			{
 				if (selectQuery.From.Tables.Count == 0 && selectQuery.Select.Columns.Count == 1)
@@ -77,12 +80,16 @@ namespace LinqToDB.DataProvider.Access
 					}
 					else if (selectQuery.Select.Columns[0].Expression is SqlSearchCondition sc)
 					{
-						if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
+						if (sc.Conditions.Count == 1)
 						{
-							if (p.Function.Name == "EXISTS")
+							switch (sc.Conditions[0].Predicate)
 							{
-								BuildAnyAsCount(selectQuery);
-								return;
+								case SqlPredicate.FuncLike { Function.Name: "EXISTS" } :
+									BuildAnyAsCount(selectQuery);
+									return;
+								case SqlPredicate.InSubQuery:
+									BuildInAsCount(selectQuery);
+									return;
 							}
 						}
 					}
@@ -117,13 +124,39 @@ namespace LinqToDB.DataProvider.Access
 			_selectColumn = null;
 		}
 
+		void BuildInAsCount(SelectQuery selectQuery)
+		{
+			SqlSearchCondition cond;
+
+			if (selectQuery.Select.Columns[0].Expression is SqlFunction func)
+			{
+				cond  = (SqlSearchCondition)func.Parameters[0];
+			}
+			else
+			{
+				cond  = (SqlSearchCondition)selectQuery.Select.Columns[0].Expression;
+			}
+
+			var predicate = (SqlPredicate.InSubQuery)cond.Conditions[0].Predicate;
+			var query     = predicate.SubQuery;
+
+			query.Where.SearchCondition.Conditions.Add(
+				new (false, new SqlPredicate.ExprExpr(query.Select.Columns[0].Expression, SqlPredicate.Operator.Equal, predicate.Expr1, true)));
+
+			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
+
+			BuildSql(0, new SqlSelectStatement(query), StringBuilder, OptimizationContext);
+
+			_selectColumn = null;
+		}
+
 		protected override IEnumerable<SqlColumn> GetSelectedColumns(SelectQuery selectQuery)
 		{
 			if (_selectColumn != null)
 				return new[] { _selectColumn };
 
 			if (NeedSkip(selectQuery.Select.TakeValue, selectQuery.Select.SkipValue) && !selectQuery.OrderBy.IsEmpty)
-				return AlternativeGetSelectedColumns(selectQuery, () => base.GetSelectedColumns(selectQuery));
+				return AlternativeGetSelectedColumns(selectQuery, base.GetSelectedColumns(selectQuery));
 
 			return base.GetSelectedColumns(selectQuery);
 		}
@@ -146,6 +179,21 @@ namespace LinqToDB.DataProvider.Access
 			}
 
 			base.BuildBinaryExpression(expr);
+		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			StringBuilder.Append("IIF(");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" = ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder.Append(" OR ");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" IS NULL AND ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder
+				.Append(" IS NULL, 0, 1) = ")
+				.Append(expr.IsNot ? '0' : '1');
 		}
 
 		protected override void BuildFunction(SqlFunction func)
@@ -182,7 +230,24 @@ namespace LinqToDB.DataProvider.Access
 				case "Convert"   :
 					switch (func.SystemType.ToUnderlying().GetTypeCodeEx())
 					{
-						case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]); break;
+						case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr" , func.Parameters[1]); break;
+						case TypeCode.Boolean  :
+						{
+							var newFunc = new SqlFunction(func.SystemType, "CBool", func.Parameters[1]);
+							if (func.Parameters[1].CanBeNull)
+							{
+								var isNull = new SqlSearchCondition();
+								isNull.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[1], false)));
+
+								newFunc = new SqlFunction(func.SystemType, "CASE", false, true, isNull, new SqlValue(func.SystemType, null), newFunc)
+								{
+									CanBeNull = true
+								};
+							}
+
+							func = newFunc;
+							break;
+						}
 						case TypeCode.DateTime :
 							if (IsDateDataType(func.Parameters[0], "Date"))
 								func = new SqlFunction(func.SystemType, "DateValue", func.Parameters[1]);
@@ -211,13 +276,18 @@ namespace LinqToDB.DataProvider.Access
 		{
 			var len = parameters.Length - start;
 
-			if (len < 3)
+			if (len < 2)
 				throw new SqlException("CASE statement is not supported by the {0}.", GetType().Name);
 
-			if (len == 3)
-				return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], parameters[start + 2]);
-
-			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
+			return new SqlFunction(systemType, "Iif",
+				parameters[start],
+				parameters[start + 1],
+				len switch
+				{
+					2 => parameters[start                          + 1],
+					3 => parameters[start                          + 2],
+					_ => ConvertCase(systemType, parameters, start + 2)
+				});
 		}
 
 		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -227,12 +297,12 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
-				case DataType.DateTime2 : StringBuilder.Append("timestamp");                    break;
-				default                 : base.BuildDataTypeFromDataType(type, forCreateTable); break;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp");                               break;
+				default                 : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}
 		}
 
@@ -256,11 +326,9 @@ namespace LinqToDB.DataProvider.Access
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToProcedure :
 					if (value.Length > 0 && value[0] == '[')
 							return sb.Append(value);
-
-					if (value.IndexOf('.') > 0)
-						value = string.Join("].[", value.Split('.'));
 
 					return sb.Append('[').Append(value).Append(']');
 
@@ -286,20 +354,59 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
-			if (database != null && database.Length == 0)
-				database = null;
+			if (name.Database != null)
+			{
+				(escape ? Convert(sb, name.Database, ConvertType.NameToDatabase) : sb.Append(name.Database))
+					.Append('.');
+			}
 
-			if (database != null)
-				sb.Append(database).Append('.');
-
-			return sb.Append(table);
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		}
+
+		protected override StringBuilder BuildSqlComment(StringBuilder sb, SqlComment comment)
+		{
+			// comments not supported by Access
+			return sb;
+		}
+
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SelectQuery?.SqlQueryExtensions is not null)
+			{
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+				{
+					var buffer = new char[StringBuilder.Length - len];
+
+					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+
+					prefix += new string(buffer);
+				}
+
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
+			}
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
+		}
+
+		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
+		{
 		}
 	}
 }

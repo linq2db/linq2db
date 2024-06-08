@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq
 {
-	class ExpressionQueryImpl<T> : ExpressionQuery<T>
+	sealed class ExpressionQueryImpl<T> : ExpressionQuery<T>
 	{
 		public ExpressionQueryImpl(IDataContext dataContext, Expression? expression)
 		{

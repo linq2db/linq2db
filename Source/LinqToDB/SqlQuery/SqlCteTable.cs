@@ -1,34 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common;
+	using Common.Internal;
 	using Mapping;
 
-	public class SqlCteTable : SqlTable, ICloneableElement
+	public class SqlCteTable : SqlTable
 	{
-		public          CteClause? Cte  { get; private set; }
+		[DisallowNull]
+		public CteClause? Cte { get; set; }
 
-		public override string?    Name
+		public override SqlObjectName TableName
 		{
-			get => Cte?.Name ?? base.Name;
-			set => base.Name = value;
-		}
-
-		public override string?    PhysicalName
-		{
-			get => Cte?.Name ?? base.PhysicalName;
-			set => base.PhysicalName = value;
+			get => new SqlObjectName(Cte?.Name ?? string.Empty);
+			set { }
 		}
 
 		public SqlCteTable(
-			MappingSchema mappingSchema,
-			CteClause     cte)
-			: base(mappingSchema, cte.ObjectType, cte.Name)
+			CteClause        cte,
+			EntityDescriptor entityDescriptor)
+			: base(entityDescriptor, cte.Name)
 		{
-			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
+			Cte = cte;
 
 			// CTE has it's own names even there is mapping
 			foreach (var field in Fields)
@@ -36,35 +31,27 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
-			: base(id, cte.Name, alias, string.Empty, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
+			: base(id, null, alias, new(string.Empty), cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
 		{
-			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
+			Cte = cte;
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields)
-			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
+			: base(id, null, alias, new(string.Empty), null!, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
 		{
 		}
 
 		internal void SetDelayedCteObject(CteClause cte)
 		{
-			Cte          = cte ?? throw new ArgumentNullException(nameof(cte));
-			Name         = cte.Name;
-			PhysicalName = cte.Name;
-			ObjectType   = cte.ObjectType;
+			Cte        = cte;
+			ObjectType = cte.ObjectType;
 		}
 
 		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause cte)
+			: base(table.ObjectType, null, table.TableName)
 		{
 			Alias              = table.Alias;
-			Server             = table.Server;
-			Database           = table.Database;
-			Schema             = table.Schema;
-
-			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
-
 			Cte                = cte;
 
 			AddRange(fields);
@@ -81,49 +68,16 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+		public string SqlText
+		{
+			get
+			{
+				using var sb = Pools.StringBuilder.Allocate();
+				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			}
+		}
 
 
 		#endregion
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var table = new SqlCteTable(this, Array<SqlField>.Empty, Cte == null ? throw new InvalidOperationException("Cte is null") : (CteClause)Cte.Clone(objectTree, doClone))
-				{
-					Name               = base.Name,
-					Alias              = Alias,
-					Server             = Server,
-					Database           = Database,
-					Schema             = Schema,
-					PhysicalName       = base.PhysicalName,
-					ObjectType         = ObjectType,
-					SqlTableType       = SqlTableType,
-				};
-
-				table.ClearFields();
-
-				foreach (var field in Fields)
-				{
-					var fc = new SqlField(field);
-
-					objectTree.Add(field, fc);
-					table.     Add(fc);
-				}
-
-				objectTree.Add(this, table);
-				objectTree.Add(All,  table.All);
-
-				clone = table;
-			}
-
-			return clone;
-		}
 	}
 }

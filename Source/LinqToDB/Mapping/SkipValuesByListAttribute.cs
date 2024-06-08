@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
 
 namespace LinqToDB.Mapping
 {
@@ -10,7 +13,7 @@ namespace LinqToDB.Mapping
 	/// custom Attribute derived from this to override <see cref="SkipBaseAttribute.ShouldSkip"/>
 	/// </summary>
 	[CLSCompliant(false)]
-	public abstract class SkipValuesByListAttribute: SkipBaseAttribute
+	public abstract class SkipValuesByListAttribute : SkipBaseAttribute
 	{
 		/// <summary>
 		/// Gets collection with values to skip.
@@ -34,7 +37,12 @@ namespace LinqToDB.Mapping
 		/// <returns><c>true</c> if object should be skipped for the operation.</returns>
 		public override bool ShouldSkip(object obj, EntityDescriptor entityDescriptor, ColumnDescriptor columnDescriptor)
 		{
-			return Values?.Contains(columnDescriptor.MemberAccessor.Getter!(obj)) ?? false;
+			return Values?.Contains(columnDescriptor.MemberAccessor.GetValue(obj)) ?? false;
+		}
+
+		public override string GetObjectID()
+		{
+			return $"{base.GetObjectID()}.{string.Join(".", Values.Select(v => string.Format(CultureInfo.InvariantCulture, "{0}", v)))}.";
 		}
 	}
 }

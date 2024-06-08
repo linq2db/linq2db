@@ -1,11 +1,13 @@
 ﻿using System;
-using LinqToDB.Common;
-using LinqToDB.Reflection;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Mapping
 {
+	using Common;
+	using Reflection;
+
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
-	public class ValueConverterAttribute : Attribute
+	public class ValueConverterAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// ValueConverter for mapping Database Values to Model values.
@@ -28,15 +30,13 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string? Configuration { get; set; }
-
-		/// <summary>
 		/// Gets or sets converter type. ConverterType should implement <see cref="IValueConverter"/> interface, should have public constructor with no parameters.
 		/// </summary>
 		public Type? ConverterType { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{IdentifierBuilder.GetObjectID(ConverterType)}.";
+		}
 	}
 }

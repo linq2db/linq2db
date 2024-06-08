@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 #if DEBUG
@@ -16,11 +17,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = context.SelectQuery == null
 				? $"{context.GetType().Name}(<none>)"
-				: $"{context.GetType().Name}({context.SelectQuery.SourceID})";
+				: FormattableString.Invariant($"{context.GetType().Name}({context.SelectQuery.SourceID})");
 
 			if (context is TableBuilder.TableContext tc)
 			{
-				result += $"(T: {tc.SqlTable.SourceID})";
+				result += FormattableString.Invariant($"(T: {tc.SqlTable.SourceID})");
 			}
 
 			return result;
@@ -52,8 +53,8 @@ namespace LinqToDB.Linq.Builder
 	interface IBuildContext
 	{
 #if DEBUG
-		string? _sqlQueryText { get; }
-		string   Path         { get; }
+		string? SqlQueryText { get; }
+		string  Path         { get; }
 #endif
 
 		ExpressionBuilder  Builder     { get; }
@@ -68,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[]          ConvertToIndex      (Expression? expression, int level, ConvertFlags flags);
 
 		/// <summary>
-		/// Returns information about expression according to <paramref name="requestFlag"/>. 
+		/// Returns information about expression according to <paramref name="requestFlag"/>.
 		/// </summary>
 		/// <param name="expression">Analyzed expression.</param>
 		/// <param name="level">Member level.</param>
@@ -78,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 
 		IBuildContext?     GetContext          (Expression? expression, int level, BuildInfo buildInfo);
 		int                ConvertToParentIndex(int index, IBuildContext context);
-		void               SetAlias            (string alias);
+		void               SetAlias            (string? alias);
 		ISqlExpression?    GetSubQuery         (IBuildContext context);
 
 		SqlStatement       GetResultStatement();

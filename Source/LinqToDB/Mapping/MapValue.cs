@@ -1,6 +1,4 @@
-using System;
-
-namespace LinqToDB.Mapping
+﻿namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Stores enum mapping information for single enum value.

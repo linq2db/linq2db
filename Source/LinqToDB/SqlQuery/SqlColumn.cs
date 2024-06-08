@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -30,7 +32,7 @@ namespace LinqToDB.SqlQuery
 #endif
 
 		ISqlExpression _expression;
-		
+
 		public ISqlExpression Expression
 		{
 			get => _expression;
@@ -38,13 +40,15 @@ namespace LinqToDB.SqlQuery
 			{
 				if (_expression == value)
 					return;
+				if (value == this)
+					throw new InvalidOperationException();
 				_expression = value;
 				_hashCode   = null;
 			}
 		}
 
 		SelectQuery? _parent;
-		
+
 		public SelectQuery? Parent
 		{
 			get => _parent;
@@ -57,73 +61,52 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		internal string?        RawAlias   { get; set; }
+		internal string? RawAlias   { get; set; }
+
+		public ISqlExpression UnderlyingExpression()
+		{
+			var current = QueryHelper.UnwrapExpression(Expression, false);
+			while (current.ElementType == QueryElementType.Column)
+			{
+				var column      = (SqlColumn)current;
+				var columnQuery = column.Parent;
+				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Take(2).Count() > 1)
+					break;
+				current = QueryHelper.UnwrapExpression(column.Expression, false);
+			}
+
+			return current;
+		}
 
 		public string? Alias
 		{
 			get
 			{
 				if (RawAlias == null)
-				{
-					switch (Expression)
-					{
-						case SqlField    field  : return field.Alias ?? field.PhysicalName;
-						case SqlColumn   column : return column.Alias;
-						case SelectQuery query:
-							{
-								if (query.Select.Columns.Count == 1 && query.Select.Columns[0].Alias != "*")
-									return query.Select.Columns[0].Alias;
-								break;
-							}
-					}
-				}
+					return GetAlias(Expression);
 
 				return RawAlias;
 			}
 			set => RawAlias = value;
 		}
 
-		private bool   _underlyingColumnSet;
-
-		private SqlColumn? _underlyingColumn;
-
-		public  SqlColumn?  UnderlyingColumn
+		private static string? GetAlias(ISqlExpression? expr)
 		{
-			get
+			switch (expr)
 			{
-				if (_underlyingColumnSet)
-					return _underlyingColumn;
-
-				var columns = new List<SqlColumn>(10);
-				var column  = Expression as SqlColumn;
-
-				while (column != null)
-				{
-					if (column._underlyingColumn != null)
+				case SqlField    field  : return field.Alias ?? field.PhysicalName;
+				case SqlColumn   column : return column.Alias;
+				case SelectQuery query  :
 					{
-						columns.Add(column._underlyingColumn);
+						if (query.Select.Columns.Count == 1 && query.Select.Columns[0].Alias != "*")
+							return query.Select.Columns[0].Alias;
 						break;
 					}
-
-					columns.Add(column);
-					column = column.Expression as SqlColumn;
-				}
-
-				_underlyingColumnSet = true;
-				if (columns.Count == 0)
-					return null;
-
-				_underlyingColumn = columns[columns.Count - 1];
-
-				for (var i = 0; i < columns.Count - 1; i++)
-				{
-					var c = columns[i];
-					c._underlyingColumn    = _underlyingColumn;
-					c._underlyingColumnSet = true;
-				}
-
-				return _underlyingColumn;
+				case SqlExpression e
+					when e.Expr is "{0}": return GetAlias(e.Parameters[0]);
 			}
+
+			return null;
 		}
 
 		int? _hashCode;
@@ -137,8 +120,6 @@ namespace LinqToDB.SqlQuery
 			var hashCode = Parent?.GetHashCode() ?? 0;
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
-			if (UnderlyingColumn != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ UnderlyingColumn.GetHashCode());
 
 			_hashCode = hashCode;
 
@@ -150,13 +131,16 @@ namespace LinqToDB.SqlQuery
 			if (other == null)
 				return false;
 
+			if (ReferenceEquals(this, other))
+				return true;
+
 			if (!Equals(Parent, other.Parent))
 				return false;
 
 			if (Expression.Equals(other.Expression))
-				return true;
+				return false;
 
-			return UnderlyingColumn != null && UnderlyingColumn.Equals(other.UnderlyingColumn);
+			return false;
 		}
 
 		public override string ToString()
@@ -177,11 +161,21 @@ namespace LinqToDB.SqlQuery
 
 			Expression.ToString(sb, dic);
 
+			var underlying = UnderlyingExpression();
+			if (!ReferenceEquals(underlying, Expression))
+			{
+				sb.Append(" == ");
+				underlying.ToString(sb, dic);
+			}
+
 			return sb.ToString();
 
 #else
 			if (Expression is SqlField)
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			{
+				using var sb = Common.Internal.Pools.StringBuilder.Allocate();
+				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			}
 
 			return base.ToString()!;
 #endif
@@ -225,22 +219,6 @@ namespace LinqToDB.SqlQuery
 		public int   Precedence => SqlQuery.Precedence.Primary;
 		public Type? SystemType => Expression.SystemType;
 
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var parent = (SelectQuery?)Parent?.Clone(objectTree, doClone);
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlColumn(
-					parent,
-					(ISqlExpression)Expression.Clone(objectTree, doClone),
-					RawAlias));
-
-			return clone;
-		}
-
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members
@@ -257,15 +235,14 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			if (!(options.SkipColumns && Expression is SqlColumn))
-				Expression = Expression.Walk(options, func)!;
+			Expression = Expression.Walk(options, context, func)!;
 
 			if (options.ProcessParent)
-				Parent = (SelectQuery)func(Parent!);
+				Parent = (SelectQuery)func(context, Parent!);
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -283,13 +260,12 @@ namespace LinqToDB.SqlQuery
 			}
 
 			sb
-				.Append('t')
-				.Append(Parent?.SourceID ?? - 1)
+				.Append(CultureInfo.InvariantCulture, $"t{Parent?.SourceID ?? -1}")
 #if DEBUG
-				.Append('[').Append(_columnNumber).Append(']')
+				.Append(CultureInfo.InvariantCulture, $"[{_columnNumber}]")
 #endif
 				.Append('.')
-				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
+				.Append(Alias ?? FormattableString.Invariant($"c{(parentIndex >= 0 ? parentIndex + 1 : parentIndex)}"));
 
 			return sb;
 		}

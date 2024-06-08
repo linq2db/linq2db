@@ -186,7 +186,8 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			public void Fire()
 			{
-				TestEvent?.Invoke(null, new TestClass2());
+				using var obj = new TestClass2();
+				TestEvent?.Invoke(null, obj);
 			}
 		}
 
@@ -341,7 +342,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			public void        CreateDatabase()                   => ((Action<TestClass2>                      )CompiledWrappers[3])(this);
 			public void        Dispose()                          => ((Action<TestClass2>                      )CompiledWrappers[4])(this);
 			public string      QuoteIdentifier(string identifier) => ((Func<TestClass2, string, string>        )CompiledWrappers[0])(this, identifier);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void        WriteToServer(IDataReader rd)      => ((Action<TestClass2, IDataReader>         )CompiledWrappers[5])(this, rd);
+#pragma warning restore RS0030 //  API mapping must preserve type
 			public TestClass2  Add(TestClass2 p)                  => ((Func<TestClass2, TestClass2, TestClass2>)CompiledWrappers[1])(this, p);
 			public IEnumerable GetEnumerator()                    => ((Func<TestClass2, IEnumerable>           )CompiledWrappers[2])(this);
 

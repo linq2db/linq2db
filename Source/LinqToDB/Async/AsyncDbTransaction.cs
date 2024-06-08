@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,80 +7,124 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Async
 {
+	using Tools;
+
 	/// <summary>
-	/// Asynchronous version of the <see cref="IDbTransaction"/> interface, allowing asynchronous operations,
-	/// missing from <see cref="IDbTransaction"/>.
-	/// Providers with async operations support could override its methods with asynchronous implementations.
+	/// Basic <see cref="IAsyncDbTransaction"/> implementation with fallback to synchronous operations if corresponding functionality
+	/// missing from <see cref="DbTransaction"/>.
 	/// </summary>
 	[PublicAPI]
 	public class AsyncDbTransaction : IAsyncDbTransaction
 	{
-		internal protected AsyncDbTransaction(IDbTransaction transaction)
+		protected internal AsyncDbTransaction(DbTransaction transaction)
 		{
 			Transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
 		}
 
-		public virtual IDbConnection Connection      => Transaction.Connection;
+		public DbTransaction Transaction { get; }
 
-		public virtual IsolationLevel IsolationLevel => Transaction.IsolationLevel;
-
-		public IDbTransaction Transaction { get; }
-
-		public virtual void Commit()
+		public virtual void Commit  ()
 		{
+			using var a = ActivityService.Start(ActivityID.TransactionCommit);
 			Transaction.Commit();
 		}
 
-		public virtual Task CommitAsync(CancellationToken cancellationToken = default)
+		public virtual void Rollback()
+		{
+			using var a = ActivityService.Start(ActivityID.TransactionRollback);
+			Transaction.Rollback();
+		}
+
+		public virtual Task CommitAsync(CancellationToken cancellationToken)
 		{
 #if NETSTANDARD2_1PLUS
-			if (Transaction is DbTransaction dbTransaction)
-				return dbTransaction.CommitAsync(cancellationToken);
-#endif
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionCommitAsync);
 
-			Commit();
+			if (a is null)
+				return Transaction.CommitAsync(cancellationToken);
 
+			return CallAwaitUsing(a, Transaction, cancellationToken);
+
+			static async Task CallAwaitUsing(AsyncConfigured activity, DbTransaction transaction, CancellationToken token)
+			{
+				await using (activity)
+					await transaction.CommitAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+#else
+			using var a = ActivityService.Start(ActivityID.TransactionCommitAsync);
+
+			Transaction.Commit();
 			return TaskEx.CompletedTask;
+#endif
 		}
+
+		public virtual Task RollbackAsync(CancellationToken cancellationToken)
+		{
+#if NETSTANDARD2_1PLUS
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionRollbackAsync);
+
+			if (a is null)
+				return Transaction.RollbackAsync(cancellationToken);
+
+			return CallAwaitUsing(a, Transaction, cancellationToken);
+
+			static async Task CallAwaitUsing(AsyncConfigured activity, DbTransaction transaction, CancellationToken token)
+			{
+				await using (activity)
+					await transaction.RollbackAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+#else
+			using var a = ActivityService.Start(ActivityID.TransactionRollbackAsync);
+
+			Rollback();
+			return TaskEx.CompletedTask;
+#endif
+		}
+
+		#region IDisposable
 
 		public virtual void Dispose()
 		{
+			using var _ = ActivityService.Start(ActivityID.TransactionDispose);
 			Transaction.Dispose();
 		}
 
-#if NETFRAMEWORK
+		#endregion
+
+		#region IAsyncDisposable
+#if !NATIVE_ASYNC
 		public virtual Task DisposeAsync()
 		{
-			Dispose();
+			using var _ = ActivityService.Start(ActivityID.TransactionDisposeAsync);
 
+			Transaction.Dispose();
 			return TaskEx.CompletedTask;
 		}
 #else
 		public virtual ValueTask DisposeAsync()
 		{
 			if (Transaction is IAsyncDisposable asyncDisposable)
-				return asyncDisposable.DisposeAsync();
+			{
+				var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionDisposeAsync);
 
-			Dispose();
-			return new ValueTask(Task.CompletedTask);
+				if (a is null)
+					return asyncDisposable.DisposeAsync();
+
+				return CallAwaitUsing(a, asyncDisposable);
+
+				static async ValueTask CallAwaitUsing(AsyncConfigured activity, IAsyncDisposable disposable)
+				{
+					await using (activity)
+						await disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				}
+			}
+
+			using var _ = ActivityService.Start(ActivityID.TransactionDisposeAsync);
+
+			Transaction.Dispose();
+			return default;
 		}
 #endif
-
-		public virtual void Rollback()
-		{
-			Transaction.Rollback();
-		}
-
-		public virtual Task RollbackAsync(CancellationToken cancellationToken = default)
-		{
-#if NETSTANDARD2_1PLUS
-			if (Transaction is DbTransaction dbTransaction)
-				return dbTransaction.RollbackAsync(cancellationToken);
-#endif
-
-			Rollback();
-
-			return TaskEx.CompletedTask;
-		}
+		#endregion
 	}
 }

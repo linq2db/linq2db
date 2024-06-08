@@ -54,16 +54,6 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		internal SqlFromClause(
-			SelectQuery selectQuery,
-			SqlFromClause  clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
-		{
-			Tables.AddRange(clone.Tables.Select(ts => (SqlTableSource)ts.Clone(objectTree, doClone)));
-		}
-
 		internal SqlFromClause(IEnumerable<SqlTableSource> tables)
 			: base(null)
 		{
@@ -210,10 +200,10 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			foreach (var table in Tables)
-				((ISqlExpressionWalkable)table).Walk(options, func);
+				((ISqlExpressionWalkable)table).Walk(options, context, func);
 
 			return null;
 		}
