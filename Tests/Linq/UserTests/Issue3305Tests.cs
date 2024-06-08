@@ -10,7 +10,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3305Tests : TestBase
 	{
-
 		public class AisleDTO 
 		{
 			[NotColumn]
