@@ -122,7 +122,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<DBExercise>(DBExercise.Seed()))
