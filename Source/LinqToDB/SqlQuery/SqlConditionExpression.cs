@@ -22,6 +22,7 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
+				//.DebugAppendUniqueId(this)
 				.Append("$IIF$(")
 				.AppendElement(Condition)
 				.Append(", ")

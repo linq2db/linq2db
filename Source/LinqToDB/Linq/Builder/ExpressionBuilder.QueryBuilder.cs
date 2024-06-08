@@ -573,13 +573,13 @@ namespace LinqToDB.Linq.Builder
 
 		class SubqueryCacheKey
 		{
-			public SubqueryCacheKey(IBuildContext buildContext, Expression expression)
+			public SubqueryCacheKey(SelectQuery selectQuery, Expression expression)
 			{
-				BuildContext = buildContext;
-				Expression   = expression;
+				SelectQuery = selectQuery;
+				Expression  = expression;
 			}
 
-			public IBuildContext BuildContext { get; }
+			public SelectQuery SelectQuery { get; }
 			public Expression Expression { get; }
 
 			sealed class BuildContextExpressionEqualityComparer : IEqualityComparer<SubqueryCacheKey>
@@ -606,14 +606,14 @@ namespace LinqToDB.Linq.Builder
 						return false;
 					}
 
-					return x.BuildContext.Equals(y.BuildContext) && ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression);
+					return x.SelectQuery.Equals(y.SelectQuery, SqlExpression.DefaultComparer) && ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression);
 				}
 
 				public int GetHashCode(SubqueryCacheKey obj)
 				{
 					unchecked
 					{
-						var hashCode = obj.BuildContext.GetHashCode();
+						var hashCode = obj.SelectQuery.SourceID.GetHashCode();
 						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
 						return hashCode;
 					}
@@ -630,7 +630,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			context   = inContext;
 			var testExpression = CorrectRoot(context, expr);
-			var cacheKey            = new SubqueryCacheKey(context, testExpression);
+			var cacheKey       = new SubqueryCacheKey(context.SelectQuery, testExpression);
 
 			var shouldCache = flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsRoot();
 

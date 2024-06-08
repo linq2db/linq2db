@@ -872,14 +872,14 @@ namespace LinqToDB.Linq.Builder
 					return TranslateExpression(node);
 				}
 
-				var saveDescriptor = _columnDescriptor;
-				_columnDescriptor  = null;
-				var test           = Visit(node.Test);
-				_columnDescriptor  = saveDescriptor;
-
-				var saveFlags = _flags;
+				var saveFlags      = _flags;
 
 				_flags |= ProjectFlags.ForceOuterAssociation;
+
+				var saveDescriptor = _columnDescriptor;
+				_columnDescriptor = null;
+				var test           = Visit(node.Test);
+				_columnDescriptor  = saveDescriptor;
 
 				var ifTrue  = Visit(node.IfTrue);
 				var ifFalse = Visit(node.IfFalse);

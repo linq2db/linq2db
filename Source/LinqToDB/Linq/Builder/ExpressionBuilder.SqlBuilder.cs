@@ -4433,7 +4433,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var shouldCache = null != path.Find(1, (_, e) => e is ContextRefExpression);
+			var shouldCache = !flags.IsTest() && null != path.Find(1, (_, e) => e is ContextRefExpression);
 
 			var key = new SqlCacheKey(path, null, null, null, flags);
 
