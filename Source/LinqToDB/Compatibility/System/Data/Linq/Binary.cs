@@ -1,6 +1,9 @@
+﻿#if !NETFRAMEWORK
 using System;
 using System.Text;
 using System.Runtime.Serialization;
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
 
 namespace System.Data.Linq
 {
@@ -9,125 +12,95 @@ namespace System.Data.Linq
 	public sealed class Binary : IEquatable<Binary>
 	{
 		[DataMember(Name = "Bytes")]
-		byte[] bytes;
-		int? hashCode;
+		private byte[] _bytes;
+		private int?   _hashCode;
 
-		public Binary(byte[] value)
+		public Binary(byte[]? value)
 		{
 			if(value == null)
 			{
-				this.bytes = new byte[0];
+				_bytes = Array<byte>.Empty;
 			}
 			else
 			{
-				this.bytes = new byte[value.Length];
-				Array.Copy(value, this.bytes, value.Length);
+				_bytes = new byte[value.Length];
+				Array.Copy(value, _bytes, value.Length);
 			}
-			this.ComputeHash();
 		}
 
 		public byte[] ToArray()
 		{
-			byte[] copy = new byte[this.bytes.Length];
-			Array.Copy(this.bytes, copy, copy.Length);
+			var copy = new byte[_bytes.Length];
+			Array.Copy(_bytes, copy, copy.Length);
 			return copy;
 		}
 
-		public int Length
-		{
-			get { return this.bytes.Length; }
-		}
+		public int Length => _bytes.Length;
 
-		public static implicit operator Binary(byte[] value)
-		{
-			return new Binary(value);
-		}
+		public static implicit operator Binary(byte[]? value) => new Binary(value);
 
-		public bool Equals(Binary other)
-		{
-			return this.EqualsTo(other);
-		}
+		public bool Equals(Binary? other) => EqualsTo(other);
 
-		public static bool operator ==(Binary binary1, Binary binary2)
+		public static bool operator ==(Binary? binary1, Binary? binary2)
 		{
-			if((object)binary1 == (object)binary2)
+			if (ReferenceEquals(binary1, binary2))
 				return true;
-			if((object)binary1 == null && (object)binary2 == null)
-				return true;
-			if((object)binary1 == null || (object)binary2 == null)
+			if (binary1 is null || binary2 is null)
 				return false;
-			return binary1.EqualsTo(binary2);
+
+			return binary1.Equals(binary2);
 		}
 
-		public static bool operator !=(Binary binary1, Binary binary2)
-		{
-			if((object)binary1 == (object)binary2)
-				return false;
-			if((object)binary1 == null && (object)binary2 == null)
-				return false;
-			if((object)binary1 == null || (object)binary2 == null)
-				return true;
-			return !binary1.EqualsTo(binary2);
-		}
+		public static bool operator !=(Binary? binary1, Binary? binary2) => !(binary1 == binary2);
 
-		public override bool Equals(object obj)
-		{
-			return this.EqualsTo(obj as Binary);
-		}
+		public override bool Equals(object? obj) => EqualsTo(obj as Binary);
 
 		public override int GetHashCode()
 		{
-			if(!hashCode.HasValue)
+			if(!_hashCode.HasValue)
 			{
 				// hash code is not marked [DataMember], so when
 				// using the DataContractSerializer, we'll need
 				// to recompute the hash after deserialization.
 				ComputeHash();
 			}
-			return this.hashCode.Value;
+			return _hashCode!.Value;
 		}
 
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
-			sb.Append("\"");
-			sb.Append(System.Convert.ToBase64String(this.bytes, 0, this.bytes.Length));
-			sb.Append("\"");
-			return sb.ToString();
-		}
+		public override string ToString() => $"\"{Convert.ToBase64String(_bytes, 0, _bytes.Length)}\"";
 
-		private bool EqualsTo(Binary binary)
+		private bool EqualsTo(Binary? binary)
 		{
-			if((object)this == (object)binary)
+			if (binary == null)
+				return false;
+			if(ReferenceEquals(this, binary))
 				return true;
-			if((object)binary == null)
+			if(_bytes.Length != binary._bytes.Length)
 				return false;
-			if(this.bytes.Length != binary.bytes.Length)
+			if(GetHashCode() != binary.GetHashCode())
 				return false;
-			if(this.GetHashCode() != binary.GetHashCode())
-				return false;
-			for(int i = 0, n = this.bytes.Length; i < n; i++)
+			for(int i = 0, n = _bytes.Length; i < n; i++)
 			{
-				if(this.bytes[i] != binary.bytes[i])
+				if(_bytes[i] != binary._bytes[i])
 					return false;
 			}
 			return true;
 		}
 
 		/// <summary>
-		/// Simple hash using pseudo-random coefficients for each byte in 
+		/// Simple hash using pseudo-random coefficients for each byte in
 		/// the array to achieve order dependency.
 		/// </summary>
 		private void ComputeHash()
 		{
 			int s = 314, t = 159;
-			hashCode = 0;
-			for(int i = 0; i < bytes.Length; i++)
+			_hashCode = 0;
+			for(var i = 0; i < _bytes.Length; i++)
 			{
-				hashCode = hashCode * s + bytes[i];
-				s = s * t;
+				_hashCode = _hashCode * s + _bytes[i];
+				s *= t;
 			}
 		}
 	}
 }
-
+#endif

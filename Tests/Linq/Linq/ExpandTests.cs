@@ -6,15 +6,13 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Linq
 {
-	using Tools;
-
 	[TestFixture]
 	public class ExpandTests : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -37,7 +35,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InvocationTestLocal([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
+		public void InvocationTestLocal([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int param)
 		{
 			Expression<Func<SampleClass,bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
@@ -57,7 +55,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void CompileTestLocal([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
+		public void CompileTestLocal([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int param)
 		{
 			Expression<Func<SampleClass, bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
@@ -78,7 +76,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void NonCompileTestLocal([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
+		public void NonCompileTestLocal([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int param)
 		{
 			Expression<Func<SampleClass, bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
@@ -90,6 +88,10 @@ namespace Tests.Playground
 					from t2 in table.Where(predicate)
 					select t;
 
+				//DO NOT REMOVE, it forces caching query
+				var str = query.ToString();
+				TestContext.WriteLine(str);
+
 				var expected = from t in sampleData
 					from t2 in sampleData.Where(predicate.Compile())
 					select t;
@@ -99,7 +101,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InvocationTestFunction([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
+		public void InvocationTestFunction([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int param)
 		{
 			var sampleData = GenerateData();
 
@@ -118,7 +120,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void LocalInvocation([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(2, 3)] int param)
+		public void LocalInvocation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(2, 3)] int param)
 		{
 			var sampleData = GenerateData();
 
@@ -139,7 +141,7 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void InvocationTestByInvoke([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
+		public void InvocationTestByInvoke([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int param)
 		{
 			var sampleData = GenerateData();
 

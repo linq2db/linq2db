@@ -12,7 +12,9 @@ type PersonID = int
 
 type Person =
     { [<SequenceName(ProviderName.Firebird, "PersonID")>]
-      [<Column("PersonID"); Identity; PrimaryKey>]
+      [<Column("PersonID", Configuration = ProviderName.ClickHouse)>]
+      [<Column("PersonID", IsIdentity = true)>]
+      [<PrimaryKey>]
       ID : int
       [<NotNull>]
       FirstName : string
@@ -47,10 +49,11 @@ type NestedFullName = { FirstName : string; MiddleName: string; LastName: LastNa
 [<Column("FirstName",  "Name.FirstName")>]
 [<Column("MiddleName", "Name.MiddleName")>]
 [<Column("LastName",   "Name.LastName")>]
-type ComplexPerson =
-    { [<Identity>]
+type ComplexPerson = {
       [<SequenceName(ProviderName.Firebird, "PersonID")>]
-      [<Column("PersonID", IsPrimaryKey=true)>]
+      [<Column("PersonID", Configuration = ProviderName.ClickHouse)>]
+      [<Column("PersonID", IsIdentity = true)>]
+      [<PrimaryKey>]
       ID : int
       Name : FullName
       Gender : string }
@@ -59,10 +62,11 @@ type ComplexPerson =
 [<Column("FirstName",  "Name.FirstName")>]
 [<Column("MiddleName", "Name.MiddleName")>]
 [<Column("LastName",   "Name.LastName.Value")>]
-type DeeplyComplexPerson =
-    { [<Identity>]
+type DeeplyComplexPerson = {
       [<SequenceName(ProviderName.Firebird, "PersonID")>]
-      [<Column("PersonID", IsPrimaryKey=true)>]
+      [<Column("PersonID", Configuration = ProviderName.ClickHouse)>]
+      [<Column("PersonID", IsIdentity = true)>]
+      [<PrimaryKey>]
       ID : int
       Name : NestedFullName
       Gender : string }
@@ -82,7 +86,9 @@ type DeeplyComplexPerson =
 [<Table("Person", IsColumnAttributeRequired=false)>]
 type PersonWithOptions =
     { [<SequenceName(ProviderName.Firebird, "PersonID")>]
-      [<Column("PersonID"); Identity; PrimaryKey>]
+      [<Column("PersonID", Configuration = ProviderName.ClickHouse)>]
+      [<Column("PersonID", IsIdentity = true)>]
+      [<PrimaryKey>]
       ID : int
       [<NotNull>]
       FirstName : string
@@ -97,7 +103,9 @@ type PersonWithOptions =
 type [<CLIMutable; Table("Person", IsColumnAttributeRequired=false)>]
     PersonCLIMutable =
     { [<SequenceName(ProviderName.Firebird, "PersonID")>]
-      [<Column("PersonID"); Identity; PrimaryKey>]
+      [<Column("PersonID", Configuration = ProviderName.ClickHouse)>]
+      [<Column("PersonID", IsIdentity = true)>]
+      [<PrimaryKey>]
       ID : int
       [<NotNull>]
       FirstName : string

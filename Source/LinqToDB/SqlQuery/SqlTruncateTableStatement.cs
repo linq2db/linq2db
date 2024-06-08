@@ -6,8 +6,8 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlTruncateTableStatement : SqlStatement
 	{
-		public SqlTable Table         { get; set; }
-		public bool     ResetIdentity { get; set; }
+		public SqlTable? Table         { get; set; }
+		public bool      ResetIdentity { get; set; }
 
 		public override QueryType          QueryType    => QueryType.TruncateTable;
 		public override QueryElementType   ElementType  => QueryElementType.TruncateTableStatement;
@@ -18,51 +18,35 @@ namespace LinqToDB.SqlQuery
 			set {}
 		}
 
-		public override SelectQuery SelectQuery { get => null; set {}}
+		public override SelectQuery? SelectQuery { get => null; set {}}
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			sb.Append("TRUNCATE TABLE ");
 
-			((IQueryElement)Table)?.ToString(sb, dic);
+			((IQueryElement?)Table)?.ToString(sb, dic);
 
 			sb.AppendLine();
 
 			return sb;
 		}
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Table)?.Walk(options, func);
-
-			return null;
+			Table = ((ISqlExpressionWalkable?)Table)?.Walk(options, context, func) as SqlTable;
+			return base.Walk(options, context, func);
 		}
 
-		public override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlTruncateTableStatement();
-
-			if (Table != null)
-				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			return null;
 		}
 
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
 			if (SelectQuery != null)
 			{
-				var newQuery = func(SelectQuery);
+				var newQuery = func(context, SelectQuery);
 				if (!ReferenceEquals(newQuery, SelectQuery))
 					SelectQuery = newQuery;
 			}

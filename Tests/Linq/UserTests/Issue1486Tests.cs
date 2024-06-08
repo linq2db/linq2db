@@ -1,8 +1,10 @@
 ﻿using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using Tests.Model;
 
@@ -16,6 +18,8 @@ namespace Tests.UserTests
 			public IssueDataConnection(string configuration)
 				: base(GetDataProvider(configuration), GetConnection(configuration), true)
 			{
+				// to avoid mapper conflict with SequentialAccess test provider
+				AddMappingSchema(new MappingSchema());
 			}
 
 			private new static IDataProvider GetDataProvider(string configuration)
@@ -23,7 +27,7 @@ namespace Tests.UserTests
 				return DataConnection.GetDataProvider(configuration);
 			}
 
-			private static IDbConnection GetConnection(string configuration)
+			private static DbConnection GetConnection(string configuration)
 			{
 				string connStr = GetConnectionString(configuration);
 
@@ -34,8 +38,10 @@ namespace Tests.UserTests
 		public class FactoryDataConnection : DataConnection
 		{
 			public FactoryDataConnection(string configuration)
-				: base(GetDataProvider(configuration), () => GetConnection(configuration))
+				: base(GetDataProvider(configuration), _ => GetConnection(configuration))
 			{
+				// to avoid mapper conflict with SequentialAccess test provider
+				AddMappingSchema(new MappingSchema());
 			}
 
 			private new static IDataProvider GetDataProvider(string configuration)
@@ -43,7 +49,7 @@ namespace Tests.UserTests
 				return DataConnection.GetDataProvider(configuration);
 			}
 
-			private static IDbConnection GetConnection(string configuration)
+			private static DbConnection GetConnection(string configuration)
 			{
 				string connStr = GetConnectionString(configuration);
 
@@ -56,35 +62,23 @@ namespace Tests.UserTests
 		public void TestConnectionStringCopy(
 			[DataSources(
 				false,
-#if NETSTANDARD1_6
-				TestProvName.AllMySqlData,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSqlServer,
-#endif
-				ProviderName.MySqlConnector,
+				TestProvName.AllMySqlConnector,
 				TestProvName.AllOracle,
-				ProviderName.SapHana)]
-					string context,
-			[Values]
-					bool providerSpecific)
+				TestProvName.AllSapHana)]
+					string context)
 		{
-			using (new AllowMultipleQuery())
-			using (new AvoidSpecificDataProviderAPI(providerSpecific))
 			using (var db = new IssueDataConnection(context))
 			{
-				db.GetTable<Child>().LoadWith(p => p.Parent.Children).First();
+				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
 			}
 		}
 
-		[ActiveIssue("AvoidSpecificDataProviderAPI support missing", Configuration = TestProvName.AllOracle)]
 		[Test]
-		public void TestFactory([DataSources(false)] string context, [Values] bool providerSpecific)
+		public void TestFactory([DataSources(false)] string context)
 		{
-			using (new AllowMultipleQuery())
-			using (new AvoidSpecificDataProviderAPI(providerSpecific))
 			using (var db = new FactoryDataConnection(context))
 			{
-				db.GetTable<Child>().LoadWith(p => p.Parent.Children).First();
+				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
 			}
 		}
 	}

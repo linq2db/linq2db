@@ -1,21 +1,39 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Default.props" />
-	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net45;net46;netcoreapp1.0;netcoreapp2.0;netstandard1.6;netstandard2.0</TargetFrameworks>
-
 		<AssemblyName>linq2db.Tools</AssemblyName>
 		<RootNamespace>LinqToDB.Tools</RootNamespace>
 
-		<PackageId>linq2db.Tools</PackageId>
-
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.Tools.xml</DocumentationFile>
-		<!--https://github.com/dotnet/project-system/issues/1358-->
-		<TargetFrameworks>$(TargetFrameworks)</TargetFrameworks>
+
+		<!--published targets-->
+		<TargetFrameworks>net8.0</TargetFrameworks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
+		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\LinqToDB\Compatibility\System\Threading\AsyncLocal.cs" Link="AsyncLocal.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+
+		<PackageReference Include="Humanizer.Core" />
+
+		<None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Schemas.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="DataProvider\SqlServer\Schemas\Schemas.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Schemas.tt</DependentUpon>
+		</Compile>
+
 	</ItemGroup>
 </Project>

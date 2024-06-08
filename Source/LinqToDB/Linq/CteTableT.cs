@@ -1,10 +1,11 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Text;
 
 namespace LinqToDB.Linq
 {
-	class CteTable<T> : ExpressionQuery<T>
+	using Common.Internal;
+
+	sealed class CteTable<T> : ExpressionQuery<T>
 	{
 		public CteTable(IDataContext dataContext)
 		{
@@ -16,12 +17,16 @@ namespace LinqToDB.Linq
 			Init(dataContext, expression);
 		}
 
-		public string TableName { get; set; }
+		public string? TableName { get; set; }
 
-		public string GetTableName() =>
-			DataContext.CreateSqlProvider()
-				.ConvertTableName(new StringBuilder(), "", "", TableName)
+		public string GetTableName()
+		{
+			using var sb = Pools.StringBuilder.Allocate();
+
+			return DataContext.CreateSqlProvider()
+				.BuildObjectName(sb.Value, new(TableName!))
 				.ToString();
+		}
 
 		#region Overrides
 

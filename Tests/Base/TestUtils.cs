@@ -4,16 +4,18 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-using JetBrains.Annotations;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
-using LinqToDB.SchemaProvider;
 
 namespace Tests
 {
 	using Model;
+#if NETFRAMEWORK
+	using Model.Remote.Wcf;
+#else
+	using Model.Remote.Grpc;
+#endif
 
 	public static class TestUtils
 	{
@@ -33,8 +35,9 @@ namespace Tests
 			return Interlocked.Increment(ref _cnt);
 		}
 
-		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
+		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
+		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
 
 		[Sql.Function("VERSION", ServerSideOnly = true)]
 		private static string MySqlVersion()
@@ -48,25 +51,32 @@ namespace Tests
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Expression("current_schema", ServerSideOnly = true, Configuration = ProviderName.SapHana)]
 		[Sql.Expression("current server", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_database", ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
 		[Sql.Function("DATABASE"        , ServerSideOnly = true, Configuration = ProviderName.MySql)]
+		[Sql.Function("currentDatabase" , ServerSideOnly = true, Configuration = ProviderName.ClickHouse)]
 		[Sql.Function("DB_NAME"         , ServerSideOnly = true)]
 		private static string DbName()
 		{
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.Informix)]
-		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.OracleNative)]
-		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.OracleManaged)]
-		[Sql.Expression("current_user"  , ServerSideOnly = true, Configuration = ProviderName.SapHana)]
-		[Sql.Expression("current schema", ServerSideOnly = true, Configuration = ProviderName.DB2)]
-		[Sql.Function("current_schema"  , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
-		[Sql.Function("USER_NAME"       , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
-		[Sql.Function("SCHEMA_NAME"     , ServerSideOnly = true)]
+		[Sql.Expression("user"                                    , ServerSideOnly = true, Configuration = ProviderName.Informix)]
+		[Sql.Expression("sys_context('userenv', 'current_schema')", ServerSideOnly = true, Configuration = ProviderName.Oracle)]
+		[Sql.Expression("current schema"                          , ServerSideOnly = true, Configuration = ProviderName.DB2)]
+		[Sql.Function("current_schema"                            , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
+		[Sql.Function("USER_NAME"                                 , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
+		[Sql.Expression("current_schema"                          , ServerSideOnly = true, Configuration = ProviderName.SapHana)]
+		[Sql.Function("SCHEMA_NAME"                               , ServerSideOnly = true)]
 		private static string SchemaName()
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Sql.Expression("sys_context('userenv','service_name')", ServerSideOnly = true, Configuration = ProviderName.Oracle)]
+		[Sql.Expression("DBSERVERNAME"                         , ServerSideOnly = true, Configuration = ProviderName.Informix)]
+		[Sql.Expression("@@SERVERNAME"                         , ServerSideOnly = true)]
+		private static string ServerName()
 		{
 			throw new InvalidOperationException();
 		}
@@ -75,126 +85,85 @@ namespace Tests
 		/// Returns schema name for provided connection.
 		/// Returns UNUSED_SCHEMA if fully-qualified table name doesn't support database name.
 		/// </summary>
-		public static string GetSchemaName(IDataContext db)
+		public static string GetSchemaName(IDataContext db, string context)
 		{
-			switch (GetContextName(db))
+			switch (context)
 			{
-				case ProviderName.SapHana:
-				case ProviderName.Informix:
-				case ProviderName.Oracle:
-				case ProviderName.OracleNative:
-				case ProviderName.OracleManaged:
-				case ProviderName.PostgreSQL:
-				case ProviderName.PostgreSQL92:
-				case ProviderName.PostgreSQL93:
-				case ProviderName.PostgreSQL95:
-				case TestProvName.PostgreSQL10:
-				case TestProvName.PostgreSQL11:
-				case TestProvName.PostgreSQLLatest:
-				case ProviderName.DB2:
-				case ProviderName.Sybase:
-				case ProviderName.SybaseManaged:
-				case ProviderName.SqlServer2000:
-				case ProviderName.SqlServer2005:
-				case ProviderName.SqlServer2008:
-				case ProviderName.SqlServer2012:
-				case ProviderName.SqlServer2014:
-				case ProviderName.SqlServer2017:
-				case TestProvName.SqlAzure:
+				case string when context.IsAnyOf(TestProvName.AllInformix)  :
+				case string when context.IsAnyOf(TestProvName.AllOracle)    :
+				case string when context.IsAnyOf(TestProvName.AllPostgreSQL):
+				case string when context.IsAnyOf(TestProvName.AllSybase)    :
+				case string when context.IsAnyOf(TestProvName.AllSqlServer) :
+				case string when context.IsAnyOf(TestProvName.AllSapHana)   :
+				case string when context.IsAnyOf(ProviderName.DB2)          :
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
 			}
 
 			return NO_SCHEMA_NAME;
 		}
 
-		public static GetSchemaOptions GetDefaultSchemaOptions(string context, GetSchemaOptions baseOptions = null)
+		/// <summary>
+		/// Returns server name for provided connection.
+		/// Returns UNUSED_SERVER if fully-qualified table name doesn't support server name.
+		/// </summary>
+		public static string GetServerName(IDataContext db, string context)
 		{
-			if (context.Contains("SapHana"))
+			switch (context)
 			{
-				// SAP HANA provider throws C++ assertions when we try to load schema for some functions
-				var options = baseOptions ?? new GetSchemaOptions();
+				case string when context.IsAnyOf(TestProvName.AllSybase)   :
+				case string when context.IsAnyOf(TestProvName.AllSqlServer):
+				case string when context.IsAnyOf(TestProvName.AllOracle)   :
+				case string when context.IsAnyOf(TestProvName.AllInformix) :
+					return db.Select(() => ServerName());
+				case string when context.IsAnyOf(TestProvName.AllSapHana)  :
+					/* SAP HANA should be configured for linked server queries
+					 This will help to configure (especially second link):
+					 https://www.linkedin.com/pulse/cross-database-queries-thing-past-how-use-sap-hana-your-nandan
+					 https://blogs.sap.com/2017/04/12/introduction-to-the-sap-hana-smart-data-access-linked-database-feature/
+					 https://blogs.sap.com/2014/12/19/step-by-step-tutorial-cross-database-queries-in-sap-hana-sps09/
+					 SAMPLE CONFIGURATION SCRIPT:
 
-				var oldLoad = options.LoadProcedure;
-				if (oldLoad != null)
-					options.LoadProcedure = p => oldLoad(p) && loadCheck(p);
-				else
-					options.LoadProcedure = loadCheck;
+			CREATE REMOTE SOURCE "LINKED_DB" ADAPTER "hanaodbc" CONFIGURATION 'DRIVER=libodbcHDB.so;ServerNode=192.168.56.101:39013;';
 
-				bool loadCheck(ProcedureSchema p)
-				{
-					return p.ProcedureName != "SERIES_GENERATE_TIME"
-						&& p.ProcedureName != "SERIES_DISAGGREGATE_TIME"
-						// just too slow
-						&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP"
-						&& p.ProcedureName != "GET_FULL_SYSTEM_INFO_DUMP_WITH_PARAMETERS"
-						&& p.ProcedureName != "FULL_SYSTEM_INFO_DUMP_CREATE";
-				}
+			// optional step
+			GRANT LINKED DATABASE ON REMOTE SOURCE LINKED_DB TO SYSTEM;
 
-				return options;
+			CREATE CREDENTIAL FOR USER SYSTEM COMPONENT 'SAPHANAFEDERATION' PURPOSE 'LINKED_DB' TYPE 'PASSWORD' USING 'user=SYSTEM;password=E15342GcbaFd';
+					 */
+					return "LINKED_DB";
 			}
 
-			return baseOptions;
-		}
-
-		private static string GetContextName(IDataContext db)
-		{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
-			if (db is TestServiceModelDataContext linqDb)
-				return linqDb.Configuration;
-#endif
-
-			if (db is TestDataConnection testDb)
-				return testDb.ConfigurationString;
-
-			return db.ContextID;
+			return NO_SCHEMA_NAME;
 		}
 
 		/// <summary>
 		/// Returns database name for provided connection.
 		/// Returns UNUSED_DB if fully-qualified table name doesn't support database name.
 		/// </summary>
-		public static string GetDatabaseName(IDataContext db)
+		public static string GetDatabaseName(IDataContext db, string context)
 		{
-			switch (GetContextName(db))
+			return context switch
 			{
-				case ProviderName.SQLiteClassic:
-				case ProviderName.SQLiteMS:
-					return "main";
-				case ProviderName.Access:
-					return "Database\\TestData";
-				case ProviderName.SapHana:
-				case ProviderName.MySql:
-				case ProviderName.MySqlConnector:
-				case TestProvName.MariaDB:
-				case TestProvName.MySql57:
-				case ProviderName.PostgreSQL:
-				case ProviderName.PostgreSQL92:
-				case ProviderName.PostgreSQL93:
-				case ProviderName.PostgreSQL95:
-				case TestProvName.PostgreSQL10:
-				case TestProvName.PostgreSQL11:
-				case TestProvName.PostgreSQLLatest:
-				case ProviderName.DB2:
-				case ProviderName.Sybase:
-				case ProviderName.SybaseManaged:
-				case ProviderName.SqlServer2000:
-				case ProviderName.SqlServer2005:
-				case ProviderName.SqlServer2008:
-				case ProviderName.SqlServer2012:
-				case ProviderName.SqlServer2014:
-				case ProviderName.SqlServer2017:
-				case TestProvName.SqlAzure:
-					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
-				case ProviderName.Informix:
-					return db.GetTable<LinqDataTypes>().Select(_ => DbInfo("dbname")).First();
-			}
-
-			return NO_DATABASE_NAME;
+				string when context.IsAnyOf(TestProvName.AllSQLite)   => "main",
+				// Access adds extension automatically to database name, but if there are
+				// dots in name, extension not added as dot treated as extension separator by Access
+				string when context.IsAnyOf(ProviderName.Access)      => "Database\\TestData",
+				string when context.IsAnyOf(ProviderName.AccessOdbc)  => "Database\\TestData.ODBC.mdb",
+				string when context.IsAnyOf(
+					TestProvName.AllMySql,
+					TestProvName.AllClickHouse,
+					TestProvName.AllPostgreSQL,
+					ProviderName.DB2,
+					TestProvName.AllSybase,
+					TestProvName.AllSqlServer)                        => db.GetTable<LinqDataTypes>().Select(_ => DbName()).First(),
+				string when context.IsAnyOf(TestProvName.AllInformix) => db.GetTable<LinqDataTypes>().Select(_ => DbInfo("dbname")).First(),
+				_                                                     => NO_DATABASE_NAME
+			};
 		}
 
 		public static bool ProviderNeedsTimeFix(this IDataContext db, string context)
 		{
-			if (context == "MySql" || context == "MySql.LinqService")
+			if (context.IsAnyOf(TestProvName.AllMySql55))
 			{
 				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
 				// them from expected data too
@@ -202,40 +171,52 @@ namespace Tests
 				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
 				if (match.Success)
 				{
-					var versionParts = match.Value.Split('.').Select(_ => int.Parse(_)).ToArray();
+					var versionParts = match.Value.Split('.').Select(int.Parse).ToArray();
 
 					return (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604);
 				}
+			}
+			else if (context.IsAnyOf(ProviderName.AccessOdbc))
+			{
+				// ODBC driver strips milliseconds from values on both save and load
+				return true;
 			}
 
 			return false;
 		}
 
 		// see ProviderNeedsTimeFix
-		public static DateTime FixTime(DateTime value, bool fix)
+		public static DateTime StripMilliseconds(DateTime value, bool fix)
 		{
-			return fix ? value.AddMilliseconds(-value.Millisecond) : value;
+			return fix ? new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second) : value;
 		}
 
-		class FirebirdTempTable<T> : TempTable<T>
+		sealed class FirebirdTempTable<T> : TempTable<T>
+			where T : notnull
 		{
-			public FirebirdTempTable([NotNull] IDataContext db, string tableName = null, string databaseName = null, string schemaName = null) 
-				: base(db, tableName, databaseName, schemaName)
+			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
+				: base(db, tableName, databaseName, schemaName, tableOptions : tableOptions)
 			{
 			}
 
 			public override void Dispose()
 			{
+				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
+				{
+					FirebirdTools.ClearAllPools();
+				}
+
 				DataContext.Close();
 				FirebirdTools.ClearAllPools();
 				base.Dispose();
 			}
 		}
 
-		static TempTable<T> CreateTable<T>(IDataContext db, string tableName) =>
+		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet)
+			where T : notnull =>
 			db.CreateSqlProvider() is FirebirdSqlBuilder ?
-				new FirebirdTempTable<T>(db, tableName) : 
-				new         TempTable<T>(db, tableName);
+				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
+				new         TempTable<T>(db, tableName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
@@ -246,42 +227,89 @@ namespace Tests
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db,
-			string tableName = null)
+		public static Version GetSqliteVersion(DataConnection db)
+		{
+			using (var cmd = db.CreateCommand())
+			{
+				cmd.CommandText = "select sqlite_version();";
+				var version     = (string)cmd.ExecuteScalar()!;
+
+				return new Version(version);
+			}
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.CheckExistence)
+			where T : notnull
 		{
 			try
 			{
-				return CreateTable<T>(db, tableName);
+				if ((tableOptions & TableOptions.CheckExistence) == TableOptions.CheckExistence)
+					db.DropTable<T>(tableName, tableOptions:tableOptions);
+				return CreateTable<T>(db, tableName, tableOptions);
 			}
 			catch
 			{
 				ClearDataContext(db);
 				db.DropTable<T>(tableName, throwExceptionIfNotExists:false);
-				return CreateTable<T>(db, tableName);
+				return CreateTable<T>(db, tableName, tableOptions);
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string tableName, IEnumerable<T> items)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
+			where T : notnull
 		{
-			var table = CreateLocalTable<T>(db, tableName);
+			var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
 
-			if (db is DataConnection)
-				using (new DisableLogging())
-					table.Copy(items
-						, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows }
-						);
-			else
-				using (new DisableLogging())
+			using (new DisableLogging())
+			{
+				if (db is DataConnection dc)
+				{
+					// apply transaction only on insert, as not all dbs support DDL within transaction
+					if (insertInTransaction)
+						dc.BeginTransaction();
+
+					table.Copy(items, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows });
+
+					if (insertInTransaction)
+						dc.CommitTransaction();
+				}
+				else
 					foreach (var item in items)
 						db.Insert(item, table.TableName);
-
+			}
 
 			return table;
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items, bool insertInTransaction = false)
+			where T : notnull
 		{
-			return CreateLocalTable(db, null, items);
+			return CreateLocalTable(db, null, items, insertInTransaction);
+		}
+
+		public static string GetValidCollationName(string providerName)
+		{
+			return providerName switch
+			{
+				string when providerName.IsAnyOf(TestProvName.AllOracle12Plus) => "latin_AI",
+				string when providerName.IsAnyOf(ProviderName.DB2)             => "SYSTEM_923_DE",
+				string when providerName.IsAnyOf(TestProvName.AllPostgreSQL)   => "POSIX",
+				string when providerName.IsAnyOf(TestProvName.AllSQLite)       => "NOCASE",
+				string when providerName.IsAnyOf(TestProvName.AllFirebird)     => "UNICODE_FSS",
+				string when providerName.IsAnyOf(TestProvName.AllMySql)        => "utf8_bin",
+				string when providerName.IsAnyOf(TestProvName.AllSqlServer)    => "Albanian_CI_AS",
+				_                                                              => "whatever"
+			};
+		}
+
+		public static string? Clean(this string? s)
+		{
+			return s?
+				.Replace(" ", "")
+				.Replace("\t", "")
+				.Replace("\r", "")
+				.Replace("\n", "")
+				;
 		}
 	}
 }

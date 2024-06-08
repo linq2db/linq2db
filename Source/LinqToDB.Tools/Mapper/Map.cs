@@ -8,8 +8,7 @@ namespace LinqToDB.Tools.Mapper
 	/// Mapper helper class.
 	/// </summary>
 	/// <example>
-	/// This example shows how to map one object to another.
-	/// <code source="CodeJam.Blocks.Tests\Mapping\Examples\MapTests.cs" region="Example" lang="C#"/>
+	/// This <see href="https://github.com/rsdn/CodeJam/blob/master/CodeJam.Blocks.Tests/Mapping/Examples/MapTests.cs">example</see> shows how to map one object to another.
 	/// </example>
 	[PublicAPI]
 	public static class Map
@@ -31,9 +30,9 @@ namespace LinqToDB.Tools.Mapper
 		/// <typeparam name="TTo">Type to map to.</typeparam>
 		/// <param name="setter">MapperBuilder parameter setter.</param>
 		/// <returns>Mapping expression.</returns>
-		[Pure, NotNull]
+		[Pure]
 		public static Mapper<TFrom,TTo> GetMapper<TFrom,TTo>(
-			[NotNull] Func<MapperBuilder<TFrom,TTo>,MapperBuilder<TFrom,TTo>> setter)
+			Func<MapperBuilder<TFrom,TTo>,MapperBuilder<TFrom,TTo>> setter)
 		{
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 			return new Mapper<TFrom,TTo>(setter(new MapperBuilder<TFrom,TTo>()));
@@ -41,11 +40,10 @@ namespace LinqToDB.Tools.Mapper
 
 		static class MapHolder<T>
 		{
-			[NotNull]
 			public static readonly Mapper<T,T> Mapper =
 				GetMapper<T,T>(m => m
-					 .SetProcessCrossReferences(true)
-					 .SetDeepCopy(true));
+					.SetProcessCrossReferences(true)
+					.SetDeepCopy(true));
 		}
 
 		/// <summary>

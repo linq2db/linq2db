@@ -5,20 +5,31 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlProvider;
 	using SqlQuery;
 
-	class SqlServer2005SqlOptimizer : SqlServerSqlOptimizer
+	sealed class SqlServer2005SqlOptimizer : SqlServerSqlOptimizer
 	{
 		public SqlServer2005SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags, SqlServerVersion.v2005)
 		{
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
-			expr = base.ConvertExpression(expr);
+			//SQL Server 2005 supports ROW_NUMBER but not OFFSET/FETCH
 
-			if (expr is SqlFunction)
-				return ConvertConvertFunction((SqlFunction)expr);
+			statement = SeparateDistinctFromPagination(statement, q => q.Select.TakeValue != null || q.Select.SkipValue != null);
+			statement = ReplaceDistinctOrderByWithRowNumber(statement, q => true);
 
-			return expr;
+			if (statement.IsUpdate() || statement.IsDelete())
+				statement = WrapRootTakeSkipOrderBy(statement);
+
+			statement = ReplaceSkipWithRowNumber(statement);
+
+			return statement;
+		}
+
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
 		}
 	}
 }

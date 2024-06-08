@@ -1,82 +1,119 @@
 ﻿using System;
-using LinqToDB.Common;
-using LinqToDB.Extensions;
+using System.Data.Common;
+using System.IO;
+using System.Reflection;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using System.Data;
-	using System.IO;
-	using System.Reflection;
-
+	using Common;
 	using Data;
+	using Configuration;
 
+	[PublicAPI]
 	public static class SapHanaTools
 	{
-		public static string AssemblyName = "Sap.Data.Hana";
-
-		static readonly SapHanaDataProvider _hanaDataProvider = new SapHanaDataProvider();
-
-		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
-		public  static BulkCopyType  DefaultBulkCopyType
-		{
-			get { return _defaultBulkCopyType;  }
-			set { _defaultBulkCopyType = value; }
-		}
-
-		static SapHanaTools()
-		{
-			try
-			{
-				var path = typeof(SapHanaTools).AssemblyEx().GetPath();
-
-				if (!String.IsNullOrEmpty(path))
-				{
-					if (!File.Exists(Path.Combine(path, AssemblyName + ".dll")))
-					{
-						if (File.Exists(Path.Combine(path, AssemblyName +".v4.5.dll")))
-							AssemblyName += ".v4.5";
-					}
-				}
-			}
-			catch
-			{
-			}
-
-			DataConnection.AddDataProvider(_hanaDataProvider);
-		}
+		static readonly Lazy<IDataProvider> _hanaDataProvider     = DataConnection.CreateDataProvider<SapHanaDataProvider>();
+		static readonly Lazy<IDataProvider> _hanaOdbcDataProvider = DataConnection.CreateDataProvider<SapHanaOdbcDataProvider>();
 
 		public static void ResolveSapHana(string path)
 		{
-			new AssemblyResolver(path, AssemblyName);
+			_ = new AssemblyResolver(
+				path,
+				DetectedProviderName == ProviderName.SapHanaNative
+					? SapHanaProviderAdapter.AssemblyName
+					: OdbcProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveSapHana(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, AssemblyName);
+			_ = new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
-		public static IDataProvider GetDataProvider()
+		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
 		{
-			return _hanaDataProvider;
+			if (assemblyName == SapHanaProviderAdapter.AssemblyName) return _hanaDataProvider.Value;
+			if (assemblyName == OdbcProviderAdapter.AssemblyName)    return _hanaOdbcDataProvider.Value;
+
+			switch (providerName)
+			{
+				case ProviderName.SapHanaOdbc  : return _hanaOdbcDataProvider.Value;
+				case ProviderName.SapHanaNative: return _hanaDataProvider.Value;
+			}
+
+			if (DetectedProviderName == ProviderName.SapHanaNative)
+				return _hanaDataProvider.Value;
+
+			return _hanaOdbcDataProvider.Value;
 		}
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString)
+		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
-			return new DataConnection(_hanaDataProvider, connectionString);
+			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
-			return new DataConnection(_hanaDataProvider, connection);
+			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
-			return new DataConnection(_hanaDataProvider, transaction);
+			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
-		#endregion
+#endregion
+
+		private static string? _detectedProviderName;
+		public  static string  DetectedProviderName =>
+			_detectedProviderName ??= DetectProviderName();
+
+		static string DetectProviderName()
+		{
+			var path = typeof(SapHanaTools).Assembly.GetPath();
+
+			if (File.Exists(Path.Combine(path, $"{SapHanaProviderAdapter.AssemblyName}.dll")))
+				return ProviderName.SapHanaNative;
+
+			return ProviderName.SapHanaOdbc;
+		}
+
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
+		{
+			if (options.ConnectionString?.IndexOf("HDBODBC", StringComparison.OrdinalIgnoreCase) >= 0)
+				return _hanaOdbcDataProvider.Value;
+
+			switch (options.ProviderName)
+			{
+				case SapHanaProviderAdapter.ClientNamespace:
+				case "Sap.Data.Hana.v4.5"                  :
+				case "Sap.Data.Hana.Core"                  :
+				case "Sap.Data.Hana.Core.v2.1"             :
+				case ProviderName.SapHanaNative            : return _hanaDataProvider.Value;
+				case ProviderName.SapHanaOdbc              : return _hanaOdbcDataProvider.Value;
+				case ""                                    :
+				case null                                  :
+					if (options.ConfigurationString?.Contains("Hana") == true)
+						goto case ProviderName.SapHana;
+					break;
+				case ProviderName.SapHana                  :
+					if (options.ConfigurationString?.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) >= 0)
+						return _hanaOdbcDataProvider.Value;
+
+					return GetDataProvider();
+			}
+
+			return null;
+		}
+
+		[Obsolete("Use SapHanaOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => SapHanaOptions.Default.BulkCopyType;
+			set => SapHanaOptions.Default = SapHanaOptions.Default with { BulkCopyType = value };
+		}
 	}
 }

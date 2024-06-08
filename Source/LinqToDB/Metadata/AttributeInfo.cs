@@ -7,45 +7,46 @@ namespace LinqToDB.Metadata
 {
 	using Common;
 	using Extensions;
+	using Mapping;
 
-	class AttributeInfo
+	sealed class AttributeInfo
 	{
-		public AttributeInfo(string name, Dictionary<string,object> values)
+		public AttributeInfo(Type type, Dictionary<string,object?> values)
 		{
-			Name   = name;
+			Type   = type;
 			Values = values;
 		}
 
-		public string                    Name;
-		public Dictionary<string,object> Values;
+		public Type                       Type;
+		public Dictionary<string,object?> Values;
 
-		Func<Attribute> _func;
+		Func<MappingAttribute>? _func;
 
-		public Attribute MakeAttribute(Type type)
+		public MappingAttribute MakeAttribute()
 		{
 			if (_func == null)
 			{
-				var ctors = type.GetConstructorsEx();
+				var ctors = Type.GetConstructors();
 				var ctor  = ctors.FirstOrDefault(c => c.GetParameters().Length == 0);
 
 				if (ctor != null)
 				{
-					var expr = Expression.Lambda<Func<Attribute>>(
+					var expr = Expression.Lambda<Func<MappingAttribute>>(
 						Expression.Convert(
 							Expression.MemberInit(
 								Expression.New(ctor),
-								(IEnumerable<MemberBinding>)Values.Select(k =>
+								Values.Select(k =>
 								{
-									var member = type.GetPublicMemberEx(k.Key)[0];
+									var member = Type.GetPublicMemberEx(k.Key)[0];
 									var mtype  = member.GetMemberType();
 
 									return Expression.Bind(
 										member,
 										Expression.Constant(Converter.ChangeType(k.Value, mtype), mtype));
 								})),
-							typeof(Attribute)));
+							typeof(MappingAttribute)));
 
-					_func = expr.Compile();
+					_func = expr.CompileExpression();
 				}
 				else
 				{

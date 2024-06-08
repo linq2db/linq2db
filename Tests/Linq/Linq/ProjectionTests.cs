@@ -19,14 +19,14 @@ namespace Tests.Linq
 			public int? OtherId { get; set; }
 
 			[Association(ThisKey = "OtherId", OtherKey = "Id", CanBeNull = true)]
-			public SomeOtherEntity Other { get; set; }
+			public SomeOtherEntity? Other { get; set; }
 
 			[ExpressionMethod(nameof(GetThroughIsActual), IsColumn = false)]
 			public bool? ThroughIsActual { get; set; }
 
 			private static Expression<Func<SomeEntity, bool?>> GetThroughIsActual()
 			{
-				return t => Sql.ToNullable(t.Other.IsActual);
+				return t => Sql.ToNullable(t.Other!.IsActual);
 			}
 		}
 
@@ -36,13 +36,14 @@ namespace Tests.Linq
 			[Column]
 			public int Id { get; set; }
 			[Column]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 			[Column]
 			public bool IsActual { get; set; }
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void AssociationTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void AssociationTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<SomeEntity>(new[]{new SomeEntity{Id = 1, OtherId = 3} }))
@@ -57,8 +58,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void ToNullableTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void ToNullableTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<SomeEntity>(new[]{new SomeEntity{Id = 1, OtherId = 3} }))
@@ -86,7 +88,7 @@ namespace Tests.Linq
 						key = new
 						{
 							// cast
-							id = (int?)_.Patient.PersonID,
+							id = (int?)_.Patient!.PersonID,
 							value = _.Patient.Diagnosis
 						}
 					})
@@ -124,7 +126,7 @@ namespace Tests.Linq
 						key = new
 						{
 							// cast
-							id = (int?)_.Patient.PersonID,
+							id = (int?)_.Patient!.PersonID,
 							value = _.Patient.Diagnosis
 						}
 					})
@@ -162,7 +164,7 @@ namespace Tests.Linq
 						group = _.ID,
 						key = new
 						{
-							id = Sql.ToNullable(_.Patient.PersonID),
+							id = Sql.ToNullable(_.Patient!.PersonID),
 							value = _.Patient.Diagnosis
 						}
 					})

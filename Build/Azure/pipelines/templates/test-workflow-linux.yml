@@ -1,0 +1,159 @@
+parameters:
+  with_baselines: false
+
+steps:
+- checkout: none
+
+# .NET 6&7 SDK already installed https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md#net-tools
+
+- task: CmdLine@2
+  inputs:
+    script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Checkout test baselines
+  condition: and(variables.title, ${{ parameters.with_baselines }}, succeeded())
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: test_artifacts
+    targetPath: '$(System.DefaultWorkingDirectory)'
+  condition: and(variables.title, succeeded())
+  displayName: Extract test files
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/netcore31/$(config).json netcore31/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy test config
+  condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net60/$(config).json net60/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy .NET 6 test config
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net70/$(config).json net70/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy .NET 7 test config
+  condition: and(variables.title, eq(variables.net70, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'chmod +x $(script_global)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.script_global, succeeded())
+  displayName: Mark script as executable
+
+- task: CmdLine@2
+  inputs:
+    script: 'chmod +x $(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.script_local, succeeded())
+  displayName: Mark script as executable
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_global)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.script_global, succeeded())
+  displayName: Setup tests
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31'
+  condition: and(variables.title, variables.script_local, eq(variables.netcore31, 'true'), succeeded())
+  displayName: Setup tests
+
+- script: dotnet test ./netcore31/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx $(extra)
+  condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
+  displayName: 'Tests (CORE31): $(title)'
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net60'
+  condition: and(variables.title, variables.script_local, eq(variables.net60, 'true'), succeeded())
+  displayName: Setup tests
+
+- script: dotnet test ./net60/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+  displayName: 'Tests (NET60): $(title)'
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net70'
+  condition: and(variables.title, variables.script_local, eq(variables.net70, 'true'), succeeded())
+  displayName: Setup .NET 7 tests
+
+- script: dotnet test ./net70/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net70 -l trx $(extra)
+  condition: and(variables.title, eq(variables.net70, 'true'), succeeded())
+  displayName: 'Tests (.NET 7): $(title)'
+
+- task: PublishTestResults@2
+  condition: and(variables.title, succeededOrFailed())
+  inputs:
+    testRunner: VsTest
+    testResultsFiles: '**/*.trx'
+    testRunTitle: 'Linux / $(title)'
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Add baselines changes to commit (index)"
+      $output = git add -A
+      if ($LASTEXITCODE -ne 0) {
+          Write-Host "Failed to add baselines changes. Error code ${LASTEXITCODE}, output: ${output}"
+          exit 1
+      }
+      Write-Host "Create commit"
+      $output = git commit -m "[Linux / $(title)] baselines"
+      if ($output -match "nothing to commit") {
+          Write-Host "No baselines changes detected"
+          exit 0
+      }
+      if ($LASTEXITCODE -ne 0) {
+          Write-Host "Failed to create commit. Error code ${LASTEXITCODE}, output: ${output}"
+          exit 1
+      }
+      $rebaseAttempts = 10
+      do {
+          Write-Host "Pull with rebase"
+          $output = git pull --rebase
+          if ($LASTEXITCODE -ne 0) {
+              Write-Host "Failed to rebase. Error code ${LASTEXITCODE}, output: ${output}"
+              exit 1
+          }
+          Write-Host "Push baselines to server"
+          $output = git push https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git $(baselines_branch)
+          if ($LASTEXITCODE -ne 0) {
+              Write-Host "Failed to push baselines. Error code ${LASTEXITCODE}, output: ${output}"
+          } else {
+              exit 0
+          }
+          $rebaseAttempts = $rebaseAttempts - 1
+      } while ($rebaseAttempts -gt 0)
+      Write-Host "Failed to push baselines"
+      exit 1
+    workingDirectory: '$(System.DefaultWorkingDirectory)/baselines'
+  displayName: Commit test baselines
+  condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
+  env:
+    GITHUB_TOKEN: $(BASELINES_GH_PAT)
+    EMAIL: azp@linq2db.com
+    GIT_AUTHOR_NAME: Azure Pipelines Bot
+    GIT_COMMITTER_NAME: Azure Pipelines Bot
+
+# dunno why, but it is not needed for now for linux images
+#    - task: Docker@2
+#      displayName: Auth on hub.docker.com
+#      inputs:
+#        command: login
+#        containerRegistry: dockerhub
+#      condition: and(variables.title, eq(variables.docker_login, 'true'))

@@ -10,13 +10,17 @@ namespace LinqToDB.SqlQuery
 		public override QueryType QueryType          => QueryType.Update;
 		public override QueryElementType ElementType => QueryElementType.UpdateStatement;
 
-		private SqlUpdateClause _update;
+		public SqlOutputClause? Output { get; set; }
+
+		private SqlUpdateClause? _update;
 
 		public SqlUpdateClause Update
 		{
-			get => _update ?? (_update = new SqlUpdateClause());
+			get => _update ??= new SqlUpdateClause();
 			set => _update = value;
 		}
+
+		internal bool HasUpdate => _update != null;
 
 		public SqlUpdateStatement(SelectQuery selectQuery) : base(selectQuery)
 		{
@@ -24,50 +28,109 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
+			sb.AppendLine("UPDATE");
+
 			((IQueryElement)Update).ToString(sb, dic);
+
+			sb.AppendLine();
+
+			SelectQuery.ToString(sb, dic);
+
 			return sb;
 		}
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			With?.Walk(options, func);
-			((ISqlExpressionWalkable)_update)?.Walk(options, func);
+			With?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)_update)?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)Output)?.Walk(options, context, func);
 
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
+			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
+
+			return base.Walk(options, context, func);
+		}
+
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
+		{
+			var result = SelectQuery.GetTableSource(table);
+
+			if (result != null)
+				return result;
+
+			if (_update != null && table == _update.Table)
+				return table;
+
+			if (Update != null)
+			{
+				foreach (var item in Update.Items)
+				{
+					if (item.Expression is SelectQuery q)
+					{
+						result = q.GetTableSource(table);
+						if (result != null)
+							return result;
+					}
+				}
+			}
 
 			return null;
 		}
 
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+		public override bool IsDependedOn(SqlTable table)
 		{
-			var clone = new SqlUpdateStatement((SelectQuery)SelectQuery.Clone(objectTree, doClone));
+			// do not allow to optimize out Update table
+			if (Update == null)
+				return false;
 
-			if (_update != null)
-				clone._update = (SqlUpdateClause)_update.Clone(objectTree, doClone);
-
-			if (With != null)
-				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
-
-			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
-
-			objectTree.Add(this, clone);
-
-			return clone;
+			return null != Update.Find(table, static (table, e) =>
+			{
+				return e switch
+				{
+					SqlTable t => QueryHelper.IsEqualTables(t, table),
+					SqlField f => QueryHelper.IsEqualTables(f.Table as SqlTable, table),
+					_          => false,
+				};
+			});
 		}
 
-		public override IEnumerable<IQueryElement> EnumClauses()
+		public void AfterSetAliases()
 		{
-			if (_update != null)
-				yield return _update;
+			if (Output?.OutputColumns != null)
+			{
+				var columnAliases = new Dictionary<string,string?>();
+
+				foreach (var item in Update.Items)
+				{
+					switch (item.Column)
+					{
+						case SqlColumn { Expression : SqlField field } col :
+							columnAliases.Add(field.PhysicalName, col.Alias);
+							break;
+						case SqlField field :
+							columnAliases.Add(field.PhysicalName, field.Alias);
+							break;
+					}
+				}
+
+				foreach (var column in Output.OutputColumns)
+				{
+					switch (column)
+					{
+						case SqlColumn { Expression : SqlField field } col:
+						{
+							if (columnAliases.TryGetValue(field.Name, out var alias) && alias != null && alias != col.Alias)
+								col.Alias = alias;
+							break;
+						}
+						case SqlField field:
+						{
+							if (columnAliases.TryGetValue(field.Name, out var alias) && alias != null && alias != field.Alias)
+								field.PhysicalName = alias;
+							break;
+						}
+					}
+				}
+			}
 		}
-
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
-		{
-			if (_update?.Table == table)
-				return table;
-
-			return SelectQuery.GetTableSource(table);
-		}
-
 	}
 }

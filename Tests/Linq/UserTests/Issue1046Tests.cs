@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -17,39 +16,40 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Column(IsDiscriminator = true)]
-			public string TargetName { get; set; }
+			public string? TargetName { get; set; }
 		}
 
 		[Table("Task")]
-		class TaskTable
+		sealed class TaskTable
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
 
 			[Column(IsDiscriminator = true)]
-			public string TargetName { get; set; }
+			public string? TargetName { get; set; }
 
 			[Column]
-			public string BdaValue { get; set; }
+			public string? BdaValue { get; set; }
 		}
 
 		[Table("Task")]
-		class BdaTask: Task
+		sealed class BdaTask : Task
 		{
 			public const string Code = "bda.Requests";
 
 			[Column]
-			public string BdaValue { get; set; }
+			public string? BdaValue { get; set; }
 		}
 
-		class SelectAllAndExpand<T>
+		sealed class SelectAllAndExpand<T>
 		{
-			public T Instance { get; set; }
+			public T Instance { get; set; } = default!;
 		}
 
 		[Test]
 		public void TestInheritance([DataSources] string context)
 		{
+			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context))
 			{
 				using (db.CreateLocalTable<TaskTable>())

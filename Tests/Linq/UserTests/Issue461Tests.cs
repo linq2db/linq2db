@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 
 using LinqToDB.Data;
 
@@ -30,10 +26,9 @@ namespace Tests.UserTests
 
 			public int ParentId;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				var vh = obj as ValueHolder;
-				if (vh == null)
+				if (!(obj is ValueHolder vh))
 					return false;
 
 				if (ReferenceEquals(this, vh))
@@ -50,12 +45,11 @@ namespace Tests.UserTests
 
 		public class ValueValueHolder
 		{
-			public ValueHolder Child;
+			public ValueHolder? Child;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				var vvh = obj as ValueValueHolder;
-				if (vvh == null)
+				if (!(obj is ValueValueHolder vvh))
 					return false;
 
 				if (ReferenceEquals(this, vvh))
@@ -76,7 +70,6 @@ namespace Tests.UserTests
 		[Test]
 		public void SelectToAnonimousTest1([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var result = (from sep in db.Parent
@@ -90,10 +83,8 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-#if !APPVEYOR
 				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
-#endif
+					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new
@@ -113,7 +104,6 @@ namespace Tests.UserTests
 		[Test]
 		public void SelectToAnonymousTest2([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var result = (from sep in db.Parent
@@ -128,10 +118,8 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-#if !APPVEYOR
 				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
-#endif
+					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new
@@ -152,7 +140,6 @@ namespace Tests.UserTests
 		[Test]
 		public void SelectToTypeTest1([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var result = (from sep in db.Parent
@@ -166,10 +153,8 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-#if !APPVEYOR
 				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
-#endif
+					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -189,7 +174,6 @@ namespace Tests.UserTests
 		[Test]
 		public void SelectToTypeTest2([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var result = (from sep in db.Parent
@@ -204,10 +188,8 @@ namespace Tests.UserTests
 								   }).FirstOrDefault()
 							  }).ToList();
 
-#if !APPVEYOR
 				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
-#endif
+					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -227,17 +209,12 @@ namespace Tests.UserTests
 
 		// Sybase do not supports limiting subqueries
 		[Test]
-		public void SelectPlainTest1([DataSources(TestProvName.AllSybase, ProviderName.Informix, ProviderName.SapHana)] string context)
+		public void SelectPlainTest1([DataSources(TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Parent.Select(p =>    Child.Select(c => c.ParentID + 1).FirstOrDefault());
 				var result   = db.Parent.Select(p => db.Child.Select(c => c.ParentID + 1).FirstOrDefault());
-
-#if !APPVEYOR
-				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
-#endif
 
 				AreEqual(expected, result);
 			}
@@ -245,17 +222,12 @@ namespace Tests.UserTests
 
 		// Sybase do not supports limiting subqueries
 		[Test]
-		public void SelectPlainTest2([DataSources(TestProvName.AllSybase, ProviderName.Informix, ProviderName.SapHana)] string context)
+		public void SelectPlainTest2([DataSources(TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var expected =    Parent.Select(p => new { Id = p.ParentID, V =    Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
 				var result   = db.Parent.Select(p => new { Id = p.ParentID, V = db.Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
-
-#if !APPVEYOR
-				if (db is DataConnection connection)
-					Console.WriteLine(connection.LastQuery);
-#endif
 
 				AreEqual(expected, result);
 			}

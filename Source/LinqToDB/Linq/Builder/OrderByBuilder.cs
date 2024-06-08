@@ -4,14 +4,16 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
+	using SqlQuery;
 	using LinqToDB.Expressions;
 
-	class OrderByBuilder : MethodCallBuilder
+	sealed class OrderByBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			if (!methodCall.IsQueryable("OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending"))
+			if (!methodCall.IsQueryable(MethodNames))
 				return false;
 
 			var body = ((LambdaExpression)methodCall.Arguments[1].Unwrap()).Body.Unwrap();
@@ -37,34 +39,72 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sequence.SelectQuery.Select.TakeValue != null ||
-				sequence.SelectQuery.Select.SkipValue != null)
+			var wrapped = false;
+
+			if (sequence.SelectQuery.Select.HasModifier)
+			{
 				sequence = new SubQueryContext(sequence);
+				wrapped = true;
+			}
 
+			var isContinuousOrder = !sequence.SelectQuery.OrderBy.IsEmpty && methodCall.Method.Name.StartsWith("Then");
 			var lambda  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			var sparent = sequence.Parent;
-			var order   = new ExpressionContext(buildInfo.Parent, sequence, lambda);
-			var body    = lambda.Body.Unwrap();
-			var sql     = builder.ConvertExpressions(order, body, ConvertFlags.Key);
+			SqlInfo[] sql;
 
-			builder.ReplaceParent(order, sparent);
+			while (true)
+			{
+				var sparent = sequence.Parent;
+				var order   = new ExpressionContext(buildInfo.Parent, sequence, lambda);
+				var body    = lambda.Body.Unwrap();
+				    sql     = builder.ConvertExpressions(order, body, ConvertFlags.Key, null);
 
-			if (!methodCall.Method.Name.StartsWith("Then") && !Configuration.Linq.DoNotClearOrderBys)
+				builder.ReplaceParent(order, sparent);
+
+				// Do not create subquery for ThenByExtensions
+				if (wrapped || isContinuousOrder)
+					break;
+
+				// handle situation when order by uses complex field
+
+				var isComplex = false;
+
+				foreach (var sqlInfo in sql)
+				{
+					// immutable expressions will be removed later
+					//
+					var isImmutable = QueryHelper.IsConstant(sqlInfo.Sql);
+					if (isImmutable)
+						continue;
+
+					// possible we have to extend this list
+					//
+					isComplex = null != sqlInfo.Sql.Find(QueryElementType.SqlQuery);
+					if (isComplex)
+						break;
+				}
+
+				if (!isComplex)
+					break;
+
+				sequence = new SubQueryContext(sequence);
+				wrapped = true;
+			}
+
+			if (!isContinuousOrder && !builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 
 			foreach (var expr in sql)
 			{
-				var e = builder.ConvertSearchCondition(sequence, expr.Sql);
-				sequence.SelectQuery.OrderBy.Expr(e, methodCall.Method.Name.EndsWith("Descending"));
+				// we do not need sorting by immutable values, like "Some", Func("Some"), "Some1" + "Some2". It does nothing for ordering
+				// IT: Actually it does. See ORDER BY ordinal position.
+				//
+				if (!builder.DataOptions.SqlOptions.EnableConstantExpressionInOrderBy && QueryHelper.IsConstant(expr.Sql))
+					continue;
+
+				sequence.SelectQuery.OrderBy.Expr(expr.Sql, methodCall.Method.Name.EndsWith("Descending"));
 			}
 
 			return sequence;
-		}
-
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
-		{
-			return null;
 		}
 	}
 }

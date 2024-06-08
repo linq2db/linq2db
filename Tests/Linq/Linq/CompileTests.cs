@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -37,8 +36,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, 1).ToList().Count());
-				Assert.AreEqual(2, query(db, 2).ToList().Count());
+				Assert.AreEqual(1, query(db, 1).ToList().Count);
+				Assert.AreEqual(2, query(db, 2).ToList().Count);
 			}
 		}
 
@@ -50,8 +49,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, 1).ToList().Count());
-				Assert.AreEqual(2, query(db, 2).ToList().Count());
+				Assert.AreEqual(1, query(db, 1).ToList().Count);
+				Assert.AreEqual(2, query(db, 2).ToList().Count);
 			}
 		}
 
@@ -63,8 +62,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, (await query(db, 1)).Count());
-				Assert.AreEqual(2, (await query(db, 2)).Count());
+				Assert.AreEqual(1, (await query(db, 1)).Count);
+				Assert.AreEqual(2, (await query(db, 2)).Count);
 			}
 		}
 
@@ -75,19 +74,19 @@ namespace Tests.Linq
 				db.GetTable<Child>().Where(c => n.Contains(c.ParentID)));
 
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(3, query(db, new[] { 1, 2 }).ToList().Count());
+				Assert.AreEqual(3, query(db, new[] { 1, 2 }).ToList().Count);
 		}
 
 		[Test]
 		public void CompiledTest5([DataSources] string context)
 		{
-			var query = CompiledQuery.Compile((ITestDataContext db, object[] ps) =>
-				db.Parent.Where(p => p.ParentID == (int)ps[0] && p.Value1 == (int?)ps[1]));
+			var query = CompiledQuery.Compile((ITestDataContext db, object?[] ps) =>
+				db.Parent.Where(p => p.ParentID == (int)ps[0]! && p.Value1 == (int?)ps[1]));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, new object[] { 1, 1    }).ToList().Count());
-				Assert.AreEqual(1, query(db, new object[] { 2, null }).ToList().Count());
+				Assert.AreEqual(1, query(db, new object[] { 1, 1     }).ToList().Count);
+				Assert.AreEqual(1, query(db, new object?[] { 2, null }).ToList().Count);
 			}
 		}
 
@@ -99,7 +98,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				var _ = query(db).ToList().Count();
+				var _ = query(db).ToList().Count;
 			}
 		}
 
@@ -110,79 +109,140 @@ namespace Tests.Linq
 				db.GetTable<Child>());
 
 			using (var db = GetDataContext(context))
-				query(db).ToList().Count();
+				query(db).ToList();
 		}
 
-		// NS16 disabled due to intermittent crashes
-		// System.InvalidCastException: Unable to cast object of type 'System.Int64' to type 'System.Int32'.
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test, Order(100)]
-		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
+			using (new DisableBaseline("Multi-threading"))
+			{
+				var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.GetTable<Parent>().Where(p => p.ParentID == n).First().ParentID);
 
-			const int count = 100;
+				const int count = 100;
 
-			var threads = new Thread[count];
-			var results = new int   [count, 2];
+				var threads = new Task[count];
+				var results = new int [count, 2];
 
-			for (var i = 0; i < count; i++)
-			{
-				var n = i;
-
-				threads[i] = new Thread(() =>
+				for (var i = 0; i < count; i++)
 				{
-					using (var db = GetDataContext(context))
+					var n = i;
+
+					threads[i] = Task.Run(() =>
 					{
-						var id = (n % 6) + 1;
-						results[n,0] = id;
-						results[n,1] = query(db, id);
-					}
-				});
+						using (var db = GetDataContext(context))
+						{
+							var id = (n % 6) + 1;
+							results[n, 0] = id;
+							results[n, 1] = query(db, id);
+						}
+					});
+				}
+
+				Task.WaitAll(threads);
+
+				for (var i = 0; i < count; i++)
+					Assert.AreEqual(results[i, 0], results[i, 1]);
 			}
+		}
 
-			for (var i = 0; i < count; i++)
-				threads[i].Start();
+		[Test, Order(100)]
+		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (new DisableBaseline("Multi-threading"))
+			{
+				var query = CompiledQuery.Compile((ITestDataContext db, int n, int n2) =>
+					db.GetTable<Parent>().Where(p => p.ParentID == n && n == n2).First().ParentID);
 
-			for (var i = 0; i < count; i++)
-				threads[i].Join();
+				const int count = 100;
 
-			for (var i = 0; i < count; i++)
-				Assert.AreEqual(results[i,0], results[i,1]);
+				var threads = new Task[count];
+				var results = new int [count, 2];
+
+				for (var i = 0; i < count; i++)
+				{
+					var n = i;
+
+					threads[i] = Task.Run(() =>
+					{
+						using (var db = GetDataContext(context))
+						{
+							var id = (n % 6) + 1;
+							results[n, 0] = id;
+							results[n, 1] = query(db, id, id);
+						}
+					});
+				}
+
+				Task.WaitAll(threads);
+
+				for (var i = 0; i < count; i++)
+					Assert.AreEqual(results[i, 0], results[i, 1]);
+			}
 		}
 
 		[Test]
 		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			var threads = new Thread[100];
-			var results = new int   [100,2];
-
-			for (var i = 0; i < 100; i++)
+			using (new DisableBaseline("Multi-threading"))
 			{
-				var n = i;
+				var threads = new Task[100];
+				var results = new int [100,2];
 
-				threads[i] = new Thread(() =>
+				for (var i = 0; i < 100; i++)
 				{
-					using (var db = GetDataContext(context))
+					var n = i;
+
+					threads[i] = Task.Run(() =>
 					{
-						var id = (n % 6) + 1;
-						results[n,0] = id;
-						results[n,1] = db.Parent.Where(p => p.ParentID == id).First().ParentID;
-					}
-				});
+						using (var db = GetDataContext(context))
+						{
+							var id = (n % 6) + 1;
+							results[n, 0] = id;
+							results[n, 1] = db.Parent.Where(p => p.ParentID == id).First().ParentID;
+						}
+					});
+				}
+
+				Task.WaitAll(threads);
+
+				for (var i = 0; i < 100; i++)
+					Assert.AreEqual(results[i, 0], results[i, 1]);
 			}
-
-			for (var i = 0; i < 100; i++)
-				threads[i].Start();
-
-			for (var i = 0; i < 100; i++)
-				threads[i].Join();
-
-			for (var i = 0; i < 100; i++)
-				Assert.AreEqual(results[i,0], results[i,1]);
 		}
-#endif
+
+		[Test]
+		public void ConcurrentTest3([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (new DisableBaseline("Multi-threading"))
+			{
+				var threadCount = 100;
+
+				var threads = new Task[threadCount];
+				var results = new int [threadCount,2];
+
+				for (var i = 0; i < threadCount; i++)
+				{
+					var n = i;
+
+					threads[i] = Task.Run(() =>
+					{
+						using (var db = GetDataContext(context))
+						{
+							var id = (n % 6) + 1;
+							results[n, 0] = id;
+							results[n, 1] = db.Parent.Where(p => p.ParentID == id && id >= 0).First().ParentID;
+						}
+					});
+				}
+
+				Task.WaitAll(threads);
+
+				for (var i = 0; i < threadCount; i++)
+					Assert.AreEqual(results[i, 0], results[i, 1]);
+			}
+		}
 
 		[Test]
 		public void ParamTest1([DataSources] string context)
@@ -197,7 +257,7 @@ namespace Tests.Linq
 				});
 
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(2, query(db, 2).ToList().Count());
+				Assert.AreEqual(2, query(db, 2).ToList().Count);
 		}
 
 		[Test]
@@ -276,6 +336,7 @@ namespace Tests.Linq
 				select x;
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void ContainsTest([DataSources] string context)
 		{
@@ -289,6 +350,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task ContainsTestAsync([DataSources] string context)
 		{
@@ -302,6 +364,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void AnyTest([DataSources] string context)
 		{
@@ -315,6 +378,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AnyTestAsync([DataSources] string context)
 		{
@@ -328,6 +392,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void AnyTest2([DataSources] string context)
 		{
@@ -341,6 +406,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AnyTestAsync2([DataSources] string context)
 		{

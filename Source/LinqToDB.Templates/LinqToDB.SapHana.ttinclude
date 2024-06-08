@@ -1,5 +1,6 @@
-<#@ include file="LinqToDB.ttinclude" #>
-<#@ import namespace="LinqToDB.DataProvider.SapHana"   #>
+<#@ include file="T4Model.ttinclude"  once="true"    #>
+<#@ include file="LinqToDB.ttinclude" once="true"    #>
+<#@ import namespace="LinqToDB.DataProvider.SapHana" #>
 <#
 	Model.Usings.Add("LinqToDB.DataProvider.SapHana");
 	Model.Usings.Add("System.Reflection");
@@ -12,7 +13,7 @@
 			t.Parameters.Select(p => (Func<string>)(() => p.Type.ToTypeName() + " " + p.ParameterName)),
 			() => new []
 			{
-				String.Concat("return GetTable<",t.TypeName,">(this, (MethodInfo) MethodBase.GetCurrentMethod(),"),
+				String.Concat("return GetTable<",t.TypeName,">(this, (MethodInfo) MethodBase.GetCurrentMethod()", EnableNullableReferenceTypes ? "!" : "" ,","),
 				String.Join(",", t.Parameters.Select(p => p.ParameterName)),
 				");"
 			});
@@ -63,7 +64,7 @@
 					Size          = pr.Size,
 					ParameterName = pr.ParameterName,
 					ParameterType = pr.ParameterType,
-					SystemType    = pr.SystemType,
+					SystemType    = pr.SystemType ?? typeof(object),
 					DataType      = pr.DataType.ToString(),
 					IsNullable    = pr.IsNullable
 				})
@@ -77,9 +78,9 @@
 		public List<Parameter> Parameters;
 	}
 
-	LinqToDB.Data.DataConnection GetSapHanaConnection(string connectionString)
+	LinqToDB.Data.DataConnection GetSapHanaConnection(string connectionString, string providerName = null)
 	{
-		return LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(connectionString);
+		return LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(connectionString, providerName);
 	}
 
 	LinqToDB.Data.DataConnection GetSapHanaConnection(string server, string schema, string uid, string password)
@@ -87,18 +88,18 @@
 		return GetSapHanaConnection(string.Format("Server={0};Current Schema={1};UserID={2};Password={3};", server, schema, uid, password));
 	}
 
-	void LoadSapHanaMetadata(DataConnection dataConnection)
+	public void LoadSapHanaMetadata(DataConnection dataConnection)
 	{
 		LoadMetadata(dataConnection);
 	}
 
-	void LoadSapHanaMetadata(string connectionString)
+	public void LoadSapHanaMetadata(string connectionString, string providerName = null)
 	{
-		using (var dataConnection = GetSapHanaConnection(connectionString))
+		using (var dataConnection = GetSapHanaConnection(connectionString, providerName))
 			LoadMetadata(dataConnection);
 	}
 
-	void LoadSapHanaMetadata(string server, string schema, string uid, string password)
+	public void LoadSapHanaMetadata(string server, string schema, string uid, string password)
 	{
 		using (var dataConnection = GetSapHanaConnection(server, schema, uid, password))
 			LoadMetadata(dataConnection);

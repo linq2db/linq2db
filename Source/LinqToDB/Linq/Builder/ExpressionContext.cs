@@ -1,20 +1,20 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class ExpressionContext : SequenceContextBase
 	{
-		public ExpressionContext(IBuildContext parent, IBuildContext[] sequences, LambdaExpression lambda)
+		public ExpressionContext(IBuildContext? parent, IBuildContext[] sequences, LambdaExpression lambda)
 			: base(parent, sequences, lambda)
 		{
 		}
 
-		public ExpressionContext(IBuildContext parent, IBuildContext sequence, LambdaExpression lambda)
+		public ExpressionContext(IBuildContext? parent, IBuildContext sequence, LambdaExpression lambda)
 			: base(parent, sequence, lambda)
 		{
 		}
@@ -25,12 +25,12 @@ namespace LinqToDB.Linq.Builder
 			SelectQuery = selectQuery;
 		}
 
-		public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+		public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
 			throw new InvalidOperationException();
 		}
 
-		public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
 			if (level == 0)
 			{
@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Key   :
 					case ConvertFlags.All   :
 						{
-							var root = expression.GetRootObject(Builder.MappingSchema);
+							var root = Builder.GetRootObject(expression)!;
 
 							if (root.NodeType == ExpressionType.Parameter)
 							{
@@ -51,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 									if (ctx != this)
 										return ctx.ConvertToSql(expression, 0, flags);
 
-									for (var i = 0; i < Lambda.Parameters.Count; i++)
+									for (var i = 0; i < Lambda!.Parameters.Count; i++)
 									{
 										if (ReferenceEquals(root, Lambda.Parameters[i]))
 											return root == expression ?
@@ -64,6 +64,20 @@ namespace LinqToDB.Linq.Builder
 										Sequence.ConvertToSql(expression, level + 1, flags);
 								}
 							}
+							else if (root.IsNullValue())
+							{
+								return Array<SqlInfo>.Empty;
+							}
+							// except null, handled above
+							else if (root.NodeType == ExpressionType.Constant)
+							{
+								return Builder.ConvertExpressions(this, expression!, flags, null);
+							}
+							else if (root.NodeType == ExpressionType.New)
+							{
+								if (((NewExpression)root).Arguments.Count == 0)
+									return Array<SqlInfo>.Empty;
+							}
 
 							break;
 						}
@@ -75,19 +89,24 @@ namespace LinqToDB.Linq.Builder
 			throw new InvalidOperationException();
 		}
 
-		public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+		public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
 			throw new InvalidOperationException();
 		}
 
-		public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
 			switch (requestFlag)
 			{
 				case RequestFor.Root        :
-					return new IsExpressionResult(Lambda.Parameters.Count == 1 ?
-						ReferenceEquals(expression, Lambda.Parameters[0]) :
-						Lambda.Parameters.Any(p => ReferenceEquals(expression, p)));
+					if (Lambda!.Parameters.Count == 1)
+						return IsExpressionResult.GetResult(ReferenceEquals(expression, Lambda.Parameters[0]));
+
+					foreach (var param in Lambda.Parameters)
+						if (ReferenceEquals(expression, param))
+							return IsExpressionResult.True;
+
+					return IsExpressionResult.False;
 
 				case RequestFor.Table       :
 				case RequestFor.Association :
@@ -101,11 +120,16 @@ namespace LinqToDB.Linq.Builder
 
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
-						if (Lambda.Parameters.Count > 1)
+						if (levelExpression is ContextRefExpression contextRef)
+						{
+							return contextRef.BuildContext.IsExpression(expression, level, requestFlag);
+						}
+
+						if (Lambda!.Parameters.Count > 1)
 						{
 							for (var i = 0; i < Lambda.Parameters.Count; i++)
 							{
-								var root = expression.GetRootObject(Builder.MappingSchema);
+								var root = Builder.GetRootObject(expression);
 
 								if (ReferenceEquals(root, Lambda.Parameters[i]))
 								{
@@ -125,11 +149,11 @@ namespace LinqToDB.Linq.Builder
 			return IsExpressionResult.False;
 		}
 
-		public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+		public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
-			var root = expression.GetRootObject(Builder.MappingSchema);
+			var root = Builder.GetRootObject(expression);
 
-			for (var i = 0; i < Lambda.Parameters.Count; i++)
+			for (var i = 0; i < Lambda!.Parameters.Count; i++)
 				if (ReferenceEquals(root, Lambda.Parameters[i]))
 				{
 					if (expression == root)
@@ -137,8 +161,9 @@ namespace LinqToDB.Linq.Builder
 					return Sequences[i].GetContext(expression, level + 1, buildInfo);
 				}
 
-			switch (expression.NodeType)
+			switch (expression!.NodeType)
 			{
+				case ExpressionType.Default    :
 				case ExpressionType.Constant   :
 				case ExpressionType.New        :
 				case ExpressionType.MemberInit : return null;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -12,13 +11,13 @@ namespace Tests.Linq
 	[TestFixture]
 	public class OrderByDistinctTests : TestBase
 	{
-		class OrderByDistinctData
+		sealed class OrderByDistinctData
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 
 			[Column]
-			public string DuplicateData { get; set; }
+			public string DuplicateData { get; set; } = null!;
 
 			[Column]
 			public int OrderData1 { get; set; }
@@ -180,6 +179,7 @@ namespace Tests.Linq
 			}
 		}
 
+		// if this test fails for mysql, check that you have no ONLY_FULL_GROUP_BY option set
 		[Test]
 		public void OrderByDistinctTest([DataSources(ProviderName.SqlCe)] string context)
 		{
@@ -408,7 +408,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderBySubQuery([DataSources(ProviderName.SqlCe)] string context)
+		public void OrderBySubQuery([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GetTestData();
 
@@ -435,10 +435,6 @@ namespace Tests.Linq
 						t.DuplicateData,
 						Count = subQuery2.Where(s => s.DuplicateData == t.DuplicateData).Count()
 					};
-
-				var selectQuery = query.GetSelectQuery();
-				var info = new QueryInformation(selectQuery);
-				info.GetParentQuery(selectQuery);
 
 				var result = query.ToArray();
 			}

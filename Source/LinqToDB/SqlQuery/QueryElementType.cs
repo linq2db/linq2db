@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public enum QueryElementType
 	{
@@ -8,17 +6,23 @@ namespace LinqToDB.SqlQuery
 		SqlFunction,
 		SqlParameter,
 		SqlExpression,
+		SqlObjectExpression,
 		SqlBinaryExpression,
 		SqlValue,
 		SqlDataType,
 		SqlTable,
+		SqlAliasPlaceholder,
+		SqlRow,
 
 		ExprPredicate,
 		NotExprPredicate,
 		ExprExprPredicate,
 		LikePredicate,
+		SearchStringPredicate,
 		BetweenPredicate,
 		IsNullPredicate,
+		IsDistinctPredicate,
+		IsTruePredicate,
 		InSubQueryPredicate,
 		InListPredicate,
 		FuncLikePredicate,
@@ -45,15 +49,29 @@ namespace LinqToDB.SqlQuery
 		CteClause,
 		SqlCteTable,
 		SqlRawSqlTable,
+		SqlValuesTable,
+
+		OutputClause,
 
 		SelectStatement,
 		InsertStatement,
 		InsertOrUpdateStatement,
 		UpdateStatement,
 		DeleteStatement,
+		MergeStatement,
+		MultiInsertStatement,
+			ConditionalInsertClause,
 
 		CreateTableStatement,
 		DropTableStatement,
 		TruncateTableStatement,
+
+		SqlTableLikeSource,
+		MergeOperationClause,
+
+		GroupingSet,
+
+		Comment,
+		SqlID
 	}
 }

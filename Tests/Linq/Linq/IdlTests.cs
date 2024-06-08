@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Extensions;
@@ -19,8 +18,16 @@ namespace Tests.Linq
 		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
 		public class IdlProvidersAttribute : IncludeDataSourcesAttribute
 		{
-			public IdlProvidersAttribute()
-				: base(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllSqlServer2005Plus)
+			private static readonly string[] Supported = new[]
+			{
+				TestProvName.AllMySql,
+				TestProvName.AllSQLite,
+				TestProvName.AllClickHouse,
+				TestProvName.AllSqlServer,
+				TestProvName.AllAccess
+			};
+			public IdlProvidersAttribute(params string[] except)
+				: base(Split(Supported).Except(Split(except)).ToArray())
 			{
 			}
 		}
@@ -51,20 +58,20 @@ namespace Tests.Linq
 			}
 
 			[SequenceName(ProviderName.Firebird, "PersonID")]
-			[Column("PersonID"), Identity, PrimaryKey] public int    ID        { get; set; }
-			[Column, NotNull]                          public string FirstName { get; set; }
-			[Column, NotNull]                          public string LastName;
-			[Column, Nullable]                         public string MiddleName;
-			[Column]                                   public Gender Gender;
+			[Column("PersonID"), Identity, PrimaryKey] public int     ID        { get; set; }
+			[Column, NotNull]                          public string  FirstName { get; set; } = null!;
+			[Column, NotNull]                          public string  LastName = null!;
+			[Column, Nullable]                         public string? MiddleName;
+			[Column]                                   public Gender  Gender;
 
 			public string Name => FirstName + " " + LastName;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				return Equals(obj as PersonWithId);
 			}
 
-			public bool Equals(PersonWithId other)
+			public bool Equals(PersonWithId? other)
 			{
 				if (ReferenceEquals(null, other)) return false;
 				if (ReferenceEquals(this, other)) return true;
@@ -131,7 +138,7 @@ namespace Tests.Linq
 
 		public class PersonWithObjectId : WithObjectIdBase, IHasObjectId2
 		{
-			public string FistName { get; set; }
+			public string FistName { get; set; } = null!;
 		}
 
 		public struct NullableObjectId
@@ -363,7 +370,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestDistinctWithGroupBy([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var source = db.Parent.ToList();
 				// Ensure that the data source has duplicate values.
@@ -397,7 +404,7 @@ namespace Tests.Linq
 		[Test]
 		public void ImplicitCastTest([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var people =
 					from p in db.Person
@@ -417,7 +424,7 @@ namespace Tests.Linq
 		[Test]
 		public void ListvsArrayTest([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var st = "John";
 
@@ -438,7 +445,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConcatJoinOrderByTest([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var query = from y in
 								((from pat in db.Patient
@@ -462,7 +469,7 @@ namespace Tests.Linq
 		{
 			var types2 = new[] { TypeValue.Value2, TypeValue.Value3, TypeValue.Value4 };
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var result = (from x in db.Parent4 where types2.Contains(x.Value1) select x)
 					.ToList();
@@ -474,7 +481,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestQueryWithInterface([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var persons =
 					from x in db.Person
@@ -499,9 +506,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestBugCountWithOrderBy([IdlProviders] string context)
+		public void TestCountWithOrderBy([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q1 = db.Person.OrderBy(x => x.ID);
 
@@ -515,20 +522,36 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestUpdateWithTargetByAssociationProperty([IdlProviders] string context)
+		public void TestCountWithOrderByAsync([IdlProviders] string context)
 		{
-			TestUpdateByAssociationProperty(context,true);
+			using (var db = GetDataConnection(context))
+			{
+				var q1 = db.Person.OrderBy(x => x.ID);
+
+				var q2 = from p in q1
+					join p2 in db.Person on p.ID equals p2.ID
+					select p2;
+
+				Assert.DoesNotThrowAsync(() => q2.MaxAsync(x => x.ID));
+				Assert.DoesNotThrowAsync(() => q2.CountAsync());
+			}
 		}
 
 		[Test]
-		public void TestSetUpdateWithoutTargetByAssociationProperty([IdlProviders] string context)
+		public void TestUpdateWithTargetByAssociationProperty([IdlProviders(TestProvName.AllClickHouse)] string context)
+		{
+			TestUpdateByAssociationProperty(context, true);
+		}
+
+		[Test]
+		public void TestSetUpdateWithoutTargetByAssociationProperty([IdlProviders(TestProvName.AllClickHouse)] string context)
 		{
 			TestUpdateByAssociationProperty(context, false);
 		}
 
 		private void TestUpdateByAssociationProperty(string context, bool useUpdateWithTarget)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				const int childId = 10000;
 				const int parentId = 20000;
@@ -579,7 +602,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestComparePropertyOfEnumTypeToVariableInSubquery([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var gender = Gender.Other;
 				var q = from x in db.Patient
@@ -594,29 +617,32 @@ namespace Tests.Linq
 		[Test]
 		public void ConcatOrderByTest([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q = from p in db.Person
 							where p.ID < 0
-							select new { Rank = 0, FirstName = (string)null, LastName = (string)null };
+							select new { Rank = 0, FirstName = (string?)null, LastName = (string?)null };
 				var q2 =
 					q.Concat(
 						from p in db.Person
 						select new { Rank = p.ID, p.FirstName, p.LastName });
 
-				var resultquery = (from x in q2 orderby x.Rank, x.FirstName, x.LastName select x).ToString();
+				var resultquery = (from x in q2 orderby x.Rank, x.FirstName, x.LastName select x).ToString()!;
+				
+				TestContext.WriteLine(resultquery);
 
 				var rqr = resultquery.LastIndexOf("ORDER BY", System.StringComparison.OrdinalIgnoreCase);
 				var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
 
-				Assert.That(rqp.Count(),  Is.EqualTo(3));
+				Assert.That(rqp.Length, Is.EqualTo(3));
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestContainsForNullableDateTimeWithOnlyNullValue1([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var dates = new DateTime?[] { null };
 
@@ -631,10 +657,11 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestContainsForNullableDateTimeWithOnlyNullValue2([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// Ensures that  the query works properly in memory
 				// ReSharper disable RemoveToList.2
@@ -647,10 +674,11 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestContainsForNullableDateTimeWithNullAndNotNullValues1([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var date  = new DateTime(2009,  9,  24,  9, 19, 29,  90);
 				var dates = new DateTime?[] { null, date };
@@ -666,10 +694,11 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestContainsForNullableDateTimeWithNullAndNotNullValues2([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// Ensures that  the query works properly in memory
 				// ReSharper disable RemoveToList.2
@@ -712,8 +741,8 @@ namespace Tests.Linq
 			public GenericConcatQuery(ITestDataContext ds, object[] args)
 				: base(ds)
 			{
-				@p1 = (System.String)args[0];
-				@p2 = (System.Int32)args[1];
+				@p1 = (string)args[0];
+				@p2 = (int)   args[1];
 			}
 
 			public override IEnumerable<object> Query()
@@ -732,7 +761,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestMono01([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ds = new IdlPatientSource(db);
 				var t = "A";
@@ -752,7 +781,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestMono03([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 				Assert.That(new GenericConcatQuery(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null);
 		}
 
@@ -761,14 +790,14 @@ namespace Tests.Linq
 			return source1.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					typeof(Queryable).GetMethodEx("Concat").MakeGenericMethod(typeof(TSource)),
+					typeof(Queryable).GetMethodEx("Concat")!.MakeGenericMethod(typeof(TSource)),
 					new[] { source1.Expression, Expression.Constant(source2, typeof (IEnumerable<TSource>)) }));
 		}
 
 		[Test]
 		public void TestMonoConcat([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ds = new IdlPatientSource(db);
 				var t  = "A";
@@ -783,7 +812,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestMonoConcat2([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ds = new IdlPatientSource(db);
 				var t  = "A";
@@ -794,7 +823,7 @@ namespace Tests.Linq
 				Assert.That(query1.ToList(), Is.Not.Null);
 			}
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ds = new IdlPatientSource(db);
 				var t  = "A";
@@ -818,20 +847,20 @@ namespace Tests.Linq
 
 	public class IdlPerson
 	{
-		public IdlTests.ObjectId Id { get; set; }
-		public string Name { get; set; }
+		public IdlTests.ObjectId Id   { get; set; }
+		public string?           Name { get; set; }
 	}
 
 	public class IdlGrandChild
 	{
-		public IdlTests.ObjectId ParentID { get; set; }
-		public IdlTests.ObjectId ChildID { get; set; }
+		public IdlTests.ObjectId ParentID     { get; set; }
+		public IdlTests.ObjectId ChildID      { get; set; }
 		public IdlTests.ObjectId GrandChildID { get; set; }
 	}
 
 	public class IdlPatientEx : IdlPatient
 	{
-		public IdlPerson Person { get; set; }
+		public IdlPerson Person { get; set; } = null!;
 	}
 
 	public class IdlPatientSource
@@ -847,9 +876,9 @@ namespace Tests.Linq
 		{
 				return m_dc.GrandChild.Select(x => new IdlGrandChild
 					{
-						ChildID = new IdlTests.ObjectId {Value = x.ChildID.Value},
-						GrandChildID = new IdlTests.ObjectId { Value = x.GrandChildID.Value },
-						ParentID = new IdlTests.ObjectId { Value = x.ParentID.Value }
+						ChildID      = new IdlTests.ObjectId {Value = x.ChildID!.Value},
+						GrandChildID = new IdlTests.ObjectId { Value = x.GrandChildID!.Value },
+						ParentID     = new IdlTests.ObjectId { Value = x.ParentID!.Value }
 					});
 		}
 

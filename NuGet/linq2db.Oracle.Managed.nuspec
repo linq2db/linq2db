@@ -5,20 +5,30 @@
 		<title>LINQ to Oracle (ODP.NET) Managed</title>
 		<description>
 			LINQ to Oracle is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+			Install this package only if you want to use database model scaffolding using T4 templates (requires Visual Studio or Rider), otherwise you should use linq2db package.
 		</description>
 		<summary>
 			This package includes a T4 template to generate data models for Oracle database and references to the linq2db and odp.net.managed nugets.
 			Oracle data provider for .NET will still need to be installed on the production or development machine in order to connect to Oracle.
 		</summary>
 		<tags>linq linq2db Oracle LinqToDB ORM database DB SQL</tags>
+		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net40">
-				<dependency id="linq2db"                  version="2.6.0"/>
-				<dependency id="Oracle.ManagedDataAccess" version="12.2.1100"/>
+			<group targetFramework="net45">
+				<dependency id="linq2db"                       version="5.0.0"    />
+				<dependency id="Oracle.ManagedDataAccess"      version="19.20.0"  />
+			</group>
+			<group targetFramework="net462">
+				<dependency id="linq2db"                       version="5.0.0"    />
+				<dependency id="Oracle.ManagedDataAccess"      version="21.11.0"  />
 			</group>
 			<group targetFramework="netstandard2.0">
-				<dependency id="linq2db"                       version="2.6.0"/>
-				<dependency id="Oracle.ManagedDataAccess.Core" version="2.18.3"/>
+				<dependency id="linq2db"                       version="5.0.0"    />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.200" />
+			</group>
+			<group targetFramework="netstandard2.1">
+				<dependency id="linq2db"                       version="5.0.0"    />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="3.21.110" />
 			</group>
 		</dependencies>
 		<contentFiles>
@@ -26,19 +36,25 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net46\Oracle.ManagedDataAccess.dll"  target="tools" />
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"               target="tools" />
-		
-		<file src="Oracle\linq2db.Oracle.props"                                    target="build\linq2db.Oracle.Managed.props" />
-		
-		<file src="Oracle\*.*"                                                     target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="t4models\*.ttinclude"                                           target="contentFiles\any\any\LinqToDB.Templates"/>
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
-		<file src="..\Source\LinqToDB.Templates\*.Oracle.ttinclude"                target="contentFiles\any\any\LinqToDB.Templates" />
-		
-		<file src="Oracle\*.*"                                                     target="content\LinqToDB.Templates" exclude="**\*.props" />
-		<file src="t4models\*.ttinclude"                                           target="content\LinqToDB.Templates"/>
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                       target="content\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
-		<file src="..\Source\LinqToDB.Templates\*.Oracle.ttinclude"                target="content\LinqToDB.Templates" />
+		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
+
+		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Oracle.ManagedDataAccess.dll"      target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                                                                              />
+
+		<file src="..\NuGet\Oracle\linq2db.Oracle.props"                             target="build\linq2db.Oracle.Managed.props"                                                                 />
+
+		<file src="..\NuGet\Oracle\*.*"                                              target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\*.props"              />
+		<file src="..\NuGet\t4models\*.ttinclude"                                    target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                   />
+		<file src="..\Source\LinqToDB.Templates\*.Oracle.ttinclude"                  target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+
+		<file src="..\NuGet\Oracle\*.*"                                              target="content\LinqToDB.Templates"                                       exclude="**\*.props"              />
+		<file src="..\NuGet\t4models\*.ttinclude"                                    target="content\LinqToDB.Templates"                                                                         />
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
+		<file src="..\Source\LinqToDB.Templates\*.Oracle.ttinclude"                  target="content\LinqToDB.Templates"                                                                         />
 	</files>
 </package>

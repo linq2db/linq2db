@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq.Expressions;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,148 +11,169 @@ namespace LinqToDB.DataProvider.Firebird
 	using Mapping;
 	using SqlProvider;
 
-	public class FirebirdDataProvider : DynamicDataProviderBase
+	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
-		public FirebirdDataProvider()
-			: this(ProviderName.Firebird, new FirebirdMappingSchema(), null)
+		public FirebirdDataProvider() : this(ProviderName.Firebird, null)
 		{
 		}
 
 		public FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
-			: this(ProviderName.Firebird, new FirebirdMappingSchema(), sqlOptimizer)
+			: this(ProviderName.Firebird, sqlOptimizer)
 		{
 		}
 
-		protected FirebirdDataProvider(string name, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer)
-			: base(name, mappingSchema)
+		protected FirebirdDataProvider(string name, ISqlOptimizer? sqlOptimizer)
+			: base(name, GetMappingSchema(), FirebirdProviderAdapter.Instance)
 		{
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
+			SqlProviderFlags.IsExistsPreferableForContains     = true;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
-			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
-			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+			SetProviderField<DbDataReader, TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
+			SetProviderField<DbDataReader, DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
 
 			_sqlOptimizer = sqlOptimizer ?? new FirebirdSqlOptimizer(SqlProviderFlags);
 		}
 
-		static DateTime GetDateTime(IDataReader dr, int idx)
+		static DateTime GetDateTime(DateTime value)
 		{
-			var value = dr.GetDateTime(idx);
-
 			if (value.Year == 1970 && value.Month == 1 && value.Day == 1)
 				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
 
 			return value;
 		}
 
-		Action<IDbDataParameter> _setTimeStamp;
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsGlobalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData       |
+			TableOptions.IsTransactionTemporaryData |
+			TableOptions.CreateIfNotExists          |
+			TableOptions.DropIfExists;
 
-		public    override string ConnectionNamespace => "FirebirdSql.Data.FirebirdClient";
-		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.FbConnection, {ConnectionNamespace}";
-		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.FbDataReader, {ConnectionNamespace}";
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			//                                             ((FbParameter)parameter).FbDbType =  FbDbType.   TimeStamp;
-			_setTimeStamp = GetSetParameter(connectionType, "FbParameter",         "FbDbType", "FbDbType", "TimeStamp");
-		}
-
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
-		{
-			return new FirebirdSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new FirebirdSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions)
 		{
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new FirebirdSchemaProvider();
+			return new FirebirdSchemaProvider(this);
 		}
-#endif
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
 			return true;
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			if (value is bool)
+			if (value is bool boolVal)
 			{
-				value = (bool)value ? "1" : "0";
+				value    = boolVal ? "1" : "0";
 				dataType = dataType.WithDataType(DataType.Char);
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+#if NET6_0_OR_GREATER
+			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
+			{
+				value = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
+
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
+			FirebirdProviderAdapter.FbDbType? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.SByte      : dataType = dataType.WithDataType(DataType.Int16);   break;
-				case DataType.UInt16     : dataType = dataType.WithDataType(DataType.Int32);   break;
-				case DataType.UInt32     : dataType = dataType.WithDataType(DataType.Int64);   break;
-				case DataType.UInt64     : dataType = dataType.WithDataType(DataType.Decimal); break;
-				case DataType.VarNumeric : dataType = dataType.WithDataType(DataType.Decimal); break;
-				case DataType.DateTime   :
-				case DataType.DateTime2  : _setTimeStamp(parameter);    return;
+				case DataType.DateTimeOffset : type = FirebirdProviderAdapter.FbDbType.TimeStampTZ; break;
 			}
 
-			base.SetParameterType(parameter, dataType);
+			if (type != null)
+			{
+				var param = TryGetProviderParameter(dataConnection, parameter);
+				if (param != null)
+				{
+					Adapter.SetDbType(param, type.Value);
+					return;
+				}
+			}
+
+			switch (dataType.DataType)
+			{
+				case DataType.SByte      : dataType = dataType.WithDataType(DataType.Int16);    break;
+				case DataType.UInt16     : dataType = dataType.WithDataType(DataType.Int32);    break;
+				case DataType.UInt32     : dataType = dataType.WithDataType(DataType.Int64);    break;
+				case DataType.UInt64     : dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.VarNumeric : dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.DateTime2  : dataType = dataType.WithDataType(DataType.DateTime); break;
+			}
+
+			base.SetParameterType(dataConnection, parameter, dataType);
+		}
+
+		static MappingSchema GetMappingSchema()
+		{
+			return new FirebirdMappingSchema.FirebirdProviderMappingSchema();
 		}
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
 			return new FirebirdBulkCopy().BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? FirebirdTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(FirebirdOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (delete)
-				throw new LinqToDBException("Firebird MERGE statement does not support DELETE by source.");
-
-			return new FirebirdMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
+			return new FirebirdBulkCopy().BulkCopyAsync(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(FirebirdOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
 		}
 
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
+#if NATIVE_ASYNC
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (delete)
-				throw new LinqToDBException("Firebird MERGE statement does not support DELETE by source.");
-
-			return new FirebirdMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+			return new FirebirdBulkCopy().BulkCopyAsync(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(FirebirdOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
 		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new FirebirdMergeBuilder<TTarget, TSource>(connection, merge);
-		}
+#endif
 
 		#endregion
 	}

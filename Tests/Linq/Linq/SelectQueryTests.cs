@@ -9,15 +9,15 @@ namespace Tests.Linq
 	public class SelectQueryTests : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix interval cannot be created from non-literal value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
 		[Test]
-		public void UnionTest([DataSources(ProviderName.Access)] string context)
+		public void UnionTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
@@ -43,13 +43,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix interval cannot be created from non-literal value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
 		[Test]
-		public void SubQueryTest([DataSources(ProviderName.Access)] string context)
+		public void SubQueryTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			var data = GenerateData();
 			using (var db = GetDataContext(context))
-			using (new AllowMultipleQuery())
 			using (db.CreateLocalTable(data))
 			{
 				var values1 = from t in db.GetTable<SampleClass>()
@@ -80,11 +79,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinTest([DataSources(ProviderName.Access)] string context)
+		public void JoinTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			var data = GenerateData();
 			using (var db = GetDataContext(context))
-			using (new AllowMultipleQuery())
 			using (db.CreateLocalTable(data))
 			{
 				var query = from t in db.GetTable<SampleClass>()
@@ -113,11 +111,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinScalarTest([DataSources(ProviderName.Access)] string context)
+		public void JoinScalarTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			var data = GenerateData();
 			using (var db = GetDataContext(context))
-			using (new AllowMultipleQuery())
 			using (db.CreateLocalTable(data))
 			{
 				var query = from t in db.GetTable<SampleClass>()
@@ -175,5 +172,26 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(4284)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4284")]
+		public void Select_GroupBy_SelectAgain([DataSources(TestProvName.AllSqlServer2017)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person
+					.GroupBy(g => g.LastName)
+					.Select(group => new
+					{
+						LastName         = group.Key,
+						Count            = group.Count(),
+						HighestFirstName = group.Max(x => x.FirstName)
+					})
+					.Where(summary => summary.Count > 5)
+					.Skip(1).Take(1)
+					.Select(x => new { Count = Sql.Ext.Count().Over().ToValue(), Value = x });
+
+				query.ToArray();
+			}
+		}
 	}
 }

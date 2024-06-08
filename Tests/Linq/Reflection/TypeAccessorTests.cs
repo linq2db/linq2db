@@ -1,6 +1,4 @@
-﻿using System;
-
-using LinqToDB.Reflection;
+﻿using LinqToDB.Reflection;
 
 using NUnit.Framework;
 
@@ -9,7 +7,7 @@ namespace Tests.Reflection
 	[TestFixture]
 	public class TypeAccessorTests : TestBase
 	{
-		class TestClass1
+		sealed class TestClass1
 		{
 			public int Prop1
 			{
@@ -18,7 +16,7 @@ namespace Tests.Reflection
 
 			public int Prop2 { get; set; }
 
-			public TestClass2 Class2;
+			public TestClass2? Class2;
 
 			int _prop3;
 			public int Prop3
@@ -27,18 +25,18 @@ namespace Tests.Reflection
 			}
 		}
 
-		class TestClass2
+		sealed class TestClass2
 		{
-			public TestClass3  Class3;
+			public TestClass3? Class3;
 			public TestStruct1 Struct1;
 		}
 
-		class TestClass3
+		sealed class TestClass3
 		{
-			public TestClass4 Class4;
+			public TestClass4? Class4;
 		}
 
-		class TestClass4
+		sealed class TestClass4
 		{
 			public int Field1;
 		}
@@ -111,7 +109,7 @@ namespace Tests.Reflection
 
 			ta["Class2.Class3.Class4.Field1"].SetValue(obj, 42);
 
-			Assert.That(obj.Class2.Class3.Class4.Field1, Is.EqualTo(42));
+			Assert.That(obj.Class2!.Class3!.Class4!.Field1, Is.EqualTo(42));
 		}
 
 		[Test]
@@ -122,7 +120,7 @@ namespace Tests.Reflection
 
 			ta["Class2.Struct1.Class3.Class4.Field1"].SetValue(obj, 42);
 
-			Assert.That(obj.Class2.Struct1.Class3.Class4.Field1, Is.EqualTo(42));
+			Assert.That(obj.Class2!.Struct1.Class3.Class4!.Field1, Is.EqualTo(42));
 		}
 
 		[Test]

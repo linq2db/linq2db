@@ -5,19 +5,20 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	using LinqToDB;
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
 	public class Issue358Tests : TestBase
 	{
-#if !MONO
 		enum TestIssue358Enum
 		{
 			Value1,
 			Value2
 		}
 
-		class TestIssue358Class
+		sealed class TestIssue358Class
 		{
 			public TestIssue358Enum? MyEnum;
 			public TestIssue358Enum  MyEnum2;
@@ -26,76 +27,60 @@ namespace Tests.UserTests
 		[Test]
 		public void HasIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var qry =
 					from p in db.GetTable<TestIssue358Class>()
 					where p.MyEnum != TestIssue358Enum.Value1
 					select p;
 
-				var sql = qry.ToString();
+				var sql = qry.ToString()!;
+				TestContext.WriteLine(sql);
 
-				Assert.That(sql.IndexOf("NULL"), Is.GreaterThan(0), sql);
+				Assert.That(sql, Does.Contain("NULL"));
 			}
 		}
 
 		[Test]
-		public void ContainsHasIsNull()
+		public void ContainsDoesNotHaveIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var filter = new[] {TestIssue358Enum.Value2};
 
 				var qry =
 					from p in db.GetTable<TestIssue358Class>()
-					where !!filter.Contains(p.MyEnum.Value)
+					where !!filter.Contains(p.MyEnum!.Value)
 					select p;
 
-				var sql = qry.ToString();
+				var sql = qry.ToString()!;
+				TestContext.WriteLine(sql);
 
-				Assert.That(sql.IndexOf("NULL"), Is.GreaterThan(0), sql);
-			}
-		}
-
-		[Test]
-		public void ContainsHasIsNullWithoutComparasionNullCheck()
-		{
-			using (new WithoutComparisonNullCheck())
-			using (var db = new TestDataConnection())
-			{
-				var filter = new[] {TestIssue358Enum.Value2};
-
-				var qry =
-					from p in db.GetTable<TestIssue358Class>()
-					where !!filter.Contains(p.MyEnum.Value)
-					select p;
-
-				var sql = qry.ToString();
-
-				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
+				Assert.That(sql, Does.Not.Contain("NULL"));
 			}
 		}
 
 		[Test]
 		public void NoIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var qry =
 					from p in db.GetTable<TestIssue358Class>()
 					where p.MyEnum2 != TestIssue358Enum.Value1
 					select p;
 
-				var sql = qry.ToString();
+				var sql = qry.ToString()!;
+				TestContext.WriteLine(sql);
 
-				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
+				Assert.That(sql, Does.Not.Contain("NULL"));
 			}
 		}
 
 		[Test]
 		public void ContainsNoIsNull()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var filter = new[] {TestIssue358Enum.Value2};
 
@@ -104,18 +89,21 @@ namespace Tests.UserTests
 					where !filter.Contains(p.MyEnum2)
 					select p;
 
-				var sql = qry.ToString();
+				var sql = qry.ToString()!;
+				TestContext.WriteLine(sql);
 
-				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
+				Assert.That(sql, Does.Not.Contain("NULL"));
 			}
 		}
 
 		static LinqDataTypes2 FixData(LinqDataTypes2 data)
 		{
+			data = data.Clone();
 			data.StringValue = null;
 			return data;
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test1([DataSources] string context)
 		{
@@ -127,17 +115,19 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(FixData,
-					   Types2.Where(_ => !_.BoolValue.Value),
-					db.Types2.Where(_ => !_.BoolValue.Value));
+					   Types2.Where(_ => !_.BoolValue!.Value),
+					db.Types2.Where(_ => !_.BoolValue!.Value));
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test3([DataSources] string context)
 		{
@@ -149,12 +139,13 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var bigintFilter = new Int64?[] {2};
+				var bigintFilter = new long?[] {2};
 
 				AreEqual(FixData,
 					   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)),
@@ -162,26 +153,26 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test4WithoutComparasionNullCheck([DataSources] string context)
 		{
-			using (new WithoutComparisonNullCheck())
-			using (var db = GetDataContext(context))
-			{
-				var bigintFilter = new Int64?[] {2};
+			using var _  = new CompareNullsAsValuesOption(false);
+			using var db = GetDataContext(context);
+			var bigintFilter = new long?[] {2};
 
-				AreEqual(FixData,
-					   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue) && _.BigIntValue != null),
-					db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
-			}
+			AreEqual(FixData,
+				   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue) && _.BigIntValue != null),
+				db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var boolFilter = new bool? [] {true};
+				var boolFilter = new bool?[] {true};
 
 				AreEqual(FixData,
 					   Types2.Where(_ => !boolFilter.  Contains(_.BoolValue)),
@@ -189,12 +180,13 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var bigintFilter = new Int64?[] {2};
+				var bigintFilter = new long?[] {2};
 
 				AreEqual(FixData,
 					   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) == false),
@@ -202,12 +194,13 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var boolFilter = new bool? [] {true};
+				var boolFilter = new bool?[] {true};
 
 				AreEqual(FixData,
 					   Types2.Where(_ => boolFilter.  Contains(_.BoolValue) == false),
@@ -215,12 +208,13 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var bigintFilter = new Int64?[] {2};
+				var bigintFilter = new long?[] {2};
 
 				AreEqual(FixData,
 					   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) != true),
@@ -228,6 +222,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test9([DataSources] string context)
 		{
@@ -241,12 +236,13 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test81([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var bigintFilter = new Int64?[] {2};
+				var bigintFilter = new long?[] {2};
 
 				AreEqual(FixData,
 					   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue)),
@@ -254,6 +250,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test91([DataSources] string context)
 		{
@@ -267,12 +264,13 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test82([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var bigintFilter = new Int64?[] {2};
+				var bigintFilter = new long?[] {2};
 
 				AreEqual(FixData,
 					   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) == true),
@@ -280,6 +278,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test92([DataSources] string context)
 		{
@@ -292,6 +291,5 @@ namespace Tests.UserTests
 					db.Types2.Where(_ => boolFilter.  Contains(_.BoolValue) == true));
 			}
 		}
-#endif
 	}
 }

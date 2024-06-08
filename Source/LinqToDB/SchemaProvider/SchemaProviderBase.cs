@@ -1,56 +1,94 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SchemaProvider
 {
 	using Common;
+	using Common.Internal;
 	using Data;
-	using Extensions;
+	using SqlProvider;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
-		protected abstract DataType             GetDataType   (string dataType, string columnType, long? length, int? prec, int? scale);
-		protected abstract List<TableInfo>      GetTables     (DataConnection dataConnection);
-		protected abstract List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection);
-		protected abstract List<ColumnInfo>     GetColumns    (DataConnection dataConnection);
-		protected abstract List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection);
-		protected abstract string               GetProviderSpecificTypeNamespace();
+		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, int? length, int? precision, int? scale);
+		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection, GetSchemaOptions options);
+		protected abstract IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options);
+		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
+		protected abstract IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options);
+		protected abstract string?                             GetProviderSpecificTypeNamespace();
 
-		protected virtual List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
-		{
-			return null;
-		}
+		protected virtual List<ProcedureInfo>?          GetProcedures         (DataConnection dataConnection, GetSchemaOptions options) => null;
+		protected virtual List<ProcedureParameterInfo>? GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options) => null;
 
-		protected virtual List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
-		{
-			return null;
-		}
-
-		// TODO: get rid of list and use dictionary, because now we perform joins on this property and it will produce
-		// invalid results if list contains duplicates
-		protected List<DataTypeInfo> DataTypes;
-		protected HashSet<string>    IncludedSchemas;
-		protected HashSet<string>    ExcludedSchemas;
-		protected HashSet<string>    IncludedCatalogs;
-		protected HashSet<string>    ExcludedCatalogs;
+		protected HashSet<string?>   IncludedSchemas  = null!;
+		protected HashSet<string?>   ExcludedSchemas  = null!;
+		protected HashSet<string?>   IncludedCatalogs = null!;
+		protected HashSet<string?>   ExcludedCatalogs = null!;
 		protected bool               GenerateChar1AsString;
-		protected DataTable          DataTypesSchema;
+		protected DataTable          DataTypesSchema  = null!;
 
-		protected Dictionary<string,DataTypeInfo> DataTypesDic;
+		private Dictionary<string, DataTypeInfo> DataTypesDic = null!;
+		private Dictionary<string, DataTypeInfo> ProviderSpecificDataTypesDic = null!;
+
+		private Dictionary<int, DataTypeInfo> DataTypesByProviderDbTypeDic = null!;
+		private Dictionary<int, DataTypeInfo> ProviderSpecificDataTypesByProviderDbTypeDic = null!;
 
 		/// <summary>
 		/// If true, provider doesn't support schema-only procedure execution and will execute procedure for real.
 		/// </summary>
 		protected virtual bool GetProcedureSchemaExecutesProcedure => false;
 
-		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
+		protected string? BuildSchemaFilter(GetSchemaOptions? options, string defaultSchema, Action<StringBuilder, string> stringLiteralBuilder)
 		{
-			if (options == null)
-				options = new GetSchemaOptions();
+			var schemas = new HashSet<string>();
+			schemas.Add(defaultSchema);
+
+			if (options != null)
+			{
+				if (options.IncludedSchemas != null && options.IncludedSchemas.Length > 0)
+				{
+					schemas.Clear();
+					foreach (var schema in options.IncludedSchemas)
+						if (!string.IsNullOrEmpty(schema))
+							schemas.Add(schema!);
+				}
+
+				if (options.ExcludedSchemas != null && options.ExcludedSchemas.Length > 0)
+					foreach (var schema in options.ExcludedSchemas)
+						if (!string.IsNullOrEmpty(schema))
+							schemas.Remove(schema!);
+			}
+
+			if (schemas.Count == 0)
+				return null;
+
+			var first = true;
+
+			using var sb = Pools.StringBuilder.Allocate();
+			sb.Value.Append("IN (");
+
+			foreach (var schema in schemas)
+			{
+				if (!first)
+					sb.Value.Append(", ");
+				else
+					first = false;
+
+				stringLiteralBuilder(sb.Value, schema);
+			}
+
+			sb.Value.Append(')');
+
+			return sb.Value.ToString();
+		}
+
+		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
+		{
+			options ??= new GetSchemaOptions();
 
 			IncludedSchemas       = GetHashSet(options.IncludedSchemas,  options.StringComparer);
 			ExcludedSchemas       = GetHashSet(options.ExcludedSchemas,  options.StringComparer);
@@ -58,16 +96,40 @@ namespace LinqToDB.SchemaProvider
 			ExcludedCatalogs      = GetHashSet(options.ExcludedCatalogs, options.StringComparer);
 			GenerateChar1AsString = options.GenerateChar1AsString;
 
-			var dbConnection = (DbConnection)dataConnection.Connection;
+			var dbConnection = dataConnection.Connection;
 
 			InitProvider(dataConnection);
 
-			DataTypes    = GetDataTypes(dataConnection);
-			DataTypesDic = new Dictionary<string,DataTypeInfo>(DataTypes.Count, StringComparer.OrdinalIgnoreCase);
+			DataTypesDic                                 = new Dictionary<string,DataTypeInfo>(StringComparer.OrdinalIgnoreCase);
+			ProviderSpecificDataTypesDic                 = new Dictionary<string,DataTypeInfo>(StringComparer.OrdinalIgnoreCase);
+			DataTypesByProviderDbTypeDic                 = new Dictionary<int   ,DataTypeInfo>();
+			ProviderSpecificDataTypesByProviderDbTypeDic = new Dictionary<int   ,DataTypeInfo>();
 
-			foreach (var dt in DataTypes)
-				if (!DataTypesDic.ContainsKey(dt.TypeName))
-					DataTypesDic.Add(dt.TypeName, dt);
+			foreach (var dt in GetDataTypes(dataConnection))
+				if (dt.ProviderSpecific)
+				{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+					ProviderSpecificDataTypesDic.TryAdd(dt.TypeName, dt);
+					ProviderSpecificDataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
+#else
+					if (!ProviderSpecificDataTypesDic.ContainsKey(dt.TypeName))
+						ProviderSpecificDataTypesDic.Add(dt.TypeName, dt);
+					if (!ProviderSpecificDataTypesByProviderDbTypeDic.ContainsKey(dt.ProviderDbType))
+						ProviderSpecificDataTypesByProviderDbTypeDic.Add(dt.ProviderDbType, dt);
+#endif
+				}
+				else
+				{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+					DataTypesDic.TryAdd(dt.TypeName, dt);
+					DataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
+#else
+					if (!DataTypesDic.ContainsKey(dt.TypeName))
+						DataTypesDic.Add(dt.TypeName, dt);
+					if (!DataTypesByProviderDbTypeDic.ContainsKey(dt.ProviderDbType))
+						DataTypesByProviderDbTypeDic.Add(dt.ProviderDbType, dt);
+#endif
+				}
 
 			List<TableSchema>     tables;
 			List<ProcedureSchema> procedures;
@@ -76,7 +138,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				tables =
 				(
-					from t in GetTables(dataConnection)
+					from t in GetTables(dataConnection, options)
 					where
 						(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(t.SchemaName))  &&
 						(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(t.SchemaName))  &&
@@ -99,12 +161,12 @@ namespace LinqToDB.SchemaProvider
 					}
 				).ToList();
 
-				var pks = GetPrimaryKeys(dataConnection);
+				var pks = GetPrimaryKeys(dataConnection, tables, options);
 
 				#region Columns
 
 				var columns =
-					from c  in GetColumns(dataConnection)
+					from c  in GetColumns(dataConnection, options)
 
 					join pk in pks
 						on c.TableID + "." + c.Name equals pk.TableID + "." + pk.ColumnName into g2
@@ -113,14 +175,14 @@ namespace LinqToDB.SchemaProvider
 					join t  in tables on c.TableID equals t.ID
 
 					orderby c.Ordinal
-					select new { t, c, dt = GetDataType(c.DataType), pk };
+					select new { t, c, dt = GetDataType(c.DataType, c.Type, options), pk };
 
 				foreach (var column in columns)
 				{
 					var dataType   = column.c.DataType;
-					var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale);
+					var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, options);
 					var isNullable = column.c.IsNullable;
-					var columnType = column.c.ColumnType ?? GetDbType(dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, null, null, null);
+					var columnType = column.c.ColumnType ?? GetDbType(options, dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, null, null, null);
 
 					column.t.Columns.Add(new ColumnSchema
 					{
@@ -130,8 +192,8 @@ namespace LinqToDB.SchemaProvider
 						IsNullable           = isNullable,
 						MemberName           = ToValidName(column.c.Name),
 						MemberType           = ToTypeName(systemType, isNullable),
-						SystemType           = systemType ?? typeof(object),
-						DataType             = GetDataType(dataType, column.c.ColumnType, column.c.Length, column.c.Precision, column.c.Scale),
+						SystemType           = systemType,
+						DataType             = column.c.Type ?? GetDataType(dataType, column.c.ColumnType, column.c.Length, column.c.Precision, column.c.Scale),
 						ProviderSpecificType = GetProviderSpecificType(dataType),
 						SkipOnInsert         = column.c.SkipOnInsert || column.c.IsIdentity,
 						SkipOnUpdate         = column.c.SkipOnUpdate || column.c.IsIdentity,
@@ -142,6 +204,7 @@ namespace LinqToDB.SchemaProvider
 						Length               = column.c.Length,
 						Precision            = column.c.Precision,
 						Scale                = column.c.Scale,
+						Ordinal              = column.c.Ordinal,
 					});
 				}
 
@@ -149,7 +212,7 @@ namespace LinqToDB.SchemaProvider
 
 				#region FK
 
-				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection) : new List<ForeignKeyInfo>();
+				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection, tables, options) : Array<ForeignKeyInfo>.Empty;
 
 				foreach (var fk in fks.OrderBy(f => f.Ordinal))
 				{
@@ -165,7 +228,7 @@ namespace LinqToDB.SchemaProvider
 					var otherColumn =
 					(
 						from c in otherTable.Columns
-						where string.Compare(c.ColumnName, fk.OtherColumn, stringComparison)  == 0
+						where string.Equals(c.ColumnName, fk.OtherColumn, stringComparison)
 						select c
 					).SingleOrDefault();
 
@@ -196,7 +259,7 @@ namespace LinqToDB.SchemaProvider
 
 				#endregion
 
-				var pst = GetProviderSpecificTables(dataConnection);
+				var pst = GetProviderSpecificTables(dataConnection, options);
 
 				if (pst != null)
 					tables.AddRange(pst);
@@ -208,13 +271,14 @@ namespace LinqToDB.SchemaProvider
 			{
 				#region Procedures
 
-				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-				var procs       = GetProcedures(dataConnection);
-				var procPparams = GetProcedureParameters(dataConnection);
+				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
+				var procs       = GetProcedures(dataConnection, options);
 				var n           = 0;
 
 				if (procs != null)
 				{
+					var procParams = (IEnumerable<ProcedureParameterInfo>?)GetProcedureParameters(dataConnection, procs, options) ?? Array<ProcedureParameterInfo>.Empty;
+
 					procedures =
 					(
 						from sp in procs
@@ -223,44 +287,45 @@ namespace LinqToDB.SchemaProvider
 							(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(sp.SchemaName))  &&
 							(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(sp.CatalogName)) &&
 							(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(sp.CatalogName))
-						join p  in procPparams on sp.ProcedureID equals p.ProcedureID
+						join p  in procParams on sp.ProcedureID equals p.ProcedureID
 						into gr
 						select new ProcedureSchema
 						{
 							CatalogName         = sp.CatalogName,
 							SchemaName          = sp.SchemaName,
+							PackageName         = sp.PackageName,
 							ProcedureName       = sp.ProcedureName,
-							MemberName          = ToValidName(sp.ProcedureName),
+							MemberName          = ToValidName($"{sp.PackageName}{(sp.PackageName != null ? "_" : null)}{sp.ProcedureName}"),
 							IsFunction          = sp.IsFunction,
 							IsTableFunction     = sp.IsTableFunction,
 							IsResultDynamic     = sp.IsResultDynamic,
 							IsAggregateFunction = sp.IsAggregateFunction,
 							IsDefaultSchema     = sp.IsDefaultSchema,
+							Description         = sp.Description,
 							Parameters          =
 							(
 								from pr in gr
 
-								join dt in DataTypes
-									on pr.DataType equals dt.TypeName into g1
-								from dt in g1.DefaultIfEmpty()
+								let dt         = GetDataType(pr.DataType, null, options)
 
-								let systemType = GetSystemType(pr.DataType, null, dt, pr.Length, pr.Precision, pr.Scale)
+								let systemType = GetSystemType(pr.DataType, pr.DataTypeExact, dt, pr.Length, pr.Precision, pr.Scale, options)
 
 								orderby pr.Ordinal
 								select new ParameterSchema
 								{
 									SchemaName           = pr.ParameterName,
-									SchemaType           = GetDbType(pr.DataType, dt, pr.Length, pr.Precision, pr.Scale, pr.UDTCatalog, pr.UDTSchema, pr.UDTName),
+									SchemaType           = GetDbType(options, pr.DataType, dt, pr.Length, pr.Precision, pr.Scale, pr.UDTCatalog, pr.UDTSchema, pr.UDTName),
 									IsIn                 = pr.IsIn,
 									IsOut                = pr.IsOut,
 									IsResult             = pr.IsResult,
 									Size                 = pr.Length,
-									ParameterName        = ToValidName(pr.ParameterName ?? "par" + ++n),
+									ParameterName        = ToValidName(pr.ParameterName ?? FormattableString.Invariant($"par{++n}")),
 									ParameterType        = ToTypeName(systemType, true),
-									SystemType           = systemType ?? typeof(object),
-									DataType             = GetDataType(pr.DataType, null, pr.Length, pr.Precision, pr.Scale),
+									SystemType           = systemType,
+									DataType             = GetDataType(pr.DataType, pr.DataTypeExact, pr.Length, pr.Precision, pr.Scale),
 									ProviderSpecificType = GetProviderSpecificType(pr.DataType),
-									IsNullable           = pr.IsNullable
+									IsNullable           = pr.IsNullable,
+									Description          = pr.Description
 								}
 							).ToList()
 						} into ps
@@ -283,12 +348,11 @@ namespace LinqToDB.SchemaProvider
 						{
 							if (!procedure.IsResultDynamic && (!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
 							{
-								var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
-									 procedure.CatalogName,
-									 procedure.SchemaName,
-									 procedure.ProcedureName).ToString();
+								var commandText = sqlProvider.BuildObjectName(
+									new (),
+									new (procedure.ProcedureName, Database: procedure.CatalogName, Schema: procedure.SchemaName, Package: procedure.PackageName)).ToString();
 
-								LoadProcedureTableSchema(dataConnection, procedure, commandText, tables);
+								LoadProcedureTableSchema(dataConnection, options, procedure, commandText, tables);
 							}
 
 							options.ProcedureLoadingProgress(procedures.Count, current++);
@@ -315,8 +379,8 @@ namespace LinqToDB.SchemaProvider
 
 			return ProcessSchema(new DatabaseSchema
 			{
-				DataSource                    = GetDataSourceName(dbConnection),
-				Database                      = GetDatabaseName  (dbConnection),
+				DataSource                    = GetDataSourceName(dataConnection),
+				Database                      = GetDatabaseName  (dataConnection),
 				ServerVersion                 = dbConnection.ServerVersion,
 				Tables                        = tables,
 				Procedures                    = procedures,
@@ -328,9 +392,9 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual StringComparison ForeignKeyColumnComparison(string column) => StringComparison.Ordinal;
 
-		protected static HashSet<string> GetHashSet(string[] data, IEqualityComparer<string> comparer)
+		protected static HashSet<string?> GetHashSet(string?[]? data, IEqualityComparer<string?> comparer)
 		{
-			var set = new HashSet<string>(comparer ?? StringComparer.OrdinalIgnoreCase);
+			var set = new HashSet<string?>(comparer ?? StringComparer.OrdinalIgnoreCase);
 
 			if (data == null)
 				return set;
@@ -341,15 +405,8 @@ namespace LinqToDB.SchemaProvider
 			return set;
 		}
 
-		protected virtual List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection)
-		{
-			return null;
-		}
-
-		protected virtual List<ProcedureSchema> GetProviderSpecificProcedures(DataConnection dataConnection)
-		{
-			return null;
-		}
+		protected virtual List<TableSchema>?     GetProviderSpecificTables    (DataConnection dataConnection, GetSchemaOptions options) => null;
+		protected virtual List<ProcedureSchema>? GetProviderSpecificProcedures(DataConnection dataConnection) => null;
 
 		/// <summary>
 		/// Builds table function call command.
@@ -371,7 +428,11 @@ namespace LinqToDB.SchemaProvider
 		}
 
 		protected virtual void LoadProcedureTableSchema(
-			DataConnection dataConnection, ProcedureSchema procedure, string commandText, List<TableSchema> tables)
+			DataConnection    dataConnection,
+			GetSchemaOptions  options,
+			ProcedureSchema   procedure,
+			string            commandText,
+			List<TableSchema> tables)
 		{
 			CommandType     commandType;
 			DataParameter[] parameters;
@@ -380,7 +441,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				commandText = BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
 				commandType = CommandType.Text;
-				parameters  = new DataParameter[0];
+				parameters  = Array<DataParameter>.Empty;
 			}
 			else
 			{
@@ -390,31 +451,36 @@ namespace LinqToDB.SchemaProvider
 
 			try
 			{
-				var st = GetProcedureSchema(dataConnection, commandText, commandType, parameters);
+				var st = GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
 
 				procedure.IsLoaded = true;
 
-				if (st != null)
+				if (st != null && st.Columns.Count > 0)
 				{
-					procedure.ResultTable = new TableSchema
+					var columns = GetProcedureResultColumns(st, options);
+
+					if (columns.Count > 0)
 					{
-						IsProcedureResult = true,
-						TypeName          = ToValidName(procedure.ProcedureName + "Result"),
-						ForeignKeys       = new List<ForeignKeySchema>(),
-						Columns           = GetProcedureResultColumns(st)
-					};
+						procedure.ResultTable = new TableSchema
+						{
+							IsProcedureResult = true,
+							TypeName          = ToValidName(procedure.ProcedureName + "Result"),
+							ForeignKeys       = new List<ForeignKeySchema>(),
+							Columns           = columns
+						};
 
-					foreach (var column in procedure.ResultTable.Columns)
-						column.Table = procedure.ResultTable;
+						foreach (var column in procedure.ResultTable.Columns)
+							column.Table = procedure.ResultTable;
 
-					procedure.SimilarTables =
-					(
-						from  t in tables
-						where t.Columns.Count == procedure.ResultTable.Columns.Count
-						let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
-						where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
-						select t
-					).ToList();
+						procedure.SimilarTables =
+						(
+							from t in tables
+							where t.Columns.Count == procedure.ResultTable.Columns.Count
+							let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
+							where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
+							select t
+						).ToList();
+					}
 				}
 			}
 			catch (Exception ex)
@@ -427,15 +493,17 @@ namespace LinqToDB.SchemaProvider
 		{
 			return new DataParameter
 			{
-				Name = p.ParameterName,
-				Value =
+				Name      = p.ParameterName,
+				Value     =
 					p.SystemType == typeof(string) ?
 						"" :
 						p.SystemType == typeof(DateTime) ?
-							DateTime.Now :
-							DefaultValue.GetValue(p.SystemType),
-				DataType = p.DataType,
-				Size = (int?)p.Size,
+							// use fixed value to generate stable baselines
+							new DateTime(2020, 09, 23) :
+							DefaultValue.GetValue(p.SystemType ?? typeof(object)),
+				DataType  = p.DataType,
+				DbType    = p.SchemaType,
+				Size      = (int?)p.Size,
 				Direction =
 					p.IsIn ?
 						p.IsOut ?
@@ -445,27 +513,35 @@ namespace LinqToDB.SchemaProvider
 			};
 		}
 
-		protected virtual string GetProviderSpecificType(string dataType)
+		protected virtual string? GetProviderSpecificType(string? dataType) => null;
+
+		protected virtual DataTypeInfo? GetDataType(string? typeName, DataType? dataType, GetSchemaOptions options)
 		{
-			return null;
+			if (typeName == null)
+				return null;
+
+			return
+				options.PreferProviderSpecificTypes
+				? (ProviderSpecificDataTypesDic.TryGetValue(typeName, out var dt) ? dt : DataTypesDic                .TryGetValue(typeName, out dt) ? dt : null)
+				: (DataTypesDic                .TryGetValue(typeName, out dt)     ? dt : ProviderSpecificDataTypesDic.TryGetValue(typeName, out dt) ? dt : null);
 		}
 
-		protected DataTypeInfo GetDataType(string typeName)
+		protected DataTypeInfo? GetDataTypeByProviderDbType(int typeId, GetSchemaOptions options)
 		{
-			return DataTypesDic.TryGetValue(typeName, out var dt) ? dt : null;
+			return
+				options.PreferProviderSpecificTypes
+				? (ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out var dt) ? dt : DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt) ? dt : null)
+				: (DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt)     ? dt : ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out dt) ? dt : null);
 		}
 
-		protected virtual DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		protected virtual DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
-			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
-			{
-				return rd.Reader.GetSchemaTable();
-			}
+			using var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters);
+			return rd.Reader!.GetSchemaTable();
 		}
 
-		protected virtual List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		protected virtual List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
 		{
-#if !NETSTANDARD
 			return
 			(
 				from r in resultTable.AsEnumerable()
@@ -473,43 +549,29 @@ namespace LinqToDB.SchemaProvider
 				let columnType = r.Field<string>("DataTypeName")
 				let columnName = r.Field<string>("ColumnName")
 				let isNullable = r.Field<bool>  ("AllowDBNull")
-
-				join dt in DataTypes
-					on columnType equals dt.TypeName into g1
-				from dt in g1.DefaultIfEmpty()
-
-				let length     = r.Field<int> ("ColumnSize")
+				let dt         = GetDataType(columnType, null, options)
+				let length     = r.Field<int?>  ("ColumnSize")
 				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
-				let systemType = GetSystemType(columnType, null, dt, length, precision, scale)
+				let systemType = GetSystemType(columnType, null, dt, length, precision, scale, options)
 
 				select new ColumnSchema
 				{
 					ColumnName           = columnName,
-					ColumnType           = GetDbType(columnType, dt, length, precision, scale, null, null, null),
+					ColumnType           = GetDbType(options, columnType, dt, length, precision, scale, null, null, null),
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = systemType ?? typeof(object),
+					SystemType           = systemType,
 					DataType             = GetDataType(columnType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 					IsIdentity           = r.Field<bool>("IsIdentity"),
 				}
 			).ToList();
-#else
-			return new List<ColumnSchema>();
-#endif
 		}
 
-		protected virtual string GetDataSourceName(DbConnection dbConnection)
-		{
-			return dbConnection.DataSource;
-		}
-
-		protected virtual string GetDatabaseName(DbConnection dbConnection)
-		{
-			return dbConnection.Database;
-		}
+		protected virtual string GetDataSourceName(DataConnection dbConnection) => dbConnection.Connection.DataSource;
+		protected virtual string GetDatabaseName  (DataConnection dbConnection) => dbConnection.Connection.Database;
 
 		protected virtual void InitProvider(DataConnection dataConnection)
 		{
@@ -522,25 +584,21 @@ namespace LinqToDB.SchemaProvider
 		/// <returns>List of database data types.</returns>
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-#if !NETSTANDARD
-			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			DataTypesSchema = dataConnection.Connection.GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
-					TypeName         = t.Field<string>("TypeName"),
-					DataType         = t.Field<string>("DataType"),
+					TypeName         = t.Field<string>("TypeName")!,
+					DataType         = t.Field<string>("DataType")!,
 					CreateFormat     = t.Field<string>("CreateFormat"),
 					CreateParameters = t.Field<string>("CreateParameters"),
 					ProviderDbType   = t.Field<int>   ("ProviderDbType"),
 				})
 				.ToList();
-#else
-			return new List<DataTypeInfo>();
-#endif
 		}
 
-		protected virtual Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		protected virtual Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
 			var systemType = dataTypeInfo != null ? Type.GetType(dataTypeInfo.DataType) : null;
 
@@ -550,9 +608,9 @@ namespace LinqToDB.SchemaProvider
 			return systemType;
 		}
 
-		protected virtual string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale, string udtCatalog, string udtSchema, string udtName)
+		protected virtual string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
-			var dbType = columnType;
+			var dbType = columnType ?? dataType?.TypeName;
 
 			if (dataType != null)
 			{
@@ -561,37 +619,40 @@ namespace LinqToDB.SchemaProvider
 
 				if (!string.IsNullOrWhiteSpace(format) && !string.IsNullOrWhiteSpace(parms))
 				{
-					var paramNames  = parms.Split(',');
-					var paramValues = new object[paramNames.Length];
+					var paramNames  = parms!.Split(',');
+					var paramValues = new object?[paramNames.Length];
 
 					for (var i = 0; i < paramNames.Length; i++)
 					{
-						switch (paramNames[i].Trim().ToLower())
+						switch (paramNames[i].Trim().ToLowerInvariant())
 						{
 							case "size"       :
-							case "length"     : paramValues[i] = length;        break;
-							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length.HasValue ? length.ToString() : null; break;
-							case "precision"  : paramValues[i] = prec;          break;
-							case "scale"      : paramValues[i] = scale.HasValue || paramNames.Length == 2 ? scale : prec; break;
+							case "length"     : paramValues[i] = length; break;
+							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length?.ToString(NumberFormatInfo.InvariantInfo); break;
+							case "precision"  : paramValues[i] = precision;   break;
+							case "scale"      : paramValues[i] = scale.HasValue || paramNames.Length == 2 ? scale : precision; break;
 						}
 					}
 
 					if (paramValues.All(v => v != null))
-						dbType = string.Format(format, paramValues);
+						dbType = string.Format(CultureInfo.InvariantCulture, format, paramValues);
 				}
 			}
 
 			return dbType;
 		}
 
+		private static readonly char[] _nameSeparators = new [] {' ', '\t'};
+
+		// TODO: use proper C# identifier validation procedure
 		public static string ToValidName(string name)
 		{
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
-				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)
-					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
+				var ss = name.Split(_nameSeparators, StringSplitOptions.RemoveEmptyEntries)
+					.Select(s => char.ToUpperInvariant(s[0]) + s.Substring(1));
 
-				name = string.Join("", ss.ToArray());
+				name = string.Concat(ss);
 			}
 
 			if (name.Length > 0 && char.IsDigit(name[0]))
@@ -603,22 +664,29 @@ namespace LinqToDB.SchemaProvider
 				.Replace('-',  '_')
 				.Replace('/',  '_')
 				.Replace('\\', '_')
+				.Replace('\r', '_')
+				.Replace('\n', '_')
+				.Replace('\t', '_')
+				.Replace(':' , '_')
+				.Replace('`' , '_')
 				;
 		}
 
-		public static string ToTypeName(Type type, bool isNullable)
+		public static string ToTypeName(Type? type, bool isNullable)
 		{
 			if (type == null)
 				type = typeof(object);
 
 			var memberType = type.Name;
 
+			if (type.IsArray)
+				memberType = ToTypeName(type.GetElementType(), false) + "[]";
+
 			switch (memberType)
 			{
 				case "Boolean" : memberType = "bool";    break;
 				case "Byte"    : memberType = "byte";    break;
 				case "SByte"   : memberType = "sbyte";   break;
-				case "Byte[]"  : memberType = "byte[]";  break;
 				case "Int16"   : memberType = "short";   break;
 				case "Int32"   : memberType = "int";     break;
 				case "Int64"   : memberType = "long";    break;
@@ -633,7 +701,10 @@ namespace LinqToDB.SchemaProvider
 				case "Object"  : memberType = "object";  break;
 			}
 
-			if (!type.IsClassEx() && isNullable)
+			if (type.IsGenericType)
+				memberType = $"{type.Name.Split('`')[0]}<{string.Join(", ", type.GetGenericArguments().Select(t => ToTypeName(t, false)))}>";
+
+			if (type.IsValueType && isNullable)
 				memberType += "?";
 
 			return memberType;
@@ -691,9 +762,9 @@ namespace LinqToDB.SchemaProvider
 			return databaseSchema;
 		}
 
-		internal static void SetForeignKeyMemberName(GetSchemaOptions schemaOptions, TableSchema table, ForeignKeySchema key)
+		private static void SetForeignKeyMemberName(GetSchemaOptions schemaOptions, TableSchema table, ForeignKeySchema key)
 		{
-			string name = null;
+			string? name = null;
 
 			if (schemaOptions.GetAssociationMemberName != null)
 			{
@@ -707,7 +778,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				name = key.MemberName;
 
-				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
+				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLowerInvariant().EndsWith("id"))
 				{
 					name = key.ThisColumns[0].MemberName;
 					name = name.Substring(0, name.Length - "id".Length).TrimEnd('_');
@@ -728,12 +799,11 @@ namespace LinqToDB.SchemaProvider
 					if (name.EndsWith("_BackReference"))
 						name = name.Substring(0, name.Length - "_BackReference".Length);
 
-					name = string.Join("", name
+					name = string.Concat(name
 						.Split('_')
 						.Where(_ =>
 							_.Length > 0 && _ != table.TableName &&
-							(table.SchemaName == null || table.IsDefaultSchema || _ != table.SchemaName))
-						.ToArray());
+							(table.SchemaName == null || table.IsDefaultSchema || _ != table.SchemaName)));
 
 					var digitEnd = 0;
 					for (var i = name.Length - 1; i >= 0; i--)
@@ -749,7 +819,7 @@ namespace LinqToDB.SchemaProvider
 				}
 
 				if (string.IsNullOrEmpty(name))
-					name = key.OtherTable != key.ThisTable ? key.OtherTable.TableName : key.KeyName;
+					name = key.OtherTable != key.ThisTable ? key.OtherTable.TableName! : key.KeyName;
 
 				if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
 					table.Columns.    Select(_ => _.MemberName)).Concat(

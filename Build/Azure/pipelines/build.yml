@@ -1,0 +1,29 @@
+# build solution only
+variables:
+  - template: templates/build-vars.yml
+
+# allways trigger on PRs
+trigger: none
+pr:
+  branches:
+    include:
+    - '*'
+
+stages:
+
+- stage: ''
+  displayName: ''
+  jobs:
+##############
+#  BUILD JOB #
+##############
+  - template: templates/build-job.yml
+    parameters:
+      for_nuget: true
+      for_tests: false
+##############
+#  NUGET JOB #
+##############
+  - template: templates/nuget-job.yml
+    parameters:
+      publish: false

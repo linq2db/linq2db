@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
@@ -11,13 +12,13 @@ using Tests.Model;
 namespace Tests.UserTests
 {
 	/// <summary>
-	/// Builder for parametrized sql IN expression
+	/// Builder for parameterized sql IN expression
 	/// </summary>
 	/// <seealso cref="Sql.IExtensionCallBuilder" />
 	public class InExpressionItemBuilder : Sql.IExtensionCallBuilder
 	{
 		/// <summary>
-		/// Builds the parametrized sql IN expression
+		/// Builds the parameterized sql IN expression
 		/// </summary>
 		/// <param name="builder">The builder.</param>
 		/// <exception cref="ArgumentNullException">Values for \"In\" operation should not be empty - values</exception>
@@ -33,12 +34,14 @@ namespace Tests.UserTests
 
 			if (values == null || values.Length == 0)
 			{
-				throw new ArgumentNullException("values", "Values for \"In\" operation should not be empty");
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
+				throw new ArgumentNullException(nameof(values), "Values for \"In\" operation should not be empty");
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
 			}
 
 			foreach (var value in values)
 			{
-				var param = new SqlParameter(value?.GetType() ?? typeof(object), parameterName, value);
+				var param = new SqlParameter(new DbDataType(value?.GetType() ?? typeof(object)), parameterName, value);
 				builder.AddParameter("values", param);
 			}
 		}
@@ -55,13 +58,13 @@ namespace Tests.UserTests
 		/// <param name="values">The values.</param>
 		/// <returns></returns>
 		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InExpressionItemBuilder), ServerSideOnly = true)]
-		public static bool In<T>(this Sql.ISqlExtension ext, [ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values)
+		public static bool In<T>(this Sql.ISqlExtension? ext, [ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values)
 		{
 			return values.Contains(field);
 		}
 
 		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InExpressionItemBuilder), ServerSideOnly = true)]
-		public static bool In<T>(this Sql.ISqlExtension ext, [ExprParameter] T field, [SqlQueryDependent] params T[] values)
+		public static bool In<T>(this Sql.ISqlExtension? ext, [ExprParameter] T field, [SqlQueryDependent] params T[] values)
 		{
 			return values.Contains(field);
 		}

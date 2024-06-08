@@ -4,33 +4,76 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSetExpression : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlSetExpression : IQueryElement, ISqlExpressionWalkable
 	{
-		public SqlSetExpression(ISqlExpression column, ISqlExpression expression)
+		// These are both nullable refs, but by construction either _column or _row is set.
+
+		public SqlSetExpression(ISqlExpression column, ISqlExpression? expression)
 		{
-			Column     = column;
+			Column    = column;
 			Expression = expression;
 
-			if (expression is SqlParameter p)
+			ValidateColumnExpression(column, expression);
+		}
+
+		private void ValidateColumnExpression(ISqlExpression column, ISqlExpression? expression)
+		{
+			if (column is SqlRow row)
 			{
-				if (column is SqlField field)
+				// The length-checks _should_ never failed thanks to C# type-checking.
+				// We do them in case someone attempts to build invalid expressions with unsafe casts or similar.
+
+				if (expression is SelectQuery subquery)
 				{
-					if (field.ColumnDescriptor != null)
-					{
-						if (field.ColumnDescriptor.DataType != DataType.Undefined && p.DataType == DataType.Undefined)
-							p.DataType = field.ColumnDescriptor.DataType;
-//							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbTypeSet)
-//								p.DbType = field.ColumnDescriptorptor.MapMemberInfo.DbType;
-//
-//							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbSizeSet)
-//								p.DbSize = field.ColumnDescriptor.MapMemberInfo.DbSize;
-					}
+					var columns = subquery.Select.Columns;
+					if (columns.Count != row.Values.Length)
+						throw new LinqToDBException("Arity of row expression and subquery do not match.");
+					for (int i = 0; i < row.Values.Length; i++)				
+						RefineDbParameter(row.Values[i], columns[i].Expression);
 				}
+				else if (expression is SqlRow sqlRow)
+				{
+					var values = sqlRow.Values;
+					if (values.Length != row.Values.Length)
+						throw new LinqToDBException("Arity of row expressions do not match.");
+					for (int i = 0; i < values.Length; i++)
+						RefineDbParameter(values[i], values[i]);
+				}
+				else if (expression != null)
+				{
+					throw new ArgumentException("An array of expressions can only be SET to a subquery or row expression", nameof(expression));
+				}
+			}
+			else
+			{
+				RefineDbParameter(column, expression);
 			}
 		}
 
-		public ISqlExpression Column     { get; set; }
-		public ISqlExpression Expression { get; set; }
+
+		public ISqlExpression  Column     { get; set; }
+		public ISqlExpression? Expression { get; set; }
+
+		private static void RefineDbParameter(ISqlExpression column, ISqlExpression? value)
+		{
+			if (value is SqlParameter p && column is SqlField field)
+			{
+				if (field.ColumnDescriptor != null && p.Type.SystemType != typeof(object))
+				{
+					if (field.ColumnDescriptor.DataType  != DataType.Undefined && p.Type.DataType == DataType.Undefined)
+						p.Type = p.Type.WithDataType(field.ColumnDescriptor.DataType);
+
+					if (field.ColumnDescriptor.DbType    != null && p.Type.DbType == null)
+						p.Type = p.Type.WithDbType(field.ColumnDescriptor.DbType);
+					if (field.ColumnDescriptor.Length    != null && p.Type.Length == null)
+						p.Type = p.Type.WithLength(field.ColumnDescriptor.Length);
+					if (field.ColumnDescriptor.Precision != null && p.Type.Precision == null)
+						p.Type = p.Type.WithPrecision(field.ColumnDescriptor.Precision);
+					if (field.ColumnDescriptor.Scale     != null && p.Type.Scale == null)
+						p.Type = p.Type.WithScale(field.ColumnDescriptor.Scale);
+				}
+			}
+		}
 
 		#region Overrides
 
@@ -45,31 +88,12 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlSetExpression(
-					(ISqlExpression)Column.    Clone(objectTree, doClone),
-					(ISqlExpression)Expression.Clone(objectTree, doClone)));
-			}
-
-			return clone;
-		}
-
-		#endregion
-
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Column     = Column.    Walk(options, func);
-			Expression = Expression.Walk(options, func);
+			Column     = Column.Walk(options, context, func)!;
+			Expression = Expression?.Walk(options, context, func);
 			return null;
 		}
 
@@ -82,8 +106,9 @@ namespace LinqToDB.SqlQuery
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
 			Column.ToString(sb, dic);
+
 			sb.Append(" = ");
-			Expression.ToString(sb, dic);
+			Expression?.ToString(sb, dic);
 
 			return sb;
 		}

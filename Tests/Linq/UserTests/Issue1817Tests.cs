@@ -14,8 +14,8 @@ namespace Tests.UserTests
 			#region Simple columns
 
 			public long Id { get; set; } // bigint
-			public string Number { get; set; } // varchar(20)
-			public string Name { get; set; } // varchar(5000)
+			public string? Number { get; set; } // varchar(20)
+			public string? Name { get; set; } // varchar(5000)
 			public AccountType Type { get; set; } // smallint
 			public AccountState State { get; set; } // smallint
 

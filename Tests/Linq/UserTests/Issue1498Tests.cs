@@ -10,29 +10,29 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	[TestFixture, Parallelizable(ParallelScope.None)]
+	[TestFixture]
 	public class Issue1498Tests : TestBase
 	{
 		public class Topic
 		{
 			public int Id { get; set; }
 
-			public string Title { get; set; }
+			public string? Title { get; set; }
 
-			public string Text { get; set; }
+			public string? Text { get; set; }
 
 			[Association(ThisKey = "Id", OtherKey = "TopicId")]
-			public virtual ICollection<Message> MessagesA1 { get; set; }
+			public virtual ICollection<Message> MessagesA1 { get; set; } = null!;
 
 			[Association(ExpressionPredicate = nameof(Predicate))]
-			public virtual ICollection<Message> MessagesA2 { get; set; }
+			public virtual ICollection<Message> MessagesA2 { get; set; } = null!;
 
 			[Association(QueryExpressionMethod = nameof(Query))]
-			public virtual ICollection<Message> MessagesA3 { get; set; }
+			public virtual ICollection<Message> MessagesA3 { get; set; } = null!;
 
-			public virtual ICollection<Message> MessagesF1 { get; set; }
-			public virtual ICollection<Message> MessagesF2 { get; set; }
-			public virtual ICollection<Message> MessagesF3 { get; set; }
+			public virtual ICollection<Message> MessagesF1 { get; set; } = null!;
+			public virtual ICollection<Message> MessagesF2 { get; set; } = null!;
+			public virtual ICollection<Message> MessagesF3 { get; set; } = null!;
 
 			static Expression<Func<Topic, Message, bool>> Predicate => (t, m) => t.Id == m.TopicId;
 
@@ -46,15 +46,14 @@ namespace Tests.UserTests
 			public int TopicId { get; set; }
 
 			[Association(ThisKey = "TopicId", OtherKey = "Id")]
-			public virtual Topic Topic { get; set; }
+			public virtual Topic? Topic { get; set; }
 
-			public string Text { get; set; }
+			public string? Text { get; set; }
 		}
 
 		[Test]
 		public void TestAttributesByKey([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Topic>())
 			using (db.CreateLocalTable<Message>())
@@ -75,7 +74,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestAttributesByExpression([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Topic>())
 			using (db.CreateLocalTable<Message>())
@@ -96,7 +94,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestAttributesByQuery([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Topic>())
 			using (db.CreateLocalTable<Message>())
@@ -117,20 +114,22 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByExpression([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Topic>()
-						.Property(e => e.Id)
-						.Association(e => e.MessagesF1, (t, m) => t.Id == m.TopicId)
-						.Property(e => e.Title)
-						.Property(e => e.Text)
-					.Entity<Message>()
-						.Property(e => e.Id)
-						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+			var ms = new MappingSchema();
 
+			new FluentMappingBuilder(ms)
+				.Entity<Topic>()
+					.Property(e => e.Id)
+					.Association(e => e.MessagesF1, (t, m) => t.Id == m.TopicId)
+					.Property(e => e.Title)
+					.Property(e => e.Text)
+				.Entity<Message>()
+					.Property(e => e.Id)
+					.Property(e => e.TopicId)
+					.Property(e => e.Text)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			{
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
 				{
@@ -151,20 +150,22 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByKeys([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Topic>()
-						.Property(e => e.Id)
-						.Association(e => e.MessagesF2, t => t.Id, m => m.TopicId)
-						.Property(e => e.Title)
-						.Property(e => e.Text)
-					.Entity<Message>()
-						.Property(e => e.Id)
-						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+			var ms = new MappingSchema();
 
+			new FluentMappingBuilder(ms)
+				.Entity<Topic>()
+					.Property(e => e.Id)
+					.Association(e => e.MessagesF2, t => t.Id, m => m.TopicId)
+					.Property(e => e.Title)
+					.Property(e => e.Text)
+				.Entity<Message>()
+					.Property(e => e.Id)
+					.Property(e => e.TopicId)
+					.Property(e => e.Text)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			{
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
 				{
@@ -185,20 +186,22 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByQuery([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Topic>()
-						.Property(e => e.Id)
-						.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
-						.Property(e => e.Title)
-						.Property(e => e.Text)
-					.Entity<Message>()
-						.Property(e => e.Id)
-						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+			var ms = new MappingSchema();
 
+			new FluentMappingBuilder(ms)
+				.Entity<Topic>()
+					.Property(e => e.Id)
+					.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
+					.Property(e => e.Title)
+					.Property(e => e.Text)
+				.Entity<Message>()
+					.Property(e => e.Id)
+					.Property(e => e.TopicId)
+					.Property(e => e.Text)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			{
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
 				{
@@ -213,7 +216,7 @@ namespace Tests.UserTests
 						{
 							Topic = x,
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
-						}).FirstOrDefault();
+						}).FirstOrDefault()!;
 
 					Assert.IsNotNull(result);
 					Assert.AreEqual(60, result.MessagesIds.Single());
@@ -224,26 +227,30 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByQueryWithKeys([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Topic>()
-						.Property(e => e.Id).IsPrimaryKey()
-						.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
-						.Property(e => e.Title)
-						.Property(e => e.Text)
-					.Entity<Message>()
-						.Property(e => e.Id).IsPrimaryKey()
-						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+			var ms = new MappingSchema();
 
+			new FluentMappingBuilder(ms)
+				.Entity<Topic>()
+					.Property(e => e.Id).IsPrimaryKey()
+					.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
+					.Property(e => e.Title)
+					.Property(e => e.Text)
+				.Entity<Message>()
+					.Property(e => e.Id).IsPrimaryKey()
+					.Property(e => e.TopicId)
+					.Property(e => e.Text)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			{
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
 				{
-					db.Insert(new Topic() { Id = 6, Title = "title", Text = "text" });
-					db.Insert(new Message() { Id = 60, Text = "message", TopicId = 6});
-					db.Insert(new Message() { Id = 61, Text = "message", TopicId = 7});
+					var topic = new Topic { Id = 6, Text = "text", Title = "title" };
+
+					db.Insert(topic);
+					db.Insert(new Message { Id = 60, Text = "message", TopicId = 6});
+					db.Insert(new Message { Id = 61, Text = "message", TopicId = 7});
 
 					var result = db.GetTable<Topic>()
 						.Where(x => x.Id == 6)
@@ -252,13 +259,15 @@ namespace Tests.UserTests
 						{
 							Topic = x,
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
-						}).FirstOrDefault();
+						}).FirstOrDefault()!;
 
-					Assert.IsNotNull(result);
-					Assert.AreEqual(60, result.MessagesIds.Single());
+					Assert.That(result,           Is.Not.Null);
+					Assert.That(topic.Id,         Is.EqualTo(result.Topic.Id));
+					Assert.That(topic.Text,       Is.EqualTo(result.Topic.Text));
+					Assert.That(topic.Title,      Is.EqualTo(result.Topic.Title));
+					Assert.That(new[] { 60 }, Is.EqualTo(result.MessagesIds));
 				}
 			}
 		}
-
 	}
 }

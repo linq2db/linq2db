@@ -1,10 +1,9 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class SelectQueryBuilder : MethodCallBuilder
+	sealed class SelectQueryBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -20,11 +19,9 @@ namespace LinqToDB.Linq.Builder
 			return sequence;
 		}
 
-		protected override SequenceConvertInfo Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression param)
+		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return null;
+			return true;
 		}
-
 	}
 }

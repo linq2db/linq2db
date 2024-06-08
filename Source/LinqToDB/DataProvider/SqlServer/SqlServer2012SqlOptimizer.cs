@@ -1,66 +1,94 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿using System;
+
+namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
 
 	class SqlServer2012SqlOptimizer : SqlServerSqlOptimizer
 	{
-		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags)
-			: this(sqlProviderFlags, SqlServerVersion.v2012)
+		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags) : this(sqlProviderFlags, SqlServerVersion.v2012)
 		{
 		}
 
-		protected SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion sqlVersion = SqlServerVersion.v2012)
-			: base(sqlProviderFlags, sqlVersion)
+		protected SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion version) : base(sqlProviderFlags, version)
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
-			var result = base.Finalize(statement);
-			if (result.SelectQuery != null)
-				CorrectSkip(result.SelectQuery);
-			return result;
+			// SQL Server 2012 supports OFFSET/FETCH providing there is an ORDER BY
+			// UPDATE queries do not directly support ORDER BY, TOP, OFFSET, or FETCH, but they are supported in subqueries
+
+			if (statement.IsUpdate() || statement.IsDelete())
+				statement = WrapRootTakeSkipOrderBy(statement);
+
+			statement = AddOrderByForSkip(statement);
+
+			return statement;
 		}
 
-		private void CorrectSkip(SelectQuery selectQuery)
+		/// <summary>
+		/// Adds an ORDER BY clause to queries using OFFSET/FETCH, if none exists
+		/// </summary>
+		protected SqlStatement AddOrderByForSkip(SqlStatement statement)
 		{
-			((ISqlExpressionWalkable)selectQuery).Walk(new WalkOptions(), e =>
+			statement = statement.Convert(static (visitor, element) =>
 			{
-				if (e is SelectQuery q && q.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(q) && q.OrderBy.IsEmpty)
+				if (element.ElementType == QueryElementType.OrderByClause)
 				{
-					if (q.Select.Columns.Count == 0)
+					var orderByClause = (SqlOrderByClause)element;
+					if (orderByClause.OrderBy.IsEmpty && orderByClause.SelectQuery.Select.SkipValue != null)
 					{
-						var source = q.Select.From.Tables[0].Source;
-						var keys = source.GetKeys(true);
-
-						foreach (var key in keys)
-						{
-							q.Select.AddNew(key);
-						}
-					}
-
-					for (var i = 0; i < q.Select.Columns.Count; i++)
-						q.OrderBy.ExprAsc(new SqlValue(i + 1));
-
-					if (q.OrderBy.IsEmpty)
-					{
-						throw new LinqToDBException("Order by required for Skip operation.");
+						return new SqlOrderByClause(new[] { new SqlOrderByItem(new SqlValue(typeof(int), 1), false) });
 					}
 				}
-				return e;
-			}
-			);
+				return element;
+			});
+			return statement;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
 		{
-			expr = base.ConvertExpression(expr);
+			func = ConvertFunctionParameters(func, false);
 
-			if (expr is SqlFunction function)
-				return ConvertConvertFunction(function);
+			switch (func.Name)
+			{
+				case PseudoFunctions.TRY_CONVERT:
+					return new SqlFunction(func.SystemType, "TRY_CONVERT", false, true, func.Parameters[0], func.Parameters[2]) { CanBeNull = true };
 
-			return expr;
+				case "CASE"     :
+
+					if (func.Parameters.Length <= 5)
+						func = ConvertCase(func.CanBeNull, func.SystemType, func.Parameters, 0);
+
+					break;
+			}
+
+			return base.ConvertFunction(func);
+		}
+
+		static SqlFunction ConvertCase(bool canBeNull, Type systemType, ISqlExpression[] parameters, int start)
+		{
+			var len  = parameters.Length - start;
+			var name = start == 0 ? "IIF" : "CASE";
+			var cond = parameters[start];
+
+			if (start == 0 && SqlExpression.NeedsEqual(cond))
+			{
+				cond = new SqlSearchCondition(
+					new SqlCondition(
+						false,
+						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1), null)));
+			}
+
+			if (len == 3)
+				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]) { CanBeNull = canBeNull };
+
+			return new SqlFunction(systemType, name,
+				cond,
+				parameters[start + 1],
+				ConvertCase(canBeNull, systemType, parameters, start + 2)) { CanBeNull = canBeNull };
 		}
 	}
 }

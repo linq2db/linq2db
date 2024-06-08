@@ -27,8 +27,7 @@ void NotifyPropertyChangedImpl()
 
 		if (prop.Parent is Class)
 		{
-			var parent = (Class)prop.Parent;
-			parentMembers = parent.Members;
+			parentMembers = ((Class)prop.Parent).Members;
 		}
 		else
 		{
@@ -59,6 +58,9 @@ void NotifyPropertyChangedImpl()
 			parentMembers.RemoveAt(index);
 			parentMembers.Insert  (index, gr);
 		}
+
+		gr.Conditional   = prop.Conditional;
+		prop.Conditional = null;
 
 		if (prop.IsAuto)
 		{
@@ -217,7 +219,7 @@ void NotifyPropertyChangedImpl()
 						new Event("PropertyChangedEventHandler", "PropertyChanged", true)
 						{
 							IsVirtual  = true,
-							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+							Attributes = { new Attribute("field : NonSerialized") }
 						},
 						new Method(() => "void", "OnPropertyChanged", new Func<string>[] { () => "string propertyName" }, () => OnPropertyChangedBody)
 						{
@@ -246,7 +248,7 @@ void NotifyPropertyChangedImpl()
 						new Event("PropertyChangingEventHandler", "PropertyChanging", true)
 						{
 							IsVirtual  = true,
-							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+							Attributes = { new Attribute("field : NonSerialized") }
 						},
 						new Method(() => "void", "OnPropertyChanging", new Func<string>[] { () => "string propertyName" }, () => OnPropertyChangingBody)
 						{
@@ -269,20 +271,7 @@ public string[] OnPropertyChangedBody = new[]
 	"",
 	"if (propertyChanged != null)",
 	"{",
-	"#if SILVERLIGHT",
-	"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
-	"\t\tpropertyChanged(this, new PropertyChangedEventArgs(propertyName));",
-	"\telse",
-	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
-	"\t\t\t() =>",
-	"\t\t\t{",
-	"\t\t\t\tvar pc = PropertyChanged;",
-	"\t\t\t\tif (pc != null)",
-	"\t\t\t\t\tpc(this, new PropertyChangedEventArgs(propertyName));",
-	"\t\t\t});",
-	"#else",
 	"\tpropertyChanged(this, new PropertyChangedEventArgs(propertyName));",
-	"#endif",
 	"}",
 };
 
@@ -292,20 +281,7 @@ public string[] OnPropertyChangedArgBody = new[]
 	"",
 	"if (propertyChanged != null)",
 	"{",
-	"#if SILVERLIGHT",
-	"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
-	"\t\tpropertyChanged(this, arg);",
-	"\telse",
-	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
-	"\t\t\t() =>",
-	"\t\t\t{",
-	"\t\t\t\tvar pc = PropertyChanged;",
-	"\t\t\t\tif (pc != null)",
-	"\t\t\t\t\tpc(this, arg);",
-	"\t\t\t});",
-	"#else",
 	"\tpropertyChanged(this, arg);",
-	"#endif",
 	"}",
 };
 
@@ -315,20 +291,7 @@ public string[] OnPropertyChangingBody = new[]
 	"",
 	"if (propertyChanging != null)",
 	"{",
-	"#if SILVERLIGHT",
-	"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
-	"\t\tpropertyChanging(this, new PropertyChangingEventArgs(propertyName));",
-	"\telse",
-	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
-	"\t\t\t() =>",
-	"\t\t\t{",
-	"\t\t\t\tvar pc = PropertyChanging;",
-	"\t\t\t\tif (pc != null)",
-	"\t\t\t\t\tpc(this, new PropertyChangingEventArgs(propertyName));",
-	"\t\t\t});",
-	"#else",
 	"\tpropertyChanging(this, new PropertyChangingEventArgs(propertyName));",
-	"#endif",
 	"}",
 };
 
@@ -338,20 +301,7 @@ public string[] OnPropertyChangingArgBody = new[]
 	"",
 	"if (propertyChanging != null)",
 	"{",
-	"#if SILVERLIGHT",
-	"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
-	"\t\tpropertyChanging(this, arg);",
-	"\telse",
-	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
-	"\t\t\t() =>",
-	"\t\t\t{",
-	"\t\t\t\tvar pc = PropertyChanging;",
-	"\t\t\t\tif (pc != null)",
-	"\t\t\t\t\tpc(this, arg);",
-	"\t\t\t});",
-	"#else",
 	"\tpropertyChanging(this, arg);",
-	"#endif",
 	"}",
 };
 
@@ -361,7 +311,7 @@ partial class Property
 	public List<string> Dependents = new List<string>();
 }
 
-class NotifyingProperty : Property
+public class NotifyingProperty : Property
 {
 	public NotifyingProperty()
 	{
@@ -369,7 +319,7 @@ class NotifyingProperty : Property
 	}
 
 	public NotifyingProperty(ModelType type, string name, params string[] dependents)
-		: base(() => type.ToTypeName(), name, null, null)
+		: base(type.ToTypeName, name)
 	{
 		IsNotifying = true;
 
@@ -380,7 +330,7 @@ class NotifyingProperty : Property
 	}
 
 	public NotifyingProperty(string type, string name, params string[] dependents)
-		: base(() => type, name, null, null)
+		: base(() => type, name)
 	{
 		IsNotifying = true;
 

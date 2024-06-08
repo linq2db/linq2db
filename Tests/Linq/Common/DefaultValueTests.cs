@@ -89,7 +89,7 @@ namespace Tests.Common
 			Assert.AreEqual(null, DefaultValue<string>.Value);
 			DefaultValue<string>.Value = "";
 			Assert.AreEqual("", DefaultValue<string>.Value);
-			DefaultValue<string>.Value = null;
+			DefaultValue<string?>.Value = null;
 		}
 	}
 }

@@ -1,0 +1,510 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\linq2db.TestProjects.props" />
+	
+	<PropertyGroup>
+		<AssemblyName>Tests.T4</AssemblyName>
+
+		<NoWarn>(NoWarn);618</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectCapability Remove="TestContainer" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
+		<PackageReference Update="MySql.Data" Aliases="" />
+		<PackageReference Update="MySqlConnector" Aliases="" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+		<Reference Include="System.ComponentModel.DataAnnotations" />
+		<Reference Include="PresentationCore" />
+		<Reference Include="PresentationFramework" />
+		<Reference Include="WindowsBase" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Models\bbb.txt" />
+		<Content Include="Models\bbb.txt" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+		<Compile Update="WPF\ViewModel.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ViewModel.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	
+	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
+		<Compile Remove="WPF\*.cs" />
+		<None Include="WPF\ViewModel.cs" />
+
+		<None Remove="SqlServer.tt" />
+		<None Remove="SqlServerAzure.tt" />
+
+		<Compile Remove="SqlServer.generated.cs" />
+		<Compile Remove="SqlServerAzure.generated.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+
+		<None Update="Cli\Fluent.tt">
+		  <LastGenOutput>Fluent.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
+		<None Update="Cli\NoMetadata.tt">
+		  <LastGenOutput>NoMetadata.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
+		<None Update="Cli\All.tt">
+		  <LastGenOutput>All.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
+		<None Update="Cli\Default.tt">
+		  <LastGenOutput>Default.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
+		<None Update="Cli\T4.tt">
+		  <LastGenOutput>T4.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
+		<None Update="Databases\AccessODBC.tt">
+			<LastGenOutput>AccessODBC.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\Access.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Access.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\DB2.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>DB2.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\Firebird4.tt">
+		  <LastGenOutput>Firebird4.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\Firebird3.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Firebird3.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\Informix.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Informix.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\MariaDB.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>MariaDB.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\MySqlConnector.tt">
+			<LastGenOutput>MySqlConnector.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\MySql.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>MySql.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\Oracle.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Oracle.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\PostgreSQL.11.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>PostgreSQL.11.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\PostgreSQL.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>PostgreSQL.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\SapHana.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SapHana.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\SqlCe.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SqlCe.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\SQLite.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SQLite.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\SqlServer.2017.ProceduresFromSchema.tt">
+			<LastGenOutput>SqlServer.2017.ProceduresFromSchema.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\SqlServer.MS.tt">
+			<LastGenOutput>SqlServer.MS.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\SqlServer.2017.tt">
+			<LastGenOutput>SqlServer.2017.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\SqlServerAzure.tt">
+			<LastGenOutput>SqlServerAzure.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\Sybase.DataAction.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Sybase.DataAction.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\Sybase.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Sybase.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Databases\Firebird.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Firebird.generated.cs</LastGenOutput>
+		</None>
+		<None Update="Default\AccessOleDb.tt">
+		  <LastGenOutput>AccessOleDb.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\AccessOdbc.tt">
+		  <LastGenOutput>AccessODBC.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\DB2.tt">
+		  <LastGenOutput>DB2.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\Firebird.tt">
+		  <LastGenOutput>Firebird.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\Informix.tt">
+		  <LastGenOutput>Informix.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\MySql.tt">
+		  <LastGenOutput>MySql.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\MariaDB.tt">
+		  <LastGenOutput>MariaDB.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\Oracle.tt">
+		  <LastGenOutput>Oracle.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\PostgreSQL.tt">
+		  <LastGenOutput>PostgreSQL.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SapHana.tt">
+		  <LastGenOutput>SapHana.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SqlCe.tt">
+		  <LastGenOutput>SqlCe.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SQLite.Northwind.tt">
+		  <LastGenOutput>SQLite.Northwind.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SQLite.tt">
+		  <LastGenOutput>SQLite.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SqlServer.Northwind.tt">
+		  <LastGenOutput>SqlServer.Northwind.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\SqlServer.tt">
+		  <LastGenOutput>SqlServer.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\Sybase.tt">
+		  <LastGenOutput>Sybase.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Unlock.tt">
+			<LastGenOutput>Unlock.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Models\EditableModelTest.tt">
+			<LastGenOutput>EditableModelTest.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Models\EquatableTest.tt">
+			<LastGenOutput>EquatableTest.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Models\ModelTest.tt">
+			<LastGenOutput>ModelTest.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Models\MultipleFiles.tt">
+			<LastGenOutput>MultipleFiles.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="WPF\ViewModel.tt">
+			<LastGenOutput>ViewModel.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Databases\SqlServer.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SqlServer.generated.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Cli\All.generated.cs">
+		  <DependentUpon>All.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		</Compile>
+		<Compile Update="Cli\Default.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Default.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Cli\Fluent.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Fluent.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Cli\NoMetadata.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>NoMetadata.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Cli\T4.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>T4.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Access.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Access.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\AccessODBC.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>AccessODBC.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\DB2.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>DB2.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Firebird.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Firebird.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Firebird3.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Firebird3.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Firebird4.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Firebird4.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Informix.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Informix.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\MariaDB.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>MariaDB.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\MySql.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>MySql.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\MySqlConnector.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>MySqlConnector.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Oracle.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Oracle.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\PostgreSQL.11.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>PostgreSQL.11.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\PostgreSQL.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>PostgreSQL.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SapHana.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SapHana.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SqlCe.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlCe.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SQLite.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SQLite.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SqlServer.2017.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServer.2017.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SqlServer.2017.ProceduresFromSchema.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServer.2017.ProceduresFromSchema.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SqlServer.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServer.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SqlServer.MS.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServer.MS.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\SqlServerAzure.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServerAzure.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Sybase.DataAction.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Sybase.DataAction.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\Sybase.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Sybase.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\AccessOleDb.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>AccessOleDb.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\AccessODBC.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>AccessOdbc.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\DB2.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>DB2.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\Firebird.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Firebird.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\Informix.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Informix.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\MariaDB.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MariaDB.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\MySql.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MySql.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\Oracle.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Oracle.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\PostgreSQL.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>PostgreSQL.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SapHana.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SapHana.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SqlCe.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlCe.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SQLite.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SQLite.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SQLite.Northwind.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SQLite.Northwind.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SqlServer.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServer.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\SqlServer.Northwind.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServer.Northwind.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Default\Sybase.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Sybase.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Models\EditableModelTest.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>EditableModelTest.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Models\EquatableTest.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>EquatableTest.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Models\ModelTest.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ModelTest.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Models\MultipleFiles.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>MultipleFiles.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Unlock.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Unlock.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+</Project>

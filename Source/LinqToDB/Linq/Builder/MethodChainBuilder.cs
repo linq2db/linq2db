@@ -1,22 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common.Internal;
+	using Extensions;
 	using LinqToDB.Expressions;
+	using Reflection;
+	using SqlQuery;
 
-	class MethodChainBuilder : MethodCallBuilder
+	sealed class MethodChainBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
-			return functions.Any();
+			return functions.Length > 0;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -28,55 +28,62 @@ namespace LinqToDB.Linq.Builder
 			// evaluating IQueryableContainer
 			while (root.NodeType == ExpressionType.Constant && typeof(Sql.IQueryableContainer).IsSameOrParentOf(root.Type))
 			{
-				root = ((Sql.IQueryableContainer)root.EvaluateExpression()).Query.Expression;
+				root = root.EvaluateExpression<Sql.IQueryableContainer>(builder.DataContext)!.Query.Expression;
 				root = root.SkipMethodChain(builder.MappingSchema);
 			}
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
+			root = builder.ConvertExpressionTree(root);
 
+			var prevSequence  = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
 			var finalFunction = functions.First();
-				
-			var sqlExpression = finalFunction.GetExpression(builder.DataContext, buildInfo.SelectQuery, methodCall,
-				e => builder.ConvertToExtensionSql(sequence, e));
+			var sequence      = prevSequence;
+
+			if (finalFunction.IsAggregate)
+			{
+				// Wrap by subquery to handle aggregate limitations, especially for SQL Server
+				//
+				sequence = new SubQueryContext(sequence);
+			}
 
 			var context = new ChainContext(buildInfo.Parent, sequence, methodCall);
+
+			var sqlExpression = finalFunction.GetExpression((builder, context), builder.DataContext, context.SelectQuery, methodCall,
+				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor));
+
 			context.Sql        = context.SelectQuery;
 			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodCall.Method.Name);
 
 			return context;
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		internal sealed class ChainContext : SequenceContextBase
 		{
-			return null;
-		}
-
-		class ChainContext : SequenceContextBase
-		{
-			public ChainContext(IBuildContext parent, IBuildContext sequence, MethodCallExpression methodCall)
+			public ChainContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
 			{
-				_returnType = methodCall.Method.ReturnType;
-				_methodName = methodCall.Method.Name;
+				MethodCall = methodCall;
+				_returnType     = methodCall.Method.ReturnType;
+				_methodName     = methodCall.Method.Name;
 
-				if (_returnType.IsGenericTypeEx() && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
+				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
 				{
-					_returnType = _returnType.GetGenericArgumentsEx()[0];
+					_returnType = _returnType.GetGenericArguments()[0];
 					_methodName = _methodName.Replace("Async", "");
 				}
 			}
 
-			readonly string    _methodName;
-			readonly Type      _returnType;
-			private  SqlInfo[] _index;
+			readonly string     _methodName;
+			readonly Type       _returnType;
+			private  SqlInfo[]? _index;
+			private  int?       _parentIndex;
 
-			public int            FieldIndex;
-			public ISqlExpression Sql;
+			public int                  FieldIndex;
+			public ISqlExpression       Sql = null!;
+			public MethodCallExpression MethodCall { get; }
 
-			static int CheckNullValue(IDataRecord reader, object context)
+			static int CheckNullValue(bool isNull, object context)
 			{
-				if (reader.IsDBNull(0))
+				if (isNull)
 					throw new InvalidOperationException(
 						$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
 				return 0;
@@ -84,76 +91,101 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildExpression(FieldIndex);
+				var expr   = BuildExpression(FieldIndex, Sql);
 				var mapper = Builder.BuildMapper<object>(expr);
 
+				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
+				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
+				var index = info.Index;
 				if (Parent != null)
 					index = ConvertToParentIndex(index, Parent);
-				return BuildExpression(index);
+				return BuildExpression(index, info.Sql);
 			}
 
-			Expression BuildExpression(int fieldIndex)
+			Expression BuildExpression(int fieldIndex, ISqlExpression? sqlExpression)
 			{
 				Expression expr;
 
-				if (_returnType.IsClassEx() || _returnType.IsNullable())
+				if (_returnType.IsNullableType())
 				{
-					expr = Builder.BuildSql(_returnType, fieldIndex);
+					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
 				}
 				else
 				{
 					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(null, null)), ExpressionBuilder.DataReaderParam, Expression.Constant(_methodName)),
-						Builder.BuildSql(_returnType, fieldIndex));
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, ExpressionInstances.Constant0), Expression.Constant(_methodName)),
+						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
 				}
 
 				return expr;
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
+
 				switch (flags)
 				{
 					case ConvertFlags.All   :
 					case ConvertFlags.Key   :
-					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level + 1, flags);
+					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level, flags);
 				}
 
 				throw new InvalidOperationException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
-				switch (flags)
+				if (index != FieldIndex)
+					throw new InvalidOperationException();
+
+				if (_parentIndex != null)
+					return _parentIndex.Value;
+
+				if (Parent != null)
 				{
-					case ConvertFlags.Field :
-						return _index ?? (_index = new[]
+					index        = Parent.SelectQuery.Select.Add(Sql);
+					_parentIndex = Parent.ConvertToParentIndex(index, Parent);
+				}
+				else
+				{
+					_parentIndex = index;
+				}
+
+				return _parentIndex.Value;
+			}
+
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
+			{
+				return flags switch
+				{
+					ConvertFlags.Field =>
+						_index ??= new[]
 						{
-							new SqlInfo { Query = Parent.SelectQuery, Index = Parent.SelectQuery.Select.Add(Sql), Sql = Sql, }
-						});
-				}
-
-				throw new InvalidOperationException();
+							new SqlInfo(Sql, SelectQuery, FieldIndex)
+						},
+					_ => throw new InvalidOperationException(),
+				};
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				switch (requestFlag)
-				{
-					case RequestFor.Root       : return new IsExpressionResult(Lambda != null && expression == Lambda.Parameters[0]);
-					case RequestFor.Expression : return IsExpressionResult.True;
-				}
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 
-				return IsExpressionResult.False;
+				return requestFlag switch
+				{
+					RequestFor.Root       => IsExpressionResult.GetResult(Lambda != null && expression == Lambda.Parameters[0]),
+					RequestFor.Expression => IsExpressionResult.True,
+					_                     => IsExpressionResult.False,
+				};
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}

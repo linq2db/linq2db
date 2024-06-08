@@ -1,27 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common.Internal;
+	using Remote;
+
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SelectQuery : ISqlTableSource
+	public class SelectQuery : ISqlTableSource, IQueryExtendible
 	{
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		protected string DebugSqlText => SqlText;
+
 		#region Init
 
 		public SelectQuery()
 		{
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
 
-			Select  = new SqlSelectClause (this);
-			From    = new SqlFromClause   (this);
-			Where   = new SqlWhereClause  (this);
-			GroupBy = new SqlGroupByClause(this);
-			Having  = new SqlWhereClause  (this);
-			OrderBy = new SqlOrderByClause(this);
+			Select  = new(this);
+			From    = new(this);
+			Where   = new(this);
+			GroupBy = new(this);
+			Having  = new(this);
+			OrderBy = new(this);
 		}
 
 		internal SelectQuery(int id)
@@ -30,16 +37,18 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void Init(
-			SqlSelectClause        select,
-			SqlFromClause          from,
-			SqlWhereClause         where,
-			SqlGroupByClause       groupBy,
-			SqlWhereClause         having,
-			SqlOrderByClause       orderBy,
-			List<SqlSetOperator>   setOparators,
-			List<ISqlExpression[]> uniqueKeys,
-			SelectQuery            parentSelect,
-			bool                   parameterDependent)
+			SqlSelectClause         select,
+			SqlFromClause           from,
+			SqlWhereClause          where,
+			SqlGroupByClause        groupBy,
+			SqlWhereClause          having,
+			SqlOrderByClause        orderBy,
+			List<SqlSetOperator>?   setOperators,
+			List<ISqlExpression[]>? uniqueKeys,
+			SelectQuery?            parentSelect,
+			bool                    parameterDependent,
+			string?                 queryName,
+			bool                    doNotSetAliases)
 		{
 			Select               = select;
 			From                 = from;
@@ -47,9 +56,11 @@ namespace LinqToDB.SqlQuery
 			GroupBy              = groupBy;
 			Having               = having;
 			OrderBy              = orderBy;
-			_setOperators        = setOparators;
+			_setOperators        = setOperators;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
+			QueryName            = queryName;
+			DoNotSetAliases      = doNotSetAliases;
 
 			if (uniqueKeys != null)
 				UniqueKeys.AddRange(uniqueKeys);
@@ -65,43 +76,44 @@ namespace LinqToDB.SqlQuery
 			OrderBy.SetSqlQuery(this);
 		}
 
-		public SqlSelectClause  Select  { get; private set; }
-		public SqlFromClause    From    { get; private set; }
-		public SqlWhereClause   Where   { get; private set; }
-		public SqlGroupByClause GroupBy { get; private set; }
-		public SqlWhereClause   Having  { get; private set; }
-		public SqlOrderByClause OrderBy { get; private set; }
+		public SqlSelectClause  Select  { get; internal set; } = null!;
+		public SqlFromClause    From    { get; internal set; } = null!;
+		public SqlWhereClause   Where   { get; internal set; } = null!;
+		public SqlGroupByClause GroupBy { get; internal set; } = null!;
+		public SqlWhereClause   Having  { get; internal set; } = null!;
+		public SqlOrderByClause OrderBy { get; internal set; } = null!;
 
-		private List<object> _properties;
-		public  List<object>  Properties => _properties ?? (_properties = new List<object>());
+		private List<object>? _properties;
+		public  List<object>   Properties => _properties ??= new ();
 
-		public SelectQuery    ParentSelect         { get; set; }
-		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
+		public SelectQuery?   ParentSelect         { get; set; }
+		public bool           IsSimple      => IsSimpleOrSet && !HasSetOperators;
+		public bool           IsSimpleOrSet => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
 		public bool           IsParameterDependent { get; set; }
 
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
 		/// </summary>
-		public bool               DoNotRemove         { get; set; }
+		public bool                     DoNotRemove        { get; set; }
+		public string?                  QueryName          { get; set; }
+		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
+		public bool                     DoNotSetAliases    { get; set; }
 
-		private List<ISqlExpression[]> _uniqueKeys;
+		List<ISqlExpression[]>? _uniqueKeys;
 
 		/// <summary>
 		/// Contains list of columns that build unique key for this sub-query.
 		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
 		/// </summary>
-		public  List<ISqlExpression[]>  UniqueKeys   => _uniqueKeys ?? (_uniqueKeys = new List<ISqlExpression[]>());
-
-		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
-
+		public  List<ISqlExpression[]> UniqueKeys    => _uniqueKeys ??= new ();
+		public  bool                   HasUniqueKeys => _uniqueKeys?.Count > 0;
 
 		#endregion
 
 		#region Union
 
-		private List<SqlSetOperator> _setOperators;
-		public  List<SqlSetOperator>  SetOperators => _setOperators ?? (_setOperators = new List<SqlSetOperator>());
-
+		private List<SqlSetOperator>? _setOperators;
+		public  List<SqlSetOperator>   SetOperators => _setOperators ??= new List<SqlSetOperator>();
 		public  bool            HasSetOperators    => _setOperators != null && _setOperators.Count > 0;
 
 		public void AddUnion(SelectQuery union, bool isAll)
@@ -111,81 +123,31 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region Clone
-
-		SelectQuery(SelectQuery clone, Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			objectTree.Add(clone,     this);
-			objectTree.Add(clone.All, All);
-
-			SourceID = Interlocked.Increment(ref SourceIDCounter);
-
-			ICloneableElement parentClone;
-
-			if (clone.ParentSelect != null)
-				ParentSelect = objectTree.TryGetValue(clone.ParentSelect, out parentClone) ? (SelectQuery)parentClone : clone.ParentSelect;
-
-			Select  = new SqlSelectClause (this, clone.Select,  objectTree, doClone);
-			From    = new SqlFromClause   (this, clone.From,    objectTree, doClone);
-			Where   = new SqlWhereClause  (this, clone.Where,   objectTree, doClone);
-			GroupBy = new SqlGroupByClause(this, clone.GroupBy, objectTree, doClone);
-			Having  = new SqlWhereClause  (this, clone.Having,  objectTree, doClone);
-			OrderBy = new SqlOrderByClause(this, clone.OrderBy, objectTree, doClone);
-
-			IsParameterDependent = clone.IsParameterDependent;
-
-			if (clone.HasUniqueKeys)
-				UniqueKeys.AddRange(clone.UniqueKeys.Select(uk => uk.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
-
-			new QueryVisitor().Visit(this, expr =>
-			{
-				var sb = expr as SelectQuery;
-
-				if (sb != null && sb.ParentSelect == clone)
-					sb.ParentSelect = this;
-			});
-		}
-
-		public SelectQuery Clone()
-		{
-			return (SelectQuery)Clone(new Dictionary<ICloneableElement,ICloneableElement>(), _ => true);
-		}
-
-		public SelectQuery Clone(Predicate<ICloneableElement> doClone)
-		{
-			return (SelectQuery)Clone(new Dictionary<ICloneableElement,ICloneableElement>(), doClone);
-		}
-
-#endregion
-
 		#region Helpers
 
-		public void ForEachTable(Action<SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
+		public void ForEachTable<TContext>(TContext context, Action<TContext, SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
 		{
 			if (!visitedQueries.Add(this))
 				return;
 
 			foreach (var table in From.Tables)
-				table.ForEach(action, visitedQueries);
+				table.ForEach(context, action, visitedQueries);
 
-			new QueryVisitor().Visit(this, e =>
+			this.Visit((query: this, action, visitedQueries, context), static (context, e) =>
 			{
-				if (e is SelectQuery query && e != this)
-					query.ForEachTable(action, visitedQueries);
+				if (e is SelectQuery query && e != context.query)
+					query.ForEachTable(context.context, context.action, context.visitedQueries);
 			});
 		}
 
-		public ISqlTableSource GetTableSource(ISqlTableSource table)
+		public ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			var ts = From[table];
-
-//			if (ts == null && IsUpdate && Update.Table == table)
-//				return Update.Table;
 
 			return ts == null && ParentSelect != null ? ParentSelect.GetTableSource(table) : ts;
 		}
 
-		internal static SqlTableSource CheckTableSource(SqlTableSource ts, ISqlTableSource table, string alias)
+		internal static SqlTableSource? CheckTableSource(SqlTableSource ts, ISqlTableSource table, string? alias)
 		{
 			if (ts.Source == table && (alias == null || ts.Alias == alias))
 				return ts;
@@ -195,9 +157,9 @@ namespace LinqToDB.SqlQuery
 			if (jt != null)
 				return jt;
 
-			if (ts.Source is SelectQuery)
+			if (ts.Source is SelectQuery query)
 			{
-				var s = ((SelectQuery)ts.Source).From[table, alias];
+				var s = query.From[table, alias];
 
 				if (s != null)
 					return s;
@@ -226,13 +188,12 @@ namespace LinqToDB.SqlQuery
 		public bool CanBeNull => true;
 		public int Precedence => SqlQuery.Precedence.Unknown;
 
-
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return this == other;
 		}
 
-		public Type SystemType
+		public Type? SystemType
 		{
 			get
 			{
@@ -248,49 +209,34 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				clone = new SelectQuery(this, objectTree, doClone) { DoNotRemove = this.DoNotRemove };
-
-			return clone;
-		}
-
-		#endregion
-
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Select) .Walk(options, func);
-			((ISqlExpressionWalkable)From)   .Walk(options, func);
-			((ISqlExpressionWalkable)Where)  .Walk(options, func);
-			((ISqlExpressionWalkable)GroupBy).Walk(options, func);
-			((ISqlExpressionWalkable)Having) .Walk(options, func);
-			((ISqlExpressionWalkable)OrderBy).Walk(options, func);
+			((ISqlExpressionWalkable)Select) .Walk(options, context, func);
+			((ISqlExpressionWalkable)From)   .Walk(options, context, func);
+			((ISqlExpressionWalkable)Where)  .Walk(options, context, func);
+			((ISqlExpressionWalkable)GroupBy).Walk(options, context, func);
+			((ISqlExpressionWalkable)Having) .Walk(options, context, func);
+			((ISqlExpressionWalkable)OrderBy).Walk(options, context, func);
 
 			if (HasSetOperators)
 				foreach (var setOperator in SetOperators)
-					((ISqlExpressionWalkable)setOperator.SelectQuery).Walk(options, func);
+					((ISqlExpressionWalkable)setOperator.SelectQuery).Walk(options, context, func);
 
 			if (HasUniqueKeys)
 				foreach (var uk in UniqueKeys)
 					foreach (var k in uk)
-						k.Walk(options, func);
+						k.Walk(options, context, func);
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			return this == other;
 		}
@@ -304,10 +250,10 @@ namespace LinqToDB.SqlQuery
 		public int           SourceID { get; }
 		public SqlTableType  SqlTableType => SqlTableType.Table;
 
-		private SqlField _all;
-		public  SqlField  All
+		private SqlField? _all;
+		public  SqlField   All
 		{
-			get => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
+			get => _all ??= SqlField.All(this);
 
 			internal set
 			{
@@ -318,21 +264,24 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		List<ISqlExpression> _keys;
+		List<ISqlExpression>? _keys;
 
 		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
 		{
-			if (_keys == null && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
+			if (_keys == null)
 			{
-				_keys = new List<ISqlExpression>();
+				if (Select.Columns.Count > 0 && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
+				{
+					var q =
+						from key in ((ISqlTableSource) From.Tables[0]).GetKeys(allIfEmpty)
+						from col in Select.Columns
+						where  col.Expression == key
+						select col as ISqlExpression;
 
-				var q =
-					from key in ((ISqlTableSource)From.Tables[0]).GetKeys(allIfEmpty)
-					from col in Select.Columns
-					where col.Expression == key
-					select col as ISqlExpression;
-
-				_keys = q.ToList();
+					_keys = q.ToList();
+				}
+				else
+					_keys = new List<ISqlExpression>();
 			}
 
 			return _keys;
@@ -344,9 +293,14 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlQuery;
 
-		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+		public string SqlText
+		{
+			get
+			{
+				using var sb = Pools.StringBuilder.Allocate();
+				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			}
+		}
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
@@ -355,10 +309,7 @@ namespace LinqToDB.SqlQuery
 
 			dic.Add(this, this);
 
-			sb
-				.Append("(")
-				.Append(SourceID)
-				.Append(") ");
+			sb.Append(CultureInfo.InvariantCulture, $"({SourceID}) ");
 
 			((IQueryElement)Select). ToString(sb, dic);
 			((IQueryElement)From).   ToString(sb, dic);
@@ -382,13 +333,13 @@ namespace LinqToDB.SqlQuery
 
 		internal void EnsureFindTables()
 		{
-			new QueryVisitor().Visit(this, e =>
+			this.Visit(this, static (query, e) =>
 			{
 				if (e is SqlField f)
 				{
-					var ts = GetTableSource(f.Table);
+					var ts = query.GetTableSource(f.Table!);
 
-					if (ts == null && f != f.Table.All)
+					if (ts == null && f != f.Table!.All)
 						throw new SqlException("Table '{0}' not found.", f.Table);
 				}
 			});

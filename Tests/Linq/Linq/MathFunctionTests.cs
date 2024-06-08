@@ -20,7 +20,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Acos([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
+		public void Acos([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -29,7 +29,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Asin([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
+		public void Asin([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -47,7 +47,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Atan2([DataSources(ProviderName.Access, ProviderName.SQLiteMS)] string context)
+		public void Atan2([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -96,8 +96,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from p in    Types select Math.Floor(Sql.Cot((double)p.MoneyValue / 15).Value * 15) where t != 0.1 select t,
-					from t in from p in db.Types select Math.Floor(Sql.Cot((double)p.MoneyValue / 15).Value * 15) where t != 0.1 select t);
+					from t in from p in    Types select Math.Floor(Sql.Cot((double)p.MoneyValue / 15)!.Value * 15) where t != 0.1 select t,
+					from t in from p in db.Types select Math.Floor(Sql.Cot((double)p.MoneyValue / 15)!.Value * 15) where t != 0.1 select t);
 		}
 
 		[Test]
@@ -105,8 +105,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from p in    Types select Math.Floor(Sql.Degrees(p.MoneyValue).Value) where t != 0.1m select t,
-					from t in from p in db.Types select Math.Floor(Sql.Degrees(p.MoneyValue).Value) where t != 0.1m select t);
+					from t in from p in    Types select Math.Floor(Sql.Degrees(p.MoneyValue)!.Value) where t != 0.1m select t,
+					from t in from p in db.Types select Math.Floor(Sql.Degrees(p.MoneyValue)!.Value) where t != 0.1m select t);
 		}
 
 		[Test]
@@ -114,17 +114,18 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from p in    Types select Sql.Degrees((double)p.MoneyValue).Value where t != 0.1 select Math.Floor(t),
-					from t in from p in db.Types select Sql.Degrees((double)p.MoneyValue).Value where t != 0.1 select Math.Floor(t));
+					from t in from p in    Types select Sql.Degrees((double)p.MoneyValue)!.Value where t != 0.1 select Math.Floor(t),
+					from t in from p in db.Types select Sql.Degrees((double)p.MoneyValue)!.Value where t != 0.1 select Math.Floor(t));
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Degrees3([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from p in    Types select Sql.Degrees((int)p.MoneyValue).Value where t != 0.1 select t,
-					from t in from p in db.Types select Sql.Degrees((int)p.MoneyValue).Value where t != 0.1 select t);
+					from t in from p in    Types select Sql.Degrees((int)p.MoneyValue)!.Value where t != 0.1 select t,
+					from t in from p in db.Types select Sql.Degrees((int)p.MoneyValue)!.Value where t != 0.1 select t);
 		}
 
 		[Test]
@@ -221,11 +222,21 @@ namespace Tests.Linq
 		public void Round3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
+				var q = from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 && t != 7 select t;
+
+				if (context.IsAnyOf(ProviderName.DB2))
+					q = q.AsQueryable().Select(t => Math.Round(t, 1));
+
 				AreEqual(
 					from t in from p in    Types select Math.Round(p.MoneyValue, 1) where t != 0 && t != 7 select t,
-					from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 && t != 7 select t);
+					q);
+			}
 		}
 
+#if AZURE
+		[ActiveIssue("Fails on CI", Configuration = ProviderName.DB2)]
+#endif
 		[Test]
 		public void Round4([DataSources] string context)
 		{
@@ -244,8 +255,9 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round(p.MoneyValue, MidpointRounding.AwayFromZero) where t != 0 select t);
 		}
 
+		// ClickHouse: AwayFromZero rounding supported only for decimals. Double use bankers rounding (Round5 test)
 		[Test]
-		public void Round6([DataSources] string context)
+		public void Round6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -284,11 +296,21 @@ namespace Tests.Linq
 		public void Round10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
+				var q = from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 && t != 7 select t;
+
+				if (context.IsAnyOf(ProviderName.DB2))
+					q = q.AsQueryable().Select(t => Math.Round(t, 1, MidpointRounding.ToEven));
+
 				AreEqual(
 					from t in from p in    Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 && t != 7 select t,
-					from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 && t != 7 select t);
+					q);
+			}
 		}
 
+#if AZURE
+		[ActiveIssue("Fails on CI", Configuration = ProviderName.DB2)]
+#endif
 		[Test]
 		public void Round11([DataSources] string context)
 		{
@@ -299,14 +321,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Round12([DataSources(TestProvName.AllSQLite)] string context)
+		public void Round12([DataSources(TestProvName.AllSQLite)] string context, [Values(MidpointRounding.AwayFromZero, MidpointRounding.ToEven)] MidpointRounding mp)
 		{
-			var mp = MidpointRounding.AwayFromZero;
 
 			using (var db = GetDataContext(context))
+			{
+				var q = from t in from p in db.Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t;
+
+				if (context.IsAnyOf(ProviderName.DB2))
+					q = q.AsQueryable().Select(t => Math.Round(t, 1, mp));
+
 				AreEqual(
 					from t in from p in    Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t,
-					from t in from p in db.Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t);
+					q);
+			}
 		}
 
 		[Test]

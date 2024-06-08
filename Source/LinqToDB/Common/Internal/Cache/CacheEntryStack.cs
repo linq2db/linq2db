@@ -1,40 +1,36 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 
 namespace LinqToDB.Common.Internal.Cache
 {
-    internal class CacheEntryStack
-    {
-        private readonly CacheEntryStack _previous;
-        private readonly CacheEntry _entry;
+	internal sealed class CacheEntryStack<TKey,TEntry>
+		where TKey: notnull
+	{
+		private readonly CacheEntryStack<TKey,TEntry>? _previous;
+		private readonly CacheEntry<TKey,TEntry>?      _entry;
 
-        private CacheEntryStack()
-        {
-        }
+		private CacheEntryStack()
+		{
+		}
 
-        private CacheEntryStack(CacheEntryStack previous, CacheEntry entry)
-        {
-            if (previous == null)
-            {
-                throw new ArgumentNullException(nameof(previous));
-            }
+		private CacheEntryStack(CacheEntryStack<TKey,TEntry> previous, CacheEntry<TKey,TEntry> entry)
+		{
+			_previous = previous ?? throw new ArgumentNullException(nameof(previous));
+			_entry    = entry;
+		}
 
-            _previous = previous;
-            _entry = entry;
-        }
+		public static CacheEntryStack<TKey,TEntry> Empty { get; } = new();
 
-        public static CacheEntryStack Empty { get; } = new CacheEntryStack();
+		public CacheEntryStack<TKey,TEntry> Push(CacheEntry<TKey,TEntry> c)
+		{
+			return new(this, c);
+		}
 
-        public CacheEntryStack Push(CacheEntry c)
-        {
-            return new CacheEntryStack(this, c);
-        }
-
-        public CacheEntry Peek()
-        {
-            return _entry;
-        }
-    }
+		public CacheEntry<TKey,TEntry>? Peek()
+		{
+			return _entry;
+		}
+	}
 }

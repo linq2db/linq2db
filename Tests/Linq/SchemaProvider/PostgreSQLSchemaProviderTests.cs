@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 
 using LinqToDB;
@@ -14,17 +15,27 @@ using NUnit.Framework;
 
 namespace Tests.SchemaProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class PostgreSQLTests : TestBase
 	{
-		public static IEnumerable<ProcedureSchema> ProcedureTestCases
+		public class ProcedureTestCase
+		{
+			public ProcedureTestCase(ProcedureSchema schema)
+			{
+				Schema = schema;
+			}
+
+			public ProcedureSchema Schema { get; }
+
+			public override string ToString() => Schema.ProcedureName;
+		}
+
+		public static IEnumerable<ProcedureTestCase> ProcedureTestCases
 		{
 			get
 			{
 				// test table function schema
-				yield return new ProcedureSchema()
+				yield return new ProcedureTestCase(new ProcedureSchema()
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -42,57 +53,70 @@ namespace Tests.SchemaProvider
 						TypeName          = "TestTableFunctionSchemaResult",
 						Columns           = new List<ColumnSchema>
 						{
-							new ColumnSchema { ColumnName = "ID",                  ColumnType = "int4",                            MemberName = "ID",                  MemberType = "int?",            SystemType = typeof(int),                                                     IsNullable = true, // must be false, but we don't get this information from provider
+							new ColumnSchema { ColumnName = "ID",                  ColumnType = "int4",                            MemberName = "ID",                  MemberType = "int?",                        SystemType = typeof(int),                                                     IsNullable = true, // must be false, but we don't get this information from provider
 							                                                                                                                                                                                                                                                                            DataType = DataType.Int32          },
-							new ColumnSchema { ColumnName = "bigintDataType",      ColumnType = "int8",                            MemberName = "bigintDataType",      MemberType = "long?",           SystemType = typeof(long),                                                    IsNullable = true, DataType = DataType.Int64          },
-							new ColumnSchema { ColumnName = "numericDataType",     ColumnType = "numeric(0,0)",                    MemberName = "numericDataType",     MemberType = "decimal?",        SystemType = typeof(decimal),                                                 IsNullable = true, DataType = DataType.Decimal        },
-							new ColumnSchema { ColumnName = "smallintDataType",    ColumnType = "int2",                            MemberName = "smallintDataType",    MemberType = "short?",          SystemType = typeof(short),                                                   IsNullable = true, DataType = DataType.Int16          },
-							new ColumnSchema { ColumnName = "intDataType",         ColumnType = "int4",                            MemberName = "intDataType",         MemberType = "int?",            SystemType = typeof(int),                                                     IsNullable = true, DataType = DataType.Int32          },
-							new ColumnSchema { ColumnName = "moneyDataType",       ColumnType = "money",                           MemberName = "moneyDataType",       MemberType = "decimal?",        SystemType = typeof(decimal),                                                 IsNullable = true, DataType = DataType.Money          },
-							new ColumnSchema { ColumnName = "doubleDataType",      ColumnType = "float8",                          MemberName = "doubleDataType",      MemberType = "double?",         SystemType = typeof(double),                                                  IsNullable = true, DataType = DataType.Double         },
-							new ColumnSchema { ColumnName = "realDataType",        ColumnType = "float4",                          MemberName = "realDataType",        MemberType = "float?",          SystemType = typeof(float),                                                   IsNullable = true, DataType = DataType.Single         },
-							new ColumnSchema { ColumnName = "timestampDataType",   ColumnType = "timestamp (0) without time zone", MemberName = "timestampDataType",   MemberType = "DateTime?",       SystemType = typeof(DateTime),       ProviderSpecificType = "NpgsqlDate",     IsNullable = true, DataType = DataType.DateTime2      },
-							new ColumnSchema { ColumnName = "timestampTZDataType", ColumnType = "timestamp (0) with time zone",    MemberName = "timestampTZDataType", MemberType = "DateTimeOffset?", SystemType = typeof(DateTimeOffset), ProviderSpecificType = "NpgsqlDate",     IsNullable = true, DataType = DataType.DateTimeOffset },
-							new ColumnSchema { ColumnName = "dateDataType",        ColumnType = "date",                            MemberName = "dateDataType",        MemberType = "NpgsqlDate?",     SystemType = typeof(NpgsqlDate),     ProviderSpecificType = "NpgsqlDate",     IsNullable = true, DataType = DataType.Date           },
-							new ColumnSchema { ColumnName = "timeDataType",        ColumnType = "time (0) without time zone",      MemberName = "timeDataType",        MemberType = "TimeSpan?",       SystemType = typeof(TimeSpan),                                                IsNullable = true, DataType = DataType.Time           },
-							new ColumnSchema { ColumnName = "timeTZDataType",      ColumnType = "time (0) with time zone",         MemberName = "timeTZDataType",      MemberType = "DateTimeOffset?", SystemType = typeof(DateTimeOffset),                                          IsNullable = true, DataType = DataType.Time           },
-							new ColumnSchema { ColumnName = "intervalDataType",    ColumnType = "interval(0)",                     MemberName = "intervalDataType",    MemberType = "NpgsqlTimeSpan?", SystemType = typeof(NpgsqlTimeSpan), ProviderSpecificType = "NpgsqlTimeSpan", IsNullable = true, DataType = DataType.Time           },
-							new ColumnSchema { ColumnName = "charDataType",        ColumnType = "character(1)",                    MemberName = "charDataType",        MemberType = "char?",           SystemType = typeof(char),                                                    IsNullable = true, DataType = DataType.NChar          },
-							new ColumnSchema { ColumnName = "char20DataType",      ColumnType = "character(20)",                   MemberName = "char20DataType",      MemberType = "string",          SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.NChar          },
-							new ColumnSchema { ColumnName = "varcharDataType",     ColumnType = "character varying(20)",           MemberName = "varcharDataType",     MemberType = "string",          SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.NVarChar       },
-							new ColumnSchema { ColumnName = "textDataType",        ColumnType = "text",                            MemberName = "textDataType",        MemberType = "string",          SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.Text           },
-							new ColumnSchema { ColumnName = "binaryDataType",      ColumnType = "bytea",                           MemberName = "binaryDataType",      MemberType = "byte[]",          SystemType = typeof(byte[]),                                                  IsNullable = true, DataType = DataType.Binary         },
-							new ColumnSchema { ColumnName = "uuidDataType",        ColumnType = "uuid",                            MemberName = "uuidDataType",        MemberType = "Guid?",           SystemType = typeof(Guid),                                                    IsNullable = true, DataType = DataType.Guid           },
+							new ColumnSchema { ColumnName = "bigintDataType",      ColumnType = "int8",                            MemberName = "bigintDataType",      MemberType = "long?",                       SystemType = typeof(long),                                                    IsNullable = true, DataType = DataType.Int64          },
+							new ColumnSchema { ColumnName = "numericDataType",     ColumnType = "numeric(0,0)",                    MemberName = "numericDataType",     MemberType = "decimal?",                    SystemType = typeof(decimal),                                                 IsNullable = true, DataType = DataType.Decimal        },
+							new ColumnSchema { ColumnName = "smallintDataType",    ColumnType = "int2",                            MemberName = "smallintDataType",    MemberType = "short?",                      SystemType = typeof(short),                                                   IsNullable = true, DataType = DataType.Int16          },
+							new ColumnSchema { ColumnName = "intDataType",         ColumnType = "int4",                            MemberName = "intDataType",         MemberType = "int?",                        SystemType = typeof(int),                                                     IsNullable = true, DataType = DataType.Int32          },
+							new ColumnSchema { ColumnName = "moneyDataType",       ColumnType = "money",                           MemberName = "moneyDataType",       MemberType = "decimal?",                    SystemType = typeof(decimal),                                                 IsNullable = true, DataType = DataType.Money          },
+							new ColumnSchema { ColumnName = "doubleDataType",      ColumnType = "float8",                          MemberName = "doubleDataType",      MemberType = "double?",                     SystemType = typeof(double),                                                  IsNullable = true, DataType = DataType.Double         },
+							new ColumnSchema { ColumnName = "realDataType",        ColumnType = "float4",                          MemberName = "realDataType",        MemberType = "float?",                      SystemType = typeof(float),                                                   IsNullable = true, DataType = DataType.Single         },
+							new ColumnSchema { ColumnName = "timestampDataType",   ColumnType = "timestamp (0) without time zone", MemberName = "timestampDataType",   MemberType = "DateTime?",                   SystemType = typeof(DateTime),                                                IsNullable = true, DataType = DataType.DateTime2      },
+							new ColumnSchema { ColumnName = "timestampTZDataType", ColumnType = "timestamp (0) with time zone",    MemberName = "timestampTZDataType", MemberType = "DateTimeOffset?",             SystemType = typeof(DateTimeOffset),                                          IsNullable = true, DataType = DataType.DateTimeOffset },
+							new ColumnSchema { ColumnName = "dateDataType",        ColumnType = "date",                            MemberName = "dateDataType",        MemberType = "DateTime?",                   SystemType = typeof(DateTime),                                                IsNullable = true, DataType = DataType.Date           },
+							new ColumnSchema { ColumnName = "timeDataType",        ColumnType = "time (0) without time zone",      MemberName = "timeDataType",        MemberType = "TimeSpan?",                   SystemType = typeof(TimeSpan),                                                IsNullable = true, DataType = DataType.Time           },
+							new ColumnSchema { ColumnName = "timeTZDataType",      ColumnType = "time (0) with time zone",         MemberName = "timeTZDataType",      MemberType = "DateTimeOffset?",             SystemType = typeof(DateTimeOffset),                                          IsNullable = true, DataType = DataType.Time           },
+							new ColumnSchema { ColumnName = "intervalDataType",    ColumnType = "interval",                        MemberName = "intervalDataType",    MemberType = "TimeSpan?",                   SystemType = typeof(TimeSpan),       ProviderSpecificType = "NpgsqlInterval", IsNullable = true, DataType = DataType.Interval       },
+							new ColumnSchema { ColumnName = "intervalDataType2",   ColumnType = "interval",                        MemberName = "intervalDataType2",   MemberType = "TimeSpan?",                   SystemType = typeof(TimeSpan),       ProviderSpecificType = "NpgsqlInterval", IsNullable = true, DataType = DataType.Interval       },
+							new ColumnSchema { ColumnName = "charDataType",        ColumnType = "character(1)",                    MemberName = "charDataType",        MemberType = "char?",                       SystemType = typeof(char),                                                    IsNullable = true, DataType = DataType.NChar          },
+							new ColumnSchema { ColumnName = "char20DataType",      ColumnType = "character(20)",                   MemberName = "char20DataType",      MemberType = "string",                      SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.NChar          },
+							new ColumnSchema { ColumnName = "varcharDataType",     ColumnType = "character varying(20)",           MemberName = "varcharDataType",     MemberType = "string",                      SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.NVarChar       },
+							new ColumnSchema { ColumnName = "textDataType",        ColumnType = "text",                            MemberName = "textDataType",        MemberType = "string",                      SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.Text           },
+							new ColumnSchema { ColumnName = "binaryDataType",      ColumnType = "bytea",                           MemberName = "binaryDataType",      MemberType = "byte[]",                      SystemType = typeof(byte[]),                                                  IsNullable = true, DataType = DataType.Binary         },
+							new ColumnSchema { ColumnName = "uuidDataType",        ColumnType = "uuid",                            MemberName = "uuidDataType",        MemberType = "Guid?",                       SystemType = typeof(Guid),                                                    IsNullable = true, DataType = DataType.Guid           },
 							new ColumnSchema { ColumnName = "bitDataType",         ColumnType = "bit(-1)", // TODO: must be 3, but npgsql3 doesn't return it (npgsql4 does)
-							                                                                                                       MemberName = "bitDataType",         MemberType = "BitArray",        SystemType = typeof(BitArray),                                                IsNullable = true, DataType = DataType.BitArray       },
-							new ColumnSchema { ColumnName = "booleanDataType",     ColumnType = "bool",                            MemberName = "booleanDataType",     MemberType = "bool?",           SystemType = typeof(bool),                                                    IsNullable = true, DataType = DataType.Boolean        },
-							new ColumnSchema { ColumnName = "colorDataType",       ColumnType = "public.color",                    MemberName = "colorDataType",       MemberType = "string",          SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.Undefined      },
-							new ColumnSchema { ColumnName = "pointDataType",       ColumnType = "point",                           MemberName = "pointDataType",       MemberType = "NpgsqlPoint?",    SystemType = typeof(NpgsqlPoint),    ProviderSpecificType = "NpgsqlPoint",    IsNullable = true, DataType = DataType.Udt            },
-							new ColumnSchema { ColumnName = "lsegDataType",        ColumnType = "lseg",                            MemberName = "lsegDataType",        MemberType = "NpgsqlLSeg?",     SystemType = typeof(NpgsqlLSeg),     ProviderSpecificType = "NpgsqlLSeg",     IsNullable = true, DataType = DataType.Udt            },
-							new ColumnSchema { ColumnName = "boxDataType",         ColumnType = "box",                             MemberName = "boxDataType",         MemberType = "NpgsqlBox?",      SystemType = typeof(NpgsqlBox),      ProviderSpecificType = "NpgsqlBox",      IsNullable = true, DataType = DataType.Udt            },
-							new ColumnSchema { ColumnName = "pathDataType",        ColumnType = "path",                            MemberName = "pathDataType",        MemberType = "NpgsqlPath?",     SystemType = typeof(NpgsqlPath),     ProviderSpecificType = "NpgsqlPath",     IsNullable = true, DataType = DataType.Udt            },
-							new ColumnSchema { ColumnName = "polygonDataType",     ColumnType = "polygon",                         MemberName = "polygonDataType",     MemberType = "NpgsqlPolygon?",  SystemType = typeof(NpgsqlPolygon),  ProviderSpecificType = "NpgsqlPolygon",  IsNullable = true, DataType = DataType.Udt            },
-							new ColumnSchema { ColumnName = "circleDataType",      ColumnType = "circle",                          MemberName = "circleDataType",      MemberType = "NpgsqlCircle?",   SystemType = typeof(NpgsqlCircle),   ProviderSpecificType = "NpgsqlCircle",   IsNullable = true, DataType = DataType.Udt            },
-							new ColumnSchema { ColumnName = "lineDataType",        ColumnType = "line",                            MemberName = "lineDataType",        MemberType = "NpgsqlLine?",     SystemType = typeof(NpgsqlLine),     ProviderSpecificType = "NpgsqlLine",     IsNullable = true, DataType = DataType.Udt            },
-							new ColumnSchema { ColumnName = "inetDataType",        ColumnType = "inet",                            MemberName = "inetDataType",        MemberType = "NpgsqlInet?",     SystemType = typeof(NpgsqlInet),     ProviderSpecificType = "NpgsqlInet",     IsNullable = true, DataType = DataType.Udt            },
-							new ColumnSchema { ColumnName = "cidrDataType",        ColumnType = "cidr",                            MemberName = "cidrDataType",        MemberType = "NpgsqlInet?",     SystemType = typeof(NpgsqlInet),     ProviderSpecificType = "NpgsqlInet",     IsNullable = true, DataType = DataType.Udt            },
-							new ColumnSchema { ColumnName = "macaddrDataType",     ColumnType = "macaddr",                         MemberName = "macaddrDataType",     MemberType = "PhysicalAddress", SystemType = typeof(PhysicalAddress),                                         IsNullable = true, DataType = DataType.Udt            },
-							new ColumnSchema { ColumnName = "macaddr8DataType",    ColumnType = "macaddr8",                        MemberName = "macaddr8DataType",    MemberType = "PhysicalAddress", SystemType = typeof(PhysicalAddress),                                         IsNullable = true, DataType = DataType.Udt            },
-							new ColumnSchema { ColumnName = "jsonDataType",        ColumnType = "json",                            MemberName = "jsonDataType",        MemberType = "string",          SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.Json           },
-							new ColumnSchema { ColumnName = "jsonbDataType",       ColumnType = "jsonb",                           MemberName = "jsonbDataType",       MemberType = "string",          SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.BinaryJson     },
-							new ColumnSchema { ColumnName = "xmlDataType",         ColumnType = "xml",                             MemberName = "xmlDataType",         MemberType = "string",          SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.Xml            },
+							                                                                                                       MemberName = "bitDataType",         MemberType = "BitArray",                    SystemType = typeof(BitArray),                                                IsNullable = true, DataType = DataType.BitArray       },
+							new ColumnSchema { ColumnName = "booleanDataType",     ColumnType = "bool",                            MemberName = "booleanDataType",     MemberType = "bool?",                       SystemType = typeof(bool),                                                    IsNullable = true, DataType = DataType.Boolean        },
+							new ColumnSchema { ColumnName = "colorDataType",       ColumnType = "public.color",                    MemberName = "colorDataType",       MemberType = "string",                      SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "pointDataType",       ColumnType = "point",                           MemberName = "pointDataType",       MemberType = "NpgsqlPoint?",                SystemType = typeof(NpgsqlPoint),                ProviderSpecificType = "NpgsqlPoint",    IsNullable = true, DataType = DataType.Udt            },
+							new ColumnSchema { ColumnName = "lsegDataType",        ColumnType = "lseg",                            MemberName = "lsegDataType",        MemberType = "NpgsqlLSeg?",                 SystemType = typeof(NpgsqlLSeg),                 ProviderSpecificType = "NpgsqlLSeg",     IsNullable = true, DataType = DataType.Udt            },
+							new ColumnSchema { ColumnName = "boxDataType",         ColumnType = "box",                             MemberName = "boxDataType",         MemberType = "NpgsqlBox?",                  SystemType = typeof(NpgsqlBox),                  ProviderSpecificType = "NpgsqlBox",      IsNullable = true, DataType = DataType.Udt            },
+							new ColumnSchema { ColumnName = "pathDataType",        ColumnType = "path",                            MemberName = "pathDataType",        MemberType = "NpgsqlPath?",                 SystemType = typeof(NpgsqlPath),                 ProviderSpecificType = "NpgsqlPath",     IsNullable = true, DataType = DataType.Udt            },
+							new ColumnSchema { ColumnName = "polygonDataType",     ColumnType = "polygon",                         MemberName = "polygonDataType",     MemberType = "NpgsqlPolygon?",              SystemType = typeof(NpgsqlPolygon),              ProviderSpecificType = "NpgsqlPolygon",  IsNullable = true, DataType = DataType.Udt            },
+							new ColumnSchema { ColumnName = "circleDataType",      ColumnType = "circle",                          MemberName = "circleDataType",      MemberType = "NpgsqlCircle?",               SystemType = typeof(NpgsqlCircle),               ProviderSpecificType = "NpgsqlCircle",   IsNullable = true, DataType = DataType.Udt            },
+							new ColumnSchema { ColumnName = "lineDataType",        ColumnType = "line",                            MemberName = "lineDataType",        MemberType = "NpgsqlLine?",                 SystemType = typeof(NpgsqlLine),                 ProviderSpecificType = "NpgsqlLine",     IsNullable = true, DataType = DataType.Udt            },
+							new ColumnSchema { ColumnName = "inetDataType",        ColumnType = "inet",                            MemberName = "inetDataType",        MemberType = "IPAddress",                   SystemType = typeof(IPAddress),                  ProviderSpecificType = "NpgsqlInet",     IsNullable = true, DataType = DataType.Udt            },
+#if NET7_0_OR_GREATER
+							new ColumnSchema { ColumnName = "cidrDataType",        ColumnType = "cidr",                            MemberName = "cidrDataType",        MemberType = "ValueTuple<IPAddress, byte>?", SystemType = typeof(ValueTuple<IPAddress, byte>), ProviderSpecificType = "NpgsqlCidr",   IsNullable = true, DataType = DataType.Udt            },
+#else
+							new ColumnSchema { ColumnName = "cidrDataType",        ColumnType = "cidr",                            MemberName = "cidrDataType",        MemberType = "ValueTuple<IPAddress, int>?", SystemType = typeof(ValueTuple<IPAddress, int>), ProviderSpecificType = "NpgsqlInet",     IsNullable = true, DataType = DataType.Udt            },
+#endif
+							new ColumnSchema { ColumnName = "macaddrDataType",     ColumnType = "macaddr",                         MemberName = "macaddrDataType",     MemberType = "PhysicalAddress",             SystemType = typeof(PhysicalAddress),                                         IsNullable = true, DataType = DataType.Udt            },
+							new ColumnSchema { ColumnName = "macaddr8DataType",    ColumnType = "macaddr8",                        MemberName = "macaddr8DataType",    MemberType = "PhysicalAddress",             SystemType = typeof(PhysicalAddress),                                         IsNullable = true, DataType = DataType.Udt            },
+							new ColumnSchema { ColumnName = "jsonDataType",        ColumnType = "json",                            MemberName = "jsonDataType",        MemberType = "string",                      SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.Json           },
+							new ColumnSchema { ColumnName = "jsonbDataType",       ColumnType = "jsonb",                           MemberName = "jsonbDataType",       MemberType = "string",                      SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.BinaryJson     },
+							new ColumnSchema { ColumnName = "xmlDataType",         ColumnType = "xml",                             MemberName = "xmlDataType",         MemberType = "string",                      SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.Xml            },
 							new ColumnSchema { ColumnName = "varBitDataType",      ColumnType = "bit varying(-1)", // TODO: length missing from npgsql
-							                                                                                                       MemberName = "varBitDataType",      MemberType = "BitArray",        SystemType = typeof(BitArray),                                                IsNullable = true, DataType = DataType.BitArray       },
+							                                                                                                       MemberName = "varBitDataType",      MemberType = "BitArray",                    SystemType = typeof(BitArray),                                                IsNullable = true, DataType = DataType.BitArray       },
+							new ColumnSchema { ColumnName = "strarray",            ColumnType = "text[]",                          MemberName = "strarray",            MemberType = "string[]",                    SystemType = typeof(string[]),                                                IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "intarray",            ColumnType = "integer[]",                       MemberName = "intarray",            MemberType = "int[]",                       SystemType = typeof(int[]),                                                   IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "int2darray",          ColumnType = "integer[]",                       MemberName = "int2darray",          MemberType = "int[]",                       SystemType = typeof(int[]),                                                   IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "longarray",           ColumnType = "bigint[]",                        MemberName = "longarray",           MemberType = "long[]",                      SystemType = typeof(long[]),                                                IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "doublearray",         ColumnType = "double precision[]",              MemberName = "doublearray",         MemberType = "double[]",                    SystemType = typeof(double[]),                                               IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "intervalarray",       ColumnType = "interval[]",                      MemberName = "intervalarray",       MemberType = "TimeSpan[]",                  SystemType = typeof(TimeSpan[]),                                              IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "numericarray",        ColumnType = "numeric[]",                       MemberName = "numericarray",        MemberType = "decimal[]",                   SystemType = typeof(decimal[]),                                               IsNullable = true, DataType = DataType.Undefined      },
+							new ColumnSchema { ColumnName = "decimalarray",        ColumnType = "numeric[]",                       MemberName = "decimalarray",        MemberType = "decimal[]",                   SystemType = typeof(decimal[]),                                               IsNullable = true, DataType = DataType.Undefined      },
 						}
 					},
 					SimilarTables = new List<TableSchema>
 					{
 						new TableSchema { TableName = "AllTypes" }
 					}
-				};
+				});
 
 				// test parameters directions
-				yield return new ProcedureSchema
+				yield return new ProcedureTestCase(new ProcedureSchema
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -109,10 +133,10 @@ namespace Tests.SchemaProvider
 						new ParameterSchema { SchemaName = "param2", SchemaType = "integer", IsIn  = true, IsOut = true, ParameterName = "param2", ParameterType = "int?", SystemType = typeof(int), DataType = DataType.Int32 },
 						new ParameterSchema { SchemaName = "param3", SchemaType = "integer",               IsOut = true, ParameterName = "param3", ParameterType = "int?", SystemType = typeof(int), DataType = DataType.Int32 }
 					}
-				};
+				});
 
 				// table function with single column result
-				yield return new ProcedureSchema
+				yield return new ProcedureTestCase(new ProcedureSchema
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -137,10 +161,10 @@ namespace Tests.SchemaProvider
 							new ColumnSchema { ColumnName = "param2", ColumnType = "int4", MemberName = "param2", MemberType = "int?", SystemType = typeof(int), IsNullable = true, DataType = DataType.Int32 }
 						}
 					}
-				};
+				});
 
 				// table function with multiple columns result
-				yield return new ProcedureSchema
+				yield return new ProcedureTestCase(new ProcedureSchema
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -168,10 +192,10 @@ namespace Tests.SchemaProvider
 							new ColumnSchema { ColumnName = "param4", ColumnType = "int4", MemberName = "param4", MemberType = "int?", SystemType = typeof(int), IsNullable = true, DataType = DataType.Int32 }
 						}
 					}
-				};
+				});
 
 				// scalar function
-				yield return new ProcedureSchema
+				yield return new ProcedureTestCase(new ProcedureSchema
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -204,10 +228,10 @@ namespace Tests.SchemaProvider
 							DataType      = DataType.Int32
 						}
 					}
-				};
+				});
 
 				// scalar function
-				yield return new ProcedureSchema()
+				yield return new ProcedureTestCase(new ProcedureSchema()
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -223,10 +247,10 @@ namespace Tests.SchemaProvider
 						new ParameterSchema { SchemaName = "param1", SchemaType = "integer", IsIn  = true, ParameterName = "param1", ParameterType = "int?", SystemType = typeof(int), DataType = DataType.Int32 },
 						new ParameterSchema { SchemaName = "param2", SchemaType = "integer", IsOut = true, ParameterName = "param2", ParameterType = "int?", SystemType = typeof(int), DataType = DataType.Int32 }
 					}
-				};
+				});
 
 				// custom aggregate
-				yield return new ProcedureSchema()
+				yield return new ProcedureTestCase(new ProcedureSchema()
 				{
 					CatalogName         = "SET_BY_TEST",
 					SchemaName          = "public",
@@ -242,27 +266,28 @@ namespace Tests.SchemaProvider
 						new ParameterSchema { SchemaType = "double precision", IsResult = true, ParameterName = "__skip", ParameterType = "double?", SystemType = typeof(double), DataType = DataType.Double },
 						new ParameterSchema { SchemaType = "double precision", IsIn     = true, ParameterName = "__skip", ParameterType = "double?", SystemType = typeof(double), DataType = DataType.Double }
 					}
-				};
+				});
 			}
 		}
 
-#if !NETSTANDARD1_6
 		[Test]
 		public void ProceduresSchemaProviderTest(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
-			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
+			[ValueSource(nameof(ProcedureTestCases))] ProcedureTestCase testCase)
 		{
-			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10) || context.Contains(TestProvName.PostgreSQL11) || context.Contains(TestProvName.PostgreSQLLatest);
-			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
+			var macaddr8Supported = context.IsAnyOf(TestProvName.AllPostgreSQL10Plus);
+			var jsonbSupported    = context.IsAnyOf(TestProvName.AllPostgreSQL95Plus);
+
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
+				var expectedProc = testCase.Schema;
+				expectedProc.CatalogName = TestUtils.GetDatabaseName(db, context);
 
 				// schema load takes too long if system schema included
 				// added SchemaProceduresLoadedTest to test system schema
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(
 					db,
-					TestUtils.GetDefaultSchemaOptions(context, new GetSchemaOptions() { ExcludedSchemas = new[] { "pg_catalog" } }));
+					new GetSchemaOptions() { ExcludedSchemas = new[] { "pg_catalog" } });
 
 				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
 
@@ -319,15 +344,15 @@ namespace Tests.SchemaProvider
 					var expectedTable = expectedProc.ResultTable;
 					var actualTable = procedure.ResultTable;
 
-					Assert.AreEqual(expectedTable.ID, actualTable.ID);
-					Assert.AreEqual(expectedTable.CatalogName, actualTable.CatalogName);
-					Assert.AreEqual(expectedTable.SchemaName, actualTable.SchemaName);
-					Assert.AreEqual(expectedTable.TableName, actualTable.TableName);
-					Assert.AreEqual(expectedTable.Description, actualTable.Description);
-					Assert.AreEqual(expectedTable.IsDefaultSchema, actualTable.IsDefaultSchema);
-					Assert.AreEqual(expectedTable.IsView, actualTable.IsView);
-					Assert.AreEqual(expectedTable.IsProcedureResult, actualTable.IsProcedureResult);
-					Assert.AreEqual(expectedTable.TypeName, actualTable.TypeName);
+					Assert.AreEqual(expectedTable.ID                , actualTable!.ID);
+					Assert.AreEqual(expectedTable.CatalogName       , actualTable.CatalogName);
+					Assert.AreEqual(expectedTable.SchemaName        , actualTable.SchemaName);
+					Assert.AreEqual(expectedTable.TableName         , actualTable.TableName);
+					Assert.AreEqual(expectedTable.Description       , actualTable.Description);
+					Assert.AreEqual(expectedTable.IsDefaultSchema   , actualTable.IsDefaultSchema);
+					Assert.AreEqual(expectedTable.IsView            , actualTable.IsView);
+					Assert.AreEqual(expectedTable.IsProcedureResult , actualTable.IsProcedureResult);
+					Assert.AreEqual(expectedTable.TypeName          , actualTable.TypeName);
 					Assert.AreEqual(expectedTable.IsProviderSpecific, actualTable.IsProviderSpecific);
 
 					Assert.IsNotNull(actualTable.ForeignKeys);
@@ -345,7 +370,7 @@ namespace Tests.SchemaProvider
 					{
 						var expectedColumn = expectedColumns
 							.Where(_ => _.ColumnName == actualColumn.ColumnName)
-							.SingleOrDefault();
+							.SingleOrDefault()!;
 
 						Assert.IsNotNull(expectedColumn);
 
@@ -367,8 +392,16 @@ namespace Tests.SchemaProvider
 							Assert.Contains(actualColumn.ColumnType, new[] { "bit(-1)", "bit(3)" });
 						else if (expectedColumn.ColumnType == "bool")
 							Assert.Contains(actualColumn.ColumnType, new[] { "bool", "boolean" });
+						else if (expectedColumn.ColumnType == "time (0) with time zone")
+							Assert.Contains(actualColumn.ColumnType, new[] { "time (0) with time zone", "time with time zone" });
+						else if (expectedColumn.ColumnType == "time (0) without time zone")
+							Assert.Contains(actualColumn.ColumnType, new[] { "time (0) without time zone", "time without time zone" });
+						else if (expectedColumn.ColumnType == "timestamp (0) with time zone")
+							Assert.Contains(actualColumn.ColumnType, new[] { "timestamp (0) with time zone", "timestamp with time zone" });
+						else if (expectedColumn.ColumnType == "timestamp (0) without time zone")
+							Assert.Contains(actualColumn.ColumnType, new[] { "timestamp (0) without time zone", "timestamp without time zone" });
 						else
-						Assert.AreEqual(expectedColumn.ColumnType, actualColumn.ColumnType);
+							Assert.AreEqual(expectedColumn.ColumnType, actualColumn.ColumnType);
 
 						Assert.AreEqual(expectedColumn.IsNullable, actualColumn.IsNullable);
 						Assert.AreEqual(expectedColumn.IsIdentity, actualColumn.IsIdentity);
@@ -390,9 +423,9 @@ namespace Tests.SchemaProvider
 
 					Assert.IsNotNull(procedure.SimilarTables);
 
-					foreach (var table in procedure.SimilarTables)
+					foreach (var table in procedure.SimilarTables!)
 					{
-						var tbl = expectedProc.SimilarTables
+						var tbl = expectedProc.SimilarTables!
 							.Where(_ => _.TableName == table.TableName)
 							.SingleOrDefault();
 
@@ -405,7 +438,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void DescriptionTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
@@ -420,7 +453,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void TestMaterializedViewSchema([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
@@ -435,8 +468,8 @@ namespace Tests.SchemaProvider
 				
 				Assert.IsNotNull(view);
 
-				Assert.AreEqual("public.Issue2023", view.ID);
-				Assert.IsNull(view.CatalogName);
+				Assert.That(view!.ID, Is.EqualTo(view.CatalogName + ".public.Issue2023"));
+				Assert.IsNotNull(view.CatalogName);
 				Assert.AreEqual("public", view.SchemaName);
 				Assert.AreEqual("Issue2023", view.TableName);
 				Assert.AreEqual("This is the Issue2023 matview", view.Description);
@@ -449,7 +482,7 @@ namespace Tests.SchemaProvider
 				Assert.AreEqual(5, view.Columns.Count);
 
 				Assert.AreEqual("PersonID", view.Columns[0].ColumnName);
-				Assert.AreEqual("int4", view.Columns[0].ColumnType);
+				Assert.AreEqual("integer", view.Columns[0].ColumnType);
 				Assert.AreEqual(true, view.Columns[0].IsNullable);
 				Assert.AreEqual(false, view.Columns[0].IsIdentity);
 				Assert.AreEqual(false, view.Columns[0].IsPrimaryKey);
@@ -545,7 +578,5 @@ namespace Tests.SchemaProvider
 				Assert.AreEqual(view, view.Columns[4].Table);
 			}
 		}
-#endif
 	}
-
 }

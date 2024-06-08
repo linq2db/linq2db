@@ -1,13 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-
-using Tests.Model;
-
 using LinqToDB;
-
-using NUnit.Framework;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
+using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.xUpdate
 {
@@ -17,10 +14,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceInsertFromTable([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
-
 				PrepareData(db);
 
 				var table = GetTarget(db);
@@ -50,8 +45,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceInsertFromQuery([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -81,8 +75,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceInsertFromQueryWithSelect([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -92,7 +85,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
-						Id = _.Id,
+						Id     = _.Id,
 						Field1 = _.Field1,
 						Field2 = _.Field2,
 						Field3 = _.Id + _.Id,
@@ -121,11 +114,10 @@ namespace Tests.xUpdate
 		// DB2, SAPHANA: match condition matches multiple target records
 		[Test]
 		public void SameSourceInsertFromTableWithMatch([MergeDataContextSource(
-			ProviderName.DB2, ProviderName.SapHana)]
+			ProviderName.DB2, TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -155,8 +147,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceInsertFromTableWithMatchAlternative([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -186,11 +177,10 @@ namespace Tests.xUpdate
 		// DB2, SAPHANA: match condition matches multiple target records
 		[Test]
 		public void SameSourceInsertFromQueryWithSelectAndMatch([MergeDataContextSource(
-			ProviderName.DB2, ProviderName.SapHana)]
+			ProviderName.DB2, TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -200,7 +190,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
-						Id = _.Id,
+						Id     = _.Id,
 						Field1 = _.Field3,
 						Field2 = _.Field4,
 						Field3 = _.Id + _.Id,
@@ -234,8 +224,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceInsertFromQueryWithSelectAndMatchAlternative([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -245,7 +234,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
-						Id = _.Id,
+						Id     = _.Id,
 						Field1 = _.Field3,
 						Field2 = _.Field4,
 						Field3 = _.Id + _.Id,
@@ -279,8 +268,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceInsertFromCollection([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -309,10 +297,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceInsertFromEmptyCollection([MergeDataContextSource] string context)
+		public void SameSourceInsertFromEmptyCollection([MergeDataContextSource(TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -320,7 +307,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(new TestMapping1[0])
+					.Using(Array<TestMapping1>.Empty)
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
@@ -341,11 +328,10 @@ namespace Tests.xUpdate
 		// DB2, SAPHANA: match condition matches multiple target records
 		[Test]
 		public void SameSourceInsertFromCollectionWithMatch([MergeDataContextSource(
-			ProviderName.DB2, ProviderName.SapHana)]
+			ProviderName.DB2, TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -375,8 +361,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceInsertFromCollectionWithMatchAlternative([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -404,10 +389,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceInsertFromEmptyCollectionWithMatch([MergeDataContextSource] string context)
+		public void SameSourceInsertFromEmptyCollectionWithMatch([MergeDataContextSource(TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -415,7 +399,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(new TestMapping1[0])
+					.Using(Array<TestMapping1>.Empty)
 					.On((t, s) => t.Id == s.Id && s.Field3 != null)
 					.InsertWhenNotMatched()
 					.Merge();
@@ -434,10 +418,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource] string context)
+		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -447,7 +430,7 @@ namespace Tests.xUpdate
 							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
 							 select new TestMapping1()
 							 {
-								 Id = t1.Id,
+								 Id     = t1.Id,
 								 // this is workaround
 								 //Fake = t2.Fake,
 								 Field1 = t1.Field1,
@@ -460,7 +443,8 @@ namespace Tests.xUpdate
 				var results = source.ToList();
 
 				// 5 commas after selected columns and 1 comma in join
-				Assert.AreEqual(6, db.LastQuery.Count(c => c == ','));
+				var explicitJoin = db.LastQuery!.Contains("JOIN");
+				Assert.AreEqual(explicitJoin ? 5 : 6, db.LastQuery!.Count(c => c == ','));
 
 				Assert.AreEqual(16, results.Count);
 			}
@@ -468,10 +452,9 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(896, Details = "Selects 10 columns instead of 6. Also see InsertFromCrossJoinedSourceQuery2Workaround for workaround")]
 		[Test]
-		public void InsertFromCrossJoinedSourceQuery2([MergeDataContextSource] string context)
+		public void InsertFromCrossJoinedSourceQuery2([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -481,8 +464,8 @@ namespace Tests.xUpdate
 							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
 							 select new TestMapping1()
 							 {
-								 Id = t1.Id,
-								 Fake = t2.Fake,
+								 Id     = t1.Id,
+								 Fake   = t2.Fake,
 								 Field1 = t1.Field1,
 								 Field2 = t2.Field2,
 								 Field3 = t1.Field3,
@@ -493,7 +476,7 @@ namespace Tests.xUpdate
 				var results = source.ToList();
 
 				// 5 commas after selected columns and 1 comma in join
-				Assert.AreEqual(6, db.LastQuery.Count(c => c == ','));
+				Assert.AreEqual(6, db.LastQuery!.Count(c => c == ','));
 
 				Assert.AreEqual(16, results.Count);
 			}
@@ -527,9 +510,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromCrossJoinedSourceQuery([MergeDataContextSource] string context)
+		public void InsertFromCrossJoinedSourceQuery([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data
@@ -547,8 +530,8 @@ namespace Tests.xUpdate
 							 from t2 in db.GetTable<CrossJoinRight>()
 							 select new
 							 {
-								 LeftId = t1.Id,
-								 RightId = t2.Id,
+								 LeftId   = t1.Id,
+								 RightId  = t2.Id,
 								 ResultId = t1.Id + t2.Id
 							 };
 
@@ -558,8 +541,8 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.ResultId)
 					.InsertWhenNotMatched(s => new CrossJoinResult()
 					{
-						Id = s.ResultId,
-						LeftId = s.LeftId,
+						Id      = s.ResultId,
+						LeftId  = s.LeftId,
 						RightId = s.RightId
 					})
 					.Merge();
@@ -588,12 +571,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(896, Details = "Regression from 1.x: Member 'TestMapping1.Fake' is not a table column.")]
 		[Test]
-		public void InsertFromCrossJoinedSourceQuery3([MergeDataContextSource] string context)
+		public void InsertFromCrossJoinedSourceQuery3([MergeDataContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -603,8 +584,8 @@ namespace Tests.xUpdate
 							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
 							 select new TestMapping1()
 							 {
-								 Id = t1.Id,
-								 Fake = t2.Fake,
+								 Id     = t1.Id,
+								 Fake   = t2.Fake,
 								 Field1 = t1.Field1,
 								 Field2 = t2.Field2,
 								 Field3 = t1.Field3,
@@ -621,16 +602,14 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.Fail("Almost done, uncomment and fix asserts below");
-
 				AssertRowCount(0, rows, context);
 			}
 		}
 
 		[Test]
-		public void InsertFromSelectManySourceQuery([MergeDataContextSource] string context)
+		public void InsertFromSelectManySourceQuery([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data
@@ -638,10 +617,10 @@ namespace Tests.xUpdate
 				db.GetTable<CrossJoinRight>().Delete();
 				db.GetTable<CrossJoinResult>().Delete();
 
-				db.Insert(new CrossJoinLeft() { Id = 1 });
-				db.Insert(new CrossJoinLeft() { Id = 2 });
-				db.Insert(new CrossJoinRight() { Id = 10 });
-				db.Insert(new CrossJoinRight() { Id = 20 });
+				db.Insert(new CrossJoinLeft()   { Id = 1 });
+				db.Insert(new CrossJoinLeft()   { Id = 2 });
+				db.Insert(new CrossJoinRight()  { Id = 10 });
+				db.Insert(new CrossJoinRight()  { Id = 20 });
 				db.Insert(new CrossJoinResult() { Id = 11, LeftId = 100, RightId = 200 });
 
 				var source = db.GetTable<CrossJoinLeft>()
@@ -650,8 +629,8 @@ namespace Tests.xUpdate
 						(t1, t2) =>
 						 new
 							 {
-								 LeftId = t1.Id,
-								 RightId = t2.Id,
+								 LeftId   = t1.Id,
+								 RightId  = t2.Id,
 								 ResultId = t1.Id + t2.Id
 							 });
 
@@ -661,8 +640,8 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.ResultId)
 					.InsertWhenNotMatched(s => new CrossJoinResult()
 					{
-						Id = s.ResultId,
-						LeftId = s.LeftId,
+						Id      = s.ResultId,
+						LeftId  = s.LeftId,
 						RightId = s.RightId
 					})
 					.Merge();
@@ -694,8 +673,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromPartialSourceProjection_UnknownFieldInDefaultSetter([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -707,18 +685,17 @@ namespace Tests.xUpdate
 						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
 						.OnTargetKey()
 						.InsertWhenNotMatched()
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
 			}
 		}
 
 		[Test]
 		public void InsertFromPartialSourceProjection_UnknownFieldInSetter([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -731,13 +708,14 @@ namespace Tests.xUpdate
 						.OnTargetKey()
 						.InsertWhenNotMatched(s => new TestMapping1()
 						{
-							Id = s.Id,
+							Id     = s.Id,
 							Field1 = s.Field3
 						})
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field3 doesn't exist in source", exception.Message);
+				Assert.AreEqual("'s.Field3' cannot be converted to SQL.", exception.Message);
+				//Assert.AreEqual("Column Field3 doesn't exist in source", exception.Message);
 			}
 		}
 		#endregion
@@ -745,11 +723,10 @@ namespace Tests.xUpdate
 		#region Insert<TEntity>(predicate)
 		[Test]
 		public void SameSourceInsertWithPredicate([MergeDataContextSource(
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -759,7 +736,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
-						Id = _.Id,
+						Id     = _.Id,
 						Field1 = _.Field3,
 						Field2 = _.Field4,
 						Field3 = _.Id,
@@ -795,8 +772,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceInsertWithCreate([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -808,7 +784,7 @@ namespace Tests.xUpdate
 					.OnTargetKey()
 					.InsertWhenNotMatched(_ => new TestMapping1()
 					{
-						Id = 10 + _.Id,
+						Id     = 10 + _.Id,
 						Field1 = 123,
 						Field2 = _.Field1,
 						Field3 = _.Field2,
@@ -845,10 +821,62 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void SameSourceInsertWithComplexSetter([MergeDataContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var name = "test";
+				var idx  = 6;
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatched(_ => new TestMapping1()
+					{
+						Id     = 10 + _.Id,
+						Field1 = 123,
+						Field2 = Sql.AsSql(name).Length + idx,
+						Field3 = _.Field2,
+						Field4 = 999,
+						Field5 = 888
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(6, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+
+				Assert.AreEqual(InitialSourceData[2].Id + 10, result[4].Id);
+				Assert.AreEqual(123, result[4].Field1);
+				Assert.AreEqual(InitialSourceData[2].Field1, result[4].Field2);
+				Assert.AreEqual(4, result[4].Field3);
+				Assert.AreEqual(999, result[4].Field4);
+				Assert.AreEqual(888, result[4].Field5);
+
+				Assert.AreEqual(InitialSourceData[3].Id + 10, result[5].Id);
+				Assert.AreEqual(123, result[5].Field1);
+				Assert.AreEqual(10, result[5].Field2);
+				Assert.IsNull(result[5].Field3);
+				Assert.AreEqual(999, result[5].Field4);
+				Assert.AreEqual(888, result[5].Field5);
+			}
+		}
+
+		[Test]
 		public void InsertPartialSourceProjection_KnownFieldInSetter([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -861,7 +889,7 @@ namespace Tests.xUpdate
 					.OnTargetKey()
 					.InsertWhenNotMatched(_ => new TestMapping1()
 					{
-						Id = 10 + _.Id,
+						Id     = 10 + _.Id,
 						Field1 = 123,
 						Field2 = _.Field1,
 						Field3 = _.Field2,
@@ -900,8 +928,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DataContextTest([MergeDataContextSource] string context)
 		{
-			using (var db = new DataContext(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -913,7 +940,7 @@ namespace Tests.xUpdate
 					.OnTargetKey()
 					.InsertWhenNotMatched(_ => new TestMapping1
 					{
-						Id = 10 + _.Id,
+						Id     = 10 + _.Id,
 						Field1 = 123,
 						Field2 = _.Field1,
 						Field3 = _.Field2,
@@ -953,11 +980,10 @@ namespace Tests.xUpdate
 		#region Insert<TEntity>(predicate, create)
 		[Test]
 		public void SameSourceInsertWithPredicateAndCreate([MergeDataContextSource(
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -971,7 +997,7 @@ namespace Tests.xUpdate
 						_ => _.Field2 != null,
 						_ => new TestMapping1()
 						{
-							Id = 10 + _.Id,
+							Id     = 10 + _.Id,
 							Field1 = 123,
 							Field2 = _.Field1,
 							Field3 = _.Field2,
@@ -1005,11 +1031,10 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertWithPredicatePartialSourceProjection_KnownFieldInCondition([MergeDataContextSource(
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1024,7 +1049,7 @@ namespace Tests.xUpdate
 						_ => _.Field2 != null,
 						_ => new TestMapping1()
 						{
-							Id = 10 + _.Id,
+							Id     = 10 + _.Id,
 							Field1 = 123,
 							Field2 = _.Field1,
 							Field3 = _.Field2,
@@ -1058,11 +1083,10 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceInsertWithPredicateAndCreatePartialSourceProjection_UnknownFieldInCondition([MergeDataContextSource(
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1077,16 +1101,16 @@ namespace Tests.xUpdate
 						_ => _.Field2 != null,
 						_ => new TestMapping1()
 						{
-							Id = 10 + _.Id,
+							Id     = 10 + _.Id,
 							Field1 = 123,
 							Field2 = _.Field1,
 							Field4 = 999,
 							Field5 = 888
 						})
-					.Merge());
+					.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+				Assert.AreEqual("'_.Field2' cannot be converted to SQL.", exception.Message);
 			}
 		}
 		#endregion
@@ -1095,8 +1119,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceInsertFromTable([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1108,7 +1131,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.OtherId)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
-						Id = s.OtherId,
+						Id     = s.OtherId,
 						Field1 = s.OtherField1,
 						Field2 = s.OtherField2,
 						Field3 = s.OtherField3,
@@ -1135,8 +1158,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceInsertFromQuery([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1148,7 +1170,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.OtherId && s.OtherField3 != null)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
-						Id = s.OtherId,
+						Id     = s.OtherId,
 						Field1 = s.OtherField5,
 						Field2 = s.OtherField4,
 						Field3 = s.OtherField3,
@@ -1180,8 +1202,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceInsertFromQueryWithSelect([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1191,7 +1212,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new TestMapping2()
 					{
-						OtherId = _.OtherId,
+						OtherId     = _.OtherId,
 						OtherField1 = _.OtherField1,
 						OtherField2 = _.OtherField2,
 						OtherField3 = _.OtherId + _.OtherId,
@@ -1201,7 +1222,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.OtherId)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
-						Id = s.OtherId,
+						Id     = s.OtherId,
 						Field1 = s.OtherField3,
 						Field2 = s.OtherField2,
 						Field3 = s.OtherField1,
@@ -1240,8 +1261,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceInsertFromList([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1253,7 +1273,7 @@ namespace Tests.xUpdate
 					.On((t, s) => t.Id == s.OtherId)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
-						Id = s.OtherId,
+						Id     = s.OtherId,
 						Field1 = s.OtherField1,
 						Field2 = s.OtherField5,
 						Field3 = s.OtherField2,
@@ -1290,10 +1310,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceInsertFromEmptyList([MergeDataContextSource] string context)
+		public void OtherSourceInsertFromEmptyList([MergeDataContextSource(TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1301,10 +1320,11 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(new TestMapping2[0])
+					.Using(Array<TestMapping2>.Empty)
 					.On((t, s) => t.Id == s.OtherId)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{
+						Id     = s.OtherId,
 						Field1 = s.OtherField1,
 						Field2 = s.OtherField5,
 						Field3 = s.OtherField2,
@@ -1330,11 +1350,10 @@ namespace Tests.xUpdate
 		#region Insert<TTarget, TSource>(predicate, create)
 		[Test]
 		public void OtherSourceInsertWithPredicate([MergeDataContextSource(
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1348,7 +1367,7 @@ namespace Tests.xUpdate
 						s => s.OtherField4 == 216,
 						s => new TestMapping1()
 						{
-							Id = s.OtherId,
+							Id     = s.OtherId,
 							Field1 = s.OtherField1,
 							Field2 = s.OtherField2,
 							Field3 = s.OtherField3,
@@ -1373,11 +1392,10 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousSourceInsertWithPredicate([MergeDataContextSource(
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1387,19 +1405,19 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new
 					{
-						Key = _.OtherId,
+						Key     = _.OtherId,
 						Field01 = _.OtherField1,
 						Field02 = _.OtherField2,
 						Field03 = _.OtherField3,
 						Field04 = _.OtherField4,
 						Field05 = _.OtherField5,
 					}))
-					.On((t, s) => t.Id == s.Key)
+					.On((t, s)  => t.Id == s.Key)
 					.InsertWhenNotMatchedAnd(
-						s => s.Field04 == 216,
-						s => new TestMapping1()
+						s       => s.Field04 == 216,
+						s       => new TestMapping1()
 						{
-							Id = s.Key,
+							Id     = s.Key,
 							Field1 = s.Field01,
 							Field2 = s.Field02,
 							Field3 = s.Field03,
@@ -1424,11 +1442,10 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousListSourceInsertWithPredicate([MergeDataContextSource(
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1436,21 +1453,21 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(GetSource2(db).ToList().Select(_ => new
+					.Using(GetSource2(db).OrderBy(_ => _.OtherId).ToList().Select(_ => new
 					{
-						Key = _.OtherId,
+						Key     = _.OtherId,
 						Field01 = _.OtherField1,
 						Field02 = _.OtherField2,
 						Field03 = _.OtherField3,
 						Field04 = _.OtherField4,
 						Field05 = _.OtherField5,
 					}))
-					.On((t, s) => t.Id == s.Key)
+					.On((t, s)  => t.Id == s.Key)
 					.InsertWhenNotMatchedAnd(
-						s => s.Field04 == 216,
-						s => new TestMapping1()
+						s       => s.Field04 == 216,
+						s       => new TestMapping1()
 						{
-							Id = s.Key,
+							Id     = s.Key,
 							Field1 = s.Field01,
 							Field2 = s.Field02,
 							Field3 = s.Field03,
@@ -1476,11 +1493,10 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertReservedAndCaseNames([MergeDataContextSource(
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1490,23 +1506,23 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new
 					{
-						field = _.OtherId,
-						Field = _.OtherField1,
-						and = _.OtherField2,
-						or = _.OtherField3,
-						between = _.OtherField4,
-						@case = _.OtherField5
+						field  = _.OtherId,
+						Field  = _.OtherField1,
+						and    = _.OtherField2,
+						Target = _.OtherField3,
+						Source = _.OtherField4,
+						@case  = _.OtherField5
 					}))
 					.On((t, s) => t.Id == s.field)
 					.InsertWhenNotMatchedAnd(
-						s => s.between == 216,
-						s => new TestMapping1()
+						s      => s.Source == 216,
+						s      => new TestMapping1()
 						{
-							Id = s.field,
+							Id     = s.field,
 							Field1 = s.Field,
 							Field2 = s.and,
-							Field3 = s.or,
-							Field4 = s.between,
+							Field3 = s.Target,
+							Field4 = s.Source,
 							Field5 = s.@case
 						})
 					.Merge();
@@ -1527,11 +1543,10 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertReservedAndCaseNamesFromList([MergeDataContextSource(
-			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1541,19 +1556,19 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(GetSource2(db).ToList().Select(_ => new
 					{
-						@as = _.OtherId,
-						take = _.OtherField1,
-						skip = _.OtherField2,
-						Skip = _.OtherField3,
+						@as    = _.OtherId,
+						take   = _.OtherField1,
+						skip   = _.OtherField2,
+						Skip   = _.OtherField3,
 						insert = _.OtherField4,
 						SELECT = _.OtherField5
 					}))
 					.On((t, s) => t.Id == s.@as)
 					.InsertWhenNotMatchedAnd(
-						s => s.insert == 216,
-						s => new TestMapping1()
+						s      => s.insert == 216,
+						s      => new TestMapping1()
 						{
-							Id = s.@as,
+							Id     = s.@as,
 							Field1 = s.take,
 							Field2 = s.skip,
 							Field3 = s.Skip,
@@ -1566,15 +1581,15 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				if (context != ProviderName.Sybase)
+				if (!context.IsAnyOf(ProviderName.Sybase))
 					Assert.AreEqual(5, result.Count);
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 				AssertRow(InitialTargetData[3], result[3], null, null);
-				if (context != ProviderName.Sybase)
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+				if (!context.IsAnyOf(ProviderName.Sybase))
+					AssertRow(InitialSourceData[3], result[4], null, 216);
 			}
 		}
 		#endregion
@@ -1583,8 +1598,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task SameSourceInsertFromTableAsyn([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1615,8 +1629,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task SameSourceInsertFromQueryAsyn([MergeDataContextSource] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1649,9 +1662,9 @@ namespace Tests.xUpdate
 			Configuration = TestProvName.AllSybase,
 			Details       = "Cross-join doesn't work in Sybase. Also see SqlLinqCrossJoinSubQuery test")]
 		[Test]
-		public void CrossJoinedSourceWithSingleFieldSelection([MergeDataContextSource] string context)
+		public void CrossJoinedSourceWithSingleFieldSelection([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data
@@ -1712,12 +1725,12 @@ namespace Tests.xUpdate
 		}
 
 		// same as CrossJoinedSourceWithSingleFieldSelection test but with server-side sort
-		// it returns incorrectly ordered data for DB2 and Oracle for some reason
-		[ActiveIssue(Configurations = new[] { ProviderName.DB2, TestProvName.AllOracle, TestProvName.AllSybase })]
+		// it returns incorrectly ordered data for DB2, PostgreSQL and Oracle for some reason
+		[ActiveIssue(Configurations = new[] { ProviderName.DB2, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllPostgreSQL15Plus })]
 		[Test]
-		public void SortedMergeResultsIssue([MergeDataContextSource] string context)
+		public void SortedMergeResultsIssue([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data

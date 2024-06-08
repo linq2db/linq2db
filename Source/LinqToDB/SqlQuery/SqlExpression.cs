@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -7,7 +9,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlExpression : ISqlExpression
 	{
-		public SqlExpression(Type systemType, string expr, int precedence, bool isAggregate, params ISqlExpression[] parameters)
+		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, params ISqlExpression[] parameters)
 		{
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
@@ -18,11 +20,11 @@ namespace LinqToDB.SqlQuery
 			Expr        = expr;
 			Precedence  = precedence;
 			Parameters  = parameters;
-			IsAggregate = isAggregate;
+			Flags       = flags;
 		}
 
-		public SqlExpression(Type systemType, string expr, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, expr, precedence, false, parameters)
+		public SqlExpression(Type? systemType, string expr, int precedence, params ISqlExpression[] parameters)
+			: this(systemType, expr, precedence, SqlFlags.IsPure, parameters)
 		{
 		}
 
@@ -31,7 +33,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlExpression(Type systemType, string expr, params ISqlExpression[] parameters)
+		public SqlExpression(Type? systemType, string expr, params ISqlExpression[] parameters)
 			: this(systemType, expr, SqlQuery.Precedence.Unknown, parameters)
 		{
 		}
@@ -41,11 +43,16 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public Type             SystemType  { get; }
+		public Type?            SystemType  { get; }
 		public string           Expr        { get; }
 		public int              Precedence  { get; }
 		public ISqlExpression[] Parameters  { get; }
-		public bool             IsAggregate { get; }
+		public SqlFlags         Flags       { get; }
+
+		public bool             IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
+		public bool             IsPure           => (Flags & SqlFlags.IsPure)           != 0;
+		public bool             IsPredicate      => (Flags & SqlFlags.IsPredicate)      != 0;
+		public bool             IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
 
 		#region Overrides
 
@@ -62,19 +69,19 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, func);
+				Parameters[i] = Parameters[i].Walk(options, context, func)!;
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			return Equals(other, DefaultComparer);
 		}
@@ -103,42 +110,40 @@ namespace LinqToDB.SqlQuery
 
 		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		int? _hashCode;
+
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+		public override int GetHashCode()
+		{
+			if (_hashCode != null)
+				return _hashCode.Value;
+
+			var hashCode = Expr.GetHashCode();
+
+			if (SystemType != null)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+
+			for (var i = 0; i < Parameters.Length; i++)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
+
+			_hashCode = hashCode;
+
+			return hashCode;
+		}
+
+		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;
 
-			var expr = other as SqlExpression;
-
-			if (expr == null || SystemType != expr.SystemType || Expr != expr.Expr || Parameters.Length != expr.Parameters.Length)
+			if (!(other is SqlExpression expr) || SystemType != expr.SystemType || Expr != expr.Expr || Parameters.Length != expr.Parameters.Length)
 				return false;
 
 			for (var i = 0; i < Parameters.Length; i++)
 				if (!Parameters[i].Equals(expr.Parameters[i], comparer))
 					return false;
 
-			return comparer(this, other);
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlExpression(
-					SystemType,
-					Expr,
-					Precedence,
-					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
-			}
-
-			return clone;
+			return comparer(this, expr);
 		}
 
 		#endregion
@@ -158,7 +163,18 @@ namespace LinqToDB.SqlQuery
 				return (object)s;
 			});
 
-			return sb.AppendFormat(Expr, ss.ToArray());
+			if (Parameters.Length == 0)
+				return sb.Append(Expr);
+
+			if (Expr.Contains("{"))
+				sb.AppendFormat(CultureInfo.InvariantCulture, Expr, ss.ToArray());
+			else
+				sb.Append(Expr)
+					.Append('{')
+					.Append(string.Join(", ", ss.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
+					.Append('}');
+
+			return sb;
 		}
 
 		#endregion
@@ -171,17 +187,26 @@ namespace LinqToDB.SqlQuery
 			{
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlField    :
+				case QueryElementType.SqlQuery    :
 				case QueryElementType.Column      : return true;
+				case QueryElementType.SqlExpression:
+				{
+					var expr = (SqlExpression)ex;
+					if (expr.IsPredicate)
+						return false;
+					if (QueryHelper.IsTransitiveExpression(expr, checkNullability: true))
+						return NeedsEqual(expr.Parameters[0]);
+					return true;
+				}
 				case QueryElementType.SqlFunction :
 
 					var f = (SqlFunction)ex;
 
-					switch (f.Name)
+					return f.Name switch
 					{
-						case "EXISTS" : return false;
-					}
-
-					return true;
+						"EXISTS" => false,
+						_        => true,
+					};
 			}
 
 			return false;

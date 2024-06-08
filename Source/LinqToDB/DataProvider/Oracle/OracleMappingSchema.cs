@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Linq;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
@@ -7,18 +8,34 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Expressions;
-	using Extensions;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
 
-	public class OracleMappingSchema : MappingSchema
+	public sealed class OracleMappingSchema : LockedMappingSchema
 	{
-		public OracleMappingSchema() : this(ProviderName.Oracle)
-		{
-		}
+		private const string DATE_FORMAT = "DATE '{0:yyyy-MM-dd}'";
 
-		protected OracleMappingSchema(string configuration) : base(configuration)
+		private const string DATETIME_FORMAT = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
+
+		private const string TIMESTAMP0_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss}'";
+		private const string TIMESTAMP1_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.f}'";
+		private const string TIMESTAMP2_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ff}'";
+		private const string TIMESTAMP3_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fff}'";
+		private const string TIMESTAMP4_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff}'";
+		private const string TIMESTAMP5_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffff}'";
+		private const string TIMESTAMP6_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff}'";
+		private const string TIMESTAMP7_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff}'";
+
+		private const string TIMESTAMPTZ0_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss} +00:00'";
+		private const string TIMESTAMPTZ1_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.f} +00:00'";
+		private const string TIMESTAMPTZ2_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ff} +00:00'";
+		private const string TIMESTAMPTZ3_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fff} +00:00'";
+		private const string TIMESTAMPTZ4_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff} +00:00'";
+		private const string TIMESTAMPTZ5_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffff} +00:00'";
+		private const string TIMESTAMPTZ6_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff} +00:00'";
+		private const string TIMESTAMPTZ7_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff} +00:00'";
+
+		OracleMappingSchema() : base(ProviderName.Oracle)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -28,57 +45,81 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SetConvertExpression<decimal,TimeSpan>(v => new TimeSpan((long)v));
 
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertGuidToSql    (sb,     (Guid)    v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid),           (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Guid)   v).ToByteArray()));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
+			SetValueToSqlConverter(typeof(string)        , (sb, _,_,v) => ConvertStringToSql  (sb,     (string)v));
+			SetValueToSqlConverter(typeof(char)          , (sb, _,_,v) => ConvertCharToSql    (sb,     (char)v));
+			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Binary)v).ToArray()));
 
-			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+#endif
 
-			SetValueToSqlConverter(typeof(double), (sb, dt, v) => sb.Append(((double)v).ToString("G17", NumberFormatInfo.InvariantInfo)).Append("D"));
-
-			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			// adds floating point special values support
+			SetValueToSqlConverter(typeof(float), (sb,_,_,v) =>
+			{
+				var f = (float)v;
+				if (float.IsNaN(f))
+					sb.Append("BINARY_FLOAT_NAN");
+				else if (float.IsNegativeInfinity(f))
+					sb.Append("-BINARY_FLOAT_INFINITY");
+				else if (float.IsPositiveInfinity(f))
+					sb.Append("BINARY_FLOAT_INFINITY");
+				else
+					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
+			});
+			SetValueToSqlConverter(typeof(double), (sb,_,_,v) =>
+			{
+				var d = (double)v;
+				if (double.IsNaN(d))
+					sb.Append("BINARY_DOUBLE_NAN");
+				else if (double.IsNegativeInfinity(d))
+					sb.Append("-BINARY_DOUBLE_INFINITY");
+				else if (double.IsPositiveInfinity(d))
+					sb.Append("BINARY_DOUBLE_INFINITY");
+				else
+					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}D", d);
+			});
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("HEXTORAW('");
-
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder
+				.Append("HEXTORAW('")
+				.AppendByteArrayAsHexViaLookup32(value);
 
 			stringBuilder.Append("')");
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(")")
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
-		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
-		public override LambdaExpression TryGetConvertExpression(Type from, Type to)
+		public override LambdaExpression? TryGetConvertExpression(Type from, Type to)
 		{
-			if (to.IsEnumEx() && from == typeof(decimal))
+			if (to.IsEnum && from == typeof(decimal))
 			{
 				var type = Converter.GetDefaultMappingFromEnumType(this, to);
 
 				if (type != null)
 				{
-					var fromDecimalToType = GetConvertExpression(from, type, false);
-					var fromTypeToEnum    = GetConvertExpression(type, to,   false);
+					var fromDecimalToType = GetConvertExpression(from, type, false)!;
+					var fromTypeToEnum    = GetConvertExpression(type, to,   false)!;
 
 					return Expression.Lambda(
 						fromTypeToEnum.GetBody(fromDecimalToType.Body),
@@ -89,52 +130,100 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.TryGetConvertExpression(from, to);
 		}
 
-		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)
-		{
-			var s = value.ToString("N");
-
-			stringBuilder
-				.Append("Cast('")
-				.Append(s.Substring( 6,  2))
-				.Append(s.Substring( 4,  2))
-				.Append(s.Substring( 2,  2))
-				.Append(s.Substring( 0,  2))
-				.Append(s.Substring(10,  2))
-				.Append(s.Substring( 8,  2))
-				.Append(s.Substring(14,  2))
-				.Append(s.Substring(12,  2))
-				.Append(s.Substring(16, 16))
-				.Append("' as raw(16))")
-				;
-		}
-
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
 		{
 			string format;
-			if (value.Millisecond != 0 && (dataType.DataType == DataType.DateTime2 || dataType.DataType == DataType.Undefined))
-				format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
-			else
-				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					"TO_DATE('{0:yyyy-MM-dd}', 'YYYY-MM-DD')" :
-					"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
+			switch (dataType.Type.DataType)
+			{
+				case DataType.Date:
+					format = DATE_FORMAT;
+					break;
+				case DataType.DateTime2:
+					switch (dataType.Type.Precision)
+					{
+						case 0   : format = TIMESTAMP0_FORMAT; break;
+						case 1   : format = TIMESTAMP1_FORMAT; break;
+						case 2   : format = TIMESTAMP2_FORMAT; break;
+						case 3   : format = TIMESTAMP3_FORMAT; break;
+						case 4   : format = TIMESTAMP4_FORMAT; break;
+						case 5   : format = TIMESTAMP5_FORMAT; break;
+						// .net types doesn't support more than 7 digits, so it doesn't make sense to generate 8/9
+						case >= 7: format = TIMESTAMP7_FORMAT; break;
+						default  : format = TIMESTAMP6_FORMAT; break;
+					}
+					break;
+				case DataType.DateTimeOffset:
+					// just use UTC literal
+					value = value.ToUniversalTime();
+					switch (dataType.Type.Precision)
+					{
+						case 0   : format = TIMESTAMPTZ0_FORMAT; break;
+						case 1   : format = TIMESTAMPTZ1_FORMAT; break;
+						case 2   : format = TIMESTAMPTZ2_FORMAT; break;
+						case 3   : format = TIMESTAMPTZ3_FORMAT; break;
+						case 4   : format = TIMESTAMPTZ4_FORMAT; break;
+						case 5   : format = TIMESTAMPTZ5_FORMAT; break;
+						// .net types doesn't support more than 7 digits, so it doesn't make sense to generate 8/9
+						case >= 7: format = TIMESTAMPTZ7_FORMAT; break;
+						default  : format = TIMESTAMPTZ6_FORMAT; break;
+					}
+					break;
+				case DataType.DateTime:
+				default:
+					format = DATETIME_FORMAT;
+					break;
+			}
 
-			stringBuilder.AppendFormat(format, value);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
-		internal static readonly OracleMappingSchema Instance = new OracleMappingSchema();
-
-		public class NativeMappingSchema : MappingSchema
+#if NET6_0_OR_GREATER
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
 		{
-			public NativeMappingSchema()
-				: base(ProviderName.OracleNative, Instance)
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+#endif
+
+		internal static readonly OracleMappingSchema Instance = new ();
+
+		public sealed class NativeMappingSchema : LockedMappingSchema
+		{
+			public NativeMappingSchema() : base(ProviderName.OracleNative, OracleProviderAdapter.GetInstance(OracleProvider.Native).MappingSchema, Instance)
 			{
 			}
 		}
 
-		public class ManagedMappingSchema : MappingSchema
+		public sealed class ManagedMappingSchema : LockedMappingSchema
 		{
-			public ManagedMappingSchema()
-				: base(ProviderName.OracleManaged, Instance)
+			public ManagedMappingSchema() : base(ProviderName.OracleManaged, OracleProviderAdapter.GetInstance(OracleProvider.Managed).MappingSchema, Instance)
+			{
+			}
+		}
+
+		public sealed class DevartMappingSchema : LockedMappingSchema
+		{
+			public DevartMappingSchema() : base(ProviderName.OracleDevart, OracleProviderAdapter.GetInstance(OracleProvider.Devart).MappingSchema, Instance)
+			{
+			}
+		}
+
+		public sealed class Native11MappingSchema : LockedMappingSchema
+		{
+			public Native11MappingSchema() : base(ProviderName.Oracle11Native, OracleProviderAdapter.GetInstance(OracleProvider.Native).MappingSchema, Instance)
+			{
+			}
+		}
+
+		public sealed class Managed11MappingSchema : LockedMappingSchema
+		{
+			public Managed11MappingSchema() : base(ProviderName.Oracle11Managed, OracleProviderAdapter.GetInstance(OracleProvider.Managed).MappingSchema, Instance)
+			{
+			}
+		}
+
+		public sealed class Devart11MappingSchema : LockedMappingSchema
+		{
+			public Devart11MappingSchema() : base(ProviderName.Oracle11Devart, OracleProviderAdapter.GetInstance(OracleProvider.Devart).MappingSchema, Instance)
 			{
 			}
 		}

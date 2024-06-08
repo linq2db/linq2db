@@ -6,6 +6,7 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
@@ -20,15 +21,15 @@ namespace Tests.Linq
 		static IEnumerable<T> QueryTable<T>(IDataContext dataContext)
 		{
 			var query = new SqlSelectStatement();
-			var table = new SqlTable(typeof(T));
+			var table = SqlTable.Create<T>(dataContext);
 			var tableSource = new SqlTableSource(table, "t");
 			query.SelectQuery.From.Tables.Add(tableSource);
 
 			var connection = (DataConnection) dataContext;
 
-			var sqlBuilder = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema);
-			var sb = new StringBuilder();
-			sqlBuilder.BuildSql(0, query, sb);
+			var sqlBuilder = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema, connection.Options);
+			var sb         = new StringBuilder();
+			sqlBuilder.BuildSql(0, query, sb, new OptimizationContext(new EvaluationContext(), new AliasesContext(), false, connection.DataProvider.GetQueryParameterNormalizer));
 
 			return connection.Query<T>(sb.ToString());
 		}
@@ -87,12 +88,10 @@ namespace Tests.Linq
 		[Test]
 		public void Test7([DataSources(false)] string context)
 		{
-#pragma warning disable 183
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    ParentInheritance where p is ParentInheritanceBase select p,
 					from p in QueryTable<ParentInheritanceBase>(db) where p is ParentInheritanceBase select p);
-#pragma warning restore 183
 		}
 
 		[Test]
@@ -200,8 +199,8 @@ namespace Tests.Linq
 			{
 				var dd = GetNorthwindAsList(context);
 				Assert.AreEqual(
-					dd.DiscontinuedProduct.FirstOrDefault().ProductID,
-					QueryTable<Northwind.DiscontinuedProduct>(db).Where(p => p.Discontinued).FirstOrDefault().ProductID);
+					dd.DiscontinuedProduct.FirstOrDefault()!.ProductID,
+					QueryTable<Northwind.DiscontinuedProduct>(db).Where(p => p.Discontinued).FirstOrDefault()!.ProductID);
 			}
 		}
 
@@ -214,10 +213,10 @@ namespace Tests.Linq
 					QueryTable<ParentInheritanceBase>(db).OfType<ParentInheritance1>().Cast<ParentInheritanceBase>());
 		}
 
-		class ParentEx : Parent
+		sealed class ParentEx : Parent
 		{
 			[NotColumn]
-			protected bool Field1;
+			public bool Field1;
 
 			public static void Test(QueryInheritanceTests inheritance, string context)
 			{
@@ -235,14 +234,14 @@ namespace Tests.Linq
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
-		class PersonEx : Person
+		sealed class PersonEx : Person
 		{
 		}
 
 		[Test]
 		public void SimpleTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 				Assert.AreEqual(1, QueryTable<PersonEx>(db).Where(_ => _.FirstName == "John").Select(_ => _.ID).Single());
 		}
 
@@ -284,19 +283,19 @@ namespace Tests.Linq
 		public abstract class InheritanceA : InheritanceBase
 		{
 			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
-			public List<InheritanceB> Bs { get; set; }
+			public List<InheritanceB> Bs { get; set; } = null!;
 
 			[Column("ID", IsDiscriminator = true)]
 			public override TypeCodeEnum TypeCode => TypeCodeEnum.A;
 		}
 
-		class InheritanceA1 : InheritanceA
+		sealed class InheritanceA1 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
 			public override TypeCodeEnum TypeCode => TypeCodeEnum.A1;
 		}
 
-		class InheritanceA2 : InheritanceA
+		sealed class InheritanceA2 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
 			public override TypeCodeEnum TypeCode => TypeCodeEnum.A2;

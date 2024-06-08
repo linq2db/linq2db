@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -6,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class ScalarSelectBuilder : ISequenceBuilder
+	sealed class ScalarSelectBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
 
@@ -27,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 			};
 		}
 
-		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)
+		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
 		}
@@ -37,7 +38,8 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		class ScalarSelectContext : IBuildContext
+		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
+		sealed class ScalarSelectContext : IBuildContext
 		{
 			public ScalarSelectContext(ExpressionBuilder builder)
 			{
@@ -47,15 +49,15 @@ namespace LinqToDB.Linq.Builder
 			}
 
 #if DEBUG
-			public string _sqlQueryText { get { return SelectQuery == null ? "" : SelectQuery.SqlText; } }
+			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 			public string Path => this.GetPath();
 #endif
 
 			public ExpressionBuilder Builder     { get; }
-			public Expression        Expression  { get; set; }
-			public SelectQuery       SelectQuery { get; set; }
-			public SqlStatement      Statement   { get; set; }
-			public IBuildContext     Parent      { get; set; }
+			public Expression?       Expression  { get; set; }
+			public SelectQuery       SelectQuery { get; set; } = null!;
+			public SqlStatement?     Statement   { get; set; }
+			public IBuildContext?    Parent      { get; set; }
 
 			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -65,10 +67,9 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				if (expression == null)
-					expression = ((LambdaExpression)Expression).Body.Unwrap();
+				expression ??= ((LambdaExpression)Expression!).Body.Unwrap();
 
 				switch (expression.NodeType)
 				{
@@ -88,32 +89,32 @@ namespace LinqToDB.Linq.Builder
 							var expr = Builder.ConvertToSql(this, expression);
 							var idx  = SelectQuery.Select.Add(expr);
 
-							return Builder.BuildSql(expression.Type, idx);
+							return Builder.BuildSql(expression.Type, idx, expr);
 						}
 				}
 
 			}
 
-			public SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				switch (requestFlag)
+				return requestFlag switch
 				{
-					case RequestFor.Expression : return IsExpressionResult.True;
-					default                    : return IsExpressionResult.False;
-				}
+					RequestFor.Expression => IsExpressionResult.True,
+					_                     => IsExpressionResult.False,
+				};
 			}
 
-			public IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}
@@ -123,18 +124,22 @@ namespace LinqToDB.Linq.Builder
 				return Parent?.ConvertToParentIndex(index, context) ?? index;
 			}
 
-			public void SetAlias(string alias)
+			public void SetAlias(string? alias)
 			{
 			}
 
-			public ISqlExpression GetSubQuery(IBuildContext context)
+			public ISqlExpression? GetSubQuery(IBuildContext context)
 			{
 				return null;
 			}
 
-			public virtual SqlStatement GetResultStatement()
+			public SqlStatement GetResultStatement()
 			{
-				return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
+				return Statement ??= new SqlSelectStatement(SelectQuery);
+			}
+
+			public void CompleteColumns()
+			{
 			}
 		}
 	}

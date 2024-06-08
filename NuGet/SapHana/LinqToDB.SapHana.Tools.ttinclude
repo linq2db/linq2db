@@ -1,2 +1,2 @@
-<#@ include file="LinqToDB.Tools.ttinclude" #>
-<#@ include file="LinqToDB.SapHana.ttinclude" #>
+<#@ include file="LinqToDB.Tools.ttinclude"   once="true" #>
+<#@ include file="LinqToDB.SapHana.ttinclude" once="true" #>

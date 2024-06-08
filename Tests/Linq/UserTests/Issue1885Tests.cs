@@ -12,28 +12,28 @@ namespace Tests.UserTests
 		public class User
 		{
 			public int Id { get; set; }
-			public Testing Data { get; set; }
+			public Testing? Data { get; set; }
 		}
 
 		public class Testing
 		{
 			[NotColumn]
-			public int[] Ids { get; set; }
+			public int[]? Ids { get; set; }
 
 			[Column]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 		}
 
 		public class Model
 		{
-			public string Data { get; set; }
+			public string? Data { get; set; }
 		}
 
 		[Test]
 		public void TestGenericAssociationRuntime([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			var values = new[] { 1, 5 };
 
@@ -45,7 +45,8 @@ namespace Tests.UserTests
 						Ids = values,
 						Value = x.Data
 					})
-				);
+				)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var u = db.CreateLocalTable<User>())

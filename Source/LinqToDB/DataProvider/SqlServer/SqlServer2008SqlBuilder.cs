@@ -1,20 +1,25 @@
-﻿using System;
+using System;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlQuery;
+	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
-	class SqlServer2008SqlBuilder : SqlServerSqlBuilder
+	sealed partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2008SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SqlServer2008SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
+		{
+		}
+
+		SqlServer2008SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlServer2008SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SqlServer2008SqlBuilder(this);
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -23,15 +28,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.AppendLine(";");
 		}
 
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
-		}
-
-		public override string  Name
-		{
-			get { return ProviderName.SqlServer2008; }
-		}
+		public override string  Name => ProviderName.SqlServer2008;
 	}
 }

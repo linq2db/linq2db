@@ -231,7 +231,7 @@ CREATE TABLE "TestIdentity" (
 GO
 
 
-DROP TABLE IF EXISTS AllTypes
+DROP TABLE IF EXISTS "AllTypes"
 GO
 DROP TABLE IF EXISTS "AllTypes"
 GO
@@ -260,6 +260,7 @@ CREATE TABLE "AllTypes"
 	"timeDataType"        time                     NULL,
 	"timeTZDataType"      time with time zone      NULL,
 	"intervalDataType"    interval                 NULL,
+	"intervalDataType2"   interval                 NULL,
 
 	"charDataType"        char(1)                  NULL,
 	"char20DataType"      char(20)                 NULL,
@@ -287,22 +288,29 @@ CREATE TABLE "AllTypes"
 -- SKIP PostgreSQL.9.2 BEGIN
 -- SKIP PostgreSQL.9.3 BEGIN
 -- SKIP PostgreSQL.9.5 BEGIN
--- SKIP PostgreSQL BEGIN
 	"macaddr8DataType"  macaddr8                   NULL,
 -- SKIP PostgreSQL.9.2 END
 -- SKIP PostgreSQL.9.3 END
 -- SKIP PostgreSQL.9.5 END
--- SKIP PostgreSQL END
 
 	"jsonDataType"        json                     NULL,
 -- SKIP PostgreSQL.9.2 BEGIN
 -- SKIP PostgreSQL.9.3 BEGIN
-"jsonbDataType"       jsonb                    NULL,
+	"jsonbDataType"       jsonb                    NULL,
 -- SKIP PostgreSQL.9.2 END
 -- SKIP PostgreSQL.9.3 END
 
 	"xmlDataType"         xml                      NULL,
-	"varBitDataType"      varbit                   NULL
+	"varBitDataType"      varbit                   NULL,
+
+	StrArray              text[]                   NULL,
+	IntArray              int[]                    NULL,
+	Int2dArray            int[][]                  NULL,
+	LongArray             bigint[]                 NULL,
+	IntervalArray         interval[]               NULL,
+	DoubleArray           double precision[]       NULL,
+	NumericArray          numeric[]                NULL,
+	DecimalArray          decimal[]                NULL
 )
 GO
 
@@ -558,7 +566,7 @@ CREATE OR REPLACE FUNCTION AddIssue792Record()
 	RETURNS void AS
 $BODY$
 BEGIN
-	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792');
+	INSERT INTO dbo."AllTypes"(char20DataType) VALUES('issue792');
 END;
 $BODY$
 	LANGUAGE PLPGSQL;
@@ -631,4 +639,62 @@ GO
 COMMENT ON MATERIALIZED VIEW  "Issue2023" IS 'This is the Issue2023 matview';
 COMMENT ON COLUMN             "Issue2023"."PersonID" IS 'This is the Issue2023.PersonID column';
 -- SKIP PostgreSQL.9.2 END
+GO
+
+DROP FUNCTION IF EXISTS "SchemaName"."fnTest"(INT)
+GO
+
+DROP SCHEMA IF EXISTS "SchemaName"
+GO
+
+CREATE SCHEMA "SchemaName"
+GO
+CREATE OR REPLACE FUNCTION "SchemaName"."fnTest"(param INT) RETURNS VARCHAR(20)
+AS $$ BEGIN RETURN 'issue2679test'; END $$ LANGUAGE PLPGSQL;
+GO
+
+DROP TABLE IF EXISTS same_name2
+GO
+DROP TABLE IF EXISTS same_name1
+GO
+DROP TABLE IF EXISTS same_name
+GO
+CREATE TABLE same_name (
+id INTEGER PRIMARY KEY
+)
+GO
+CREATE TABLE same_name1 (
+id			INTEGER PRIMARY KEY,
+same_name	INTEGER NULL,
+
+CONSTRAINT same_name
+	FOREIGN KEY (same_name)
+	REFERENCES same_name (id)
+)
+GO
+CREATE TABLE same_name2 (
+id			INTEGER PRIMARY KEY,
+same_name	INTEGER NULL,
+
+CONSTRAINT same_name
+	FOREIGN KEY (same_name)
+	REFERENCES same_name (id)
+)
+GO
+DROP TABLE "CollatedTable"
+GO
+CREATE TABLE "CollatedTable"
+(
+	"Id"				INT NOT NULL,
+	"CaseSensitive"		VARCHAR(20) NOT NULL,
+	"CaseInsensitive"	VARCHAR(20) NOT NULL
+)
+GO
+DROP TABLE "TestMergeIdentity"
+GO
+CREATE TABLE "TestMergeIdentity"
+(
+	"Id"     SERIAL NOT NULL PRIMARY KEY,
+	"Field"  INT NULL
+)
 GO

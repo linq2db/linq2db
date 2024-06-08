@@ -1,7 +1,7 @@
 <#@ assembly name="System.Core"                   #>
 <#@ import namespace="System"                     #>
-<#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Linq"                #>
+<#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Text"                #>
 <#+
 static Action<GeneratedTextTransformation,string> WriteComment    = (tt,s) => tt.WriteLine("//{0}", s);
@@ -11,10 +11,8 @@ Action BeforeGenerateModel = () => {};
 bool GenerateProcedureErrors             = true;
 
 static bool EnableNullableReferenceTypes = false;
-static bool AddNullablePragma            = false;
-static Func<string, bool> IsValueType    = IsValueTypeDefault;
 
-void GenerateModel()
+public void GenerateModel()
 {
 	Model.SetTree();
 
@@ -29,19 +27,14 @@ void GenerateModel()
 	WriteComment(this, "---------------------------------------------------------------------------------------------------");
 
 	WriteLine("");
-	WriteLine("#pragma warning disable 1591");
-	if (AddNullablePragma)
-		WriteLine($"#nullable {(EnableNullableReferenceTypes ? "enable" : "disable")}");
+	WriteLine("#pragma warning disable 1573, 1591");
+	if (EnableNullableReferenceTypes)
+		WriteLine("#nullable enable");
 	WriteLine("");
 
 	BeforeGenerateModel();
 
 	Model.Render(this);
-
-	WriteLine("");
-	if (AddNullablePragma)
-		WriteLine($"#nullable restore");
-	WriteLine("#pragma warning restore 1591");
 }
 
 void Trim()
@@ -61,9 +54,7 @@ void RenderUsings(List<string> usings)
 		from ns in usings.Distinct()
 		group ns by ns.Split('.')[0];
 
-	var groups =
-		(from ns in q where ns.Key == "System"                select ns).Concat
-		(from ns in q where ns.Key != "System" orderby ns.Key select ns);
+	var groups = q.OrderByDescending(ns => ns.Key == "System").ThenBy(ns => ns.Key);
 
 	foreach (var gr in groups)
 	{
@@ -91,7 +82,7 @@ public partial class ModelSource : ITree
 {
 	public int CurrentNamespace = 0;
 
-	public List<string>    Usings     = new List<String>    { "System"        };
+	public List<string>    Usings     = new List<string>    { "System"        };
 	public List<Namespace> Namespaces = new List<Namespace> { new Namespace() };
 
 	public Namespace      Namespace { get { return Namespaces[CurrentNamespace];       } }
@@ -228,7 +219,7 @@ static Action<GeneratedTextTransformation,Class> WriteBeginClass = (tt,cl) =>
 	tt.Write(cl.AccessModifier.ToString().ToLower() + " ");
 	if (cl.IsStatic)  tt.Write("static ");
 	if (cl.IsPartial) tt.Write("partial ", cl.Name);
-	tt.Write("{0} {1}{2}", cl.ClassKeyword, cl.Name, cl.GenericArguments.Count > 0 ? $"<{string.Join(", ", cl.GenericArguments)}>" : string.Empty);
+	tt.Write("{0} {1}{2}", cl.ClassKeyword, cl.Name, cl.GenericArguments.Count > 0 ? string.Format("<{0}>", string.Join(", ", cl.GenericArguments)) : string.Empty);
 
 	if (!string.IsNullOrEmpty(cl.BaseClass) || cl.Interfaces.Count > 0)
 	{
@@ -249,11 +240,10 @@ static Action<GeneratedTextTransformation> WriteEndClass = tt => tt.WriteLine("}
 public partial class Class : TypeBase
 {
 	public string             BaseClass;
-	public List<string>       GenericArguments = new List<string>();
-	public bool               IsStatic         = false;
-	public List<string>       Interfaces       = new List<string>();
-	public List<IClassMember> Members          = new List<IClassMember>();
-	public bool               DisableNullable  = false;
+	public List<string>       GenericArguments   = new List<string>();
+	public bool               IsStatic           = false;
+	public List<string>       Interfaces         = new List<string>();
+	public List<IClassMember> Members            = new List<IClassMember>();
 
 	public Class()
 	{
@@ -268,9 +258,6 @@ public partial class Class : TypeBase
 	public override void Render(GeneratedTextTransformation tt)
 	{
 		BeginConditional(tt);
-
-		if (DisableNullable && EnableNullableReferenceTypes)
-			tt.WriteLine("#nullable disable");
 
 		foreach (var c in Comment)
 			tt.WriteLine("//" + c);
@@ -371,9 +358,6 @@ public partial class Class : TypeBase
 
 		tt.PopIndent();
 		WriteEndClass(tt);
-
-		if (DisableNullable && EnableNullableReferenceTypes)
-			tt.WriteLine("#nullable enable");
 
 		EndConditional(tt);
 	}
@@ -1018,6 +1002,9 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 
 		tt.Write("}");
 
+		if (p.EnforceNotNullable)
+			tt.Write(" = null!;");
+
 		if (!string.IsNullOrEmpty(p.EndLineComment))
 			tt.WriteSpaces(p.BodyLen - (tt.GenerationEnvironment.Length - len));
 		writeComment();
@@ -1137,10 +1124,10 @@ public partial class Property : MemberBase
 		InitBody(getBodyBuilder, setBodyBuilder);
 	}
 
-	public Property(bool disableNullable, Func<string> typeBuilder, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
+	public Property(bool enforceNotNullable, Func<string> typeBuilder, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
 		: this(typeBuilder, name, getBodyBuilder, setBodyBuilder)
 	{
-		DisableNullable = disableNullable;
+		EnforceNotNullable = enforceNotNullable;
 	}
 
 	public Property(Func<string> typeBuilder, string name, Func<IEnumerable<string>> getBodyBuilder = null, Func<IEnumerable<string>> setBodyBuilder = null)
@@ -1227,7 +1214,7 @@ public partial class Property : MemberBase
 
 	public Property InitGetter(Func<IEnumerable<string>> getBodyBuilder)
 	{
-		return InitBody(getBodyBuilder, null);
+		return InitBody(getBodyBuilder);
 	}
 
 	public IEnumerable<string> BuildGetBody()
@@ -1240,23 +1227,7 @@ public partial class Property : MemberBase
 		return SetBodyBuilders.SelectMany(builder => builder?.Invoke() ?? Array.Empty<string>());
 	}
 
-	protected virtual bool DisableNullable { get; }
-
-	public override void BeginConditional(GeneratedTextTransformation tt, bool isCompact)
-	{
-		base.BeginConditional(tt, isCompact);
-
-		if (DisableNullable && EnableNullableReferenceTypes)
-			tt.WriteLine("#nullable disable");
-	}
-
-	public override void EndConditional(GeneratedTextTransformation tt, bool isCompact)
-	{
-		if (DisableNullable && EnableNullableReferenceTypes)
-			tt.WriteLine("#nullable enable");
-
-		base.EndConditional(tt, isCompact);
-	}
+	protected internal virtual bool EnforceNotNullable { get; }
 }
 
 static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compact) =>
@@ -1283,7 +1254,7 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		m.BuildType() == null ? "" : " ",
 		m.BuildType(), LenDiff(m.TypeLen,     m.BuildType() ?? ""),
 		m.Name,
-		m.GenericArguments.Count > 0 ? $"<{string.Join(", ", m.GenericArguments)}>" : string.Empty);
+		m.GenericArguments.Count > 0 ? string.Format("<{0}>", string.Join(", ", m.GenericArguments)) : string.Empty);
 
 	Action writeComment = () =>
 	{
@@ -1406,7 +1377,7 @@ public partial class Method : MemberBase
 		return new Method(
 			() => type,
 			name,
-			parameters?.Select<string,Func<string>>((string p) => () => p),
+			parameters?.Select<string,Func<string>>(p => () => p),
 			body?.Select<string,Func<IEnumerable<string>>>(p => () => new[] { p }).ToArray());
 	}
 
@@ -1497,9 +1468,6 @@ public partial class Attribute
 // Helpers.
 //
 
-Func<string,string> ToPlural   = s => s + "s";
-Func<string,string> ToSingular = s => s;
-
 static string LenDiff(int max, string str)
 {
 	var s = "";
@@ -1565,7 +1533,7 @@ static void SkipSpacesAndInsert(GeneratedTextTransformation tt, string value)
 }
 
 
-string ToCamelCase(string name)
+public static string ToCamelCase(string name)
 {
 	var n = 0;
 
@@ -1588,9 +1556,9 @@ string ToCamelCase(string name)
 	return name.Substring(0, n).ToLower() + name.Substring(n);
 }
 
-event Action<Property,string,object> SetPropertyValueAction;
+static event Action<Property,string,object> SetPropertyValueAction;
 
-void SetPropertyValue(Property propertyObject, string propertyName, object value)
+public static void SetPropertyValue(Property propertyObject, string propertyName, object value)
 {
 	if (SetPropertyValueAction != null)
 		SetPropertyValueAction(propertyObject, propertyName, value);
@@ -1607,17 +1575,17 @@ static string ToStringLiteral(string value)
 	{
 		switch (chr)
 		{
-			case '\t':     sb.Append("\\t");            break;
-			case '\n':     sb.Append("\\n");            break;
-			case '\r':     sb.Append("\\r");            break;
-			case '\\':     sb.Append("\\\\");           break;
-			case '"' :     sb.Append("\\\"");           break;
-			case '\0':     sb.Append("\\0");            break;
+			case '\t':     sb.Append("\\t");                    break;
+			case '\n':     sb.Append("\\n");                    break;
+			case '\r':     sb.Append("\\r");                    break;
+			case '\\':     sb.Append("\\\\");                   break;
+			case '"' :     sb.Append("\\\"");                   break;
+			case '\0':     sb.Append("\\0");                    break;
 			case '\u0085':
 			case '\u2028':
 			case '\u2029':
-					 sb.Append($"\\u{(ushort)chr:X4}"); break;
-			default: sb.Append(chr);                    break;
+					 sb.AppendFormat("\\u{0:X4}", (ushort)chr); break;
+			default: sb.Append(chr);                            break;
 		}
 	}
 
@@ -1653,7 +1621,7 @@ public class ModelType
 		if (type.IsConstructedGenericType)
 		{
 			if (typeArguments != null && typeArguments.Length > 0)
-				throw new ArgumentException($"{type} must be open generic type or {typeArguments} should be empty");
+				throw new ArgumentException(string.Format("{0} must be open generic type or {1} should be empty", type, typeArguments));
 
 			if (!_aliasedTypes.ContainsKey(type))
 				_arguments = new List<ModelType>(type.GetGenericArguments().Select(a => new ModelType(a, /* we don't have type info here */ false)));
@@ -1752,82 +1720,6 @@ public class ModelType
 
 		return sb.ToString();
 	}
-}
-
-static bool IsValueTypeDefault(string typeName)
-{
-	switch (typeName)
-	{
-		case "bool":
-		case "bool?":
-		case "char":
-		case "char?":
-		case "decimal":
-		case "decimal?":
-		case "int":
-		case "int?":
-		case "uint":
-		case "uint?":
-		case "byte":
-		case "byte?":
-		case "sbyte":
-		case "sbyte?":
-		case "long":
-		case "long?":
-		case "ulong":
-		case "ulong?":
-		case "short":
-		case "short?":
-		case "ushort":
-		case "ushort?":
-		case "float":
-		case "float?":
-		case "double":
-		case "double?":
-		case "DateTime":
-		case "DateTime?":
-		case "DateTimeOffset":
-		case "DateTimeOffset?":
-		case "TimeSpan":
-		case "TimeSpan?":
-		case "Guid":
-		case "Guid?":
-		case "SqlHierarchyId":
-		case "SqlHierarchyId?":
-		case "NpgsqlDate":
-		case "NpgsqlDate?":
-		case "NpgsqlTimeSpan":
-		case "NpgsqlTimeSpan?":
-		case "NpgsqlPoint":
-		case "NpgsqlPoint?":
-		case "NpgsqlLSeg":
-		case "NpgsqlLSeg?":
-		case "NpgsqlBox":
-		case "NpgsqlBox?":
-		case "NpgsqlPath":
-		case "NpgsqlPath?":
-		case "NpgsqlPolygon":
-		case "NpgsqlPolygon?":
-		case "NpgsqlCircle":
-		case "NpgsqlCircle?":
-		case "NpgsqlLine":
-		case "NpgsqlLine?":
-		case "NpgsqlInet":
-		case "NpgsqlInet?":
-			return true;
-		case "object":
-		case "string":
-		case "byte[]":
-		case "BitArray":
-		case "SqlGeography":
-		case "SqlGeometry":
-		case "PhysicalAddress":
-		case "Array":
-		case "DataTable":
-			return false;
-	}
-
-	return typeName.EndsWith("?");
 }
 
 #>

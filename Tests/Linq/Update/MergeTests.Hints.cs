@@ -10,9 +10,9 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		public void MergeIntoWithTargetHintSqlServer([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeIntoWithTargetHintSqlServer([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -24,7 +24,7 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
+				Assert.True(db.LastQuery!.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -42,9 +42,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UsingTargetWithTargetHintSqlServer([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void UsingTargetWithTargetHintSqlServer([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -60,7 +60,7 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
+				Assert.True(db.LastQuery!.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK)"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -99,9 +99,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithTargetHintSqlServer([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithTargetHintSqlServer([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -117,7 +117,7 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
+				Assert.True(db.LastQuery!.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -139,9 +139,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeIntoWithTargetHintOracle([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void MergeIntoWithTargetHintOracle([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -153,7 +153,7 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE /*+ append */ INTO TestMerge1 Target"));
+				Assert.True(db.LastQuery!.Contains("MERGE /*+ append */ INTO \"TestMerge1\" Target"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -171,10 +171,10 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeIntoWithTargetHintInformix([IncludeDataSources(ProviderName.Informix)]
+		public void MergeIntoWithTargetHintInformix([IncludeDataSources(false, TestProvName.AllInformix)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -186,7 +186,7 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE {+ AVOID_STMT_CACHE } INTO TestMerge1 Target"));
+				Assert.True(db.LastQuery!.Contains("MERGE {+ AVOID_STMT_CACHE } INTO TestMerge1 Target"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 

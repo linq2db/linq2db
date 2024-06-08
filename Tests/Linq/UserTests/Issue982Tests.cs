@@ -1,33 +1,36 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
-using System;
-using System.Linq;
 
 namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue982Tests : TestBase
 	{
-		private class Issue982FirebirdSqlOptimizer : FirebirdSqlOptimizer
+		private sealed class Issue982FirebirdSqlOptimizer : FirebirdSqlOptimizer
 		{
 			public Issue982FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 			{
 			}
 
-			public override SqlStatement Finalize(SqlStatement statement)
+			public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 			{
-				statement = base.Finalize(statement);
+				statement = base.Finalize(mappingSchema, statement, dataOptions);
 
 				AddConditions(statement);
 
 				return statement;
 			}
 
-			private object GetMaxValue(DataType type)
+			private object? GetMaxValue(DataType type)
 			{
 				switch (type)
 				{
@@ -68,7 +71,7 @@ namespace Tests.UserTests
 
 				foreach (var key in keys.OfType<SqlField>())
 				{
-					var maxValue = GetMaxValue(key.DataType);
+					var maxValue = GetMaxValue(key.Type!.DataType);
 					if (maxValue == null)
 						continue;
 
@@ -90,27 +93,29 @@ namespace Tests.UserTests
 
 			private void AddConditions(SqlStatement statement)
 			{
-				statement.WalkQueries(query =>
-				{
-					new QueryVisitor().Visit(query, e =>
+				statement.WalkQueries(
+					this,
+					static (context, query) =>
 					{
-						if (e.ElementType != QueryElementType.SqlQuery)
-							return;
-
-						var q = (SelectQuery)e;
-
-						foreach (var source in q.From.Tables)
+						query.Visit(context, static (optimizer, e) =>
 						{
-							if (source.Joins.Any())
-								AddConditions(q.Select.Where, source);
+							if (e.ElementType != QueryElementType.SqlQuery)
+								return;
 
-							foreach (var join in source.Joins)
-								AddConditions(q.Select.Where, join.Table);
-						}
+							var q = (SelectQuery)e;
+
+							foreach (var source in q.From.Tables)
+							{
+								if (source.Joins.Any())
+									optimizer.AddConditions(q.Select.Where, source);
+
+								foreach (var join in source.Joins)
+									optimizer.AddConditions(q.Select.Where, join.Table);
+							}
+						});
+
+						return query;
 					});
-
-					return query;
-				});
 			}
 		}
 
@@ -144,7 +149,7 @@ namespace Tests.UserTests
 									c
 								};
 
-					var str = query.ToString();
+					var str = query.ToString()!;
 					Assert.True(str.Contains("2147483647"));
 					var _ = query.ToArray();
 				}

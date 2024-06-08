@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using JetBrains.Annotations;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -14,7 +13,7 @@ namespace Tests.xUpdate
 	{
 		[Table]
 		[UsedImplicitly]
-		class TestTrun
+		sealed class TestTrun
 		{
 			[Column, PrimaryKey] public int     ID;
 			[Column]             public decimal Field1;
@@ -34,14 +33,14 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class TestIdTrun
+		sealed class TestIdTrun
 		{
 			[Column, Identity, PrimaryKey] public int     ID;
 			[Column]                       public decimal Field1;
 		}
 
 		[Test]
-		public void TruncateIdentityTest([DataSources(ProviderName.Informix, ProviderName.SapHana)]
+		public void TruncateIdentityTest([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -71,30 +70,25 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TruncateIdentityNoResetTest([DataSources] string context)
+		public void TruncateIdentityNoResetTest([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.DropTable<TestIdTrun>(throwExceptionIfNotExists:false);
+			using var db = GetDataContext(context);
 
-				var table = db.CreateTable<TestIdTrun>();
+			using var table = db.CreateTempTable<TestIdTrun>("test_temp", tableOptions:TableOptions.CheckExistence);
 
-				table.Insert(() => new TestIdTrun { Field1 = 1m });
-				table.Insert(() => new TestIdTrun { Field1 = 1m });
+			table.Insert(() => new TestIdTrun { Field1 = 1m });
+			table.Insert(() => new TestIdTrun { Field1 = 1m });
 
-				var id = table.OrderBy(t => t.ID).Skip(1).Single().ID;
+			var id = table.OrderBy(t => t.ID).Skip(1).Single().ID;
 
-				table.Truncate(false);
+			table.Truncate(false);
 
-				table.Insert(() => new TestIdTrun { Field1 = 1m });
-				table.Insert(() => new TestIdTrun { Field1 = 1m });
+			table.Insert(() => new TestIdTrun { Field1 = 1m });
+			table.Insert(() => new TestIdTrun { Field1 = 1m });
 
-				var r = table.OrderBy(t => t.ID).Skip(1).Single();
+			var r = table.OrderBy(t => t.ID).Skip(1).Single();
 
-				Assert.That(r.ID, Is.EqualTo(id + 2));
-
-				table.Drop();
-			}
+			Assert.That(r.ID, Is.EqualTo(id + 2));
 		}
 	}
 }

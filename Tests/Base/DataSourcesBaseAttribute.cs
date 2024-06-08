@@ -10,32 +10,61 @@ namespace Tests
 {
 	public abstract class DataSourcesBaseAttribute : NUnitAttribute, IParameterDataSource
 	{
-		public bool     IncludeLinqService { get; }
-		public string[] Providers          { get; }
+		public bool IncludeLinqService { get; }
+		public string[] Providers { get; }
 
-		public static bool NoLinqService   { get; set; }
+		public static bool NoLinqService { get; set; }
 
 		protected DataSourcesBaseAttribute(bool includeLinqService, string[] providers)
 		{
-			IncludeLinqService = includeLinqService;
-			Providers          = providers.SelectMany(p => p.Split(',').Select(_ => _.Trim())).ToArray();
+			try
+			{
+				IncludeLinqService = includeLinqService;
+				Providers          = CustomizationSupport.Interceptor.InterceptDataSources(this, Split(providers)).ToArray();
+			}
+			catch (Exception e)
+			{
+				TestBase.Log(e);
+				throw;
+			}
 		}
 
 		public IEnumerable GetData(IParameterInfo parameter)
 		{
-			var skipAttrs = new HashSet<string>(
-				from a in parameter.Method.GetCustomAttributes<SkipCategoryAttribute>(true)
-				where a.ProviderName != null && TestBase.SkipCategories.Contains(a.Category)
-				select a.ProviderName);
+			try
+			{
+				var skipAttrs = new HashSet<string>(
+					from a in parameter.Method.GetCustomAttributes<SkipCategoryAttribute>(true)
+					where a.ProviderName != null && TestBase.SkipCategories.Contains(a.Category)
+					select a.ProviderName);
 
-			var providers = skipAttrs.Count == 0 ?
-				GetProviders().ToList() :
-				GetProviders().Where(a => !skipAttrs.Contains(a)).ToList();
+				var providers = skipAttrs.Count == 0 ?
+					GetProviders().ToList() :
+					GetProviders().Where(a => !skipAttrs.Contains(a)).ToList();
 
-			if (NoLinqService || !IncludeLinqService)
-				return providers;
+				if (!NoLinqService && IncludeLinqService && !TestBase.DisableRemoteContext)
+					providers.AddRange(providers.Select(p => p + TestBase.LinqServiceSuffix).ToList());
 
-			return providers.Concat(providers.Select(p => p + ".LinqService"));
+				return CustomizationSupport.Interceptor.InterceptTestDataSources(this, parameter.Method, providers);
+			}
+			catch (Exception e)
+			{
+				TestBase.Log(e);
+				throw;
+			}
+		}
+
+		protected static IEnumerable<string> Split(IEnumerable<string> providers)
+		{
+			try
+			{
+				return providers.SelectMany(x => x.Split(',')).Select(x => x.Trim());
+			}
+			catch (Exception e)
+			{
+				TestBase.Log(e);
+				throw;
+			}
 		}
 
 		protected abstract IEnumerable<string> GetProviders();

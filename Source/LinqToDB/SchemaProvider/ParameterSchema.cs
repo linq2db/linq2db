@@ -10,12 +10,12 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets parameter's name.
 		/// </summary>
-		public string   SchemaName           { get; set; }
+		public string?  SchemaName           { get; set; }
 
 		/// <summary>
 		/// Gets database-specific parameter type.
 		/// </summary>
-		public string   SchemaType           { get; set; }
+		public string?  SchemaType           { get; set; }
 
 		/// <summary>
 		/// Gets flag indicating that it is input parameter.
@@ -40,22 +40,26 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets parameter type size.
 		/// </summary>
-		public long?    Size                 { get; set; }
+		public int?     Size                 { get; set; }
 
+		/// <summary>
+		/// Gets parameter description.
+		/// </summary>
+		public string?  Description          { get; set; }
 
 		/// <summary>
 		/// Gets C#-friendly parameter name.
 		/// </summary>
-		public string   ParameterName        { get; set; }
+		public string   ParameterName        { get; set; } = null!;
 		/// <summary>
 		/// Gets .net type for parameter as string.
 		/// </summary>
-		public string   ParameterType        { get; set; }
+		public string   ParameterType        { get; set; } = null!;
 
 		/// <summary>
 		/// Gets .net type for parameter.
 		/// </summary>
-		public Type     SystemType           { get; set; }
+		public Type?    SystemType           { get; set; }
 		/// <summary>
 		/// Gets parameter type as <see cref="DataType"/> enumeration value.
 		/// </summary>
@@ -64,6 +68,6 @@ namespace LinqToDB.SchemaProvider
 		/// <summary>
 		/// Gets provider-specific .net parameter type as a string.
 		/// </summary>
-		public string   ProviderSpecificType { get; set; }
+		public string?  ProviderSpecificType { get; set; }
 	}
 }

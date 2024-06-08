@@ -13,16 +13,16 @@ namespace Tests.UserTests
 		public class Person1974
 		{
 			[Column]
-			public int ID {get; set;}   
+			public int ID {get; set;}
 
 			[Column]
-			public string Name {get; set;}
+			public string? Name {get; set;}
 
-			[Association(QueryExpressionMethod = nameof(ArticleExpr), CanBeNull = true, Relationship = Relationship.OneToOne)]
-			public Article BoughtQuery {get; set; }
+			[Association(QueryExpressionMethod = nameof(ArticleExpr), CanBeNull = true)]
+			public Article? BoughtQuery {get; set; }
 
-			[Association(ThisKey = nameof(ID), OtherKey = nameof(Article.PersonId), CanBeNull = true, Relationship = Relationship.OneToOne)]
-			public Article Bought {get; set; }
+			[Association(ThisKey = nameof(ID), OtherKey = nameof(Article.PersonId), CanBeNull = true)]
+			public Article? Bought {get; set; }
 
 			public static Expression<Func<Person1974, IDataContext, IQueryable<Article>>> ArticleExpr()
 			{
@@ -33,17 +33,17 @@ namespace Tests.UserTests
 		public class Article
 		{
 			[Column]
-			public string ID {get; set;}  
+			public string? ID {get; set;}
 
 			[Column]
-			public int PersonId {get; set;}  
+			public int PersonId {get; set;}
 
 			[Column]
-			public double Price {get; set;}  
+			public double Price {get; set;}
 		}
 
 		[Test]
-		public void SelectAssociations([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SelectAssociations([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
@@ -61,8 +61,8 @@ namespace Tests.UserTests
 				Assert.That(items[0].Bought,      Is.Null);
 				Assert.That(items[0].BoughtQuery, Is.Null);
 
-				Assert.That(items[1].Bought.ID,      Is.EqualTo("Article"));
-				Assert.That(items[1].BoughtQuery.ID, Is.EqualTo("Article"));
+				Assert.That(items[1].Bought!.ID,      Is.EqualTo("Article"));
+				Assert.That(items[1].BoughtQuery!.ID, Is.EqualTo("Article"));
 			}
 		}
 	}

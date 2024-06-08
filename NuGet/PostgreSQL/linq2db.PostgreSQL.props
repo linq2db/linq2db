@@ -1,7 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<LinqToDBT4PostgreSQLTemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4PostgreSQLTemplatesDirectory>
-		<LinqToDBT4PostgreSQLToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4PostgreSQLToolsDirectory>
-		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
+		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SharedTools>
+		<LinqToDBT4NpgsqlClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4NpgsqlClientPath>
+		<LinqToDBT4PostgreSQLTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4PostgreSQLTemplatesPath>
 	</PropertyGroup>
 </Project>

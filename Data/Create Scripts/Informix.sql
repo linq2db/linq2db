@@ -185,7 +185,6 @@ INSERT INTO AllTypes
 	ncharDataType,
 	nvarcharDataType,
 	lvarcharDataType,
-	textDataType,
 
 	dateDataType,
 	datetimeDataType,
@@ -209,7 +208,6 @@ VALUES
 	'55645',
 	'6687',
 	'AAAAA',
-	'BBBBB',
 
 	datetime(2012-12-12) year to day,
 	datetime(2012-12-12 12:12:12) year to second,
@@ -315,4 +313,14 @@ GO
 CREATE PROCEDURE AddIssue792Record()
 	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
 END PROCEDURE
+GO
+
+DROP TABLE CollatedTable
+GO
+CREATE TABLE CollatedTable
+(
+	Id				INT NOT NULL,
+	CaseSensitive	VARCHAR(20) NOT NULL,
+	CaseInsensitive	NVARCHAR(20) NOT NULL
+)
 GO

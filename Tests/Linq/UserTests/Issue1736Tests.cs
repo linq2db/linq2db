@@ -139,21 +139,14 @@ namespace Tests.UserTests.Issue1736
 
 		public class RoutePlanerOutfeedResultDto
 		{
-			public WmsLoadCarrierDTO R { get; set; }
-
-			public InventoryResourceDTO IR { get; set; }
-
-			public ChannelDTO C { get; set; }
-
-			public StorageShelfDTO SS { get; set; }
-
-			public AisleStatus AisleStatus { get; set; }
-
-			public WmsResourcePointDTO RP { get; set; }
-
-			public decimal RefQty { get; set; }
-
-			public bool MixedStock { get; set; }
+			public WmsLoadCarrierDTO    R           { get; set; } = null!;
+			public InventoryResourceDTO IR          { get; set; } = null!;
+			public ChannelDTO?          C           { get; set; }
+			public StorageShelfDTO?     SS          { get; set; }
+			public AisleStatus          AisleStatus { get; set; }
+			public WmsResourcePointDTO  RP          { get; set; } = null!;
+			public decimal              RefQty      { get; set; }
+			public bool                 MixedStock  { get; set; }
 		}
 
 
@@ -185,7 +178,7 @@ namespace Tests.UserTests.Issue1736
 					join rp in db.GetTable<WmsResourcePointDTO>() on aislerp.ResourcePointId equals rp.Id
 					join r in db.GetTable<WmsLoadCarrierDTO>() on refS.ResourceID equals r.Id
 					join ir in db.GetTable<InventoryResourceDTO>() on r.Id equals ir.ResourceID
-					where ir.MaterialID == orderDTO.MaterialID.Value &&
+					where ir.MaterialID == orderDTO.MaterialID!.Value &&
 					      ir.ProductStatus == 0 &&
 					      ir.Quantity > 0
 					select new RoutePlanerOutfeedResultDto
@@ -204,7 +197,7 @@ namespace Tests.UserTests.Issue1736
 							.Any(irMix => irMix.ResourceID == r.Id &&
 							              irMix.Status >= InventoryResourceStatus.ReservedForInfeed &&
 							              irMix.Status <= InventoryResourceStatus.ReservedForOutfeed &&
-							              (irMix.MaterialID != orderDTO.MaterialID.Value ||
+							              (irMix.MaterialID != orderDTO.MaterialID!.Value ||
 							               irMix.ProductStatus != 0))
 					};
 
@@ -213,7 +206,7 @@ namespace Tests.UserTests.Issue1736
 					join r in db.GetTable<WmsLoadCarrierDTO>() on rp.Id equals r.ResourcePointID
 					join ir in db.GetTable<InventoryResourceDTO>() on r.Id equals ir.ResourceID
 					where rp.IsStoragePlace &&
-					      ir.MaterialID == orderDTO.MaterialID.Value &&
+					      ir.MaterialID == orderDTO.MaterialID!.Value &&
 					      ir.ProductStatus == 0 &&
 					      ir.Quantity > 0
 					select new RoutePlanerOutfeedResultDto

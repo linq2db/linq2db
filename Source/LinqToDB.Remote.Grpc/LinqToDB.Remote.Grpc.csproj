@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.Remote.Grpc</AssemblyName>
+		<RootNamespace>LinqToDB.Remote.Grpc</RootNamespace>
+
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.grpc.xml</DocumentationFile>
+
+		<!--published targets-->
+		<TargetFrameworks>net8.0</TargetFrameworks>
+		<IsAotCompatible>true</IsAotCompatible>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Grpc.Net.Client" />
+		<PackageReference Include="protobuf-net.Grpc" />
+	</ItemGroup>
+</Project>

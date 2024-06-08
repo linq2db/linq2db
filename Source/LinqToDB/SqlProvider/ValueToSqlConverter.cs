@@ -8,20 +8,28 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Extensions;
+	using Mapping;
 	using SqlQuery;
 
-	using ConverterType = Action<StringBuilder,SqlQuery.SqlDataType,object>;
+	using ConverterType = Action<StringBuilder,SqlQuery.SqlDataType,DataOptions,object>;
 
 	public class ValueToSqlConverter
 	{
-		public ValueToSqlConverter(params ValueToSqlConverter[] converters)
+		public ValueToSqlConverter()
+		{
+			BaseConverters = Array<ValueToSqlConverter>.Empty;
+		}
+
+		public ValueToSqlConverter(params ValueToSqlConverter[]? converters)
 		{
 			BaseConverters = converters ?? Array<ValueToSqlConverter>.Empty;
 		}
 
 		public bool CanConvert(Type type)
 		{
-			if (_converters.ContainsKey(type))
+			type = type.ToNullableUnderlying();
+
+			if (_converters?.ContainsKey(type) == true)
 				return true;
 
 			for (var i = 0; i < BaseConverters.Length; i++)
@@ -33,59 +41,63 @@ namespace LinqToDB.SqlProvider
 
 		internal void SetDefaults()
 		{
-			SetConverter(typeof(Boolean),    (sb,dt,v) => sb.Append((bool)v       ? "1" : "0"));
-			SetConverter(typeof(Char),       (sb,dt,v) => BuildChar(sb, (char)  v));
-			SetConverter(typeof(SByte),      (sb,dt,v) => sb.Append((SByte)     v));
-			SetConverter(typeof(Byte),       (sb,dt,v) => sb.Append((Byte)      v));
-			SetConverter(typeof(Int16),      (sb,dt,v) => sb.Append((Int16)     v));
-			SetConverter(typeof(UInt16),     (sb,dt,v) => sb.Append((UInt16)    v));
-			SetConverter(typeof(Int32),      (sb,dt,v) => sb.Append((Int32)     v));
-			SetConverter(typeof(UInt32),     (sb,dt,v) => sb.Append((UInt32)    v));
-			SetConverter(typeof(Int64),      (sb,dt,v) => sb.Append((Int64)     v));
-			SetConverter(typeof(UInt64),     (sb,dt,v) => sb.Append((UInt64)    v));
-			SetConverter(typeof(Single),     (sb,dt,v) => sb.Append(((float)    v). ToString(_numberFormatInfo)));
-			SetConverter(typeof(Double),     (sb,dt,v) => sb.Append(((double)   v). ToString("G17", _numberFormatInfo)));
-			SetConverter(typeof(Decimal),    (sb,dt,v) => sb.Append(((decimal)v).   ToString(_numberFormatInfo)));
-			SetConverter(typeof(DateTime),   (sb,dt,v) => BuildDateTime(sb, (DateTime)v));
-			SetConverter(typeof(String),     (sb,dt,v) => BuildString  (sb, v.ToString()));
-			SetConverter(typeof(Guid),       (sb,dt,v) => sb.Append('\'').Append(v).Append('\''));
+			SetConverter(typeof(bool),       (sb,_,_,v) => sb.Append((bool)      v ? "1" : "0"));
+			SetConverter(typeof(char),       (sb,_,_,v) => BuildChar(sb, (char)  v));
+			SetConverter(typeof(sbyte),      (sb,_,_,v) => sb.Append(((sbyte)    v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(byte),       (sb,_,_,v) => sb.Append(((byte)     v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(short),      (sb,_,_,v) => sb.Append(((short)    v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(ushort),     (sb,_,_,v) => sb.Append(((ushort)   v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(int),        (sb,_,_,v) => sb.Append(((int)      v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(uint),       (sb,_,_,v) => sb.Append(((uint)     v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(long),       (sb,_,_,v) => sb.Append(((long)     v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(ulong),      (sb,_,_,v) => sb.Append(((ulong)    v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(float),      (sb,_,_,v) => sb.Append(((float)    v).ToString("G9", _numberFormatInfo)));
+			SetConverter(typeof(double),     (sb,_,_,v) => sb.Append(((double)   v).ToString("G17", _numberFormatInfo)));
+			SetConverter(typeof(decimal),    (sb,_,_,v) => sb.Append(((decimal)  v).ToString(_numberFormatInfo)));
+			SetConverter(typeof(DateTime),   (sb,_,_,v) => BuildDateTime(sb, (DateTime)v));
+			SetConverter(typeof(string),     (sb,_,_,v) => BuildString  (sb, (string)v));
+			SetConverter(typeof(Guid),       (sb,_,_,v) => sb.Append('\'').Append(((Guid)v).ToString()).Append('\''));
 
-			SetConverter(typeof(SqlBoolean), (sb,dt,v) => sb.Append((SqlBoolean)v ? "1" : "0"));
-			SetConverter(typeof(SqlByte),    (sb,dt,v) => sb.Append(((SqlByte)   v).ToString()));
-			SetConverter(typeof(SqlInt16),   (sb,dt,v) => sb.Append(((SqlInt16)  v).ToString()));
-			SetConverter(typeof(SqlInt32),   (sb,dt,v) => sb.Append(((SqlInt32)  v).ToString()));
-			SetConverter(typeof(SqlInt64),   (sb,dt,v) => sb.Append(((SqlInt64)  v).ToString()));
-			SetConverter(typeof(SqlSingle),  (sb,dt,v) => sb.Append(((SqlSingle) v).ToString()));
-			SetConverter(typeof(SqlDouble),  (sb,dt,v) => sb.Append(((SqlDouble) v).ToString()));
-			SetConverter(typeof(SqlDecimal), (sb,dt,v) => sb.Append(((SqlDecimal)v).ToString()));
-			SetConverter(typeof(SqlMoney),   (sb,dt,v) => sb.Append(((SqlMoney)  v).ToString()));
-			SetConverter(typeof(SqlDateTime),(sb,dt,v) => BuildDateTime(sb, (DateTime)(SqlDateTime)v));
-			SetConverter(typeof(SqlString),  (sb,dt,v) => BuildString  (sb, v.ToString()));
-			SetConverter(typeof(SqlChars),   (sb,dt,v) => BuildString  (sb, ((SqlChars)v).ToSqlString().ToString()));
-			SetConverter(typeof(SqlGuid),    (sb,dt,v) => sb.Append('\'').Append(v).Append('\''));
+			SetConverter(typeof(SqlBoolean), (sb,_,_,v) => sb.Append((SqlBoolean)v ? "1" : "0"));
+			SetConverter(typeof(SqlByte),    (sb,_,_,v) => sb.Append(((SqlByte)   v).ToString()));
+			SetConverter(typeof(SqlInt16),   (sb,_,_,v) => sb.Append(((SqlInt16)  v).ToString()));
+			SetConverter(typeof(SqlInt32),   (sb,_,_,v) => sb.Append(((SqlInt32)  v).ToString()));
+			SetConverter(typeof(SqlInt64),   (sb,_,_,v) => sb.Append(((SqlInt64)  v).ToString()));
+			SetConverter(typeof(SqlSingle),  (sb,_,_,v) => sb.Append(((SqlSingle) v).ToString()));
+			SetConverter(typeof(SqlDouble),  (sb,_,_,v) => sb.Append(((SqlDouble) v).ToString()));
+			SetConverter(typeof(SqlDecimal), (sb,_,_,v) => sb.Append(((SqlDecimal)v).ToString()));
+			SetConverter(typeof(SqlMoney),   (sb,_,_,v) => sb.Append(((SqlMoney)  v).ToString()));
+			SetConverter(typeof(SqlDateTime),(sb,_,_,v) => BuildDateTime(sb, (DateTime)(SqlDateTime)v));
+			SetConverter(typeof(SqlString),  (sb,_,_,v) => BuildString  (sb, ((SqlString)v).Value));
+			SetConverter(typeof(SqlChars),   (sb,_,_,v) => BuildString  (sb, ((SqlChars)v).ToSqlString().ToString()));
+			SetConverter(typeof(SqlGuid),    (sb,_,_,v) => sb.Append('\'').Append(((SqlGuid)v).Value.ToString()).Append('\''));
+
+#if NET6_0_OR_GREATER
+			SetConverter(typeof(DateOnly),   (sb,_,_,v) => BuildDateOnly(sb, (DateOnly)v));
+#endif
 		}
 
 		internal readonly ValueToSqlConverter[] BaseConverters;
 
-		readonly Dictionary<Type,ConverterType> _converters = new Dictionary<Type,ConverterType>();
+		Dictionary<Type,ConverterType>? _converters;
 
-		ConverterType _booleanConverter;
-		ConverterType _charConverter;
-		ConverterType _sByteConverter;
-		ConverterType _byteConverter;
-		ConverterType _int16Converter;
-		ConverterType _uInt16Converter;
-		ConverterType _int32Converter;
-		ConverterType _uInt32Converter;
-		ConverterType _int64Converter;
-		ConverterType _uInt64Converter;
-		ConverterType _singleConverter;
-		ConverterType _doubleConverter;
-		ConverterType _decimalConverter;
-		ConverterType _dateTimeConverter;
-		ConverterType _stringConverter;
+		ConverterType? _booleanConverter;
+		ConverterType? _charConverter;
+		ConverterType? _sByteConverter;
+		ConverterType? _byteConverter;
+		ConverterType? _int16Converter;
+		ConverterType? _uInt16Converter;
+		ConverterType? _int32Converter;
+		ConverterType? _uInt32Converter;
+		ConverterType? _int64Converter;
+		ConverterType? _uInt64Converter;
+		ConverterType? _singleConverter;
+		ConverterType? _doubleConverter;
+		ConverterType? _decimalConverter;
+		ConverterType? _dateTimeConverter;
+		ConverterType? _stringConverter;
 
-		static readonly NumberFormatInfo _numberFormatInfo = new NumberFormatInfo
+		static readonly NumberFormatInfo _numberFormatInfo = new ()
 		{
 			CurrencyDecimalDigits    = NumberFormatInfo.InvariantInfo.CurrencyDecimalDigits,
 			CurrencyDecimalSeparator = NumberFormatInfo.InvariantInfo.CurrencyDecimalSeparator,
@@ -143,48 +155,56 @@ namespace LinqToDB.SqlProvider
 					"'{0:yyyy-MM-dd HH:mm:ss}'";
 			}
 
-			stringBuilder.AppendFormat(format, value);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
-		public bool TryConvert(StringBuilder stringBuilder, object value)
+#if NET6_0_OR_GREATER
+		static void BuildDateOnly(StringBuilder stringBuilder, DateOnly value)
 		{
-			if (value == null || value is INullable && ((INullable)value).IsNull)
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"'{value:yyyy-MM-dd}'");
+		}
+#endif
+
+		public bool TryConvert(StringBuilder stringBuilder, MappingSchema mappingSchema, DataOptions options, object? value)
+		{
+			return TryConvert(stringBuilder, mappingSchema, null, options, value);
+		}
+
+		public bool TryConvert(StringBuilder stringBuilder, MappingSchema mappingSchema, SqlDataType? dataType, DataOptions options, object? value)
+		{
+			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
 				stringBuilder.Append("NULL");
 				return true;
 			}
 
-			return TryConvertImpl(stringBuilder, new SqlDataType(value.GetType()), value, true);
+			return TryConvertImpl(stringBuilder, dataType ?? mappingSchema.GetDataType(value.GetType()), options, value, true);
 		}
 
-		public bool TryConvert(StringBuilder stringBuilder, SqlDataType dataType, object value)
+		public bool CanConvert(SqlDataType dataType, DataOptions options, object? value)
 		{
-			return TryConvertImpl(stringBuilder, dataType, value, true);
+			return TryConvertImpl(null, dataType, options, value, true);
 		}
 
-		bool TryConvertImpl(StringBuilder stringBuilder, SqlDataType dataType, object value, bool tryBase)
+		bool TryConvertImpl(StringBuilder? stringBuilder, SqlDataType dataType, DataOptions options, object? value, bool tryBase)
 		{
-			if (value == null || value is INullable && ((INullable)value).IsNull)
+			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
-				stringBuilder.Append("NULL");
+				stringBuilder?.Append("NULL");
 				return true;
 			}
 
 			var type = value.GetType();
 
-			ConverterType converter = null;
+			ConverterType? converter = null;
 
-			if (_converters.Count > 0)
+			if (_converters?.Count > 0)
 			{
 				if (!_converters.TryGetValue(type, out converter))
 				{
 					switch (type.GetTypeCodeEx())
 					{
-#if NETSTANDARD1_6
-					case (TypeCode)2          : stringBuilder.Append("NULL")  ; return true;
-#else
-						case TypeCode.DBNull  : stringBuilder.Append("NULL")  ; return true;
-#endif
+						case TypeCode.DBNull  : stringBuilder?.Append("NULL")  ; return true;
 						case TypeCode.Boolean : converter = _booleanConverter ; break;
 						case TypeCode.Char    : converter = _charConverter    ; break;
 						case TypeCode.SByte   : converter = _sByteConverter   ; break;
@@ -206,55 +226,44 @@ namespace LinqToDB.SqlProvider
 
 			if (converter != null)
 			{
-				converter(stringBuilder, dataType, value);
+				if (stringBuilder != null)
+					converter(stringBuilder, dataType, options, value);
 				return true;
 			}
 
 			if (tryBase && BaseConverters.Length > 0)
 				foreach (var valueConverter in BaseConverters)
-					if (valueConverter.TryConvertImpl(stringBuilder, dataType, value, false))
+					if (valueConverter.TryConvertImpl(stringBuilder, dataType, options, value, false))
 						return true;
-
-			/*
-			var ar      = new AttributeReader();
-			var udtAttr = ar.GetAttributes<Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute>(type);
-
-			if (udtAttr.Length > 0 && udtAttr[0].Format == Microsoft.SqlServer.Server.Format.UserDefined)
-			{
-				SetConverter(type, (sb,dt,v) => BuildString(sb, v.ToString()));
-				return TryConvertImpl(stringBuilder, dataType, value, tryBase);
-			}
-			*/
 
 			return false;
 		}
 
-		public StringBuilder Convert(StringBuilder stringBuilder, object value)
+		public StringBuilder Convert(StringBuilder stringBuilder, MappingSchema mappingSchema, DataOptions options, object? value)
 		{
-			if (!TryConvert(stringBuilder, value))
-				stringBuilder.Append(value);
+			return Convert(stringBuilder, mappingSchema, null, options, value);
+		}
+
+		public StringBuilder Convert(StringBuilder stringBuilder, MappingSchema mappingSchema, SqlDataType? dataType, DataOptions options, object? value)
+		{
+			if (!TryConvert(stringBuilder, mappingSchema, dataType, options, value))
+				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+
 			return stringBuilder;
 		}
 
-		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType dataType, object value)
-		{
-			if (!TryConvert(stringBuilder, dataType, value))
-				stringBuilder.Append(value);
-			return stringBuilder;
-		}
-
-		public void SetConverter(Type type, ConverterType converter)
+		public void SetConverter(Type type, ConverterType? converter)
 		{
 			if (converter == null)
 			{
-				if (_converters.ContainsKey(type))
+				if (_converters?.ContainsKey(type) == true)
 					_converters.Remove(type);
 			}
 			else
 			{
-				_converters[type] = converter;
+				(_converters ??= new())[type] = converter;
 
-				if (!type.IsEnumEx())
+				if (!type.IsEnum)
 				{
 					switch (type.GetTypeCodeEx())
 					{

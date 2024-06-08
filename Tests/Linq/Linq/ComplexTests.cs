@@ -11,13 +11,14 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
 	public class ComplexTests : TestBase
 	{
 		[Test]
-		public void Contains1([DataSources(ProviderName.Access)] string context)
+		public void Contains1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -35,7 +36,7 @@ namespace Tests.Linq
 						join p   in Parent on ch.ParentID equals p.ParentID
 						join gc2 in q1     on p.ParentID  equals gc2.ParentID into g
 						from gc3 in g.DefaultIfEmpty()
-					where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID.Value)
+					where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID!.Value)
 					select new { p.ParentID, gc3 };
 
 				var q2 =
@@ -52,7 +53,7 @@ namespace Tests.Linq
 						join p   in db.Parent on ch.ParentID equals p.ParentID
 						join gc2 in q2        on p.ParentID  equals gc2.ParentID into g
 						from gc3 in g.DefaultIfEmpty()
-				where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID.Value)
+				where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID!.Value)
 				select new { p.ParentID, gc3 };
 
 				AreEqual(expected, result);
@@ -60,7 +61,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains2([DataSources(ProviderName.Access)] string context)
+		public void Contains2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -118,7 +119,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains3([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
+		public void Contains3([DataSources(TestProvName.AllSQLite, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -136,7 +137,7 @@ namespace Tests.Linq
 						join p  in Parent on ch.ParentID equals p.ParentID
 						join gc in q1     on p.ParentID  equals gc.ParentID into g
 						from gc in g.DefaultIfEmpty()
-					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID.Value)
+					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
 					select new { p.ParentID, gc };
 
 				var q2 =
@@ -153,7 +154,7 @@ namespace Tests.Linq
 						join p  in db.Parent on ch.ParentID equals p.ParentID
 						join gc in q2        on p.ParentID  equals gc.ParentID into g
 						from gc in g.DefaultIfEmpty()
-					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID.Value)
+					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
 					select new { p.ParentID, gc };
 
 				AreEqual(expected, result);
@@ -161,7 +162,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains4([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
+		public void Contains4([DataSources(TestProvName.AllSQLite, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -176,9 +177,9 @@ namespace Tests.Linq
 
 				var expected =
 					from ch in Child
-						join gc in q1 on ch.Parent.ParentID equals gc.ParentID into g
+						join gc in q1 on ch.Parent!.ParentID equals gc.ParentID into g
 						from gc in g.DefaultIfEmpty()
-					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID.Value)
+					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
 					select new { ch.Parent, gc };
 
 				var q2 =
@@ -192,9 +193,9 @@ namespace Tests.Linq
 
 				var result =
 					from ch in db.Child
-						join gc in q2 on ch.Parent.ParentID equals gc.ParentID into g
+						join gc in q2 on ch.Parent!.ParentID equals gc.ParentID into g
 						from gc in g.DefaultIfEmpty()
-				where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID.Value)
+				where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
 				select new { ch.Parent, gc };
 
 				AreEqual(expected, result);
@@ -202,7 +203,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains5([DataSources(ProviderName.Access, ProviderName.SqlServer2000, TestProvName.AllSybase)] string context)
+		public void Contains5([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -214,7 +215,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains6([DataSources(ProviderName.Access)] string context)
+		public void Contains6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -272,8 +273,8 @@ namespace Tests.Linq
 
 		public class MyObject
 		{
-			public Parent Parent;
-			public Child  Child;
+			public Parent? Parent;
+			public Child?  Child;
 		}
 
 		IQueryable<MyObject> GetData(ITestDataContext db, int id)
@@ -294,7 +295,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from o in GetData(db, 1)
-					from g in o.Parent.GrandChildren
+					from g in o.Parent!.GrandChildren
 					select new { o, g };
 
 				var _ = q.ToList();
@@ -354,7 +355,7 @@ namespace Tests.Linq
 		[Column("ParentID",     "InnerEntityType")]
 		public class LookupEntity : Entity
 		{
-			public Entity         InnerEntity     { get; set; }
+			public Entity?        InnerEntity     { get; set; }
 			public TestEntityType InnerEntityType { get; set; }
 		}
 
@@ -365,7 +366,7 @@ namespace Tests.Linq
 		public class TestEntityBase : Entity
 		{
 			public TestEntityType EntityType { get; set; }
-			public SuperAccount   Owner      { get; set; }
+			public SuperAccount?  Owner      { get; set; }
 		}
 
 		public class TestEntity : TestEntityBase, IEnumerable<object>
@@ -400,7 +401,7 @@ namespace Tests.Linq
 		[Column("ParentID",     "Type")]
 		public class SuperAccount : Entity, IEnumerable<object>
 		{
-			public List<Entity>     InnerAccounts { get; set; }
+			public List<Entity>     InnerAccounts { get; set; } = null!;
 			public SuperAccountType Type          { get; set; }
 
 			#region IEnumerable<object> Members
@@ -425,11 +426,11 @@ namespace Tests.Linq
 		[Test]
 		public void IEnumerableTest1()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var res =
 					from rc in db.GetTable<TestEntity>()
-					join li in db.GetTable<LookupEntity>() on rc.Id equals li.InnerEntity.Id
+					join li in db.GetTable<LookupEntity>() on rc.Id equals li.InnerEntity!.Id
 					where rc.EntityType == TestEntityType.Type1
 					select rc;
 
@@ -440,11 +441,11 @@ namespace Tests.Linq
 		[Test]
 		public void IEnumerableTest2()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var zones =
 					from z in db.GetTable<TestEntity2>()
-					join o in db.GetTable<SuperAccount>() on z.Owner.Id equals o.Id
+					join o in db.GetTable<SuperAccount>() on z.Owner!.Id equals o.Id
 					select z;
 
 				var _ = zones.ToList();
@@ -452,5 +453,136 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		[Table("T1")]
+		public class T1
+		{
+			[PrimaryKey] public int      InstrumentId         { get; set; }
+			[Column]     public string?  InstrumentCode       { get; set; }
+			[Column]     public DateTime CreateDate           { get; set; }
+			[Column]     public string?  SourceInstrumentCode { get; set; }
+		}
+
+		[Table("T2")]
+		public class T2
+		{
+			[Column] public int InstrumentId { get; set; }
+			[Column] public int IndexId { get; set; }
+
+		}
+
+		[Table("T3")]
+		public class T3
+		{
+			[Column] public int InstrumentId { get; set; }
+			[Column] public int IndexId { get; set; }
+		}
+
+		[Test]
+		public void Issue413Test([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<T1>())
+			using (db.CreateLocalTable<T2>())
+			using (db.CreateLocalTable<T3>())
+			{
+				string cond = "aaa";
+				DateTime uptoDate = TestData.DateTime;
+
+				db.Insert(new T3 { IndexId = 1, InstrumentId = 1 });
+				db.Insert(new T3 { IndexId = 1, InstrumentId = 2 });
+				db.Insert(new T3 { IndexId = 1, InstrumentId = 3 });
+				db.Insert(new T2 { IndexId = 1, InstrumentId = 1 });
+				db.Insert(new T2 { IndexId = 1, InstrumentId = 2 });
+
+				db.Insert(new T1 { InstrumentId = 1, CreateDate = TestData.DateTime.AddDays(-1), InstrumentCode = "aaa1", SourceInstrumentCode = "NOTNULL" });
+				db.Insert(new T1 { InstrumentId = 2, CreateDate = TestData.DateTime.AddDays(-1), InstrumentCode = "aaa2", SourceInstrumentCode = null });
+
+				var res = db.GetTable<T1>()
+					.Where(_ => _.InstrumentCode!.StartsWith(cond) && _.CreateDate <= uptoDate)
+					.Join(db.GetTable<T2>(), _ => _.InstrumentId, _ => _.InstrumentId, (ins, idx) => idx.IndexId)
+					.Join(db.GetTable<T3>(), _ => _,              _ => _.IndexId,      (idx, w)   => w.InstrumentId)
+					.Join(db.GetTable<T1>(), _ => _,              _ => _.InstrumentId, (w, ins)   => ins.SourceInstrumentCode)
+					.Where(_ => _ != null)
+					.Distinct()
+					.OrderBy(_ => _)
+					.ToList();
+
+//				db.GetTable<T1>().Truncate();
+//				db.GetTable<T2>().Truncate();
+//				db.GetTable<T3>().Truncate();
+//
+//				_ = db.Person.ToList();
+
+				Assert.That(res.Count, Is.EqualTo(1));
+			}
+		}
+
+		public class Address
+		{
+			public string? City { get; set; }
+			public string? Street { get; set; }
+			public int Building { get; set; }
+		}
+
+		[Column("city", "Residence.City")]
+		[Column("user_name", "Name")]
+		public class User
+		{
+			public string? Name;
+
+			[Column("street", ".Street")]
+			[Column("building_number", MemberName = ".Building")]
+			public Address? Residence { get; set; }
+
+			public static readonly User[] TestData = new []
+			{
+				new User()
+				{
+					Name = "Freddy",
+					Residence = new Address()
+					{
+						Building = 13,
+						City     = "Springwood",
+						Street   = "Elm Street"
+					}
+				}
+			};
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/999")]
+		public void SelectCompositeTypeSpecificColumnTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var users = db.CreateLocalTable<User>())
+			{
+				var query = users.Select(u => u.Residence!.City);
+				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);
+
+				query.ToList();
+
+				query = users.Select(u => u.Residence!.Street);
+				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);
+
+				query.ToList();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2590")]
+		public void SelectCompositeTypeAllColumnsTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var users = db.CreateLocalTable(User.TestData))
+			{
+				var result = users.ToList();
+
+				Assert.AreEqual(1, result.Count);
+				Assert.AreEqual(User.TestData[0].Name, result[0].Name);
+				Assert.IsNotNull(result[0].Residence);
+				Assert.AreEqual(User.TestData[0].Residence!.Building, result[0].Residence!.Building);
+				Assert.AreEqual(User.TestData[0].Residence!.City, result[0].Residence!.City);
+				Assert.AreEqual(User.TestData[0].Residence!.Street, result[0].Residence!.Street);
+			}
+		}
 	}
 }

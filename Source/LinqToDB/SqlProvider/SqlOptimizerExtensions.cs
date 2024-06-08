@@ -1,26 +1,25 @@
-﻿using System;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.SqlProvider
+﻿namespace LinqToDB.SqlProvider
 {
+	using DataProvider;
+	using Mapping;
+	using SqlQuery;
+
 	internal static class SqlOptimizerExtensions
 	{
-		public static SqlStatement OptimizeStatement([JetBrains.Annotations.NotNull] this ISqlOptimizer optimizer, [JetBrains.Annotations.NotNull] SqlStatement statement,
-			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
+			MappingSchema mappingSchema, DataOptions dataOptions, AliasesContext aliases, EvaluationContext context)
 		{
-			if (optimizer     == null) throw new ArgumentNullException(nameof(optimizer));
-			if (statement     == null) throw new ArgumentNullException(nameof(statement));
-			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
+			var optimizationContext = new OptimizationContext(context, aliases, false, static () => NoopQueryParametersNormalizer.Instance);
 
-			// transforming parameters to values
-			var newStatement = statement.ProcessParameters(mappingSchema);
+			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, dataOptions, statement, optimizationContext);
 
-			// optimizing expressions according to new values
-			newStatement = optimizer.OptimizeStatement(newStatement);
+			return newStatement;
+		}
 
-			// reset parameters
-			newStatement.CollectParameters();
+		public static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
+			MappingSchema mappingSchema, DataOptions dataOptions, OptimizationContext optimizationContext)
+		{
+			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, dataOptions, statement, optimizationContext);
 
 			return newStatement;
 		}

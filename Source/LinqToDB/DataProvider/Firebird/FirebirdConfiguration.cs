@@ -4,23 +4,27 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	public static class FirebirdConfiguration
 	{
-		[Obsolete("Use FirebirdSqlBuilder.IdentifierQuoteMode instead.")]
-		public static bool QuoteIdentifiers
+		/// <summary>
+		/// Specifies how identifiers like table and field names should be quoted.
+		/// </summary>
+		/// <remarks>
+		/// Default value: <see cref="FirebirdIdentifierQuoteMode.Auto"/>.
+		/// </remarks>
+		[Obsolete("Use FirebirdOptions.Default.IdentifierQuoteMode instead.")]
+		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode
 		{
-			get
-			{
-				return FirebirdSqlBuilder.IdentifierQuoteMode != FirebirdIdentifierQuoteMode.None;
-			}
-
-			set
-			{
-				FirebirdSqlBuilder.IdentifierQuoteMode = value ? FirebirdIdentifierQuoteMode.Quote : FirebirdIdentifierQuoteMode.None;
-			}
+			get => FirebirdOptions.Default.IdentifierQuoteMode;
+			set => FirebirdOptions.Default = FirebirdOptions.Default with { IdentifierQuoteMode = value };
 		}
 
 		/// <summary>
 		/// Specifies that Firebird supports literal encoding. Availiable from version 2.5.
 		/// </summary>
-		public static bool IsLiteralEncodingSupported = true;
+		[Obsolete("Use FirebirdOptions.Default.IsLiteralEncodingSupported instead.")]
+		public static bool IsLiteralEncodingSupported
+		{
+			get => FirebirdOptions.Default.IsLiteralEncodingSupported;
+			set => FirebirdOptions.Default = FirebirdOptions.Default with { IsLiteralEncodingSupported = value };
+		}
 	}
 }

@@ -1,45 +1,54 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace LinqToDB.Data
 {
 	public class DataReader : IDisposable
 	{
-		public   CommandInfo CommandInfo { get; set; }
-		public   IDataReader Reader      { get; set; }
-		internal int         ReadNumber  { get; set; }
-		private  DateTime    StartedOn   { get; }      = DateTime.UtcNow;
-		private  Stopwatch   Stopwatch   { get; }      = Stopwatch.StartNew();
+		internal DataReaderWrapper?  ReaderWrapper { get; private set;  }
+		public   DbDataReader?       Reader        => ReaderWrapper?.DataReader;
+		public   CommandInfo?        CommandInfo   { get; }
+		internal int                 ReadNumber    { get; set; }
+		private  DateTime            StartedOn     { get; }      = DateTime.UtcNow;
+		private  Stopwatch           Stopwatch     { get; }      = Stopwatch.StartNew();
+
+		public DataReader(CommandInfo commandInfo, DataReaderWrapper dataReader)
+		{
+			CommandInfo   = commandInfo;
+			ReaderWrapper = dataReader;
+		}
 
 		public void Dispose()
 		{
-			if (Reader != null)
+			if (ReaderWrapper != null)
 			{
-				Reader.Dispose();
-
-				if (DataConnection.TraceSwitch.TraceInfo && CommandInfo?.DataConnection?.OnTraceConnection != null)
+				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.Completed)
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel      = TraceLevel.Info,
-						DataConnection  = CommandInfo.DataConnection,
-						Command         = CommandInfo.DataConnection.Command,
+						Command         = ReaderWrapper.Command,
 						StartTime       = StartedOn,
 						ExecutionTime   = Stopwatch.Elapsed,
 						RecordsAffected = ReadNumber,
 					});
 				}
+
+				ReaderWrapper.Dispose();
+				ReaderWrapper = null;
 			}
 		}
 
 		#region Query with object reader
 
-		public IEnumerable<T> Query<T>(Func<IDataReader,T> objectReader)
+		public IEnumerable<T> Query<T>(Func<DbDataReader, T> objectReader)
 		{
-			while (Reader.Read())
+			while (Reader!.Read())
 				yield return objectReader(Reader);
 		}
 
@@ -50,12 +59,12 @@ namespace LinqToDB.Data
 		public IEnumerable<T> Query<T>()
 		{
 			if (ReadNumber != 0)
-				if (!Reader.NextResult())
+				if (!Reader!.NextResult())
 					return Enumerable.Empty<T>();
 
 			ReadNumber++;
 
-			return CommandInfo.ExecuteQuery<T>(Reader, CommandInfo.DataConnection.Command.CommandText + "$$$" + ReadNumber);
+			return CommandInfo!.ExecuteQuery<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"));
 		}
 
 		#endregion
@@ -71,17 +80,18 @@ namespace LinqToDB.Data
 
 		#region Execute scalar
 
+		[return: MaybeNull]
 		public T Execute<T>()
 		{
 			if (ReadNumber != 0)
-				if (!Reader.NextResult())
+				if (!Reader!.NextResult())
 					return default(T);
 
 			ReadNumber++;
 
-			var sql = CommandInfo.DataConnection.Command.CommandText + "$$$" + ReadNumber;
+			var sql = FormattableString.Invariant($"{CommandInfo!.CommandText}$$${ReadNumber}");
 
-			return CommandInfo.ExecuteScalar<T>(Reader, sql);
+			return CommandInfo.ExecuteScalar<T>(Reader!, sql);
 		}
 
 		#endregion

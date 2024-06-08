@@ -1,74 +1,56 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
-using LinqToDB.DataProvider;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlParameter : ISqlExpression, IValueContainer
+	using Common;
+
+	public class SqlParameter : ISqlExpression
 	{
-		public SqlParameter(Type systemType, string name, object value)
+		public SqlParameter(DbDataType type, string? name, object? value)
 		{
 			IsQueryParameter = true;
 			Name             = name;
-			SystemType       = systemType;
+			Type             = type;
 			Value            = value;
-			DataType         = DataType.Undefined;
+
+#if DEBUG
+			_paramNumber = ++_paramCounter;
+#endif
 		}
 
-		public SqlParameter(Type systemType, string name, object value, Func<object,object> valueConverter)
-			: this(systemType, name, value)
+#if DEBUG
+		readonly int _paramNumber;
+		static   int _paramCounter;
+#endif
+
+		// meh, nullable...
+		public string?    Name             { get; set; }
+		public DbDataType Type             { get; set; }
+		public bool       IsQueryParameter { get; set; }
+		internal int?     AccessorId       { get; set; }
+
+		Type ISqlExpression.SystemType => Type.SystemType;
+
+		public object?    Value            { get; }
+
+		public object? CorrectParameterValue(object? rawValue)
 		{
-			_valueConverter = valueConverter;
+			var value = rawValue;
+
+			var valueConverter = ValueConverter;
+			return valueConverter == null ? value : valueConverter(value);
 		}
-
-		public string   Name             { get; set; }
-		public Type     SystemType       { get; set; }
-		public bool     IsQueryParameter { get; set; }
-		public DataType DataType         { get; set; }
-		public string   DbType           { get; set; }
-		public int?     DbSize           { get; set; }
-		public string   LikeStart        { get; set; }
-		public string   LikeEnd          { get; set; }
-		public bool     ReplaceLike      { get; set; }
-
-		private object _value;
-		public  object  Value
-		{
-			get
-			{
-				var value = _value;
-
-				if (ReplaceLike)
-				{
-					value = DataTools.EscapeUnterminatedBracket(value?.ToString());
-				}
-
-				if (LikeStart != null)
-				{
-					if (value != null)
-					{
-						return value.ToString().IndexOfAny(new[] { '%', '_' }) < 0 ?
-							LikeStart + value + LikeEnd :
-							LikeStart + EscapeLikeText(value.ToString()) + LikeEnd;
-					}
-				}
-
-				var valueConverter = ValueConverter;
-				return valueConverter == null? value: valueConverter(value);
-			}
-
-			set => _value = value;
-		}
-
-		internal object RawValue => _value;
 
 		#region Value Converter
 
-		internal List<int>  TakeValues;
+		internal List<int>? TakeValues;
 
-		private Func<object,object> _valueConverter;
-		public  Func<object,object>  ValueConverter
+		private Func<object?, object?>? _valueConverter;
+		public  Func<object?, object?>?  ValueConverter
 		{
 			get
 			{
@@ -84,8 +66,7 @@ namespace LinqToDB.SqlQuery
 
 		internal void SetTakeConverter(int take)
 		{
-			if (TakeValues == null)
-				TakeValues = new List<int>();
+			TakeValues ??= new List<int>();
 
 			TakeValues.Add(take);
 
@@ -97,33 +78,9 @@ namespace LinqToDB.SqlQuery
 			var conv = _valueConverter;
 
 			if (conv == null)
-				_valueConverter = v => v == null ? null : (object) ((int) v + take);
+				_valueConverter = v => v == null ? null : ((int) v + take);
 			else
-				_valueConverter = v => v == null ? null : (object) ((int) conv(v) + take);
-		}
-
-		static string EscapeLikeText(string text)
-		{
-			if (text.IndexOfAny(new[] { '%', '_' }) < 0)
-				return text;
-
-			var builder = new StringBuilder(text.Length);
-
-			foreach (var ch in text)
-			{
-				switch (ch)
-				{
-					case '%':
-					case '_':
-					case '~':
-						builder.Append('~');
-						break;
-				}
-
-				builder.Append(ch);
-			}
-
-			return builder.ToString();
+				_valueConverter = v => v == null ? null : ((int) conv(v)! + take);
 		}
 
 		#endregion
@@ -149,70 +106,34 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
-			if (this == other)
-				return true;
+			return ReferenceEquals(this, other);
+		}
 
-			var p = other as SqlParameter;
-			return (object)p != null && Name != null && p.Name != null && Name == p.Name && SystemType == p.SystemType;
+		public override int GetHashCode()
+		{
+			return RuntimeHelpers.GetHashCode(this);
 		}
 
 		#endregion
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull
-		{
-			get
-			{
-				if (SystemType == null && _value == null)
-					return true;
-
-				return SqlDataType.TypeCanBeNull(SystemType ?? _value.GetType());
-			}
-		}
+		public bool CanBeNull => SqlDataType.TypeCanBeNull(Type.SystemType);
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return ((ISqlExpression)this).Equals(other) && comparer(this, other);
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var p = new SqlParameter(SystemType, Name, _value, _valueConverter)
-				{
-					IsQueryParameter = IsQueryParameter,
-					DataType         = DataType,
-					DbType           = DbType,
-					DbSize           = DbSize,
-					LikeStart        = LikeStart,
-					LikeEnd          = LikeEnd,
-					ReplaceLike      = ReplaceLike
-				};
-
-				objectTree.Add(this, clone = p);
-			}
-
-			return clone;
 		}
 
 		#endregion
@@ -223,12 +144,19 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			return sb
-				.Append('@')
-				.Append(Name ?? "parameter")
-				.Append('[')
-				.Append(Value ?? "NULL")
-				.Append(']');
+			if (Name?.StartsWith("@") == false)
+				sb.Append('@');
+
+			sb
+				.Append(Name ?? "parameter");
+
+#if DEBUG
+			sb.Append(CultureInfo.InvariantCulture, $"({_paramNumber})");
+#endif
+			if (Value != null)
+				sb.Append(CultureInfo.InvariantCulture, $"[{Value}]");
+
+			return sb;
 		}
 
 		#endregion

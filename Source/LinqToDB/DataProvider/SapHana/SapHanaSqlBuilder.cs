@@ -1,18 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
 
-	class SapHanaSqlBuilder : BasicSqlBuilder
+	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
-		public SapHanaSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
+		}
+
+		protected SapHanaSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SapHanaSqlBuilder(this);
 		}
 
 		public override int CommandCount(SqlStatement statement)
@@ -25,22 +35,14 @@ namespace LinqToDB.DataProvider.SapHana
 			var insertClause = Statement.GetInsertClause();
 			if (insertClause != null)
 			{
-				var identityField = insertClause.Into.GetIdentityField();
+				var identityField = insertClause.Into!.GetIdentityField();
 				var table = insertClause.Into;
 
 				if (identityField == null || table == null)
-					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
+					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
 
-				StringBuilder.Append("SELECT MAX(");
-				BuildExpression(identityField, false, true);
-				StringBuilder.Append(") FROM ");
-				BuildPhysicalTable(table, null);
+				StringBuilder.Append("SELECT CURRENT_IDENTITY_VALUE() FROM DUMMY");
 			}
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SapHanaSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
@@ -53,7 +55,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return selectQuery.Select.TakeValue == null ? "LIMIT 4200000000 OFFSET {0}" : "OFFSET {0}";
 		}
 
-		public override bool IsNestedJoinParenthesisRequired { get { return true; } }
+		public override bool IsNestedJoinParenthesisRequired => true;
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
@@ -65,25 +67,18 @@ namespace LinqToDB.DataProvider.SapHana
 			else
 			{
 				var name = WithStringBuilder(
-					new StringBuilder(),
-					() =>
+					static ctx =>
 					{
-						BuildPhysicalTable(createTable.Table, null);
-						return StringBuilder.ToString();
-					});
+						ctx.this_.BuildPhysicalTable(ctx.createTable.Table, null);
+					}, (this_: this, createTable));
 
-				AppendIndent().AppendFormat(createTable.StatementHeader, name);
+				AppendIndent().AppendFormat(CultureInfo.InvariantCulture, createTable.StatementHeader, name);
 			}
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
-		}
-
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
-		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.Int32         :
 				case DataType.UInt16        :
@@ -115,86 +110,60 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.NVarChar:
 				case DataType.VarChar:
 				case DataType.VarBinary:
-					if (type.Length == null || type.Length > 5000 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 5000 || type.Type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.DataType)
-							.Append("(5000)");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.Type.DataType}(5000)");
+
 						return;
 					}
 					break;
 			}
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
 			if (selectQuery.From.Tables.Count == 0)
 				StringBuilder.Append("FROM DUMMY").AppendLine();
+			else
+				base.BuildFromClause(statement, selectQuery);
 		}
 
-		public static bool TryConvertParameterSymbol { get; set; }
-
-		private static List<char> _convertParameterSymbols;
-		public  static List<char>  ConvertParameterSymbols
-		{
-			get { return _convertParameterSymbols; }
-			set { _convertParameterSymbols = value ?? new List<char>(); }
-		}
-
-		public override object Convert(object value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
-					return ":" + value;
+					return sb.Append(':')
+						.Append('"').Append(value).Append('"');
 
 				case ConvertType.NameToCommandParameter:
-					return value;
-
 				case ConvertType.NameToSprocParameter:
-					{
-						var valueStr = value.ToString();
-
-						if(string.IsNullOrEmpty(valueStr))
-							throw new ArgumentException("Argument 'value' must represent parameter name.");
-
-						return valueStr;
-					}
-
 				case ConvertType.SprocParameterToName:
-					{
-						return value.ToString();
-					}
+					return sb.Append(value);
 
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					{
-						var name = value.ToString();
-						if (name.Length > 0 && name[0] == '"')
-							return value;
-						return "\"" + value + "\"";
+						if (value.Length > 0 && value[0] == '"')
+							return sb.Append(value);
+						return sb.Append('"').Append(value).Append('"');
 					}
 
-				case ConvertType.NameToDatabase   :
-				case ConvertType.NameToSchema     :
-				case ConvertType.NameToQueryTable :
-					if (value != null)
-					{
-						var name = value.ToString();
-						if (name.Length > 0 && name[0] == '\"')
-							return value;
+				case ConvertType.NameToServer    :
+				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToSchema    :
+				case ConvertType.NameToPackage   :
+				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToProcedure :
+					if (value.Length > 0 && value[0] == '\"')
+						return sb.Append(value);
 
-						return "\"" + value + "\"";
-					}
-
-					break;
+					return sb.Append('"').Append(value).Append('"');
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute1(SqlField field)
@@ -206,78 +175,70 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
-			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
-			StringBuilder.Append(")");
+			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+			StringBuilder.Append(')');
 		}
 
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
-			var wrap = false;
+			// <table_name> ::= [[<linked_server_name>.]<schema_name>.][library_name:]<identifier>
+			if (name.Server != null && name.Schema == null)
+				throw new LinqToDBException("You must specify schema name for linked server queries.");
 
-			if (expr.SystemType == typeof(bool))
+			if (name.Server != null)
 			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
+				(escape ? Convert(sb, name.Server, ConvertType.NameToServer) : sb.Append(name.Server))
+					.Append('.');
+			}
+
+			if (name.Schema != null)
+			{
+				(escape ? Convert(sb, name.Schema, ConvertType.NameToSchema) : sb.Append(name.Schema))
+					.Append('.');
+			}
+
+			if (name.Package != null)
+			{
+				(escape ? Convert(sb, name.Package, ConvertType.NameToPackage) : sb.Append(name.Package))
+					.Append(':');
+			}
+
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
 				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE LOCAL TEMPORARY TABLE ";
+						break;
+					case TableOptions.IsGlobalTemporaryStructure                                                               :
+					case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData                           :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
 				}
 			}
-
-			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
-			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
-		}
-
-		//this is for Tests.Linq.Common.CoalesceLike test
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			switch (func.Name)
+			else
 			{
-				case "CASE": func = ConvertCase(func.SystemType, func.Parameters, 0);
-					break;
-			}
-			base.BuildFunction(func);
-		}
-
-		//this is for Tests.Linq.Common.CoalesceLike test
-		static SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
-		{
-			var len  = parameters.Length - start;
-			var cond = parameters[start];
-
-			if (start == 0 && SqlExpression.NeedsEqual(cond))
-			{
-				cond = new SqlSearchCondition(
-					new SqlCondition(
-						false,
-						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1))));
+				command = "CREATE TABLE ";
 			}
 
-			const string name = "CASE";
-
-			if (len == 3)
-				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]);
-
-			return new SqlFunction(systemType, name,
-				cond,
-				parameters[start + 1],
-				ConvertCase(systemType, parameters, start + 2));
+			StringBuilder.Append(command);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
-		{
-			if (database != null && database.Length == 0) database = null;
-			if (schema    != null && schema.   Length == 0) schema    = null;
-
-			// "db..table" syntax not supported:
-			// <table_name> ::= [[<database_name>.]<schema.name>.]<identifier>
-			if (database != null && schema == null)
-				throw new LinqToDBException("SAP HANA requires schema name if database name provided.");
-
-			return base.BuildTableName(sb, database, schema, table);
-		}
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

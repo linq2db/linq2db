@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Specialized;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using System.Collections.Generic;
 	using Configuration;
 
 	[UsedImplicitly]
-	class FirebirdFactory: IDataProviderFactory
+	sealed class FirebirdFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return new FirebirdDataProvider();
+			return FirebirdTools.GetDataProvider();
 		}
 	}
 }

@@ -12,11 +12,10 @@ using LinqToDB.SqlQuery;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Samples
 {
-
 	[AttributeUsage(AttributeTargets.Property)]
-	public class JSonContentAttribute : Attribute
+	public class JsonContentAttribute : Attribute
 	{
 	}
 
@@ -28,9 +27,9 @@ namespace Tests.Playground
 
 		static MappingHelper()
 		{
-			_deserializeMethod = MemberHelper.MethodOf(() => JsonConvert.DeserializeObject(null, typeof(int)));
-			_serializeMethod = MemberHelper.MethodOf(() => JsonConvert.SerializeObject(null));
-			_dataParamContructor = typeof(DataParameter).GetConstructor(new[] { typeof(string), typeof(object) });
+			_deserializeMethod   = MemberHelper.MethodOf(() => JsonConvert.DeserializeObject(null!, typeof(int)));
+			_serializeMethod     = MemberHelper.MethodOf(() => JsonConvert.SerializeObject(null));
+			_dataParamContructor = typeof(DataParameter).GetConstructor(new[] { typeof(string), typeof(object) })!;
 		}
 
 		public static void GenerateConvertorsForTables(Type dataConnectionType, MappingSchema ms)
@@ -47,7 +46,7 @@ namespace Tests.Playground
 
 		public static void GenerateConvertors(Type entityType, MappingSchema ms)
 		{
-			foreach (var propertyInfo in entityType.GetProperties().Where(p => p.GetCustomAttribute(typeof(JSonContentAttribute)) != null))
+			foreach (var propertyInfo in entityType.GetProperties().Where(p => p.HasAttribute<JsonContentAttribute>()))
 			{
 				// emulating inParam => JsonConvert.DeserializeObject(inParam, propertyInfo.PropertyType)
 
@@ -92,7 +91,7 @@ namespace Tests.Playground
 			AddMappingSchema(_convertorSchema);
 		}
 
-		public ITable<SampleClass> SampleClass => GetTable<SampleClass>();
+		public ITable<SampleClass> SampleClass => this.GetTable<SampleClass>();
 	}
 
 	[Table]
@@ -100,18 +99,18 @@ namespace Tests.Playground
 	{
 		[Column] public int Id    { get; set; }
 
-		[Column(DataType = DataType.VarChar, Length = 4000), JSonContent]
-		public DataClass Data { get; set; }
+		[Column(DataType = DataType.VarChar, Length = 4000), JsonContent]
+		public DataClass? Data { get; set; }
 	}
 
 	public class DataClass
 	{
-		public string Property1 { get; set; }
+		public string? Property1 { get; set; }
 	}
 
 	public static class Json
 	{
-		class JsonValueBuilder : Sql.IExtensionCallBuilder
+		sealed class JsonValueBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -126,7 +125,7 @@ namespace Tests.Playground
 					pathList.Add(current);
 					if (current.NodeType == ExpressionType.MemberAccess)
 					{
-						current = ((MemberExpression) current).Expression;
+						current = ((MemberExpression) current).Expression!;
 					}
 					else
 						break;
@@ -152,7 +151,7 @@ namespace Tests.Playground
 
 
 		[Sql.Extension("JSON_VALUE({field}, {propPath})", Precedence = Precedence.Primary, BuilderType = typeof(JsonValueBuilder), ServerSideOnly = true, CanBeNull = false)]
-		public static string Value(object path)
+		public static string Value(object? path)
 		{
 			throw new NotImplementedException();
 		}
@@ -161,22 +160,21 @@ namespace Tests.Playground
 	[TestFixture]
 	public class JsonConvertTests : TestBase
 	{
-
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new MyDataConnection(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
 			{
 				db.Insert(new SampleClass { Id = 1, Data = new DataClass { Property1 = "Pr1" } });
 
-				var objects = table.Where(t => Json.Value(t.Data.Property1) == "Pr1")
+				var objects = table.Where(t => Json.Value(t.Data!.Property1) == "Pr1")
 					.ToArray();
 
-				Assert.That(!db.LastQuery.Contains("IS NULL"));
+				Assert.That(!db.LastQuery!.Contains("IS NULL"));
 
 				Assert.AreEqual(1, objects.Length);
-				Assert.AreEqual("Pr1", objects[0].Data.Property1);
+				Assert.AreEqual("Pr1", objects[0].Data!.Property1);
 			}
 		}
 	}

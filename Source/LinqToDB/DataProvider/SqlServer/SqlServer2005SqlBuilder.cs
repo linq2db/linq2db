@@ -1,43 +1,39 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlQuery;
+	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
-	class SqlServer2005SqlBuilder : SqlServerSqlBuilder
+	sealed class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2005SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SqlServer2005SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
+		{
+		}
+
+		SqlServer2005SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlServer2005SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new SqlServer2005SqlBuilder(this);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
+		protected override bool IsValuesSyntaxSupported => false;
+
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.DataType)
+			switch (type.Type.DataType)
 			{
 				case DataType.DateTimeOffset :
 				case DataType.DateTime2      :
 				case DataType.Time           :
-				case DataType.Date           : StringBuilder.Append("DateTime");       break;
-				default                      : base.BuildDataType(type, createDbType); break;
+				case DataType.Date           : StringBuilder.Append("DateTime");                                break;
+				default                      : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}
 		}
 
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
-		}
-
-		public override string  Name
-		{
-			get { return ProviderName.SqlServer2005; }
-		}
+		public override string  Name => ProviderName.SqlServer2005;
 	}
 }

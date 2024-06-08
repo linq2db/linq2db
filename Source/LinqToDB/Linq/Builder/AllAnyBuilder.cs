@@ -6,18 +6,21 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class AllAnyBuilder : MethodCallBuilder
+	sealed class AllAnyBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames      = { "All"     , "Any"      };
+		private static readonly string[] MethodNamesAsync = { "AllAsync", "AnyAsync" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return
-				methodCall.IsQueryable     ("All", "Any") ||
-				methodCall.IsAsyncExtension("All", "Any");
+				methodCall.IsQueryable     (MethodNames     ) ||
+				methodCall.IsAsyncExtension(MethodNamesAsync);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CopyTable = true });
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CopyTable = true, CreateSubQuery = true });
 
 			var isAsync = methodCall.Method.DeclaringType == typeof(AsyncExtensions);
 
@@ -41,8 +44,8 @@ namespace LinqToDB.Linq.Builder
 			return new AllAnyContext(buildInfo.Parent, methodCall, sequence);
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
+		protected override SequenceConvertInfo? Convert(
+			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			var isAsync = methodCall.Method.DeclaringType == typeof(AsyncExtensions);
 
@@ -53,7 +56,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (info != null)
 				{
-					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
+					info.Expression = methodCall.Transform(
+						(methodCall, info, predicate),
+						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
 					info.Parameter  = param;
 
 					return info;
@@ -65,7 +70,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (info != null)
 				{
-					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
+					info.Expression = methodCall.Transform(
+						(methodCall, info),
+						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, null, ex));
 					info.Parameter  = param;
 
 					return info;
@@ -75,11 +82,11 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		class AllAnyContext : SequenceContextBase
+		sealed class AllAnyContext : SequenceContextBase
 		{
 			readonly MethodCallExpression _methodCall;
 
-			public AllAnyContext(IBuildContext parent, MethodCallExpression methodCall, IBuildContext sequence)
+			public AllAnyContext(IBuildContext? parent, MethodCallExpression methodCall, IBuildContext sequence)
 				: base(parent, sequence, null)
 			{
 				_methodCall = methodCall;
@@ -94,21 +101,23 @@ namespace LinqToDB.Linq.Builder
 
 				query.Queries[0].Statement = sq;
 
-				var expr   = Builder.BuildSql(typeof(bool), 0);
+				var expr   = Builder.BuildSql(typeof(bool), 0, sql);
 				var mapper = Builder.BuildMapper<object>(expr);
 
+				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
+				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
+				var index = info.Index;
 				if (Parent != null)
 					index = ConvertToParentIndex(index, Parent);
-				return Builder.BuildSql(typeof(bool), index);
+				return Builder.BuildSql(typeof(bool), index, info.Sql);
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				if (expression == null)
 				{
@@ -118,23 +127,23 @@ namespace LinqToDB.Linq.Builder
 					if (Parent != null)
 						query = Parent.SelectQuery;
 
-					return new[] { new SqlInfo { Query = query, Sql = sql } };
+					return new[] { new SqlInfo(sql, query) };
 				}
 
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				var sql = ConvertToSql(expression, level, flags);
 
 				if (sql[0].Index < 0)
-					sql[0].Index = sql[0].Query.Select.Add(sql[0].Sql);
+					sql[0] = sql[0].WithIndex(sql[0].Query!.Select.Add(sql[0].Sql));
 
 				return sql;
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				if (expression == null)
 				{
@@ -145,23 +154,25 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				throw new NotImplementedException();
+				return IsExpressionResult.False;
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}
 
-			ISqlExpression _subQuerySql;
+			ISqlExpression? _subQuerySql;
 
-			public override ISqlExpression GetSubQuery(IBuildContext context)
+			public override ISqlExpression GetSubQuery(IBuildContext? context)
 			{
 				if (_subQuerySql == null)
 				{
 					var cond = new SqlCondition(
 						_methodCall.Method.Name.StartsWith("All"),
 						new SqlPredicate.FuncLike(SqlFunction.CreateExists(SelectQuery)));
+
+					Sequence.CompleteColumns();
 
 					_subQuerySql = new SqlSearchCondition(cond);
 				}

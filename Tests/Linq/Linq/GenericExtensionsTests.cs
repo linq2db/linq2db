@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using JetBrains.Annotations;
-
 using LinqToDB;
+using LinqToDB.Common.Internal;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -14,21 +14,25 @@ namespace Tests.Linq
 	using Model;
 
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-	public class ExtensionChoiceAttribute : Attribute
+	public class ExtensionChoiceAttribute : MappingAttribute
 	{
-		public ExtensionChoiceAttribute(string configuration, string expression, [NotNull] params Type[] types)
+		public ExtensionChoiceAttribute(string configuration, string expression, params Type?[] types)
 		{
 			Configuration = configuration;
 			Expression    = expression;
 			Types         = types ?? throw new ArgumentNullException(nameof(types));
 		}
 
-		public string Configuration { get; set; }
-		public string Expression    { get; set; }
-		public Type[] Types         { get; }
+		public string  Expression    { get; set; }
+		public Type?[] Types { get; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{Expression}.[{string.Join(",", Types.Select(IdentifierBuilder.GetObjectID))}].";
+		}
 	}
 
-	class GenericBuilder : Sql.IExtensionCallBuilder
+	sealed class GenericBuilder : Sql.IExtensionCallBuilder
 	{
 		string Match(Type[] current, ExtensionChoiceAttribute[] choices)
 		{
@@ -71,8 +75,7 @@ namespace Tests.Linq
 			if (method != null && method.IsGenericMethod)
 			{
 				var typeParameters = method.GetGenericArguments();
-				builder.Expression = Match(typeParameters,
-					builder.Mapping.GetAttributes<ExtensionChoiceAttribute>(builder.Member.DeclaringType, method, a => a.Configuration));
+				builder.Expression = Match(typeParameters, builder.Mapping.GetAttributes<ExtensionChoiceAttribute>(builder.Member.DeclaringType!, method));
 			}
 			else
 				throw new InvalidOperationException("This extension could be applied only to methods with type parameters.");
@@ -87,7 +90,7 @@ namespace Tests.Linq
 		[ExtensionChoice("", "'T3=(BYTE: ' + CAST({first} AS NVARCHAR) + ', INT: ' + CASE WHEN {second} IS NULL THEN 'null' ELSE CAST({second} AS NVARCHAR) END + ')'", typeof(byte),   typeof(int?)  )]
 		[ExtensionChoice("", "'T4=(BYTE: ' + CAST({first} AS NVARCHAR) + ', INT: ' + CAST({second} AS NVARCHAR) + ')'",                                                 typeof(byte),   typeof(int)   )]
 		[ExtensionChoice("", "'T5=(CHAR: ' + CASE WHEN {first} IS NULL THEN 'null' ELSE CAST({first} AS NVARCHAR) END + ', STRING: ' + {second} + ')'",                 typeof(char?),  typeof(string))]
-		public static string TestGenericExpression<TFirstValue, TSecondValue>(this Sql.ISqlExtension ext,
+		public static string TestGenericExpression<TFirstValue, TSecondValue>(this Sql.ISqlExtension? ext,
 			[ExprParameter("first")]  TFirstValue value,
 			[ExprParameter("second")] TSecondValue secondValue)
 		{
@@ -95,9 +98,8 @@ namespace Tests.Linq
 		}
 	}
 
-	class GenericExtensionTests : TestBase
+	sealed class GenericExtensionTests : TestBase
 	{
-
 		[Test]
 		public void Issue326([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -108,7 +110,7 @@ namespace Tests.Linq
 					{
 						R1 = Sql.Ext.TestGenericExpression<char?, string>('X', "some string"),
 						R2 = Sql.Ext.TestGenericExpression<char?, string>(null, "another string"),
-						R3 = Sql.Ext.TestGenericExpression<char?, string>(null, null),
+						R3 = Sql.Ext.TestGenericExpression<char?, string?>(null, null),
 
 						R4 = Sql.Ext.TestGenericExpression<byte, int?>(123, 456),
 						R5 = Sql.Ext.TestGenericExpression<byte, int?>(123, null),

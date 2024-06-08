@@ -1,19 +1,17 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
 	using LinqToDB;
-	using Model;
 
 	public partial class MergeTests
 	{
 		[Test]
-		public void SameSourceUpdateWithDelete([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void SameSourceUpdateWithDelete([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -57,9 +55,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeletePartialSourceProjection_KnownFieldsInDefaultSetter(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -110,9 +108,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceUpdateWithDeleteWithPredicate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -145,9 +143,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceUpdateWithDeleteWithUpdate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -189,9 +187,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void SameSourceUpdateWithDeleteWithPredicateAndUpdate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -234,9 +232,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeletePartialSourceProjection_KnownFieldInUpdateCondition(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -280,9 +278,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceUpdateWithDelete([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void OtherSourceUpdateWithDelete([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -324,9 +322,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeletePartialSourceProjection_KnownFieldInDeleteCondition(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -371,9 +369,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void OtherSourceUpdateWithDeleteWithPredicate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -416,9 +414,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousSourceUpdateWithDeleteWithPredicate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -469,9 +467,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void AnonymousListSourceUpdateWithDeleteWithPredicate(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -522,9 +520,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeleteReservedAndCaseNames(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -575,9 +573,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeleteReservedAndCaseNamesFromList(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -628,9 +626,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateWithDeleteDeleteByConditionOnUpdatedField(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -662,9 +660,9 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInDeleteCondition(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -682,18 +680,18 @@ namespace Tests.xUpdate
 								Field1 = s.Field1
 							},
 							(t, s) => t.Field2 == s.Field2)
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));
 			}
 		}
 
 		[Test]
 		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInSetter(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -711,18 +709,18 @@ namespace Tests.xUpdate
 								Field1 = s.Field2
 							},
 							(t, s) => t.Field2 == s.Field1)
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
 			}
 		}
 
 		[Test]
 		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInDefaultSetter(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -734,18 +732,18 @@ namespace Tests.xUpdate
 						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
 						.OnTargetKey()
 						.UpdateWhenMatchedThenDelete((t, s) => t.Field2 == s.Field1)
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
 			}
 		}
 
 		[Test]
 		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInSearchCondition(
-			[IncludeDataSources(TestProvName.AllOracle)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -764,10 +762,10 @@ namespace Tests.xUpdate
 								Field1 = s.Field1
 							},
 							(t, s) => t.Field2 == s.Field1)
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));
 			}
 		}
 	}

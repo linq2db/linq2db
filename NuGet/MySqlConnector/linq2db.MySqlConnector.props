@@ -1,7 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<LinqToDBT4MySqlConnectorTemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4MySqlConnectorTemplatesDirectory>
-		<LinqToDBT4MySqlConnectorToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4MySqlConnectorToolsDirectory>
-		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
-</PropertyGroup>
+		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SharedTools>
+		<LinqToDBT4MySqlConnectorClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4MySqlConnectorClientPath>
+		<LinqToDBT4MySqlTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4MySqlTemplatesPath>
+	</PropertyGroup>
 </Project>

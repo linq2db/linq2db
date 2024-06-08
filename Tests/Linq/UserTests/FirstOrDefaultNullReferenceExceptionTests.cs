@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB.Mapping;
@@ -8,35 +7,35 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	using LinqToDB;
 	using Model;
-	using Tests;
 
 	[TestFixture]
 	public class FirstOrDefaultNullReferenceExceptionTests : TestBase
 	{
 		[Table("GrandChild")]
-		class Table1
+		sealed class Table1
 		{
 			[Column] public int ChildID { get; set; }
 		}
 
 		[Table("Child")]
-		class Table2
+		sealed class Table2
 		{
 			[Column] public int ChildID  { get; set; }
 			[Column] public int ParentID { get; set; }
 
 			[Association(ThisKey = "ChildID", OtherKey = "ChildID", CanBeNull = true)]
-			public List<Table1> GrandChildren { get; set; }
+			public List<Table1> GrandChildren { get; set; } = null!;
 		}
 
 		[Table("Parent")]
-		class Table3
+		sealed class Table3
 		{
 			[Column] public int ParentID { get; set; }
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
-			public List<Table2> Children { get; set; }
+			public List<Table2> Children { get; set; } = null!;
 		}
 
 		[Test]

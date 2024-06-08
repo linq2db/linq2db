@@ -1,83 +1,85 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Configuration;
 	using Data;
 
 	public static class SqlCeTools
 	{
-		static readonly SqlCeDataProvider _sqlCeDataProvider = new SqlCeDataProvider();
+		static readonly Lazy<IDataProvider> _sqlCeDataProvider = DataConnection.CreateDataProvider<SqlCeDataProvider>();
 
-		static SqlCeTools()
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			DataConnection.AddDataProvider(_sqlCeDataProvider);
+			if (options.ProviderName?.Contains("SqlCe") == true
+				|| options.ProviderName?.Contains("SqlServerCe") == true
+				|| options.ConfigurationString?.Contains("SqlCe") == true
+				|| options.ConfigurationString?.Contains("SqlServerCe") == true)
+				return _sqlCeDataProvider.Value;
+
+			return null;
 		}
 
-		public static IDataProvider GetDataProvider()
-		{
-			return _sqlCeDataProvider;
-		}
+		public static IDataProvider GetDataProvider() => _sqlCeDataProvider.Value;
 
 		public static void ResolveSqlCe(string path)
 		{
-			new AssemblyResolver(path, "System.Data.SqlServerCe");
+			_ = new AssemblyResolver(path, SqlCeProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveSqlCe(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, "System.Data.SqlServerCe");
+			_ = new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)
 		{
-			return new DataConnection(_sqlCeDataProvider, connectionString);
+			return new DataConnection(_sqlCeDataProvider.Value, connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(DbConnection connection)
 		{
-			return new DataConnection(_sqlCeDataProvider, connection);
+			return new DataConnection(_sqlCeDataProvider.Value, connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(DbTransaction transaction)
 		{
-			return new DataConnection(_sqlCeDataProvider, transaction);
+			return new DataConnection(_sqlCeDataProvider.Value, transaction);
 		}
 
 		#endregion
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			_sqlCeDataProvider.CreateDatabase(databaseName, deleteIfExists);
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+			DataTools.CreateFileDatabase(
+				databaseName, deleteIfExists, ".sdf",
+				dbName =>
+				{
+					using (var engine = SqlCeProviderAdapter.GetInstance().CreateSqlCeEngine("Data Source=" + dbName))
+						engine.CreateDatabase();
+				});
 		}
 
 		public static void DropDatabase(string databaseName)
 		{
-			_sqlCeDataProvider.DropDatabase(databaseName);
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+			DataTools.DropFileDatabase(databaseName, ".sdf");
 		}
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int                        maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
-			where T : class
+		[Obsolete("Use SqlCeOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
 		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
+			get => SqlCeOptions.Default.BulkCopyType;
+			set => SqlCeOptions.Default = SqlCeOptions.Default with { BulkCopyType = value };
 		}
 
 		#endregion

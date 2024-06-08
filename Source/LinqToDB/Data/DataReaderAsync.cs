@@ -8,72 +8,119 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-	using Linq;
-
 	public class DataReaderAsync : IDisposable
+#if !NETFRAMEWORK
+		, IAsyncDisposable
+#endif
 	{
-		public   CommandInfo       CommandInfo       { get; set; }
-		public   DbDataReader      Reader            { get; set; }
-		internal int               ReadNumber        { get; set; }
-		internal CancellationToken CancellationToken { get; set; }
-		private  DateTime          StartedOn         { get; }      = DateTime.UtcNow;
-		private  Stopwatch         Stopwatch         { get; }      = Stopwatch.StartNew();
+		internal DataReaderWrapper? ReaderWrapper     { get; private set; }
+		public   DbDataReader?      Reader            => ReaderWrapper?.DataReader;
+		public   CommandInfo?       CommandInfo       { get; }
+		internal int                ReadNumber        { get; set; }
+		internal CancellationToken  CancellationToken { get; set; }
+		private  DateTime           StartedOn         { get; }      = DateTime.UtcNow;
+		private  Stopwatch          Stopwatch         { get; }      = Stopwatch.StartNew();
+
+		public DataReaderAsync(CommandInfo commandInfo, DataReaderWrapper dataReader)
+		{
+			CommandInfo   = commandInfo;
+			ReaderWrapper = dataReader;
+		}
 
 		public void Dispose()
 		{
-			if (Reader != null)
+			if (ReaderWrapper != null)
 			{
-				Reader.Dispose();
+				ReaderWrapper.Dispose();
 
-				if (DataConnection.TraceSwitch.TraceInfo && CommandInfo?.DataConnection?.OnTraceConnection != null)
+				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.Completed)
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel      = TraceLevel.Info,
-						DataConnection  = CommandInfo.DataConnection,
-						Command         = CommandInfo.DataConnection.Command,
+						Command         = ReaderWrapper.Command,
 						StartTime       = StartedOn,
 						ExecutionTime   = Stopwatch.Elapsed,
 						RecordsAffected = ReadNumber,
 					});
 				}
+
+				ReaderWrapper.Dispose();
+				ReaderWrapper = null;
 			}
 		}
 
+#if NETSTANDARD2_1PLUS
+		public async ValueTask DisposeAsync()
+		{
+			if (ReaderWrapper != null)
+			{
+				await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
+				{
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, true)
+					{
+						TraceLevel      = TraceLevel.Info,
+						Command         = ReaderWrapper.Command,
+						StartTime       = StartedOn,
+						ExecutionTime   = Stopwatch.Elapsed,
+						RecordsAffected = ReadNumber,
+					});
+				}
+
+				await ReaderWrapper.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				ReaderWrapper = null;
+			}
+		}
+#elif NATIVE_ASYNC
+		public ValueTask DisposeAsync()
+		{
+			Dispose();
+			return default;
+		}
+#else
+		public Task DisposeAsync()
+		{
+			Dispose();
+			return TaskEx.CompletedTask;
+		}
+#endif
+
 		#region Query with object reader
 
-		public Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader)
+		public Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader)
 		{
 			return QueryToListAsync(objectReader, CancellationToken.None);
 		}
 
-		public async Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
+		public async Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list;
 		}
 
-		public Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader)
+		public Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader)
 		{
 			return QueryToArrayAsync(objectReader, CancellationToken.None);
 		}
 
-		public async Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
+		public async Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken)
 		{
 			var list = new List<T>();
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			return list.ToArray();
 		}
 
-		public Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action)
+		public Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action)
 		{
 			return QueryForEachAsync(objectReader, action, CancellationToken.None);
 		}
 
-		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
+		public async Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action, CancellationToken cancellationToken)
 		{
-			while (await Reader.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				action(objectReader(Reader));
 		}
 
@@ -113,12 +160,12 @@ namespace LinqToDB.Data
 		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken)
 		{
 			if (ReadNumber != 0)
-				if (!await Reader.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				if (!await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 					return;
 
 			ReadNumber++;
 
-			await CommandInfo.ExecuteQueryAsync(Reader, CommandInfo.DataConnection.Command.CommandText + "$$$" + ReadNumber, action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await CommandInfo!.ExecuteQueryAsync(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion
@@ -171,14 +218,14 @@ namespace LinqToDB.Data
 		public async Task<T> ExecuteForEachAsync<T>(CancellationToken cancellationToken)
 		{
 			if (ReadNumber != 0)
-				if (!await Reader.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-					return default(T);
+				if (!await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					return default(T)!;
 
 			ReadNumber++;
 
-			var sql = CommandInfo.DataConnection.Command.CommandText + "$$$" + ReadNumber;
+			var sql = FormattableString.Invariant($"{CommandInfo!.CommandText}$$${ReadNumber}");
 
-			return await CommandInfo.ExecuteScalarAsync<T>(Reader, sql, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await CommandInfo.ExecuteScalarAsync<T>(Reader!, sql, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		#endregion

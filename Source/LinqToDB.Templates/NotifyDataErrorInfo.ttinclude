@@ -1,3 +1,5 @@
+<#@ include file="T4Model.ttinclude"    once="true" #>
+<#@ include file="Validation.ttinclude" once="true" #>
 <#
 	{
 		var beforeGenerateModel = BeforeGenerateModel;
@@ -38,14 +40,14 @@ void NotifyDataErrorInfoImpl()
 						new Event("EventHandler<DataErrorsChangedEventArgs>", "ErrorsChanged", true)
 						{
 							IsVirtual  = true,
-							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+							Attributes = { new Attribute("field : NonSerialized") }
 						},
 						new Field(() => "Dictionary<string,List<string>>", "_validationErrors")
 						{
 							InitValue      = "new Dictionary<string,List<string>>()",
 							AccessModifier = AccessModifier.Private,
 							IsReadonly     = true,
-							Attributes     = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+							Attributes     = { new Attribute("field : NonSerialized") }
 						},
 						new Method(() => "void", "AddError",
 							new Func<string>[]
@@ -113,7 +115,7 @@ void NotifyDataErrorInfoImpl()
 						new Method(() => ModelType.Create<System.Collections.IEnumerable>(true).ToTypeName(), "GetErrors",
 							new Func<string>[]
 							{
-								() => $"{ModelType.Create<string>(true).ToTypeName()} propertyName",
+								() => string.Format("{0} propertyName", ModelType.Create<string>(true).ToTypeName()),
 							},
 							() => new[]
 							{

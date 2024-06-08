@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Linq
+﻿namespace LinqToDB.Linq
 {
 	public interface IUpdatable<T>
 	{

@@ -1,31 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-
+﻿using System.Collections.Generic;
+using LinqToDB.Common;
 using LinqToDB.Configuration;
 
 namespace Tests
 {
 	public class TxtSettings : ILinqToDBSettings
 	{
-		class DataProviderSettings : IDataProviderSettings
+		sealed class DataProviderSettings : IDataProviderSettings
 		{
-			public string                  TypeName   { get; set; }
-			public string                  Name       { get; set; }
+			public string                  TypeName   { get; set; } = null!;
+			public string?                 Name       { get; set; }
 			public bool                    Default    { get; set; }
-			public IEnumerable<NamedValue> Attributes => new NamedValue[0];
+			public IEnumerable<NamedValue> Attributes => Array<NamedValue>.Empty;
 		}
 
-		class ConnectionStringSettings : IConnectionStringSettings
+		sealed class ConnectionStringSettings : IConnectionStringSettings
 		{
-			public string ConnectionString { get; set; }
-			public string Name             { get; set; }
-			public string ProviderName     { get; set; }
-			public bool   IsGlobal         { get; set; }
+			public string  ConnectionString { get; set; } = null!;
+			public string  Name             { get; set; } = null!;
+			public string? ProviderName     { get; set; }
+			public bool    IsGlobal         { get; set; }
 		}
 
 		public IEnumerable<IDataProviderSettings>     DataProviders => _dataProviders;
-		public string                                 DefaultConfiguration { get; set; }
-		public string                                 DefaultDataProvider  { get; set; }
+		public string?                                DefaultConfiguration { get; set; }
+		public string?                                DefaultDataProvider  { get; set; }
 		public IEnumerable<IConnectionStringSettings> ConnectionStrings => _strings;
 
 

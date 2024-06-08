@@ -17,23 +17,19 @@ namespace LinqToDB.Tools.Mapper
 	using Extensions;
 	using Reflection;
 
-	class ExpressionBuilder
+	sealed class ExpressionBuilder
 	{
-		class BuilderData
+		sealed class BuilderData
 		{
-			public BuilderData(Tuple<MemberInfo[],LambdaExpression>[] memberMappers) => MemberMappers = memberMappers;
+			public BuilderData(Tuple<MemberInfo[],LambdaExpression>[]? memberMappers) => MemberMappers = memberMappers;
 
-			public readonly Tuple<MemberInfo[],LambdaExpression>[]           MemberMappers;
-			[NotNull]
-			public readonly Dictionary<Tuple<Type,Type>,ParameterExpression> Mappers     = new Dictionary<Tuple<Type,Type>,ParameterExpression>();
-			[NotNull]
-			public readonly HashSet<Tuple<Type,Type>>                        MapperTypes = new HashSet<Tuple<Type,Type>>();
-			[NotNull, ItemNotNull]
-			public readonly List<ParameterExpression>                        Locals      = new List<ParameterExpression>();
-			[NotNull, ItemNotNull]
-			public readonly List<Expression>                                 Expressions = new List<Expression>();
+			public readonly Tuple<MemberInfo[],LambdaExpression>[]?          MemberMappers;
+			public readonly Dictionary<Tuple<Type,Type>,ParameterExpression> Mappers     = new ();
+			public readonly HashSet<Tuple<Type,Type>>                        MapperTypes = new ();
+			public readonly List<ParameterExpression>                        Locals      = new ();
+			public readonly List<Expression>                                 Expressions = new ();
 
-			public ParameterExpression LocalDic;
+			public ParameterExpression? LocalDic;
 
 			public int  NameCounter;
 			public int  RestartCounter;
@@ -41,11 +37,11 @@ namespace LinqToDB.Tools.Mapper
 			public bool IsRestart => RestartCounter > 10;
 		}
 
-		public ExpressionBuilder([NotNull] IMapperBuilder mapperBuilder, Tuple<MemberInfo[],LambdaExpression>[] memberMappers)
+		public ExpressionBuilder(IMapperBuilder mapperBuilder, Tuple<MemberInfo[],LambdaExpression>[]? memberMappers)
 			: this(mapperBuilder, new BuilderData(memberMappers)) =>
 			_processCrossReferences = mapperBuilder.ProcessCrossReferences == true;
 
-		ExpressionBuilder([NotNull] IMapperBuilder mapperBuilder, [NotNull] BuilderData data)
+		ExpressionBuilder(IMapperBuilder mapperBuilder, BuilderData data)
 		{
 			_mapperBuilder          = mapperBuilder;
 			_data                   = data;
@@ -54,23 +50,22 @@ namespace LinqToDB.Tools.Mapper
 			_processCrossReferences = true;
 		}
 
-		[NotNull] readonly IMapperBuilder _mapperBuilder;
-		[NotNull] readonly Type           _fromType;
-		[NotNull] readonly Type           _toType;
-		[NotNull] readonly BuilderData    _data;
-		          readonly bool           _processCrossReferences;
+		readonly IMapperBuilder _mapperBuilder;
+		readonly Type           _fromType;
+		readonly Type           _toType;
+		readonly BuilderData    _data;
+		readonly bool           _processCrossReferences;
 
 		#region GetExpression
 
-		[CanBeNull]
-		public LambdaExpression GetExpression()
+		public LambdaExpression? GetExpression()
 		{
 			if (_mapperBuilder.MappingSchema.IsScalarType(_fromType) || _mapperBuilder.MappingSchema.IsScalarType(_toType))
 				return _mapperBuilder.MappingSchema.GetConvertExpression(_fromType, _toType);
 
 			var pFrom = Parameter(_fromType, "from");
 
-			Expression expr;
+			Expression? expr;
 
 			if (_mapperBuilder.MappingSchema.IsScalarType(_fromType) || _mapperBuilder.MappingSchema.IsScalarType(_toType))
 			{
@@ -78,7 +73,7 @@ namespace LinqToDB.Tools.Mapper
 			}
 			else if (_processCrossReferences)
 			{
-				_data.LocalDic = Parameter(typeof(IDictionary<object,object>), "ldic" + ++_data.NameCounter);
+				_data.LocalDic = Parameter(typeof(IDictionary<object,object>), FormattableString.Invariant($"ldic{++_data.NameCounter}"));
 				_data.Locals.Add(_data.LocalDic);
 				_data.Expressions.Add(Assign(_data.LocalDic, New(MemberHelper.ConstructorOf(() => new Dictionary<object,object>()))));
 
@@ -97,15 +92,14 @@ namespace LinqToDB.Tools.Mapper
 
 			var l = Lambda(
 				_data.Locals.Count > 0 || _data.Expressions.Count > 0 ?
-					Block(_data.Locals, _data.Expressions.Concat(new [] { expr })) :
-					expr,
+					Block(_data.Locals, _data.Expressions.Concat(new [] { expr! })) :
+					expr!,
 				pFrom);
 
 			return l;
 		}
 
-		[CanBeNull]
-		LambdaExpression GetExpressionInner()
+		LambdaExpression? GetExpressionInner()
 		{
 			if (_mapperBuilder.MappingSchema.IsScalarType(_fromType) || _mapperBuilder.MappingSchema.IsScalarType(_toType))
 				return _mapperBuilder.MappingSchema.GetConvertExpression(_fromType, _toType);
@@ -116,29 +110,24 @@ namespace LinqToDB.Tools.Mapper
 			if (_data.IsRestart)
 				return null;
 
-			var l = Lambda(expr, pFrom);
+			var l = Lambda(expr!, pFrom);
 
 			return l;
 		}
 
-		[CanBeNull]
-		Expression GetExpressionImpl([NotNull] Expression fromExpression, [NotNull] Type toType)
+		Expression? GetExpressionImpl(Expression fromExpression, Type toType)
 		{
 			var fromAccessor = TypeAccessor.GetAccessor(fromExpression.Type);
 			var toAccessor   = TypeAccessor.GetAccessor(toType);
 			var binds        = new List<MemberAssignment>();
 			var key          = new Tuple<Type,Type>(fromExpression.Type, toType);
 
-			if (_data.MapperTypes.Contains(key))
+			if (!_data.MapperTypes.Add(key))
 			{
 				_data.RestartCounter++;
 
 				if (_data.IsRestart)
 					return null;
-			}
-			else
-			{
-				_data.MapperTypes.Add(key);
 			}
 
 			var initExpression = BuildCollectionMapper(fromExpression, toType);
@@ -162,7 +151,7 @@ namespace LinqToDB.Tools.Mapper
 					{
 						if (item.Item1.Length == 1 && item.Item1[0] == toMember.MemberInfo)
 						{
-							binds.Add(BuildAssignment(item.Item2, fromExpression, item.Item2.Type, toMember));
+							binds.Add(BuildAssignment(item.Item2.GetBody, fromExpression, item.Item2.Type, toMember));
 							processed = true;
 							break;
 						}
@@ -189,19 +178,17 @@ namespace LinqToDB.Tools.Mapper
 				if (fromMember == null || !fromMember.HasGetter)
 					continue;
 
-				var getter = fromMember.GetterExpression;
-
 				if (_mapperBuilder.MappingSchema.IsScalarType(fromMember.Type) || _mapperBuilder.MappingSchema.IsScalarType(toMember.Type))
 				{
-					binds.Add(BuildAssignment(getter, fromExpression, fromMember.Type, toMember));
+					binds.Add(BuildAssignment(fromMember.GetGetterExpression, fromExpression, fromMember.Type, toMember));
 				}
 				else if (fromMember.Type == toMember.Type && _mapperBuilder.DeepCopy == false)
 				{
-					binds.Add(Bind(toMember.MemberInfo, getter.GetBody(fromExpression)));
+					binds.Add(Bind(toMember.MemberInfo, fromMember.GetGetterExpression(fromExpression)));
 				}
 				else
 				{
-					var getValue = getter.GetBody(fromExpression);
+					var getValue = fromMember.GetGetterExpression(fromExpression);
 					var exExpr   = GetExpressionImpl(getValue, toMember.Type);
 
 					if (_data.IsRestart)
@@ -210,7 +197,7 @@ namespace LinqToDB.Tools.Mapper
 					var expr     = Condition(
 						Equal(getValue, Constant(_mapperBuilder.MappingSchema.GetDefaultValue(getValue.Type), getValue.Type)),
 						Constant(_mapperBuilder.MappingSchema.GetDefaultValue(toMember.Type), toMember.Type),
-						exExpr);
+						exExpr!);
 
 					binds.Add(Bind(toMember.MemberInfo, expr));
 				}
@@ -224,19 +211,18 @@ namespace LinqToDB.Tools.Mapper
 			initExpression =
 				Convert(
 					binds.Count > 0
-						? (Expression)MemberInit(newExpression, binds)
+						? MemberInit(newExpression, binds)
 						: newExpression,
 					toType);
 
 			return initExpression;
 		}
 
-		[NotNull]
-		static NewExpression GetNewExpression([NotNull] Type originalType)
+		static NewExpression GetNewExpression(Type originalType)
 		{
 			var type = originalType;
 
-			if (type.IsInterfaceEx() && type.IsGenericTypeEx())
+			if (type.IsInterface && type.IsGenericType)
 			{
 				var definition = type.GetGenericTypeDefinition();
 
@@ -249,13 +235,11 @@ namespace LinqToDB.Tools.Mapper
 			return New(type);
 		}
 
-		[CanBeNull]
-		[ContractAnnotation("expr:null => null; expr:notnull => notnull")]
-		static Expression Convert([CanBeNull] Expression expr, [NotNull] Type toType) =>
+		[return: NotNullIfNotNull(nameof(expr))]
+		static Expression? Convert(Expression? expr, Type toType) =>
 			expr == null ? null : expr.Type == toType ? expr : Expression.Convert(expr, toType);
 
-		[CanBeNull]
-		Expression BuildCollectionMapper([NotNull] Expression fromExpression, [NotNull] Type toType)
+		Expression? BuildCollectionMapper(Expression fromExpression, Type toType)
 		{
 			var fromType = fromExpression.Type;
 
@@ -265,14 +249,13 @@ namespace LinqToDB.Tools.Mapper
 			return null;
 		}
 
-		[CanBeNull]
-		Expression ConvertCollection([NotNull] Expression fromExpression, [NotNull] Type toType)
+		Expression? ConvertCollection(Expression fromExpression, Type toType)
 		{
 			var fromType     = fromExpression.Type;
-			var fromItemType = fromType.GetItemType();
-			var toItemType   = toType.  GetItemType();
+			var fromItemType = fromType.GetItemType()!;
+			var toItemType   = toType.  GetItemType()!;
 
-			if (toType.IsGenericTypeEx() && !toType.IsGenericTypeDefinitionEx())
+			if (toType.IsGenericType && !toType.IsGenericTypeDefinition)
 			{
 				var toDefinition = toType.GetGenericTypeDefinition();
 
@@ -292,13 +275,13 @@ namespace LinqToDB.Tools.Mapper
 		}
 
 		MemberAssignment BuildAssignment(
-			[NotNull] LambdaExpression getter,
-			[NotNull] Expression       fromExpression,
-			[NotNull] Type             fromMemberType,
-			[NotNull] MemberAccessor   toMember)
+			Func<Expression, Expression> getter,
+			Expression                   fromExpression,
+			Type                         fromMemberType,
+			MemberAccessor               toMember)
 		{
-			var getValue = getter.GetBody(fromExpression);
-			var expr     = _mapperBuilder.MappingSchema.GetConvertExpression(fromMemberType, toMember.Type);
+			var getValue = getter(fromExpression);
+			var expr     = _mapperBuilder.MappingSchema.GetConvertExpression(fromMemberType, toMember.Type)!;
 			var convert  = expr.GetBody(getValue);
 
 			return Bind(toMember.MemberInfo, convert);
@@ -308,23 +291,22 @@ namespace LinqToDB.Tools.Mapper
 
 		#region GetExpressionEx
 
-		[NotNull]
 		public LambdaExpression GetExpressionEx()
 		{
 			var pFrom = Parameter(_fromType, "from");
 			var pTo   = Parameter(_toType,   "to");
-			var pDic  = Parameter(typeof(IDictionary<object,object>), "dic" + ++_data.NameCounter);
+			var pDic  = Parameter(typeof(IDictionary<object,object>), FormattableString.Invariant($"dic{++_data.NameCounter}"));
 
 			if (_mapperBuilder.MappingSchema.IsScalarType(_fromType) || _mapperBuilder.MappingSchema.IsScalarType(_toType))
 			{
 				return Lambda(
-					_mapperBuilder.MappingSchema.GetConvertExpression(_fromType, _toType).GetBody(pFrom),
+					_mapperBuilder.MappingSchema.GetConvertExpression(_fromType, _toType)!.GetBody(pFrom),
 					pFrom,
 					pTo,
 					pDic);
 			}
 
-			_data.LocalDic = Parameter(typeof(IDictionary<object,object>), "ldic" + ++_data.NameCounter);
+			_data.LocalDic = Parameter(typeof(IDictionary<object,object>), FormattableString.Invariant($"ldic{++_data.NameCounter}"));
 			_data.Locals.     Add(_data.LocalDic);
 			_data.Expressions.Add(Assign(_data.LocalDic, pDic));
 
@@ -343,7 +325,7 @@ namespace LinqToDB.Tools.Mapper
 			if (_mapperBuilder.MappingSchema.IsScalarType(_fromType) || _mapperBuilder.MappingSchema.IsScalarType(_toType))
 			{
 				return Lambda(
-					_mapperBuilder.MappingSchema.GetConvertExpression(_fromType, _toType).GetBody(pFrom),
+					_mapperBuilder.MappingSchema.GetConvertExpression(_fromType, _toType)!.GetBody(pFrom),
 					pFrom,
 					pTo);
 			}
@@ -355,31 +337,31 @@ namespace LinqToDB.Tools.Mapper
 			return l;
 		}
 
-		class MappingImpl
+		sealed class MappingImpl
 		{
 			public MappingImpl(
-				[NotNull] ExpressionBuilder builder,
-				[NotNull] Expression        fromExpression,
-				[NotNull] Expression        toExpression)
+				ExpressionBuilder builder,
+				Expression        fromExpression,
+				Expression        toExpression)
 			{
 				_builder        = builder;
 				_fromExpression = fromExpression;
 				_toExpression   = toExpression;
-				_localObject    = Parameter(_toExpression.Type, "obj" + ++_builder._data.NameCounter);
+				_localObject    = Parameter(_toExpression.Type, FormattableString.Invariant($"obj{++_builder._data.NameCounter}"));
 				_fromAccessor   = TypeAccessor.GetAccessor(_fromExpression.Type);
 				_toAccessor     = TypeAccessor.GetAccessor(_toExpression.  Type);
 				_cacheMapper    = _builder._mapperBuilder.ProcessCrossReferences != false;
 			}
 
-			[NotNull]              readonly ExpressionBuilder         _builder;
-			[NotNull]              readonly Expression                _fromExpression;
-			[NotNull]              readonly Expression                _toExpression;
-			[NotNull]              readonly ParameterExpression       _localObject;
-			[NotNull]              readonly TypeAccessor              _fromAccessor;
-			[NotNull]              readonly TypeAccessor              _toAccessor;
-			[NotNull, ItemNotNull] readonly List<Expression>          _expressions = new List<Expression>();
-			[NotNull, ItemNotNull] readonly List<ParameterExpression> _locals      = new List<ParameterExpression>();
-			                       readonly bool                      _cacheMapper;
+			readonly ExpressionBuilder         _builder;
+			readonly Expression                _fromExpression;
+			readonly Expression                _toExpression;
+			readonly ParameterExpression       _localObject;
+			readonly TypeAccessor              _fromAccessor;
+			readonly TypeAccessor              _toAccessor;
+			readonly List<Expression>          _expressions = new ();
+			readonly List<ParameterExpression> _locals      = new ();
+			readonly bool                      _cacheMapper;
 
 			public Expression GetExpression()
 			{
@@ -406,8 +388,8 @@ namespace LinqToDB.Tools.Mapper
 					{
 						_expressions.Add(
 							Call(
-								MemberHelper.MethodOf(() => Add(null, null, null)),
-								_builder._data.LocalDic,
+								MemberHelper.MethodOf(() => Add(null!, null!, null!)),
+								_builder._data.LocalDic!,
 								_fromExpression,
 								_localObject));
 					}
@@ -424,8 +406,8 @@ namespace LinqToDB.Tools.Mapper
 					expr = Expression.Convert(
 						Coalesce(
 							Call(
-								MemberHelper.MethodOf<IDictionary<object,object>>(_ => GetValue(null, null)),
-								_builder._data.LocalDic,
+								MemberHelper.MethodOf<IDictionary<object,object>>(_ => GetValue(null!, null!)),
+								_builder._data.LocalDic!,
 								_fromExpression),
 							expr),
 						_toExpression.Type);
@@ -440,8 +422,6 @@ namespace LinqToDB.Tools.Mapper
 					if (!toMember.HasSetter)
 						continue;
 
-					var setter = toMember.SetterExpression;
-
 					if (_builder._data.MemberMappers != null)
 					{
 						var processed = false;
@@ -450,7 +430,7 @@ namespace LinqToDB.Tools.Mapper
 						{
 							if (item.Item1.Length == 1 && item.Item1[0] == toMember.MemberInfo)
 							{
-								_expressions.Add(BuildAssignment(item.Item2, setter, item.Item2.Type, _localObject, toMember));
+								_expressions.Add(BuildAssignment(item.Item2.GetBody, toMember.GetSetterExpression, item.Item2.Type, _localObject, toMember));
 								processed = true;
 								break;
 							}
@@ -477,46 +457,43 @@ namespace LinqToDB.Tools.Mapper
 					if (fromMember == null || !fromMember.HasGetter)
 						continue;
 
-					var getter = fromMember.GetterExpression;
-
 					if (_builder._mapperBuilder.MappingSchema.IsScalarType(fromMember.Type) ||
 						_builder._mapperBuilder.MappingSchema.IsScalarType(toMember.Type))
 					{
-						_expressions.Add(BuildAssignment(getter, setter, fromMember.Type, _localObject, toMember));
+						_expressions.Add(BuildAssignment(fromMember.GetGetterExpression, toMember.GetSetterExpression, fromMember.Type, _localObject, toMember));
 					}
 					else if (fromMember.Type == toMember.Type && _builder._mapperBuilder.DeepCopy == false)
 					{
-						_expressions.Add(setter.GetBody(_localObject, getter.GetBody(_fromExpression)));
+						_expressions.Add(toMember.GetSetterExpression(_localObject, fromMember.GetGetterExpression(_fromExpression)));
 					}
 					else
 					{
-						var getValue = getter.GetBody(_fromExpression);
+						var getValue = fromMember.GetGetterExpression(_fromExpression);
 						var expr     = IfThenElse(
 							// if (from == null)
 							Equal(getValue, Constant(_builder._mapperBuilder.MappingSchema.GetDefaultValue(getValue.Type), getValue.Type)),
 							//   localObject = null;
-							setter.GetBody(
+							toMember.GetSetterExpression(
 								_localObject,
 								Constant(_builder._mapperBuilder.MappingSchema.GetDefaultValue(toMember.Type), toMember.Type)),
 							// else
 							toMember.HasGetter ?
-								setter.GetBody(_localObject, BuildClassMapper(getValue, toMember)) :
-								setter.GetBody(_localObject, _builder.GetExpressionImpl(getValue, toMember.Type)));
+								toMember.GetSetterExpression(_localObject, BuildClassMapper(getValue, toMember)) :
+								toMember.GetSetterExpression(_localObject, _builder.GetExpressionImpl(getValue, toMember.Type)!));
 
 						_expressions.Add(expr);
 					}
 				}
 			}
 
-			[SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
 			Expression BuildClassMapper(Expression getValue, MemberAccessor toMember)
 			{
 				var key   = Tuple.Create(_fromExpression.Type, toMember.Type);
 				var pFrom = Parameter(getValue.Type, "pFrom");
 				var pTo   = Parameter(toMember.Type, "pTo");
-				var toObj = toMember.GetterExpression.GetBody(_localObject);
+				var toObj = toMember.GetGetterExpression(_localObject);
 
-				ParameterExpression nullPrm = null;
+				ParameterExpression? nullPrm = null;
 
 				if (_cacheMapper)
 				{
@@ -541,9 +518,9 @@ namespace LinqToDB.Tools.Mapper
 				{
 					var lex = Lambda(expr, pFrom, pTo);
 
-					_builder._data.Expressions.Add(Assign(nullPrm, lex));
+					_builder._data.Expressions.Add(Assign(nullPrm!, lex));
 
-					expr = Invoke(nullPrm, getValue, toObj);
+					expr = Invoke(nullPrm!, getValue, toObj);
 				}
 
 				return expr;
@@ -556,12 +533,12 @@ namespace LinqToDB.Tools.Mapper
 
 				if (toType.IsArray && fromType.IsSubClassOf(typeof(IEnumerable<>)))
 				{
-					var fromItemType = fromType.GetItemType();
-					var toItemType   = toType.  GetItemType();
+					var fromItemType = fromType.GetItemType()!;
+					var toItemType   = toType.  GetItemType()!;
 
 					var expr = ToArray(_builder, _fromExpression, fromItemType, toItemType);
 
-					_expressions.Add(Assign(_localObject, expr));
+					_expressions.Add(Assign(_localObject, expr!));
 
 					return true;
 				}
@@ -582,28 +559,28 @@ namespace LinqToDB.Tools.Mapper
 				if (clearMethodInfo != null)
 					_expressions.Add(Call(_localObject, clearMethodInfo));
 
-				var fromItemType = fromListType.GetItemType();
-				var toItemType   = toListType.  GetItemType();
+				var fromItemType = fromListType.GetItemType()!;
+				var toItemType   = toListType.  GetItemType()!;
 
 				var addRangeMethodInfo = toListType.GetMethod("AddRange");
 
 				if (addRangeMethodInfo != null)
 				{
-					var selectExpr = Select(_builder, _fromExpression, fromItemType, toItemType);
+					var selectExpr = Select(_builder, _fromExpression, fromItemType, toItemType)!;
 					_expressions.Add(Call(_localObject, addRangeMethodInfo, selectExpr));
 				}
-				else if (toListType.IsGenericTypeEx() && !toListType.IsGenericTypeDefinitionEx())
+				else if (toListType.IsGenericType && !toListType.IsGenericTypeDefinition)
 				{
 					if (toListType.IsSubClassOf(typeof(ICollection<>)))
 					{
 						var selectExpr = Select(
 							_builder,
 							_fromExpression, fromItemType,
-							toItemType);
+							toItemType)!;
 
 						_expressions.Add(
 							Call(
-								MemberHelper.MethodOf(() => AddRange(((ICollection<int>)null), (IEnumerable<int>)null))
+								MemberHelper.MethodOf(() => AddRange<int>(null!, null!))
 									.GetGenericMethodDefinition()
 									.MakeGenericMethod(toItemType),
 								_localObject,
@@ -614,7 +591,7 @@ namespace LinqToDB.Tools.Mapper
 						_expressions.Add(
 							Assign(
 								_localObject,
-								_builder.ConvertCollection(_fromExpression, toListType)));
+								_builder.ConvertCollection(_fromExpression, toListType)!));
 					}
 				}
 				else
@@ -626,41 +603,40 @@ namespace LinqToDB.Tools.Mapper
 			}
 
 			Expression BuildAssignment(
-				[NotNull] LambdaExpression getter,
-				[NotNull] LambdaExpression setter,
-				[NotNull] Type fromMemberType,
-				[NotNull] Expression toExpression,
-				MemberAccessor toMember)
+				Func<Expression, Expression>             getter,
+				Func<Expression, Expression, Expression> setter,
+				Type                                     fromMemberType,
+				Expression                               toExpression,
+				MemberAccessor                           toMember)
 			{
-				var getValue = getter.GetBody(_fromExpression);
-				var expr     = _builder._mapperBuilder.MappingSchema.GetConvertExpression(fromMemberType, toMember.Type);
+				var getValue = getter(_fromExpression);
+				var expr     = _builder._mapperBuilder.MappingSchema.GetConvertExpression(fromMemberType, toMember.Type)!;
 				var convert  = expr.GetBody(getValue);
 
-				return setter.GetBody(toExpression, convert);
+				return setter(toExpression, convert);
 			}
 		}
 
 		#endregion
 
-		static object GetValue(IDictionary<object,object> dic, object key) =>
+		static object? GetValue(IDictionary<object,object>? dic, object key) =>
 			dic != null && dic.TryGetValue(key, out var result) ? result : null;
 
-		static void Add(IDictionary<object,object> dic, object key, object value)
+		static void Add(IDictionary<object,object>? dic, object? key, object value)
 		{
 			if (key != null && dic != null)
 				dic[key] = value;
 		}
 
-		static HashSet<T> ToHashSet<T>([NotNull, InstantHandle] IEnumerable<T> source) => new HashSet<T>(source);
+		static HashSet<T> ToHashSet<T>([InstantHandle] IEnumerable<T> source) => new (source);
 
-		static void AddRange<T>([NotNull] ICollection<T> source, [NotNull, InstantHandle] IEnumerable<T> items)
+		static void AddRange<T>(ICollection<T> source, [InstantHandle] IEnumerable<T> items)
 		{
 			foreach (var item in items)
 				source.Add(item);
 		}
 
-		[NotNull]
-		static IMapperBuilder GetBuilder<TFrom,TTo>([NotNull] IMapperBuilder builder) =>
+		static IMapperBuilder GetBuilder<TFrom,TTo>(IMapperBuilder builder) =>
 			new MapperBuilder<TFrom,TTo>
 			{
 				MappingSchema          = builder.MappingSchema,
@@ -672,73 +648,69 @@ namespace LinqToDB.Tools.Mapper
 				DeepCopy               = builder.DeepCopy
 			};
 
-		[CanBeNull]
-		static Expression ToList(
-			[NotNull] ExpressionBuilder builder,
-			Expression fromExpression,
-			[NotNull] Type fromItemType,
-			[NotNull] Type toItemType)
+		static Expression? ToList(
+			ExpressionBuilder builder,
+			Expression        fromExpression,
+			Type              fromItemType,
+			Type              toItemType)
 		{
-			var toListInfo = MemberHelper.MethodOf(() => Enumerable.ToList<int>(null)).GetGenericMethodDefinition();
+			var toListInfo = MemberHelper.MethodOf(() => Enumerable.ToList<int>(null!)).GetGenericMethodDefinition();
 			var expr       = Select(builder, fromExpression, fromItemType, toItemType);
 
 			if (builder._data.IsRestart)
 				return null;
 
-			return Call(toListInfo.MakeGenericMethod(toItemType), expr);
+			return Call(toListInfo.MakeGenericMethod(toItemType), expr!);
 		}
 
-		[CanBeNull]
-		static Expression ToHashSet(
-			[NotNull] ExpressionBuilder builder,
-			Expression fromExpression,
-			[NotNull] Type fromItemType,
-			[NotNull] Type toItemType)
+		static Expression? ToHashSet(
+			ExpressionBuilder builder,
+			Expression        fromExpression,
+			Type              fromItemType,
+			Type              toItemType)
 		{
-			var toListInfo = MemberHelper.MethodOf(() => ToHashSet<int>(null)).GetGenericMethodDefinition();
+			var toListInfo = MemberHelper.MethodOf(() => ToHashSet<int>(null!)).GetGenericMethodDefinition();
 			var expr       = Select(builder, fromExpression, fromItemType, toItemType);
 
 			if (builder._data.IsRestart)
 				return null;
 
-			return Call(toListInfo.MakeGenericMethod(toItemType), expr);
+			return Call(toListInfo.MakeGenericMethod(toItemType), expr!);
 		}
 
-		[CanBeNull]
-		static Expression ToArray(
-			[NotNull] ExpressionBuilder builder,
-			Expression fromExpression,
-			[NotNull] Type fromItemType,
-			[NotNull] Type toItemType)
+		static Expression? ToArray(
+			ExpressionBuilder builder,
+			Expression        fromExpression,
+			Type              fromItemType,
+			Type              toItemType)
 		{
-			var toListInfo = MemberHelper.MethodOf(() => Enumerable.ToArray<int>(null)).GetGenericMethodDefinition();
+			var toListInfo = MemberHelper.MethodOf(() => Enumerable.ToArray<int>(null!)).GetGenericMethodDefinition();
 			var expr       = Select(builder, fromExpression, fromItemType, toItemType);
 
 			if (builder._data.IsRestart)
 				return null;
 
-			return Call(toListInfo.MakeGenericMethod(toItemType), expr);
+			return Call(toListInfo.MakeGenericMethod(toItemType), expr!);
 		}
 
-		[CanBeNull]
-		static Expression Select(
-			[NotNull] ExpressionBuilder builder,
-			Expression getValue,
-			[NotNull] Type fromItemType,
-			[NotNull] Type toItemType)
+		static Expression? Select(
+			ExpressionBuilder builder,
+			Expression        getValue,
+			Type              fromItemType,
+			Type              toItemType)
 		{
-			var getBuilderInfo = MemberHelper.MethodOf(() => GetBuilder<int,int>(null)).               GetGenericMethodDefinition();
-			var selectInfo     = MemberHelper.MethodOf(() => Enumerable.Select<int,int>(null, _ => _)).GetGenericMethodDefinition();
+			var getBuilderInfo = MemberHelper.MethodOf(() => GetBuilder<int,int>(null!)).               GetGenericMethodDefinition();
+			var selectInfo     = MemberHelper.MethodOf(() => Enumerable.Select<int,int>(null!, _ => _)).GetGenericMethodDefinition();
 			var itemBuilder    =
 				(IMapperBuilder)getBuilderInfo
 					.MakeGenericMethod(fromItemType, toItemType)
-					.Invoke(null, new object[] { builder._mapperBuilder });
+					.Invoke(null, new object[] { builder._mapperBuilder })!;
 
 			var expr = getValue;
 
 			if (builder._mapperBuilder.DeepCopy != false || fromItemType != toItemType)
 			{
-				Expression selector;
+				Expression? selector;
 
 				var selectorBuilder = new ExpressionBuilder(itemBuilder, builder._data);
 
@@ -759,7 +731,7 @@ namespace LinqToDB.Tools.Mapper
 				if (builder._data.IsRestart)
 					return null;
 
-				expr = Call(selectInfo.MakeGenericMethod(fromItemType, toItemType), getValue, selector);
+				expr = Call(selectInfo.MakeGenericMethod(fromItemType, toItemType), getValue, selector!);
 			}
 
 			return expr;

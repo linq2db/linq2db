@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 
@@ -13,7 +12,6 @@ namespace Tests.Linq
 		//[Test]
 		public void Test1([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select p.Children,
@@ -23,7 +21,6 @@ namespace Tests.Linq
 		//[Test]
 		public void Test2([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select p.Children.ToList(),
@@ -42,7 +39,6 @@ namespace Tests.Linq
 		[Test]
 		public void Test4([DataSources] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
@@ -52,18 +48,17 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test5([DataSources] string context)
+		public void Test5([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from ch in    Child
 					orderby ch.ChildID
-					select    Parent.Where(p => p.ParentID == ch.Parent.ParentID).Select(p => p)
+					select    Parent.Where(p => p.ParentID == ch.Parent!.ParentID).Select(p => p)
 					,
 					from ch in db.Child
 					orderby ch.ChildID
-					select db.Parent.Where(p => p.ParentID == ch.Parent.ParentID).Select(p => p));
+					select db.Parent.Where(p => p.ParentID == ch.Parent!.ParentID).Select(p => p));
 		}
 	}
 }

@@ -10,7 +10,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Inheritance discriminator value.
 		/// </summary>
-		public object           Code;
+		public object?          Code;
 		/// <summary>
 		/// Is it default mapping.
 		/// </summary>
@@ -18,18 +18,15 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Mapping class type for current discriminator value.
 		/// </summary>
-		public Type             Type;
+		public Type             Type = null!;
 		/// <summary>
 		/// Discriminator column descriptor.
 		/// </summary>
-		public ColumnDescriptor Discriminator;
+		public ColumnDescriptor Discriminator = null!;
 
 		/// <summary>
 		/// Gets discriminator field or property name.
 		/// </summary>
-		public string DiscriminatorName
-		{
-			get { return Discriminator.MemberName; }
-		}
+		public string DiscriminatorName => Discriminator.MemberName;
 	}
 }

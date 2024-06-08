@@ -1,26 +1,36 @@
 ﻿using System;
-using System.Data;
-using System.Linq;
+using System.Data.Common;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
 
-	class SqlCeSqlBuilder : BasicSqlBuilder
+	sealed class SqlCeSqlBuilder : BasicSqlBuilder
 	{
-		public SqlCeSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
-			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		public SqlCeSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected override string FirstFormat(SelectQuery selectQuery)
+		SqlCeSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SqlCeSqlBuilder(this);
+		}
+
+		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;
 		}
 
-		protected override string LimitFormat(SelectQuery selectQuery)
+		protected override string? LimitFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null;
 		}
@@ -30,12 +40,15 @@ namespace LinqToDB.DataProvider.SqlCe
 			return "OFFSET {0} ROWS";
 		}
 
-		protected override bool   OffsetFirst => true;
+		protected override bool OffsetFirst                   => true;
+		protected override bool IsValuesSyntaxSupported       => false;
+		protected override bool SupportsColumnAliasesInSource => true;
+		protected override bool RequiresConstantColumnAliases => true;
 
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+				return trun.ResetIdentity ? 1 + trun.Table!.IdentityFields.Count : 1;
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
@@ -43,131 +56,93 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			if (statement is SqlTruncateTableStatement trun)
 			{
-				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+				var field = trun.Table!.IdentityFields[commandNumber - 1];
 
 				StringBuilder.Append("ALTER TABLE ");
-				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
-				StringBuilder
-					.Append(" ALTER COLUMN ")
-					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
-					.AppendLine(" IDENTITY(1,1)")
-					;
+				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
+				StringBuilder.Append(" ALTER COLUMN ");
+				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				StringBuilder.AppendLine(" IDENTITY(1, 1)");
 			}
 			else
-		{
-			StringBuilder.AppendLine("SELECT @@IDENTITY");
-		}
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SqlCeSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
-		}
-
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
-		}
-
-		protected override void BuildDataType(SqlDataType type, bool createDbType)
-		{
-			switch (type.DataType)
 			{
-				case DataType.Char          : base.BuildDataType(new SqlDataType(DataType.NChar,    type.Length), createDbType); return;
-				case DataType.VarChar       : base.BuildDataType(new SqlDataType(DataType.NVarChar, type.Length), createDbType); return;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");                                             return;
+				StringBuilder.AppendLine("SELECT @@IDENTITY");
+			}
+		}
+
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		{
+			// https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2005/ms172424(v=sql.90)
+			switch (type.Type.DataType)
+			{
+				case DataType.Guid          : StringBuilder.Append("UNIQUEIDENTIFIER");                                                                        return;
+				case DataType.Char          : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NChar,    type.Type.Length), forCreateTable, canBeNull); return;
+				case DataType.VarChar       : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NVarChar, type.Type.Length), forCreateTable, canBeNull); return;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                                          return;
 				case DataType.DateTime2     :
 				case DataType.Time          :
 				case DataType.Date          :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                  return;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                                return;
 				case DataType.NVarChar:
-					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.DataType)
-							.Append("(4000)");
+						StringBuilder.Append("NVarChar(4000)");
 						return;
 					}
 
 					break;
+
+				case DataType.Binary:
+					StringBuilder.Append("BINARY");
+					if (type.Type.Length > 1 && type.Type.Length <= 8000)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
+					return;
+				case DataType.VarBinary:
+					StringBuilder.Append("VARBINARY");
+					if (type.Type.Length > 1 && type.Type.Length <= 8000)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
+					return;
 			}
 
-			base.BuildDataType(type, createDbType);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
-		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
-		}
-
-		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
-		{
-			var wrap = false;
-
-			if (expr.SystemType == typeof(bool))
-			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
-					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-			}
-
-			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
-			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
-		}
-
-		public override object Convert(object value, ConvertType convertType)
+		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					return "@" + value;
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
+					if (value.Length > 0 && value[0] == '[')
+						return sb.Append(value);
 
-						if (name.Length > 0 && name[0] == '[')
-							return value;
-					}
+					return sb.Append('[').Append(value).Append(']');
 
-					return "[" + value + "]";
-
-				case ConvertType.NameToDatabase:
-				case ConvertType.NameToSchema:
+				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+				case ConvertType.NameToProcedure :
+					if (value.Length > 0 && value[0] == '[')
+						return sb.Append(value);
 
-						if (name.Length > 0 && name[0] == '[')
-							return value;
+					if (value.IndexOf('.') > 0)
+						value = string.Join("].[", value.Split('.'));
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
-
-						return "[" + value + "]";
-					}
-
-					break;
+					return sb.Append('[').Append(value).Append(']');
 
 				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return str.Length > 0 && str[0] == '@'? str.Substring(1): str;
-					}
-					break;
+					return value.Length > 0 && value[0] == '@'
+						? sb.Append(value.Substring(1))
+						: sb.Append(value);
 			}
 
-			return value;
+			return sb.Append(value);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
@@ -175,15 +150,34 @@ namespace LinqToDB.DataProvider.SqlCe
 			StringBuilder.Append("IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
-			return sb.Append(table);
+			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			dynamic p = parameter;
-			return p.SqlDbType.ToString();
+			if (DataProvider is SqlCeDataProvider provider)
+			{
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
+				if (param != null)
+					return provider.Adapter.GetDbType(param).ToString();
+			}
+
+			return base.GetProviderTypeName(dataContext, parameter);
+		}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+		{
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (table.SqlQueryExtensions is not null)
+				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
 		}
 	}
 }

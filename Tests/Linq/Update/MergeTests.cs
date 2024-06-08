@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Tests.Model;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -9,8 +11,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	[TestFixture]
 //	[Order(10101)]
 	public partial class MergeTests : TestBase
@@ -18,29 +18,24 @@ namespace Tests.xUpdate
 		[AttributeUsage(AttributeTargets.Parameter)]
 		public class MergeDataContextSourceAttribute : DataSourcesAttribute
 		{
-			static string[] Unsupported =
+			public static List<string> Unsupported = new[]
 			{
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.SqlCe,
-				ProviderName.SQLiteClassic,
-				ProviderName.SQLiteMS,
-				ProviderName.SqlServer2000,
-				ProviderName.SqlServer2005,
-				ProviderName.PostgreSQL,
-				ProviderName.PostgreSQL92,
-				ProviderName.PostgreSQL93,
-				ProviderName.PostgreSQL95,
-				TestProvName.PostgreSQL10,
-				TestProvName.PostgreSQL11,
-				TestProvName.PostgreSQLLatest,
-				ProviderName.MySql,
-				ProviderName.MySqlConnector,
-				TestProvName.MySql57,
-				TestProvName.MariaDB
-			};
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer2005,
+				TestProvName.AllClickHouse,
+				TestProvName.AllPostgreSQL14Minus,
+				TestProvName.AllMySql,
+			}.SelectMany(_ => _.Split(',')).ToList();
 
 			public MergeDataContextSourceAttribute(params string[] except)
-				: base(false, Unsupported.Concat(except).ToArray())
+				: base(true, Unsupported.Concat(except.SelectMany(_ => _.Split(','))).ToArray())
+			{
+			}
+
+			public MergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
+				: base(includeLinqService, Unsupported.Concat(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
@@ -50,23 +45,24 @@ namespace Tests.xUpdate
 		{
 			static string[] Supported = new[]
 			{
-				ProviderName.Sybase,
-				ProviderName.SybaseManaged,
-				ProviderName.SqlServer2008,
-				ProviderName.SqlServer2012,
-				ProviderName.SqlServer2014,
-				ProviderName.SqlServer2017,
-				TestProvName.SqlAzure
-			};
+				TestProvName.AllSybase,
+				TestProvName.AllSqlServer2008Plus,
+				TestProvName.AllPostgreSQL15Plus,
+			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
-				: base(false, Supported.Except(except).ToArray())
+				: base(true, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
+			{
+			}
+
+			public IdentityInsertMergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
+				: base(includeLinqService, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
 
 		[Table("merge1")]
-		class TestMapping1
+		internal sealed class TestMapping1
 		{
 			[Column("Id")]
 			[PrimaryKey]
@@ -93,7 +89,8 @@ namespace Tests.xUpdate
 
 		[Table("TestMergeIdentity", Configuration = ProviderName.Sybase)]
 		[Table("TestMergeIdentity", Configuration = ProviderName.SqlServer)]
-		class TestMappingWithIdentity
+		[Table("TestMergeIdentity", Configuration = ProviderName.PostgreSQL)]
+		sealed class TestMappingWithIdentity
 		{
 			[Column("Id", SkipOnInsert = true, IsIdentity = true)]
 			public int Id;
@@ -103,7 +100,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("merge2")]
-		class TestMapping2
+		internal sealed class TestMapping2
 		{
 			[Column("Id")]
 			[PrimaryKey]
@@ -205,9 +202,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestDataGenerationTest([DataSources(false)] string context)
+		public void TestDataGenerationTest([DataSources] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -232,9 +229,9 @@ namespace Tests.xUpdate
 		private void AssertRowCount(int expected, int actual, string context)
 		{
 			// another sybase quirk, nothing surprising
-			if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)
+			if (context.IsAnyOf(TestProvName.AllSybase))
 				Assert.LessOrEqual(expected, actual);
-			else if (context == ProviderName.OracleNative && actual == -1)
+			else if (context.IsAnyOf(TestProvName.AllOracleNative) && actual == -1)
 			{ }
 			else
 				Assert.AreEqual(expected, actual);

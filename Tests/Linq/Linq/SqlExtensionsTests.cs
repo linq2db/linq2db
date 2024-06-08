@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -12,7 +11,7 @@ namespace Tests.Linq
 	public class SqlExtensionsTests : TestBase
 	{
 		[Table("sample_table")]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column("id")]    public int Id    { get; set; }
 			[Column("value")] public int Value { get; set; }
@@ -67,7 +66,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableNameTests1([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
+		public void TableNameTests1([IncludeDataSources(true, TestProvName.AllSqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[]{new SampleClass{Id = 1, Value = 2} }))
@@ -97,7 +96,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableNameTests2([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
+		public void TableNameTests2([IncludeDataSources(true, TestProvName.AllSqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -114,13 +113,13 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableName(t, Sql.TableQualification.DatabaseName),
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 
 				var ast = query.GetSelectQuery();
 
 				string GetColumnValue(int index)
 				{
-					return (string)((SqlValue)ast.Select.Columns[index].Expression).Value;
+					return (string)((SqlValue)ast.Select.Columns[index].Expression).Value!;
 				}
 
 				Assert.That(GetColumnValue(0), Is.EqualTo("[database].[schema].[table_name]"));
@@ -132,7 +131,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableExprTests1([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
+		public void TableExprTests1([IncludeDataSources(true, TestProvName.AllSqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[]{new SampleClass{Id = 1, Value = 2} }))
@@ -162,7 +161,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableExprTests2([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
+		public void TableExprTests2([IncludeDataSources(true, TestProvName.AllSqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -179,7 +178,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableExpr(t, Sql.TableQualification.DatabaseName),
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 
 				var ast = query.GetSelectQuery();
 
@@ -197,7 +196,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ExprPredicateTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void ExprPredicateTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var sampleData = new[]
 			{
@@ -220,12 +219,12 @@ namespace Tests.Linq
 
 		public class FreeTextKey<T>
 		{
-			public T   Key;
+			public T   Key = default!;
 			public int Rank;
 		}
 
 		[Test]
-		public void FreeTextTableTest([IncludeDataSources(true, ProviderName.SqlServer2012)] string context)
+		public void FreeTextTableTest([IncludeDataSources(true, TestProvName.AllSqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -241,7 +240,7 @@ namespace Tests.Linq
 
 				var query1Str = query1.ToString();
 
-				Console.WriteLine(query1Str);
+				TestContext.WriteLine(query1Str);
 
 				var query2 = from t in table
 					from ft in db.FromSql<FreeTextKey<int>>(
@@ -251,7 +250,7 @@ namespace Tests.Linq
 
 				var query2Str = query2.ToString();
 
-				Console.WriteLine(query2Str);
+				TestContext.WriteLine(query2Str);
 
 
 				var query3 = db.FromSql<FreeTextKey<int>>(
@@ -259,11 +258,51 @@ namespace Tests.Linq
 
 				var query3Str = query3.ToString();
 
-				Console.WriteLine(query3Str);
+				TestContext.WriteLine(query3Str);
 
 				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query1Str);
 				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query2Str);
 				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query3Str);
+			}
+		}
+
+		[Test]
+		public void TestSqlCollate1(
+			[DataSources(
+				ProviderName.SqlCe,
+				TestProvName.AllClickHouse,
+				TestProvName.AllAccess,
+				TestProvName.AllSapHana,
+				TestProvName.AllOracle11,
+				TestProvName.AllInformix,
+				TestProvName.AllSybase)]
+			string context)
+		{
+			var collation = TestUtils.GetValidCollationName(GetProviderName(context, out _));
+
+			using (var db = GetDataContext(context))
+			{
+				db.Person.OrderBy(_ => "1" + Sql.Collate(_.FirstName, collation) + "2").ToList();
+			}
+		}
+
+		[Test]
+		public void TestSqlCollate2(
+			[DataSources(
+				ProviderName.SqlCe,
+				TestProvName.AllClickHouse,
+				TestProvName.AllAccess,
+				TestProvName.AllSapHana,
+				TestProvName.AllOracle11,
+				TestProvName.AllInformix,
+				TestProvName.AllSybase)]
+			string context)
+		{
+			var collation = TestUtils.GetValidCollationName(GetProviderName(context, out _));
+
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Select(_ => new { CollatedName = "1" + Sql.Collate(_.FirstName, collation) + "2" }).ToList();
 			}
 		}
 	}

@@ -1,8 +1,7 @@
-﻿using System.Linq;
+﻿using System.Text.Json;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -24,17 +23,17 @@ namespace Tests.UserTests
 		{
 			[Column(), NotNull] public int Id { get; set; }
 
-			[Column(DataType = DataType.VarChar), NotNull] public ITest1 F { get; set; }
+			[Column(DataType = DataType.VarChar), NotNull] public ITest1 F { get; set; } = null!;
 		}
 
 		[Test]
-		public void TestMappingToInterface([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestMappingToInterface([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			ms.SetConverter<ITest1, string>(favs => JsonConvert.SerializeObject(favs));
+			ms.SetConverter<ITest1, string>(favs => JsonSerializer.Serialize(favs));
 			ms.SetConverter<ITest1, DataParameter>(obj =>
-				new DataParameter { Value = JsonConvert.SerializeObject(obj), DataType = DataType.NVarChar });
-			ms.SetConverter<string, ITest1>(favs => { return JsonConvert.DeserializeObject<ITest1>(favs); });
+				new DataParameter { Value = JsonSerializer.Serialize(obj), DataType = DataType.NVarChar });
+			ms.SetConverter<string, ITest1>(favs => { return JsonSerializer.Deserialize<ITest1>(favs)!; });
 
 
 			using (var db = GetDataContext(context, ms))

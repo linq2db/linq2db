@@ -1,21 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+	using Common.Internal;
 	using Mapping;
 
 	public class SqlField : ISqlExpression
 	{
-		public SqlField()
+		internal static SqlField All(ISqlTableSource table)
 		{
+			return new SqlField(table, "*", "*");
+		}
+
+		public SqlField(ISqlTableSource table, string name)
+		{
+			Table     = table;
+			Name      = name;
 			CanBeNull = true;
+		}
+
+		public SqlField(Type systemType, string? name, bool canBeNull)
+		{
+			Type      = new DbDataType(systemType);
+			Name      = name!;
+			CanBeNull = canBeNull;
+		}
+
+		private SqlField(ISqlTableSource table, string name, string physicalName)
+		{
+			Table        = table;
+			Name         = name;
+			PhysicalName = physicalName;
+			CanBeNull    = true;
+		}
+
+		public SqlField(string name, string physicalName)
+		{
+			Name         = name;
+			PhysicalName = physicalName;
+			CanBeNull    = true;
 		}
 
 		public SqlField(SqlField field)
 		{
-			SystemType       = field.SystemType;
+			Type             = field.Type;
 			Alias            = field.Alias;
 			Name             = field.Name;
 			PhysicalName     = field.PhysicalName;
@@ -25,11 +57,6 @@ namespace LinqToDB.SqlQuery
 			IsIdentity       = field.IsIdentity;
 			IsInsertable     = field.IsInsertable;
 			IsUpdatable      = field.IsUpdatable;
-			DataType         = field.DataType;
-			DbType           = field.DbType;
-			Length           = field.Length;
-			Precision        = field.Precision;
-			Scale            = field.Scale;
 			CreateFormat     = field.CreateFormat;
 			CreateOrder      = field.CreateOrder;
 			ColumnDescriptor = field.ColumnDescriptor;
@@ -38,47 +65,41 @@ namespace LinqToDB.SqlQuery
 
 		public SqlField(ColumnDescriptor column)
 		{
-			SystemType       = column.MemberType;
-			Name             = column.MemberName;
-			PhysicalName     = column.ColumnName;
-			CanBeNull        = column.CanBeNull;
-			IsPrimaryKey     = column.IsPrimaryKey;
-			PrimaryKeyOrder  = column.PrimaryKeyOrder;
-			IsIdentity       = column.IsIdentity;
-			IsInsertable     = !column.SkipOnInsert;
-			IsUpdatable      = !column.SkipOnUpdate;
-			DataType         = column.DataType;
-			DbType           = column.DbType;
-			Length           = column.Length;
-			Precision        = column.Precision;
-			Scale            = column.Scale;
-			CreateFormat     = column.CreateFormat;
-			CreateOrder      = column.Order;
-			ColumnDescriptor = column;
+			Type              = column.GetDbDataType(true);
+			Name              = column.MemberName;
+			PhysicalName      = column.ColumnName;
+			CanBeNull         = column.CanBeNull;
+			IsPrimaryKey      = column.IsPrimaryKey;
+			PrimaryKeyOrder   = column.PrimaryKeyOrder;
+			IsIdentity        = column.IsIdentity;
+			IsInsertable      = !column.SkipOnInsert;
+			IsUpdatable       = !column.SkipOnUpdate;
+			SkipOnEntityFetch = column.SkipOnEntityFetch;
+			CreateFormat      = column.CreateFormat;
+			CreateOrder       = column.Order;
+			ColumnDescriptor  = column;
 		}
 
-		public Type             SystemType       { get; set; }
-		public string           Alias            { get; set; }
-		public string           Name             { get; set; }
-		public bool             IsPrimaryKey     { get; set; }
-		public int              PrimaryKeyOrder  { get; set; }
-		public bool             IsIdentity       { get; set; }
-		public bool             IsInsertable     { get; set; }
-		public bool             IsUpdatable      { get; set; }
-		public bool             IsDynamic        { get; set; }
-		public DataType         DataType         { get; set; }
-		public string           DbType           { get; set; }
-		public int?             Length           { get; set; }
-		public int?             Precision        { get; set; }
-		public int?             Scale            { get; set; }
-		public string           CreateFormat     { get; set; }
-		public int?             CreateOrder      { get; set; }
+		public DbDataType        Type              { get; set; }
+		public string?           Alias             { get; set; }
+		public string            Name              { get; set; } = null!; // not always true, see ColumnDescriptor notes
+		public bool              IsPrimaryKey      { get; set; }
+		public int               PrimaryKeyOrder   { get; set; }
+		public bool              IsIdentity        { get; set; }
+		public bool              IsInsertable      { get; set; }
+		public bool              IsUpdatable       { get; set; }
+		public bool              IsDynamic         { get; set; }
+		public bool              SkipOnEntityFetch { get; set; }
+		public string?           CreateFormat      { get; set; }
+		public int?              CreateOrder       { get; set; }
 
-		public ISqlTableSource  Table            { get; set; }
-		public ColumnDescriptor ColumnDescriptor { get; set; }
+		public ISqlTableSource?  Table             { get; set; }
+		public ColumnDescriptor  ColumnDescriptor  { get; set; } = null!; // TODO: not true, we probably should introduce something else for non-column fields
 
-		private string _physicalName;
-		public  string  PhysicalName
+		Type ISqlExpression.SystemType => Type.SystemType;
+
+		private string? _physicalName;
+		public  string   PhysicalName
 		{
 			get => _physicalName ?? Name;
 			set => _physicalName = value;
@@ -90,7 +111,8 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			using var sb = Pools.StringBuilder.Allocate();
+			return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
 		}
 
 //#endif
@@ -101,7 +123,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNull { get; set; }
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return this == other;
 		}
@@ -112,32 +134,18 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			return this == other;
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			Table.Clone(objectTree, doClone);
-
-			return objectTree[this];
 		}
 
 		#endregion
@@ -146,17 +154,21 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlField;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			if (Table != null)
-				sb
-					.Append('t')
-					.Append(Table.SourceID)
-					.Append('.');
+				sb.Append(CultureInfo.InvariantCulture, $"t{Table.SourceID}.");
 
 			return sb.Append(Name);
 		}
 
 		#endregion
+
+		internal static SqlField FakeField(DbDataType dataType, string fieldName, bool canBeNull)
+		{
+			var field = new SqlField(fieldName, fieldName);
+			field.Type = dataType;
+			return field;
+		}
 	}
 }

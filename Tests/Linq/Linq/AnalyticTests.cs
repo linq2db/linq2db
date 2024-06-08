@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -14,11 +13,12 @@ namespace Tests.Linq
 	public class AnalyticTests : TestBase
 	{
 		[Test]
-		public void Test(
+		public void ManyFunctions(
 			[IncludeDataSources(
 				true,
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL)]
 			string context)
 		{
@@ -30,13 +30,13 @@ namespace Tests.Linq
 					select new
 					{
 						Rank1       = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID).ToValue(),
-						RowNumber   = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1).ThenBy(c.ChildID).ThenByDesc(c.ParentID).ToValue(),
+						RowNumber   = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1).ThenByDesc(c.ChildID).ThenByDesc(c.ParentID).ToValue(),
 						DenseRank   = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 						Sum         = Sql.Ext.Sum(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 						Avg         = Sql.Ext.Average<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 
-						Count1      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count2      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenBy(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count1      = Sql.Ext.Count().Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count2      = Sql.Ext.Count(p.ParentID).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenBy(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 						Count4      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenByDesc(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 						Count6      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Rows.Between.UnboundedPreceding.And.ValuePreceding(3).ToValue(),
 						Count7      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.CurrentRow.And.UnboundedFollowing.ToValue(),
@@ -46,6 +46,19 @@ namespace Tests.Linq
 						Count11     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Rows.ValuePreceding(1).ToValue(),
 						Count12     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 						Count14     = Sql.Ext.Count().Over().ToValue(),
+
+						LongCount1  = Sql.Ext.LongCount().Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						LongCount2  = Sql.Ext.LongCount(p.ParentID).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenBy(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						LongCount4  = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenByDesc(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						LongCount6  = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Rows.Between.UnboundedPreceding.And.ValuePreceding(3).ToValue(),
+						LongCount7  = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.CurrentRow.And.UnboundedFollowing.ToValue(),
+						LongCount8  = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.None).Rows.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						LongCount9  = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.UnboundedPreceding.ToValue(),
+						LongCount10 = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.CurrentRow.ToValue(),
+						LongCount11 = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Rows.ValuePreceding(1).ToValue(),
+						LongCount12 = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						LongCount14 = Sql.Ext.LongCount().Over().ToValue(),
+
 
 						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() +
 									  Sql.Sqrt(Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue()) +
@@ -63,6 +76,7 @@ namespace Tests.Linq
 				true,
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL)]
 			string context)
 		{
@@ -88,51 +102,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestExtensionsOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
-					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID
-					select new
-					{
-						Rank1       = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID, Sql.NullsPosition.First).ToValue(),
-						Rank2       = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1, Sql.NullsPosition.Last).ThenBy(c.ChildID).ThenBy(c.ParentID, Sql.NullsPosition.First).ToValue(),
-						RowNumber   = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1, Sql.NullsPosition.First).ThenBy(c.ChildID).ThenByDesc(c.ParentID, Sql.NullsPosition.First).ToValue(),
-						DenseRank   = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
-
-						Count1      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count2      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenBy(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count3      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenBy(c.ChildID, Sql.NullsPosition.First).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count4      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenByDesc(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count5      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenByDesc(c.ChildID, Sql.NullsPosition.Last).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count6      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.ValuePreceding(3).ToValue(),
-						Count7      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.CurrentRow.And.UnboundedFollowing.ToValue(),
-						Count8      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.None).Rows.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count9      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.First).Range.UnboundedPreceding.ToValue(),
-						Count10     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.First).Range.CurrentRow.ToValue(),
-						Count11     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.First).Range.ValuePreceding(1).ToValue(),
-						Count12     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count13     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1, Sql.NullsPosition.First).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count14     = Sql.Ext.Count().Over().ToValue(),
-
-						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() +
-									  Sql.Sqrt(Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue()) +
-									  Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue() +
-									  Sql.Ext.Count().Over().ToValue(),
-					};
-				var res = q.ToArray();
-				Assert.IsNotEmpty(res);
-			}
-		}
-
-		[ActiveIssue(
-			Configuration         = TestProvName.AllOracle,
-			Details               = "Specified cast is not valid.",
-			SkipForNonLinqService = true)]
-		[Test]
-		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -159,7 +129,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestAvgOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestAvgOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -239,9 +209,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCorrOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCorrOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
+#if NETFRAMEWORK
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
+#endif
+
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -282,7 +257,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -311,7 +286,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -340,7 +315,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarPopOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -377,9 +352,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarSampOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
+#if NETFRAMEWORK
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
+#endif
+
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -414,7 +394,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCumeDistOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestCumeDistOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -464,6 +444,47 @@ namespace Tests.Linq
 						DenseRank1     = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
 				Assert.IsNotEmpty(q2.ToArray());
+			}
+		}
+
+		[Test]
+		public void TestDenseRankOracleSorting([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select new
+					{
+						DenseRank1     = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
+					};
+				Assert.IsNotEmpty(q.ToArray());
+
+				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC)"));
+			}
+		}
+
+		[Test]
+		public void TestRowNumberOracleSorting([IncludeDataSources(false, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select new
+					{
+						DenseRank1     = Sql.Ext.RowNumber().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ThenBy(p.ParentID).ToValue(),
+					};
+				Assert.IsNotEmpty(q.ToArray());
+
+				if (context.IsAnyOf(TestProvName.AllOracle))
+					Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
+				else if (context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER(ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
+				else
+					Assert.Fail("Missing assertion");
 			}
 		}
 
@@ -556,7 +577,7 @@ namespace Tests.Linq
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						ListAgg1  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderBy(p.Value1).ThenBy(p.ParentTest.Value1).ThenByDesc(c.ParentID).ToValue(),
+						ListAgg1  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderBy(p.Value1).ThenBy(p.ParentTest!.Value1).ThenByDesc(c.ParentID).ToValue(),
 						ListAgg2  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderBy(p.Value1, Sql.NullsPosition.Last).ThenByDesc(c.ParentID, Sql.NullsPosition.First).ToValue(),
 						ListAgg3  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderBy(p.Value1, Sql.NullsPosition.First).ThenBy(c.ParentID).ThenBy(c.ParentID, Sql.NullsPosition.First).ToValue(),
 						ListAgg4  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderByDesc(p.Value1).ThenBy(p.ParentTest.Value1).ThenByDesc(c.ParentID).ToValue(),
@@ -571,7 +592,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -609,7 +630,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer)] string context)
+		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -645,8 +666,8 @@ namespace Tests.Linq
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						Median1   = Sql.Ext.Median(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						Median2   = Sql.Ext.Median(p.Value1).Over().ToValue(),
+						Median1 = Sql.Ext.Median(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						Median2 = Sql.Ext.Median(p.Value1).Over().ToValue(),
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
@@ -669,7 +690,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -697,7 +718,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer)] string context)
+		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -761,7 +782,7 @@ namespace Tests.Linq
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						NTile1     = Sql.Ext.NTile(p.Value1.Value).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
+						NTile1     = Sql.Ext.NTile(p.Value1!.Value).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 						NTile2     = Sql.Ext.NTile(1).Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 
 					};
@@ -830,7 +851,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestPercentRankOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestPercentRankOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -857,7 +878,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestPercentRatioToReportOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestPercentRatioToReportOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -875,7 +896,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -893,8 +914,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRankOracle([IncludeDataSources(true,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void TestRankOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -922,8 +942,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRegrOracle([IncludeDataSources(
-			true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void TestRegrOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -950,7 +969,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestStdDevOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -979,7 +998,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDev([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void TestStdDev([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1006,7 +1025,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevPopOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1042,7 +1061,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevSampOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestStdDevSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1078,8 +1097,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSumOracle([IncludeDataSources(true,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1110,7 +1128,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarPopOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1146,9 +1164,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarSampOracle([IncludeDataSources(TestProvName.AllOracle)]
+		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
+#if NETFRAMEWORK
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
+#endif
+
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -1183,7 +1206,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void TestVarianceOracle([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void TestVarianceOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1270,7 +1293,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, ProviderName.Oracle)]string context)
+		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllClickHouse)]string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1289,8 +1312,8 @@ namespace Tests.Linq
 						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
 					};
 
-				Console.WriteLine(q1.ToString());
-				Console.WriteLine(q2.ToString());
+				TestContext.WriteLine(q1.ToString());
+				TestContext.WriteLine(q2.ToString());
 
 				Assert.AreEqual(2, q1.EnumQueries().Count());
 				Assert.AreEqual(3, q2.EnumQueries().Count());
@@ -1298,7 +1321,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Position
+		sealed class Position
 		{
 			[Column] public int  Group { get; set; }
 			[Column] public int  Order { get; set; }
@@ -1313,18 +1336,17 @@ namespace Tests.Linq
 			};
 		}
 
-		// Tests that default LAG behavior matches RESPECT NULLS as per spec, so we don't need to generate RESPECT NULLS token
-		// TODO: needs sqllite 3.25
-		// TODO: needs mysql 8.0/mariadb 10.2
-		// also syntax should be altered (mariadb doesn't support defaults, mysql supports Sql.Nulls.Ignore in other place)
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql })]
 		[Test]
 		public void Issue1732Lag([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
-			ProviderName.Firebird)] string context)
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllMySql55,
+			// doesn't support LAG with 3 parameters
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1358,16 +1380,17 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: needs sqllite 3.25
-		// TODO: needs mysql 8.0/mariadb 10.2
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql })]
 		[Test]
 		public void Issue1732Lead([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
-			ProviderName.Firebird)] string context)
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllMySql55,
+			// doesn't support 3-rd parameter for LEAD
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1399,14 +1422,67 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql })]
+		[Test]
+		public void FirstLastValueIgnoreNulls([IncludeDataSources(
+			TestProvName.AllSqlServer2022Plus,
+			TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Position.TestData))
+			{
+				var group = 7;
+
+				var q =
+					from p in db.GetTable<Position>()
+					where p.Group == @group
+					select new
+					{
+						Id = p.Id,
+						FirstRespect = (int?)Sql.Ext.FirstValue(p.Id, Sql.Nulls.Respect).Over().OrderByDesc(p.Order).ToValue(),
+						FirstIgnore = (int?)Sql.Ext.FirstValue(p.Id, Sql.Nulls.Ignore).Over().OrderByDesc(p.Order).ToValue(),
+						LastRespect = (int?)Sql.Ext.LastValue(p.Id, Sql.Nulls.Respect).Over().OrderBy(p.Order).ToValue(),
+						LastIgnore = (int?)Sql.Ext.LastValue(p.Id, Sql.Nulls.Ignore).Over().OrderBy(p.Order).ToValue(),
+					};
+
+				var res = q.ToArray();
+
+				Assert.AreEqual(4, res.Length);
+
+				Assert.AreEqual(5, res[0].Id);
+				Assert.IsNull(res[0].FirstRespect);
+				Assert.AreEqual(6, res[0].FirstIgnore);
+				Assert.AreEqual(5, res[0].LastRespect);
+				Assert.AreEqual(5, res[0].LastIgnore);
+
+				Assert.AreEqual(6, res[1].Id);
+				Assert.IsNull(res[1].FirstRespect);
+				Assert.AreEqual(6, res[1].FirstIgnore);
+				Assert.AreEqual(6, res[1].LastRespect);
+				Assert.AreEqual(6, res[1].LastIgnore);
+
+				Assert.IsNull(res[2].Id);
+				Assert.IsNull(res[2].FirstRespect);
+				Assert.IsNull(res[2].FirstIgnore);
+				Assert.IsNull(res[2].LastRespect);
+				Assert.AreEqual(6, res[2].LastIgnore);
+
+				Assert.IsNull(res[3].Id);
+				Assert.IsNull(res[3].FirstRespect);
+				Assert.IsNull(res[3].FirstIgnore);
+				Assert.IsNull(res[3].LastRespect);
+				Assert.AreEqual(6, res[3].LastIgnore);
+			}
+		}
+
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37950", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
-			ProviderName.Firebird)] string context)
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1423,7 +1499,7 @@ namespace Tests.Linq
 
 					};
 
-				var res = q.ToArray();
+				var res = q.AsEnumerable().OrderBy(r => r.Id).ToArray();
 
 				Assert.AreEqual(4, res.Length);
 
@@ -1431,21 +1507,22 @@ namespace Tests.Linq
 				Assert.IsNull(res[0].PreviousId);
 				Assert.IsNull(res[1].Id);
 				Assert.IsNull(res[1].PreviousId);
-				Assert.AreEqual(6, res[2].Id);
+				Assert.AreEqual(5, res[2].Id);
 				Assert.IsNull(res[2].PreviousId);
-				Assert.AreEqual(5, res[3].Id);
+				Assert.AreEqual(6, res[3].Id);
 				Assert.IsNull(res[3].PreviousId);
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql })]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37950", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
-			ProviderName.Firebird)] string context)
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1477,17 +1554,20 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: pgsql/SAP HANA doesn't support FROM clause
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, ProviderName.SapHana })]
 		[Test]
 		public void Issue1732NthValue([DataSources(
 			TestProvName.AllSqlServer,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllPostgreSQL,
-			ProviderName.Informix,
+			TestProvName.AllInformix,
 			ProviderName.SqlCe,
-			ProviderName.Access,
-			ProviderName.Firebird)] string context)
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllSQLite,
+			TestProvName.AllSapHana,
+			TestProvName.AllMySql55,
+			TestProvName.AllMariaDB)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1520,7 +1600,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1799Table1
+		sealed class Issue1799Table1
 		{
 			[Column] public int      EventUser { get; set; }
 			[Column] public int      ProcessID { get; set; }
@@ -1528,28 +1608,30 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1799Table2
+		sealed class Issue1799Table2
 		{
-			[Column] public int UserId        { get; set; }
-			[Column] public string UserGroups { get; set; }
+			[Column] public int     UserId        { get; set; }
+			[Column] public string? UserGroups { get; set; }
 		}
 
 		[Table]
-		class Issue1799Table3
+		sealed class Issue1799Table3
 		{
-			[Column] public int    ProcessID   { get; set; }
-			[Column] public string ProcessName { get; set; }
+			[Column] public int     ProcessID   { get; set; }
+			[Column] public string? ProcessName { get; set; }
 		}
 
-		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, ProviderName.Informix, TestProvName.AllOracle })]
 		[Test]
 		public void Issue1799Test1([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
-			ProviderName.Firebird)] string context)
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllOracle,
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1594,15 +1676,17 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: various issues like old db version, minute datepart translation
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, ProviderName.Informix, TestProvName.AllOracle })]
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Access,
-			ProviderName.Firebird)] string context)
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllOracle,
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1645,6 +1729,88 @@ namespace Tests.Linq
 				finalQuery
 					.Take(10)
 					.ToList();
+			}
+		}
+
+		[Test]
+		public void LeadLagWithStringDefault([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllMySql55,
+			// doesn't support 3-rd parameter for LEAD
+			TestProvName.AllMariaDB)] string context)
+		{
+			// #3423: LEAD and LAG `default` parameter can be a type other than int.
+			var data = new Issue1799Table3[]
+			{
+				new() { ProcessID = 1, ProcessName = "One" },
+				new() { ProcessID = 2, ProcessName = "Two" },
+			};
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 1, "None")
+												 	 .Over().OrderBy(p.ProcessID).ToValue())
+								 .ToArray();
+
+				CollectionAssert.AreEqual(new[] { "Two", "None" }, leads);
+
+
+				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 1, "None")
+												 	.Over().OrderBy(p.ProcessID).ToValue())
+								.ToArray();
+
+				CollectionAssert.AreEqual(new[] { "None", "One" }, lags);
+			}
+		}
+
+		[Test]
+		public void LeadLagOverloads([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.AllMySql55)] string context)
+		{
+			var data = new Issue1799Table3[]
+			{
+				new() { ProcessID = 1, ProcessName = "One" },
+				new() { ProcessID = 2, ProcessName = "Two" },
+				new() { ProcessID = 3, ProcessName = "Three" },
+				new() { ProcessID = 4, ProcessName = "Four" },
+			};
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 2)
+												 	 .Over().OrderBy(p.ProcessID).ToValue())
+								 .ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { "Three", "Four", null, null }, leads);
+
+				leads = table.Select(p => Sql.Ext.Lead(p.ProcessName)
+											 	 .Over().OrderBy(p.ProcessID).ToValue())
+							 .ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { "Two", "Three", "Four", null }, leads);
+
+				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 2)
+												 	.Over().OrderBy(p.ProcessID).ToValue())
+								.ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { null, null, "One", "Two" }, lags);
+
+				lags = table.Select(p => Sql.Ext.Lag(p.ProcessName)
+										 	.Over().OrderBy(p.ProcessID).ToValue())
+							.ToArray();
+
+				CollectionAssert.AreEqual(new string?[] { null, "One", "Two", "Three" }, lags);
 			}
 		}
 	}

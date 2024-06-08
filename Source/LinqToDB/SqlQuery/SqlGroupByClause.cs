@@ -1,28 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	public enum GroupingType
+	{
+		Default,
+		GroupBySets,
+		Rollup,
+		Cube
+	}
+
 	public class SqlGroupByClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
 	{
+
 		internal SqlGroupByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
 		}
 
-		internal SqlGroupByClause(
-			SelectQuery   selectQuery,
-			SqlGroupByClause clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
+		internal SqlGroupByClause(GroupingType groupingType, IEnumerable<ISqlExpression> items) : base(null)
 		{
-			Items.AddRange(clone.Items.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)));
-		}
-
-		internal SqlGroupByClause(IEnumerable<ISqlExpression> items) : base(null)
-		{
+			GroupingType = groupingType;
 			Items.AddRange(items);
 		}
 
@@ -46,9 +45,28 @@ namespace LinqToDB.SqlQuery
 			Items.Add(expr);
 		}
 
+		public GroupingType GroupingType  { get; set; } = GroupingType.Default;
 		public List<ISqlExpression> Items { get; } = new List<ISqlExpression>();
 
 		public bool IsEmpty => Items.Count == 0;
+
+		public IEnumerable<ISqlExpression> EnumItems()
+		{
+			foreach (var item in Items)
+			{
+				if (item is SqlGroupingSet groupingSet)
+				{
+					foreach (var gropingSetItem in groupingSet.Items)
+					{
+						yield return gropingSetItem;
+					}
+				}
+				else
+				{
+					yield return item;
+				}
+			}
+		}
 
 #if OVERRIDETOSTRING
 
@@ -61,10 +79,10 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var i = 0; i < Items.Count; i++)
-				Items[i] = Items[i].Walk(options, func);
+				Items[i] = Items[i].Walk(options, context, func)!;
 
 			return null;
 		}
@@ -80,16 +98,36 @@ namespace LinqToDB.SqlQuery
 			if (Items.Count == 0)
 				return sb;
 
-			sb.Append(" \nGROUP BY \n");
+			sb.Append(" \nGROUP BY");
+			switch (GroupingType)
+			{
+				case GroupingType.Default:
+					sb.Append('\n');
+					break;
+				case GroupingType.GroupBySets:
+					sb.Append(" GROUPING SETS (\n");
+					break;
+				case GroupingType.Rollup:
+					sb.Append(" ROLLUP (\n");
+					break;
+				case GroupingType.Cube:
+					sb.Append(" CUBE (\n");
+					break;
+				default:
+					throw new InvalidOperationException($"Unexpected grouping type: {GroupingType}");
+			}
 
 			foreach (var item in Items)
 			{
 				sb.Append('\t');
 				item.ToString(sb, dic);
-				sb.Append(",");
+				sb.Append(',');
 			}
 
 			sb.Length--;
+
+			if (GroupingType != GroupingType.Default)
+				sb.Append(')');
 
 			return sb;
 		}

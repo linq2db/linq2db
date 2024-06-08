@@ -1,53 +1,80 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue1925Tests : TestBase
 	{
 
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
-			[Column] public int Id { get; set; }
-			[Column] public string Value { get; set; }
+			[Column] public int     Id    { get; set; }
+			[Column] public string? Value { get; set; }
 		}
 
 		[Test]
-		[ActiveIssue(1925)]
-		public void Issue1925Test([IncludeDataSources(ProviderName.Access, ProviderName.SqlServer, ProviderName.Sybase)]  string context)
+		public void Issue1925Test([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer, ProviderName.Sybase, TestProvName.AllClickHouse)]  string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
+			var data = new[]
 			{
+				new SampleClass() { Id = 1, Value = "6" }, 
+				new SampleClass() { Id = 2, Value = "x[0-9]x" },
+				new SampleClass() { Id = 3, Value = "x[0x" },
+				new SampleClass() { Id = 4, Value = "x[]x" },
+				new SampleClass() { Id = 5, Value = "x]" },
+				new SampleClass() { Id = 6, Value = "]x" },
+			};
 
-				table.Insert(() => new SampleClass() { Id = 1, Value = "6" });
-				Assert.AreEqual(1, table.ToList().Count());
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
 				var asParam = "[0-9]";
 				var asParamUnterm = "[0";
+				
 
-				Assert.AreEqual(0, table.Where(r => r.Value.Contains("[0")).ToList().Count());
+				Assert.AreEqual(5, table.Where(r => r.Value!.EndsWith("]")).Select(r => r.Id).Single());
+				Assert.AreEqual(6, table.Where(r => r.Value!.StartsWith("]")).Select(r => r.Id).Single());
 
-				Assert.AreEqual(0, table.Where(r => r.Value.Contains(asParamUnterm)).ToList().Count());
+				Assert.AreEqual(2, table.Where(r => r.Value!.Contains("-")).Select(r => r.Id).Single());
 
-				Assert.AreEqual(1, table.Where(r => r.Value.Contains("[0-9]")).ToList().Count());
+				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("[]")).ToList().Count);
 
-				Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList().Count());
-				Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList().Count());
+				Assert.AreEqual(2, table.Where(r => r.Value!.Contains("[0")).ToList().Count);
+				
+				Assert.AreEqual(2, table.Where(r => r.Value!.Contains(asParamUnterm)).ToList().Count);
 
+				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("[0-9]")).ToList().Count);
 
-				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, "[0-9]")).ToList().Count());
+				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("6")).ToList().Count);
 
-				Assert.AreEqual(1, table.Where(r => Sql.Like(r.Value, asParam)).ToList().Count());
+				if (context.IsAnyOf(ProviderName.Access))
+				{
+#pragma warning disable CA1416 // windows-specific API
+					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
+					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
+#pragma warning disable CA1416
+				}
+				else if (context.IsAnyOf(ProviderName.AccessOdbc))
+				{
+					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
+					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
+				}
+				else
+				{
+					table.Where(r => Sql.Like(r.Value, "[0")).ToList();
+					table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList();
+				}
 
+				var expected = context.IsAnyOf(TestProvName.AllClickHouse) ? 0 : 1;
+				Assert.AreEqual(expected, table.Where(r => Sql.Like(r.Value, "[0-9]")).ToList().Count);
+				Assert.AreEqual(expected, table.Where(r => Sql.Like(r.Value, asParam)).ToList().Count);
 			}
 		}
 		

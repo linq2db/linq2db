@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class DropBuilder : MethodCallBuilder
+	sealed class DropBuilder : MethodCallBuilder
 	{
 		#region DropBuilder
 
@@ -23,30 +23,25 @@ namespace LinqToDB.Linq.Builder
 
 			if (methodCall.Arguments.Count == 2)
 			{
-				if (methodCall.Arguments[1] is ConstantExpression c)
+				if (methodCall.Arguments[1].Type == typeof(bool))
 				{
-					ifExists = !(bool)c.Value;
+					ifExists = !(bool)methodCall.Arguments[1].EvaluateExpression(builder.DataContext)!;
 				}
 			}
 
-			sequence.Statement = new SqlDropTableStatement(ifExists) {Table = sequence.SqlTable};
+			sequence.SqlTable.Set(ifExists, TableOptions.DropIfExists);
+			sequence.Statement = new SqlDropTableStatement(sequence.SqlTable);
 
 			return new DropContext(buildInfo.Parent, sequence);
-		}
-
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
-		{
-			return null;
 		}
 
 		#endregion
 
 		#region DropContext
 
-		class DropContext : SequenceContextBase
+		sealed class DropContext : SequenceContextBase
 		{
-			public DropContext(IBuildContext parent, IBuildContext sequence)
+			public DropContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)
 			{
 			}
@@ -56,27 +51,27 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetNonQueryQuery(query);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}

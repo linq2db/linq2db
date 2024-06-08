@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq.Expressions;
-using System.Security;
+using System.Data.Common;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,233 +9,236 @@ namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
 	using Data;
-	using Extensions;
+	using Linq.Internal;
 	using Mapping;
 	using SqlProvider;
 
-	public class InformixDataProvider : DynamicDataProviderBase
-	{
-		public InformixDataProvider()
-			: this(ProviderName.Informix, new InformixMappingSchema())
-		{
-		}
+	sealed class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix)    {} }
+	sealed class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2) {} }
 
-		protected InformixDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+	public abstract class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
+	{
+		protected InformixDataProvider(string providerName)
+			: base(providerName, GetMappingSchema(providerName), InformixProviderAdapter.GetInstance(providerName))
 		{
-			SqlProviderFlags.IsParameterOrderDependent         = true;
+			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
-			SqlProviderFlags.IsGroupByExpressionSupported      = false;
 			SqlProviderFlags.IsCrossJoinSupported              = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.IsGroupByColumnRequred            = true;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
+			SqlProviderFlags.IsExistsPreferableForContains     = true;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("CHAR",  (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("NCHAR", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("CHAR",  DataTools.GetCharExpression);
+			SetCharFieldToType<char>("NCHAR", DataTools.GetCharExpression);
 
-			if (!Configuration.AvoidSpecificDataProviderAPI)
-			{
-				SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
-				SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
-				SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
+			SetProviderField<DbDataReader, float,  float  >((r,i) => GetFloat  (r, i));
+			SetProviderField<DbDataReader, double, double >((r,i) => GetDouble (r, i));
+			SetProviderField<DbDataReader, decimal,decimal>((r,i) => GetDecimal(r, i));
 
-				SetField<IDataReader, float  >((r, i) => GetFloat  (r, i));
-				SetField<IDataReader, double >((r, i) => GetDouble (r, i));
-				SetField<IDataReader, decimal>((r, i) => GetDecimal(r, i));
-			}
+			SetField<DbDataReader, float  >((r, i) => GetFloat  (r, i));
+			SetField<DbDataReader, double >((r, i) => GetDouble (r, i));
+			SetField<DbDataReader, decimal>((r, i) => GetDecimal(r, i));
 
 			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags);
+
+			if (Adapter.GetBigIntReaderMethod != null)
+				SetField(typeof(long), "BIGINT", Adapter.GetBigIntReaderMethod, false, dataReaderType: Adapter.DataReaderType);
+
+			if (Name == ProviderName.Informix && Adapter.DecimalType != null)
+											  SetProviderField(Adapter.DecimalType , typeof(decimal) , Adapter.GetDecimalReaderMethod!, dataReaderType: Adapter.DataReaderType);
+			if (Adapter.DateTimeType != null) SetProviderField(Adapter.DateTimeType, typeof(DateTime), Adapter.GetDateTimeReaderMethod, dataReaderType: Adapter.DataReaderType);
+			if (Adapter.TimeSpanType != null) SetProviderField(Adapter.TimeSpanType, typeof(TimeSpan), Adapter.GetTimeSpanReaderMethod, dataReaderType: Adapter.DataReaderType);
 		}
 
-		static float GetFloat(IDataReader dr, int idx)
+		[ColumnReader(1)]
+		static float GetFloat(DbDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetFloat(idx);
 		}
 
-		static double GetDouble(IDataReader dr, int idx)
+		[ColumnReader(1)]
+		static double GetDouble(DbDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetDouble(idx);
 		}
 
-		static decimal GetDecimal(IDataReader dr, int idx)
+		[ColumnReader(1)]
+		static decimal GetDecimal(DbDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetDecimal(idx);
 		}
 
-		Type _ifxBlob;
-		Type _ifxClob;
-		Type _ifxDecimal;
-		Type _ifxDateTime;
-		Type _ifxTimeSpan;
+		public override IExecutionScope ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(null);
 
-		public override IDisposable ExecuteScope()
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary               |
+			TableOptions.IsLocalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData      |
+			TableOptions.CreateIfNotExists         |
+			TableOptions.DropIfExists;
+
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new InvariantCultureRegion();
-		}
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-			_ifxBlob     = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxBlob",     true);
-			_ifxClob     = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxClob",     true);
-			_ifxDecimal  = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxDecimal",  true);
-			_ifxDateTime = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxDateTime", true);
-			_ifxTimeSpan = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxTimeSpan", true);
-
-			if (!Configuration.AvoidSpecificDataProviderAPI)
-			{
-				SetField(typeof(Int64), "BIGINT", "GetBigInt", false);
-
-				SetProviderField(_ifxDecimal,  typeof(decimal),  "GetIfxDecimal");
-				SetProviderField(_ifxDateTime, typeof(DateTime), "GetIfxDateTime");
-				SetProviderField(_ifxTimeSpan, typeof(TimeSpan), "GetIfxTimeSpan", false);
-			}
-
-			var p = Expression.Parameter(typeof(TimeSpan));
-
-			_newIfxTimeSpan = Expression.Lambda<Func<TimeSpan,object>>(
-				Expression.Convert(
-					Expression.New(_ifxTimeSpan.GetConstructorEx(new[] { typeof(TimeSpan) }), p),
-					typeof(object)),
-				p).Compile();
-
-			_setText = GetSetParameter(connectionType, "IfxParameter", "IfxType", "IfxType", "Clob");
-
-			MappingSchema.AddScalarType(_ifxBlob,     GetNullValue(_ifxBlob),     true, DataType.VarBinary);
-			MappingSchema.AddScalarType(_ifxClob,     GetNullValue(_ifxClob),     true, DataType.Text);
-			MappingSchema.AddScalarType(_ifxDateTime, GetNullValue(_ifxDateTime), true, DataType.DateTime2);
-			MappingSchema.AddScalarType(_ifxDecimal,  GetNullValue(_ifxDecimal),  true, DataType.Decimal);
-			MappingSchema.AddScalarType(_ifxTimeSpan, GetNullValue(_ifxTimeSpan), true, DataType.Time);
-			//AddScalarType(typeof(IfxMonthSpan),   IfxMonthSpan.  Null, DataType.Time);
-		}
-
-		static object GetNullValue(Type type)
-		{
-			try
-			{
-				var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
-				return getValue.Compile()();
-			}
-			catch (SecurityException)
-			{
-				return null;
-			}
-		}
-
-		public    override string ConnectionNamespace => "IBM.Data.Informix";
-		protected override string ConnectionTypeName  => "IBM.Data.Informix.IfxConnection, IBM.Data.Informix";
-		protected override string DataReaderTypeName  => "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix";
-
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-		public override string DbFactoryProviderName => "IBM.Data.Informix";
-#endif
-
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
-		{
-			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			return new InformixSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions)
 		{
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new InformixSchemaProvider();
+			return new InformixSchemaProvider(this);
 		}
-#endif
 
-		Func<TimeSpan,object> _newIfxTimeSpan;
-
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is TimeSpan ts)
 			{
-				if (dataType.DataType != DataType.Int64)
-					value = _newIfxTimeSpan(ts);
+				// TODO: we should reverse Int64 check somehow, as now it pollutes multiple places
+				// and will not work with other not-interval mappings
+				if (Adapter.TimeSpanFactory != null && dataType.DataType != DataType.Int64)
+					value = Adapter.TimeSpanFactory(ts);
 			}
 			else if (value is Guid || value == null && dataType.DataType == DataType.Guid)
 			{
-				value    = value?.ToString();
+				value    = value == null ? null : string.Format(CultureInfo.InvariantCulture, "{0}", value);
 				dataType = dataType.WithDataType(DataType.Char);
+			}
+			else if (value is byte byteValue && dataType.DataType == DataType.Int16)
+			{
+				value = (short)byteValue;
 			}
 			else if (value is bool b)
 			{
-				value = b ? 't' : 'f';
-				dataType = dataType.WithDataType(DataType.Char);
+				// IDS provider needs short values for bulk copy, but chars still for regular SQL
+				if (parameter is BulkCopyReader.Parameter)
+				{
+					value    = (short)(b ? 1 : 0);
+					dataType = dataType.WithDataType(DataType.Int16);
+				}
+				else
+				{
+					value    = b ? 't' : 'f';
+					dataType = dataType.WithDataType(DataType.Char);
+				}
 			}
+#if NET6_0_OR_GREATER
+			else if (value is DateOnly d)
+			{
+				value = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		Action<IDbDataParameter> _setText;
-
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
+			if (parameter is BulkCopyReader.Parameter)
+				return;
+
+			InformixProviderAdapter.IfxType? idsType = null;
+			DB2.DB2ProviderAdapter.DB2Type?  db2Type = null;
+
+			switch (dataType.DataType)
+			{
+				case DataType.Text      :
+				case DataType.NText     :
+					idsType = InformixProviderAdapter.IfxType.Clob;
+					db2Type = DB2.DB2ProviderAdapter .DB2Type.Clob;
+					break;
+			}
+
+			if (idsType != null && db2Type != null)
+			{
+				var param = TryGetProviderParameter(dataConnection, parameter);
+				if (param != null)
+				{
+					if (Adapter.SetIfxType != null)
+						Adapter.SetIfxType(param, idsType.Value);
+					else
+						Adapter.SetDB2Type!(param, db2Type.Value);
+					return;
+				}
+			}
+
 			switch (dataType.DataType)
 			{
 				case DataType.UInt16    : dataType = dataType.WithDataType(DataType.Int32);    break;
 				case DataType.UInt32    : dataType = dataType.WithDataType(DataType.Int64);    break;
-				case DataType.UInt64    : dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.UInt64    :
 				case DataType.VarNumeric: dataType = dataType.WithDataType(DataType.Decimal);  break;
 				case DataType.DateTime2 : dataType = dataType.WithDataType(DataType.DateTime); break;
-				case DataType.Text      : _setText(parameter); return;
-				case DataType.NText     : _setText(parameter); return;
+				case DataType.Text      :
+				case DataType.NText     : dataType = dataType.WithDataType(DataType.NVarChar); break;
 			}
 
-			base.SetParameterType(parameter, dataType);
+			base.SetParameterType(dataConnection, parameter, dataType);
+		}
+
+		static MappingSchema GetMappingSchema(string name)
+		{
+			return name switch
+			{
+				ProviderName.Informix => new InformixMappingSchema.IfxMappingSchema(),
+				_                     => new InformixMappingSchema.DB2MappingSchema(),
+			};
 		}
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
-			return new InformixBulkCopy().BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
+			return new InformixBulkCopy(this).BulkCopy(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(InformixOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		#endregion
-
-		#region Merge
-
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (delete)
-				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
-
-			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
+			return new InformixBulkCopy(this).BulkCopyAsync(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(InformixOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
 		}
 
-		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
+#if NATIVE_ASYNC
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (delete)
-				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
-
-			return new InformixMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+			return new InformixBulkCopy(this).BulkCopyAsync(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(InformixOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
 		}
-
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget, TSource> merge)
-		{
-			return new InformixMergeBuilder<TTarget, TSource>(connection, merge);
-		}
+#endif
 
 		#endregion
 	}

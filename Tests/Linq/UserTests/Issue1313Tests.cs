@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -106,15 +105,15 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestQuery([DataSources(false, ProviderName.SQLiteMS)] string context)
+		public void TestQuery([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				using (var table = db.CreateLocalTable<ValueItem>())
 				{
 					table.Insert(() => new ValueItem { Value = 123 });
 
-					IQueryable<I1313_Derived> query = null;
+					IQueryable<I1313_Derived>? query = null;
 					Assert.DoesNotThrow(() =>
 						query =
 							from row in table
@@ -129,7 +128,7 @@ namespace Tests.UserTests
 					);
 
 					// Ensure the expected records are returned
-					var records = query.ToArray();
+					var records = query!.ToArray();
 					Assert.IsNotNull(records);
 					Assert.AreEqual(1, records.Length);
 

@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
-	public class Precedence
+	public sealed class Precedence
 	{
 		public const int Primary            = 100; // (x) x.y f(x) a[x] x++ x-- new typeof sizeof checked unchecked
 		public const int Unary              =  90; // + - ! ++x --x (T)x

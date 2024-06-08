@@ -6,62 +6,45 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlDropTableStatement : SqlStatement
 	{
-		public SqlDropTableStatement(bool ifExists)
+		public SqlDropTableStatement(SqlTable table)
 		{
-			IfExists = ifExists;
+			Table = table;
 		}
 
-		public SqlTable Table { get; set; }
+		public SqlTable Table { get; }
 
 		public override QueryType        QueryType    => QueryType.DropTable;
 		public override QueryElementType ElementType  => QueryElementType.DropTableStatement;
 		public override bool             IsParameterDependent { get => false; set {} }
-		public override SelectQuery      SelectQuery          { get => null;  set {} }
-		public          bool             IfExists             { get; }
+		public override SelectQuery?     SelectQuery          { get => null;  set {} }
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			sb.Append("DROP TABLE ");
 
-			((IQueryElement)Table)?.ToString(sb, dic);
+			((IQueryElement?)Table)?.ToString(sb, dic);
 
 			sb.AppendLine();
 
 			return sb;
 		}
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Table)?.Walk(options, func);
-
-			return null;
+			((ISqlExpressionWalkable?)Table)?.Walk(options, context, func);
+			return base.Walk(options, context, func);
 		}
 
-		public override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlDropTableStatement(IfExists);
-
-			if (Table != null)
-				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			return null;
 		}
 
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
 			if (SelectQuery != null)
 			{
-				var newQuery = func(SelectQuery);
+				var newQuery = func(context, SelectQuery);
 				if (!ReferenceEquals(newQuery, SelectQuery))
 					SelectQuery = newQuery;
 			}

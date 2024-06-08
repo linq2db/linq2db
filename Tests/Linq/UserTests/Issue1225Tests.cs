@@ -12,20 +12,20 @@ namespace Tests.UserTests
 	public class Issue1225Tests : TestBase
 	{
 		[Table]
-		class Task
+		sealed class Task
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
 
 			[Association(ExpressionPredicate = nameof(ActualStageExp))]
-			public TaskStage ActualStage { get; set; }
+			public TaskStage? ActualStage { get; set; }
 
 			private static Expression<Func<Task, TaskStage, bool>> ActualStageExp()
 				=> (t, ts) => t.Id == ts.TaskId && ts.Actual == true;
 		}
 
 		[Table]
-		class TaskStage
+		sealed class TaskStage
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
@@ -39,33 +39,33 @@ namespace Tests.UserTests
 			public bool Actual { get; set; }
 		}
 
-		private class GroupByWrapper
+		private sealed class GroupByWrapper
 		{
 			public GroupByWrapper()
 			{
 			}
 
-			public LastInChain GroupByContainer { get; set; }
+			public LastInChain GroupByContainer { get; set; } = null!;
 		}
 
-		private class LastInChain
+		private sealed class LastInChain
 		{
 			public LastInChain()
 			{
 			}
 
-			public string Name { get; set; }
-			public object Value { get; set; }
+			public string  Name  { get; set; } = null!;
+			public object? Value { get; set; }
 		}
 
-		private class AggregationWrapper
+		private sealed class AggregationWrapper
 		{
 			public AggregationWrapper()
 			{
 			}
 
-			public LastInChain GroupByContainer { get; set; }
-			public LastInChain Container { get; set; }
+			public LastInChain GroupByContainer { get; set; } = null!;
+			public LastInChain Container        { get; set; } = null!;
 		}
 
 		[Test]

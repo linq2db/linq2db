@@ -14,7 +14,7 @@ namespace Tests.Tools
 		{
 			var str = new[] { 1, 2, 222 }.ToDiagnosticString();
 
-			Console.Write(str);
+			TestContext.Write(str);
 
 			Assert.AreEqual(str.Replace("\r", "").Replace("\n", ""), @"Count : 3
 +-------+
@@ -26,9 +26,9 @@ namespace Tests.Tools
 +-------+".Replace("\r", "").Replace("\n", ""));
 		}
 
-		class TestDiagnostic
+		sealed class TestDiagnostic
 		{
-			public string   StringValue;
+			public string?  StringValue;
 			public DateTime DateTimeValue { get; set; }
 			public decimal  DecimalValue  { get; set; }
 		}
@@ -45,7 +45,7 @@ namespace Tests.Tools
 				new TestDiagnostic { StringValue = "dkjdkdjkl102398 3 1231233",   DateTimeValue = new DateTime(2016, 10, 23), DecimalValue = 1111111 },
 			}.ToDiagnosticString();
 
-			Console.Write(str);
+			TestContext.Write(str);
 
 			Assert.AreEqual(str.Replace("\r", "").Replace("\n", ""), @"Count : 4
 +---------------------+--------------+-----------------------------+

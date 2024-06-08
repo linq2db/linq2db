@@ -15,9 +15,9 @@ namespace Tests.UserTests
 			[PrimaryKey]
 			public int    ID     { get; set; }
 			[Column(Length = 10)]
-			public byte[] Array  { get; set; }
+			public byte[]? Array  { get; set; }
 			[Column(Length = 10)]
-			public Binary Binary { get; set; }
+			public Binary? Binary { get; set; }
 		}
 
 		[Test]
@@ -27,7 +27,7 @@ namespace Tests.UserTests
 			using (var tbl = db.CreateLocalTable<Issue1303>())
 			{
 				// Informix: apply inlining to insert to test binary parameters
-				if (context.StartsWith("Informix"))
+				if (context.IsAnyOf(TestProvName.AllInformix))
 					db.InlineParameters = inlineParameters;
 
 				tbl.Insert(() => new Issue1303()
@@ -42,22 +42,22 @@ namespace Tests.UserTests
 				var byId     = tbl.Where(_ => _.ID == 1).Single();
 
 				Assert.AreEqual(1, byId.ID);
-				Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byId.Array));
-				Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byId.Binary.ToArray()));
+				Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byId.Array!));
+				Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byId.Binary!.ToArray()));
 
 				// Informix: doesn't support blobs in conditions
-				if (!context.StartsWith("Informix"))
+				if (!context.IsAnyOf(TestProvName.AllInformix))
 				{
 					var byArray  = tbl.Where(_ => _.Array  == new byte[] { 1, 2, 3 })         .Single();
 					var byBinary = tbl.Where(_ => _.Binary == new Binary(new byte[] { 4, 5 })).Single();
 
 					Assert.AreEqual(1, byArray.ID);
-					Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byArray.Array));
-					Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byArray.Binary.ToArray()));
+					Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byArray.Array!));
+					Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byArray.Binary!.ToArray()));
 
 					Assert.AreEqual(1, byBinary.ID);
-					Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byBinary.Array));
-					Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byBinary.Binary.ToArray()));
+					Assert.True(new byte[] { 1, 2, 3 }.SequenceEqual(byBinary.Array!));
+					Assert.True(new byte[] { 4, 5 }   .SequenceEqual(byBinary.Binary!.ToArray()));
 				}
 			}
 		}

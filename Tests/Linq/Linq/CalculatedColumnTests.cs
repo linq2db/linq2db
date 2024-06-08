@@ -16,14 +16,14 @@ namespace Tests.Linq
 		[Table(Name="Person")]
 		public class PersonCalculated
 		{
-			[Column, PrimaryKey,  Identity] public int    PersonID   { get; set; } // INTEGER
-			[Column, NotNull              ] public string FirstName  { get; set; }
-			[Column, NotNull              ] public string LastName   { get; set; }
-			[Column,    Nullable          ] public string MiddleName { get; set; } // VARCHAR(50)
-			[Column, NotNull              ] public char   Gender     { get; set; } // CHARACTER(1)
+			[Column, PrimaryKey,  Identity] public int     PersonID   { get; set; } // INTEGER
+			[Column, NotNull              ] public string  FirstName  { get; set; } = null!;
+			[Column, NotNull              ] public string  LastName   { get; set; } = null!;
+			[Column,    Nullable          ] public string? MiddleName { get; set; } // VARCHAR(50)
+			[Column, NotNull              ] public char    Gender     { get; set; } // CHARACTER(1)
 
 			[ExpressionMethod(nameof(GetFullNameExpr), IsColumn = true)]
-			public string FullName { get; set; }
+			public string FullName { get; set; } = null!;
 
 			static Expression<Func<PersonCalculated, string>> GetFullNameExpr()
 			{
@@ -31,7 +31,7 @@ namespace Tests.Linq
 			}
 
 			[ExpressionMethod(nameof(GetAsSqlFullNameExpr), IsColumn = true)]
-			public string AsSqlFullName { get; set; }
+			public string AsSqlFullName { get; set; } = null!;
 
 			static Expression<Func<PersonCalculated, string>> GetAsSqlFullNameExpr()
 			{
@@ -53,15 +53,15 @@ namespace Tests.Linq
 		public class DoctorCalculated
 		{
 			[Column, PrimaryKey, Identity] public int    PersonID { get; set; } // Long
-			[Column(Length = 50), NotNull] public string Taxonomy { get; set; } // text(50)
+			[Column(Length = 50), NotNull] public string Taxonomy { get; set; } = null!; // text(50)
 
 			// Many association for test
-			[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull = false, KeyName="PersonDoctor", BackReferenceName="PersonDoctor")]
-			public IEnumerable<PersonCalculated> PersonDoctor { get; set; }
+			[Association(ThisKey = "PersonID", OtherKey = "PersonID", CanBeNull = false)]
+			public IEnumerable<PersonCalculated> PersonDoctor { get; set; } = null!;
 		}
 
 		[Test]
-		public void CalculatedColumnTest1([DataSources] string context)
+		public void CalculatedColumnTest1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -77,7 +77,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnTest2([DataSources] string context)
+		public void CalculatedColumnTest2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -94,7 +94,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnTest3([DataSources] string context)
+		public void CalculatedColumnTest3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -117,7 +117,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CalculatedColumnTest4([DataSources] string context)
+		public void CalculatedColumnTest4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -129,6 +129,48 @@ namespace Tests.Linq
 				Assert.That(l,                  Is.Not.Empty);
 				Assert.That(l[0].AsSqlFullName, Is.Not.Null);
 				Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
+			}
+		}
+
+		[Table("Person")]
+		public class CustomPerson1
+		{
+			[ExpressionMethod(nameof(Expr), IsColumn = true)]
+			public string? MiddleNamePreview { get; set; }
+
+			private static Expression<Func<CustomPerson1, string?>> Expr()
+			{
+				return e => Sql.TableField<CustomPerson1, string>(e, "MiddleName").Substring(0, 200);
+			}
+		}
+
+		[Table("Person")]
+		public class CustomPerson2
+		{
+			[ExpressionMethod(nameof(Expr), IsColumn = true)]
+			public string? MiddleNamePreview { get; set; }
+
+			private static Expression<Func<CustomPerson2, string?>> Expr()
+			{
+				return e => Sql.Property<string>(e, "MiddleName").Substring(0, 200);
+			}
+		}
+
+		[Test]
+		public void CalculatedColumnExpression1([IncludeDataSources(true, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				_ = db.GetTable<CustomPerson1>().ToArray();
+			}
+		}
+
+		[Test]
+		public void CalculatedColumnExpression2([IncludeDataSources(true, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				_ = db.GetTable<CustomPerson2>().ToArray();
 			}
 		}
 	}

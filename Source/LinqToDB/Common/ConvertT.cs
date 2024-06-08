@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -7,12 +8,24 @@ namespace LinqToDB.Common
 {
 	using Expressions;
 
-	/// <summary>
-	/// Converters provider for value conversion from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> type.
-	/// </summary>
-	/// <typeparam name="TFrom">Source conversion type.</typeparam>
-	/// <typeparam name="TTo">Target conversion type.</typeparam>
-	[PublicAPI]
+	// moved to non-generic class to avoid instance-per-generic
+	internal sealed class ConvertReducer
+	{
+		internal static readonly TransformVisitor<object?> ReducerVisitor = TransformVisitor<object?>.Create(Reducer);
+		private static Expression Reducer(Expression e)
+		{
+			return e is DefaultValueExpression
+				? e.Reduce()
+				: e;
+		}
+	}
+
+/// <summary>
+/// Converters provider for value conversion from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> type.
+/// </summary>
+/// <typeparam name="TFrom">Source conversion type.</typeparam>
+/// <typeparam name="TTo">Target conversion type.</typeparam>
+[PublicAPI]
 	public static class Convert<TFrom,TTo>
 	{
 		static Convert()
@@ -20,16 +33,20 @@ namespace LinqToDB.Common
 			Init();
 		}
 
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[MemberNotNull(nameof(_expression), nameof(_lambda))]
+#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		static void Init()
 		{
 			var expr = ConvertBuilder.GetConverter(null, typeof(TFrom), typeof(TTo));
 
 			_expression = (Expression<Func<TFrom,TTo>>)expr.Item1;
 
-			var rexpr = (Expression<Func<TFrom,TTo>>)expr.Item1.Transform(e => e is DefaultValueExpression ? e.Reduce() : e);
+			var rexpr = (Expression<Func<TFrom,TTo>>)ConvertReducer.ReducerVisitor.Transform(expr.Item1);
 
-			_lambda = rexpr.Compile();
+			_lambda = rexpr.CompileExpression();
 		}
+
 
 		private static Expression<Func<TFrom,TTo>> _expression;
 		/// <summary>
@@ -38,6 +55,7 @@ namespace LinqToDB.Common
 		/// Assigning <c>null</c> value will reset converter to default conversion logic.
 		/// Assigning non-null value will also set converter as default converter.
 		/// </summary>
+		[AllowNull]
 		public  static Expression<Func<TFrom,TTo>>  Expression
 		{
 			get => _expression;
@@ -52,13 +70,14 @@ namespace LinqToDB.Common
 				else
 				{
 					_expression = value;
-					_lambda = _expression.Compile();
+					_lambda = _expression.CompileExpression();
 				}
 
 				if (setDefault)
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
+						ConversionType.Common,
 						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
 			}
 		}
@@ -70,6 +89,7 @@ namespace LinqToDB.Common
 		/// Assigning <c>null</c> value will reset converter to default conversion logic.
 		/// Assigning non-null value will also set converter as default converter.
 		/// </summary>
+		[AllowNull]
 		public static  Func<TFrom,TTo>  Lambda
 		{
 			get => _lambda;
@@ -98,6 +118,7 @@ namespace LinqToDB.Common
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
+						ConversionType.Common,
 						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
 			}
 		}

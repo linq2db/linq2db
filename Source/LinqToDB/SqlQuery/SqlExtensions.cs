@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq.Expressions;
 
 namespace LinqToDB.SqlQuery
 {
@@ -9,7 +10,6 @@ namespace LinqToDB.SqlQuery
 	/// </summary>
 	public static class SqlExtensions
 	{
-
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
@@ -18,7 +18,8 @@ namespace LinqToDB.SqlQuery
 		{
 			return
 				statement.QueryType == QueryType.Insert ||
-				statement.QueryType == QueryType.InsertOrUpdate;
+				statement.QueryType == QueryType.InsertOrUpdate ||
+				statement.QueryType == QueryType.MultiInsert;
 		}
 
 		/// <summary>
@@ -43,35 +44,41 @@ namespace LinqToDB.SqlQuery
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static SqlField GetIdentityField(this SqlStatement statement)
+		public static bool IsDelete(this SqlStatement statement)
 		{
-			return statement.GetInsertClause()?.Into.GetIdentityField();
+			return statement != null && statement.QueryType == QueryType.Delete;
 		}
 
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static SqlInsertClause GetInsertClause(this SqlStatement statement)
+		public static SqlField? GetIdentityField(this SqlStatement statement)
 		{
-			switch (statement)
-			{
-				case SqlInsertStatement insert:
-					return insert.Insert;
-				case SqlInsertOrUpdateStatement update:
-					return update.Insert;
-			}
-			return null;
+			return statement.GetInsertClause()?.Into!.GetIdentityField();
 		}
 
-		public static SqlWithClause GetWithClause(this SqlStatement statement)
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
+		public static SqlInsertClause? GetInsertClause(this SqlStatement statement)
 		{
-			switch (statement)
+			return statement switch
 			{
-				case SqlStatementWithQueryBase query:
-					return query.With;
-			}
-			return null;
+				SqlInsertStatement insert         => insert.Insert,
+				SqlInsertOrUpdateStatement update => update.Insert,
+				_                                 => null,
+			};
+		}
+
+		public static SqlWithClause? GetWithClause(this SqlStatement statement)
+		{
+			return statement switch
+			{
+				SqlStatementWithQueryBase query => query.With,
+				_                               => null,
+			};
 		}
 
 		/// <summary>
@@ -90,16 +97,14 @@ namespace LinqToDB.SqlQuery
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static SqlUpdateClause GetUpdateClause(this SqlStatement statement)
+		public static SqlUpdateClause? GetUpdateClause(this SqlStatement statement)
 		{
-			switch (statement)
-		{
-				case SqlUpdateStatement update:
-					return update.Update;
-				case SqlInsertOrUpdateStatement insertOrUpdate:
-					return insertOrUpdate.Update;
-			}
-			return null;
+			return statement switch
+			{
+				SqlUpdateStatement update                 => update.Update,
+				SqlInsertOrUpdateStatement insertOrUpdate => insertOrUpdate.Update,
+				_                                         => null,
+			};
 		}
 
 		/// <summary>
@@ -118,32 +123,40 @@ namespace LinqToDB.SqlQuery
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
+		public static SqlOutputClause? GetOutputClause(this SqlStatement statement)
+		{
+			return statement switch
+			{
+				SqlInsertStatement insert => insert.Output,
+				SqlUpdateStatement update => update.Output,
+				SqlDeleteStatement delete => delete.Output,
+				_ => null,
+			};
+		}
+
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SelectQuery EnsureQuery(this SqlStatement statement)
 		{
 			var selectQuery = statement.SelectQuery;
 			if (selectQuery == null)
 				throw new LinqToDBException("Sqlect Query required");
-				return selectQuery;
+			return selectQuery;
 		}
 
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static T Clone<T>(this T cloneable)
-			where T: ICloneableElement
-		{
-			return (T)cloneable.Clone(new Dictionary<ICloneableElement,ICloneableElement>(), _ => true);
-		}
+		internal static bool IsSqlRow(this Expression expression)
+			=> expression.Type.IsSqlRow();
 
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static T Clone<T>(this T cloneable, Predicate<ICloneableElement> doClone)
-			where T: ICloneableElement
+		private static bool IsSqlRow(this Type type)
+			=> type.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
+
+		internal static ReadOnlyCollection<Expression> GetSqlRowValues(this Expression expr)
 		{
-			return (T)cloneable.Clone(new Dictionary<ICloneableElement,ICloneableElement>(), doClone);
+			return expr is MethodCallExpression { Method.Name: "Row" } call
+				? call.Arguments
+				: throw new LinqToDBException("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
 		}
 	}
 }

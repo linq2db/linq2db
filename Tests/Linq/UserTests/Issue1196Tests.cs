@@ -12,32 +12,32 @@ namespace Tests.UserTests
 	public class Issue1196Tests : TestBase
 	{
 		[Table(Name ="Requests")]
-		class Request
+		sealed class Request
 		{
 			[Column] public int Id { get; set; }
 			[Column] public int FirmId { get; set; }
 
 			[Association(ThisKey ="FirmId", OtherKey ="Id")]
-			public FirmInfo FirmInfo { get; set; }
+			public FirmInfo? FirmInfo { get; set; }
 
 			[Association(ExpressionPredicate = nameof(DocPrepareAssignmentExp))]
-			public Assignment DocPrepareAssignment { get; set; }
+			public Assignment? DocPrepareAssignment { get; set; }
 
 			private static Expression<Func<Request, Assignment, bool>> DocPrepareAssignmentExp()
 				=> (r, a) => a.TargetId == r.Id;
 		}
 
 		[Table(Name ="FirmInfo")]
-		class FirmInfo
+		sealed class FirmInfo
 		{
 			[Column]public int Id { get; set; }
 
-			[Association(ThisKey =nameof(Id), OtherKey ="FirmId")]
-			public IEnumerable<Request> Requests { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FirmId")]
+			public IEnumerable<Request> Requests { get; set; } = null!;
 		}
 
 		[Table(Name ="Assignments")]
-		class Assignment
+		sealed class Assignment
 		{
 			[PrimaryKey, Identity] public int Id { get; set; } // Int
 			[Column, NotNull] public Guid DirectionId { get; set; }
@@ -46,7 +46,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestAssociation([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestAssociation([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -61,7 +61,7 @@ namespace Tests.UserTests
 					var query =
 						db.GetTable<Request>()
 						.Where(r => r.Id == 1002)
-						.Select(r => r.FirmInfo)
+						.Select(r => r.FirmInfo!)
 						.SelectMany(r => r.Requests)
 						.Select(r => new
 						{
@@ -73,8 +73,8 @@ namespace Tests.UserTests
 
 					var query2 =
 						db.GetTable<Request>()
-						.Where(r => (r.Id == 1002))
-						.Select(r => r.FirmInfo)
+						.Where(r => r.Id == 1002)
+						.Select(r => r.FirmInfo!)
 						.SelectMany(r => r.Requests)
 						.Select(r => r.DocPrepareAssignment);
 

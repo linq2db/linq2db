@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.Configuration
 {
@@ -16,7 +15,7 @@ namespace LinqToDB.Configuration
 		/// <summary>
 		/// Gets a name of this data provider configuration.
 		/// </summary>
-		string Name { get; }
+		string? Name { get; }
 
 		/// <summary>
 		/// Gets a value indicating whether the provider is default.
@@ -39,8 +38,14 @@ namespace LinqToDB.Configuration
 		/// </para>
 		/// <para>
 		/// SQL Server:
-		/// <list><item>version - T-SQL support level, recognized values:
-		/// <c>"2000"</c>, <c>"2005"</c>, <c>"2012"</c>, <c>"2014"</c>. Default: <c>"2008"</c>.</item></list>
+		/// <list>
+		/// <item>assemblyName - provider assembly name. Recognized values:
+		/// <c>"System.Data"</c>, <c>"System.Data.SqlClient"</c>, <c>"Microsoft.Data.SqlClient"</c>.
+		/// </item>
+		/// <item>version - T-SQL support level, recognized values:
+		/// <c>"2005"</c>, <c>"2008"</c>, <c>"2012"</c>, <c>"2014"</c>, <c>"2016"</c>, <c>"2017"</c>, <c>"2018"</c>. Default: <c>"2008"</c>.
+		/// </item>
+		/// </list>
 		/// </para>
 		/// <para>
 		/// DB2:

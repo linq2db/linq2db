@@ -1,0 +1,51 @@
+variables:
+  - template: templates/build-vars.yml
+  - name: artifact_nugets
+    value: nugets
+  - name: artifact_linq2db_binaries
+    value: linq2db_binaries
+  - name: artifact_linq2db_tools_binaries
+    value: linq2db_tools_binaries
+  - name: artifact_linq2db_aspnet_binaries
+    value: linq2db_aspnet_binaries
+
+# build on commits to important branches: 'release', 'master'
+trigger:
+  - master
+  - release
+# don't trigger pr builds by default, users should trigger them manually using /azp bot commands to avoid situations
+# when we have multiple test runs waiting for free job, when nobody needs them
+# we only want to trigger it for pr to release branch
+pr:
+  - release
+
+stages:
+
+- stage: ''
+  displayName: ''
+  jobs:
+##############
+#  BUILD JOB #
+##############
+  - template: templates/build-job.yml
+    parameters:
+      for_nuget: true
+      for_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+
+#############
+# NUGET JOB #
+##############
+  - template: templates/nuget-job.yml
+    parameters:
+      publish: true
+
+#############
+# TEST JOBS #
+#############
+  - template: templates/test-matrix.yml
+    parameters:
+      enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded())
+      experimental: false
+      with_baselines: true
+      mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded()) # enable macos testing only for release
+      db_filter: '[all][metrics]'

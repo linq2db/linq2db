@@ -1,4 +1,5 @@
-﻿#region Copyright Simple Injector Contributors
+﻿#if NET45
+#region Copyright Simple Injector Contributors
 /* The Simple Injector is an easy-to-use Inversion of Control library for .NET
  * 
  * Copyright (c) 2016 Simple Injector Contributors
@@ -27,23 +28,23 @@ namespace System.Threading
 
 	internal sealed class AsyncLocal<T>
 	{
-		private readonly string key = Guid.NewGuid().ToString("N").Substring(0, 12);
+		private readonly string _key = Guid.NewGuid().ToString("N").Substring(0, 12);
 
-		public T Value
+		public T? Value
 		{
 			[SecuritySafeCritical]
 			get
 			{
-				var wrapper = (AsyncScopeWrapper)CallContext.LogicalGetData(this.key);
+				var wrapper = (AsyncScopeWrapper?)CallContext.LogicalGetData(_key);
 
-				return wrapper != null ? wrapper.Value : default(T);
+				return wrapper != null ? wrapper.Value : default;
 			}
 			[SecuritySafeCritical]
 			set
 			{
 				var wrapper = value == null ? null : new AsyncScopeWrapper(value);
 
-				CallContext.LogicalSetData(this.key, wrapper);
+				CallContext.LogicalSetData(_key, wrapper);
 
 			}
 		}
@@ -56,8 +57,9 @@ namespace System.Threading
 
 			internal AsyncScopeWrapper(T value)
 			{
-				this.Value = value;
+				Value = value;
 			}
 		}
 	}
 }
+#endif

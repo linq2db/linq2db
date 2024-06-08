@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	public class SqlSetOperator : IQueryElement
 	{
-		public SqlSetOperator()
-		{
-		}
-
 		public SqlSetOperator(SelectQuery selectQuery, SetOperation operation)
 		{
 			SelectQuery = selectQuery;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using NUnit.Framework;
 
@@ -23,9 +22,7 @@ namespace Tests.Samples
 
 				foreach (var category in query)
 				{
-#if !APPVEYOR
-					Console.WriteLine(category.CategoryID);
-#endif
+					TestContext.WriteLine(category.CategoryID);
 				}
 			}
 		}

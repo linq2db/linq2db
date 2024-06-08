@@ -13,7 +13,7 @@ namespace LinqToDB.Mapping
 	/// enumeration field with <see cref="MapValueAttribute"/> with required value. If attribute with such value is not
 	/// found, you will receive <see cref="LinqToDBException"/> error. If you cannot specify all possible values using
 	/// <see cref="MapValueAttribute"/>, you can specify custom mapping using methods like
-	/// <see cref="MappingSchema.SetConvertExpression{TFrom, TTo}(System.Linq.Expressions.Expression{Func{TFrom, TTo}}, bool)"/>.
+	/// <see cref="MappingSchema.SetConvertExpression{TFrom, TTo}(System.Linq.Expressions.Expression{Func{TFrom, TTo}}, bool, Common.ConversionType)"/>.
 	/// </para>
 	/// <para>
 	/// Mapping from enumeration value performed when you save it to database or use in query. If your enum field has
@@ -21,7 +21,7 @@ namespace LinqToDB.Mapping
 	/// </para>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple=true)]
-	public class MapValueAttribute : Attribute
+	public class MapValueAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Adds <see cref="MapValueAttribute"/> mapping to enum field. If you don't specify <see cref="Value"/> property,
@@ -35,7 +35,7 @@ namespace LinqToDB.Mapping
 		/// Adds <see cref="MapValueAttribute"/> to enum field.
 		/// </summary>
 		/// <param name="value">Database value, mapped to current enumeration field.</param>
-		public MapValueAttribute(object value)
+		public MapValueAttribute(object? value)
 		{
 			Value = value;
 		}
@@ -70,7 +70,7 @@ namespace LinqToDB.Mapping
 		/// <param name="value">Database value, mapped to current enumeration field.</param>
 		/// <param name="isDefault">If <c>true</c>, database value from this attribute will be used for mapping
 		/// to database value.</param>
-		public MapValueAttribute(string configuration, object value, bool isDefault)
+		public MapValueAttribute(string configuration, object? value, bool isDefault)
 		{
 			Configuration = configuration;
 			Value         = value;
@@ -78,22 +78,20 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string Configuration { get; set; }
-
-		/// <summary>
 		/// Database value, to which current enumeration field will be mapped when used in query or saved to database.
 		/// This value, when loaded from database, will be converted to current enumeration field.
 		/// </summary>
-		public object Value         { get; set; }
+		public object? Value        { get; set; }
 
 		/// <summary>
 		/// If <c>true</c>, <see cref="Value"/> property value will be used for conversion from enumeration to
 		/// database value.
 		/// </summary>
 		public bool   IsDefault     { get; set; }
+
+		public override string GetObjectID()
+		{
+			return FormattableString.Invariant($".{Configuration}.{(IsDefault ? 1 : 0)}.{Value}.");
+		}
 	}
 }

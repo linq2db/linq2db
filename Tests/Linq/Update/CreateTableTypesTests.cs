@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Text.Json;
 using JetBrains.Annotations;
 
 using LinqToDB;
@@ -9,8 +9,6 @@ using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
-
-using Newtonsoft.Json;
 
 using NUnit.Framework;
 
@@ -42,15 +40,15 @@ namespace Tests.xUpdate
 			public IntEnum?    IntEnumNullable    { get; set; }
 			public StringEnum  StringEnum         { get; set; }
 			public StringEnum? StringEnumNullable { get; set; }
-			public string      String             { get; set; }
+			public string?     String             { get; set; }
 
 			// converters test
 			// see https://github.com/linq2db/linq2db/issues/1032
-			public List<(uint field1, string field2)> StringConverted;
+			public List<(uint field1, string field2)> StringConverted = null!;
 
 			public static IEqualityComparer<CreateTableTypes> Comparer = ComparerBuilder.GetEqualityComparer<CreateTableTypes>();
 
-			public static List<(uint, string)> StringConvertedTestValue = new List<(uint, string)>
+			public static List<(uint, string)> StringConvertedTestValue = new ()
 			{
 				(1, "one"),
 				(2, "two")
@@ -77,59 +75,95 @@ namespace Tests.xUpdate
 
 		// TODO: add more cases: other types, different DataType values
 		// TODO: add length validation to fields with length (text/binary)
-		static IEnumerable<(ColumnBuilder, ValueBuilder, DefaultValueBuilder, Func<string, bool>, Func<string, bool>)> TestCases
+		static IEnumerable<TestCaseData> NamedTestCases
+		{
+			get => TestCases.Select((test, idx) => new TestCaseData(test).SetArgDisplayNames($"TestCreateTableColumnType#{idx + 1}"));
+		}
+
+		public class TestCreateTableColumnTypeParameters
+		{
+			public TestCreateTableColumnTypeParameters(
+				string               name,
+				ColumnBuilder        columnBuilder,
+				ValueBuilder         valueBuilder,
+				DefaultValueBuilder? defaultValueBuilder,
+				Func<string, bool>?  skipAssert,
+				Func<string, bool>?  skipCase)
+			{
+				Name                = name;
+				ColumnBuilder       = columnBuilder;
+				ValueBuilder        = valueBuilder;
+				DefaultValueBuilder = defaultValueBuilder;
+				SkipAssert          = skipAssert;
+				SkipCase            = skipCase;
+			}
+
+			public string               Name                { get; }
+			public ColumnBuilder        ColumnBuilder       { get; }
+			public ValueBuilder         ValueBuilder        { get; }
+			public DefaultValueBuilder? DefaultValueBuilder { get; }
+			public Func<string, bool>?  SkipAssert          { get; }
+			public Func<string, bool>?  SkipCase            { get; }
+
+			public override string ToString()
+			{
+				return Name;
+			}
+		}
+
+		static IEnumerable<TestCreateTableColumnTypeParameters> TestCases
 		{
 			[UsedImplicitly]
 			get
 			{
-				yield return (e => e.HasColumn(_ => _.Int32),                                  v => v.Int32              = 1                                   , null,                                                                                                                        null,                            null);
-				yield return (e => e.HasColumn(_ => _.Int32Nullable),                          v => v.Int32Nullable      = 2                                   , null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("Int32"                          , e => e.HasColumn(_ => _.Int32),                                  v => v.Int32              = 1                                   , null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("Int32Nullable"                  , e => e.HasColumn(_ => _.Int32Nullable),                          v => v.Int32Nullable      = 2                                   , null,                                                                                                                        null,                            null);
 				// Access doesn't have 64bit integer type
-				yield return (e => e.HasColumn(_ => _.Int64),                                  v => v.Int64              = 3                                   , null,                                                                                                                        null,                            ctx => ctx.Contains("Access"));
+				yield return new TestCreateTableColumnTypeParameters("Int64"                          , e => e.HasColumn(_ => _.Int64),                                  v => v.Int64              = 3                                   , null,                                                                                                                        null,                            ctx => ctx.IsAnyOf(TestProvName.AllAccess));
 				// Access doesn't have 64bit integer type
-				yield return (e => e.HasColumn(_ => _.Int64Nullable),                          v => v.Int64Nullable      = 4                                   , null,                                                                                                                        null,                            ctx => ctx.Contains("Access"));
+				yield return new TestCreateTableColumnTypeParameters("Int64Nullable"                  , e => e.HasColumn(_ => _.Int64Nullable),                          v => v.Int64Nullable      = 4                                   , null,                                                                                                                        null,                            ctx => ctx.IsAnyOf(TestProvName.AllAccess));
 				// Firebird looses precision of double
-				yield return (e => e.HasColumn(_ => _.Double),                                 v => v.Double             = 3.14                                , null,                                                                                                                        ctx => ctx.Contains("Firebird"), null);
+				yield return new TestCreateTableColumnTypeParameters("Double"                         , e => e.HasColumn(_ => _.Double),                                 v => v.Double             = 3.14                                , null,                                                                                                                        ctx => ctx.IsAnyOf(TestProvName.AllFirebird), null);
 				// Firebird looses precision of double
-				yield return (e => e.HasColumn(_ => _.DoubleNullable),                         v => v.DoubleNullable     = 4.13                                , null,                                                                                                                        ctx => ctx.Contains("Firebird"), null);
-				yield return (e => e.HasColumn(_ => _.Boolean),                                v => v.Boolean            = true                                , null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("DoubleNullable"                 , e => e.HasColumn(_ => _.DoubleNullable),                         v => v.DoubleNullable     = 4.13                                , null,                                                                                                                        ctx => ctx.IsAnyOf(TestProvName.AllFirebird), null);
+				//clickhouse.mysql: https://github.com/ClickHouse/ClickHouse/issues/37999
+				yield return new TestCreateTableColumnTypeParameters("Boolean"                        , e => e.HasColumn(_ => _.Boolean),                                v => v.Boolean            = true                                , null,                                                                                                                        ctx => ctx.IsAnyOf(ProviderName.ClickHouseMySql), null);
 				// Sybase doesn't support nullable bits
 				// Access allows you to define nullable bits, but returns null as false
-				yield return (e => e.HasColumn(_ => _.BooleanNullable),                        v => v.BooleanNullable    = true                                , (ctx, v) => { if (ctx.Contains("Access")) { v.BooleanNullable = false; } },                                                  null,                            ctx => ctx.Contains("Sybase"));
-				yield return (e => e.HasColumn(_ => _.DateTime),                               v => v.DateTime           = new DateTime(2018, 11, 24 , 1, 2, 3), null,                                                                                                                        null,                            null);
-				yield return (e => e.HasColumn(_ => _.DateTimeNullable),                       v => v.DateTimeNullable   = new DateTime(2018, 11, 25 , 1, 2, 3), null,                                                                                                                        null,                            null);
-				yield return (e => e.HasColumn(_ => _.IntEnum),                                v => v.IntEnum            = IntEnum.Value                       , null,                                                                                                                        null,                            null);
-				yield return (e => e.HasColumn(_ => _.IntEnumNullable),                        v => v.IntEnumNullable    = IntEnum.Value                       , null,                                                                                                                        null,                            null);
-				yield return (e => e.HasColumn(_ => _.StringEnum),                             v => v.StringEnum         = StringEnum.Value1                   , null,                                                                                                                        null,                            null);
-				yield return (e => e.HasColumn(_ => _.StringEnumNullable),                     v => v.StringEnumNullable = StringEnum.Value2                   , null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("BooleanNullable"                , e => e.HasColumn(_ => _.BooleanNullable),                        v => v.BooleanNullable    = true                                , (ctx, v) => { if (ctx.IsAnyOf(TestProvName.AllAccess)) { v.BooleanNullable = false; } },                                                  null,                            ctx => ctx.IsAnyOf(TestProvName.AllSybase));
+				yield return new TestCreateTableColumnTypeParameters("DateTime"                       , e => e.HasColumn(_ => _.DateTime),                               v => v.DateTime           = new DateTime(2018, 11, 24 , 1, 2, 3), null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("DateTimeNullable"               , e => e.HasColumn(_ => _.DateTimeNullable),                       v => v.DateTimeNullable   = new DateTime(2018, 11, 25 , 1, 2, 3), null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("IntEnum"                        , e => e.HasColumn(_ => _.IntEnum),                                v => v.IntEnum            = IntEnum.Value                       , null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("IntEnumNullable"                , e => e.HasColumn(_ => _.IntEnumNullable),                        v => v.IntEnumNullable    = IntEnum.Value                       , null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("StringEnum"                     , e => e.HasColumn(_ => _.StringEnum),                             v => v.StringEnum         = StringEnum.Value1                   , null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("StringEnumNullable"             , e => e.HasColumn(_ => _.StringEnumNullable),                     v => v.StringEnumNullable = StringEnum.Value2                   , null,                                                                                                                        null,                            null);
 				// Oracle treats empty string as null in this context
 				// Sybase roundtrips empty string to " " (WAT?)
-				yield return (e => e.Property(_ => _.String).IsNullable(false),                v => v.String             = "test max value"                    , (ctx, v) => { if (ctx.Contains("Oracle") || ctx.Contains("Sybase")) { v.String = " "; } else { v.String = string.Empty; } }, null,                            null);
-				yield return (e => e.Property (_ => _.String).IsNullable(),                    v => v.String = "test max value nullable"                       , null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("String"                         , e => e.Property(_ => _.String).IsNullable(false),                v => v.String             = "test max value"                    , (ctx, v) => { if (ctx.IsAnyOf(TestProvName.AllOracle) || ctx.IsAnyOf(TestProvName.AllSybase)) { v.String = " "; } else { v.String = string.Empty; } }, null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("StringNullable"                 , e => e.Property (_ => _.String).IsNullable(),                    v => v.String = "test max value nullable"                       , null,                                                                                                                        null,                            null);
 				// Oracle treats empty string as null in this context
 				// Sybase roundtrips empty string to " " (WAT?)
-				yield return (e => e.Property (_ => _.String).IsNullable(false).HasLength(10), v => v.String             = "test 10"                           , (ctx, v) => { if (ctx.Contains("Oracle") || ctx.Contains("Sybase")) { v.String = " "; } else { v.String = string.Empty; } }, null,                            null);
-				yield return (e => e.Property (_ => _.String).HasLength(10),                   v => v.String = "test 10 n"                                     , null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("String10"                       , e => e.Property (_ => _.String).IsNullable(false).HasLength(10), v => v.String             = "test 10"                           , (ctx, v) => { if (ctx.IsAnyOf(TestProvName.AllOracle) || ctx.IsAnyOf(TestProvName.AllSybase)) { v.String = " "; } else { v.String = string.Empty; } }, ctx => ctx.IsAnyOf(TestProvName.AllOracleNative), null);
+				yield return new TestCreateTableColumnTypeParameters("String10Nullable"               , e => e.Property (_ => _.String).HasLength(10),                   v => v.String = "test 10 n"                                     , null,                                                                                                                        ctx => ctx.IsAnyOf(TestProvName.AllOracleNative), null);
 				// https://github.com/linq2db/linq2db/issues/1032 with DataType specified
-				yield return (e => e.Property(_ => _.StringConverted).IsNullable(false).HasDataType(DataType.NVarChar), v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                             null,                            null);
-				yield return (e => e.Property(_ => _.StringConverted).HasDataType(DataType.NVarChar), v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                                               null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("StringConvertedNVarChar"        , e => e.Property(_ => _.StringConverted).IsNullable(false).HasDataType(DataType.NVarChar), v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                             null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("StringConvertedNVarCharNullable", e => e.Property(_ => _.StringConverted).HasDataType(DataType.NVarChar), v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                                               null,                            null);
 				// https://github.com/linq2db/linq2db/issues/1032 without DataType specified
-				yield return (e => e.Property(_ => _.StringConverted).IsNullable(false),       v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                                                      null,                            null);
-				yield return (e => e.HasColumn(_ => _.StringConverted),                        v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                                                      null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("StringConverted"                , e => e.Property(_ => _.StringConverted).IsNullable(false),       v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                                                      null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("StringConvertedNullable"        , e => e.HasColumn(_ => _.StringConverted),                        v => v.StringConverted = CreateTableTypes.StringConvertedTestValue, null,                                                                                                                      null,                            null);
 			}
 		}
 
+		// TODO: fix
+		// oracle native tests could fail due to bug in provider:
+		// InitialLONGFetchSize option makes it read garbage for String/StringNullable testcases
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestCreateTableColumnType(
 			[DataSources] string context,
-			[ValueSource(nameof(TestCases))] (
-				ColumnBuilder columnBuilder,
-				ValueBuilder valueBuilder,
-				DefaultValueBuilder defaultValueBuilder,
-				Func<string, bool> skipAssert,
-				Func<string, bool> skipCase) testCase)
+			[ValueSource(nameof(TestCases))] TestCreateTableColumnTypeParameters testCase)
 		{
-			if (testCase.skipCase?.Invoke(context) == true)
+			if (testCase.SkipCase?.Invoke(context) == true)
 			{
 				Assert.Ignore("test case is not valid");
 			}
@@ -137,19 +171,24 @@ namespace Tests.xUpdate
 			Query.ClearCaches();
 
 			var ms = new MappingSchema();
-			var entity = ms.GetFluentMappingBuilder()
+			var entity = new FluentMappingBuilder(ms)
 				.Entity<CreateTableTypes>()
 				.HasColumn(e => e.Id);
-			testCase.columnBuilder(entity);
 
-			MappingSchema.Default.SetConverter<List<(uint, string)>, string>(JsonConvert.SerializeObject);
-			MappingSchema.Default.SetConverter<List<(uint, string)>, DataParameter>(x =>
+			testCase.ColumnBuilder(entity);
+
+			entity.Build();
+
+			var options = new JsonSerializerOptions () { IncludeFields = true };
+
+			ms.SetConverter<List<(uint, string)>, string>(_ => JsonSerializer.Serialize(_, options));
+			ms.SetConverter<List<(uint, string)>, DataParameter>(x =>
 				new DataParameter()
 				{
-					Value = JsonConvert.SerializeObject(x),
+					Value = JsonSerializer.Serialize(x, options),
 					DataType = DataType.NVarChar
 				});
-			MappingSchema.Default.SetConverter<string, List<(uint, string)>>(JsonConvert.DeserializeObject<List<(uint, string)>>);
+			ms.SetConverter<string, List<(uint, string)>?>(_ => JsonSerializer.Deserialize<List<(uint, string)>>(_, options));
 
 			using (var db    = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable<CreateTableTypes>())
@@ -157,13 +196,13 @@ namespace Tests.xUpdate
 				var defaultValue = new CreateTableTypes { Id = 1 };
 				var testValue    = new CreateTableTypes { Id = 2 };
 
-				testCase.defaultValueBuilder?.Invoke(context, defaultValue);
-				testCase.valueBuilder(testValue);
+				testCase.DefaultValueBuilder?.Invoke(context, defaultValue);
+				testCase.ValueBuilder(testValue);
 
 				db.Insert(defaultValue, table.TableName);
 				db.Insert(testValue,    table.TableName);
 
-				if (testCase.skipAssert?.Invoke(context) != true)
+				if (testCase.SkipAssert?.Invoke(context) != true)
 					AreEqual(new[] { defaultValue, testValue }, table.OrderBy(_ => _.Id), CreateTableTypes.Comparer);
 			}
 		}

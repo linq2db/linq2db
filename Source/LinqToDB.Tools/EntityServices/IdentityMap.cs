@@ -8,70 +8,74 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Tools.EntityServices
 {
-	using Common;
+	using Interceptors;
 
 	[PublicAPI]
-	public class IdentityMap : IDisposable
+	public class IdentityMap : EntityServiceInterceptor, IDisposable
 	{
-		public IdentityMap([NotNull] IDataContext dataContext)
+		public IdentityMap(IDataContext dataContext)
 		{
 			_dataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
-			_dataContext.OnEntityCreated += OnEntityCreated;
+			_dataContext.AddInterceptor(this);
 		}
 
-		readonly IDataContext                          _dataContext;
-		readonly ConcurrentDictionary<Type,IEntityMap> _entityMapDic = new ConcurrentDictionary<Type,IEntityMap>();
+		IDataContext?                                  _dataContext;
+		readonly ConcurrentDictionary<Type,IEntityMap> _entityMapDic = new ();
 
-		[NotNull]
 		IEntityMap GetOrAddEntityMap(Type entityType)
 		{
 			return _entityMapDic.GetOrAdd(
 				entityType,
-				key => (IEntityMap)Activator.CreateInstance(typeof(EntityMap<>).MakeGenericType(key), _dataContext));
+				key => (IEntityMap)Activator.CreateInstance(typeof(EntityMap<>).MakeGenericType(key), _dataContext)!);
 		}
 
-		void OnEntityCreated(EntityCreatedEventArgs args)
-		{
-			GetOrAddEntityMap(args.Entity.GetType()).MapEntity(args);
-		}
-
-		[NotNull]
 		public IEnumerable GetEntities(Type entityType)
 		{
 			return GetOrAddEntityMap(entityType).GetEntities();
 		}
 
-		[NotNull]
 		public IEnumerable<T> GetEntities<T>()
 			where T : class
 		{
-			return GetEntityMap<T>().Entities?.Values.Select(e => e.Entity) ?? Array<T>.Empty;
+			return GetEntityMap<T>().Entities.Values.Select(e => e.Entity);
 		}
 
-		[NotNull]
 		public IEnumerable<EntityMapEntry<T>> GetEntityEntries<T>()
 			where T : class
 		{
-			return GetEntityMap<T>().Entities?.Values ?? Array<EntityMapEntry<T>>.Empty;
+			return GetEntityMap<T>().Entities.Values;
 		}
 
-		[NotNull]
 		public EntityMap<T> GetEntityMap<T>()
 			where T : class
 		{
 			return (EntityMap<T>)GetOrAddEntityMap(typeof(T));
 		}
 
-		[CanBeNull]
-		public T GetEntity<T>([NotNull] object key)
+		public T? GetEntity<T>(object key)
 			where T : class, new()
 		{
-			return GetEntityMap<T>().GetEntity(_dataContext, key);
+			if (_dataContext != null)
+				return GetEntityMap<T>().GetEntity(_dataContext, key);
+
+			throw new ObjectDisposedException(nameof(IdentityMap));
 		}
 
 		public void Dispose()
 		{
-			_dataContext.OnEntityCreated -= OnEntityCreated;
+			_dataContext = null;
+		}
+
+		public override object EntityCreated(EntityCreatedEventData eventData, object entity)
+		{
+			if (_dataContext != null)
+			{
+				var args = new EntityCreatedEventArgs(_dataContext, entity);
+				GetOrAddEntityMap(entity.GetType()).MapEntity(args);
+				return args.Entity;
+			}
+
+			return entity;
 		}
 	}
 }

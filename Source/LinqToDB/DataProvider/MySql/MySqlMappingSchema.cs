@@ -1,26 +1,36 @@
 ﻿using System;
-using System.Text;
+using System.Collections;
 using System.Data.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Common;
+	using Data;
 	using Mapping;
 	using SqlQuery;
 
-	public class MySqlMappingSchema : MappingSchema
+	sealed class MySqlMappingSchema : LockedMappingSchema
 	{
-		public MySqlMappingSchema() : this(ProviderName.MySql)
+		MySqlMappingSchema() : base(ProviderName.MySql)
 		{
+			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char),   (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
+
+			// both providers doesn't support BitArray directly and map bit fields to ulong by default
+			SetConvertExpression<BitArray?, DataParameter>(ba => new DataParameter(null, ba == null ? null : GetBits(ba), DataType.UInt64), false);
 		}
 
-		protected MySqlMappingSchema(string configuration) : base(configuration)
+		static ulong GetBits(BitArray ba)
 		{
-			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			// mysql supports bit(64) max, so we use 8 bytes
+			var data = new byte[8];
+			ba.CopyTo(data, 0);
+			return BitConverter.ToUInt64(data, 0);
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
@@ -52,24 +62,23 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			stringBuilder.Append("0x");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
-		internal static readonly MySqlMappingSchema Instance = new MySqlMappingSchema();
+		internal static readonly MySqlMappingSchema Instance = new ();
 
-		public class MySqlOfficialMappingSchema : MappingSchema
+		public sealed class MySqlOfficialMappingSchema : LockedMappingSchema
 		{
 			public MySqlOfficialMappingSchema()
-				: base(ProviderName.MySqlOfficial, Instance)
+				: base(ProviderName.MySqlOfficial, MySqlProviderAdapter.GetInstance(ProviderName.MySqlOfficial).MappingSchema, Instance)
 			{
 			}
 		}
 
-		public class MySqlConnectorMappingSchema : MappingSchema
+		public sealed class MySqlConnectorMappingSchema : LockedMappingSchema
 		{
 			public MySqlConnectorMappingSchema()
-				: base(ProviderName.MySqlConnector, Instance)
+				: base(ProviderName.MySqlConnector, MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector).MappingSchema, Instance)
 			{
 			}
 		}

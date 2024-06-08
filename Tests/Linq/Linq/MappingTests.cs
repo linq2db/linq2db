@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Linq;
+#if NET472
+using System.ServiceModel;
+#endif
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -113,7 +116,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Parent")]
-		class TestParent
+		sealed class TestParent
 		{
 			[Column] public int       ParentID;
 			[Column] public TestValue Value1;
@@ -126,7 +129,7 @@ namespace Tests.Linq
 				db.GetTable<TestParent>().Where(p => p.Value1 == TestValue.Value1).ToList();
 		}
 
-		internal class LinqDataTypes
+		internal sealed class LinqDataTypes
 		{
 			public TestValue ID;
 		}
@@ -160,9 +163,9 @@ namespace Tests.Linq
 		public class Person9
 		{
 			public int     PersonID;
-			public string  FirstName;
-			public string  LastName;
-			public string  MiddleName;
+			public string  FirstName = null!;
+			public string  LastName = null!;
+			public string? MiddleName;
 			public Gender9 Gender;
 		}
 
@@ -177,7 +180,7 @@ namespace Tests.Linq
 		public class ParentObject
 		{
 			[Column]                      public int   ParentID;
-			[Column("Value1", ".Value1")] public Inner Value = new Inner();
+			[Column("Value1", ".Value1")] public Inner Value = new ();
 
 			public class Inner
 			{
@@ -214,7 +217,7 @@ namespace Tests.Linq
 			[Column] public int ChildID;
 
 			[Association(ThisKey="ParentID", OtherKey="ParentID")]
-			public ParentObject Parent;
+			public ParentObject? Parent;
 		}
 
 		[Test]
@@ -222,7 +225,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var e = db.GetTable<ChildObject>().First(c => c.Parent.Value.Value1 == 1);
+				var e = db.GetTable<ChildObject>().First(c => c.Parent!.Value.Value1 == 1);
 				Assert.AreEqual(1, e.ParentID);
 			}
 		}
@@ -233,29 +236,30 @@ namespace Tests.Linq
 		}
 
 		[Table(Name="Parent")]
-		class MyParent
+		sealed class MyParent
 		{
 			[Column] public MyInt ParentID;
 			[Column] public int?  Value1;
 		}
 
-		class MyMappingSchema : MappingSchema
+		sealed class MyMappingSchema : MappingSchema
 		{
 			public MyMappingSchema()
 			{
-				SetConvertExpression<Int64,MyInt>        (n => new MyInt { MyValue = (int)n });
-				SetConvertExpression<Int32,MyInt>        (n => new MyInt { MyValue =      n });
+				SetConvertExpression<long,MyInt>         (n => new MyInt { MyValue = (int)n });
+				SetConvertExpression<int,MyInt>          (n => new MyInt { MyValue =      n });
 				SetConvertExpression<MyInt,DataParameter>(n => new DataParameter { Value = n.MyValue });
 			}
 		}
 
-		static readonly MyMappingSchema _myMappingSchema = new MyMappingSchema();
+		static readonly MyMappingSchema _myMappingSchema = new ();
 
 		[Test]
 		public void MyType1()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				var _ = db.GetTable<MyParent>().ToList();
 			}
 		}
@@ -263,8 +267,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType2()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				var _ = db.GetTable<MyParent>()
 					.Select(t => new MyParent { ParentID = t.ParentID, Value1 = t.Value1 })
 					.ToList();
@@ -274,8 +279,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType3()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
+			using (var db = (TestDataConnection) new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				try
 				{
 					db.Insert(new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
@@ -290,8 +296,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType4()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
+			using (var db = (TestDataConnection)new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				try
 				{
 					var id = new MyInt { MyValue = 1001 };
@@ -307,8 +314,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType5()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
+			using (var db = (TestDataConnection)new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				try
 				{
 					db.GetTable<MyParent>().Insert(() => new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
@@ -321,7 +329,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Parent")]
-		class MyParent1
+		sealed class MyParent1
 		{
 			[Column] public int  ParentID;
 			[Column] public int? Value1;
@@ -375,7 +383,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Person")]
-		class Table171
+		sealed class Table171
 		{
 			[Column] public Gender Gender;
 		}
@@ -439,24 +447,304 @@ namespace Tests.Linq
 		[Test]
 		public void ColumnMappingException1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList());
+			GetProviderName(context, out var isLinqService);
 
-				// field name casing depends on database
-				Assert.AreEqual("firstname", ex.ColumnName.ToLower());
+			using (var db = GetDataContext(context, testLinqService : false, suppressSequentialAccess: true))
+			{
+				if (isLinqService)
+				{
+#if NETFRAMEWORK
+					var fe = Assert.Throws<FaultException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
+#else
+					var fe = Assert.Throws<Grpc.Core.RpcException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
+#endif
+				}
+				else
+				{
+					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+					// field name casing depends on database
+					Assert.AreEqual("firstname", ex.ColumnName!.ToLowerInvariant());
+				}
 			}
 		}
 
 		[Test]
 		public void ColumnMappingException2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList());
+			GetProviderName(context, out var isLinqService);
 
-				Assert.AreEqual("lastname", ex.ColumnName.ToLower());
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
+			{
+				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
+				Assert.AreEqual("lastname", ex.ColumnName!.ToLowerInvariant());
 			}
 		}
+
+#region Records
+
+		public record Record(int Id, string Value, string BaseValue) : RecordBase(Id, BaseValue);
+		public abstract record RecordBase(int Id, string BaseValue);
+
+		public class RecordLike : RecordLikeBase
+		{
+			public RecordLike(int Id, string Value, string BaseValue)
+				: base(Id, BaseValue)
+			{
+				this.Value = Value;
+			}
+
+			public string Value { get; init; }
+		}
+
+		public abstract class RecordLikeBase
+		{
+			protected RecordLikeBase(int Id, string BaseValue)
+			{
+				this.Id = Id;
+				this.BaseValue = BaseValue;
+			}
+
+			public int    Id        { get; init; }
+			public string BaseValue { get; init; }
+		}
+
+		public class WithInitOnly : WithInitOnlyBase
+		{
+			public string? Value { get; init; }
+		}
+
+		public abstract class WithInitOnlyBase
+		{
+			public int     Id        { get; init; }
+			public string? BaseValue { get; init; }
+		}
+
+		[Test]
+		public void TestRecordMapping([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<Record>()
+					.Property(p => p.Id).IsPrimaryKey()
+					.Property(p => p.Value)
+					.Property(p => p.BaseValue)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<Record>())
+			{
+				db.Insert(new Record(1, "One", "OneBase"));
+				db.Insert(new Record(2, "Two", "TwoBase"));
+
+				var data = table.OrderBy(r => r.Id).ToArray();
+
+				Assert.AreEqual(2        , data.Length);
+				Assert.AreEqual(1        , data[0].Id);
+				Assert.AreEqual("One"    , data[0].Value);
+				Assert.AreEqual("OneBase", data[0].BaseValue );
+				Assert.AreEqual(2        , data[1].Id);
+				Assert.AreEqual("Two"    , data[1].Value);
+				Assert.AreEqual("TwoBase", data[1].BaseValue);
+
+				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
+
+				Assert.AreEqual(2        , proj.Length);
+				Assert.AreEqual(1        , proj[0].Id);
+				Assert.AreEqual("One"    , proj[0].Value);
+				Assert.AreEqual("OneBase", proj[0].BaseValue );
+				Assert.AreEqual(2        , proj[1].Id);
+				Assert.AreEqual("Two"    , proj[1].Value);
+				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+			}
+		}
+
+		[Test]
+		public void TestRecordLikeMapping([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<RecordLike>()
+					.Property(p => p.Id).IsPrimaryKey()
+					.Property(p => p.Value)
+					.Property(p => p.BaseValue)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<RecordLike>())
+			{
+				db.Insert(new RecordLike(1, "One", "OneBase"));
+				db.Insert(new RecordLike(2, "Two", "TwoBase"));
+
+				var data = table.OrderBy(r => r.Id).ToArray();
+
+				Assert.AreEqual(2        , data.Length);
+				Assert.AreEqual(1        , data[0].Id);
+				Assert.AreEqual("One"    , data[0].Value);
+				Assert.AreEqual("OneBase", data[0].BaseValue );
+				Assert.AreEqual(2        , data[1].Id);
+				Assert.AreEqual("Two"    , data[1].Value);
+				Assert.AreEqual("TwoBase", data[1].BaseValue);
+
+				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
+
+				Assert.AreEqual(2        , proj.Length);
+				Assert.AreEqual(1        , proj[0].Id);
+				Assert.AreEqual("One"    , proj[0].Value);
+				Assert.AreEqual("OneBase", proj[0].BaseValue );
+				Assert.AreEqual(2        , proj[1].Id);
+				Assert.AreEqual("Two"    , proj[1].Value);
+				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+			}
+		}
+
+		[Test]
+		public void TestInitOnly([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<WithInitOnly>()
+					.Property(p => p.Id).IsPrimaryKey()
+					.Property(p => p.Value)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<WithInitOnly>())
+			{
+				db.Insert(new WithInitOnly{Id = 1, Value = "One", BaseValue = "OneBase"});
+				db.Insert(new WithInitOnly{Id = 2, Value = "Two", BaseValue = "TwoBase"});
+
+				var data = table.OrderBy(r => r.Id).ToArray();
+
+				Assert.AreEqual(2        , data.Length);
+				Assert.AreEqual(1        , data[0].Id);
+				Assert.AreEqual("One"    , data[0].Value);
+				Assert.AreEqual("OneBase", data[0].BaseValue );
+				Assert.AreEqual(2        , data[1].Id);
+				Assert.AreEqual("Two"    , data[1].Value);
+				Assert.AreEqual("TwoBase", data[1].BaseValue);
+
+				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
+
+				Assert.AreEqual(2        , proj.Length);
+				Assert.AreEqual(1        , proj[0].Id);
+				Assert.AreEqual("One"    , proj[0].Value);
+				Assert.AreEqual("OneBase", proj[0].BaseValue );
+				Assert.AreEqual(2        , proj[1].Id);
+				Assert.AreEqual("Two"    , proj[1].Value);
+				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+			}
+		}
+
+		#endregion
+
+		#region Issue 4113
+		public interface IInterface1
+		{
+		}
+
+		public interface IInterface2
+		{
+			Guid Id { get; set; }
+		}
+
+		public interface IInterface3
+		{
+			int Id { get; set; }
+		}
+
+		[Table("Person")]
+		public abstract class BaseModel1
+		{
+			[Column("UNKNOWN")] public virtual Guid Id { get; set; }
+		}
+
+		[Table("Person")]
+		public abstract class BaseModel2: IInterface2
+		{
+			[Column("UNKNOWN")] public virtual Guid Id { get; set; }
+		}
+
+		public sealed class NewModel1 : BaseModel1
+		{
+			[Column("PersonID")] public new int Id { get; set; }
+		}
+
+		public sealed class NewModel2 : BaseModel1, IInterface1
+		{
+			[Column("PersonID")] public new int Id { get; set; }
+		}
+
+		public sealed class NewModel3 : BaseModel2
+		{
+			[Column("PersonID")] public new int Id { get; set; }
+		}
+
+		public sealed class NewModel4 : BaseModel1, IInterface3
+		{
+			[Column("PersonID")] public new int Id { get; set; }
+		}
+
+		public sealed class NewModel5 : BaseModel2, IInterface3
+		{
+			[Column("PersonID")] public new int Id { get; set; }
+		}
+
+		[Test]
+		public void ColumnReplacedWithNew1([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<NewModel1>().Where(c => c.Id == -1).ToList();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel1));
+			Assert.AreEqual(1, ed.Columns.Count);
+			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+		}
+
+		[Test]
+		public void ColumnReplacedWithNew2([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<NewModel2>().Where(c => c.Id == -1).ToList();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel2));
+			Assert.AreEqual(1, ed.Columns.Count);
+			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+		}
+
+		[Test]
+		public void ColumnReplacedWithNew3([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<NewModel3>().Where(c => c.Id == -1).ToList();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel3));
+			Assert.AreEqual(1, ed.Columns.Count);
+			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+		}
+
+		[Test]
+		public void ColumnReplacedWithNew4([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<NewModel4>().Where(c => c.Id == -1).ToList();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel4));
+			Assert.AreEqual(1, ed.Columns.Count);
+			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+		}
+
+		[Test]
+		public void ColumnReplacedWithNew5([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<NewModel5>().Where(c => c.Id == -1).ToList();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel5));
+			Assert.AreEqual(1, ed.Columns.Count);
+			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+		}
+		#endregion
 	}
 }

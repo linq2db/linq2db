@@ -1,6 +1,4 @@
-﻿using System;
-
-using LinqToDB.Mapping;
+﻿using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
@@ -18,7 +16,7 @@ namespace Tests.Model
 		[PrimaryKey]                     public int  InheritanceParentId { get; set; }
 		[Column(IsDiscriminator = true)] public int? TypeDiscriminator   { get; set; }
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			var other = obj as InheritanceParentBase;
 			if (other == null)
@@ -45,7 +43,7 @@ namespace Tests.Model
 
 	public class InheritanceParent2 : InheritanceParentBase
 	{
-		[Column] public string Name { get; set; }
+		[Column] public string? Name { get; set; }
 	}
 
 	[Table("InheritanceChild")]
@@ -59,9 +57,9 @@ namespace Tests.Model
 		[Column]                         public int  InheritanceParentId { get; set; }
 
 		[Association(ThisKey = "InheritanceParentId", OtherKey = "InheritanceParentId")]
-		public InheritanceParentBase Parent { get; set; } 
+		public InheritanceParentBase Parent { get; set; } = null!;
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			var other = obj as InheritanceChildBase;
 			if (other == null)
@@ -87,6 +85,6 @@ namespace Tests.Model
 
 	public class InheritanceChild2 : InheritanceChildBase
 	{
-		[Column] public string Name { get; set; }
+		[Column] public string? Name { get; set; }
 	}
 }

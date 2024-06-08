@@ -1,3 +1,4 @@
+<#@ include file="NotifyPropertyChanged.ttinclude" once="true" #>
 <#
 	{
 		var beforeGenerateModel = BeforeGenerateModel;
@@ -31,7 +32,7 @@ void ValidationImpl()
 			var validator    = new Class("CustomValidator", isValid) { IsStatic = true, };
 			var partialGroup = new MemberGroup { IsCompact = true };
 
-			validationGroup.Members.Add(new Field(() => "int", "_isValidCounter") { Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } } });
+			validationGroup.Members.Add(new Field(() => "int", "_isValidCounter") { Attributes = { new Attribute("field : NonSerialized") } });
 			validationGroup.Members.Add(validator);
 			validationGroup.Members.Add(partialGroup);
 
@@ -53,6 +54,10 @@ void ValidationImpl()
 				var name  = p.Name.Trim();
 				var mname = "Validate" + name;
 
+				var conditional = p.Conditional;
+				if (conditional == null && p is NotifyingProperty && p.Parent is MemberGroup)
+					conditional = ((MemberGroup)p.Parent).Conditional;
+
 				cl.Attributes.Add(
 					new Attribute("CustomValidation",
 						"typeof(" + cl.Name + ".CustomValidator)",
@@ -61,13 +66,24 @@ void ValidationImpl()
 							IsSeparated = true
 						});
 
+				if (conditional != null)
+					isValid.BodyBuilders.Add(() => new [] { "\t#if " + conditional });
+
 				isValid.BodyBuilders.Add(() => new [] {
 					"\tvar flag" + i + " = ValidationResult.Success == " + mname + "(obj, obj." + name + ");" });
 
-				ret += (i == 0 ? "" : " || ") + "flag" + i;
+				if (conditional != null)
+					isValid.BodyBuilders.Add(() => new []
+					{
+						"\t#else",
+						"\tvar flag" + i + " = true;",
+						"\t#endif",
+					});
 
-				var validate = new Method(() => "ValidationResult", mname,
-					new Func<string>[] { () => cl.Name + " obj", () => p.BuildType().Trim() + " value" }) { IsStatic = true };
+				ret += (i == 0 ? "" : " && ") + "flag" + i;
+
+				var validate = new Method(() => new ModelType("ValidationResult", true, true).ToTypeName(), mname,
+					new Func<string>[] { () => cl.Name + " obj", () => p.BuildType().Trim() + " value" }) { IsStatic = true, Conditional = conditional };
 
 				validate.BodyBuilders.Add(() => new []
 				{
@@ -105,6 +121,7 @@ void ValidationImpl()
 					})
 					{
 						AccessModifier = AccessModifier.Partial,
+						Conditional    = conditional
 					});
 			}
 
@@ -156,7 +173,7 @@ void ValidationImpl()
 			{
 				AccessModifier = AccessModifier.Private,
 				InitValue      = "0",
-				Attributes     = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+				Attributes     = { new Attribute("field : NonSerialized") }
 			});
 
 			validationGroup.Members.Add(new Method (() => "void", "LockValidation",   null, () => new[] { "_validationLockCounter++;" }));

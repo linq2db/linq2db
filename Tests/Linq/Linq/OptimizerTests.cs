@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Humanizer;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -11,7 +9,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class OptimizerTests : TestBase
 	{
-		class OptimizerData
+		sealed class OptimizerData
 		{
 			[PrimaryKey(1)]
 			public int Key1 { get; set; }
@@ -34,7 +32,7 @@ namespace Tests.Linq
 			public int DataKey33 { get; set; }
 
 			[Column(Length = 50)]
-			public string ValueStr { get; set; }
+			public string? ValueStr { get; set; }
 		}
 
 		static IEnumerable<T[]> GetPermutations<T>(IEnumerable<T> items, int count)
@@ -89,7 +87,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void AsSubQueryTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void AsSubQueryTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -109,7 +107,7 @@ namespace Tests.Linq
 						s
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 				Assert.AreEqual(2, query.EnumQueries().Count());
 
 				// test that optimizer removes subquery
@@ -125,14 +123,52 @@ namespace Tests.Linq
 						s
 					};
 
-				Console.WriteLine(queryOptimized.ToString());
+				TestContext.WriteLine(queryOptimized.ToString());
 				Assert.AreEqual(1, queryOptimized.EnumQueries().Count());
+			}
+		}
+
+		[Test]
+		public void AsSubQueryGrouping1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (var db = GetDataContext(context))
+			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
+			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
+			{
+				var query1 = first.GroupBy(f => f.Key1)
+					.AsSubQuery()
+					.Select(x => new { Count = Sql.Ext.Count().ToValue() });
+
+				var result1 = query1.ToArray();
+			}
+		}
+
+		[Test]
+		public void AsSubQueryGrouping2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (var db = GetDataContext(context))
+			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
+			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
+			{
+				var query2 = first.GroupBy(f => new { f.Key1, f.Key2 })
+					.AsSubQuery()
+					.Select(x => new
+					{
+						Count2 = Sql.Ext.Count(x.Key2).ToValue(),
+						Count1 = Sql.Ext.Count(x.Key1).ToValue()
+					});
+
+				var result2 = query2.ToArray();
 			}
 		}
 
 
 		[Test]
-		public void DistinctOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void DistinctOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -150,17 +186,17 @@ namespace Tests.Linq
 						d
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 				Assert.AreEqual(1, query.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 
 				var projected = query.Select(p => p.s);
-				Console.WriteLine(projected.ToString());
+				TestContext.WriteLine(projected.ToString());
 				Assert.AreEqual(0, projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 			}
 		}
 
 		[Test]
-		public void GroupByOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void GroupByOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -191,24 +227,24 @@ namespace Tests.Linq
 						MNUCount = nu.Count
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 				Assert.AreEqual(2, query.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 
 				var projected = query.Select(p => p.s);
-				Console.WriteLine(projected.ToString());
+				TestContext.WriteLine(projected.ToString());
 				Assert.AreEqual(1, projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 			}
 		}
 
 		[Test]
-		public void PrimaryKeyOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void PrimaryKeyOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var uniqueValues = first.Select(f => new { f.Key1, f.Key2 });
 
@@ -220,24 +256,24 @@ namespace Tests.Linq
 						d
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 				Assert.AreEqual(1, query.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 
 				var projected = query.Select(p => p.s);
-				Console.WriteLine(projected.ToString());
+				TestContext.WriteLine(projected.ToString());
 				Assert.AreEqual(opimizerSwitch ? 0 : 1, projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 			}
 		}
 
 		[Test]
-		public void HasKeyProjectionOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void HasKeyProjectionOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var allKeys = first.Select(f => new { First = f })
 					.HasUniqueKey(f => new {f.First.DataKey11})
@@ -255,11 +291,11 @@ namespace Tests.Linq
 						First = a
 					};
 
-				Console.WriteLine(query1.ToString());
+				TestContext.WriteLine(query1.ToString());
 				Assert.AreEqual(1, query1.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 
 				var projected1 = query1.Select(p => p.Second);
-				Console.WriteLine(projected1.ToString());
+				TestContext.WriteLine(projected1.ToString());
 				Assert.AreEqual(opimizerSwitch ? 0 : 1, projected1.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 
 				// With two keys
@@ -273,11 +309,11 @@ namespace Tests.Linq
 						First = a
 					};
 
-				Console.WriteLine(query2.ToString());
+				TestContext.WriteLine(query2.ToString());
 				Assert.AreEqual(1, query2.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 
 				var projected2 = query2.Select(p => p.Second);
-				Console.WriteLine(projected2.ToString());
+				TestContext.WriteLine(projected2.ToString());
 				Assert.AreEqual(opimizerSwitch ? 0 : 1, projected2.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 
 				// With three keys
@@ -291,25 +327,25 @@ namespace Tests.Linq
 						First = a
 					};
 
-				Console.WriteLine(query3.ToString());
+				TestContext.WriteLine(query3.ToString());
 				Assert.AreEqual(1, query3.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 
 				var projected3 = query3.Select(p => p.Second);
-				Console.WriteLine(projected3.ToString());
+				TestContext.WriteLine(projected3.ToString());
 				Assert.AreEqual(opimizerSwitch ? 0 : 1, projected3.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 
 			}
 		}
 
 		[Test]
-		public void HasKeyJoinOptimization([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void HasKeyJoinOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var allKeys = first.Select(f => new { First = f })
 					.HasUniqueKey(f => new {f.First.DataKey11})
@@ -336,25 +372,25 @@ namespace Tests.Linq
 						FF3 = ff3,
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 				Assert.AreEqual(opimizerSwitch ? 4 : 8, query.EnumQueries().SelectMany(q => q.EnumJoins()).Count());
 
 			}
 		}
 
 		[Test]
-		public void UniqueKeysPropagation([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void UniqueKeysPropagation([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var subqueryWhichWillBeOptimized =
 					from f in first
-					where f.ValueStr.StartsWith("Str")
+					where f.ValueStr!.StartsWith("Str")
 					select f;
 
 				subqueryWhichWillBeOptimized = subqueryWhichWillBeOptimized.HasUniqueKey(f => f.DataKey11);
@@ -368,7 +404,7 @@ namespace Tests.Linq
 						F = f
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 
 				var selectQuery = query.EnumQueries().Single();
 				var table = selectQuery.From.Tables[0];
@@ -381,18 +417,18 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void UniqueKeysAndSubqueries([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
+		public void UniqueKeysAndSubqueries([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var subqueryWhichWillBeOptimized =
 					from f in first
-					where f.ValueStr.StartsWith("Str")
+					where f.ValueStr!.StartsWith("Str")
 					select f;
 
 				subqueryWhichWillBeOptimized = subqueryWhichWillBeOptimized.HasUniqueKey(f => f.DataKey11);
@@ -408,14 +444,14 @@ namespace Tests.Linq
 						F2 = f2,
 					};
 
-				Console.WriteLine(query.ToString());
+				TestContext.WriteLine(query.ToString());
 
 				var selectQuery = query.EnumQueries().First();
 				var table = selectQuery.From.Tables[0];
 				Assert.AreEqual(2, table.Joins.Count);
 
 				var smallProjection = query.Select(q => q.S);
-				Console.WriteLine(smallProjection.ToString());
+				TestContext.WriteLine(smallProjection.ToString());
 
 				var selectQuery2 = smallProjection.EnumQueries().First();
 				var table2 = selectQuery2.From.Tables[0];

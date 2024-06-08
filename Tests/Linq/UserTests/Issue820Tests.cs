@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 
@@ -15,7 +14,7 @@ namespace Tests.UserTests
 		[Sql.Expression("{0}", ServerSideOnly = true)]
 		public static short Nope2(short? value)
 		{
-			return value.Value;
+			return value!.Value;
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
@@ -24,6 +23,7 @@ namespace Tests.UserTests
 			return value;
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithFunction([DataSources] string context)
 		{
@@ -42,7 +42,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(1685, Configuration = ProviderName.SapHana)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithCastAndFunction([DataSources] string context)
 		{
@@ -61,6 +61,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithCast([DataSources] string context)
 		{
@@ -79,6 +80,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithValue([DataSources] string context)
 		{
@@ -97,6 +99,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestWithoutValue([DataSources] string context)
 		{
@@ -115,6 +118,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestOrWithValue([DataSources] string context)
 		{

@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using LinqToDB;
-using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -25,12 +24,12 @@ namespace Tests.UserTests
 
 		public class InvoiceReferenceNumber
 		{
-			public long InvoiceReferenceNumberID { get; set; }
-			public string ReferenceNumber { get; set; }
+			public long    InvoiceReferenceNumberID { get; set; }
+			public string? ReferenceNumber          { get; set; }
 		}
 
 		[Test]
-		public void ConditionalTests([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConditionalTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var invoices = new Invoice[]{new Invoice
 			{

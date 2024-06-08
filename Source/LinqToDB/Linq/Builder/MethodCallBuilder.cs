@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -22,28 +21,32 @@ namespace LinqToDB.Linq.Builder
 			return BuildMethodCall(builder, (MethodCallExpression)buildInfo.Expression, buildInfo);
 		}
 
-		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)
+		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return Convert(builder, (MethodCallExpression)buildInfo.Expression, buildInfo, param);
 		}
 
-		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		protected virtual SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
+		{
+			return null;
+		}
+
+		public virtual bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			return builder.IsSequence(new BuildInfo(buildInfo, ((MethodCallExpression)buildInfo.Expression).Arguments[0]));
 		}
 
-		protected abstract bool                CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
-		protected abstract IBuildContext       BuildMethodCall   (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
-		protected abstract SequenceConvertInfo Convert           (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param);
+		protected abstract bool          CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
+		protected abstract IBuildContext BuildMethodCall   (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
 
 		protected static Expression ConvertMethod(
 			MethodCallExpression methodCall,
 			int                  sourceTypeNumber,
 			SequenceConvertInfo  info,
-			ParameterExpression  param,
+			ParameterExpression? param,
 			Expression           expression)
 		{
-			if (string.ReferenceEquals(expression, methodCall) && param != null && param.Type != info.Parameter.Type)
+			if (ReferenceEquals(expression, methodCall) && param != null && param.Type != info.Parameter!.Type)
 			{
 				var types = methodCall.Method.GetGenericArguments();
 				var mgen  = methodCall.Method.GetGenericMethodDefinition();
@@ -62,10 +65,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var l = (LambdaExpression)arg;
 
-						if (l.Parameters.Any(a => string.ReferenceEquals(a, param)))
+						if (l.Parameters.Any(a => ReferenceEquals(a, param)))
 						{
 							args[i] = Expression.Lambda(
-								l.Body.Transform(ex => ConvertMethod(methodCall, sourceTypeNumber, info, param, ex)),
+								l.Body.Transform(
+									(methodCall, sourceTypeNumber, info, param),
+									static (context, ex) => ConvertMethod(context.methodCall, context.sourceTypeNumber, context.info, context.param, ex)),
 								info.Parameter);
 
 							return Expression.Call(methodCall.Object, mgen.MakeGenericMethod(types), args);
@@ -110,8 +115,8 @@ namespace LinqToDB.Linq.Builder
 								if (ma1.Member != ma2.Member)
 									break;
 
-								ex1 = ma1.Expression;
-								ex2 = ma2.Expression;
+								ex1 = ma1.Expression!;
+								ex2 = ma2.Expression!;
 							}
 						}
 					}

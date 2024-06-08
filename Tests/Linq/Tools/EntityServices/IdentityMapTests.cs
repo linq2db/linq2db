@@ -1,11 +1,11 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using NUnit.Framework;
 
 namespace Tests.Tools.EntityServices
 {
 	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using LinqToDB.Tools.EntityServices;
 	using Model;
 
@@ -61,8 +61,8 @@ namespace Tests.Tools.EntityServices
 				Assert.AreSame(p1, p2);
 				Assert.AreSame(p1, p3);
 
-				var p4 = map.GetEntity<Person>(2);
-				var p5 = map.GetEntity<Person>(new { ID = 3L });
+				var p4 = map.GetEntity<Person>(2)!;
+				var p5 = map.GetEntity<Person>(new { ID = 3L })!;
 
 				Assert.That(
 					map.GetEntityEntries<Person>().Select(ee => new { ee.Entity, StoreCount = ee.DBCount, ee.CacheCount }),
@@ -87,7 +87,7 @@ namespace Tests.Tools.EntityServices
 		[Test]
 		public void NegativeTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			using (var map = new IdentityMap(db))
 			{
 				Assert.Throws<LinqToDBConvertException>(() => map.GetEntity<Person>(new { ID1 = 1 }));

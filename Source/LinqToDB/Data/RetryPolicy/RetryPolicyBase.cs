@@ -8,31 +8,58 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Data.RetryPolicy
 {
 	using Common;
 
 	public abstract class RetryPolicyBase : IRetryPolicy
 	{
+
 		/// <summary>
 		/// Creates a new instance of <see cref="RetryPolicyBase" />.
 		/// </summary>
 		/// <param name="maxRetryCount">The maximum number of retry attempts. </param>
 		/// <param name="maxRetryDelay">The maximum delay in milliseconds between retries. </param>
-		protected RetryPolicyBase(int maxRetryCount, TimeSpan maxRetryDelay)
+		/// <param name="randomFactor">The maximum random factor. </param>
+		/// <param name="exponentialBase">The base for the exponential function used to compute the delay between retries. </param>
+		/// <param name="coefficient">The coefficient for the exponential function used to compute the delay between retries. </param>
+		protected RetryPolicyBase(int maxRetryCount, TimeSpan maxRetryDelay, double randomFactor, double exponentialBase, TimeSpan coefficient)
 		{
 			if (maxRetryCount < 0)
 				throw new ArgumentOutOfRangeException(nameof(maxRetryCount));
 			if (maxRetryDelay.TotalMilliseconds < 0.0)
 				throw new ArgumentOutOfRangeException(nameof(maxRetryDelay));
+			if (randomFactor < 1.0)
+				throw new ArgumentOutOfRangeException(nameof(randomFactor));
+			if (exponentialBase <= 0.0)
+				throw new ArgumentOutOfRangeException(nameof(exponentialBase));
+			if (coefficient.TotalMilliseconds < 0.0)
+				throw new ArgumentOutOfRangeException(nameof(coefficient));
 
-			MaxRetryCount         = maxRetryCount;
-			MaxRetryDelay         = maxRetryDelay;
+			MaxRetryCount   = maxRetryCount;
+			MaxRetryDelay   = maxRetryDelay;
+			RandomFactor    = randomFactor;
+			ExponentialBase = exponentialBase;
+			Coefficient     = coefficient;
+
 			ExceptionsEncountered = new List<Exception>();
 			Random                = new Random();
 		}
+
+		/// <summary>
+		/// The maximum random factor, must not be lesser than 1.
+		/// </summary>
+		public double   RandomFactor    { get; }
+
+		/// <summary>
+		/// The base for the exponential function used to compute the delay between retries, must be positive.
+		/// </summary>
+		public double   ExponentialBase { get; }
+
+		/// <summary>
+		/// The coefficient for the exponential function used to compute the delay between retries, must be nonnegative.
+		/// </summary>
+		public TimeSpan Coefficient     { get; }
 
 		/// <summary>
 		/// The list of exceptions that caused the operation to be retried so far.
@@ -40,7 +67,7 @@ namespace LinqToDB.Data.RetryPolicy
 		protected virtual List<Exception> ExceptionsEncountered { get; }
 
 		/// <summary>
-		/// A pseudo-random number generater that can be used to vary the delay between retries.
+		/// A pseudo-random number generator that can be used to vary the delay between retries.
 		/// </summary>
 		protected virtual Random Random { get; }
 
@@ -54,8 +81,7 @@ namespace LinqToDB.Data.RetryPolicy
 		/// </summary>
 		protected virtual TimeSpan MaxRetryDelay { get; }
 
-		[ThreadStatic]
-		static volatile bool _suspended;
+		static readonly AsyncLocal<bool> _suspended = new ();
 
 		/// <summary>
 		/// Indicates whether the strategy is suspended. The strategy is typically suspending while executing to avoid
@@ -63,8 +89,8 @@ namespace LinqToDB.Data.RetryPolicy
 		/// </summary>
 		protected static bool Suspended
 		{
-			get => _suspended;
-			set => _suspended = value;
+			get => _suspended.Value;
+			set => _suspended.Value = value;
 		}
 
 		/// <summary>
@@ -204,7 +230,7 @@ namespace LinqToDB.Data.RetryPolicy
 					OnRetry();
 				}
 
-				await TaskEx.Delay(delay.Value, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await Task.Delay(delay.Value, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 
@@ -230,18 +256,18 @@ namespace LinqToDB.Data.RetryPolicy
 		///     Returns the delay indicating how long to wait for before the next execution attempt if the operation should be retried;
 		///     <c>null</c> otherwise
 		/// </returns>
-		protected virtual TimeSpan? GetNextDelay([NotNull] Exception lastException)
+		protected virtual TimeSpan? GetNextDelay(Exception lastException)
 		{
 			var currentRetryCount = ExceptionsEncountered.Count - 1;
 
 			if (currentRetryCount < MaxRetryCount)
 			{
 				var delta =
-					(Math.Pow(Configuration.RetryPolicy.DefaultExponentialBase, currentRetryCount) - 1.0) *
-					(1.0 + Random.NextDouble() * (Configuration.RetryPolicy.DefaultRandomFactor - 1.0));
+					(Math.Pow(ExponentialBase, currentRetryCount) - 1.0) *
+					(1.0 + Random.NextDouble() * (RandomFactor - 1.0));
 
 				var delay = Math.Min(
-					Configuration.RetryPolicy.DefaultCoefficient.TotalMilliseconds * delta,
+					Coefficient.TotalMilliseconds * delta,
 					MaxRetryDelay.TotalMilliseconds);
 
 				return TimeSpan.FromMilliseconds(delay);
@@ -257,6 +283,6 @@ namespace LinqToDB.Data.RetryPolicy
 		/// <returns>
 		///     <c>true</c> if the specified exception is considered as transient, otherwise <c>false</c>.
 		/// </returns>
-		protected abstract bool ShouldRetryOn([NotNull] Exception exception);
+		protected abstract bool ShouldRetryOn(Exception exception);
 	}
 }

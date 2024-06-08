@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -51,24 +50,27 @@ namespace Tests.UserTests
 
 		[Test]
 		public void TestDateTime(
-			[IncludeDataSources(true, ProviderName.Informix)] string context,
+			[IncludeDataSources(true, TestProvName.AllInformix)] string context,
 			[Values] bool inlineParameters,
 			[ValueSource(nameof(DateTimePairs))] Tuple<DateTimeQuantifiers, DateTimeQuantifiers> quantifiers)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema
-					.GetFluentMappingBuilder()
-					.Entity<DateTimeTestTable>()
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<DateTimeTestTable>()
 					.Property(t => t.DateTimeField)
-					.HasDbType($"datetime {GetQuantifierName(quantifiers.Item1)} to {GetQuantifierName(quantifiers.Item2)}");
+						.HasDbType($"datetime {GetQuantifierName(quantifiers.Item1)} to {GetQuantifierName(quantifiers.Item2)}")
+				.Build();
 
+			var isIDS = IsIDSProvider(context);
+
+			using (var db = GetDataContext(context, ms))
+			{
 				using (var tbl = db.CreateLocalTable<DateTimeTestTable>())
 				{
 					db.InlineParameters = inlineParameters;
 
-					var input = new DateTime(2134, 5, 21, 13, 45, 43).AddTicks(1234567);
-					var expected = GetExpectedDatetime(input, quantifiers.Item1, quantifiers.Item2);
+					var input    = new DateTime(2134, 5, 21, 13, 45, 43).AddTicks(1234567);
+					var expected = GetExpectedDatetime(isIDS, input, quantifiers.Item1, quantifiers.Item2);
 
 					db.GetTable<DateTimeTestTable>().Insert(() => new DateTimeTestTable()
 					{
@@ -84,27 +86,32 @@ namespace Tests.UserTests
 
 		private static string GetQuantifierName(DateTimeQuantifiers quantifier)
 		{
-			switch (quantifier)
+			return quantifier switch
 			{
-				case DateTimeQuantifiers.Fraction1: return "fraction(1)";
-				case DateTimeQuantifiers.Fraction2: return "fraction(2)";
-				case DateTimeQuantifiers.Fraction3: return "fraction(3)";
-				case DateTimeQuantifiers.Fraction4: return "fraction(4)";
-				case DateTimeQuantifiers.Fraction5: return "fraction(5)";
-			}
-
-			return quantifier.ToString();
+				DateTimeQuantifiers.Fraction1 => "fraction(1)",
+				DateTimeQuantifiers.Fraction2 => "fraction(2)",
+				DateTimeQuantifiers.Fraction3 => "fraction(3)",
+				DateTimeQuantifiers.Fraction4 => "fraction(4)",
+				DateTimeQuantifiers.Fraction5 => "fraction(5)",
+				_                             => quantifier.ToString(),
+			};
 		}
 
-		private static DateTime GetExpectedDatetime(DateTime input, DateTimeQuantifiers largest, DateTimeQuantifiers smallest)
+		private DateTime GetExpectedDatetime(bool isIDS, DateTime input, DateTimeQuantifiers largest, DateTimeQuantifiers smallest)
 		{
-			var year = 1200;
-			var month = 1;
-			var day = 1;
-			var hour = 0;
+			var year   = 1200;
+			var month  = 1;
+			var day    = 1;
+			var hour   = 0;
 			var minute = 0;
 			var second = 0;
-			var ticks = 0;
+			var ticks  = 0;
+
+			if (isIDS && largest >= DateTimeQuantifiers.Hour && smallest <= DateTimeQuantifiers.Second)
+			{
+				// this selectivity for default year doesn't make any sense, but this is how IDS driver behaves
+				year = 1;
+			}
 
 			if (largest == DateTimeQuantifiers.Year)
 			{
@@ -157,14 +164,15 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Column(Length = 255, DataType = DataType.VarChar)]
-			public string Content { get; set; }
+			public string? Content { get; set; }
 		}
 
 		// server and client should run with DB_LOCALE=en_us.utf8;CLIENT_LOCALE=en_us.utf8 options
 		// and database should be created with same locale
 		//[Explicit("Could fail on non-utf8 locales")]
+		[SkipCI("Used docker image needs locale configuration")]
 		[Test]
-		public void Test_Insert([IncludeDataSources(ProviderName.Informix)] string context)
+		public void Test_Insert([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Table>())
@@ -179,8 +187,9 @@ namespace Tests.UserTests
 		}
 
 		//[Explicit("Could fail on non-utf8 locales")]
+		[SkipCI("Used docker image needs locale configuration")]
 		[Test]
-		public void Test_Update([IncludeDataSources(ProviderName.Informix)] string context)
+		public void Test_Update([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Table>())
@@ -195,8 +204,9 @@ namespace Tests.UserTests
 		}
 
 		//[Explicit("Could fail on non-utf8 locales")]
+		[SkipCI("Used docker image needs locale configuration")]
 		[Test]
-		public void Test_InsertOrUpdate([IncludeDataSources(ProviderName.Informix)] string context)
+		public void Test_InsertOrUpdate([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Table>())
@@ -211,8 +221,9 @@ namespace Tests.UserTests
 		}
 
 		//[Explicit("Could fail on non-utf8 locales")]
+		[SkipCI("Used docker image needs locale configuration")]
 		[Test]
-		public void Test_Inline([IncludeDataSources(ProviderName.Informix)] string context)
+		public void Test_Inline([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Table>())

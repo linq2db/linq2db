@@ -8,13 +8,14 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]
 	public class SubQueryTests : TestBase
 	{
 		[Test]
-		public void Test1([DataSources] string context)
+		public void Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -27,7 +28,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test2([DataSources] string context)
+		public void Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -40,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test3([DataSources] string context)
+		public void Test3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -54,7 +55,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test4([DataSources] string context)
+		public void Test4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -69,7 +70,7 @@ namespace Tests.Linq
 		static int _testValue = 3;
 
 		[Test]
-		public void Test5([DataSources] string context)
+		public void Test5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -106,7 +107,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test6([DataSources] string context)
+		public void Test6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -123,7 +124,7 @@ namespace Tests.Linq
 				{
 					ID     = c.ChildID,
 					c.ParentID,
-					Sum    = gc.Where(g => g.ChildID == c.ChildID && g.GrandChildID > 0).Sum(g => (int)g.ChildID * g.GrandChildID),
+					Sum    = gc.Where(g => g.ChildID == c.ChildID && g.GrandChildID > 0).Sum(g => (int)g.ChildID! * g.GrandChildID),
 					Count1 = gc.Count(g => g.ChildID == c.ChildID && g.GrandChildID > 0)
 				});
 
@@ -137,7 +138,7 @@ namespace Tests.Linq
 				{
 					ID     = c.ChildID,
 					c.ParentID,
-					Sum    = rgc.Where(g => g.ChildID == c.ChildID && g.GrandChildID > 0).Sum(g => (int)g.ChildID * g.GrandChildID),
+					Sum    = rgc.Where(g => g.ChildID == c.ChildID && g.GrandChildID > 0).Sum(g => (int)g.ChildID! * g.GrandChildID),
 					Count1 = rgc.Count(g => g.ChildID == c.ChildID && g.GrandChildID > 0),
 				});
 
@@ -146,7 +147,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test7([DataSources] string context)
+		public void Test7([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -155,7 +156,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test8([DataSources] string context)
+		public void Test8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -212,10 +213,11 @@ namespace Tests.Linq
 
 		[Test]
 		public void Contains1([DataSources(
-			ProviderName.Informix,
+			TestProvName.AllInformix,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
-			ProviderName.SapHana,
-			ProviderName.Access,
+			TestProvName.AllSapHana,
+			TestProvName.AllAccess,
 			TestProvName.AllOracle,
 			TestProvName.AllMySql,
 			ProviderName.DB2)]
@@ -233,11 +235,12 @@ namespace Tests.Linq
 
 		[Test]
 		public void Contains2([DataSources(
-			ProviderName.Informix,
+			TestProvName.AllClickHouse,
+			TestProvName.AllInformix,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
-			ProviderName.SapHana,
-			ProviderName.Access,
+			TestProvName.AllSapHana,
+			TestProvName.AllAccess,
 			TestProvName.AllOracle,
 			ProviderName.DB2)]
 			string context)
@@ -254,6 +257,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubSub1([DataSources(
+			TestProvName.AllClickHouse,
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
 			TestProvName.AllOracle)]
 			string context)
@@ -292,12 +296,14 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubSub2([DataSources(
-			ProviderName.Access, ProviderName.DB2,
+			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
+			ProviderName.DB2,
 			TestProvName.AllOracle,
 			TestProvName.AllMySql,
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
-			ProviderName.Informix, ProviderName.SapHana)]
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -386,6 +392,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub21([DataSources(
 			ProviderName.SqlCe, ProviderName.DB2,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle,
 			ProviderName.Access)]
 			string context)
@@ -433,6 +440,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub211([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle)]
 			string context)
 		{
@@ -480,7 +488,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubSub212([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
+			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.DB2,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle)]
 			string context)
 		{
@@ -496,7 +505,7 @@ namespace Tests.Linq
 					{
 						Count =
 						(
-							from c in p1.p2.p2.Parent.GrandChildren
+							from c in p1.p2.p2.Parent!.GrandChildren
 							select new { c, ID = c.ParentID + 1 } into c
 							where c.ID < p1.ID
 							select new { c.c, ID = c.c.ParentID + 1 } into c
@@ -514,7 +523,7 @@ namespace Tests.Linq
 					{
 						Count =
 						(
-							from c in p1.p2.p2.Parent.GrandChildren
+							from c in p1.p2.p2.Parent!.GrandChildren
 							select new { c, ID = c.ParentID + 1 } into c
 							where c.ID < p1.ID
 							select new { c.c, ID = c.c.ParentID + 1 } into c
@@ -527,7 +536,8 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub22([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			TestProvName.AllOracle, ProviderName.SapHana)]
+			TestProvName.AllClickHouse,
+			TestProvName.AllOracle, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -573,7 +583,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count1([DataSources(ProviderName.SqlCe)] string context)
+		public void Count1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -598,7 +608,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count2([DataSources(ProviderName.SqlCe)] string context)
+		public void Count2([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -623,7 +633,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count3([DataSources(ProviderName.SqlCe)] string context)
+		public void Count3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -651,7 +661,7 @@ namespace Tests.Linq
 		[Test, ActiveIssue(1601)]
 		public void Issue1601([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var query = from q in db.Types
 							let datePlus2 = q.DateTimeValue.AddDays(2)
@@ -664,7 +674,200 @@ namespace Tests.Linq
 
 				query.ToList();
 
-				Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(db.LastQuery, "Types").Count);
+				Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(db.LastQuery!, "Types").Count);
+			}
+		}
+
+		[Table]
+		sealed class Contract_Distributor_Agent
+		{
+			[Column] public int Agent_Id { get; set; }
+			[Column] public int Distributor_Id { get; set; }
+			[Column] public int Contract_Id { get; set; }
+			[Column] public string? Distributor_Type_Code { get; set; }
+			[Column] public string? Distributor_Agent_Type_Prefix { get; set; }
+			[Column] public string? Represents_Type_Prefix { get; set; }
+
+			public static readonly Contract_Distributor_Agent[] Data = new[]
+			{
+				new Contract_Distributor_Agent() { Agent_Id = 1, Distributor_Id = 1, Contract_Id = 198827882, Distributor_Type_Code = "CC", Distributor_Agent_Type_Prefix = "OFFICE", Represents_Type_Prefix = "REPRESENTS" }
+			};
+		}
+
+		[Table]
+		sealed class Agent
+		{
+			[Column] public int Agent_Id { get; set; }
+			[Column] public string? First_Name { get; set; }
+			[Column] public string? Last_Name { get; set; }
+
+			public static readonly Agent[] Data = new[]
+			{
+				new Agent() { Agent_Id = 1, First_Name = "x", Last_Name = "x" }
+			};
+		}
+
+		[Table]
+		sealed class Distributor
+		{
+			[Column] public int Distributor_Id { get; set; }
+			[Column] public string? Type_Code { get; set; }
+			[Column] public string? Distributor_Name { get; set; }
+
+			public static readonly Distributor[] Data = new[]
+			{
+				new Distributor() { Distributor_Id = 1, Type_Code = "RE", Distributor_Name = "x" }
+			};
+		}
+
+		[Table]
+		sealed class Distributor_Commercial_Propert
+		{
+			[Column] public int Distributor_Id { get; set; }
+			[Column] public int Commercial_Property_Id { get; set; }
+			[Column] public string? Distributor_Type_Code { get; set; }
+
+			public static readonly Distributor_Commercial_Propert[] Data = new[]
+			{
+				new Distributor_Commercial_Propert() { Distributor_Id = 1, Commercial_Property_Id = 1, Distributor_Type_Code = "RE" }
+			};
+		}
+
+		[Table]
+		sealed class Commercial_Property
+		{
+			[Column              ] public int     Commercial_Property_Id { get; set; }
+			[Column(Length = 100)] public string? Street_Number          { get; set; }
+			[Column(Length = 100)] public string? Street_Name            { get; set; }
+			[Column(Length = 100)] public string? State                  { get; set; }
+			[Column(Length = 100)] public string? Zip_Code               { get; set; }
+			[Column(Length = 100)] public string? Zip_Plus_4             { get; set; }
+			[Column(Length = 100)] public string? City_Code              { get; set; }
+
+			public static readonly Commercial_Property[] Data = new[]
+			{
+				new Commercial_Property() { Commercial_Property_Id = 1, Street_Number = "x", Street_Name = "x", State = "x", Zip_Code = "x", Zip_Plus_4 = "x", City_Code = "x" }
+			};
+		}
+
+		[Table]
+		sealed class Contract_Dates
+		{
+			[Column] public int Contract_Id { get; set; }
+			[Column] public string? Type_Code { get; set; }
+			[Column] public string? Effective_Date { get; set; }
+
+			public static readonly Contract_Dates[] Data = new[]
+			{
+				new Contract_Dates() { Contract_Id = 198827882, Type_Code = "ESTCOE", Effective_Date = "x" }
+			};
+		}
+
+		[Table]
+		sealed class Cities
+		{
+			[Column] public string? City_Code { get; set; }
+			[Column] public string? City_Name { get; set; }
+
+			public static readonly Cities[] Data = new[]
+			{
+				new Cities() { City_Code = "x", City_Name = "Urupinsk" }
+			};
+		}
+
+		[Test]
+		public void Issue383Test1([DataSources(false, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))
+			using (db.CreateLocalTable(Agent.Data))
+			using (db.CreateLocalTable(Distributor.Data))
+			using (db.CreateLocalTable(Distributor_Commercial_Propert.Data))
+			using (db.CreateLocalTable(Commercial_Property.Data))
+			using (db.CreateLocalTable(Contract_Dates.Data))
+			using (db.CreateLocalTable(Cities.Data))
+			{
+				var query = from cda in db.GetTable<Contract_Distributor_Agent>()
+							join a in db.GetTable<Agent>() on cda.Agent_Id equals a.Agent_Id
+							join d in db.GetTable<Distributor>() on cda.Distributor_Id equals d.Distributor_Id
+							join dcp in db.GetTable<Distributor_Commercial_Propert>() on d.Distributor_Id equals dcp.Distributor_Id
+							join cp in db.GetTable<Commercial_Property>() on dcp.Commercial_Property_Id equals cp.Commercial_Property_Id
+							join cd in db.GetTable<Contract_Dates>() on cda.Contract_Id equals cd.Contract_Id
+							where cda.Contract_Id == 198827882
+								 && cda.Distributor_Type_Code == "CC"
+								 && cda.Distributor_Agent_Type_Prefix == "OFFICE"
+								 && cda.Represents_Type_Prefix == "REPRESENTS"
+								 && cd.Type_Code == "ESTCOE"
+								 && d.Type_Code == "RE"
+								 && dcp.Distributor_Type_Code == "RE"
+							select new
+							{
+								a.First_Name,
+								a.Last_Name,
+								d.Distributor_Name,
+								cp.Street_Number,
+								cp.Street_Name,
+								City_Name = (from c in db.GetTable<Cities>()
+											 where c.City_Code == cp.City_Code
+											 select new { c.City_Name }),
+								cp.State,
+								cp.Zip_Code,
+								cp.Zip_Plus_4,
+								cd.Effective_Date
+							};
+
+				var res = query.ToList();
+
+				Assert.AreEqual(1, res.Count);
+				Assert.AreEqual("Urupinsk", res[0].City_Name.Single().City_Name);
+			}
+		}
+
+		[Test]
+		public void Issue383Test2([DataSources(false, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))
+			using (db.CreateLocalTable(Agent.Data))
+			using (db.CreateLocalTable(Distributor.Data))
+			using (db.CreateLocalTable(Distributor_Commercial_Propert.Data))
+			using (db.CreateLocalTable(Commercial_Property.Data))
+			using (db.CreateLocalTable(Contract_Dates.Data))
+			using (db.CreateLocalTable(Cities.Data))
+			{
+				var query = from cda in db.GetTable<Contract_Distributor_Agent>()
+							join a in db.GetTable<Agent>() on cda.Agent_Id equals a.Agent_Id
+							join d in db.GetTable<Distributor>() on cda.Distributor_Id equals d.Distributor_Id
+							join dcp in db.GetTable<Distributor_Commercial_Propert>() on d.Distributor_Id equals dcp.Distributor_Id
+							join cp in db.GetTable<Commercial_Property>() on dcp.Commercial_Property_Id equals cp.Commercial_Property_Id
+							join cd in db.GetTable<Contract_Dates>() on cda.Contract_Id equals cd.Contract_Id
+							where cda.Contract_Id == 198827882
+								 && cda.Distributor_Type_Code == "CC"
+								 && cda.Distributor_Agent_Type_Prefix == "OFFICE"
+								 && cda.Represents_Type_Prefix == "REPRESENTS"
+								 && cd.Type_Code == "ESTCOE"
+								 && d.Type_Code == "RE"
+								 && dcp.Distributor_Type_Code == "RE"
+							select new
+							{
+								a.First_Name,
+								a.Last_Name,
+								d.Distributor_Name,
+								cp.Street_Number,
+								cp.Street_Name,
+								City_Name = (from c in db.GetTable<Cities>()
+											 where c.City_Code == cp.City_Code
+											 select c.City_Name).Single(),
+								cp.State,
+								cp.Zip_Code,
+								cp.Zip_Plus_4,
+								cd.Effective_Date
+							};
+
+				var res = query.ToList();
+
+				Assert.AreEqual(1, res.Count);
+				Assert.AreEqual("Urupinsk", res[0].City_Name);
 			}
 		}
 

@@ -1,7 +1,7 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,10 +10,9 @@ namespace LinqToDB.Data.RetryPolicy
 	using Configuration;
 	using LinqToDB.Async;
 
-	class RetryingDbConnection : DbConnection, IProxy<DbConnection>, IDisposable, ICloneable, IAsyncDbConnection
+	sealed class RetryingDbConnection : IAsyncDbConnection, IProxy<DbConnection>
 	{
 		readonly DataConnection     _dataConnection;
-		readonly DbConnection       _dbConnection;
 		readonly IAsyncDbConnection _connection;
 		readonly IRetryPolicy       _policy;
 
@@ -21,122 +20,55 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			_dataConnection = dataConnection;
 			_connection     = connection;
-			_dbConnection   = (DbConnection)connection.Connection;
 			_policy         = policy;
 		}
 
-		protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
-		{
-			return _dbConnection.BeginTransaction(isolationLevel);
-		}
+		#region IProxy<DbConnection>
+		DbConnection IProxy<DbConnection>.UnderlyingObject => _connection.Connection;
+		#endregion
 
-		public override void Close()
-		{
-			_connection.Close();
-		}
+		#region IDisposable
+		void IDisposable.Dispose() => _connection.Dispose();
+		#endregion
 
-		public override void ChangeDatabase(string databaseName)
-		{
-			_connection.ChangeDatabase(databaseName);
-		}
+		#region IAsyncDisposable
+#if NATIVE_ASYNC
+		ValueTask IAsyncDisposable.DisposeAsync() => _connection.DisposeAsync();
+#else
+		Task IAsyncDisposable.DisposeAsync() => _connection.DisposeAsync();
+#endif
+		#endregion
 
-		public override void Open()
-		{
-			_policy.Execute(_connection.Open);
-		}
+		#region IAsyncDbConnection
+		DbConnection IAsyncDbConnection.Connection => _connection.Connection;
 
-		public override string ConnectionString
+		string IAsyncDbConnection.ConnectionString
 		{
 			get => _connection.ConnectionString;
 			set => _connection.ConnectionString = value;
 		}
 
-		public override string          Database      => _connection.Database;
+		ConnectionState IAsyncDbConnection.State => _connection.State;
 
-		public override ConnectionState State         => _connection.State;
-		public override string          DataSource    => _dbConnection.DataSource;
-		public override string          ServerVersion => _dbConnection.ServerVersion;
-
-		protected override DbCommand CreateDbCommand()
-		{
-			return new RetryingDbCommand(_dbConnection.CreateCommand(), _policy);
-		}
-
-		public
-#if !NET40
-			override
-#endif
-			async Task OpenAsync(CancellationToken cancellationToken)
-		{
-			await _policy.ExecuteAsync(async ct => await _connection.OpenAsync(ct).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext), cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-		}
-
-		void IDisposable.Dispose()
-		{
-			((IDisposable)_connection).Dispose();
-		}
-
-		public DbConnection UnderlyingObject => _dbConnection;
-
-#if !NETSTANDARD1_6
-		public override DataTable GetSchema()
-		{
-			return _dbConnection.GetSchema();
-		}
-
-		public override DataTable GetSchema(string collectionName)
-		{
-			return _dbConnection.GetSchema(collectionName);
-		}
-
-		public override DataTable GetSchema(string collectionName, string[] restrictionValues)
-		{
-			return _dbConnection.GetSchema(collectionName, restrictionValues);
-		}
-
-		public override ISite Site
-		{
-			get => _dbConnection.Site;
-			set => _dbConnection.Site = value;
-		}
+		IAsyncDbTransaction IAsyncDbConnection.BeginTransaction() => _connection.BeginTransaction();
+		IAsyncDbTransaction IAsyncDbConnection.BeginTransaction(IsolationLevel isolationLevel) => _connection.BeginTransaction(isolationLevel);
+#if NATIVE_ASYNC
+		ValueTask<IAsyncDbTransaction> IAsyncDbConnection.BeginTransactionAsync(CancellationToken cancellationToken) => _connection.BeginTransactionAsync(cancellationToken);
+		ValueTask<IAsyncDbTransaction> IAsyncDbConnection.BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken) => _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
+#else
+		Task<IAsyncDbTransaction> IAsyncDbConnection.BeginTransactionAsync(CancellationToken cancellationToken) => _connection.BeginTransactionAsync(cancellationToken);
+		Task<IAsyncDbTransaction> IAsyncDbConnection.BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken) => _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
 #endif
 
-		public override int ConnectionTimeout => _connection.ConnectionTimeout;
+		DbCommand IAsyncDbConnection.CreateCommand() => new RetryingDbCommand(_connection.CreateCommand(), _policy);
 
-		// return this or it will be breaking change for DataConnection.Connection property
-		public IDbConnection Connection => this;
+		void IAsyncDbConnection.Close() => _connection.Close();
+		Task IAsyncDbConnection.CloseAsync() => _connection.CloseAsync();
 
-		public override event StateChangeEventHandler StateChange
-		{
-			add    => _dbConnection.StateChange += value;
-			remove => _dbConnection.StateChange -= value;
-		}
+		void IAsyncDbConnection.Open() => _policy.Execute(_connection.Open);
+		Task IAsyncDbConnection.OpenAsync(CancellationToken cancellationToken) => _policy.ExecuteAsync(_connection.OpenAsync, cancellationToken);
 
-		public object Clone()
-		{
-			if (_connection is ICloneable cloneable)
-				return cloneable.Clone();
-			return _dataConnection.DataProvider.CreateConnection(_dataConnection.ConnectionString);
-		}
-
-		public Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
-		{
-			return _connection.BeginTransactionAsync(cancellationToken);
-		}
-
-		public Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
-		{
-			return _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
-		}
-
-		public Task CloseAsync(CancellationToken cancellationToken = default)
-		{
-			return _connection.CloseAsync(cancellationToken);
-		}
-
-		public IAsyncDbConnection TryClone()
-		{
-			return AsyncFactory.Create((IDbConnection)Clone());
-		}
+		DbConnection? IAsyncDbConnection.TryClone() => _connection.TryClone();
+#endregion
 	}
 }

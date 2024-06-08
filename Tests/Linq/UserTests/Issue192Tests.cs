@@ -16,12 +16,12 @@ namespace Tests.UserTests
 		public class TypeConvertTable
 		{
 			[Column(Length = 50), NotNull]
-			public string Name   { get; set; }
+			public string Name   { get; set; } = null!;
 
-			[Column(DataType = DataType.Char), NotNull]
+			[Column(DataType = DataType.Char)]
 			public bool BoolValue { get; set; }
 
-			[Column(DataType = DataType.VarChar, Length = 50), Nullable]
+			[Column(DataType = DataType.VarChar, Length = 50)]
 			public Guid? GuidValue { get; set; }
 
 			public override string ToString()
@@ -29,7 +29,7 @@ namespace Tests.UserTests
 				return string.Format("{0} {1} {2}", Name, BoolValue, GuidValue);
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				var e = obj as TypeConvertTable;
 
@@ -53,24 +53,27 @@ namespace Tests.UserTests
 		public class TypeConvertTableRaw
 		{
 			[Column(Length = 50), NotNull]
-			public string Name   { get; set; }
+			public string Name   { get; set; } = null!;
 
 			[Column(DataType = DataType.Char), NotNull]
 			public char BoolValue { get; set; }
 
 			[Column(DataType = DataType.VarChar, Length = 50), Nullable]
-			public string GuidValue { get; set; }
+			public string? GuidValue { get; set; }
 
 		}
 
 		[Test]
-		public void Test([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Test([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<bool,   DataParameter>(_ => DataParameter.Char(null, _ ? 'Y' : 'N'));
 			ms.SetConvertExpression<char,   bool>(_ => _ == 'Y');
-			ms.SetConvertExpression<string, bool>(_ => _.Trim() == "Y");
+			if (context.IsAnyOf(TestProvName.AllClickHouse))
+				ms.SetConvertExpression<string, bool>(_ => _.Trim('\0') == "Y");
+			else
+				ms.SetConvertExpression<string, bool>(_ => _.Trim() == "Y");
 
 			ms.SetConvertExpression<Guid?,  DataParameter>(_ => DataParameter.VarChar(null, _.ToString()));
 			ms.SetConvertExpression<string, Guid?>(_ => Guid.Parse(_));
@@ -82,14 +85,14 @@ namespace Tests.UserTests
 				{
 					Name      = "NotVerified",
 					BoolValue = false,
-					GuidValue = Guid.NewGuid()
+					GuidValue = TestData.Guid1
 				};
 
 				var verified = new TypeConvertTable
 				{
 					Name      = "Verified",
 					BoolValue = true,
-					GuidValue = Guid.NewGuid()
+					GuidValue = TestData.Guid2
 				};
 
 				db.Insert(notVerified, tbl.TableName);

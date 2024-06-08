@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -18,7 +18,7 @@ namespace Tests.Linq
 	public class CommonTests : TestBase
 	{
 		[Test]
-		public void CheckNullTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
+		public void CheckNullTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -80,7 +80,7 @@ namespace Tests.Linq
 		[Test]
 		public void CoalesceNew([DataSources] string context)
 		{
-			Child ch = null;
+			Child? ch = null;
 
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -152,17 +152,16 @@ namespace Tests.Linq
 					where
 						(p.FirstName == null ? (bool?)null : (bool?)p.FirstName.StartsWith("Jo")) == null ?
 							false :
-							(p.FirstName == null ? (bool?)null : p.FirstName.StartsWith("Jo")).Value
+							(p.FirstName == null ? (bool?)null : p.FirstName.StartsWith("Jo"))!.Value
 					select p,
 					from p in db.Person
 					where
 						(p.FirstName == null ? (bool?)null : (bool?)p.FirstName.StartsWith("Jo")) == null ?
 							false :
-							(p.FirstName == null ? (bool?)null : p.FirstName.StartsWith("Jo")).Value
+							(p.FirstName == null ? (bool?)null : p.FirstName.StartsWith("Jo"))!.Value
 					select p);
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix)]
 		[Test]
 		public void PreferServerFunc1([DataSources] string context)
 		{
@@ -172,7 +171,6 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length);
 		}
 
-		[ActiveIssue(Configuration = ProviderName.Informix)]
 		[Test]
 		public void PreferServerFunc2([DataSources] string context)
 		{
@@ -182,14 +180,14 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length + "".Length);
 		}
 
-		class Test
+		sealed class Test
 		{
-			class Entity
+			sealed class Entity
 			{
-				public Test TestField = null;
+				public Test? TestField;
 			}
 
-			public Test TestClosure(ITestDataContext db)
+			public Test? TestClosure(ITestDataContext db)
 			{
 				return db.Person.Select(_ => new Entity { TestField = this }).First().TestField;
 			}
@@ -215,17 +213,17 @@ namespace Tests.Linq
 
 				var exp = Expression.Call(((MethodCallExpression)m.Body).Method, emp.Expression);
 
-				var _ = (int)((IQueryable)emp).Provider.Execute(exp);
+				var _ = (int)((IQueryable)emp).Provider.Execute(exp)!;
 			}
 		}
 
-		class MyClass
+		sealed class MyClass
 		{
 			public int ID;
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				return ((MyClass)obj).ID == ID;
+				return obj is MyClass mc && mc.ID == ID;
 			}
 
 			public override int GetHashCode()
@@ -312,6 +310,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Condition1([DataSources] string context)
 		{
@@ -511,7 +510,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParameterTest1([DataSources] string context)
+		public void ParameterTest1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -524,12 +523,12 @@ namespace Tests.Linq
 		public class PersonTest
 		{
 			[Column("FirstName"), PrimaryKey]
-			public string ID;
+			public string ID = null!;
 		}
 
 		int _i;
 
-		string GetCustKey()
+		string? GetCustKey()
 		{
 			return ++_i % 2 == 0 ? "John" : null;
 		}
@@ -558,10 +557,10 @@ namespace Tests.Linq
 			Assert.That(_i, Is.EqualTo(2));
 		}
 
-		class User
+		sealed class User
 		{
-			public string FirstName;
-			public int?   Status;
+			public string? FirstName;
+			public int?    Status;
 		}
 
 		// https://github.com/linq2db/linq2db/issues/191
@@ -570,13 +569,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				string firstName = null;
-				int?   status    = null;
+				string? firstName = null;
+				int?    status    = null;
 
 				var str = db.GetTable<User>()
 					.Where(user =>
 						user.Status == status &&
-						(string.IsNullOrEmpty(firstName) || user.FirstName.Contains(firstName)))
+						(string.IsNullOrEmpty(firstName) || user.FirstName!.Contains(firstName)))
 					.ToString();
 
 				Debug.WriteLine(str);
@@ -591,7 +590,7 @@ namespace Tests.Linq
 			return db.GetTable<Person>();
 		}
 
-		public static bool IsNullOrEmpty(this string value)
+		public static bool IsNullOrEmpty(this string? value)
 		{
 			return string.IsNullOrEmpty(value);
 		}

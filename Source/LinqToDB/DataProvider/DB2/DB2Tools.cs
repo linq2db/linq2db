@@ -1,118 +1,85 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
+using System.Data.Common;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
 	using Configuration;
 	using Data;
-	using Extensions;
 
 	[PublicAPI]
 	public static class DB2Tools
 	{
-		public static string AssemblyName;
-		public static bool   IsCore;
+		static readonly Lazy<IDataProvider> _db2DataProviderzOS = DataConnection.CreateDataProvider<DB2zOSDataProvider>();
+		static readonly Lazy<IDataProvider> _db2DataProviderLUW = DataConnection.CreateDataProvider<DB2LUWDataProvider>();
 
-		static readonly DB2DataProvider _db2DataProviderzOS = new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
-		static readonly DB2DataProvider _db2DataProviderLUW = new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW);
+		public static bool AutoDetectProvider { get; set; } = true;
 
-		public static bool AutoDetectProvider { get; set; }
-
-		static DB2Tools()
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			try
+			// DB2 ODS provider could be used by informix
+			if (options.ConfigurationString?.Contains("Informix") == true)
+				return null;
+
+			switch (options.ProviderName)
 			{
-				var path = typeof(DB2Tools).AssemblyEx().GetPath();
+				case ProviderName.DB2LUW: return _db2DataProviderLUW.Value;
+				case ProviderName.DB2zOS: return _db2DataProviderzOS.Value;
 
-				IsCore = File.Exists(Path.Combine(path, (AssemblyName = "IBM.Data.DB2.Core") + ".dll"));
-
-				if (!IsCore)
-					AssemblyName = "IBM.Data.DB2";
-			}
-			catch (Exception)
-			{
-			}
-
-			AutoDetectProvider = true;
-
-			DataConnection.AddDataProvider(ProviderName.DB2, _db2DataProviderLUW);
-			DataConnection.AddDataProvider(_db2DataProviderLUW);
-			DataConnection.AddDataProvider(_db2DataProviderzOS);
-
-			DataConnection.AddProviderDetector(ProviderDetector);
-		}
-
-		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
-		{
-			//if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
-			//	return null;
-
-			switch (css.ProviderName)
-			{
 				case ""             :
 				case null           :
 
-					if (css.Name == "DB2")
-						goto case "DB2";
+					if (options.ConfigurationString == "DB2")
+						goto case ProviderName.DB2;
 					break;
 
-				case "IBM.Data.DB2.Core" :
-					IsCore       = true;
-					AssemblyName = "IBM.Data.DB2.Core";
+				case ProviderName.DB2    :
+				case DB2ProviderAdapter.NetFxClientNamespace:
+				case DB2ProviderAdapter.CoreClientNamespace :
 
-					goto case "DB2";
+					if (options.ConfigurationString?.Contains("LUW") == true)
+						return _db2DataProviderLUW.Value;
+					if (options.ConfigurationString?.Contains("z/OS") == true || options.ConfigurationString?.Contains("zOS") == true)
+						return _db2DataProviderzOS.Value;
 
-				case "DB2"               :
-				case "IBM.Data.DB2"      :
-
-					if (css.Name.Contains("LUW") || css.Name.Contains("z/OS") || css.Name.Contains("zOS"))
-						break;
-
-					if (AutoDetectProvider)
+					if (AutoDetectProvider && options.ConnectionString != null)
 					{
 						try
 						{
-							var connectionType = Type.GetType(AssemblyName + ".DB2Connection, " + AssemblyName, true);
-							var serverTypeProp = connectionType
-								.GetPropertiesEx (BindingFlags.NonPublic | BindingFlags.Instance)
-								.FirstOrDefault(p => p.Name == "eServerType");
+							using var conn = DB2ProviderAdapter.Instance.CreateConnection(options.ConnectionString);
 
-							if (serverTypeProp != null)
+							if (options.ConnectionInterceptor == null)
 							{
-								var connectionCreator = DynamicDataProviderBase.CreateConnectionExpression(connectionType).Compile();
-								var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
-
-								using (var conn = connectionCreator(cs))
-								{
-									conn.Open();
-
-									var serverType = Expression.Lambda<Func<object>>(
-										Expression.Convert(
-											Expression.MakeMemberAccess(Expression.Constant(conn), serverTypeProp),
-											typeof(object)))
-										.Compile()();
-
-									var iszOS = serverType.ToString() == "DB2_390";
-
-									return iszOS ? _db2DataProviderzOS : _db2DataProviderLUW;
-								}
+								conn.Open();
 							}
+							else
+							{
+								using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
+									options.ConnectionInterceptor.ConnectionOpening(new(null), ((IConnectionWrapper)conn).Connection);
+
+								conn.Open();
+
+								using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
+									options.ConnectionInterceptor.ConnectionOpened(new(null), ((IConnectionWrapper)conn).Connection);
+							}
+
+							var iszOS = conn.eServerType == DB2ProviderAdapter.DB2ServerTypes.DB2_390;
+
+							return iszOS ? _db2DataProviderzOS.Value : _db2DataProviderLUW.Value;
 						}
-						catch (Exception)
+						catch
 						{
+							// ignored
 						}
 					}
 
-					break;
+					return GetDataProvider();
 			}
 
 			return null;
@@ -120,144 +87,74 @@ namespace LinqToDB.DataProvider.DB2
 
 		public static IDataProvider GetDataProvider(DB2Version version = DB2Version.LUW)
 		{
-			switch (version)
-			{
-				case DB2Version.zOS : return _db2DataProviderzOS;
-			}
+			if (version == DB2Version.zOS)
+				return _db2DataProviderzOS.Value;
 
-			return _db2DataProviderLUW;
+			return _db2DataProviderLUW.Value;
 		}
 
 		public static void ResolveDB2(string path)
 		{
-			new AssemblyResolver(path, AssemblyName);
+			new AssemblyResolver(path, DB2ProviderAdapter.AssemblyName);
+#if !NETFRAMEWORK
+			new AssemblyResolver(path, DB2ProviderAdapter.AssemblyNameOld);
+#endif
 		}
 
 		public static void ResolveDB2(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, AssemblyName);
+			new AssemblyResolver(assembly, assembly.GetName().Name!);
 		}
-
-		#region OnInitialized
-
-		private static  bool                  _isInitialized;
-		static readonly object                _syncAfterInitialized    = new object();
-		private static  ConcurrentQueue<Action> _afterInitializedActions = new ConcurrentQueue<Action>();
-
-		internal static void Initialized()
-		{
-			if (!_isInitialized)
-			{
-				lock (_syncAfterInitialized)
-				{
-					if (!_isInitialized)
-					{
-						_isInitialized = true;
-
-						foreach (var action in _afterInitializedActions)
-							action();
-						_afterInitializedActions = null;
-					}
-				}
-			}
-		}
-
-		public static void AfterInitialized(Action action)
-		{
-			if (_isInitialized)
-			{
-				action();
-			}
-			else
-			{
-				lock (_syncAfterInitialized)
-				{
-					if (_isInitialized)
-					{
-						action();
-					}
-					else
-					{
-						_afterInitializedActions.Enqueue(action);
-					}
-				}
-			}
-		}
-
-		#endregion
 
 		#region CreateDataConnection
 
+		/// <summary>
+		/// Creates <see cref="DataConnection"/> object using provided DB2 connection string.
+		/// </summary>
+		/// <param name="connectionString">Connection string.</param>
+		/// <param name="version">DB2 version.</param>
+		/// <returns><see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateDataConnection(string connectionString, DB2Version version = DB2Version.LUW)
 		{
-			switch (version)
-			{
-				case DB2Version.zOS : return new DataConnection(_db2DataProviderzOS, connectionString);
-			}
-
-			return new DataConnection(_db2DataProviderLUW, connectionString);
+			return new DataConnection(GetDataProvider(version), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, DB2Version version = DB2Version.LUW)
+		/// <summary>
+		/// Creates <see cref="DataConnection"/> object using provided connection object.
+		/// </summary>
+		/// <param name="connection">Connection instance.</param>
+		/// <param name="version">DB2 version.</param>
+		/// <returns><see cref="DataConnection"/> instance.</returns>
+		public static DataConnection CreateDataConnection(DbConnection connection, DB2Version version = DB2Version.LUW)
 		{
-			switch (version)
-			{
-				case DB2Version.zOS : return new DataConnection(_db2DataProviderzOS, connection);
-			}
-
-			return new DataConnection(_db2DataProviderLUW, connection);
+			return new DataConnection(GetDataProvider(version), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, DB2Version version = DB2Version.LUW)
+		/// <summary>
+		/// Creates <see cref="DataConnection"/> object using provided transaction object.
+		/// </summary>
+		/// <param name="transaction">Transaction instance.</param>
+		/// <param name="version">DB2 version.</param>
+		/// <returns><see cref="DataConnection"/> instance.</returns>
+		public static DataConnection CreateDataConnection(DbTransaction transaction, DB2Version version = DB2Version.LUW)
 		{
-			switch (version)
-			{
-				case DB2Version.zOS : return new DataConnection(_db2DataProviderzOS, transaction);
-			}
-
-			return new DataConnection(_db2DataProviderLUW, transaction);
+			return new DataConnection(GetDataProvider(version), transaction);
 		}
 
 		#endregion
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int                        maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
-			where T : class
+		/// <summary>
+		/// Default bulk copy mode, used for DB2 by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+		/// methods, if mode is not specified explicitly.
+		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
+		/// </summary>
+		[Obsolete("Use DB2Options.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
 		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
-		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int?                       bulkCopyTimeout    = null,
-			bool                       keepIdentity       = false,
-			int                        notifyAfter        = 0,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					BulkCopyTimeout    = bulkCopyTimeout,
-					KeepIdentity       = keepIdentity,
-					NotifyAfter        = notifyAfter,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
+			get => DB2Options.Default.BulkCopyType;
+			set => DB2Options.Default = DB2Options.Default with { BulkCopyType = value };
 		}
 
 		#endregion

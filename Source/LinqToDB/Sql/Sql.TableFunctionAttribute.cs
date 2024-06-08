@@ -1,23 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using Extensions;
-
+	using Common.Internal;
+	using SqlProvider;
 	using SqlQuery;
 
 	partial class Sql
 	{
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class TableFunctionAttribute : Attribute
+		public class TableFunctionAttribute : MappingAttribute
 		{
 			public TableFunctionAttribute()
 			{
@@ -47,47 +44,36 @@ namespace LinqToDB
 				ArgIndices    = argIndices;
 			}
 
-			public string Configuration { get; set; }
-			public string Name          { get; set; }
-			public string Schema        { get; set; }
-			public string Database      { get; set; }
-			public int[]  ArgIndices    { get; set; }
+			public string? Name          { get; set; }
+			public string? Schema        { get; set; }
+			public string? Database      { get; set; }
+			public string? Server        { get; set; }
+			public string? Package       { get; set; }
+			public int[]?  ArgIndices    { get; set; }
 
-			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)
+			public virtual void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
-				if (member is MethodInfo)
-				{
-					var method = (MethodInfo)member;
+				table.SqlTableType = SqlTableType.Function;
+				var expressionStr  = table.Expression = Name ?? methodCall.Method.Name!;
 
-					if (method.DeclaringType.IsGenericTypeEx())
-						args = args.Concat(method.DeclaringType.GetGenericArgumentsEx().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
+				ExpressionAttribute.PrepareParameterValues(context, mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes, converter);
 
-					if (method.IsGenericMethod)
-						args = args.Concat(method.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
-				}
+				if (string.IsNullOrEmpty(expressionStr))
+					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
 
-				if (ArgIndices != null)
-				{
-					var idxs = new ISqlExpression[ArgIndices.Length];
+				table.TableName = new SqlObjectName(
+					expressionStr!,
+					Schema  : Schema   ?? table.TableName.Schema,
+					Database: Database ?? table.TableName.Database,
+					Server  : Server   ?? table.TableName.Server,
+					Package : Package  ?? table.TableName.Package);
 
-					for (var i = 0; i < ArgIndices.Length; i++)
-						idxs[i] = args[ArgIndices[i]];
-
-					return idxs;
-				}
-
-				return args;
+				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter);
 			}
 
-			public virtual void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
+			public override string GetObjectID()
 			{
-				table.SqlTableType   = SqlTableType.Function;
-				table.Name           = Name ?? member.Name;
-				table.PhysicalName   = Name ?? member.Name;
-				table.TableArguments = ConvertArgs(member, sqlArgs.ToArray());
-
-				if (Schema   != null) table.Schema   = Schema;
-				if (Database != null) table.Database = Database;
+				return $".{Configuration}.{Name}.{Schema}.{Database}.{Server}.{Package}.{IdentifierBuilder.GetObjectID(ArgIndices)}.";
 			}
 		}
 	}

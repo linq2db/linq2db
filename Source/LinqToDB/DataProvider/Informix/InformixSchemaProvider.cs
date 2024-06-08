@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Informix
@@ -8,34 +9,41 @@ namespace LinqToDB.DataProvider.Informix
 	using Data;
 	using SchemaProvider;
 
-	class InformixSchemaProvider : SchemaProviderBase
+	sealed class InformixSchemaProvider : SchemaProviderBase
 	{
+		private readonly InformixDataProvider _provider;
+
+		public InformixSchemaProvider(InformixDataProvider provider)
+		{
+			_provider = provider;
+		}
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			return new[]
 			{
-				new DataTypeInfo { TypeName = "CHAR",       DataType = typeof(string).  FullName, CreateFormat = "CHAR({0})",        CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "SMALLINT",   DataType = typeof(short).   FullName },
-				new DataTypeInfo { TypeName = "INTEGER",    DataType = typeof(int).     FullName },
-				new DataTypeInfo { TypeName = "FLOAT",      DataType = typeof(double).  FullName },
-				new DataTypeInfo { TypeName = "SMALLFLOAT", DataType = typeof(float).   FullName },
-				new DataTypeInfo { TypeName = "DECIMAL",    DataType = typeof(decimal). FullName, CreateFormat = "DECIMAL({0},{1})", CreateParameters = "precision,scale" },
-				new DataTypeInfo { TypeName = "SERIAL",     DataType = typeof(int).     FullName },
-				new DataTypeInfo { TypeName = "DATE",       DataType = typeof(DateTime).FullName },
-				new DataTypeInfo { TypeName = "MONEY",      DataType = typeof(decimal). FullName, CreateFormat = "MONEY({0},{1})",   CreateParameters = "precision,scale" },
-				new DataTypeInfo { TypeName = "DATETIME",   DataType = typeof(DateTime).FullName },
-				new DataTypeInfo { TypeName = "BYTE",       DataType = typeof(byte[]).  FullName },
-				new DataTypeInfo { TypeName = "TEXT",       DataType = typeof(string).  FullName },
-				new DataTypeInfo { TypeName = "VARCHAR",    DataType = typeof(string).  FullName, CreateFormat = "VARCHAR({0})",     CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "INTERVAL",   DataType = typeof(TimeSpan).FullName },
-				new DataTypeInfo { TypeName = "NCHAR",      DataType = typeof(string).  FullName, CreateFormat = "NCHAR({0})",       CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "NVARCHAR",   DataType = typeof(string).  FullName, CreateFormat = "NVARCHAR({0})",    CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "INT8",       DataType = typeof(long).    FullName },
-				new DataTypeInfo { TypeName = "SERIAL8",    DataType = typeof(long).    FullName },
-				new DataTypeInfo { TypeName = "LVARCHAR",   DataType = typeof(string).  FullName, CreateFormat = "LVARCHAR({0})",    CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "BOOLEAN",    DataType = typeof(bool).    FullName },
-				new DataTypeInfo { TypeName = "BIGINT",     DataType = typeof(long).    FullName },
-				new DataTypeInfo { TypeName = "BIGSERIAL",  DataType = typeof(long).    FullName },
+				new DataTypeInfo { TypeName = "CHAR",       DataType = typeof(string).  FullName!, CreateFormat = "CHAR({0})",        CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "SMALLINT",   DataType = typeof(short).   FullName! },
+				new DataTypeInfo { TypeName = "INTEGER",    DataType = typeof(int).     FullName! },
+				new DataTypeInfo { TypeName = "FLOAT",      DataType = typeof(double).  FullName! },
+				new DataTypeInfo { TypeName = "SMALLFLOAT", DataType = typeof(float).   FullName! },
+				new DataTypeInfo { TypeName = "DECIMAL",    DataType = typeof(decimal). FullName!, CreateFormat = "DECIMAL({0},{1})", CreateParameters = "precision,scale" },
+				new DataTypeInfo { TypeName = "SERIAL",     DataType = typeof(int).     FullName! },
+				new DataTypeInfo { TypeName = "DATE",       DataType = typeof(DateTime).FullName! },
+				new DataTypeInfo { TypeName = "MONEY",      DataType = typeof(decimal). FullName!, CreateFormat = "MONEY({0},{1})",   CreateParameters = "precision,scale" },
+				new DataTypeInfo { TypeName = "DATETIME",   DataType = typeof(DateTime).FullName! },
+				new DataTypeInfo { TypeName = "BYTE",       DataType = typeof(byte[]).  FullName! },
+				new DataTypeInfo { TypeName = "TEXT",       DataType = typeof(string).  FullName! },
+				new DataTypeInfo { TypeName = "VARCHAR",    DataType = typeof(string).  FullName!, CreateFormat = "VARCHAR({0})",     CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "INTERVAL",   DataType = typeof(TimeSpan).FullName! },
+				new DataTypeInfo { TypeName = "NCHAR",      DataType = typeof(string).  FullName!, CreateFormat = "NCHAR({0})",       CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "NVARCHAR",   DataType = typeof(string).  FullName!, CreateFormat = "NVARCHAR({0})",    CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "INT8",       DataType = typeof(long).    FullName! },
+				new DataTypeInfo { TypeName = "SERIAL8",    DataType = typeof(long).    FullName! },
+				new DataTypeInfo { TypeName = "LVARCHAR",   DataType = typeof(string).  FullName!, CreateFormat = "LVARCHAR({0})",    CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "BOOLEAN",    DataType = typeof(bool).    FullName! },
+				new DataTypeInfo { TypeName = "BIGINT",     DataType = typeof(long).    FullName! },
+				new DataTypeInfo { TypeName = "BIGSERIAL",  DataType = typeof(long).    FullName! },
 				//new DataTypeInfo { TypeName = "SET",        DataType = typeof(object).  FullName },
 				//new DataTypeInfo { TypeName = "MULTISET",   DataType = typeof(object).  FullName },
 				//new DataTypeInfo { TypeName = "LIST",       DataType = typeof(object).  FullName },
@@ -44,61 +52,54 @@ namespace LinqToDB.DataProvider.Informix
 			}.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "CHAR"       : return DataType.Char;
-				case "SMALLINT"   : return DataType.Int16;
-				case "INTEGER"    : return DataType.Int32;
-				case "FLOAT"      : return DataType.Double;
-				case "SMALLFLOAT" : return DataType.Single;
-				case "DECIMAL"    : return DataType.Decimal;
-				case "SERIAL"     : return DataType.Int32;
-				case "DATE"       : return DataType.DateTime;
-				case "MONEY"      : return DataType.Decimal;
-				case "DATETIME"   : return DataType.DateTime;
-				case "BYTE"       : return DataType.Binary;
-				case "TEXT"       : return DataType.Text;
-				case "VARCHAR"    : return DataType.VarChar;
-				case "INTERVAL"   : return DataType.Time;
-				case "NCHAR"      : return DataType.NChar;
-				case "NVARCHAR"   : return DataType.NVarChar;
-				case "INT8"       : return DataType.Int64;
-				case "SERIAL8"    : return DataType.Int64;
-				case "LVARCHAR"   : return DataType.VarChar;
-				case "BOOLEAN"    : return DataType.Boolean;
-				case "BIGINT"     : return DataType.Int64;
-				case "BIGSERIAL"  : return DataType.Int64;
-				//case "SET"        : return DataType.object).  ;
-				//case "MULTISET"   : return DataType.object).  ;
-				//case "LIST"       : return DataType.object).  ;
-				//case "ROW"        : return DataType.object).  ;
-				//case "COLLECTION" : return DataType.object).  ;
-			}
-
-			return DataType.Undefined;
+				"CHAR"       => DataType.Char,
+				"SMALLINT"   => DataType.Int16,
+				"INTEGER"    => DataType.Int32,
+				"FLOAT"      => DataType.Double,
+				"SMALLFLOAT" => DataType.Single,
+				"DECIMAL"    => DataType.Decimal,
+				"SERIAL"     => DataType.Int32,
+				"DATE"       => DataType.DateTime,
+				"MONEY"      => DataType.Decimal,
+				"DATETIME"   => DataType.DateTime,
+				"BYTE"       => DataType.Binary,
+				"TEXT"       => DataType.Text,
+				"VARCHAR"    => DataType.VarChar,
+				"INTERVAL"   => DataType.Time,
+				"NCHAR"      => DataType.NChar,
+				"NVARCHAR"   => DataType.NVarChar,
+				"INT8"       => DataType.Int64,
+				"SERIAL8"    => DataType.Int64,
+				"LVARCHAR"   => DataType.VarChar,
+				"BOOLEAN"    => DataType.Boolean,
+				"BIGINT"     => DataType.Int64,
+				"BIGSERIAL"  => DataType.Int64,
+				_            => DataType.Undefined,
+			};
 		}
 
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
-			return "IBM.Data.Informix";
+			return _provider.Adapter.ProviderTypesNamespace;
 		}
 
-		protected override string GetProviderSpecificType(string dataType)
+		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "DATETIME" : return "IfxDateTime";
-				case "INTERVAL" : return "IfxTimeSpan";
-				case "DECIMAL"  : return "IfxDecimal";
-			}
-
-			return base.GetProviderSpecificType(dataType);
+				"DATETIME" => _provider.Adapter.DateTimeType?.Name,
+				"INTERVAL" => _provider.Adapter.TimeSpanType?.Name,
+				"DECIMAL"  => _provider.Adapter.DecimalType?.Name,
+				_          => base.GetProviderSpecificType(dataType),
+			};
 		}
 
-		protected override List<TableInfo> GetTables(DataConnection dataConnection)
+		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<TableInfo>(@"
 				SELECT
@@ -114,27 +115,30 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
-		List<PrimaryKeyInfo> _pks;
-
-		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return _pks =
+			return
 			(
 				from pk in dataConnection.Query(
 					rd =>
 					{
-						var arr = new string[16];
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var tableId = string.Format(CultureInfo.InvariantCulture, "{0}", rd[0]);
+						var pkName  = (string)rd[1];
+
+						var arr = new string?[16];
 
 						for (var i = 0; i < arr.Length; i++)
 						{
-							var value = rd["col" + (i + 1)];
+							var value = rd[FormattableString.Invariant($"col{i + 1}")];
 							arr[i] = value is DBNull ? null : (string)value;
 						}
 
 						return new
 						{
-							TableID        = rd["tabid"].ToString(),
-							PrimaryKeyName = (string)rd["idxname"],
+							TableID        = tableId,
+							PrimaryKeyName = pkName,
 							arr
 						};
 					}, @"
@@ -238,22 +242,22 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (len == 0 || j > 11) // is the default 12 on have the precision already coded
 			{
-				c.ColumnType = c.DataType + " " + arr[j].datetype + " TO " + arr[i].datetype;
+				c.ColumnType = FormattableString.Invariant($"{c.DataType} {arr[j].datetype} TO {arr[i].datetype}");
 			}
 			else // # isn't the default
 			{
 				// uh-oh, how long IS the default major?
 				k = arr[j].end_point - arr[j].start_point;
- 
+
 				// add in the extra
-				k = k + len;
- 
-				c.ColumnType = c.DataType + " " + arr[j].datetype + " (" + k + ") TO " + arr[i].datetype;
+				k += len;
+
+				c.ColumnType = FormattableString.Invariant($"{c.DataType} {arr[j].datetype} ({k}) TO {arr[i].datetype}");
 				c.Precision = 5;
 			}
 		}
 
-		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
+		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection
 				.Query<ColumnInfo>(@"
@@ -286,9 +290,9 @@ namespace LinqToDB.DataProvider.Informix
 						case    4 : c.DataType = "SMALLFLOAT";       break;
 						case    5 :
 							c.DataType  = "DECIMAL";
-							c.Precision = (int)(len / 256);
+							c.Precision = (int)(len! / 256);
 							if (c.Precision >= len % 256)
-								c.Scale = (int)(len % 256);
+								c.Scale = (int)(len! % 256);
 							break;
 						case    6 :
 							c.DataType   = "SERIAL";
@@ -297,14 +301,14 @@ namespace LinqToDB.DataProvider.Informix
 						case    7 : c.DataType = "DATE";             break;
 						case    8 :
 							c.DataType  = "MONEY";
-							c.Precision = (int)(len / 256);
+							c.Precision = (int)(len! / 256);
 							if (c.Precision >= len % 256)
-								c.Scale = (int)(len % 256);
+								c.Scale = (int)(len! % 256);
 							break;
 						case    9 : c.DataType = "NULL";             break;
 						case   10 :
 							c.DataType = "DATETIME";
-							SetDate(c, (int)len);
+							SetDate(c, (int)len!);
 							break;
 						case   11 : c.DataType = "BYTE";             break;
 						case   12 : c.DataType = "TEXT";             break;
@@ -314,7 +318,7 @@ namespace LinqToDB.DataProvider.Informix
 							break;
 						case   14 :
 							c.DataType = "INTERVAL";
-							SetDate(c, (int)len);
+							SetDate(c, (int)len!);
 							break;
 						case   15 :
 							c.DataType = "NCHAR";
@@ -355,7 +359,8 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
-		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
+			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			var names = new HashSet<string>();
 
@@ -364,12 +369,18 @@ namespace LinqToDB.DataProvider.Informix
 				from fk in dataConnection.Query(
 					rd =>
 					{
-						var arr = new string[16][];
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var id           = string.Format(CultureInfo.InvariantCulture, "{0}", rd["ID"]);
+						var name         = string.Format(CultureInfo.InvariantCulture, "{0}", rd["Name"]);
+						var thisTableID  = string.Format(CultureInfo.InvariantCulture, "{0}", rd["ThisTableID"]);
+						var otherTableID = string.Format(CultureInfo.InvariantCulture, "{0}", rd["OtherTableID"]);
+
+						var arr = new string?[16][];
 
 						for (var i = 0; i < arr.Length; i++)
 						{
-							var value1 = rd["ThisCol"  + (i + 1)];
-							var value2 = rd["OtherCol" + (i + 1)];
+							var value1 = rd[FormattableString.Invariant($"ThisCol{i + 1}")];
+							var value2 = rd[FormattableString.Invariant($"OtherCol{i + 1}")];
 
 							arr[i] = new[]
 							{
@@ -378,10 +389,6 @@ namespace LinqToDB.DataProvider.Informix
 							};
 						}
 
-						var id           = rd["ID"].ToString();
-						var name         = rd["Name"].ToString();
-						var thisTableID  = rd["ThisTableID"]. ToString();
-						var otherTableID = rd["OtherTableID"].ToString();
 
 						if (name.StartsWith("r"))
 						{
@@ -395,7 +402,7 @@ namespace LinqToDB.DataProvider.Informix
 								var n        = 0;
 
 								while (names.Contains(name))
-									name = origName + "_" + ++n;
+									name = FormattableString.Invariant($"{origName}_{++n}");
 
 								names.Add(name);
 							}
@@ -413,41 +420,41 @@ namespace LinqToDB.DataProvider.Informix
 							r.constrid    as ID,
 							tc.constrname as Name,
 							tc.tabid      as ThisTableID,
-							tt.tabname    as ThisTableName,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part1)  as ThisCol1,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part2)  as ThisCol2,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part3)  as ThisCol3,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part4)  as ThisCol4,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part5)  as ThisCol5,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part6)  as ThisCol6,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part7)  as ThisCol7,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part8)  as ThisCol8,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part9)  as ThisCol9,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part10) as ThisCol10,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part11) as ThisCol11,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part12) as ThisCol12,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part13) as ThisCol13,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part14) as ThisCol14,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part15) as ThisCol15,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part16) as ThisCol16,
 							oc.tabid      as OtherTableID,
-							ot.tabname    as OtherTableName,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part1)  as ThisCol1,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part1)  as OtherCol1,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part2)  as ThisCol2,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part2)  as OtherCol2,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part3)  as ThisCol3,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part3)  as OtherCol3,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part4)  as ThisCol4,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part4)  as OtherCol4,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part5)  as ThisCol5,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part5)  as OtherCol5,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part6)  as ThisCol6,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part6)  as OtherCol6,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part7)  as ThisCol7,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part7)  as OtherCol7,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part8)  as ThisCol8,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part8)  as OtherCol8,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part9)  as ThisCol9,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part9)  as OtherCol9,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part10) as ThisCol10,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part10) as OtherCol10,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part11) as ThisCol11,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part11) as OtherCol11,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part12) as ThisCol12,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part12) as OtherCol12,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part13) as ThisCol13,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part13) as OtherCol13,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part14) as ThisCol14,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part14) as OtherCol14,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part15) as ThisCol15,
 							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part15) as OtherCol15,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part16) as OtherCol16
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part16) as ThisCol16,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part16) as OtherCol16,
+							tt.tabname    as ThisTableName,
+							ot.tabname    as OtherTableName
 						FROM
 							sysreferences r
 								JOIN sysconstraints tc ON r.constrid = tc.constrid

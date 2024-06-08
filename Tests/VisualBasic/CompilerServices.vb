@@ -1,7 +1,4 @@
-﻿Imports System.Collections.Generic
-Imports System.Linq
-
-Imports Tests.Model
+﻿Imports Tests.Model
 
 Public Module CompilerServices
 

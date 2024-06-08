@@ -1,20 +1,24 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Data connection transaction controller.
 	/// </summary>
-	public class DataConnectionTransaction : IDisposable
+	public class DataConnectionTransaction : IDisposable,
+#if NATIVE_ASYNC
+		IAsyncDisposable
+#else
+		Async.IAsyncDisposable
+#endif
 	{
 		/// <summary>
 		/// Creates new transaction controller for data connection.
 		/// </summary>
 		/// <param name="dataConnection">Data connection instance.</param>
-		public DataConnectionTransaction([NotNull] DataConnection dataConnection)
+		public DataConnectionTransaction(DataConnection dataConnection)
 		{
 			DataConnection = dataConnection ?? throw new ArgumentNullException(nameof(dataConnection));
 		}
@@ -22,7 +26,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Returns associated data connection instance.
 		/// </summary>
-		public DataConnection DataConnection { get; private set; }
+		public DataConnection DataConnection { get; }
 
 		bool _disposeTransaction = true;
 
@@ -71,7 +75,13 @@ namespace LinqToDB.Data
 		public void Dispose()
 		{
 			if (_disposeTransaction)
-				DataConnection.RollbackTransaction();
+				DataConnection.DisposeTransaction();
 		}
+
+#if NATIVE_ASYNC
+		public ValueTask DisposeAsync() => new (DataConnection.DisposeTransactionAsync());
+#else
+		public Task DisposeAsync() => DataConnection.DisposeTransactionAsync();
+#endif
 	}
 }

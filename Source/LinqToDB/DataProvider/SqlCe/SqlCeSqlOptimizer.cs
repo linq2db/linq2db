@@ -3,105 +3,257 @@
 namespace LinqToDB.DataProvider.SqlCe
 {
 	using Extensions;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
 
-	class SqlCeSqlOptimizer : BasicSqlOptimizer
+	sealed class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
 		public SqlCeSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
-			statement = base.Finalize(statement);
+			// This function mutates statement which is allowed only in this place
+			CorrectSkipAndColumns(statement);
 
-			var selectQuery = statement.SelectQuery;
-			if (selectQuery != null)
-				new QueryVisitor().Visit(selectQuery.Select, element =>
-				{
-					if (element.ElementType == QueryElementType.SqlParameter)
-					{
-						var p = (SqlParameter)element;
-						if (p.SystemType == null || p.SystemType.IsScalar(false))
-						{
-							p.IsQueryParameter = false;
+			// This function mutates statement which is allowed only in this place
+			CorrectInsertParameters(statement);
 
-							selectQuery.IsParameterDependent = true;
-						}
-					}
-				});
+			CorrectFunctionParameters(statement, dataOptions);
+
+			statement = CorrectBooleanComparison(statement);
 
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
-					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
-					statement.SelectQuery.From.Tables[0].Alias = "$";
+					statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions);
+					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SqlUpdateStatement) statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions);
 					break;
 			}
 
-			if (selectQuery != null)
-				CorrectSkip(selectQuery);
+
+			// call fixer after CorrectSkipAndColumns for remaining cases
+			base.FixEmptySelect(statement);
 
 			return statement;
 		}
 
-		private void CorrectSkip(SelectQuery selectQuery)
+		private static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
+
+		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
+
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			((ISqlExpressionWalkable)selectQuery).Walk(new WalkOptions(), e =>
+			var like = ConvertSearchStringPredicateViaLike(predicate, visitor);
+
+			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
 			{
-				if (e is SelectQuery q && q.Select.SkipValue != null && q.OrderBy.IsEmpty)
+				SqlPredicate.ExprExpr? subStrPredicate = null;
+
+				switch (predicate.Kind)
 				{
-					if (q.Select.Columns.Count == 0)
+					case SqlPredicate.SearchString.SearchKind.StartsWith:
 					{
-						var source = q.Select.From.Tables[0].Source;
-						var keys = source.GetKeys(true);
-
-						foreach (var key in keys)
-						{
-							q.Select.AddNew(key);
-						}
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(typeof(string), "SUBSTRING",
+										predicate.Expr1,
+										new SqlValue(1),
+									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+						break;
 					}
 
-					for (var i = 0; i < q.Select.Columns.Count; i++)
-						q.OrderBy.ExprAsc(q.Select.Columns[i].Expression);
-
-					if (q.OrderBy.IsEmpty)
+					case SqlPredicate.SearchString.SearchKind.EndsWith:
 					{
-						throw new LinqToDBException("Order by required for Skip operation.");
+						var indexExpression = new SqlBinaryExpression(typeof(int),
+							new SqlBinaryExpression(typeof(int),
+								new SqlFunction(typeof(int), "Length", predicate.Expr1),
+								"-",
+								new SqlFunction(typeof(int), "Length", predicate.Expr2)),
+							"+",
+							new SqlValue(1));
+
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(typeof(string), "SUBSTRING",
+										predicate.Expr1,
+										indexExpression,
+										new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+
+						break;
 					}
+					case SqlPredicate.SearchString.SearchKind.Contains:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(int), "CHARINDEX",
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr2),
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr1)),
+								SqlPredicate.Operator.Greater,
+								new SqlValue(0), null);
+
+						break;
+					}
+
 				}
-				return e;
+
+				if (subStrPredicate != null)
+				{
+					var result = new SqlSearchCondition(
+						new SqlCondition(false, like, predicate.IsNot),
+						new SqlCondition(predicate.IsNot, subStrPredicate));
+
+					return result;
+				}
 			}
-			);
+
+			return like;
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		static void CorrectInsertParameters(SqlStatement statement)
 		{
-			if (SqlCeConfiguration.InlineFunctionParameters && expr is SqlFunction sqlFunction)
+			//SlqCe do not support parameters in columns for insert
+			//
+			if (statement.IsInsert())
 			{
-				foreach (var parameter in sqlFunction.Parameters)
+				var query = statement.SelectQuery;
+				if (query != null)
 				{
-					if (parameter.ElementType == QueryElementType.SqlParameter && parameter is SqlParameter sqlParameter)
+					foreach (var column in query.Select.Columns)
 					{
-						sqlParameter.IsQueryParameter = false;
+						if (column.Expression is SqlParameter parameter)
+						{
+							parameter.IsQueryParameter = false;
+						}
 					}
 				}
 			}
+		}
 
-			expr = base.ConvertExpression(expr);
+		static void CorrectSkipAndColumns(SqlStatement statement)
+		{
+			statement.Visit(static e =>
+			{
+				switch (e.ElementType)
+				{
+					case QueryElementType.SqlQuery:
+						{
+							var q = (SelectQuery)e;
 
-			switch (expr)
+							if (q.Select.SkipValue != null && q.OrderBy.IsEmpty)
+							{
+								if (q.Select.Columns.Count == 0)
+								{
+									var source = q.Select.From.Tables[0].Source;
+									var keys   = source.GetKeys(true);
+
+									foreach (var key in keys)
+									{
+										q.Select.AddNew(key);
+									}
+								}
+
+								for (var i = 0; i < q.Select.Columns.Count; i++)
+									q.OrderBy.ExprAsc(q.Select.Columns[i].Expression);
+
+								if (q.OrderBy.IsEmpty)
+								{
+									throw new LinqToDBException("Order by required for Skip operation.");
+								}
+							}
+
+							// looks like SqlCE do not allow '*' for grouped records
+							if (!q.GroupBy.IsEmpty && q.Select.Columns.Count == 0)
+							{
+								q.Select.Add(new SqlValue(1));
+							}
+
+							break;
+						}
+				}
+			});
+		}
+
+		static void CorrectFunctionParameters(SqlStatement statement, DataOptions options)
+		{
+			if (!options.FindOrDefault(SqlCeOptions.Default).InlineFunctionParameters)
+				return;
+
+			statement.Visit(static e =>
+			{
+				if (e.ElementType == QueryElementType.SqlFunction)
+				{
+					var sqlFunction = (SqlFunction)e;
+					foreach (var parameter in sqlFunction.Parameters)
+					{
+						if (parameter.ElementType == QueryElementType.SqlParameter &&
+						    parameter is SqlParameter sqlParameter)
+						{
+							sqlParameter.IsQueryParameter = false;
+						}
+					}
+				}
+			});
+		}
+
+		protected override void FixEmptySelect(SqlStatement statement)
+		{
+			// already fixed by CorrectSkipAndColumns
+		}
+
+		private SqlStatement CorrectBooleanComparison(SqlStatement statement)
+		{
+			statement = statement.ConvertAll(this, true, static (_, e) =>
+			{
+				if (e.ElementType == QueryElementType.IsTruePredicate)
+				{
+					var isTruePredicate = (SqlPredicate.IsTrue)e;
+					if (isTruePredicate.Expr1 is SelectQuery query && query.Select.Columns.Count == 1)
+					{
+						query.Select.Where.EnsureConjunction();
+						query.Select.Where.SearchCondition.Conditions.Add(new SqlCondition(false,
+							new SqlPredicate.IsTrue(query.Select.Columns[0].Expression, isTruePredicate.TrueValue,
+								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot, true)));
+						query.Select.Columns.Clear();
+
+						return new SqlPredicate.FuncLike(SqlFunction.CreateExists(query));
+					}
+				}
+
+				return e;
+			});
+
+			return statement;
+		}
+
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		{
+			expression = base.ConvertExpressionImpl(expression, visitor);
+
+			switch (expression)
 			{
 				case SqlBinaryExpression be:
 					switch (be.Operation)
 					{
 						case "%":
-							return be.Expr1.SystemType.IsIntegerType()?
+							return be.Expr1.SystemType!.IsIntegerType()?
 								be :
 								new SqlBinaryExpression(
 									typeof(int),
@@ -116,11 +268,16 @@ namespace LinqToDB.DataProvider.SqlCe
 				case SqlFunction func:
 					switch (func.Name)
 					{
+						case "Length":
+						{
+							return new SqlFunction(func.SystemType, "LEN", func.IsAggregate, func.IsPure,
+								func.Precedence, func.Parameters);
+						}
 						case "Convert" :
 							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 							{
 								case TypeCode.UInt64 :
-									if (func.Parameters[1].SystemType.IsFloatType())
+									if (func.Parameters[1].SystemType!.IsFloatType())
 										return new SqlFunction(
 											func.SystemType,
 											func.Name,
@@ -132,7 +289,7 @@ namespace LinqToDB.DataProvider.SqlCe
 									break;
 
 								case TypeCode.DateTime :
-									var type1 = func.Parameters[1].SystemType.ToUnderlying();
+									var type1 = func.Parameters[1].SystemType!.ToUnderlying();
 
 									if (IsTimeDataType(func.Parameters[0]))
 									{
@@ -163,7 +320,14 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			return expr;
+			return expression;
 		}
+
+		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func, false);
+			return base.ConvertFunction(func);
+		}
+
 	}
 }

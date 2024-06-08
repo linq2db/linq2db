@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Expressions;
 
 using NUnit.Framework;
@@ -13,7 +17,7 @@ namespace Tests.Linq
 
 	public class CachingTests: TestBase
 	{
-		class AggregateFuncBuilder: Sql.IExtensionCallBuilder
+		sealed class AggregateFuncBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -29,7 +33,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TesSqlQueryDependent(
+		public void TestSqlQueryDependent(
 			[Values(
 				"MIN",
 				"MAX",
@@ -61,7 +65,7 @@ namespace Tests.Linq
 					};
 
 				var sql = query.ToString();
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
 			}
@@ -82,7 +86,7 @@ namespace Tests.Linq
 			var count = 0;
 			var n     = 0;
 
-			if (subString != "")
+			if (subString.Length != 0)
 			{
 				while ((n = source.IndexOf(subString, n, StringComparison.Ordinal)) != -1)
 				{
@@ -96,15 +100,13 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestByCall(
+			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
 			[Values("tableName1", "tableName2")] string tableName,
 			[Values("database1",  "database2")]  string databaseName,
 			[Values("schema1",    "schema2")]    string schemaName
 		)
 		{
-			if (!UserProviders.Contains(ProviderName.SqlServer))
-				return;
-
-			using (var db = GetDataContext(ProviderName.SqlServer))
+			using (var db = GetDataContext(context))
 			{
 				var query =
 					from c in db.Child
@@ -115,8 +117,8 @@ namespace Tests.Linq
 					)
 					select cc;
 
-				var sql = query.ToString();
-				Console.WriteLine(sql);
+				var sql = query.ToString()!;
+				TestContext.WriteLine(sql);
 
 				Assert.That(CountOccurrences(sql, tableName),    Is.EqualTo(2));
 				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
@@ -126,15 +128,13 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestInlined(
+			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
 			[Values("tableName1", "tableName2")] string tableName,
 			[Values("database1",  "database2")]  string databaseName,
 			[Values("schema1",    "schema2")]    string schemaName
 		)
 		{
-			if (!UserProviders.Contains(ProviderName.SqlServer))
-				return;
-
-			using (var db = GetDataContext(ProviderName.SqlServer))
+			using (var db = GetDataContext(context))
 			{
 				var query =
 					from c in db.Child
@@ -146,8 +146,8 @@ namespace Tests.Linq
 					)
 					select cc;
 
-				var sql = query.ToString();
-				Console.WriteLine(sql);
+				var sql = query.ToString()!;
+				TestContext.WriteLine(sql);
 
 				Assert.That(CountOccurrences(sql, tableName),    Is.EqualTo(2));
 				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
@@ -157,13 +157,13 @@ namespace Tests.Linq
 
 		[Test]
 		public void TakeHint(
-			[Values(TakeHints.Percent, TakeHints.WithTies, TakeHints.Percent | TakeHints.WithTies)] TakeHints takeHint
-		)
+			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context,
+			[Values(TakeHints.Percent, TakeHints.WithTies, TakeHints.Percent | TakeHints.WithTies)] TakeHints takeHint)
 		{
-			if (!UserProviders.Contains(ProviderName.SqlServer))
-				return;
+			if (takeHint.HasFlag(TakeHints.Percent) && context.IsAnyOf(TestProvName.AllClickHouse))
+				Assert.Inconclusive($"ClickHouse doesn't support '{takeHint}' hint");
 
-			using (var db = GetDataContext(ProviderName.SqlServer))
+			using (var db = GetDataContext(context))
 			{
 				var query =
 					from c1 in db.Child
@@ -171,13 +171,118 @@ namespace Tests.Linq
 					select new {c1, c2};
 
 				var sql = query.ToString();
-				Console.WriteLine(sql);
+				TestContext.WriteLine(sql);
 
 				if (takeHint.HasFlag(TakeHints.Percent))
 					Assert.That(sql, Contains.Substring("PERCENT"));
 
 				if (takeHint.HasFlag(TakeHints.WithTies))
 					Assert.That(sql, Contains.Substring("WITH TIES"));
+			}
+		}
+
+		[ActiveIssue(4266)]
+		[Test]
+		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
+			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
+
+			try
+			{
+				var persons = new List<int>() { 1, 2 };
+				var query = from p in db.GetTable<Person>()
+							where InExt(p.ID, persons)
+							orderby p.ID
+							select p.ID;
+
+				var result =  query.ToList();
+				AreEqual(persons, result);
+
+				persons.AddRange(new int[] { 3, 4 });
+
+				result = query.ToList();
+
+				AreEqual(persons, result);
+			}
+			finally
+			{
+				db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
+			}
+		}
+
+		[ActiveIssue(4266)]
+		[Test]
+		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
+			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
+
+			try
+			{
+				var persons = new List<int>() { 1, 2 };
+				var query = from p in db.GetTable<Person>()
+							where InExt(p.ID, persons)
+							orderby p.ID
+							select p.ID;
+
+				var result =  query.ToList();
+				AreEqual(persons, result);
+
+				persons.AddRange(new int[] { 3, 4 });
+
+				query = from p in db.GetTable<Person>()
+						where InExt(p.ID, persons)
+						orderby p.ID
+						select p.ID;
+
+				result = query.ToList();
+
+				AreEqual(persons, result);
+			}
+			finally
+			{
+				db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
+			}
+		}
+
+		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, BuilderType = typeof(InExtExpressionItemBuilder), ServerSideOnly = true)]
+		public static bool InExt<T>([ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values) where T : struct, IEquatable<int>
+		{
+			throw new NotImplementedException();
+		}
+
+		public sealed class InExtExpressionItemBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var parameterName = (builder.Arguments[1] as MemberExpression)?.Member.Name ?? "p";
+
+				var values = builder.GetValue<System.Collections.IEnumerable>("values")?.OfType<int>().ToArray();
+
+				if (values == null)
+				{
+					throw new ArgumentNullException("values", "Values for \"In/Any\" operation should not be empty");
+				}
+
+				using var dataTable = new DataTable("IntTableType");
+				dataTable.Columns.Add("Id", typeof(int));
+
+				foreach (var x in values.Distinct())
+				{
+					var newRow = dataTable.Rows.Add();
+					newRow[0] = x;
+				}
+
+				dataTable.AcceptChanges();
+
+				var param = new LinqToDB.SqlQuery.SqlParameter(new LinqToDB.Common.DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
+
+				builder.AddParameter("values", param);
 			}
 		}
 	}

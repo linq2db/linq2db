@@ -12,7 +12,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue513Tests : TestBase
 	{
-		[Test, Category("WindowsOnly")]
+		[Test]
 		public void Simple([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -28,10 +28,11 @@ namespace Tests.UserTests
 
 		// Informix disabled due to issue, described here (but it reproduced with client 4.1):
 		// https://www-01.ibm.com/support/docview.wss?uid=swg1IC66046
-		[Test, Category("WindowsOnly")]
-		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
-		public void Test([DataSources(ProviderName.SQLiteMS, ProviderName.Informix)] string context)
+		[Test]
+		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = TestProvName.AllSybase)]
+		public void Test([DataSources(TestProvName.AllInformix)] string context)
 		{
+			using (new DisableBaseline("Multi-threading"))
 			using (var semaphore = new Semaphore(0, 10))
 			{
 				var tasks = new Task[10];
@@ -41,7 +42,7 @@ namespace Tests.UserTests
 				for (var i = 0; i < 10; i++)
 					tasks[i].Start();
 
-				Thread   .Sleep(100);
+				Thread.Sleep(100);
 				semaphore.Release(10);
 
 				Task.WaitAll(tasks);

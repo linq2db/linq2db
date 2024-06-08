@@ -1,6 +1,4 @@
-﻿#if !MONO && !TRAVIS
-
-using System;
+﻿using System;
 using System.Linq;
 
 using LinqToDB;
@@ -26,17 +24,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareString1([DataSources] string context)
+		public void CompareString1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var str = CompilerServices.CompareString(db).ToString();
-				Assert.That(str.IndexOf("CASE"), Is.EqualTo(-1));
+				var query = (IQueryable<Person>)CompilerServices.CompareString(db);
+				var str   = query.ToString();
+				TestContext.WriteLine(str);
+				Assert.That(str, Does.Not.Contain("CASE"));
 			}
 		}
 
 		[Test]
-		public void ParameterName([DataSources(ProviderName.SapHana)] string context)
+		public void ParameterName([DataSources(TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -44,8 +44,9 @@ namespace Tests.Linq
 					VisualBasicCommon.ParamenterName(db));
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
-		public void SearchCondition1([DataSources(ProviderName.Access)] string context)
+		public void SearchCondition1([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -108,7 +109,80 @@ namespace Tests.Linq
 					vbResults);
 			}
 		}
+
+		//Instance property or field with name Key not found on type System.Collections.Generic.IEnumerable`1[Tests.VisualBasic.VBTests+Activity649]
+		[ActiveIssue(649)]
+		[Test]
+		public void Issue649Test1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<VBTests.Activity649>())
+			using (db.CreateLocalTable<VBTests.Person649>())
+			{
+				var result = VBTests.Issue649Test1(db);
+			}
+		}
+
+		[Test]
+		public void Issue649Test2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<VBTests.Activity649>())
+			using (db.CreateLocalTable<VBTests.Person649>())
+			{
+				var result = VBTests.Issue649Test2(db);
+			}
+		}
+
+		[Test]
+		public void Issue649Test3([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<VBTests.Activity649>())
+			using (db.CreateLocalTable<VBTests.Person649>())
+			{
+				var result = VBTests.Issue649Test3(db);
+			}
+		}
+
+		// Instance property or field with name Key not found on type System.Collections.Generic.IEnumerable`1[Tests.Model.Child]
+		[ActiveIssue(649)]
+		[Test]
+		public void Issue649Test4([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.InlineParameters = true;
+				var q1 = db.Child.GroupBy(c => new
+				{
+					c.ParentID,
+					c.ChildID
+				}, (c, g) => new
+				{
+					Child = c,
+					Grouped = g
+				}).Select(data => new
+				{
+					ParentID  = data.Child.ParentID,
+					ChildID   = data.Child.ChildID,
+					LastChild = data.Grouped.Max(f => f.ChildID)
+				});
+
+				var str = q1.ToString();
+			}
+		}
+
+		#region issue 2746
+
+		[Test]
+		public void Issue2746([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				VBTests.Issue2746Test(db, "1");
+			}
+		}
+		#endregion
+
 	}
 }
-
-#endif

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
@@ -70,12 +72,10 @@ namespace Tests.Linq
 		[Test]
 		public void Test7([DataSources] string context)
 		{
-#pragma warning disable 183
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    ParentInheritance where p is ParentInheritanceBase select p,
 					from p in db.ParentInheritance where p is ParentInheritanceBase select p);
-#pragma warning restore 183
 		}
 
 		[Test]
@@ -208,8 +208,8 @@ namespace Tests.Linq
 			{
 				var dd = GetNorthwindAsList(context);
 				Assert.AreEqual(
-					dd.DiscontinuedProduct.FirstOrDefault().ProductID,
-					db.DiscontinuedProduct.FirstOrDefault().ProductID);
+					dd.DiscontinuedProduct.FirstOrDefault()!.ProductID,
+					db.DiscontinuedProduct.FirstOrDefault()!.ProductID);
 			}
 		}
 
@@ -231,10 +231,10 @@ namespace Tests.Linq
 					await db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>().ToListAsync());
 		}
 
-		class ParentEx : Parent
+		sealed class ParentEx : Parent
 		{
 			[NotColumn]
-			protected bool Field1;
+			public bool Field1;
 
 			public static void Test(InheritanceTests inheritance, string context)
 			{
@@ -252,14 +252,14 @@ namespace Tests.Linq
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
-		class PersonEx : Person
+		sealed class PersonEx : Person
 		{
 		}
 
 		[Test]
 		public void SimplTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 				Assert.AreEqual(1, db.GetTable<PersonEx>().Where(_ => _.FirstName == "John").Select(_ => _.ID).Single());
 		}
 
@@ -274,7 +274,7 @@ namespace Tests.Linq
 		[Column("Value1", "Value.ID")]
 		public class Parent222 : Parent111
 		{
-			public Value111 Value;
+			public Value111 Value = null!;
 		}
 
 		public class Value111
@@ -285,7 +285,7 @@ namespace Tests.Linq
 		[Test]
 		public void InheritanceMappingIssueTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var q1 = db.GetTable<Parent222>();
 				var q  = q1.Where(_ => _.Value.ID == 1);
@@ -330,7 +330,7 @@ namespace Tests.Linq
 			{
 				var result =
 					from od in db.OrderDetail
-					where od.Product.Category.CategoryName == "Seafood"
+					where od.Product.Category!.CategoryName == "Seafood"
 					select new { od.Order, od.Product };
 
 				var list = result.ToList();
@@ -358,7 +358,7 @@ namespace Tests.Linq
 				var expected = db.Product.ToList().Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
 
 				Assert.That(result.Count,                    Is.GreaterThan(0));
-				Assert.That(expected.Count(),                Is.EqualTo(result.Count));
+				Assert.That(expected.Count,                  Is.EqualTo(result.Count));
 				Assert.That(result.Contains(null),           Is.True);
 				Assert.That(result.Select(x => x == null ? (int?)null : x.ProductID).Except(expected.Select(x => x == null ? (int?)null : x.ProductID)).Count(), Is.EqualTo(0));
 			}
@@ -403,14 +403,14 @@ namespace Tests.Linq
 		}
 
 		[Table(Name="Child")]
-		class ChildTest14 : IChildTest14
+		sealed class ChildTest14 : IChildTest14
 		{
 			[PrimaryKey] public int ChildID { get; set; }
 
 		}
 
-		T FindById<T>(IQueryable<T> queryable, int id)
-			where T : IChildTest14
+		T? FindById<T>(IQueryable<T> queryable, int id)
+			where T : class, IChildTest14
 		{
 			return queryable.Where(x => x.ChildID == id).FirstOrDefault();
 		}
@@ -469,10 +469,7 @@ namespace Tests.Linq
 			[Column] public Guid GuidValue { get; set; }
 
 			[Column("ID")]
-			public virtual TypeCodeEnum TypeCode
-			{
-				get { return TypeCodeEnum.Base; }
-			}
+			public virtual TypeCodeEnum TypeCode => TypeCodeEnum.Base;
 		}
 
 		[InheritanceMapping(Code = TypeCodeEnum.A1, Type = typeof(InheritanceA1), IsDefault = false)]
@@ -480,31 +477,22 @@ namespace Tests.Linq
 		public abstract class InheritanceA : InheritanceBase
 		{
 			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
-			public List<InheritanceB> Bs { get; set; }
+			public List<InheritanceB> Bs { get; set; } = null!;
 
 			[Column("ID", IsDiscriminator = true)]
-			public override TypeCodeEnum TypeCode
-			{
-				get { return TypeCodeEnum.A; }
-			}
+			public override TypeCodeEnum TypeCode => TypeCodeEnum.A;
 		}
 
 		public class InheritanceA1 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
-			public override TypeCodeEnum TypeCode
-			{
-				get { return TypeCodeEnum.A1; }
-			}
+			public override TypeCodeEnum TypeCode => TypeCodeEnum.A1;
 		}
 
 		public class InheritanceA2 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
-			public override TypeCodeEnum TypeCode
-			{
-				get { return TypeCodeEnum.A2; }
-			}
+			public override TypeCodeEnum TypeCode => TypeCodeEnum.A2;
 		}
 
 		public class InheritanceB : InheritanceBase
@@ -516,18 +504,17 @@ namespace Tests.Linq
 		{
 			[Column] public Guid GuidValue { get; set; }
 
-			[JetBrains.Annotations.NotNull]
 			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
-			public InheritanceA1 A1 { get; set; }
+			public InheritanceA1? A1 { get; set; }
 
 			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
-			public InheritanceA2 A2 { get; set; }
+			public InheritanceA2? A2 { get; set; }
 		}
 
 		[Test]
 		public void GuidTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var list = db.GetTable<InheritanceA>().Where(a => a.Bs.Any()).ToList();
 			}
@@ -554,12 +541,12 @@ namespace Tests.Linq
 
 		public class Test17John : Test17Person
 		{
-			public string FirstName { get; set; }
+			public string FirstName { get; set; } = null!;
 		}
 
 		public class Test17Tester : Test17Person
 		{
-			public string LastName { get; set; }
+			public string LastName { get; set; } = null!;
 		}
 
 		[Test]
@@ -569,7 +556,7 @@ namespace Tests.Linq
 			{
 				var db = (TestDataConnection)context;
 				db.GetTable<Test17Person>().OfType<Test17John>().ToList();
-				Assert.False(db.LastQuery.ToLowerInvariant().Contains("lastname"), "Why select LastName field??");
+				Assert.False(db.LastQuery!.ToLowerInvariant().Contains("lastname"), "Why select LastName field??");
 			}
 		}
 
@@ -584,13 +571,13 @@ namespace Tests.Linq
 
 		public class Test18Male : Test18Person
 		{
-			[Column] public string FirstName { get; set; }
+			[Column] public string FirstName { get; set; } = null!;
 		}
 
 		public class Test18Female : Test18Person
 		{
-			[Column] public string FirstName { get; set; }
-			[Column] public string LastName  { get; set; }
+			[Column] public string FirstName { get; set; } = null!;
+			[Column] public string LastName  { get; set; } = null!;
 		}
 
 		[Test]
@@ -642,6 +629,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void InheritanceAssociationTest([DataSources] string context)
 		{
@@ -650,8 +638,8 @@ namespace Tests.Linq
 				var result = db.GetTable<InheritanceAssociation>().Select(ia =>
 					new
 					{
-						TC1 = ia.A1.TypeCode,
-						TC2 = ia.A2.TypeCode
+						TC1 = ia.A1!.TypeCode,
+						TC2 = ia.A2!.TypeCode
 					});
 
 				var items = db.GetTable<LinqDataTypes>().ToList();
@@ -665,5 +653,236 @@ namespace Tests.Linq
 				AreEqual(expected, result);
 			}
 		}
+
+		#region issue 2429
+
+		public abstract class Root
+		{
+			public abstract int Value { get; set; }
+			public abstract int GetValue();
+		}
+
+		[Table]
+		public class BaseTable : Root
+		{
+			[PrimaryKey, NotNull  ] public int Id { get; set; }
+			[Column(nameof(Value))] public int BaseValue { get; set; }
+
+			private static Expression<Func<BaseTable, int>> GeValueImpl() => e => e.BaseValue;
+
+			[ExpressionMethod(nameof(GeValueImpl), IsColumn = true)]
+			public override int Value { get => BaseValue; set => BaseValue = value; }
+
+			[ExpressionMethod(nameof(GeValueImpl))]
+			public override int GetValue() => BaseValue;
+
+			public static readonly BaseTable[] Data = new []
+			{
+				new BaseTable() { Id = 1, Value = 100 }
+			};
+		}
+
+		[Table]
+		public class BaseTable2
+		{
+			[PrimaryKey, NotNull] public         int Id { get; set; }
+			[Column             ] public virtual int Value { get; set; }
+
+			[ExpressionMethod(nameof(GetBaseTableOverrideImpl), IsColumn = true)]
+			public virtual int GetValue() => Value;
+
+			private static Expression<Func<BaseTable2, int>> GetBaseTableOverrideImpl() => e => e.Value;
+
+			public static readonly BaseTable2[] Data = new []
+			{
+				new BaseTable2() { Id = 1, Value = 100 }
+			};
+		}
+
+		public class DerivedTable2 : BaseTable2
+		{
+			private static Expression<Func<DerivedTable2, int>> GetDerivedTableOverrideImpl() => e => e.BaseValue * -1;
+
+			[Column(nameof(Value))] public int BaseValue { get; set; }
+
+			[ExpressionMethod(nameof(GetDerivedTableOverrideImpl), IsColumn = true)]
+			public override int Value { get; set; }
+
+			[ExpressionMethod(nameof(GetDerivedTableOverrideImpl))]
+			public override int GetValue() => BaseValue * -1;
+		}
+
+		[Test]
+		public void Issue2429PropertiesTest1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(BaseTable.Data))
+			{
+					var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
+					Assert.AreEqual(1, baseTableRecordById?.Id);
+					Assert.AreEqual(100, baseTableRecordById?.Value);
+
+					var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.Value == 100);
+					Assert.AreEqual(1, baseTableRecordWithValuePredicate?.Id);
+					Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value);
+			}
+		}
+
+		[Test]
+		public void Issue2429MethodsTest1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(BaseTable.Data))
+			{
+				var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
+				Assert.AreEqual(1, baseTableRecordById?.Id);
+				Assert.AreEqual(100, baseTableRecordById?.Value);
+
+				var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == 100);
+				Assert.AreEqual(1, baseTableRecordWithValuePredicate?.Id);
+				Assert.AreEqual(100, baseTableRecordWithValuePredicate?.Value);
+			}
+		}
+
+		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
+		[Test]
+		public void Issue2429PropertiesTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(BaseTable2.Data))
+			{
+				var baseTableRecord    = db.GetTable<BaseTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == 100);
+				//var derivedTableRecord = db.GetTable<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == (100 * -1 ));
+				var derivedTableRecord = db.GetTable<BaseTable2>().OfType<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == (100 * -1 ));
+
+				Assert.AreEqual(1, baseTableRecord?.Id);
+				Assert.AreEqual(100, baseTableRecord?.Value);
+
+				Assert.AreEqual(1, derivedTableRecord?.Id);
+				Assert.AreEqual(100, derivedTableRecord?.Value * -1);
+			}
+		}
+
+		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
+		[Test]
+		public void Issue2429MethodsTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(BaseTable2.Data))
+			{
+				var baseTableRecord    = db.GetTable<BaseTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == 100);
+				//var derivedTableRecord = db.GetTable<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == (100 * -1 ));
+				var derivedTableRecord = db.GetTable<BaseTable2>().OfType<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == (100 * -1 ));
+
+				Assert.AreEqual(1, baseTableRecord?.Id);
+				Assert.AreEqual(100, baseTableRecord?.Value);
+
+				Assert.AreEqual(1, derivedTableRecord?.Id);
+				Assert.AreEqual(100, derivedTableRecord?.Value * -1);
+			}
+		}
+		#endregion
+
+		#region issue4280
+
+		[InheritanceMapping(Code = "DISPLAY", Type = typeof(Issue4280T1))]
+		[InheritanceMapping(Code = "TV", Type = typeof(Issue4280T2))]
+		[Table("Issue4280")]
+		public abstract class Issue4280Base
+		{
+			[PrimaryKey                    ] public          int     Id           { get; set; }
+			[Column                        ] public          string? SerialNumber { get; set; }
+			[Column(IsDiscriminator = true)] public abstract string  DeviceType   { get; set; }
+		}
+
+		public class Issue4280T1 : Issue4280Base
+		{
+			public override string DeviceType { get; set; } = "DISPLAY";
+		}
+
+		public class Issue4280T2 : Issue4280Base
+		{
+			public override string DeviceType { get; set; } = "TV";
+
+			[Column]
+			public string? Location { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4280")]
+		public void TestIssue4280AsBase([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4280Base>();
+
+			var displayDevice = new Issue4280T1 { Id = 1, SerialNumber = "Disp00001" };
+			var tvDevice      = new Issue4280T2 { Id = 2, SerialNumber = "TV00001", Location = "Something" };
+
+			db.Insert<Issue4280Base>(tvDevice);
+			db.Insert<Issue4280Base>(displayDevice);
+
+			var data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.AreEqual(2          , data.Length);
+			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
+			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
+			Assert.AreEqual("Disp00001", data[0].SerialNumber);
+			Assert.AreEqual("TV00001"  , data[1].SerialNumber);
+			Assert.AreEqual("Something", ((Issue4280T2)data[1]).Location);
+
+			displayDevice.SerialNumber = "Disp00002";
+			tvDevice.SerialNumber      = "TV00002";
+			tvDevice.Location          = "Anything";
+
+			db.Update<Issue4280Base>(tvDevice);
+			db.Update<Issue4280Base>(displayDevice);
+
+			data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.AreEqual(2          , data.Length);
+			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
+			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
+			Assert.AreEqual("Disp00002", data[0].SerialNumber);
+			Assert.AreEqual("TV00002"  , data[1].SerialNumber);
+			Assert.AreEqual("Anything" , ((Issue4280T2)data[1]).Location);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4280")]
+		public void TestIssue4280AsIs([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4280Base>();
+
+			var displayDevice = new Issue4280T1 { Id = 1, SerialNumber = "Disp00001" };
+			var tvDevice      = new Issue4280T2 { Id = 2, SerialNumber = "TV00001", Location = "Something" };
+
+			db.Insert(tvDevice);
+			db.Insert(displayDevice);
+
+			var data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.AreEqual(2          , data.Length);
+			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
+			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
+			Assert.AreEqual("Disp00001", data[0].SerialNumber);
+			Assert.AreEqual("TV00001"  , data[1].SerialNumber);
+			Assert.AreEqual("Something", ((Issue4280T2)data[1]).Location);
+
+			displayDevice.SerialNumber = "Disp00002";
+			tvDevice.SerialNumber      = "TV00002";
+			tvDevice.Location          = "Anything";
+
+			db.Update(tvDevice);
+			db.Update(displayDevice);
+
+			data = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.AreEqual(2          , data.Length);
+			Assert.That(data[0]        , Is.InstanceOf<Issue4280T1>());
+			Assert.That(data[1]        , Is.InstanceOf<Issue4280T2>());
+			Assert.AreEqual("Disp00002", data[0].SerialNumber);
+			Assert.AreEqual("TV00002"  , data[1].SerialNumber);
+			Assert.AreEqual("Anything" , ((Issue4280T2)data[1]).Location);
+		}
+		#endregion
 	}
 }

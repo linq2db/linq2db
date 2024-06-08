@@ -1,24 +1,18 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 
 namespace LinqToDB.Common.Internal.Cache
 {
-    /// <summary>
-    /// Provides access to the normal system clock.
-    /// </summary>
-    public class SystemClock : ISystemClock
-    {
-        /// <summary>
-        /// Retrieves the current system time in UTC.
-        /// </summary>
-        public DateTimeOffset UtcNow
-        {
-            get
-            {
-                return DateTimeOffset.UtcNow;
-            }
-        }
-    }
+	/// <summary>
+	/// Provides access to the normal system clock.
+	/// </summary>
+	public class SystemClock : ISystemClock
+	{
+		/// <summary>
+		/// Retrieves the current system time in UTC.
+		/// </summary>
+		public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
+	}
 }

@@ -1,115 +1,231 @@
-using System;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	class PostgreSQLBulkCopy : BasicBulkCopy
+	using Common;
+	using Data;
+	using Mapping;
+	using SqlProvider;
+
+	sealed class PostgreSQLBulkCopy : BasicBulkCopy
 	{
-		readonly PostgreSQLDataProvider _dataProvider;
-		readonly Type                   _connectionType;
+		/// <remarks>
+		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
+		/// We subtract 1 based on possibility of provider using parameter for command.
+		/// </remarks>
+		protected override int                    MaxParameters => 32766;
+		/// <summary>
+		/// Setting based on https://stackoverflow.com/a/4937695/2937845
+		/// Max is actually 2GiB, but we keep a lower number here to avoid the cost of huge statements.
+		/// </summary>
+		protected override int                    MaxSqlLength  => 327670;
+		readonly           PostgreSQLDataProvider _provider;
 
-		static readonly ConcurrentDictionary<object, object> _rowWriterCache = new ConcurrentDictionary<object, object>();
-
-		public PostgreSQLBulkCopy(PostgreSQLDataProvider dataProvider, Type connectionType)
+		public PostgreSQLBulkCopy(PostgreSQLDataProvider dataProvider)
 		{
-			_dataProvider   = dataProvider;
-			_connectionType = connectionType;
+			_provider = dataProvider;
 		}
 
-		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			return MultipleRowsCopy1(table, options, source);
 		}
 
-		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (!(table?.DataContext is DataConnection dataConnection))
-				throw new ArgumentNullException(nameof(dataConnection));
+			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
+		}
 
-			var connection = dataConnection.Connection;
+#if NATIVE_ASYNC
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
+		}
+#endif
+
+		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
+		{
+			if (table.TryGetDataConnection(out var dataConnection))
+				return ProviderSpecificCopyImpl(dataConnection, table, options, source);
+
+			return MultipleRowsCopy(table, options, source);
+		}
+
+		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			if (table.TryGetDataConnection(out var dataConnection))
+				return ProviderSpecificCopyImplAsync(dataConnection, table, options, source, cancellationToken);
+
+			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+		}
+
+#if NATIVE_ASYNC
+		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			if (table.TryGetDataConnection(out var dataConnection))
+				return ProviderSpecificCopyImplAsync(dataConnection, table, options, source, cancellationToken);
+
+			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+		}
+#endif
+
+		BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(
+			DataConnection dataConnection, ITable<T> table, DataOptions options, IEnumerable<T> source)
+			where T : notnull
+		{
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 			if (connection == null)
 				return MultipleRowsCopy(table, options, source);
 
-			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOfEx(_connectionType)))
-				return MultipleRowsCopy(table, options, source);
+			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
+			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var tableName  = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
+			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
 
-			var sqlBuilder   = _dataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-			var ed           = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName    = GetTableName(sqlBuilder, options, table);
-			var columns      = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
-			var writerType   = _connectionType.AssemblyEx().GetType("Npgsql.NpgsqlBinaryImporter", true);
+			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(_provider.Adapter, sqlBuilder, columns);
 
-			var fields       = string.Join(", ", columns.Select(column => sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField)));
-			var copyCommand  = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
+			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
+			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
 
-			var rowsCopied   = new BulkCopyRowsCopied();
 			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
-			var batchSize    = Math.Max(10, options.MaxBatchSize ?? 10000);
+			var batchSize   = Math.Max(10, options.BulkCopyOptions.MaxBatchSize ?? 10000);
+
+			var writer      = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+
+			return ProviderSpecificCopySyncImpl(table.DataContext, dataConnection, options.BulkCopyOptions, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
+		}
+
+		private (NpgsqlProviderAdapter.NpgsqlDbType?[] npgsqlTypes, string?[] dbTypes, DbDataType[] columnTypes) BuildTypes(
+			NpgsqlProviderAdapter adapter,
+			PostgreSQLSqlBuilder  sqlBuilder,
+			ColumnDescriptor[]    columns)
+		{
+			var npgsqlTypes = new NpgsqlProviderAdapter.NpgsqlDbType?[columns.Length];
+			var dbTypes     = new string?[columns.Length];
+			var columnTypes = new DbDataType[columns.Length];
+			for (var i = 0; i < columns.Length; i++)
+			{
+				dbTypes[i]     = columns[i].DbType;
+				columnTypes[i] = columns[i].GetDbDataType(true);
+				var npgsqlType = _provider.GetNativeType(columns[i].DbType, true);
+				if (npgsqlType == null)
+				{
+					var sb = new System.Text.StringBuilder();
+					sqlBuilder.BuildTypeName(sb, new SqlQuery.SqlDataType(columnTypes[i]));
+					npgsqlType = _provider.GetNativeType(sb.ToString(), true);
+				}
+
+				npgsqlTypes[i] = npgsqlType;
+
+				if (npgsqlType == null && dbTypes[i] == null)
+					throw new LinqToDBException($"Cannot guess PostgreSQL type for column {columns[i].ColumnName}. Specify type explicitly in column mapping.");
+			}
+
+			return (npgsqlTypes, dbTypes, columnTypes);
+		}
+
+		private BulkCopyRowsCopied ProviderSpecificCopySyncImpl<T>(
+			IDataContext                               originalContext,
+			DataConnection                             dataConnection,
+			BulkCopyOptions                            options,
+			IEnumerable<T>                             source,
+			DbConnection                               connection,
+			string                                     tableName,
+			ColumnDescriptor[]                         columns,
+			DbDataType[]                               columnTypes,
+			NpgsqlProviderAdapter.NpgsqlDbType?[]      npgsqlTypes,
+			string?[]                                  dbTypes,
+			string                                     copyCommand,
+			int                                        batchSize,
+			NpgsqlProviderAdapter.NpgsqlBinaryImporter writer)
+		{
+			var pgOptions    = dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default);
 			var currentCount = 0;
+			var rowsCopied   = new BulkCopyRowsCopied();
 
-			var dc           = (dynamic)connection;
-
-			var key = new { Type = typeof(T), options.KeepIdentity, ed };
-			var rowWriter = (Action<MappingSchema, object, ColumnDescriptor[], T>)_rowWriterCache.GetOrAdd(
-				key,
-				_ => BuildRowWriter<T>(writerType, columns, dataConnection.MappingSchema));
-
-			var writer       = dc.BeginBinaryImport(copyCommand);
-
-			// https://github.com/npgsql/npgsql/issues/1646
-			// npgsql 4.0 will revert logic by removing explicit Cancel() and add explicit Complete()
-			var hasCancel   = writer.GetType().GetMethod("Cancel")   != null;
-			var hasComplete = writer.GetType().GetMethod("Complete") != null;
 			try
 			{
 				foreach (var item in source)
 				{
-					rowWriter(dataConnection.MappingSchema, writer, columns, item);
+					writer.StartRow();
+
+					for (var i = 0; i < columns.Length; i++)
+					{
+						// DBNull.Value : https://github.com/npgsql/npgsql/issues/5330
+						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i], npgsqlTypes[i]);
+
+						if (value is DateTimeOffset dto && npgsqlTypes[i] == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ)
+						{
+							// https://github.com/npgsql/npgsql/issues/5332
+							// reset date
+							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
+						}
+						if (npgsqlTypes[i] != null)
+							writer.Write(value, npgsqlTypes[i]!.Value);
+						else
+							writer.Write(value, dbTypes[i]!);
+					}
 
 					currentCount++;
 					rowsCopied.RowsCopied++;
 
+					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
+					{
+						options.RowsCopiedCallback(rowsCopied);
+
+						if (rowsCopied.Abort)
+						{
+							if (!writer.HasComplete && !writer.HasComplete5)
+								writer.Cancel();
+							break;
+						}
+					}
+
 					if (currentCount >= batchSize)
 					{
-						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
-						{
-							options.RowsCopiedCallback(rowsCopied);
-
-							if (rowsCopied.Abort)
-							{
-								if (hasCancel)
-									writer.Cancel();
-								break;
-							}
-						}
-
-						if (hasComplete)
+						if (writer.HasComplete)
 							writer.Complete();
+						else if (writer.HasComplete5)
+							writer.Complete5();
 
 						writer.Dispose();
 
-						writer = dc.BeginBinaryImport(copyCommand);
+						writer = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 						currentCount = 0;
 					}
 				}
 
-				if (!rowsCopied.Abort && hasComplete)
-					writer.Complete();
+				if (!rowsCopied.Abort)
+				{
+					TraceAction(
+						dataConnection,
+						() => $"INSERT BULK {tableName}({string.Join(", ", columns.Select(x => x.ColumnName))}){Environment.NewLine}",
+						() =>
+						{
+							if (writer.HasComplete)
+								writer.Complete();
+							else if (writer.HasComplete5)
+								writer.Complete5();
+							return (int)rowsCopied.RowsCopied;
+						});
+				}
+
+				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+					options.RowsCopiedCallback(rowsCopied);
 			}
-			catch when (hasCancel)
+			catch when (!writer.HasComplete && !writer.HasComplete5)
 			{
 				writer.Cancel();
 				throw;
@@ -119,62 +235,254 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				writer.Dispose();
 			}
 
+			if (originalContext.CloseAfterUse)
+				originalContext.Close();
+
 			return rowsCopied;
 		}
 
-		Action<MappingSchema, object, ColumnDescriptor[], TEntity> BuildRowWriter<TEntity>(
-			Type writerType, ColumnDescriptor[] columns, MappingSchema mappingSchema)
+		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyImplAsync<T>(
+			DataConnection    dataConnection,
+			ITable<T>         table,
+			DataOptions       options,
+			IEnumerable<T>    source,
+			CancellationToken cancellationToken)
+			where T : notnull
 		{
-			var pMapping    = Expression.Parameter(typeof(MappingSchema));
-			var pWriter     = Expression.Parameter(typeof(object));
-			var pColumns    = Expression.Parameter(typeof(ColumnDescriptor[]));
-			var pEntity     = Expression.Parameter(typeof(TEntity));
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
-			var writerVar   = Expression.Variable(writerType);
-			var exprs       = new List<Expression>
+			if (connection == null)
+				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
+			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var tableName  = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
+			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
+
+			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
+			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
+
+			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
+			var batchSize    = Math.Max(10, options.BulkCopyOptions.MaxBatchSize ?? 10000);
+
+			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(_provider.Adapter, sqlBuilder, columns);
+
+			var writer = _provider.Adapter.BeginBinaryImportAsync != null
+				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext)
+				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+
+			if (!writer.SupportsAsync)
 			{
-				Expression.Assign(writerVar, Expression.Convert(pWriter, writerType)),
-				Expression.Call(writerVar, "StartRow", Array<Type>.Empty)
-			};
-
-			var builder = (BasicSqlBuilder)_dataProvider.CreateSqlBuilder(mappingSchema);
-
-			for (var i = 0; i < columns.Length; i++)
-			{
-				var npgsqlType = _dataProvider.GetNativeType(columns[i].DbType);
-				if (npgsqlType == null)
-				{
-					var columnType = columns[i].DataType != DataType.Undefined ? new SqlDataType(columns[i].DataType) : null;
-
-					if (columnType == null || columnType.DataType == DataType.Undefined)
-						columnType = mappingSchema.GetDataType(columns[i].StorageType);
-
-					var sb = new StringBuilder();
-					builder.BuildTypeName(sb, columnType);
-					npgsqlType = _dataProvider.GetNativeType(sb.ToString());
-				}
-
-				if (npgsqlType == null)
-					throw new LinqToDBException($"Cannot guess PostgreSQL type for column {columns[i].ColumnName}. Specify type explicitly in column mapping.");
-
-				// don't use WriteNull because Write already handle both null and DBNull values properly
-				exprs.Add(Expression.Call(
-					writerVar,
-					"Write",
-					new[] { typeof(object) },
-					Expression.Call(
-						Expression.ArrayIndex(pColumns, Expression.Constant(i)),
-						MemberHelper.MethodOf((ColumnDescriptor cd) => cd.GetValue(default, default)),
-						pMapping,
-						pEntity),
-					Expression.Constant(npgsqlType)));
+				// seems to be missing one of the required async methods; fallback to sync importer
+				return ProviderSpecificCopySyncImpl(table.DataContext, dataConnection, options.BulkCopyOptions, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
 			}
 
-			var ex = Expression.Lambda<Action<MappingSchema, object, ColumnDescriptor[], TEntity>>(
-					Expression.Block(new[] { writerVar }, exprs),
-					pMapping, pWriter, pColumns, pEntity);
+			var pgOptions    = dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default);
+			var rowsCopied   = new BulkCopyRowsCopied();
+			var currentCount = 0;
 
-			return ex.Compile();
+			try
+			{
+				foreach (var item in source)
+				{
+					await writer.StartRowAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+					for (var i = 0; i < columns.Length; i++)
+					{
+						// DBNull.Value : https://github.com/npgsql/npgsql/issues/5330
+						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i], npgsqlTypes[i]);
+						
+						if (value is DateTimeOffset dto && npgsqlTypes[i] == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ)
+						{
+							// https://github.com/npgsql/npgsql/issues/5332
+							// reset date
+							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
+						}
+						if (npgsqlTypes[i] != null)
+							await writer.WriteAsync(value, npgsqlTypes[i]!.Value, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						else
+							await writer.WriteAsync(value, dbTypes[i]!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					}
+
+					currentCount++;
+					rowsCopied.RowsCopied++;
+
+					if (options.BulkCopyOptions.NotifyAfter        != 0 &&
+					    options.BulkCopyOptions.RowsCopiedCallback != null &&
+					    rowsCopied.RowsCopied % options.BulkCopyOptions.NotifyAfter == 0)
+					{
+						options.BulkCopyOptions.RowsCopiedCallback(rowsCopied);
+
+						if (rowsCopied.Abort)
+						{
+							break;
+						}
+					}
+
+					if (currentCount >= batchSize)
+					{
+						await writer.CompleteAsync(cancellationToken)
+							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+						await writer.DisposeAsync()
+							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+						writer = _provider.Adapter.BeginBinaryImportAsync != null
+							? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext)
+							: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+						currentCount = 0;
+					}
+				}
+
+				if (!rowsCopied.Abort)
+				{
+					await TraceActionAsync(
+						dataConnection,
+						() => $"INSERT ASYNC BULK {tableName}({string.Join(", ", columns.Select(x => x.ColumnName))}){Environment.NewLine}",
+						async () => {
+							var ret = await writer.CompleteAsync(cancellationToken)
+								.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							return (int)rowsCopied.RowsCopied;
+						}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				}
+
+				if (options.BulkCopyOptions.NotifyAfter != 0 && options.BulkCopyOptions.RowsCopiedCallback != null)
+					options.BulkCopyOptions.RowsCopiedCallback(rowsCopied);
+			}
+			finally
+			{
+				await writer.DisposeAsync()
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}
+
+			if (table.DataContext.CloseAfterUse)
+				await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			return rowsCopied;
 		}
+
+#if NATIVE_ASYNC
+		async Task<BulkCopyRowsCopied> ProviderSpecificCopyImplAsync<T>(
+			DataConnection      dataConnection,
+			ITable<T>           table,
+			DataOptions         options,
+			IAsyncEnumerable<T> source,
+			CancellationToken   cancellationToken)
+		where T: notnull
+		{
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+
+			if (connection == null)
+				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			var sqlBuilder  = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
+			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var tableName   = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
+			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
+			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
+			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
+
+			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
+			var batchSize    = Math.Max(10, options.BulkCopyOptions.MaxBatchSize ?? 10000);
+
+			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(_provider.Adapter, sqlBuilder, columns);
+
+			var writer = _provider.Adapter.BeginBinaryImportAsync != null
+				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext)
+				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+
+			if (!writer.SupportsAsync)
+			{
+				// seems to be missing one of the required async methods; fallback to sync importer
+				var enumerator = source.GetAsyncEnumerator(cancellationToken);
+				await using (enumerator.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				{
+					return ProviderSpecificCopySyncImpl(table.DataContext, dataConnection, options.BulkCopyOptions, EnumerableHelper.AsyncToSyncEnumerable(enumerator), connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
+				}
+			}
+
+			var pgOptions    = dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default);
+			var rowsCopied   = new BulkCopyRowsCopied();
+			var currentCount = 0;
+
+			try
+			{
+				await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				{
+					await writer.StartRowAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					for (var i = 0; i < columns.Length; i++)
+					{
+						// DBNull.Value : https://github.com/npgsql/npgsql/issues/5330
+						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i], npgsqlTypes[i]);
+
+						if (value is DateTimeOffset dto && npgsqlTypes[i] == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ)
+						{
+							// https://github.com/npgsql/npgsql/issues/5332
+							// reset date
+							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
+						}
+						if (npgsqlTypes[i] != null)
+							await writer.WriteAsync(value, npgsqlTypes[i]!.Value, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						else
+							await writer.WriteAsync(value, dbTypes[i]!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					}
+
+					currentCount++;
+					rowsCopied.RowsCopied++;
+
+					if (options.BulkCopyOptions.NotifyAfter        != 0 &&
+					    options.BulkCopyOptions.RowsCopiedCallback != null &&
+					    rowsCopied.RowsCopied % options.BulkCopyOptions.NotifyAfter == 0)
+					{
+						options.BulkCopyOptions.RowsCopiedCallback(rowsCopied);
+
+						if (rowsCopied.Abort)
+						{
+							break;
+						}
+					}
+
+					if (currentCount >= batchSize)
+					{
+						await writer.CompleteAsync(cancellationToken)
+							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+						await writer.DisposeAsync()
+							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+						writer = _provider.Adapter.BeginBinaryImportAsync != null
+							? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext)
+							: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+						currentCount = 0;
+					}
+				}
+
+				if (!rowsCopied.Abort)
+				{
+					await TraceActionAsync(
+						dataConnection,
+						() => $"INSERT ASYNC BULK {tableName}({string.Join(", ", columns.Select(x => x.ColumnName))}){Environment.NewLine}",
+						async () => {
+							var ret = await writer.CompleteAsync(cancellationToken)
+								.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							return (int)rowsCopied.RowsCopied;
+						}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				}
+
+				if (options.BulkCopyOptions.NotifyAfter != 0 && options.BulkCopyOptions.RowsCopiedCallback != null)
+					options.BulkCopyOptions.RowsCopiedCallback(rowsCopied);
+			}
+			finally
+			{
+				await writer.DisposeAsync()
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}
+
+			if (table.DataContext.CloseAfterUse)
+				await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			return rowsCopied;
+		}
+#endif
 	}
 }

@@ -1,0 +1,284 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+// Generated.
+//
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+using LinqToDB;
+using LinqToDB.DataProvider.Oracle;
+
+using NUnit.Framework;
+
+namespace Tests.Extensions
+{
+	partial class OracleTests
+	{
+<#
+	GenerateQuery ("AllRows");
+	GenerateQuery2("FirstRows");
+
+	GenerateTable ("Cluster");
+	GenerateQuery ("Clustering");
+	GenerateQuery ("NoClustering");
+	GenerateTable ("Full");
+	GenerateTable ("Hash");
+
+	GenerateIndex ("Index");
+	GenerateIndex ("IndexAsc");
+	GenerateIndex ("IndexCombine");
+	GenerateIndex ("IndexJoin");
+	GenerateIndex ("IndexDesc");
+	GenerateIndex ("IndexFFS");
+	GenerateIndex ("IndexFastFullScan");
+	GenerateIndex ("IndexSS");
+	GenerateIndex ("IndexSkipScan");
+	GenerateIndex ("IndexSSAsc");
+	GenerateIndex ("IndexSkipScanAsc");
+	GenerateIndex ("IndexSSDesc");
+	GenerateIndex ("IndexSkipScanDesc");
+	GenerateQuery ("NativeFullOuterJoin");     GenerateQuery("NoNativeFullOuterJoin");
+	GenerateIndex ("NoIndex");
+	GenerateIndex ("NoIndexFFS");
+	GenerateIndex ("NoIndexFastFullScan");
+	GenerateIndex ("NoIndexSS");
+	GenerateIndex ("NoIndexSkipScan");
+
+	GenerateTable ("InMemory");
+	GenerateTable ("NoInMemory");
+	GenerateTable ("InMemoryPruning");
+	GenerateTable ("NoInMemoryPruning");
+
+	GenerateQuery4("UseBand");                 GenerateQuery4("NoUseBand");
+	GenerateQuery4("UseCube");                 GenerateQuery4("NoUseCube");
+	GenerateQuery4("UseHash");                 GenerateQuery4("NoUseHash");
+	GenerateQuery4("UseMerge");                GenerateQuery4("NoUseMerge");
+	GenerateQuery4("UseNL");                   GenerateQuery4("UseNestedLoop");
+	GenerateQuery4("NoUseNL");                 GenerateQuery4("NoUseNestedLoop");
+	GenerateIndex ("UseNLWithIndex");
+	GenerateIndex ("UseNestedLoopWithIndex");
+
+	GenerateQuery ("EnableParallelDml");
+	GenerateQuery ("DisableParallelDml");
+
+	GenerateQuery ("PQConcurrentUnion");       GenerateQuery3("PQConcurrentUnion");
+	GenerateQuery ("NoPQConcurrentUnion");     GenerateQuery3("NoPQConcurrentUnion");
+	GenerateQuery ("PQFilterSerial");
+	GenerateQuery ("PQFilterNone");
+	GenerateQuery ("PQFilterHash");
+	GenerateQuery ("PQFilterRandom");
+	GenerateTable ("PQSkew");
+	GenerateTable ("NoPQSkew");
+
+	GenerateQuery ("NoQueryTransformation");
+	GenerateQuery ("UseConcat");               GenerateQuery3("UseConcat");
+	GenerateQuery ("NoExpand");                GenerateQuery3("NoExpand");
+	GenerateQuery ("Rewrite");                 GenerateQuery3("Rewrite");
+	GenerateQuery ("NoRewrite");               GenerateQuery3("NoRewrite");
+	GenerateQuery ("Merge");                   GenerateQuery3("Merge");                 GenerateTable("Merge");
+	GenerateQuery ("NoMerge");                 GenerateQuery3("NoMerge");               GenerateTable("NoMerge");
+	GenerateQuery ("StarTransformation");      GenerateQuery3("StarTransformation");
+	GenerateQuery ("NoStarTransformation");    GenerateQuery3("NoStarTransformation");
+	GenerateTable ("Fact");
+	GenerateTable ("NoFact");
+	GenerateQuery ("Unnest");                  GenerateQuery3("Unnest");
+	GenerateQuery ("NoUnnest");                GenerateQuery3("NoUnnest");
+
+	GenerateQuery4("Leading");
+	GenerateQuery ("Ordered");
+
+	GenerateQuery ("Parallel");
+	GenerateTable ("NoParallel");
+
+	GenerateQuery ("Append");
+	GenerateQuery ("AppendValues");
+	GenerateQuery ("NoAppend");
+	GenerateTable ("Cache");
+	GenerateTable ("NoCache");
+	GenerateQuery ("PushPredicate");           GenerateQuery3("PushPredicate");      GenerateTable("PushPredicate");
+	GenerateQuery3("PushSubQueries");
+	GenerateQuery3("NoPushSubQueries");
+	GenerateQuery ("CursorSharingExact");
+	GenerateTable ("DrivingSite");
+	GenerateQuery ("ModelMinAnalysis");
+	GenerateTable ("PxJoinFilter");
+	GenerateTable ("NoPxJoinFilter");
+	GenerateQuery ("NoXmlQueryRewrite");
+	GenerateQuery ("NoXmlIndexRewrite");
+	GenerateQuery ("FreshMaterializedView");
+	GenerateQuery ("FreshMV");
+	GenerateQuery ("Grouping");
+	GenerateQuery ("Monitor");                 GenerateQuery ("NoMonitor");
+#>
+	}
+}
+<#+
+void GenerateTable(string test, string version = "")
+{
+#>
+		[Test]
+		public void TableHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.<#= test #>Hint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>}(p) */"));
+		}
+
+		[Test]
+		public void TableHint<#= test #>InScopeTest([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsOracle()
+			.<#= test #>InScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>}(p) {OracleHints.Hint.<#= test #>}(c_1) */"));
+		}
+
+<#+
+}
+
+void GenerateIndex(string test, string version = "")
+{
+#>
+		[Test]
+		public void IndexHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.<#= test #>Hint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>}(p parent_ix parent2_ix) */"));
+		}
+
+<#+
+}
+
+void GenerateQuery(string test, string version = "")
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.<#= test #>Hint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>} */"));
+		}
+
+<#+
+}
+
+void GenerateQuery2(string test, string version = "")
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test2([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.<#= test #>Hint(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>(10)} */"));
+		}
+
+<#+
+}
+
+void GenerateQuery3(string test, string version = "")
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test3([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryName("qb")
+			.AsOracle()
+			.<#= test #>Hint("@qb");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.<#= test #>}(@qb) */"));
+		}
+
+<#+
+}
+
+void GenerateQuery4(string test, string version = "")
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test4([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.<#= test #>Hint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>}(c_1 p) */"));
+		}
+
+<#+
+}
+#>

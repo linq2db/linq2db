@@ -8,21 +8,26 @@ namespace Tests.Model
 {
 	public class LinqDataTypes : IEquatable<LinqDataTypes>, IComparable
 	{
-		public int      ID;
-		public decimal  MoneyValue;
-		public DateTime DateTimeValue;
-		public bool     BoolValue;
-		public Guid     GuidValue;
-		public Binary   BinaryValue;
-		public short    SmallIntValue;
-		public string   StringValue;
+		[PrimaryKey(Configuration = ProviderName.ClickHouse)]
+		public int       ID;
+		[Column(DataType = DataType.Decimal64, Scale = 4, Configuration = ProviderName.ClickHouse)]
+		public decimal   MoneyValue;
+		[Column(Precision = 3, Configuration = ProviderName.ClickHouse)]
+		public DateTime  DateTimeValue;
+		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
+		public bool      BoolValue;
+		[Column(DataType = DataType.Char, Length = 36, Configuration = ProviderName.Informix)]
+		public Guid      GuidValue;
+		public Binary?   BinaryValue;
+		public short     SmallIntValue;
+		public string?   StringValue;
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return Equals(obj as LinqDataTypes);
 		}
 
-		public bool Equals(LinqDataTypes other)
+		public bool Equals(LinqDataTypes? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
@@ -48,8 +53,11 @@ namespace Tests.Model
 			return ID;
 		}
 
-		public int CompareTo(object obj)
+		public int CompareTo(object? obj)
 		{
+			if (obj == null)
+				return 1;
+
 			return ID - ((LinqDataTypes)obj).ID;
 		}
 
@@ -77,21 +85,25 @@ namespace Tests.Model
 		// type it explicitly for sql server, because SQL Server 2005+ provider maps DateTime .Net type to DataType.DateTime2 by default
 		[Column(DataType = DataType.DateTime,  Configuration = ProviderName.SqlServer)]
 		[Column(DataType = DataType.DateTime2, Configuration = ProviderName.Oracle)]
+		[Column(Precision = 3, Configuration = ProviderName.ClickHouse)]
 		[Column]                                        public DateTime? DateTimeValue;
 		[Column]                                        public DateTime? DateTimeValue2;
+		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
 		[Column]                                        public bool?     BoolValue;
+		[Column(DataType = DataType.Char, Length = 36, Configuration = ProviderName.Informix)]
 		[Column]                                        public Guid?     GuidValue;
 		[Column]                                        public short?    SmallIntValue;
 		[Column]                                        public int?      IntValue;
 		[Column]                                        public long?     BigIntValue;
-		[Column]                                        public string    StringValue;
+		[Column(DataType = DataType.NVarChar, Length = 50, Configuration = ProviderName.Firebird)]
+		[Column]                                        public string?   StringValue;
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return Equals(obj as LinqDataTypes2);
 		}
 
-		public bool Equals(LinqDataTypes2 other)
+		public bool Equals(LinqDataTypes2? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
@@ -104,7 +116,7 @@ namespace Tests.Model
 				other.DateTimeValue.HasValue == DateTimeValue.HasValue &&
 				(other.DateTimeValue == null ||
 				(
-					other.DateTimeValue.Value.Date   == DateTimeValue.Value.Date   &&
+					other.DateTimeValue.Value.Date   == DateTimeValue!.Value.Date  &&
 					other.DateTimeValue.Value.Hour   == DateTimeValue.Value.Hour   &&
 					other.DateTimeValue.Value.Minute == DateTimeValue.Value.Minute &&
 					other.DateTimeValue.Value.Second == DateTimeValue.Value.Second
@@ -116,8 +128,11 @@ namespace Tests.Model
 			return ID;
 		}
 
-		public int CompareTo(object obj)
+		public int CompareTo(object? obj)
 		{
+			if (obj == null)
+				return 1;
+
 			return ID - ((LinqDataTypes2)obj).ID;
 		}
 
@@ -134,6 +149,23 @@ namespace Tests.Model
 		public override string ToString()
 		{
 			return string.Format("{{{0,2}, {1,7}, {2:O}, {3,5}, {4}, {5}, '{6}'}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue, SmallIntValue, StringValue);
+		}
+
+		public LinqDataTypes2 Clone()
+		{
+			return new ()
+			{
+				ID             = ID,
+				MoneyValue     = MoneyValue,
+				DateTimeValue  = DateTimeValue,
+				DateTimeValue2 = DateTimeValue2,
+				BoolValue      = BoolValue,
+				GuidValue      = GuidValue,
+				SmallIntValue  = SmallIntValue,
+				IntValue       = IntValue,
+				BigIntValue    = BigIntValue,
+				StringValue    = StringValue,
+			};
 		}
 	}
 }

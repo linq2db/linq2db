@@ -1,0 +1,64 @@
+<#@ assembly name="System.Core"                         #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll" #>
+<#@ import   namespace="System.Reflection"              #>
+<#@ import   namespace="System.IO"                      #>
+<#@ import   namespace="System.Linq"                    #>
+<#@ import   namespace="System.Runtime.InteropServices" #>
+
+<#
+AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
+{
+	var requestedAssembly = new AssemblyName(args.Name);
+
+	// ignore version mismatch
+	return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == requestedAssembly.Name);
+};
+
+var sharedPath = Path.GetDirectoryName(GetAssemblyLocation(typeof(LinqToDB.Data.DataConnection).Assembly));
+
+LoadAssembly("Microsoft.Bcl.AsyncInterfaces", sharedPath);
+#>
+
+<#+
+static string GetAssemblyLocation(Assembly assembly)
+{
+	if (RuntimeInformation.FrameworkDescription.Contains(".NET Framework"))
+	{
+		// CodeBase used instead of Location, as Location could point to shadow copy, but we need to get original path
+		// to be able to locate sibling asemblies
+		return assembly.CodeBase.Replace("file:///", "");
+	}
+
+	// for "unofficial" T4 hosts use Location as CodeBase is obsoleted and throws exception on modern runtimes
+	return assembly.Location;
+}
+
+public static string GetProviderToolsPath(string assemblyName, string fullName)
+{
+	var assembly = AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.GetName().Name == assemblyName);
+
+	// needed for Rider as it fails to load MySqlConnector using directive
+	if (assembly == null)
+		assembly = Assembly.Load(fullName);
+
+	return Path.GetDirectoryName(GetAssemblyLocation(assembly));
+}
+
+public static void LoadAssembly(string assemblyName, string toolsPath)
+{
+	// check if already loaded
+	if (AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == assemblyName))
+		return;
+	
+	try
+	{
+		// try to load using VS (host) lookup paths
+		Assembly.Load(assemblyName);
+		return;
+	}
+	catch {}
+
+	// load from tools
+	Assembly.LoadFrom(Path.Combine(toolsPath, assemblyName + ".dll"));
+}
+#>

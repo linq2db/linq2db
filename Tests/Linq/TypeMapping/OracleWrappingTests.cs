@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Data;
-using LinqToDB;
+using System.Data.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
 using NUnit.Framework;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
@@ -48,21 +47,15 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class OracleParameter
+		internal sealed class OracleParameter
 		{
 			public OracleDbType OracleDbType { get; set; }
 		}
 
 		[Wrapper]
-		internal class OracleDataReader
+		internal sealed class OracleDataReader
 		{
 			public OracleDate GetOracleDate(int idx) => throw new NotImplementedException();
-		}
-
-		[Wrapper]
-		internal class GetOracleDate
-		{
-
 		}
 	}
 
@@ -72,22 +65,22 @@ namespace Tests.TypeMapping
 
 		private Type GetDynamicType(string dbTypeName, Type connectionType)
 		{
-			var dbType = connectionType.AssemblyEx().GetType(dbTypeName.Contains(".") ? dbTypeName : connectionType.Namespace + "." + dbTypeName, true);
-			return dbType;
+			var dbType = connectionType.Assembly.GetType(dbTypeName.Contains(".") ? dbTypeName : connectionType.Namespace + "." + dbTypeName, true);
+			return dbType!;
 		}
 
 		private Type GetDynamicTypesType(string dbTypeName, Type connectionType)
 		{
-			var dbType = connectionType.AssemblyEx().GetType("Oracle.ManagedDataAccess" + ".Types." + dbTypeName, true);
-			return dbType;
+			var dbType = connectionType.Assembly.GetType("Oracle.ManagedDataAccess" + ".Types." + dbTypeName, true);
+			return dbType!;
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(false, ProviderName.OracleManaged)] string context)
+		public void Test([IncludeDataSources(false, TestProvName.AllOracleManaged)] string context)
 		{
-			var prov = DataConnection.GetDataProvider(ProviderName.OracleManaged);
+			var prov = DataConnection.GetDataProvider(context);
 
-			var connectionType = ((DynamicDataProviderBase)prov).GetConnectionType();
+			var connectionType = ((OracleDataProvider)prov).Adapter.ConnectionType;
 
 			var oracleParameter  = GetDynamicType("OracleParameter", connectionType);
 			var oracleDbType     = GetDynamicType("OracleDbType", connectionType);
@@ -95,19 +88,16 @@ namespace Tests.TypeMapping
 
 			var oracleDate = GetDynamicTypesType("OracleDate", connectionType);
 
-			var oracleMapper = new TypeMapper(oracleParameter, oracleDbType, oracleDataReader, oracleDate);
+			var oracleMapper = new TypeMapper();
+			oracleMapper.RegisterTypeWrapper<OracleWrappers.OracleParameter>(oracleParameter);
+			oracleMapper.RegisterTypeWrapper<OracleWrappers.OracleDbType>(oracleDbType);
+			oracleMapper.RegisterTypeWrapper<OracleWrappers.OracleDataReader>(oracleDataReader);
 
+			oracleMapper.FinalizeMappings();
 
-//			oracleMapper.MapSetter<OracleParameter>(p => p.OracleDbType, () => OracleDbType.Date);
+			using var instance = new Oracle.ManagedDataAccess.Client.OracleParameter();
 
-			var instance = new Oracle.ManagedDataAccess.Client.OracleParameter();
-
-			oracleMapper.SetValue<OracleParameter>(instance, p => p.OracleDbType, OracleDbType.Date);
-
-			var action = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<IDbDataParameter>(OracleDbType.Single);
-			action(instance);
-
-			var setterAction = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<IDbDataParameter>();
+			var setterAction = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<DbParameter>();
 			setterAction(instance, OracleDbType.Blob);
 
 			var expr = oracleMapper.MapLambda((OracleDataReader r, int i) => r.GetOracleDate(i));

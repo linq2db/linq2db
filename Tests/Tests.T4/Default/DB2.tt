@@ -1,0 +1,10 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="..\Shared.ttinclude"                                       once="true"     #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.DB2.ttinclude" once="true"     #>
+<#
+	NamespaceName   = "Default.DB2";
+	DataContextName = "TestDataDB";
+	LoadDB2Metadata(GetConnectionString("DB2"));
+	GenerateModel();
+#>

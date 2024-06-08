@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq.Expressions;
+using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
@@ -18,10 +20,17 @@ namespace LinqToDB.Expressions
 		/// <param name="obj1"></param>
 		/// <param name="obj2"></param>
 		/// <returns>Result of comparison</returns>
-		public virtual bool ObjectsEqual(object obj1, object obj2)
+		public virtual bool ObjectsEqual(object? obj1, object? obj2)
 		{
 			if (ReferenceEquals(obj1, obj2))
 				return true;
+
+			// if both null, ReferenceEquals will return true
+			if (obj1 == null || obj2 == null)
+				return false;
+
+			if (obj1 is RawSqlString str1 && obj2 is RawSqlString str2)
+				return str1.Format == str2.Format;
 
 			if (obj1 is IEnumerable list1 && obj2 is IEnumerable list2)
 			{
@@ -32,7 +41,7 @@ namespace LinqToDB.Expressions
 				{
 					while (enum1.MoveNext())
 					{
-						if (!enum2.MoveNext() || !object.Equals(enum1.Current, enum2.Current))
+						if (!enum2.MoveNext() || !Equals(enum1.Current, enum2.Current))
 							return false;
 					}
 
@@ -47,15 +56,16 @@ namespace LinqToDB.Expressions
 		}
 
 		/// <summary>
-		/// Compares two expressions during expression tree comparison. 
+		/// Compares two expressions during expression tree comparison.
 		/// Has to be overriden if specific comparison required.
 		/// </summary>
+		/// <param name="context"></param>
 		/// <param name="expr1"></param>
 		/// <param name="expr2"></param>
 		/// <param name="comparer">Default function for comparing expressions.</param>
 		/// <returns>Result of comparison</returns>
-		public virtual bool ExpressionsEqual(Expression expr1, Expression expr2,
-			Func<Expression, Expression, bool> comparer)
+		public virtual bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2,
+			Func<TContext, Expression, Expression, bool> comparer)
 		{
 			return ObjectsEqual(expr1.EvaluateExpression(), expr2.EvaluateExpression());
 		}
@@ -68,6 +78,17 @@ namespace LinqToDB.Expressions
 		public virtual Expression PrepareForCache(Expression expression)
 		{
 			return Expression.Constant(expression.EvaluateExpression());
+		}
+
+		/// <summary>
+		/// Returns sub-expressions, if attribute applied to composite expression.
+		/// Default (non-composite) implementation returns <paramref name="expression"/>.
+		/// </summary>
+		/// <param name="expression">Expression to split.</param>
+		/// <returns>Passed expression of sub-expressions for composite expression.</returns>
+		public virtual IEnumerable<Expression> SplitExpression(Expression expression)
+		{
+			yield return expression;
 		}
 	}
 }

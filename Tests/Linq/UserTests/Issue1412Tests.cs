@@ -2,7 +2,6 @@
 using System.Linq;
 using LinqToDB;
 using NUnit.Framework;
-using Tests.Tools;
 
 namespace Tests.UserTests
 {
@@ -36,9 +35,9 @@ namespace Tests.UserTests
 		{
 			public ResourceStatus Status { get; set; }
 
-			public string ResourceLabel { get; set; }
+			public string? ResourceLabel { get; set; }
 
-			public string ResourceLabelNVE { get; set; }
+			public string? ResourceLabelNVE { get; set; }
 
 			public Guid? ParentResourceID { get; set; }
 
@@ -66,19 +65,19 @@ namespace Tests.UserTests
 
 			public decimal? Length { get; set; }
 
-			public string TechnicalValues { get; set; }
+			public string? TechnicalValues { get; set; }
 
 			public int RearrangementCount { get; set; }
 
 			public bool IsVirtual { get; set; }
 
-			public string ErrorMessage { get; set; }
+			public string? ErrorMessage { get; set; }
 
 			public decimal? FillingDegree { get; set; }
 
 			public DateTime? LastInventoryCheckTimeStamp { get; set; }
 
-			public string Segmentation { get; set; }
+			public string? Segmentation { get; set; }
 
 			public bool DontTouch { get; set; }
 
@@ -87,11 +86,11 @@ namespace Tests.UserTests
 				return Id.Equals(other.Id) && TypeID.Equals(other.TypeID);
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((WmsLoadCarrierDTO)obj);
 			}
 
@@ -106,16 +105,16 @@ namespace Tests.UserTests
 
 		public class WmsResourceCombinedDTO 
 		{
-			public WmsLoadCarrierDTO LoadCarrier { get; set; }
+			public WmsLoadCarrierDTO? LoadCarrier { get; set; }
 
-			public WmsResourceTypeDTO ResourceType { get; set; }
+			public WmsResourceTypeDTO? ResourceType { get; set; }
 		}
 
 		public class WmsResourceTypeDTO : BasicDTOwithExtensionData
 		{
-			public string Name { get; set; }
+			public string? Name { get; set; }
 
-			public string ShortName { get; set; }
+			public string? ShortName { get; set; }
 
 			public int Height { get; set; }
 
@@ -128,11 +127,11 @@ namespace Tests.UserTests
 				return Id.Equals(other.Id) && string.Equals(Name, other.Name) && string.Equals(ShortName, other.ShortName) && Height == other.Height && Depth == other.Depth && Width == other.Width;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != this.GetType()) return false;
+				if (obj.GetType() != GetType()) return false;
 				return Equals((WmsResourceTypeDTO)obj);
 			}
 
@@ -151,15 +150,16 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var typeId = Guid.NewGuid();
+			var typeId = TestData.Guid1;
 
 			var resources = new[]{ new WmsResourceTypeDTO{Depth = 256, Height = 110, Id = typeId, Name = "Resource Name", ShortName = "RN", Width = 333 } };
 
-			var carriersA = new[] { new WmsLoadCarrierDTO { Id = Guid.NewGuid(), TypeID = typeId } };
-			var carriersB = new[] { new WmsLoadCarrierDTO { Id = Guid.NewGuid(), TypeID = typeId } };
+			var carriersA = new[] { new WmsLoadCarrierDTO { Id = TestData.Guid2, TypeID = typeId } };
+			var carriersB = new[] { new WmsLoadCarrierDTO { Id = TestData.Guid3, TypeID = typeId } };
 
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<WmsResourceTypeDTO>(resources))

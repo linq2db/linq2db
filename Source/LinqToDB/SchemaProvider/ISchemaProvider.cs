@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SchemaProvider
+﻿namespace LinqToDB.SchemaProvider
 {
 	using Data;
 
@@ -22,6 +20,6 @@ namespace LinqToDB.SchemaProvider
 		/// <param name="dataConnection">Data connection to use to read schema from.</param>
 		/// <param name="options">Schema read configuration options.</param>
 		/// <returns>Returns database schema information.</returns>
-		DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null);
+		DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null);
 	}
 }

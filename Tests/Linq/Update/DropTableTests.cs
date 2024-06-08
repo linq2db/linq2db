@@ -13,7 +13,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class DropTableTests : TestBase
 	{
-		class DropTableTest
+		sealed class DropTableTest
 		{
 			public int ID { get; set; }
 		}
@@ -44,7 +44,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class DropTableTestID
+		sealed class DropTableTestID
 		{
 			[Identity, PrimaryKey]
 			public int ID  { get; set; }
@@ -52,7 +52,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DropCurrentDatabaseTableWIthIdentityTest([DataSources] string context)
+		public void DropCurrentDatabaseTableWithIdentityTest([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -80,19 +80,22 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DropSpecificDatabaseTableTest([DataSources(false, ProviderName.SapHana)] string context)
+		public void DropSpecificDatabaseTableTest([DataSources(false, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// cleanup
 				db.DropTable<DropTableTest>(throwExceptionIfNotExists: false);
 
-				var schema = TestUtils.GetSchemaName(db);
-				var database = TestUtils.GetDatabaseName(db);
+				var schema = TestUtils.GetSchemaName(db, context);
+				var database = TestUtils.GetDatabaseName(db, context);
 
-				var table = db.CreateTable<DropTableTest>()
+				// no idea why, but Access ODBC needs database set in CREATE TABLE for INSERT to work
+				// still it doesn't distinguish CREATE TABLE with and without database name
+				var table = db.CreateTable<DropTableTest>(databaseName: context.IsAnyOf(ProviderName.AccessOdbc) ? database : null)
 					.SchemaName(schema)
 					.DatabaseName(database);
+
 
 				table.Insert(() => new DropTableTest() { ID = 123 });
 
@@ -104,7 +107,7 @@ namespace Tests.xUpdate
 
 				table.Drop();
 
-				var sql = db.LastQuery;
+				var sql = db.LastQuery!;
 
 				// check that table dropped
 				var exception = Assert.Catch(() => table.ToList());

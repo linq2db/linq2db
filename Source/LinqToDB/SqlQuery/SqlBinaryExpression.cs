@@ -10,9 +10,9 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence)
 		{
-			Expr1      = expr1     ?? throw new ArgumentNullException(nameof(expr1));
+			_expr1     = expr1     ?? throw new ArgumentNullException(nameof(expr1));
 			Operation  = operation ?? throw new ArgumentNullException(nameof(operation));
-			Expr2      = expr2     ?? throw new ArgumentNullException(nameof(expr2));
+			_expr2     = expr2     ?? throw new ArgumentNullException(nameof(expr2));
 			SystemType = systemType;
 			Precedence = precedence;
 		}
@@ -22,15 +22,38 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public ISqlExpression Expr1      { get; internal set; }
+		private ISqlExpression _expr1;
+
+		public ISqlExpression Expr1
+		{
+			get => _expr1;
+			internal set
+			{
+				_expr1    = value;
+				_hashCode = null;
+			}
+		}
+
 		public string         Operation  { get; }
-		public ISqlExpression Expr2      { get; internal set; }
+
+		private ISqlExpression _expr2;
+
+		public ISqlExpression Expr2
+		{
+			get => _expr2;
+			internal set
+			{
+				_expr2    = value;
+				_hashCode = null;
+			}
+		}
+
 		public Type           SystemType { get; }
 		public int            Precedence { get; }
 
 		#region Overrides
 
-		public string SqlText => ToString();
+		public string SqlText => ToString()!;
 
 #if OVERRIDETOSTRING
 
@@ -45,30 +68,49 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Expr1 = Expr1.Walk(options, func);
-			Expr2 = Expr2.Walk(options, func);
+			Expr1 = Expr1.Walk(options, context, func)!;
+			Expr2 = Expr2.Walk(options, context, func)!;
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			return Equals(other, SqlExpression.DefaultComparer);
 		}
 
 		#endregion
 
+		int?                   _hashCode;
+
+		public override int GetHashCode()
+		{
+			// ReSharper disable NonReadonlyMemberInGetHashCode
+			if (_hashCode.HasValue)
+				return _hashCode.Value;
+
+			var hashCode = Operation.GetHashCode();
+
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr1.GetHashCode());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr2.GetHashCode());
+
+			_hashCode = hashCode;
+			return hashCode;
+			// ReSharper restore NonReadonlyMemberInGetHashCode
+		}
+
 		#region ISqlExpression Members
 
 		public bool CanBeNull => Expr1.CanBeNull || Expr2.CanBeNull;
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;
@@ -80,28 +122,6 @@ namespace LinqToDB.SqlQuery
 				Expr1.Equals(expr.Expr1, comparer) &&
 				Expr2.Equals(expr.Expr2, comparer) &&
 				comparer(this, other);
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlBinaryExpression(
-					SystemType,
-					(ISqlExpression)Expr1.Clone(objectTree, doClone),
-					Operation,
-					(ISqlExpression)Expr2.Clone(objectTree, doClone),
-					Precedence));
-			}
-
-			return clone;
 		}
 
 		#endregion
@@ -122,5 +142,20 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out Type systemType, out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
+		{
+			systemType = SystemType;
+			expr1      = Expr1;
+			operation  = Operation;
+			expr2      = Expr2;
+		}
+
+		public void Deconstruct(out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
+		{
+			expr1     = Expr1;
+			operation = Operation;
+			expr2     = Expr2;
+		}
 	}
 }

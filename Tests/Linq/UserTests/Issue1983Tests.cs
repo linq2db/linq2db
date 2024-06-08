@@ -13,11 +13,11 @@ namespace Tests.UserTests
 	{
 		public class Issue1983Person
 		{
-			public int    Id            { get; set; }
-			public string Name          { get; set; }
-			public int    CountOfCards  { get; set; }
+			public int     Id            { get; set; }
+			public string? Name          { get; set; }
+			public int     CountOfCards  { get; set; }
 			[ExpressionMethod(nameof(CountOfCardExpr), IsColumn = true)]
-			public int    CountOfCards2 { get; set; }
+			public int     CountOfCards2 { get; set; }
 
 			public static Expression<Func<Issue1983Person, IDataContext, int>> CountOfCardExpr()
 			{
@@ -33,15 +33,15 @@ namespace Tests.UserTests
 			}
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue1983Card.PersonId))]
-			public IEnumerable<Issue1983Card> Cards { get; set; }
+			public IEnumerable<Issue1983Card> Cards { get; set; } = null!;
 		}
 
 		public class Issue1983Card
 		{
-			public int    Id         { get; set; }
-			public int    CardType   { get; set; }
-			public string CardNumber { get; set; }
-			public int    PersonId   { get; set; }
+			public int     Id         { get; set; }
+			public int     CardType   { get; set; }
+			public string? CardNumber { get; set; }
+			public int     PersonId   { get; set; }
 		}
 
 		[Test]

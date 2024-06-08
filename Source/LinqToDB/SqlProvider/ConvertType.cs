@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace LinqToDB.SqlProvider
 {
@@ -40,7 +40,7 @@ namespace LinqToDB.SqlProvider
 		///     FirstName -> [FirstName]
 		/// for the following query:
 		///     SELECT [FirstName] FROM Person WHERE ID = 1
-		///            ^   and   ^
+		///            ^   add   ^
 		/// </summary>
 		NameToQueryField,
 
@@ -55,27 +55,44 @@ namespace LinqToDB.SqlProvider
 		NameToQueryFieldAlias,
 
 		/// <summary>
+		/// Provided name should be converted to linked server name.
+		/// For example:
+		///     host name\named instance -> [host name\named instance]
+		/// for the following query:
+		///     SELECT * FROM [host name\named instance]..[Person]
+		///                   ^ add      ^
+		/// </summary>
+		NameToServer,
+
+		/// <summary>
 		/// Provided name should be converted to query database.
 		/// For example:
 		///     MyDatabase -> [MyDatabase]
 		/// for the following query:
 		///     SELECT * FROM [MyDatabase]..[Person]
-		///                   ^ and      ^
+		///                   ^ add      ^
 		/// </summary>
 		NameToDatabase,
 
 		/// <summary>
-		/// Provided name should be converted to query database.
+		/// Provided name should be converted to query schema/owner.
 		/// For example:
 		///     dbo -> [dbo]
 		/// for the following query:
 		///     SELECT * FROM [ dbo ].[Person]
-		///                   ^ and ^
+		///                   ^ add ^
 		/// </summary>
 		NameToSchema,
 
-		[Obsolete("Use NameToSchema instead.")]
-		NameToOwner = NameToSchema,
+		/// <summary>
+		/// Provided name should be converted to package/module/library name.
+		/// </summary>
+		NameToPackage,
+
+		/// <summary>
+		/// Provided name should be converted to function/procedure name.
+		/// </summary>
+		NameToProcedure,
 
 		/// <summary>
 		/// Provided name should be converted to query table name.
@@ -83,7 +100,7 @@ namespace LinqToDB.SqlProvider
 		///     Person -> [Person]
 		/// for the following query:
 		///     SELECT * FROM [Person]
-		///                   ^ and  ^
+		///                   ^ add  ^
 		/// </summary>
 		NameToQueryTable,
 
@@ -93,7 +110,7 @@ namespace LinqToDB.SqlProvider
 		///     table1 -> [table1]
 		/// for the following query:
 		///     SELECT * FROM [Person] [table1]
-		///                            ^ and  ^
+		///                            ^ add  ^
 		/// </summary>
 		NameToQueryTableAlias,
 
@@ -122,5 +139,15 @@ namespace LinqToDB.SqlProvider
 		///   OleDbException -> OleDbException.Errors[0].Message
 		/// </summary>
 		ExceptionToErrorMessage,
+
+		/// <summary>
+		/// Provided name should be converted to sequence name.
+		/// </summary>
+		SequenceName,
+
+		/// <summary>
+		/// Provided name should be converted to trigger name.
+		/// </summary>
+		TriggerName,
 	}
 }

@@ -1,0 +1,9 @@
+﻿{
+	"NET472.Azure": {
+		"Providers": [
+			// disable to shorten test execution time
+			//"SqlServer.2019",
+			"SqlServer.2019.MS"
+		]
+	}
+}

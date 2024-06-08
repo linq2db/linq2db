@@ -4,7 +4,7 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class HasUniqueKeyBuilder : MethodCallBuilder
+	sealed class HasUniqueKeyBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -14,10 +14,10 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			
+
 			var keySelector = (LambdaExpression) methodCall.Arguments[1].Unwrap();
 			var keyContext  = new SelectContext(buildInfo.Parent, keySelector, sequence);
-			var keySql      = builder.ConvertExpressions(keyContext, keySelector.Body.Unwrap(), ConvertFlags.All);
+			var keySql      = builder.ConvertExpressions(keyContext, keySelector.Body.Unwrap(), ConvertFlags.All, null);
 
 			var uniqueKeys  = keySql
 				.Select(info => sequence.SelectQuery.Select.Columns[sequence.SelectQuery.Select.Add(info.Sql)])
@@ -26,12 +26,6 @@ namespace LinqToDB.Linq.Builder
 			sequence.SelectQuery.UniqueKeys.Add(uniqueKeys);
 
 			return new SubQueryContext(sequence);
-		}
-
-		protected override SequenceConvertInfo Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression param)
-		{
-			return null;
 		}
 	}
 }

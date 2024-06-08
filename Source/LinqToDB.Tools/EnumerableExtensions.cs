@@ -1,33 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 using System.Text;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
-
 namespace LinqToDB.Tools
 {
+	using Extensions;
+	using Mapping;
+	using Reflection;
+
 	public static class EnumerableExtensions
 	{
-		class ValueHolder<T>
+		sealed class ValueHolder<T>
 		{
-			public T Value;
+			[UsedImplicitly] public T Value = default!;
 		}
 
+		private static readonly string[] _nullItem = new[] { "<NULL>" };
+
 		/// <summary>
-		/// Returns detailed exception text.
+		/// Returns well formatted text.
 		/// </summary>
 		/// <param name="source">Source to process.</param>
 		/// <param name="stringBuilder"><see cref="StringBuilder"/> instance.</param>
-		/// <returns>Detailed exception text.</returns>
-		[JetBrains.Annotations.NotNull, Pure]
+		/// <param name="addTableHeader">if true (default), adds table header.</param>
+		/// <returns>Formatted text.</returns>
+		[Pure]
 		public static StringBuilder ToDiagnosticString<T>(
-			[JetBrains.Annotations.NotNull] this IEnumerable<T> source,
-			[JetBrains.Annotations.NotNull] StringBuilder stringBuilder)
+			this IEnumerable<T> source,
+			StringBuilder stringBuilder,
+			bool addTableHeader = true)
 		{
 			if (source        == null) throw new ArgumentNullException(nameof(source));
 			if (stringBuilder == null) throw new ArgumentNullException(nameof(stringBuilder));
@@ -40,55 +45,63 @@ namespace LinqToDB.Tools
 
 			foreach (var item in source)
 			{
-				var values = new string[ta.Members.Count];
-
-				for (var i = 0; i < ta.Members.Count; i++)
+				if (ta.Members.Count > 0)
 				{
-					if (item == null)
+					var values = new string[ta.Members.Count];
+
+					for (var i = 0; i < ta.Members.Count; i++)
 					{
-						values[i] = "<NULL RECORD>";
-						continue;
+						if (item == null)
+						{
+							values[i] = "<NULL RECORD>";
+							continue;
+						}
+
+						var member = ta.Members[i];
+						var value  = member.GetValue(item);
+						var type   = ta.Members[i].Type.ToNullableUnderlying();
+
+						if      (value == null)            values[i] = "<NULL>";
+						else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G", DateTimeFormatInfo.InvariantInfo);
+						else if (type == typeof(DateTime)) values[i] = ((DateTime)value).ToString("yyy-MM-dd hh:mm:ss", DateTimeFormatInfo.InvariantInfo);
+						else                               values[i] = string.Format(CultureInfo.InvariantCulture, "{0}", value);
 					}
 
-					var member = ta.Members[i];
-					var value  = member.GetValue(item);
-					var type   = ta.Members[i].Type.ToNullableUnderlying();
-
-					if      (value == null)            values[i] = "<NULL>";
-					else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G");
-					else if (type == typeof(DateTime)) values[i] = ((DateTime)value).ToString("yyy-MM-dd hh:mm:ss");
-					else                               values[i] = value.ToString();
+					itemValues.Add(values);
 				}
-
-				itemValues.Add(values);
+				else
+				{
+					itemValues.Add(item == null ? _nullItem : new[] { item.ToString() ?? string.Empty });
+				}
 			}
 
-			stringBuilder
-				.Append("Count : ").Append(itemValues.Count).AppendLine()
-				;
+			stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Count : {itemValues.Count}");
 
-			var lens = ta.Members.Select(m => m.Name.Length).ToArray();
+			var lens = ta.Members.Count > 0 ? ta.Members.Select(m => m.Name.Length).ToArray() : new[] { ta.Type.Name.Length };
 
 			foreach (var values in itemValues)
 				for (var i = 0; i < lens.Length; i++)
-					lens[i] = Math.Max(lens[i], values[i].Length);
+					lens[i] = Math.Max(lens[i], addTableHeader ? values[i].Length : 0);
 
 			void PrintDivider()
 			{
 				foreach (var len in lens)
-					stringBuilder.Append("+-").Append('-', len).Append("-");
-				stringBuilder.Append("+").AppendLine();
+					stringBuilder.Append("+-").Append('-', len).Append('-');
+				stringBuilder.Append('+').AppendLine();
 			}
 
-			PrintDivider();
-
-			for (var i = 0; i < lens.Length; i++)
+			if (addTableHeader)
 			{
-				var member = ta.Members[i];
-				stringBuilder.Append("| ").Append(member.Name).Append(' ', lens[i] - member.Name.Length).Append(" ");
-			}
+				PrintDivider();
 
-			stringBuilder.Append("|").AppendLine();
+				for (var i = 0; i < lens.Length; i++)
+				{
+					var member = ta.Members[i];
+					stringBuilder.Append("| ").Append(member.Name).Append(' ', lens[i] - member.Name.Length).Append(' ');
+				}
+
+				stringBuilder.Append('|').AppendLine();
+			}
 
 			PrintDivider();
 
@@ -124,10 +137,10 @@ namespace LinqToDB.Tools
 					else
 						stringBuilder.Append(values[i]).Append(' ', lens[i] - values[i].Length);
 
-					stringBuilder.Append(" ");
+					stringBuilder.Append(' ');
 				}
 
-				stringBuilder.Append("|").AppendLine();
+				stringBuilder.Append('|').AppendLine();
 			}
 
 			PrintDivider();
@@ -140,15 +153,26 @@ namespace LinqToDB.Tools
 		}
 
 		/// <summary>
-		/// Returns detailed exception text.
+		/// Returns well formatted text.
 		/// </summary>
 		/// <param name="source">Source to process.</param>
-		/// <returns>Detailed exception text.</returns>
-		[JetBrains.Annotations.NotNull, Pure]
-		public static string ToDiagnosticString<T>([JetBrains.Annotations.NotNull] this IEnumerable<T> source)
+		/// <param name="header">Optional header text.</param>
+		/// <param name="addTableHeader">if true (default), adds table header.</param>
+		/// <returns>Formatted text.</returns>
+		[Pure]
+		public static string ToDiagnosticString<T>(
+			this IEnumerable<T> source,
+			string? header      = null,
+			bool addTableHeader = true)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
-			return source.ToDiagnosticString(new StringBuilder()).ToString();
+
+			var sb = new StringBuilder();
+
+			if (header != null)
+				sb.AppendLine(header);
+
+			return source.ToDiagnosticString(sb, addTableHeader).ToString();
 		}
 	}
 }

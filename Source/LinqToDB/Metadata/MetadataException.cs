@@ -63,23 +63,5 @@ namespace LinqToDB.Metadata
 			: base(innerException.Message, innerException)
 		{
 		}
-
-#if !NETSTANDARD1_6
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="MetadataException"/> class
-		/// with serialized data.
-		/// </summary>
-		/// <param name="info">The object that holds the serialized object data.</param>
-		/// <param name="context">The contextual information about the source or
-		/// destination.</param>
-		/// <remarks>This constructor is called during deserialization to
-		/// reconstitute the exception object transmitted over a stream.</remarks>
-		protected MetadataException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
-		{
-		}
-
-#endif
 	}
 }

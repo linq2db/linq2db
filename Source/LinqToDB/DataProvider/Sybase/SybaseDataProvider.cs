@@ -1,159 +1,142 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Globalization;
 using System.Xml;
 using System.Xml.Linq;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Data;
-	using Mapping;
 	using Common;
+	using Data;
+	using Extensions;
+	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
 
-	public class SybaseDataProvider : DynamicDataProviderBase
+	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
+	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
+
+	public abstract class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
 		#region Init
 
-		public SybaseDataProvider()
-			: this(SybaseTools.DetectedProviderName)
-		{
-		}
-
-		public SybaseDataProvider(string name)
-			: base(name, null)
+		protected SybaseDataProvider(string name)
+			: base(name, MappingSchemaInstance.Get(name), SybaseProviderAdapter.GetInstance(name))
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
 			SqlProviderFlags.IsSubQueryTakeSupported          = false;
-			//SqlProviderFlags.IsCountSubQuerySupported       = false;
 			SqlProviderFlags.CanCombineParameters             = false;
 			SqlProviderFlags.IsSybaseBuggyGroupBy             = true;
 			SqlProviderFlags.IsCrossJoinSupported             = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
-			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("char",  DataTools.GetCharExpression);
+			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
 
-			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
-			SetField<IDataReader,DateTime>("time", (r,i) => GetDateTimeAsTime(r, i));
+			SetProviderField<DbDataReader, TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
+			SetField<DbDataReader, DateTime>("time", (r,i) => GetDateTimeAsTime(r.GetDateTime(i)));
 
 			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags);
 		}
 
-		public             string AssemblyName        => Name == ProviderName.Sybase ? SybaseTools.NativeAssemblyName : "AdoNetCore.AseClient";
-		public    override string ConnectionNamespace => Name == ProviderName.Sybase ? "Sybase.Data.AseClient" : "AdoNetCore.AseClient";
-		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.AseConnection, {AssemblyName}";
-		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.AseDataReader, {AssemblyName}";
-
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-		public override string DbFactoryProviderName => "Sybase.Data.AseClient";
-#endif
-
-		static DateTime GetDateTimeAsTime(IDataReader dr, int idx)
+		static DateTime GetDateTimeAsTime(DateTime value)
 		{
-			var value = dr.GetDateTime(idx);
-
 			if (value.Year == 1900 && value.Month == 1 && value.Day == 1)
 				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
 
 			return value;
 		}
 
-		private Action<IDbDataParameter> _setUInt16;
-		private Action<IDbDataParameter> _setUInt32;
-		private Action<IDbDataParameter> _setUInt64;
-		private Action<IDbDataParameter> _setText;
-		private Action<IDbDataParameter> _setNText;
-		private Action<IDbDataParameter> _setBinary;
-		private Action<IDbDataParameter> _setVarBinary;
-		private Action<IDbDataParameter> _setImage;
-		private Action<IDbDataParameter> _setMoney;
-		private Action<IDbDataParameter> _setSmallMoney;
-		private Action<IDbDataParameter> _setDate;
-		private Action<IDbDataParameter> _setTime;
-		private Action<IDbDataParameter> _setSmallDateTime;
-		private Action<IDbDataParameter> _setTimestamp;
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-			_setUInt16        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedSmallInt");
-			_setUInt32        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedInt"     );
-			_setUInt64        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedBigInt"  );
-			_setText          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Text"            );
-			_setNText         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Unitext"         );
-			_setBinary        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Binary"          );
-			_setVarBinary     = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "VarBinary"       );
-			_setImage         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Image"           );
-			_setMoney         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Money"           );
-			_setSmallMoney    = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "SmallMoney"      );
-			_setDate          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Date"            );
-			_setTime          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Time"            );
-			_setSmallDateTime = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "SmallDateTime"   );
-			_setTimestamp     = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "TimeStamp"       );
-		}
-
 		#endregion
 
 		#region Overrides
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override Type ConvertParameterType(Type type, DbDataType dataType)
 		{
-			return new SybaseSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, mappingSchema.ValueToSqlConverter);
+			type = base.ConvertParameterType(type, dataType);
+
+			// native client BulkCopy cannot stand nullable types
+			// AseBulkManager.IsWrongType
+			if (Name == ProviderName.Sybase)
+			{
+				type = type.ToNullableUnderlying();
+				if (type == typeof(char) || type == typeof(Guid))
+					type = typeof(string);
+				else if (type == typeof(TimeSpan))
+					type = typeof(DateTime);
+			}
+
+			return type;
+		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsLocalTemporaryStructure  |
+			TableOptions.IsGlobalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData       |
+			TableOptions.IsGlobalTemporaryData      |
+			TableOptions.CreateIfNotExists          |
+			TableOptions.DropIfExists;
+
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
+		{
+			return new SybaseSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance
 		{
-			public static readonly SybaseMappingSchema.NativeMappingSchema  NativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
-			public static readonly SybaseMappingSchema.ManagedMappingSchema ManagedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
-		}
+			static readonly MappingSchema _nativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
+			static readonly MappingSchema _managedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
 
-		public override MappingSchema MappingSchema => Name == ProviderName.Sybase
-			? MappingSchemaInstance.NativeMappingSchema as MappingSchema
-			: MappingSchemaInstance.ManagedMappingSchema;
+			public static MappingSchema Get(string name) => name == ProviderName.Sybase ? _nativeMappingSchema : _managedMappingSchema;
+		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions)
 		{
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return new SybaseSchemaProvider(Name);
+			return new SybaseSchemaProvider(this);
 		}
-#endif
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
+		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => new SybaseParametersNormalizer();
+
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
 				case DataType.SByte      :
 					dataType = dataType.WithDataType(DataType.Int16);
-					if (value is sbyte)
-						value = (short)(sbyte)value;
+					if (value is sbyte sbyteValue)
+						value = (short)sbyteValue;
 					break;
 
 				case DataType.Time       :
-					if (value is TimeSpan ts) value = new DateTime(1900, 1, 1) + ts;
+					if (value is TimeSpan ts)
+						value = new DateTime(1900, 1, 1) + ts;
 					break;
 
 				case DataType.Xml        :
 					dataType = dataType.WithDataType(DataType.NVarChar);
-						 if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+						 if (value is XDocument  xdoc) value = xdoc.ToString();
+					else if (value is XmlDocument xml) value = xml.InnerXml;
 					break;
 
 				case DataType.Guid       :
 					if (value != null)
-						value = value.ToString();
+						value = string.Format(CultureInfo.InvariantCulture, "{0}", value);
 					dataType = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;
@@ -162,62 +145,124 @@ namespace LinqToDB.DataProvider.Sybase
 					if (value == null)
 						dataType = dataType.WithDataType(DataType.Char);
 					break;
+
+				case DataType.Char       :
+				case DataType.NChar      :
+					if (Name == ProviderName.Sybase)
+						if (value is char chr)
+							value = chr.ToString();
+					break;
+
+#if NET6_0_OR_GREATER
+				case DataType.Date       :
+					if (value is DateOnly d)
+						value = d.ToDateTime(TimeOnly.MinValue);
+					break;
+#endif
 			}
 
-			base.SetParameter(parameter, "@" + name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
+			if (parameter is BulkCopyReader.Parameter)
+				return;
+
+			SybaseProviderAdapter.AseDbType? type = null;
+
 			switch (dataType.DataType)
 			{
-				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal;          break;
-				case DataType.UInt16        : _setUInt16(parameter);                      break;
-				case DataType.UInt32        : _setUInt32(parameter);                      break;
-				case DataType.UInt64        : _setUInt64(parameter);                      break;
-				case DataType.Text          : _setText(parameter);                        break;
-				case DataType.NText         : _setNText(parameter);                       break;
-				case DataType.Binary        : _setBinary(parameter);                      break;
+				case DataType.Text          : type = SybaseProviderAdapter.AseDbType.Text;             break;
+				case DataType.NText         : type = SybaseProviderAdapter.AseDbType.Unitext;          break;
 				case DataType.Blob          :
-				case DataType.VarBinary     : _setVarBinary(parameter);                   break;
-				case DataType.Image         : _setImage(parameter);                       break;
-				case DataType.Money         : _setMoney(parameter);                       break;
-				case DataType.SmallMoney    : _setSmallMoney(parameter);                  break;
-				case DataType.Date          : _setDate(parameter);                        break;
-				case DataType.Time          : _setTime(parameter);                        break;
-				case DataType.SmallDateTime : _setSmallDateTime(parameter);               break;
-				case DataType.Timestamp     : _setTimestamp(parameter);                   break;
-				case DataType.DateTime2     :
-					base.SetParameterType(parameter, dataType.WithDataType(DataType.DateTime));
-					                                                                      break;
+				case DataType.VarBinary     : type = SybaseProviderAdapter.AseDbType.VarBinary;        break;
+				case DataType.Image         : type = SybaseProviderAdapter.AseDbType.Image;            break;
+				case DataType.SmallMoney    : type = SybaseProviderAdapter.AseDbType.SmallMoney;       break;
+				case DataType.SmallDateTime : type = SybaseProviderAdapter.AseDbType.SmallDateTime;    break;
+				case DataType.Timestamp     : type = SybaseProviderAdapter.AseDbType.TimeStamp;        break;
+			}
 
-				default                     : base.SetParameterType(parameter, dataType); break;
+			if (type != null)
+			{
+				var param = TryGetProviderParameter(dataConnection, parameter);
+				if (param != null)
+				{
+					Adapter.SetDbType(param, type.Value);
+					return;
+				}
+			}
+
+			switch (dataType.DataType)
+			{
+				// fallback types
+				case DataType.Text          : parameter.DbType = DbType.AnsiString; break;
+				case DataType.NText         : parameter.DbType = DbType.String;     break;
+				case DataType.Timestamp     :
+				case DataType.Image         : parameter.DbType = DbType.Binary;     break;
+				case DataType.SmallMoney    : parameter.DbType = DbType.Currency;   break;
+				case DataType.SmallDateTime : parameter.DbType = DbType.DateTime;   break;
+
+				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal;    break;
+				case DataType.Binary        : parameter.DbType = DbType.Binary;     break;
+				case DataType.Money         : parameter.DbType = DbType.Currency;   break;
+				case DataType.DateTime2     : parameter.DbType = DbType.DateTime;   break;
+				default                     :
+					base.SetParameterType(dataConnection, parameter, dataType);     break;
 			}
 		}
 
-#endregion
+		#endregion
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		SybaseBulkCopy? _bulkCopy;
+
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
-			return new SybaseBulkCopy().BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : options.BulkCopyType,
+			_bulkCopy ??= new (this);
+
+			return _bulkCopy.BulkCopy(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SybaseOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		#endregion
-
-		#region Merge
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection,
-			IMergeable<TTarget,TSource> merge)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			return new SybaseMergeBuilder<TTarget, TSource>(connection, merge);
+			_bulkCopy ??= new (this);
+
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SybaseOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
 		}
+
+#if NATIVE_ASYNC
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			_bulkCopy ??= new (this);
+
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SybaseOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+#endif
+
 		#endregion
 	}
 }

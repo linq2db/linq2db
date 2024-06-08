@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -51,7 +50,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count3([DataSources] string context)
+		public void Count3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -87,7 +86,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count7([DataSources(ProviderName.SqlCe)] string context)
+		public void Count7([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -98,7 +97,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubQueryCount([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				AreEqual(
 					from p in Parent
@@ -110,7 +109,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy1([DataSources] string context)
+		public void GroupBy1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -136,7 +135,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy102([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupBy102([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -161,7 +160,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy103([DataSources] string context)
+		public void GroupBy103([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -173,9 +172,9 @@ namespace Tests.Linq
 					select g.Count(ch => ch.ChildID > 20));
 		}
 
-		[ActiveIssue(1685, Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
+		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
-		public void GroupBy21([DataSources] string context)
+		public void GroupBy21([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var n = 1;
 
@@ -193,9 +192,9 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue(1685, Configurations = new[] { ProviderName.Informix, ProviderName.SapHana })]
+		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
-		public void GroupBy22([DataSources] string context)
+		public void GroupBy22([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var n = 1;
 
@@ -214,7 +213,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.SqlServer2000, ProviderName.Access)] string context)
+		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -230,9 +229,9 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue("Unsupported by Informix?", Configuration = ProviderName.Informix)]
+		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
-		public void GroupBy3([DataSources] string context)
+		public void GroupBy3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -270,7 +269,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy5([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupBy5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -368,7 +367,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWhere201([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByWhere201([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -383,7 +382,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWhere202([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByWhere202([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -398,7 +397,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWhere203([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByWhere203([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -459,7 +458,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery1([DataSources] string context)
+		public void SubQuery1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -472,7 +471,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery2([DataSources] string context)
+		public void SubQuery2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -485,7 +484,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery3([DataSources] string context)
+		public void SubQuery3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -498,7 +497,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery4([DataSources] string context)
+		public void SubQuery4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -507,7 +506,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery5([DataSources] string context)
+		public void SubQuery5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -516,7 +515,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery6([DataSources(ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase)] string context)
+		public void SubQuery6([DataSources(ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -525,7 +524,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery7([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.Access)] string context)
+		public void SubQuery7([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -534,25 +533,25 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQueryMax1([DataSources] string context)
+		public void SubQueryMax1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
-					   Parent.Max(p =>    Child.Count(c => c.Parent.ParentID == p.ParentID)),
-					db.Parent.Max(p => db.Child.Count(c => c.Parent.ParentID == p.ParentID)));
+					   Parent.Max(p =>    Child.Count(c => c.Parent!.ParentID == p.ParentID)),
+					db.Parent.Max(p => db.Child.Count(c => c.Parent!.ParentID == p.ParentID)));
 		}
 
 		[Test]
-		public async Task SubQueryMax1Async([DataSources] string context)
+		public async Task SubQueryMax1Async([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
-					         Parent.Max     (p =>    Child.Count(c => c.Parent.ParentID == p.ParentID)),
-					await db.Parent.MaxAsync(p => db.Child.Count(c => c.Parent.ParentID == p.ParentID)));
+					         Parent.Max     (p =>    Child.Count(c => c.Parent!.ParentID == p.ParentID)),
+					await db.Parent.MaxAsync(p => db.Child.Count(c => c.Parent!.ParentID == p.ParentID)));
 		}
 
 		[Test]
-		public void SubQueryMax2([DataSources] string context)
+		public void SubQueryMax2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -561,7 +560,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin1([DataSources] string context)
+		public void GroupJoin1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -584,7 +583,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin2([DataSources] string context)
+		public void GroupJoin2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -611,7 +610,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin3([DataSources] string context)
+		public void GroupJoin3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -630,7 +629,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin4([DataSources] string context)
+		public void GroupJoin4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -654,22 +653,22 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
-					   Child.Select(ch => ch.Parent.ParentID).Count(p => p == 1),
-					db.Child.Select(ch => ch.Parent.ParentID).Count(p => p == 1));
+					   Child.Select(ch => ch.Parent!.ParentID).Count(p => p == 1),
+					db.Child.Select(ch => ch.Parent!.ParentID).Count(p => p == 1));
 				Assert.AreEqual(
-					db.Child.Select(ch => ch.Parent.ParentID).ToList().Count(p => p == 1),
-					db.Child.Select(ch => ch.Parent.ParentID).Count(p => p == 1));
+					db.Child.Select(ch => ch.Parent!.ParentID).ToList().Count(p => p == 1),
+					db.Child.Select(ch => ch.Parent!.ParentID).Count(p => p == 1));
 			}
 		}
 
 		[Table("Child")]
-		class Child2
+		sealed class Child2
 		{
 			[Column] public int? ParentID;
 			[Column] public int  ChildID;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
-			public Parent Parent;
+			public Parent? Parent;
 		}
 
 		[Test]
@@ -678,8 +677,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
-					db.GetTable<Child2>().Select(ch => ch.Parent.ParentID).ToList().Count(p => p == 1),
-					db.GetTable<Child2>().Select(ch => ch.Parent.ParentID).Count(p => p == 1));
+					db.GetTable<Child2>().Select(ch => ch.Parent!.ParentID).ToList().Count(p => p == 1),
+					db.GetTable<Child2>().Select(ch => ch.Parent!.ParentID).Count(p => p == 1));
 			}
 		}
 	}

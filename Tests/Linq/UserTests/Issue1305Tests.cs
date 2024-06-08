@@ -9,7 +9,7 @@ namespace Tests.UserTests
 {
 	/// <summary>
 	/// Test fixes to Issue #1305.
-	/// Before fix fields in derived tables were added first in the column order by <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, LinqToDB.SqlQuery.DefaultNullable)"/>.
+	/// Before fix fields in derived tables were added first in the column order by <see cref="DataExtensions.CreateTable{T}(IDataContext, string?, string?, string?, string?, string?, LinqToDB.SqlQuery.DefaultNullable, string?, TableOptions)"/>.
 	/// </summary>
 	[TestFixture]
 	public class Issue1305Tests : TestBase
@@ -52,40 +52,39 @@ namespace Tests.UserTests
 		public class ColumnOrderTest : VersionedRecord
 		{
 			[Column]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 			[Column]
-			public string Code { get; set; }
+			public string? Code { get; set; }
 		}
 
-#if !NETSTANDARD1_6
 		/// <summary>
 		/// Confirm that tables creation uses the <see cref="ColumnAttribute.Order"/> field correctly.
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
 		[Test]
-		public void TestAttributeMapping([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)] string context)
+		public void TestAttributeMapping([DataSources(false, ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (var __ = db.CreateLocalTable<ColumnOrderTest>())
 			{
 				// Get table schema
 				var sp = db.DataProvider.GetSchemaProvider();
-				var s = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-				var table = s.Tables.FirstOrDefault(_ => _.TableName.Equals("ColumnOrderTest", StringComparison.OrdinalIgnoreCase));
+				var s = sp.GetSchema(db);
+				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ColumnOrderTest", StringComparison.OrdinalIgnoreCase))!;
 				Assert.IsNotNull(table);
 
 				// Confirm order of specified fields only
-				Assert.AreEqual("recordid", table.Columns[0].ColumnName.ToLower());
-				Assert.AreEqual("effectivestart", table.Columns[1].ColumnName.ToLower());
-				Assert.AreEqual("effectiveend", table.Columns[2].ColumnName.ToLower());
-				Assert.AreEqual("key", table.Columns[3].ColumnName.ToLower());
-				Assert.AreEqual("audit1id", table.Columns[6].ColumnName.ToLower());
-				Assert.AreEqual("audit2id", table.Columns[7].ColumnName.ToLower());
+				Assert.AreEqual("recordid", table.Columns[0].ColumnName.ToLowerInvariant());
+				Assert.AreEqual("effectivestart", table.Columns[1].ColumnName.ToLowerInvariant());
+				Assert.AreEqual("effectiveend", table.Columns[2].ColumnName.ToLowerInvariant());
+				Assert.AreEqual("key", table.Columns[3].ColumnName.ToLowerInvariant());
+				Assert.AreEqual("audit1id", table.Columns[6].ColumnName.ToLowerInvariant());
+				Assert.AreEqual("audit2id", table.Columns[7].ColumnName.ToLowerInvariant());
 
 				// Confirm that unordered fields are in the right range of positions
 				string[] unordered = new[] { "name", "code" };
-				Assert.Contains(table.Columns[4].ColumnName.ToLower(), unordered);
-				Assert.Contains(table.Columns[5].ColumnName.ToLower(), unordered);
+				Assert.Contains(table.Columns[4].ColumnName.ToLowerInvariant(), unordered);
+				Assert.Contains(table.Columns[5].ColumnName.ToLowerInvariant(), unordered);
 			}
 		}
 
@@ -94,44 +93,46 @@ namespace Tests.UserTests
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
 		[Test]
-		public void TestFluentMapping([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)] string context)
+		public void TestFluentMapping([DataSources(false, ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = new DataConnection(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<FluentMapping>()
-					.Property(t => t.Audit1ID).HasOrder(-10)
-					.Property(t => t.Audit2ID).HasOrder(-1)
-					.Property(t => t.RecordID).HasOrder(1)
-					.Property(t => t.EffectiveEnd).HasOrder(3)
-					.Property(t => t.EffectiveStart).HasOrder(2)
-					.Property(t => t.Key).HasOrder(4)
-					.Property(t => t.Unordered1)
-					.Property(t => t.Unordered2);
+			var ms = new MappingSchema();
 
+			new FluentMappingBuilder(ms)
+				.Entity<FluentMapping>()
+				.Property(t => t.Audit1ID).HasOrder(-10)
+				.Property(t => t.Audit2ID).HasOrder(-1)
+				.Property(t => t.RecordID).HasOrder(1)
+				.Property(t => t.EffectiveEnd).HasOrder(3)
+				.Property(t => t.EffectiveStart).HasOrder(2)
+				.Property(t => t.Key).HasOrder(4)
+				.Property(t => t.Unordered1)
+				.Property(t => t.Unordered2)
+				.Build();
+
+			using (var db = GetDataConnection(context, ms))
+			{
 				using (var tbl = db.CreateLocalTable<FluentMapping>())
 				{
 					// Get table schema
 					var sp = db.DataProvider.GetSchemaProvider();
-					var s = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
-					var table = s.Tables.FirstOrDefault(_ => _.TableName.Equals(nameof(FluentMapping), StringComparison.OrdinalIgnoreCase));
+					var s = sp.GetSchema(db);
+					var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals(nameof(FluentMapping), StringComparison.OrdinalIgnoreCase))!;
 					Assert.IsNotNull(table);
 
 					// Confirm order of specified fields only
-					Assert.AreEqual("recordid", table.Columns[0].ColumnName.ToLower());
-					Assert.AreEqual("effectivestart", table.Columns[1].ColumnName.ToLower());
-					Assert.AreEqual("effectiveend", table.Columns[2].ColumnName.ToLower());
-					Assert.AreEqual("key", table.Columns[3].ColumnName.ToLower());
-					Assert.AreEqual("audit1id", table.Columns[6].ColumnName.ToLower());
-					Assert.AreEqual("audit2id", table.Columns[7].ColumnName.ToLower());
+					Assert.AreEqual("recordid", table.Columns[0].ColumnName.ToLowerInvariant());
+					Assert.AreEqual("effectivestart", table.Columns[1].ColumnName.ToLowerInvariant());
+					Assert.AreEqual("effectiveend", table.Columns[2].ColumnName.ToLowerInvariant());
+					Assert.AreEqual("key", table.Columns[3].ColumnName.ToLowerInvariant());
+					Assert.AreEqual("audit1id", table.Columns[6].ColumnName.ToLowerInvariant());
+					Assert.AreEqual("audit2id", table.Columns[7].ColumnName.ToLowerInvariant());
 
 					// Confirm that unordered fields are in the right range of positions
 					string[] unordered = new[] { "unordered1", "unordered2" };
-					Assert.Contains(table.Columns[4].ColumnName.ToLower(), unordered);
-					Assert.Contains(table.Columns[5].ColumnName.ToLower(), unordered);
+					Assert.Contains(table.Columns[4].ColumnName.ToLowerInvariant(), unordered);
+					Assert.Contains(table.Columns[5].ColumnName.ToLowerInvariant(), unordered);
 				}
 			}
 		}
-#endif
 	}
 }

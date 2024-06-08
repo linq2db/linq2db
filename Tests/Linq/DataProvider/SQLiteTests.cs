@@ -3,6 +3,7 @@ using System.Data.Linq;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -16,8 +17,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Globalization;
-
 	using Model;
 
 	[TestFixture]
@@ -26,7 +25,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p",        new { p =  1  }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>("SELECT @p",        new { p = "1" }), Is.EqualTo("1"));
@@ -38,17 +37,18 @@ namespace Tests.DataProvider
 		}
 
 		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
+			where T : notnull
 		{
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
 
-			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
+			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName))!;
 			object expectedValue = value;
 
 			if (convertToString)
 			{
-				actualValue   = actualValue.  ToString();
-				expectedValue = expectedValue.ToString();
+				actualValue   = actualValue.  ToString()!;
+				expectedValue = expectedValue.ToString()!;
 			}
 
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
@@ -57,7 +57,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				TestType(conn, "bigintDataType",           1000000L);
 				TestType(conn, "numericDataType",          9999999m);
@@ -116,7 +116,7 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var result = conn.Select(() => Cast(expectedValue, sqlType));
+				var result = conn.Select(() => Cast(expectedValue, sqlType))!;
 
 				// sqlite floating point parser doesn't restore roundtrip values properly
 				// and also deviation could differ for different versions of engine
@@ -151,7 +151,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			// culture region needed if tests run on system with non-dot decimal separator, e.g. nl-NL
+			using (new InvariantCultureRegion())
+			using (var conn = GetDataConnection(context))
 			{
 				TestSimple<bool>   (conn, true, DataType.Boolean);
 				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
@@ -188,10 +190,8 @@ namespace Tests.DataProvider
 				TestNumeric(conn, ushort.MaxValue,   DataType.UInt16);
 				TestNumeric(conn, uint.MaxValue,     DataType.UInt32);
 
-#if NETSTANDARD1_6
 				if (context != ProviderName.SQLiteMS)
 					TestNumeric(conn, ulong.MaxValue,    DataType.UInt64,     "bigint bit decimal int money numeric smallint tinyint float real");
-#endif
 
 				TestNumeric(conn, -3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
 				TestNumeric(conn,  3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
@@ -210,17 +210,15 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDoubleRoundTrip([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
-				var cmd = conn.CreateCommand();
 				var value = -1.7900000000000002E+308;
 
 				// SELECT CAST(-1.7900000000000002E+308 as real)
-				cmd.CommandText = FormattableString.Invariant($"SELECT CAST({value:G17} as real)");
-				using (var rd = cmd.ExecuteReader())
+				using (var rd = conn.ExecuteReader(FormattableString.Invariant($"SELECT CAST({value:G17} as real)")))
 				{
-					rd.Read();
-					var valueFromDB = rd.GetDouble(0);
+					rd.Reader!.Read();
+					var valueFromDB = rd.Reader.GetDouble(0);
 
 					// -1.790000000000001E+308d != -1.7900000000000002E+308
 					Assert.AreEqual(value, valueFromDB);
@@ -231,7 +229,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumericsDouble([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				TestNumeric(conn, -1.7900000000000002E+308d, DataType.Double, "bigint int smallint tinyint");
 				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
@@ -243,7 +241,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
@@ -259,7 +257,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as char)"),         Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char)"),         Is.EqualTo('1'));
@@ -281,7 +279,6 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 
-#if NETSTANDARD1_6
 				if (context != ProviderName.SQLiteMS)
 				{
 					Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
@@ -291,7 +288,6 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1))", DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1))", DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 				}
-#endif
 
 				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
@@ -310,7 +306,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),         Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),     Is.EqualTo("12345"));
@@ -342,7 +338,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
 				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
@@ -353,7 +349,7 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] { 1 };
 			var arr2 = new byte[] { 2 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT    binaryDataType FROM AllTypes WHERE ID = 2"), Is.EqualTo(           arr1));
 				Assert.That(conn.Execute<Binary>("SELECT varbinaryDataType FROM AllTypes WHERE ID = 2"), Is.EqualTo(new Binary(arr2)));
@@ -367,9 +363,9 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", new byte[0])), Is.EqualTo(new byte[0]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", new byte[0])), Is.EqualTo(new byte[0]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", new byte[0])), Is.EqualTo(new byte[0]));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
@@ -379,7 +375,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(
 					conn.Execute<Guid>("SELECT uniqueidentifierDataType FROM AllTypes WHERE ID = 2"),
@@ -389,7 +385,7 @@ namespace Tests.DataProvider
 					conn.Execute<Guid?>("SELECT '6F9619FF-8B86-D011-B42D-00C04FC964FF'"),
 					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
 
-				var guid = Guid.NewGuid();
+				var guid = TestData.Guid1;
 
 				Assert.That(conn.Execute<Guid>("SELECT @p", DataParameter.Create("p", guid)),                Is.EqualTo(guid));
 				Assert.That(conn.Execute<Guid>("SELECT @p", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
@@ -399,7 +395,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestObject([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<object>("SELECT Cast(1 as Object)"), Is.EqualTo(1));
 				Assert.That(conn.Execute<int>   ("SELECT Cast(1 as Object)"), Is.EqualTo(1));
@@ -413,15 +409,13 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<XDocument>  ("SELECT '<xml/>'").ToString(), Is.EqualTo("<xml />"));
 				Assert.That(conn.Execute<XmlDocument>("SELECT '<xml/>'").InnerXml,   Is.EqualTo("<xml />"));
 
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
-
-				//TODO this test fails in Core because provider can read Int64 from string column
 
 				Assert.That(conn.Execute<string>     ("SELECT  @p", DataParameter.Xml("p", "<xml/>")),        Is.EqualTo("<xml/>"));
 				Assert.That(conn.Execute<XDocument>  ("SELECT  @p", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
@@ -438,7 +432,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestJson([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var testJson = "{\"name\":\"bob\", \"age\":10}";
 
@@ -455,7 +449,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum> ("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
@@ -467,14 +461,14 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = TestEnum.AA }),            Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
 
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
@@ -485,9 +479,7 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void CreateDatabase([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			try
@@ -501,55 +493,88 @@ namespace Tests.DataProvider
 			SQLiteTools.CreateDatabase("TestDatabase");
 			Assert.IsTrue(File.Exists ("TestDatabase.sqlite"));
 
-			using (var db = new DataConnection(SQLiteTools.GetDataProvider(), "Data Source=TestDatabase.sqlite"))
+			using (var db = new DataConnection(SQLiteTools.GetDataProvider(context), "Data Source=TestDatabase.sqlite"))
 			{
 				db.CreateTable<CreateTableTest>();
 				db.DropTable  <CreateTableTest>();
 			}
 
+			SQLiteTools.ClearAllPools  ();
 			SQLiteTools.DropDatabase   ("TestDatabase");
 			Assert.IsFalse(File.Exists ("TestDatabase.sqlite"));
 		}
-
-#endif
 
 		[Test]
 		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
-					db.BulkCopy(
-						new BulkCopyOptions { BulkCopyType = bulkCopyType },
-						Enumerable.Range(0, 10).Select(n =>
-							new LinqDataTypes
-							{
-								ID            = 4000 + n,
-								MoneyValue    = 1000m + n,
-								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
-								SmallIntValue = (short)n
-							}
-						));
-
-					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+					try
+					{
+						db.BulkCopy(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = TestData.SequentialGuid(n),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+					}
 				}
 			}
 		}
 
-#if !NETSTANDARD1_6
+		[Test]
+		public async Task BulkCopyLinqTypesAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = GetDataConnection(context))
+				{
+					try
+					{
+						await db.BulkCopyAsync(
+							new BulkCopyOptions { BulkCopyType = bulkCopyType },
+							Enumerable.Range(0, 10).Select(n =>
+								new LinqDataTypes
+								{
+									ID            = 4000 + n,
+									MoneyValue    = 1000m + n,
+									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+									BoolValue     = true,
+									GuidValue     = TestData.SequentialGuid(n),
+									SmallIntValue = (short)n
+								}
+							));
+					}
+					finally
+					{
+						await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
+					}
+				}
+			}
+		}
 
 		[Test]
-		public void Issue784Test([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void Issue784Test([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var sp = db.DataProvider.GetSchemaProvider();
-				var s  = sp.GetSchema(db, TestUtils.GetDefaultSchemaOptions(context));
+				var s  = sp.GetSchema(db);
 
-				var table = s.Tables.FirstOrDefault(_ => _.TableName.Equals("ForeignKeyTable", StringComparison.OrdinalIgnoreCase));
+				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ForeignKeyTable", StringComparison.OrdinalIgnoreCase))!;
 				Assert.IsNotNull(table);
 
 				Assert.AreEqual(1,                   table.ForeignKeys                   .Count);
@@ -559,8 +584,6 @@ namespace Tests.DataProvider
 
 			}
 		}
-
-#endif
 
 		// there is no date type in sqlite and one of three other types could be used as storage:
 		// INTEGER: unixtime (not sure if it supports full 64 bits) without fractional seconds
@@ -680,6 +703,36 @@ namespace Tests.DataProvider
 					// local/unspecified values returned as unspecified (makes sense)
 					Assert.AreEqual(DateTimeKind.Unspecified, result.DateTime.Kind);
 				}
+		}
+
+		// test to make sure our tests work with expected version of sqlite
+		// should be updated when we bump dependency
+		// also test matrix document should be updated too in that case (Build/Azure/README.md)
+		[Test]
+		public void TestDbVersion([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			string expectedVersion;
+			switch (context)
+			{
+				case ProviderName.SQLiteClassic:
+				case TestProvName.SQLiteClassicMiniProfilerMapped:
+				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
+					expectedVersion = "3.42.0";
+					break;
+				case ProviderName.SQLiteMS:
+					expectedVersion = "3.40.1";
+					break;
+				default:
+					throw new InvalidOperationException();
+			}
+
+			using (var db = GetDataConnection(context))
+			using (var rd = db.ExecuteReader("select sqlite_version()"))
+			{
+				rd.Reader!.Read();
+				var version = rd.Reader.GetString(0);
+
+				Assert.AreEqual(expectedVersion, version);
 			}
 		}
 	}

@@ -1,13 +1,8 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -24,7 +19,7 @@ namespace Tests.UserTests
 			public int ParentId { get; set; }
 
 			[Association(ThisKey = "ParentId", OtherKey = "Id", CanBeNull = false)]
-			public Parent825 Parent { get; set; }
+			public Parent825 Parent { get; set; } = null!;
 		}
 
 		[Table(Name = "Parent")]
@@ -33,11 +28,11 @@ namespace Tests.UserTests
 			[PrimaryKey, Identity, Column("ParentID")]
 			public int Id { get; set; }
 
-			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true, IsBackReference = true)]
-			public IList<ParentPermission> ParentPermissions { get; set; }
+			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true)]
+			public IList<ParentPermission> ParentPermissions { get; set; } = null!;
 
-			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true, IsBackReference = true)]
-			public IList<Child825> Childs { get; set; }
+			[Association(ThisKey = "Id", OtherKey = "ParentId", CanBeNull = true)]
+			public IList<Child825> Childs { get; set; } = null!;
 		}
 
 		[Table(Name = "GrandChild")]
@@ -54,7 +49,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([DataSources] string context)
+		public void Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -63,19 +58,16 @@ namespace Tests.UserTests
 
 				//Configuration.Linq.OptimizeJoins = false;
 
-				using (new AllowMultipleQuery())
-				{
-					var query = db.GetTable<Parent825>()
-						.Where(p => p.ParentPermissions.Any(permission => permission.UserId == userId))
-						.SelectMany(parent => parent.Childs)
-						.Where(child => child.Id == childId)
-						.Select(child => child.Parent);
+				var query = db.GetTable<Parent825>()
+					.Where(p => p.ParentPermissions.Any(permission => permission.UserId == userId))
+					.SelectMany(parent => parent.Childs)
+					.Where(child => child.Id == childId)
+					.Select(child => child.Parent);
 
-					var result = query.ToList();
+				var result = query.ToList();
 
-					Assert.AreEqual(1, result.Count);
-					Assert.AreEqual(3, result[0].Id);
-				}
+				Assert.AreEqual(1, result.Count);
+				Assert.AreEqual(3, result[0].Id);
 			}
 		}
 	}

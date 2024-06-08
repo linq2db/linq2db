@@ -1,11 +1,10 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
-	class CastBuilder : MethodCallBuilder
+	sealed class CastBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -19,13 +18,7 @@ namespace LinqToDB.Linq.Builder
 			return new CastContext(sequence, methodCall);
 		}
 
-		protected override SequenceConvertInfo Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
-		{
-			return null;
-		}
-
-		class CastContext : PassThroughContext
+		sealed class CastContext : PassThroughContext
 		{
 			public CastContext(IBuildContext context, MethodCallExpression methodCall)
 				: base(context)
@@ -43,7 +36,7 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				var expr = base.BuildExpression(expression, level, enforceServerSide);
 				var type = _methodCall.Method.GetGenericArguments()[0];

@@ -5,33 +5,32 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Mapping
 {
-	using Tools;
-
 	[TestFixture]
 	public class FluentMappingExpressionMethodTests : TestBase
 	{
-		class InstanceClass
+		sealed class InstanceClass
 		{
 			public int    Id       { get; set; }
 			public int    Value    { get; set; }
 
 			public string EntityValue => Id.ToString() + Value;
-			public string EntityMaterialized { get; set; }
+			public string? EntityMaterialized { get; set; }
 		}
 
 		MappingSchema CreateMappingSchema()
 		{
 			var schema = new MappingSchema();
-			var fluent = schema.GetFluentMappingBuilder();
+			var fluent = new FluentMappingBuilder(schema);
 
 			fluent.Entity<InstanceClass>().IsColumnRequired()
 				.IsColumnRequired()
 				.Property(e => e.Id)
 				.Property(e => e.Value)
 				.Member(e => e.EntityValue).IsExpression(e => e.Id.ToString() + e.Value.ToString())
-				.Member(e => e.EntityMaterialized).IsExpression(e => "M" + e.Id.ToString(), true);
+				.Member(e => e.EntityMaterialized).IsExpression(e => "M" + e.Id.ToString(), true)
+				.Build();
 
 			return fluent.MappingSchema;
 		}

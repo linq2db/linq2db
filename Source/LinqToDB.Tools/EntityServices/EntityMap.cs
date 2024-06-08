@@ -5,11 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Tools.EntityServices
 {
 	using Common;
+	using LinqToDB.Expressions;
 	using Mapper;
 	using Mapping;
 	using Reflection;
@@ -23,6 +22,8 @@ namespace LinqToDB.Tools.EntityServices
 	public class EntityMap<T> : IEntityMap
 		where T : class
 	{
+		readonly object _syncRoot = new ();
+
 		public EntityMap(IDataContext dataContext)
 		{
 			_entities = new ConcurrentDictionary<T,EntityMapEntry<T>>(dataContext.GetKeyEqualityComparer<T>());
@@ -30,8 +31,11 @@ namespace LinqToDB.Tools.EntityServices
 
 		volatile ConcurrentDictionary<T,EntityMapEntry<T>> _entities;
 
-		[CanBeNull]
-		public IReadOnlyDictionary<T,EntityMapEntry<T>> Entities => _entities as IReadOnlyDictionary<T,EntityMapEntry<T>>;
+#if NET45
+		public IDictionary<T, EntityMapEntry<T>> Entities => _entities;
+#else
+		public IReadOnlyDictionary<T,EntityMapEntry<T>> Entities => _entities;
+#endif
 
 		void IEntityMap.MapEntity(EntityCreatedEventArgs args)
 		{
@@ -55,10 +59,12 @@ namespace LinqToDB.Tools.EntityServices
 			Expression<Func<T,bool>> GetPredicate(MappingSchema mappingSchema, object key);
 		}
 
-		class KeyComparer<TK> : IKeyComparer
+#pragma warning disable CA1812 // Avoid uninstantiated internal classes
+		sealed class KeyComparer<TK> : IKeyComparer
+#pragma warning restore CA1812 // Avoid uninstantiated internal classes
 		{
-			Func<TK,T>           _mapper;
-			List<MemberAccessor> _keyColumns;
+			Func<TK,T>?           _mapper;
+			List<MemberAccessor>? _keyColumns;
 
 			void CreateMapper(MappingSchema mappingSchema)
 			{
@@ -73,7 +79,7 @@ namespace LinqToDB.Tools.EntityServices
 
 				if (typeof(T) == typeof(TK))
 				{
-					_mapper = k => (T)(object)k;
+					_mapper = k => (T)(object)k!;
 					return;
 				}
 
@@ -85,7 +91,7 @@ namespace LinqToDB.Tools.EntityServices
 					_mapper = v =>
 					{
 						var e = entityDesc.TypeAccessor.CreateInstanceEx();
-						_keyColumns[0].Setter(e, v);
+						_keyColumns![0].SetValue(e, v);
 						return (T)e;
 					};
 				}
@@ -105,7 +111,7 @@ namespace LinqToDB.Tools.EntityServices
 			{
 				CreateMapper(mappingSchema);
 
-				return _mapper((TK)key);
+				return _mapper!((TK)key);
 			}
 
 			public Expression<Func<T,bool>> GetPredicate(MappingSchema mappingSchema, object key)
@@ -119,16 +125,16 @@ namespace LinqToDB.Tools.EntityServices
 					var keyExpression = Expression.Constant(new { Value = key });
 
 					bodyExpression = Expression.Equal(
-						Expression.PropertyOrField(p, _keyColumns[0].Name),
-						Expression.Convert(Expression.PropertyOrField(keyExpression, "Value"), _keyColumns[0].Type));
+						ExpressionHelper.PropertyOrField(p, _keyColumns![0].Name),
+						Expression.Convert(ExpressionHelper.PropertyOrField(keyExpression, "Value"), _keyColumns[0].Type));
 				}
 				else
 				{
 					var keyExpression = Expression.Constant(key);
-					var expressions   = _keyColumns.Select(kc =>
+					var expressions   = _keyColumns!.Select(kc =>
 						Expression.Equal(
-							Expression.PropertyOrField(p, kc.Name),
-							Expression.Convert(Expression.PropertyOrField(keyExpression, kc.Name), kc.Type)) as Expression);
+							ExpressionHelper.PropertyOrField(p, kc.Name),
+							Expression.Convert(ExpressionHelper.PropertyOrField(keyExpression, kc.Name), kc.Type)) as Expression);
 
 					bodyExpression = expressions.Aggregate(Expression.AndAlso);
 				}
@@ -137,22 +143,20 @@ namespace LinqToDB.Tools.EntityServices
 			}
 		}
 
-		volatile ConcurrentDictionary<Type,IKeyComparer> _keyComparers;
+		volatile ConcurrentDictionary<Type,IKeyComparer>? _keyComparers;
 
-		[CanBeNull]
-		public T GetEntity([JetBrains.Annotations.NotNull] IDataContext context, [JetBrains.Annotations.NotNull] object key)
+		public T? GetEntity(IDataContext context, object key)
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
 			if (key     == null) throw new ArgumentNullException(nameof(key));
 
 			if (_keyComparers == null)
-				lock (this)
-					if (_keyComparers == null)
-						_keyComparers = new ConcurrentDictionary<Type,IKeyComparer>();
+				lock (_syncRoot)
+					_keyComparers ??= new ConcurrentDictionary<Type,IKeyComparer>();
 
 			var keyComparer = _keyComparers.GetOrAdd(
 				key.GetType(),
-				type => (IKeyComparer)Activator.CreateInstance(typeof(KeyComparer<>).MakeGenericType(typeof(T), type)));
+				type => (IKeyComparer)Activator.CreateInstance(typeof(KeyComparer<>).MakeGenericType(typeof(T), type))!);
 
 			var entity = keyComparer.MapKey(context.MappingSchema, key);
 

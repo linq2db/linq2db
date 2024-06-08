@@ -6,20 +6,25 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
 	public class ExpressionsTests : TestBase
 	{
 		[Sql.Expression("{0} << {1}", Precedence = Precedence.Primary)]
+		[Sql.Expression(ProviderName.ClickHouse, "bitShiftLeft({0}, {1})", Precedence = Precedence.Primary)]
 		public static long Shl(long v, int s) => v << s;
 
 		[Sql.Expression("{0} >> {1}", Precedence = Precedence.Primary)]
+		[Sql.Expression(ProviderName.ClickHouse, "bitShiftRight({0}, {1})", Precedence = Precedence.Primary)]
 		public static long Shr(long v, int s) => v >> s;
 
 		static ExpressionsTests()
@@ -28,10 +33,12 @@ namespace Tests.Linq
 			Expressions.MapBinary((long v, int s) => v >> s, (v, s) => Shr(v, s));
 			Expressions.MapBinary((int  v, int s) => v << s, (v, s) => Shl(v, s));
 			Expressions.MapBinary((int  v, int s) => v >> s, (v, s) => Shr(v, s));
+			Expressions.MapMember((Enum e, Enum e2) => e.HasFlag(e2),
+				(t, flag) => (Sql.ConvertTo<int>.From(t) & Sql.ConvertTo<int>.From(flag)) != 0);
 		}
 
 		[Test]
-		public void MapOperator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MapOperator([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -46,22 +53,68 @@ namespace Tests.Linq
 				AreEqual(expected, query);
 			}
 		}
-		
+
+		[Flags]
+		public enum FlagsEnum
+		{
+			None = 0,
+
+			Flag1 = 0x1,
+			Flag2 = 0x2,
+			Flag3 = 0x4,
+
+			All = Flag1 | Flag2 | Flag3
+		}
+
+		[Table]
+		sealed class MappingTestClass
+		{
+			[Column] public int       Id    { get; set; }
+			[Column] public int       Value { get; set; }
+			[Column] public FlagsEnum Flags { get; set; }
+		}
+
+		[Test]
+		public void MapHasFlag([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values (FlagsEnum.Flag1, FlagsEnum.Flag3)] FlagsEnum flag)
+		{
+			var data = Enumerable.Range(1, 10).Select(i => new MappingTestClass
+				{
+					Id = i,
+					Value = i * 10,
+					Flags = (FlagsEnum)(i & (int)FlagsEnum.All)
+				})
+				.ToArray();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var query = from t in table
+					where t.Flags.HasFlag(flag)
+					select t;
+
+				var expected = from t in data
+					where t.Flags.HasFlag(flag)
+					select t;
+
+				AreEqualWithComparer(expected, query);
+			}
+		}
+
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]
-		public void MapMember1([DataSources] string context)
+		public void MapMember1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
 
 			using (var db = GetDataContext(context))
-				AreEqual(Parent.Select(p => Count1(p)), db.Parent.Select(p => Count1(p)));
+				AreEqual(Parent.Select(Count1), db.Parent.Select(p => Count1(p)));
 		}
 
 		static int Count2(Parent p, int id) { return p.Children.Count(c => c.ChildID > id); }
 
 		[Test]
-		public void MapMember2([DataSources] string context)
+		public void MapMember2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
 
@@ -72,7 +125,7 @@ namespace Tests.Linq
 		static int Count3(Parent p, int id) { return p.Children.Count(c => c.ChildID > id) + 2; }
 
 		[Test]
-		public void MapMember3([DataSources(ProviderName.SqlCe)] string context)
+		public void MapMember3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
 
@@ -85,10 +138,10 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(Count4Expression))]
 		static int Count4(Parent p, int id, int n)
 		{
-			return (_count4Expression ?? (_count4Expression = Count4Expression().Compile()))(p, id, n);
+			return (_count4Expression ??= Count4Expression().CompileExpression())(p, id, n);
 		}
 
-		static Func<Parent,int,int,int> _count4Expression;
+		static Func<Parent,int,int,int>? _count4Expression;
 
 		static Expression<Func<Parent,int,int,int>> Count4Expression()
 		{
@@ -96,7 +149,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression4([DataSources] string context)
+		public void MethodExpression4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var n = 3;
 
@@ -109,10 +162,10 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(Count5Expression))]
 		static int Count5(ITestDataContext db, Parent p, int n)
 		{
-			return (_count5Expression ?? (_count5Expression = Count5Expression().Compile()))(db, p, n);
+			return (_count5Expression ??= Count5Expression().CompileExpression())(db, p, n);
 		}
 
-		static Func<ITestDataContext,Parent,int,int> _count5Expression;
+		static Func<ITestDataContext,Parent,int,int>? _count5Expression;
 
 		static Expression<Func<ITestDataContext,Parent,int,int>> Count5Expression()
 		{
@@ -120,10 +173,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression5([DataSources(ProviderName.SqlCe)] string context)
+		public void MethodExpression5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2) ]int n)
 		{
-			var n = 2;
-
 			using (var db = GetDataContext(context))
 				AreEqual(
 					   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
@@ -133,10 +184,10 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(Count6Expression))]
 		static int Count6(ITable<Child> c, Parent p)
 		{
-			return (_count6Expression ?? (_count6Expression = Count6Expression().Compile()))(c, p);
+			return (_count6Expression ??= Count6Expression().CompileExpression())(c, p);
 		}
 
-		static Func<ITable<Child>,Parent,int> _count6Expression;
+		static Func<ITable<Child>,Parent,int>? _count6Expression;
 
 		static Expression<Func<ITable<Child>,Parent,int>> Count6Expression()
 		{
@@ -144,7 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression6([DataSources] string context)
+		public void MethodExpression6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -155,10 +206,10 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(Count7Expression))]
 		static int Count7(ITable<Child> ch, Parent p, int n)
 		{
-			return (_count7Expression ?? (_count7Expression = Count7Expression().Compile()))(ch, p, n);
+			return (_count7Expression ??= Count7Expression().CompileExpression())(ch, p, n);
 		}
 
-		static Func<ITable<Child>,Parent,int,int> _count7Expression;
+		static Func<ITable<Child>,Parent,int,int>? _count7Expression;
 
 		static Expression<Func<ITable<Child>,Parent,int,int>> Count7Expression()
 		{
@@ -166,7 +217,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression7([DataSources(ProviderName.SqlCe)] string context)
+		public void MethodExpression7([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			var n = 2;
 
@@ -191,7 +242,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression8([DataSources(ProviderName.SQLiteMS)] string context)
+		public void MethodExpression8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -210,9 +261,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression9([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MethodExpression9([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 				AreEqual(
 					from ch in Child
 					from p in
@@ -229,9 +280,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression10([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MethodExpression10([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 				AreEqual(
 					from ch in Child
 					from p in
@@ -259,7 +310,6 @@ namespace Tests.Linq
 			return obj => obj != null;
 		}
 
-#if !MONO
 		[Test]
 		public void TestGenerics1()
 		{
@@ -273,7 +323,6 @@ namespace Tests.Linq
 				var _ = q.ToList();
 			}
 		}
-#endif
 
 		[ExpressionMethod("GetBoolExpression2_{0}")]
 		static bool GetBool2<T>(T obj)
@@ -300,15 +349,15 @@ namespace Tests.Linq
 			}
 		}
 
-		class TestClass<T>
+		sealed class TestClass<T>
 		{
 			[ExpressionMethod(nameof(GetBoolExpression3))]
-			public static bool GetBool3(Parent obj)
+			public static bool GetBool3(Parent? obj)
 			{
 				throw new InvalidOperationException();
 			}
 
-			static Expression<Func<Parent,bool>> GetBoolExpression3()
+			static Expression<Func<Parent?,bool>> GetBoolExpression3()
 			{
 				return obj => obj != null;
 			}
@@ -340,7 +389,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssociationMethodExpression([DataSources] string context)
+		public void AssociationMethodExpression([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -352,7 +401,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task AssociationMethodExpressionAsync([DataSources] string context)
+		public async Task AssociationMethodExpressionAsync([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -446,7 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoinTest2([DataSources] string context)
+		public void LeftJoinTest2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -519,8 +568,7 @@ namespace Tests.Linq
 			return value => value;
 		}
 
-		[ActiveIssue(Details = "InvalidOperationException : Code supposed to be unreachable")]
-		[Test]
+		[Test(Description = "InvalidOperationException : Code supposed to be unreachable")]
 		public void ExpressionCompilerCrash([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -538,8 +586,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck1([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck1([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -549,8 +598,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck2([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -560,8 +610,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck3([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck3([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -571,8 +622,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck4([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck4([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -582,8 +634,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck5([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck5([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -593,8 +646,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck6([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck6([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -604,8 +658,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck7([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck7([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -615,8 +670,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck8([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck8([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -626,8 +682,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck9([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck9([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -637,8 +694,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck10([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck10([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -670,8 +728,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck23([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck23([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -681,8 +740,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck24([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck24([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -692,8 +752,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck25([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck25([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -703,8 +764,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck26([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck26([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -714,8 +776,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck27([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck27([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -725,8 +788,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck28([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck28([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -737,12 +801,12 @@ namespace Tests.Linq
 		}
 
 		[LinqToDB.Mapping.Table("AllTypes")]
-		class AllTypes
+		sealed class AllTypes
 		{
-			[LinqToDB.Mapping.Column] public int    ID              { get; set; }
-			[LinqToDB.Mapping.Column] public int?   intDataType     { get; set; }
-			[LinqToDB.Mapping.Column] public string varcharDataType { get; set; }
-			[LinqToDB.Mapping.Column] public string char20DataType  { get; set; }
+			[LinqToDB.Mapping.Column] public int     ID              { get; set; }
+			[LinqToDB.Mapping.Column] public int?    intDataType     { get; set; }
+			[LinqToDB.Mapping.Column] public string? varcharDataType { get; set; }
+			[LinqToDB.Mapping.Column] public string? char20DataType  { get; set; }
 		}
 
 		[Sql.Expression("COALESCE({0}, {0})", ServerSideOnly = true)]
@@ -752,7 +816,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(Func2Expr))]
-		public static int? FirstIfNullOrSecondAsNumber(string value, string intValue)
+		public static int? FirstIfNullOrSecondAsNumber(string? value, string intValue)
 		{
 			throw new InvalidOperationException();
 		}
@@ -767,14 +831,348 @@ namespace Tests.Linq
 		{
 			throw new InvalidOperationException();
 		}
+
+		#region issue 2688
+		[Test]
+		public void NullableNullValueTest1([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => p.ID != GetTernaryExpressionValue1(null)).ToList();
+			}
+		}
+
+		[Test]
+		public void NullableNullValueTest2([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => p.ID != GetTernaryExpressionValue2(null)).ToList();
+			}
+		}
+
+		[Test]
+		public void NullableNullValueTest3([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => p.ID != GetTernaryExpressionValue3(null)).ToList();
+			}
+		}
+
+		[Test]
+		public void NullableNullValueTest4([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => p.ID != GetTernaryExpressionValue4(null)).ToList();
+			}
+		}
+
+		[Test]
+		public void NullableNullValueTest5([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(p => p.ID != GetTernaryExpressionValue5(null)).ToList();
+			}
+		}
+
+		[ExpressionMethod(nameof(GetTernaryExpressionValue1Expr))]
+		public static int? GetTernaryExpressionValue1(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<int?, int?>> GetTernaryExpressionValue1Expr()
+		{
+			// null.Value
+			return value => value == null ? null : (int?)GetTernaryExpressionValueFunction(value.Value, int.MaxValue);
+		}
+
+		[ExpressionMethod(nameof(GetTernaryExpressionValue2Expr))]
+		public static int? GetTernaryExpressionValue2(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<int?, int?>> GetTernaryExpressionValue2Expr()
+		{
+			// (int)null
+			return value => value == null ? null : (int?)GetTernaryExpressionValueFunction((int)value, int.MaxValue);
+		}
+
+		[ExpressionMethod(nameof(GetTernaryExpressionValue3Expr))]
+		public static int? GetTernaryExpressionValue3(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<int?, int?>> GetTernaryExpressionValue3Expr()
+		{
+			// null.GetValueOrDefault()
+			return value => value == null ? null : (int?)GetTernaryExpressionValueFunction(value.GetValueOrDefault(), int.MaxValue);
+		}
+
+		[ExpressionMethod(nameof(GetTernaryExpressionValue4Expr))]
+		public static int? GetTernaryExpressionValue4(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<int?, int?>> GetTernaryExpressionValue4Expr()
+		{
+			// null.GetValueOrDefault(0)
+			return value => value == null ? null : (int?)GetTernaryExpressionValueFunction(value.GetValueOrDefault(0), int.MaxValue);
+		}
+
+		[ExpressionMethod(nameof(GetTernaryExpressionValue5Expr))]
+		public static int? GetTernaryExpressionValue5(int? value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static Expression<Func<int?, int?>> GetTernaryExpressionValue5Expr()
+		{
+			// this actually works
+			// null.HasValue
+			return value => value.HasValue ? null : (int?)GetTernaryExpressionValueFunction(1, int.MaxValue);
+		}
+
+		[Sql.Function("COALESCE", ServerSideOnly = true)]
+		private static int GetTernaryExpressionValueFunction(int value, int defaultValue)
+		{
+			throw new InvalidOperationException();
+		}
+		#endregion
+
+		#region issue 2431
+		[Table]
+		sealed class Issue2431Table
+		{
+			[Column] public int Id;
+			[Column(DataType = DataType.NVarChar)] public JsonType? Json;
+
+			public static readonly Issue2431Table[] Data = new []
+			{
+				new Issue2431Table() { Id = 1 },
+				new Issue2431Table() { Id = 2 },
+				new Issue2431Table() { Id = 3 }
+			};
+
+			public sealed class JsonType
+			{
+				public string? Text;
+			}
+		}
+
+		[Test]
+		public void Issue2431Test([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Issue2431Table.Data))
+			{
+				db.GetTable<Issue2431Table>().Where(r => JsonExtractPathText(r.Json, json => json!.Text) == "test" ? true : false).ToList();
+			}
+		}
+
+		[ExpressionMethod(nameof(JsonExtractPathExpression))]
+		public static TJsonProp JsonExtractPathText<TColumn, TJsonProp>(
+			TColumn field,
+			Expression<Func<TColumn, TJsonProp>> path)
+			=> throw new InvalidOperationException();
+
+		private static Expression<Func<TColumn, Expression<Func<TColumn, TJsonProp>>, TJsonProp>>
+			JsonExtractPathExpression<TColumn, TJsonProp>()
+		{
+			return (column, jsonProp) => JsonExtractPathText<TColumn, TJsonProp>(column, Sql.Expr<string>(JsonPath(jsonProp)));
+		}
+
+		[Sql.Expression("{0}::json #>> {1}", ServerSideOnly = true, IsPredicate = true)]
+		public static TJsonProp JsonExtractPathText<TColumn, TJsonProp>(TColumn left, string right)
+			=> throw new InvalidOperationException();
+
+		public static string JsonPath<TColumn, TJsonProp>(Expression<Func<TColumn, TJsonProp>> extractor) => "'{json, text}'";
+		#endregion
+
+		#region issue 2434
+		[Table]
+		sealed class Issue2434Table
+		{
+			[Column] public int     Id;
+			[Column] public string? FirstName;
+			[Column] public string? LastName;
+
+			[ExpressionMethod(nameof(FullNameExpr), IsColumn = true)]
+			public string? FullName { get; set; }
+
+			private static Expression<Func<Issue2434Table, string>> FullNameExpr() => t => $"{t.FirstName} {t.LastName}";
+		}
+
+		[Test]
+		public void Issue2434Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var tb = db.CreateLocalTable<Issue2434Table>())
+			{
+				tb.OrderBy(x => x.FullName).ToArray();
+			}
+		}
+		#endregion
+
+		#region issue 3472
+		[Table]
+		public class Issue3472TableDC
+		{
+			[Column] public int Id { get; set; }
+
+			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
+			public int PersonsCount { get; set; }
+
+			private static Expression<Func<Issue3472TableDC, DataConnection, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
+		}
+
+		[Table]
+		public class Issue3472TableDCTX
+		{
+			[Column] public int Id { get; set; }
+
+			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
+			public int PersonsCount { get; set; }
+
+			private static Expression<Func<Issue3472TableDCTX, DataContext, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
+		}
+
+		[Test]
+		public void Issue3472Test([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			if (db is DataConnection)
+			{
+				using var tb = db.CreateLocalTable(new[] { new Issue3472TableDC() { Id = 1 } });
+				tb.ToArray();
+			}
+			else
+			{
+				using var tb = db.CreateLocalTable(new[] { new Issue3472TableDCTX() { Id = 1 } });
+				tb.ToArray();
+			}
+		}
+		#endregion
+
+		#region Null check generated
+
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
+		[Test]
+		public void TestNullCheckInExpressionLeft([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Any(p => p.ID == Function2(Function1Left(null)));
+			}
+		}
+
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
+		[Test]
+		public void TestNullCheckInExpressionRight([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Any(p => p.ID == Function2(Function1Right(null)));
+			}
+		}
+
+		[Test]
+		public void TestNullCheckInExpressionUsingFieldLeft([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Parent.Where(p => p.Value1 == null).Any(p => p.ParentID == Function2(Function1Left(p.Value1)));
+			}
+		}
+
+		[Test]
+		public void TestNullCheckInExpressionUsingFieldRight([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Parent.Where(p => p.Value1 == null).Any(p => p.ParentID == Function2(Function1Right(p.Value1)));
+			}
+		}
+
+		[Sql.Expression("{0}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		public static int? Function2(int? Value) => throw new InvalidOperationException();
+
+		[ExpressionMethod(nameof(Function1LeftExpr))]
+		public static int? Function1Left(int? value) => throw new InvalidOperationException();
+
+		[ExpressionMethod(nameof(Function1RightExpr))]
+		public static int? Function1Right(int? value) => throw new InvalidOperationException();
+
+		[Sql.Expression("CAST(N'SHOULD NOT BE CALLED' AS INT)", ServerSideOnly = true)]
+		private static int Fail(int value) => throw new InvalidOperationException();
+
+		private static Expression<Func<int?, int?>> Function1LeftExpr()
+		{
+			return value => value == null ? null : Fail(value.Value);
+		}
+
+		private static Expression<Func<int?, int?>> Function1RightExpr()
+		{
+			return value => value != null ? Fail(value.Value) : null;
+		}
+
+		#endregion
+
+		#region Regression: query comparison
+		[Test(Description = "Tests regression introduced in 3.5.2")]
+		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var left  = GetQuery(db, null);
+				var right = GetQuery(db, 2);
+
+				Assert.False(
+					db.Person.Where(_ =>
+					left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0
+					&&
+					right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0)
+					.Any());
+			}
+		}
+
+		[Test(Description = "Tests regression introduced in 3.5.2")]
+		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var left  = GetQuery(db, null);
+				var right = GetQuery(db, 2);
+
+				Assert.False(
+					db.Person.Where(_ =>
+					left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0
+					&&
+					right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0)
+					.Any());
+			}
+		}
+
+		private static IQueryable<Patient> GetQuery(ITestDataContext db, int? personId)
+		{
+			return db.Patient.Where(_ => _.PersonID == personId);
+		}
+
+		#endregion
 	}
 
 	static class ExpressionTestExtensions
 	{
-		public class LeftJoinInfo<TOuter,TInner>
+		public sealed class LeftJoinInfo<TOuter,TInner>
 		{
-			public TOuter Outer;
-			public TInner Inner;
+			public TOuter Outer = default!;
+			public TInner Inner = default!;
 		}
 
 		[ExpressionMethod(nameof(LeftJoinImpl))]
@@ -786,7 +1184,7 @@ namespace Tests.Linq
 		{
 			return outer
 				.GroupJoin(inner, outerKeySelector, innerKeySelector, (o, gr) => new { o, gr })
-				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => new LeftJoinInfo<TOuter,TInner> { Outer = o.o, Inner = i });
+				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => new LeftJoinInfo<TOuter,TInner> { Outer = o.o, Inner = i! });
 		}
 
 		static Expression<Func<
@@ -799,7 +1197,7 @@ namespace Tests.Linq
 		{
 			return (outer,inner,outerKeySelector,innerKeySelector) => outer
 				.GroupJoin(inner, outerKeySelector, innerKeySelector, (o, gr) => new { o, gr })
-				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => new LeftJoinInfo<TOuter,TInner> { Outer = o.o, Inner = i });
+				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => new LeftJoinInfo<TOuter,TInner> { Outer = o.o, Inner = i! });
 		}
 
 		/*

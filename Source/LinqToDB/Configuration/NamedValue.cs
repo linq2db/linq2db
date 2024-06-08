@@ -8,10 +8,10 @@ namespace LinqToDB.Configuration
 		/// <summary>
 		/// Gets or sets name for value.
 		/// </summary>
-		public string Name  { get; set; }
+		public string Name  { get; set; } = null!;
 		/// <summary>
 		/// Gets ot sets value.
 		/// </summary>
-		public string Value { get; set; }
+		public string Value { get; set; } = null!;
 	}
 }

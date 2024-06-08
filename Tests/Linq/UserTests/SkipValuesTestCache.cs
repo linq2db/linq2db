@@ -1,10 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-
-using LinqToDB;
-using LinqToDB.Linq;
 
 namespace Tests.UserTests
 {
@@ -14,15 +11,15 @@ namespace Tests.UserTests
 		public class TestTable
 		{
 			[Column("Id"), PrimaryKey]
-			public Int32 Id { get; set; }
+			public int Id { get; set; }
 			[Column("Name")]
-			public String Name { get; set; }
+			public string? Name { get; set; }
 			[Column("Age"), SkipValuesOnInsert(1), SkipValuesOnUpdate(1)]
-			public Int32? Age { get; set; }
+			public int? Age { get; set; }
 		}
 		
 		[Test]
-		public void TestSkipInsertUpdate([DataSources] string context, [Values(1, 2, 1)] int value)
+		public void TestSkipInsertUpdate([DataSources] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -30,9 +27,10 @@ namespace Tests.UserTests
 				{
 					var count = db.Insert(new TestTable() { Id = 1, Name = "John", Age = value });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					if (value == 2)
@@ -47,8 +45,9 @@ namespace Tests.UserTests
 					r.Age = value;
 					count = db.Update(r);
 
-					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					if (value == 2)
 					{
@@ -64,8 +63,8 @@ namespace Tests.UserTests
 
 		[Test]
 		public void TestSkipInsertOrReplace(
-			[DataSources(ProviderName.OracleNative)] string context,
-			[Values(1, 2, 1)] int value)
+			[InsertOrUpdateDataSources(TestProvName.AllOracleNative)] string context,
+			[Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -75,7 +74,7 @@ namespace Tests.UserTests
 
 					Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					if (value == 2)
@@ -91,7 +90,7 @@ namespace Tests.UserTests
 					count = db.InsertOrReplace(r);
 
 					Assert.Greater(count, 0);
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.IsNotNull(r);
 					if (value == 2)
 					{

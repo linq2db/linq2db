@@ -18,27 +18,27 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 
 			[Column(IsDiscriminator = true)]
-			public string TargetName { get; set; }
+			public string? TargetName { get; set; }
 
 			[Association(ExpressionPredicate = nameof(ActualStageExp))]
-			public TaskStage ActualStage { get; set; }
+			public TaskStage? ActualStage { get; set; }
 
 			private static Expression<Func<Task, TaskStage, bool>> ActualStageExp()
 				=> (t, ts) => t.Id == ts.TaskId && ts.Actual == true;
 		}
 
-		class BdaTask : Task
+		sealed class BdaTask : Task
 		{
 			public const string Code = "bda.Requests";
 		}
 
-		class NonBdaTask : Task
+		sealed class NonBdaTask : Task
 		{
 			public const string Code = "None";
 		}
 
 		[Table]
-		class TaskStage
+		sealed class TaskStage
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
@@ -69,7 +69,7 @@ namespace Tests.UserTests
 						.Select(p => new
 						{
 							Instance = p,
-							ActualStageId = p.ActualStage.Id
+							ActualStageId = p.ActualStage!.Id
 						});
 					var res = query.ToArray();
 
@@ -97,7 +97,7 @@ namespace Tests.UserTests
 						.Select(p => new
 						{
 							Instance = p,
-							ActualStageId = (p as Task).ActualStage.Id
+							ActualStageId = (p as Task).ActualStage!.Id
 						});
 					var res = query.ToArray();
 
@@ -110,10 +110,10 @@ namespace Tests.UserTests
 						.Select(p => new
 						{
 							Instance = p,
-							ActualStageId = (p as Task).ActualStage.Id
+							ActualStageId = (p as Task).ActualStage!.Id
 						});
 
-					var res2 = query2.ToArray();
+					var res2 = query2.OrderBy(_ => _.Instance.Id).ToArray();
 
 					Assert.AreEqual(2, res2.Length);
 					Assert.IsNotNull(res2[0].Instance);

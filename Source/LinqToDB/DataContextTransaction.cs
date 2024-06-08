@@ -2,6 +2,7 @@
 using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -11,12 +12,17 @@ namespace LinqToDB
 	/// </summary>
 	[PublicAPI]
 	public class DataContextTransaction : IDisposable
+#if NATIVE_ASYNC
+		, IAsyncDisposable
+#else
+		, Async.IAsyncDisposable
+#endif
 	{
 		/// <summary>
 		/// Creates new transaction wrapper.
 		/// </summary>
 		/// <param name="dataContext">Data context.</param>
-		public DataContextTransaction([NotNull] DataContext dataContext)
+		public DataContextTransaction(DataContext dataContext)
 		{
 			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 		}
@@ -157,7 +163,7 @@ namespace LinqToDB
 				if (_transactionCounter == 0)
 				{
 					DataContext.LockDbManagerCounter--;
-					DataContext.ReleaseQuery();
+					await DataContext.ReleaseQueryAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 			}
 		}
@@ -181,7 +187,7 @@ namespace LinqToDB
 				if (_transactionCounter == 0)
 				{
 					DataContext.LockDbManagerCounter--;
-					DataContext.ReleaseQuery();
+					await DataContext.ReleaseQueryAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 			}
 		}
@@ -195,11 +201,32 @@ namespace LinqToDB
 			{
 				var db = DataContext.GetDataConnection();
 
-				db.RollbackTransaction();
+				db.DisposeTransaction();
 
 				_transactionCounter = 0;
 
 				DataContext.LockDbManagerCounter--;
+				DataContext.ReleaseQuery();
+			}
+		}
+
+		/// <inheritdoc cref="Dispose"/>
+#if NATIVE_ASYNC
+		async ValueTask IAsyncDisposable.DisposeAsync()
+#else
+		async Task Async.IAsyncDisposable.DisposeAsync()
+#endif
+		{
+			if (_transactionCounter > 0)
+			{
+				var db = DataContext.GetDataConnection();
+
+				await db.DisposeTransactionAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				_transactionCounter = 0;
+
+				DataContext.LockDbManagerCounter--;
+				await DataContext.ReleaseQueryAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}

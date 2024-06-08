@@ -7,11 +7,18 @@ using System.Threading.Tasks;
 
 namespace LinqToDB
 {
+	#if !NATIVE_ASYNC
+	using Async;
+	#endif
+
 	/// <summary>
 	/// Interface to override default implementation of LINQ To DB async operations.
 	/// </summary>
 	public interface IExtensionsAdapter
 	{
+		IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(
+			IQueryable<TSource> source);
+
 		Task ForEachAsync<TSource>(
 			IQueryable<TSource> source,
 			Action<TSource>     action,
@@ -28,26 +35,30 @@ namespace LinqToDB
 		Task<Dictionary<TKey, TSource>> ToDictionaryAsync<TSource, TKey>(
 			IQueryable<TSource> source,
 			Func<TSource, TKey> keySelector,
-			CancellationToken   token);
+			CancellationToken   token)
+			where TKey : notnull;
 
 		Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
 			IQueryable<TSource>      source,
 			Func<TSource,TKey>       keySelector,
 			IEqualityComparer<TKey>  comparer,
-			CancellationToken        token);
+			CancellationToken        token)
+			where TKey : notnull;
 
 		Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
 			IQueryable<TSource>      source,
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
-			CancellationToken        token);
+			CancellationToken        token)
+			where TKey : notnull;
 
 		Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
 			IQueryable<TSource>      source,
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
 			IEqualityComparer<TKey>  comparer,
-			CancellationToken        token);
+			CancellationToken        token)
+			where TKey : notnull;
 
 		Task<TSource> FirstAsync<TSource>(
 			IQueryable<TSource> source,
@@ -58,11 +69,11 @@ namespace LinqToDB
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
-		Task<TSource> FirstOrDefaultAsync<TSource>(
+		Task<TSource?> FirstOrDefaultAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken   token);
 
-		Task<TSource> FirstOrDefaultAsync<TSource>(
+		Task<TSource?> FirstOrDefaultAsync<TSource>(
 			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
@@ -76,11 +87,11 @@ namespace LinqToDB
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
-		Task<TSource> SingleOrDefaultAsync<TSource>(
+		Task<TSource?> SingleOrDefaultAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken   token);
 
-		Task<TSource> SingleOrDefaultAsync<TSource>(
+		Task<TSource?> SingleOrDefaultAsync<TSource>(
 			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
@@ -122,25 +133,25 @@ namespace LinqToDB
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
-		Task<TSource> MinAsync<TSource>(
+		Task<TSource?> MinAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken   token);
 
-		Task<TResult> MinAsync<TSource,TResult>(
+		Task<TResult?> MinAsync<TSource,TResult>(
 			IQueryable<TSource>               source,
 			Expression<Func<TSource,TResult>> selector,
 			CancellationToken                 token);
 
-		Task<TSource> MaxAsync<TSource>(
+		Task<TSource?> MaxAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken   token);
 
-		Task<TResult> MaxAsync<TSource,TResult>(
+		Task<TResult?> MaxAsync<TSource,TResult>(
 			IQueryable<TSource>               source,
 			Expression<Func<TSource,TResult>> selector,
 			CancellationToken                 token);
 
-		#region SumAsync
+#region SumAsync
 
 		Task<int> SumAsync(
 			IQueryable<int>   source,
@@ -232,9 +243,9 @@ namespace LinqToDB
 			Expression<Func<TSource,decimal?>> selector,
 			CancellationToken                  token);
 
-		#endregion SumAsync
+#endregion SumAsync
 
-		#region AverageAsync
+#region AverageAsync
 
 		Task<double> AverageAsync(
 			IQueryable<int>   source,
@@ -326,6 +337,6 @@ namespace LinqToDB
 			Expression<Func<TSource,decimal?>> selector,
 			CancellationToken                  token);
 
-		#endregion AverageAsync
+#endregion AverageAsync
 	}
 }

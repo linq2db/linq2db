@@ -15,24 +15,26 @@ namespace Tests.xUpdate
 
 	[TestFixture]
 	[Order(10000)]
+	[Obsolete("Tests for obsolete API. Will be removed with API under question.")]
 	public class OldMergeTests : TestBase
 	{
 		[Test]
 		public void Merge(
 			[DataSources(
 				false,
-				ProviderName.Access,
-				ProviderName.Informix,
+				TestProvName.AllAccess,
+				TestProvName.AllInformix,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				TestProvName.AllClickHouse,
+				TestProvName.AllSqlServer2005,
 				TestProvName.AllSybase,
-				ProviderName.SapHana)]
+				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Merge(db.Types2);
 			}
@@ -42,16 +44,16 @@ namespace Tests.xUpdate
 		public void MergeWithEmptySource(
 			[DataSources(
 				false,
-				ProviderName.Access,
-				ProviderName.Informix,
+				TestProvName.AllAccess,
+				TestProvName.AllInformix,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
-				db.Merge(new Person[] {});
+				db.Merge(Array<Person>.Empty);
 			}
 		}
 
@@ -59,7 +61,8 @@ namespace Tests.xUpdate
 		public void MergeWithDelete(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -67,13 +70,13 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Merge(true, db.Types2);
 			}
@@ -83,7 +86,8 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate1(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -91,13 +95,13 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Merge(t => t.ID > 5, db.Types2.Where(t => t.ID > 5));
 			}
@@ -107,7 +111,8 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate2(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -115,13 +120,13 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Merge(db.Types2, t => t.ID > 5);
 			}
@@ -131,7 +136,8 @@ namespace Tests.xUpdate
 		public async Task MergeWithDeletePredicate2Async(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -139,13 +145,13 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				await db.MergeAsync(db.Types2, t => t.ID > 5);
 			}
@@ -155,7 +161,8 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate3(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -163,13 +170,13 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var patient = db.Patient.First();
 				db.Merge(db.Person, t => t.Patient == patient);
@@ -180,7 +187,8 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate4(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -188,18 +196,18 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var patient = db.Patient.First().PersonID;
-				db.Merge(db.Person, t => t.Patient.PersonID == patient);
+				db.Merge(db.Person, t => t.Patient!.PersonID == patient);
 				patient++;
-				db.Merge(db.Person, t => t.Patient.PersonID == patient);
+				db.Merge(db.Person, t => t.Patient!.PersonID == patient);
 			}
 		}
 
@@ -207,7 +215,8 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate5(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllMySql,
@@ -215,44 +224,48 @@ namespace Tests.xUpdate
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
-				db.Merge(db.Child, t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22));
+				db.Merge(db.Child, t => t.Parent!.ParentID == 2 && t.GrandChildren.Any(g => g.Child!.ChildID == 22));
 			}
 		}
 
 		[Table("AllTypes")]
-		class AllType
+		sealed class AllType
 		{
 			[PrimaryKey, Identity] public int ID;
-			[Column(DataType = DataType.Char,  Length = 1)]  public char   charDataType;
-			[Column(DataType = DataType.NChar, Length = 20)] public string ncharDataType;
+			[Column(DataType = DataType.Char,  Length = 1)]  public char    charDataType;
+			[Column(DataType = DataType.NChar, Length = 20)] public string? ncharDataType;
 		}
 
 		[Test]
 		public void MergeChar1(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
-				ProviderName.Informix,
+				TestProvName.AllInformix,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.SapHana,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			ResetAllTypesIdentity(context);
+
+			using (var db = GetDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				var id = ConvertTo<int>.From(db.GetTable<AllType>().InsertWithIdentity(() => new AllType
 				{
@@ -260,14 +273,7 @@ namespace Tests.xUpdate
 					ncharDataType = "\x0"
 				}));
 
-				try
-				{
-					db.Merge(db.GetTable<AllType>().Where(t => t.ID == id));
-				}
-				finally
-				{
-					db.GetTable<AllType>().Delete(t => t.ID == id);
-				}
+				db.Merge(db.GetTable<AllType>().Where(t => t.ID == id));
 			}
 		}
 
@@ -275,37 +281,32 @@ namespace Tests.xUpdate
 		public void MergeChar2(
 			[DataSources(
 				false,
-				ProviderName.Access,
+				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
-				ProviderName.Informix,
-				ProviderName.SapHana,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				try
+				db.Merge(new[]
 				{
-					db.Merge(new[]
+					new AllType
 					{
-						new AllType
-						{
-							ID            = 10,
-							charDataType  = '\x0',
-							ncharDataType = "\x0"
-						}
-					});
-				}
-				finally
-				{
-					db.GetTable<AllType>().Delete(t => t.ID == 10);
-				}
+						ID            = 10,
+						charDataType  = '\x0',
+						ncharDataType = "\x0"
+					}
+				});
 			}
 		}
 	}

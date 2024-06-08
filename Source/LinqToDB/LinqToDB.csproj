@@ -1,98 +1,142 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Default.props" />
-	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
 
-		<PackageId>linq2db</PackageId>
-
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
-		<!--https://github.com/dotnet/project-system/issues/1358-->
-		<TargetFrameworks>$(TargetFrameworks)</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<DefineConstants>OVERRIDETOSTRING1;$(DefineConstants)</DefineConstants>
+		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
+		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
+		<!-- T4 support -->
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
+		<InternalsVisibleTo Include="linq2db.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010021259e121b7fbc7882afdb9118a5e5ac4684296d9a48db3411402ec45fb65cb5f2b5f157856da8258874c761d2dc0d27c09ce7fa3cd6161dabf4c81ec31ae6a793b6ded0e6cb22ec1c633cbf4081ae3842e20bfd9bc1af84a422991ec5395f2586ebc0f5a0d1d8bde074aa2dbaca26263ebb8a0997c793ef081fe557d7d4e3d1" />
+
 		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
 
-		<Compile Remove="Compatibility\**\*.cs" />
-
-		<None Remove="SqlQuery\ReservedWordsFirebird.txt" />
-
-		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
-
-		<Compile Update="AsyncExtensions.generated.cs">
+		<None Update="DataProvider\ClickHouse\ClickHouseHints.tt">
+			<LastGenOutput>ClickHouseHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\ClickHouse\ClickHouseHints.generated.cs">
+			<DependentUpon>ClickHouseHints.tt</DependentUpon>
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
-			<DependentUpon>AsyncExtensions.tt</DependentUpon>
+		</Compile>
+
+
+		<None Update="DataProvider\MySql\MySqlHints.tt">
+			<LastGenOutput>MySqlHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\MySql\MySqlHints.generated.cs">
+			<DependentUpon>MySqlHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="DataProvider\PostgreSQL\PostgreSQLHints.tt">
+			<LastGenOutput>PostgreSQLHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\PostgreSQL\PostgreSQLHints.generated.cs">
+			<DependentUpon>PostgreSQLHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="DataProvider\Oracle\OracleHints.tt">
+			<LastGenOutput>OracleHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\Oracle\OracleHints.generated.cs">
+			<DependentUpon>OracleHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="DataProvider\SqlCe\SqlCeHints.tt">
+			<LastGenOutput>SqlCeHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\SqlCe\SqlCeHints.generated.cs">
+			<DependentUpon>SqlCeHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="DataProvider\SqlServer\SqlServerHints.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SqlServerHints.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="DataProvider\SqlServer\SqlServerHints.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServerHints.tt</DependentUpon>
 		</Compile>
 
 		<None Update="AsyncExtensions.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
 		</None>
+		<Compile Update="AsyncExtensions.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>AsyncExtensions.tt</DependentUpon>
+		</Compile>
+
+		<None Update="Common\Internal\MutableTuple.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="Common\Internal\MutableTuple.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>MutableTuple.tt</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
-
-	<!-- .NET Framework -->
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' ">
-		<Compile Remove="Metadata\SystemComponentModelDataAnnotationsSchemaAttributeReader.cs" />
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net472' ">
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.Configuration" />
+		<Reference Include="System.Data.DataSetExtensions" />
+		<Reference Include="System.Data.Linq" />
+		<Reference Include="System.Data.Services" />
+		<Reference Include="System.ServiceModel" />
+		<Reference Include="System.Web.Services" />
+		<Reference Include="System.ComponentModel.DataAnnotations" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
+	<ItemGroup>
+		<PackageReference Include="Nullability.Source">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
-
-	<!-- .NET Core -->
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' OR '$(TargetFramework)' == 'netcoreapp1.0' ">
-		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
-		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
-		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
-		<Compile Remove="ServiceModel\**\*.cs;" />
-		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
-		<Compile Remove="**\*SchemaProvider*.cs" />
-		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
-		<Compile Include="Compatibility\System\ICloneable.cs" />
-		<Compile Include="Compatibility\System\SerializableAttribute.cs" />
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+		<PackageReference Include="System.Data.DataSetExtensions" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
-		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
-		<Compile Remove="ServiceModel\**\*.cs;" />
-		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
-		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net472' ">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' OR '$(TargetFramework)' == 'netcoreapp1.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.1.0" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
-		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
-		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
-		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
-		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1' ">
+		<PackageReference Include="Microsoft.CSharp" />
+		<PackageReference Include="System.ComponentModel.Annotations" />
 	</ItemGroup>
 </Project>

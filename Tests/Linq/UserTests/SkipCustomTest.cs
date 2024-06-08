@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -15,11 +14,11 @@ namespace Tests.UserTests
 				Affects = SkipModification.Insert;
 			}
 
-			public override bool ShouldSkip(object obj, EntityDescriptor entityDescriptor, ColumnDescriptor columnDescriptor)
+			public override bool ShouldSkip(object? obj, EntityDescriptor entityDescriptor, ColumnDescriptor columnDescriptor)
 			{
 				if (obj != null)
 				{
-					var value = columnDescriptor.GetValue(MappingSchema.Default, obj);
+					var value = columnDescriptor.GetProviderValue(obj);
 					if (value is int i)
 					{
 						return i % 2 == 0;
@@ -36,11 +35,11 @@ namespace Tests.UserTests
 		public class TestTable
 		{
 			[Column("Id"), PrimaryKey]
-			public Int32 Id { get; set; }
+			public int Id { get; set; }
 			[Column("Name")]
-			public String Name { get; set; }
+			public string? Name { get; set; }
 			[Column("Age"), SkipCustom()]
-			public Int32? Age { get; set; }
+			public int? Age { get; set; }
 		}
 
 		[Test]
@@ -53,18 +52,20 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() { Id = 1, Name = "John", Age = 15 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1);
+					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.IsNotNull(r);
 					Assert.AreEqual(r.Age, 15);
 
 					count = db.Insert(new TestTable() { Id = 2, Name = "Max", Age = 14 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.Greater(count, 0);
 
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2);
+					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
 					Assert.IsNotNull(r);
 					Assert.IsNull(r.Age);

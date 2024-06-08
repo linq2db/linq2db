@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -8,46 +7,39 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	public partial class MergeTests
 	{
 		[Test]
 		public void BigSource([MergeDataContextSource] string context)
 		{
-			var batchSize = 2500;
-
-			switch (context)
+			var batchSize = context switch
 			{
 				// ASE: you may need to increase memory procedure cache sizes like that:
 				// exec sp_configure 'max memory', NEW_MEMORY_SIZE
 				// exec sp_configure 'procedure cache size', NEW_CACHE_SIZE
-				case ProviderName.Sybase       :
-				case ProviderName.SybaseManaged: batchSize = 500; break;
-
+				string when context.IsAnyOf (TestProvName.AllSybase)                         => 500,
 				// hard limit around 100 records
 				// also big queries could kill connection with server
-				case ProviderName.Firebird     : batchSize = 100; break;
-
+				string when context.IsAnyOf (ProviderName.Firebird)                          => 100,
 				// hard limit around 250 records
-				case TestProvName.Firebird3    : batchSize = 250; break;
-
+				string when context.IsAnyOf (TestProvName.Firebird3, TestProvName.Firebird4) => 250,
 				// takes too long
-				case ProviderName.Informix     : batchSize = 500; break;
-
-				// big query makes Oracle to heavy eat memory
-				// this will affect other servers
-				case ProviderName.OracleManaged:
-				case ProviderName.Oracle       :
-				case ProviderName.OracleNative : batchSize = 100; break;
-			}
-
+				string when context.IsAnyOf (TestProvName.AllInformix)                       => 500,
+				// original 2500 actually works, but sometimes fails with
+				// "cannot allocate enough memory: please check traces for further information"
+				// as HANA virtual machine is PITA to configure, we just use smaller data set
+				string when context.IsAnyOf (TestProvName.AllSapHana)                        => 50,
+				// big batches leads to a lot of memory use by oracle, which could mess with testing environment
+				string when context.IsAnyOf (TestProvName.AllOracle)                         => 1000,
+				_                                                                            => 2500,
+			};
+		
 			RunTest(context, batchSize);
 		}
 
 		private void RunTest(string context, int size)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 

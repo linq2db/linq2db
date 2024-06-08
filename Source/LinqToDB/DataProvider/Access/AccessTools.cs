@@ -1,72 +1,162 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
+using System.IO;
+using System.Security;
 
 namespace LinqToDB.DataProvider.Access
 {
 	using Data;
 
-	public static class AccessTools
+	/// <summary>
+	/// Contains Access provider management tools.
+	/// </summary>
+	public static partial class AccessTools
 	{
-		static readonly AccessDataProvider _accessDataProvider = new AccessDataProvider();
+		static readonly Lazy<IDataProvider> _accessOleDbDataProvider = DataConnection.CreateDataProvider<AccessOleDbDataProvider>();
+		static readonly Lazy<IDataProvider> _accessODBCDataProvider  = DataConnection.CreateDataProvider<AccessODBCDataProvider>();
 
-		static AccessTools()
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			DataConnection.AddDataProvider(_accessDataProvider);
+			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB") == true || options.ConnectionString?.Contains("Microsoft.Jet.OLEDB") == true)
+			{
+				return _accessOleDbDataProvider.Value;
+			}
+
+			if (options.ProviderName == ProviderName.AccessOdbc
+				|| options.ConfigurationString?.Contains("Access.Odbc") == true)
+			{
+				return _accessODBCDataProvider.Value;
+			}
+
+			if (options.ProviderName == ProviderName.Access || (options.ConfigurationString?.Contains("Access") == true && !options.ConfigurationString.Contains("DataAccess")))
+			{
+				if (options.ConnectionString?.Contains("*.mdb") == true
+					|| options.ConnectionString?.Contains("*.accdb") == true)
+					return _accessODBCDataProvider.Value;
+
+				return _accessOleDbDataProvider.Value;
+			}
+
+			return null;
 		}
 
-		public static IDataProvider GetDataProvider()
+		/// <summary>
+		/// Returns instance of Access database provider.
+		/// </summary>
+		/// <returns><see cref="AccessOleDbDataProvider"/> or <see cref="AccessODBCDataProvider"/> instance.</returns>
+		public static IDataProvider GetDataProvider(string? providerName = null)
 		{
-			return _accessDataProvider;
+			if (providerName == ProviderName.AccessOdbc)
+				return _accessODBCDataProvider.Value;
+
+			return _accessOleDbDataProvider.Value;
 		}
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString)
+		/// <summary>
+		/// Creates <see cref="DataConnection"/> object using provided Access connection string.
+		/// </summary>
+		/// <param name="connectionString">Connection string.</param>
+		/// <param name="providerName">Provider name.</param>
+		/// <returns><see cref="DataConnection"/> instance.</returns>
+		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
-			return new DataConnection(_accessDataProvider, connectionString);
+			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		/// <summary>
+		/// Creates <see cref="DataConnection"/> object using provided connection object.
+		/// </summary>
+		/// <param name="connection">Connection instance.</param>
+		/// <param name="providerName">Provider name.</param>
+		/// <returns><see cref="DataConnection"/> instance.</returns>
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
-			return new DataConnection(_accessDataProvider, connection);
+			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		/// <summary>
+		/// Creates <see cref="DataConnection"/> object using provided transaction object.
+		/// </summary>
+		/// <param name="transaction">Transaction instance.</param>
+		/// <param name="providerName">Provider name.</param>
+		/// <returns><see cref="DataConnection"/> instance.</returns>
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
-			return new DataConnection(_accessDataProvider, transaction);
+			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
 		#endregion
 
-		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
+		#region Database management
+
+		/// <summary>
+		/// Creates new Access database file. Requires Access OLE DB provider (JET or ACE) and ADOX.
+		/// </summary>
+		/// <param name="databaseName">Name of database to create.</param>
+		/// <param name="deleteIfExists">If <c>true</c>, existing database will be removed before create.</param>
+		/// <param name="provider">Name of OleDb provider to use to create database. Default value: "Microsoft.Jet.OLEDB.4.0".</param>
+		/// <remarks>
+		/// Provider value examples: Microsoft.Jet.OLEDB.4.0 (for JET database), Microsoft.ACE.OLEDB.12.0, Microsoft.ACE.OLEDB.15.0 (for ACE database).
+		/// </remarks>
+		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, string provider = "Microsoft.Jet.OLEDB.4.0")
 		{
-			_accessDataProvider.CreateDatabase(databaseName, deleteIfExists);
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+			databaseName = databaseName.Trim();
+
+			if (!databaseName.ToLowerInvariant().EndsWith(".mdb"))
+				databaseName += ".mdb";
+
+			if (File.Exists(databaseName))
+			{
+				if (!deleteIfExists)
+					return;
+				File.Delete(databaseName);
+			}
+
+			var connectionString = $"Provider={provider};Data Source={databaseName};Locale Identifier=1033";
+
+			DataTools.CreateFileDatabase(
+				databaseName, deleteIfExists, ".mdb",
+				_ => CreateAccessDB(connectionString));
 		}
 
+		[SecuritySafeCritical]
+		private static void CreateAccessDB(string connectionString)
+		{
+			using (var catalog = ComWrapper.Create("ADOX.Catalog"))
+				using (var conn = ComWrapper.Wrap(catalog.Create(connectionString)))
+					conn.Close();
+		}
+
+		/// <summary>
+		/// Removes database file by database name.
+		/// </summary>
+		/// <param name="databaseName">Name of database to remove.</param>
 		public static void DropDatabase(string databaseName)
 		{
-			_accessDataProvider.DropDatabase(databaseName);
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+			DataTools.DropFileDatabase(databaseName, ".mdb");
 		}
+
+		#endregion
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int                        maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
-			where T : class
+		/// <summary>
+		/// Default bulk copy mode, used for Access by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+		/// methods, if mode is not specified explicitly.
+		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
+		/// </summary>
+		[Obsolete("Use AccessOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
 		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
+			get => AccessOptions.Default.BulkCopyType;
+			set => AccessOptions.Default = AccessOptions.Default with { BulkCopyType = value };
 		}
 
 		#endregion

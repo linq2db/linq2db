@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -25,7 +24,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new[]{new User{Id = 1, Version = UserVersion.FirstRelease} }))
@@ -33,7 +32,7 @@ namespace Tests.UserTests
 				var maxVersion = UserVersion.SecondRelease;
 
 				var query = from u in table
-					where u.Version.Value < maxVersion
+					where u.Version!.Value < maxVersion
 					select u.Id;
 
 				var ids1 = query.ToArray();

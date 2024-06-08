@@ -2,7 +2,6 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -18,12 +17,12 @@ namespace Tests.UserTests
 		int? ID2;
 
 		[Test]
-		public void TestWrongValue([DataSources] string context)
+		public void TestWrongValue([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var query = db.GetTable<LinqDataTypes2>()
-					.Where(_ => GetSource(db, ID1.Value).Select(r => r.ID).Contains(_.ID));
+					.Where(_ => GetSource(db, ID1!.Value).Select(r => r.ID).Contains(_.ID));
 
 				ID1 = 3;
 				var result = query.ToList();
@@ -31,7 +30,7 @@ namespace Tests.UserTests
 				Assert.AreEqual(3, result[0].ID);
 
 				query = db.GetTable<LinqDataTypes2>()
-					.Where(_ => GetSource(db, ID2.Value).Select(r => r.ID).Contains(_.ID));
+					.Where(_ => GetSource(db, ID2!.Value).Select(r => r.ID).Contains(_.ID));
 
 				ID1 = 2;
 				ID2 = 4;
@@ -42,12 +41,12 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestNullValue([DataSources] string context)
+		public void TestNullValue([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var query = db.GetTable<LinqDataTypes2>()
-					.Where(_ => GetSource(db, ID1.Value).Select(r => r.ID).Contains(_.ID));
+					.Where(_ => GetSource(db, ID1!.Value).Select(r => r.ID).Contains(_.ID));
 
 				ID1 = 3;
 				var result = query.ToList();
@@ -55,7 +54,7 @@ namespace Tests.UserTests
 				Assert.AreEqual(3, result[0].ID);
 
 				query = db.GetTable<LinqDataTypes2>()
-					.Where(_ => GetSource(db, ID2.Value).Select(r => r.ID).Contains(_.ID));
+					.Where(_ => GetSource(db, ID2!.Value).Select(r => r.ID).Contains(_.ID));
 
 				ID1 = null;
 				ID2 = 4;

@@ -2,20 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-using System.Windows.Forms;
-#endif
+using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture]
@@ -218,9 +218,9 @@ namespace Tests.Linq
 
 		// ProviderName.SqlServer2014 disabled due to:
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void MultipleSelect11([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SapHana)]
+			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var dt = DateTime.Now;
@@ -230,64 +230,64 @@ namespace Tests.Linq
 				var q =
 					from p in db.Parent
 					from  g1 in p.GrandChildren.DefaultIfEmpty()
-					let   c1 = g1.Child.ChildID
+					let   c1 = g1.Child!.ChildID
 					where c1 == 1
 					from  g2 in p.GrandChildren.DefaultIfEmpty()
-					let   c2 = g2.Child.ChildID
+					let   c2 = g2.Child!.ChildID
 					where c2 == 2
 					from  g3 in p.GrandChildren.DefaultIfEmpty()
-					let   c3 = g3.Child.ChildID
+					let   c3 = g3.Child!.ChildID
 					where c3 == 3
 					from  g4 in p.GrandChildren.DefaultIfEmpty()
-					let   c4 = g4.Child.ChildID
+					let   c4 = g4.Child!.ChildID
 					where c4 == 4
 					from  g5 in p.GrandChildren.DefaultIfEmpty()
-					let   c5 = g5.Child.ChildID
+					let   c5 = g5.Child!.ChildID
 					where c5 == 5
 					from  g6 in p.GrandChildren.DefaultIfEmpty()
-					let   c6 = g6.Child.ChildID
+					let   c6 = g6.Child!.ChildID
 					where c6 == 6
 					from  g7 in p.GrandChildren.DefaultIfEmpty()
-					let   c7 = g7.Child.ChildID
+					let   c7 = g7.Child!.ChildID
 					where c7 == 7
 					from  g8 in p.GrandChildren.DefaultIfEmpty()
-					let   c8 = g8.Child.ChildID
+					let   c8 = g8.Child!.ChildID
 					where c8 == 8
 					from  g9 in p.GrandChildren.DefaultIfEmpty()
-					let   c9 = g9.Child.ChildID
+					let   c9 = g9.Child!.ChildID
 					where c9 == 9
 					from  g10 in p.GrandChildren.DefaultIfEmpty()
-					let   c10 = g10.Child.ChildID
+					let   c10 = g10.Child!.ChildID
 					where c10 == 10
 					from  g11 in p.GrandChildren.DefaultIfEmpty()
-					let   c11 = g11.Child.ChildID
+					let   c11 = g11.Child!.ChildID
 					where c11 == 11
 					from  g12 in p.GrandChildren.DefaultIfEmpty()
-					let   c12 = g12.Child.ChildID
+					let   c12 = g12.Child!.ChildID
 					where c12 == 12
 					from  g13 in p.GrandChildren.DefaultIfEmpty()
-					let   c13 = g13.Child.ChildID
+					let   c13 = g13.Child!.ChildID
 					where c13 == 13
 					from  g14 in p.GrandChildren.DefaultIfEmpty()
-					let   c14 = g14.Child.ChildID
+					let   c14 = g14.Child!.ChildID
 					where c14 == 14
 					from  g15 in p.GrandChildren.DefaultIfEmpty()
-					let   c15 = g15.Child.ChildID
+					let   c15 = g15.Child!.ChildID
 					where c15 == 15
 					from  g16 in p.GrandChildren.DefaultIfEmpty()
-					let   c16 = g16.Child.ChildID
+					let   c16 = g16.Child!.ChildID
 					where c16 == 16
 					from  g17 in p.GrandChildren.DefaultIfEmpty()
-					let   c17 = g17.Child.ChildID
+					let   c17 = g17.Child!.ChildID
 					where c17 == 17
 					from  g18 in p.GrandChildren.DefaultIfEmpty()
-					let   c18 = g18.Child.ChildID
+					let   c18 = g18.Child!.ChildID
 					where c18 == 18
 					from  g19 in p.GrandChildren.DefaultIfEmpty()
-					let   c19 = g19.Child.ChildID
+					let   c19 = g19.Child!.ChildID
 					where c19 == 19
 					from  g20 in p.GrandChildren.DefaultIfEmpty()
-					let   c20 = g20.Child.ChildID
+					let   c20 = g20.Child!.ChildID
 					where c20 == 20
 					orderby c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20
 					select new
@@ -314,7 +314,7 @@ namespace Tests.Linq
 					select grandChild;
 				q.ToList();
 
-				var selectCount = ((DataConnection)db).LastQuery
+				var selectCount = ((DataConnection)db).LastQuery!
 					.Split(' ', '\t', '\n', '\r')
 					.Count(s => s.Equals("select", StringComparison.OrdinalIgnoreCase));
 
@@ -372,7 +372,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class MyMapSchema : MappingSchema
+		sealed class MyMapSchema : MappingSchema
 		{
 			public MyMapSchema()
 			{
@@ -380,7 +380,7 @@ namespace Tests.Linq
 			}
 		}
 
-		static readonly MyMapSchema _myMapSchema = new MyMapSchema();
+		static readonly MyMapSchema _myMapSchema = new ();
 
 		[Test]
 		public void Coalesce3([DataSources(false)] string context)
@@ -414,18 +414,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce4([DataSources(ProviderName.SqlCe)] string context)
+		public void Coalesce4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from c in    Child
-					select Sql.AsSql((from ch in    Child where ch.ChildID == c.ChildID select ch.Parent.Value1).FirstOrDefault() ?? c.ChildID),
+					select Sql.AsSql((from ch in    Child where ch.ChildID == c.ChildID select ch.Parent!.Value1).FirstOrDefault() ?? c.ChildID),
 					from c in db.Child
-					select Sql.AsSql((from ch in db.Child where ch.ChildID == c.ChildID select ch.Parent.Value1).FirstOrDefault() ?? c.ChildID));
+					select Sql.AsSql((from ch in db.Child where ch.ChildID == c.ChildID select ch.Parent!.Value1).FirstOrDefault() ?? c.ChildID));
 		}
 
 		[Test]
-		public void Coalesce5([DataSources(ProviderName.SqlCe)] string context)
+		public void Coalesce5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -458,20 +458,28 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+		public class ListViewItem
+		{
+			public ListViewItem(string[] items)
+			{
+			}
+
+			public bool    Checked    { get; set; }
+			public int     ImageIndex { get; set; }
+			public object? Tag        { get; set; }
+		}
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.Parent.Select(f =>
-					new ListViewItem(new[] { "", f.ParentID.ToString(), f.Value1.ToString() })
+					new ListViewItem(new[] { "", f.ParentID.ToString()!, f.Value1.ToString()! })
 					{
 						Checked    = true,
 						ImageIndex = 0,
 						Tag        = f.ParentID
 					}).ToList();
 		}
-#endif
 
 		static string ConvertString(string s, int? i, bool b, int n)
 		{
@@ -491,7 +499,7 @@ namespace Tests.Linq
 				var lines =
 					q.Select(
 						(m, i) =>
-							ConvertString(m.Parent.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
+							ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
 
 				Assert.AreEqual("7.77.True.0",  lines[0]);
 				Assert.AreEqual("6.66.False.1", lines[1]);
@@ -505,7 +513,7 @@ namespace Tests.Linq
 				lines =
 					q.Select(
 						(m, i) =>
-							ConvertString(m.Parent.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
+							ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
 
 				Assert.AreEqual("7.77.True.0", lines[0]);
 			}
@@ -526,8 +534,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from c in    Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID },
-					from c in db.Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID });
+					from c in    Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2!.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID },
+					from c in db.Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2!.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID });
 		}
 
 		[Table(Name="Person")]
@@ -546,8 +554,8 @@ namespace Tests.Linq
 				#endregion
 			}
 
-			public int    PersonID;
-			public string FirstName;
+			public int     PersonID;
+			public string? FirstName = null!;
 		}
 
 		[Test]
@@ -582,7 +590,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var arr = new List<Person> { new Person() };
-				var p = db.Person.Select(person => new { person.ID, Arr = arr.Take(1) }).FirstOrDefault();
+				var p = db.Person.Select(person => new { person.ID, Arr = arr.Take(1) }).FirstOrDefault()!;
 
 				p.Arr.Single();
 			}
@@ -598,28 +606,30 @@ namespace Tests.Linq
 		[Test]
 		public void SelectField()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var q =
 					from p in db.GetTable<TestParent>()
 					select p.Value1_;
 
-				var sql = q.ToString();
+				var sql = q.ToString()!;
 
 				Assert.That(sql.IndexOf("ParentID_"), Is.LessThan(0));
 			}
 		}
 
-		[Test, ActiveIssue("Not currently supported")]
-		public void SelectComplexField()
+		[Test]
+		public void SelectComplexField([DataSources] string context)
 		{
-			using (var db = new TestDataConnection())
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.GetTable<ComplexPerson>()
 					select p.Name.LastName;
 
-				var sql = q.ToString();
+				var sql = q.ToString()!;
+
+				TestContext.WriteLine(sql);
 
 				Assert.That(sql.IndexOf("First"),    Is.LessThan(0));
 				Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
@@ -656,14 +666,15 @@ namespace Tests.Linq
 		public void SelectComplex3([DataSources] string context)
 		{
 			var ms = new MappingSchema();
-			var b  = ms.GetFluentMappingBuilder();
+			var b  = new FluentMappingBuilder(ms);
 
 			b
 				.Entity<ComplexPerson3>()        .HasTableName ("Person")
 				.Property(_ => _.ID)             .HasColumnName("PersonID")
 				.Property(_ => _.Name.FirstName) .HasColumnName("FirstName")
 				.Property(_ => _.Name.LastName)  .HasColumnName("LastName")
-				.Property(_ => _.Name.MiddleName).HasColumnName("MiddleName");
+				.Property(_ => _.Name.MiddleName).HasColumnName("MiddleName")
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			{
@@ -675,6 +686,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void SelectNullableTest1([DataSources] string context)
 		{
@@ -696,7 +708,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
+		[Test]
 		public void SelectNullableTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -719,7 +732,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SelectNullPropagationTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -740,7 +753,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SelectNullPropagationWhereTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -761,12 +774,12 @@ namespace Tests.Linq
 							: new
 							{
 								ParentID = q.Info1 != null ? (int?)q.Info1.ParentID : (int?)null,
-								q.Info1.Value1,
+								q.Info1!.Value1,
 								Value2 = q.Info2.Value1
 							}
 					};
 
-				var query3 = query2.Where(p => p.InfoAll.ParentID.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0 );
+				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0 );
 
 				var _ = query3.ToArray();
 			}
@@ -796,7 +809,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SelectNullProjectionTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -817,7 +830,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SelectReverseNullPropagationTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -838,7 +851,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Parallelizable(ParallelScope.None)]
+		[Test]
 		public void SelectReverseNullPropagationWhereTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -859,12 +872,12 @@ namespace Tests.Linq
 									 : new
 									 {
 										 ParentID = null != q.Info1 ? (int?)q.Info1.ParentID : (int?)null,
-										 q.Info1.Value1,
+										 q.Info1!.Value1,
 										 Value2 = q.Info2.Value1
 									 }
 							 };
 
-				var query3 = query2.Where(p => p.InfoAll.ParentID.Value > 0 || p.InfoAll.Value1 > 0 || p.InfoAll.Value2 > 0);
+				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0 || p.InfoAll.Value2 > 0);
 
 				var _ = query3.ToArray();
 			}
@@ -894,7 +907,30 @@ namespace Tests.Linq
 			}
 		}
 
-		class LocalClass
+		public class ClassWithInternal
+		{
+			public int? Int { get; set; }
+			internal string? InternalStr { get; set; }
+		}
+
+
+		[Test]
+		public void InternalFieldProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Types.Select(t => new ClassWithInternal
+				{
+					Int = t.ID,
+					InternalStr = t.StringValue
+				});
+
+				var result = query.Where(x => x.InternalStr != "").OrderBy(_ => _.Int).ToArray();
+				Assert.That(result[0].InternalStr, Is.EqualTo(Types.First().StringValue));
+			}
+		}
+
+		sealed class LocalClass
 		{
 		}
 
@@ -915,12 +951,17 @@ namespace Tests.Linq
 					false,
 					ProviderName.DB2,
 					TestProvName.AllPostgreSQL,
-					ProviderName.SapHana)]
+					TestProvName.AllFirebird,
+					TestProvName.AllSapHana)]
 				string context)
 		{
-			using (var db = new TestDataConnection(context))
+			var sql = "select PersonID, FirstName, MiddleName, LastName, Gender from Person where PersonID = 3";
+			if (context.IsAnyOf(TestProvName.AllOracle))
+				sql = "select \"PersonID\", \"FirstName\", \"MiddleName\", \"LastName\", \"Gender\" from \"Person\" where \"PersonID\" = 3";
+
+			using (var db = GetDataConnection(context))
 			{
-				var person = db.Query<ComplexPerson>("select PersonID, FirstName, MiddleName, LastName, Gender from Person where PersonID = 3").FirstOrDefault();
+				var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
 
 				Assert.NotNull(person);
 				Assert.AreEqual(3, person.ID);
@@ -932,13 +973,13 @@ namespace Tests.Linq
 			}
 		}
 
-		class MainEntityObject
+		sealed class MainEntityObject
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 
 			[Column(Length = 50)]
-			public string MainValue { get; set; }
+			public string? MainValue { get; set; }
 		}
 
 		public class ChildEntityObject
@@ -946,16 +987,16 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[Column(Length = 50)]
-			public string Value { get; set; }
+			public string? Value { get; set; }
 		}
 
 		public class DtoChildEntityObject
 		{
 			public int Id { get; set; }
 
-			public string Value { get; set; }
+			public string? Value { get; set; }
 
-			static Expression<Func<ChildEntityObject, DtoChildEntityObject>> OwnerImpl()
+			static Expression<Func<ChildEntityObject?, DtoChildEntityObject?>> OwnerImpl()
 			{
 				return a => a == null
 					? null
@@ -964,38 +1005,38 @@ namespace Tests.Linq
 						Id = a.Id,
 						Value = a.Value
 					};
-			}        
+			}
 
 			[ExpressionMethod("OwnerImpl")]
-			public static implicit operator DtoChildEntityObject(ChildEntityObject a)
+			public static implicit operator DtoChildEntityObject?(ChildEntityObject a)
 			{
 				if (a == null) return null;
-				return OwnerImpl().Compile()(a);
+				return OwnerImpl().CompileExpression()(a);
 			}
 
 		}
 
 		public class DtoResult
 		{
-			public DtoChildEntityObject Child { get; set; }
-			public string Value { get; set; }
+			public DtoChildEntityObject? Child { get; set; }
+			public string? Value { get; set; }
 		}
 
 		[Test]
-		public void TestExpressionMethodInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestExpressionMethodInProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
 				new ChildEntityObject{Id = 1, Value = "Value 1"}
 			}))
 			{
-				var query = 
+				var query =
 					from m in db.GetTable<MainEntityObject>()
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
 					select new DtoResult
@@ -1004,7 +1045,7 @@ namespace Tests.Linq
 						Value = c.Value
 					};
 
-				query = query.OrderByDescending(c => c.Child.Id);
+				query = query.OrderByDescending(c => c.Child!.Id);
 				var result = query.ToArray();
 
 				Assert.NotNull(result[0].Child);
@@ -1012,16 +1053,65 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class IntermediateChildResult
+		{
+			public int?   ParentId { get; set; }
+			public Child? Child    { get; set; }
+		}
 
 		[Test]
-		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalProjectionOptimization(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
+			[Values(true, false)] bool includeChild,
+			[Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				select new IntermediateChildResult { ParentId = c.ParentID, Child = includeChild ? c : null };
+
+			var cacheMissCount = Query<IntermediateChildResult>.CacheMissCount;
+
+			var result = query.ToArray().First();
+
+			void CheckResult()
+			{
+			if (includeChild)
+			{
+				result.Child.Should().NotBeNull();
+			}
+			else
+			{
+				result.Child.Should().BeNull();
+
+				((DataConnection)db).LastQuery.Should().NotContain("ChildID");
+			}
+			}
+
+			CheckResult();
+
+			includeChild = !includeChild;
+
+			result = query.ToArray().First();
+
+			CheckResult();
+
+			if (iteration > 1)
+			{
+				Query<IntermediateChildResult>.CacheMissCount.Should().Be(cacheMissCount);
+			}
+		}
+
+
+		[Test]
+		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new AllowMultipleQuery())
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
@@ -1033,6 +1123,7 @@ namespace Tests.Linq
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
 					select new
 					{
+						m.Id,
 						Child1 = c,
 						Child2 = c == null ? null : new ChildEntityObject { Id = c.Id, Value = c.Value },
 						Child3 = c != null ? c : new ChildEntityObject { Id = 4, Value = "Generated" },
@@ -1044,7 +1135,7 @@ namespace Tests.Linq
 							: c
 					};
 
-				var result = query.ToArray();
+				var result = query.OrderBy(_ => _.Id).ToArray();
 
 				Assert.NotNull(result[0].Child1);
 				Assert.IsNull (result[1].Child1);
@@ -1065,23 +1156,23 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConditionalInProjectionSubquery([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalInProjectionSubquery([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
 				new ChildEntityObject{Id = 1, Value = "Value 1"}
 			}))
 			{
-				var query = 
+				var query =
 					(from m in db.GetTable<MainEntityObject>()
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
-					select new 
+					select new
 					{
 						c.Id,
 						Value = (c != null) ? c.Value : (m.MainValue != null ? m.MainValue : "")
@@ -1113,7 +1204,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class ParentResult
+		sealed class ParentResult
 		{
 			public ParentResult(int parentID, int? value1)
 			{
@@ -1126,7 +1217,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConstructorProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestConstructorProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1151,7 +1242,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1175,50 +1266,130 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Currently linq2db do not support such queries")]
+		[Test]
+		public void TestComplexMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					select Tuple.Create(Tuple.Create(p.ParentID, p.Value1), Tuple.Create(p.Value1, p.ParentID));
+
+				var resultQuery = from q in query
+					where q.Item2.Item1 != null
+					select q;
+
+				var queryExpected =
+					from p in Parent
+					select Tuple.Create(Tuple.Create(p.ParentID, p.Value1), Tuple.Create(p.Value1, p.ParentID));
+
+				var resultExpected = from q in queryExpected
+					where q.Item2.Item1 != null
+					select q;
+
+				AreEqual(resultExpected, resultQuery);
+			}
+		}
 
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		public void TestComplexNestedProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Parent
+					select new
+					{
+						A = new
+						{
+							A1 = new
+							{
+								B1 = p.ParentID,
+								B2 = p.Value1
+							},
+							A2 = new
+							{
+								C1 = p.Value1,
+								C2 = p.ParentID
+							}
+
+						}
+					};
+
+				var resultQuery = from q in query
+					where q.A.A1.B2 != null
+					select q;
+
+				resultQuery.ToArray();
+
+				// var queryExpected =
+				// 	from p in Parent
+				// 	select Tuple.Create(Tuple.Create(p.ParentID, p.Value1), Tuple.Create(p.Value1, p.ParentID));
+				//
+				// var resultExpected = from q in queryExpected
+				// 	where q.Item2.Item1 != null
+				// 	select q;
+				//
+				// AreEqual(resultExpected, resultQuery);
+			}
+		}
+
+		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
+		// IFX: Informix needs type hint for NULL value
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
+		[Test]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
-			using (var db = GetDataContext(context))
+			// mapping fails and fallbacks to slow-mapper
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
-				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value.Value));
+				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value!.Value));
 
 				Assert.AreEqual(value, result);
 			}
 		}
 
+		// DB2: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
+		// IFX: Informix needs type hint for NULL value
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
-			using (var db = GetDataContext(context))
+			// mapping fails and fallbacks to slow-mapper
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
-				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value.Value) : (int?)null);
+				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value!.Value) : (int?)null);
 
 				Assert.AreEqual(value, result);
 			}
 		}
 
+		// INFORMIX and DB2 need type hint in select
+		// CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
-			using (var db = GetDataContext(context))
+			// mapping fails and fallbacks to slow-mapper
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
-				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
+				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
 
 				Assert.AreEqual(value, result);
 			}
 		}
 
+		// INFORMIX and DB2 need type hint in select
+		// CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
 		[Test]
-		[ActiveIssue(Configuration = ProviderName.Informix, Details = "Informix needs type hint for NULL value")]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
-			using (var db = GetDataContext(context))
+			// mapping fails and fallbacks to slow-mapper
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
-				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
+				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
 
 				Assert.AreEqual(value, result);
 			}
@@ -1231,8 +1402,6 @@ namespace Tests.Linq
 			public int Value1 { get; }
 		}
 
-		//https://github.com/linq2db/linq2db/issues/1788
-		[ActiveIssue(1788)]
 		[Test]
 		public void Issue1788Test1([DataSources] string context)
 		{
@@ -1256,7 +1425,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1788)]
 		[Test]
 		public void Issue1788Test2([DataSources] string context)
 		{
@@ -1288,9 +1456,9 @@ namespace Tests.Linq
 				var results = from p in db.GetTable<Parent1788>()
 							  select new
 							  {
-#pragma warning disable 472
+#pragma warning disable CS0472 // comparison of non-null int? with null
 								  f1 = ((int?)p.Value1) != null,
-#pragma warning restore 472
+#pragma warning restore CS0472
 								  f2 = (int?)p.Value1
 							  };
 
@@ -1329,10 +1497,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus)] string context)
+		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle12Plus)] string context)
 		{
-			// TODO: eager loading
-			// using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var query =
@@ -1345,15 +1511,18 @@ namespace Tests.Linq
 						Child = c1,
 						Any = children.Any(),
 						Child1 = children.Where(c => c.ParentID >= p.ParentID).FirstOrDefault(),
-						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault()
+						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault(),
+						ChildArray = children.Where(c => c.ParentID >= p.ParentID).Select(c => new object[] {c.ChildID, c.ParentID}).FirstOrDefault(),
+						ChildDictionary1 = children.Where(c => c.ParentID >= p.ParentID).Select(c => new Dictionary<int, int?>{{c.ChildID, c.ParentID}}).FirstOrDefault(),
+						ChildDictionary2 = children.Where(c => c.ParentID >= p.ParentID).Select(c => new Dictionary<string, int?>{{"ChildID", c.ChildID}, {"ParentID", c.ParentID}}).FirstOrDefault()
 					};
 
 				query = query
-					.Distinct()
-					.OrderBy(_ => _.Parent.ParentID);
+				 	.Distinct()
+				 	.OrderBy(_ => _.Parent.ParentID);
 
 
-				var expectedQuery = 
+				var expectedQuery =
 					from p in Parent
 					from c1 in Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
 					let children = Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
@@ -1363,20 +1532,34 @@ namespace Tests.Linq
 						Child = c1,
 						Any = children.Any(),
 						Child1 = children.Where(c => c.ParentID >= p.ParentID).FirstOrDefault(),
-						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault()
+						Child2 = children.Where(c => c.ParentID >= 2).Select(c => new { c.ChildID, c.ParentID }).FirstOrDefault(),
+						ChildArray = children.Where(c => c.ParentID >= p.ParentID).Select(c => new object[] {c.ChildID, c.ParentID}).FirstOrDefault(),
+						ChildDictionary1 = children.Where(c => c.ParentID >= p.ParentID).Select(c => new Dictionary<int, int?>{{c.ChildID, c.ParentID}}).FirstOrDefault(),
+						ChildDictionary2 = children.Where(c => c.ParentID >= p.ParentID).Select(c => new Dictionary<string, int?>{{"ChildID", c.ChildID}, {"ParentID", c.ParentID}}).FirstOrDefault()
 					};
 
 				var actual = query.ToArray();
 
-				var expected = expectedQuery
-					.Distinct()
-					.OrderBy(_ => _.Parent.ParentID)
-					.ToArray();
+				 var expected = expectedQuery
+				 	.Distinct()
+				 	.OrderBy(_ => _.Parent.ParentID)
+				 	.ToArray();
 
-				AreEqual(expected, actual);
+				AreEqualWithComparer(expected, actual, m => !typeof(Dictionary<,>).IsSameOrParentOf(m.MemberInfo.GetMemberType()));
+
+				for (int i = 0; i < actual.Length; i++)
+				{
+					var item = actual[i];
+					if (item.Child1 != null)
+					{
+						Assert.That(item.ChildDictionary1[item.Child1.ChildID], Is.EqualTo(item.Child1.ParentID));
+						Assert.That(item.ChildDictionary2["ChildID"],           Is.EqualTo(item.Child1.ChildID));
+						Assert.That(item.ChildDictionary2["ParentID"],          Is.EqualTo(item.Child1.ParentID));
+					}
+				}
 			}
 		}
-		
+
 		[Test]
 		public void ToStringTest([DataSources] string context)
 		{
@@ -1392,10 +1575,221 @@ namespace Tests.Linq
 				id = 2;
 
 				var sql2 = query.ToString();
-				
+
 				Assert.That(sql1, Is.Not.EqualTo(sql2));
 			}
 		}
 
+		[Table]
+		sealed class SelectExpressionTable
+		{
+			[PrimaryKey] public int ID { get; set; }
+
+			public static readonly SelectExpressionTable[] Data = new[]
+			{
+				new SelectExpressionTable() { ID = 1 }
+			};
+		}
+
+		[Sql.Expression("{0}", ServerSideOnly = true)]
+		public static T Wrap1<T>(T value) => throw new InvalidOperationException();
+
+		[Sql.Expression("{0}", ServerSideOnly = true)]
+		public static T Wrap2<T>(T value) => value;
+
+		[Sql.Expression("{0}", ServerSideOnly = false)]
+		public static T Wrap3<T>(T value) => throw new InvalidOperationException();
+
+		[Sql.Expression("{0}", ServerSideOnly = false)]
+		public static T Wrap4<T>(T value) => value;
+
+		[Test]
+		public void SelectExpression1([DataSources(ProviderName.DB2, TestProvName.AllFirebird)] string context)
+		{
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
+			{
+				var res = table.Take(1).Select(_ => Wrap1(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap1(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
+
+				Assert.True(res);
+			}
+		}
+
+		[Test]
+		public void SelectExpression2([DataSources(ProviderName.DB2, TestProvName.AllFirebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
+			{
+				var res = table.Take(1).Select(_ => Wrap2(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap2(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
+
+				Assert.True(res);
+			}
+		}
+
+		[Test]
+		public void SelectExpression3([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
+			{
+				var res = table.Take(1).Select(_ => new Guid("b3d9b51c89f9442a893bcd8a6f667d37") != new Guid("61efdcd4659d41e8910c506a9c2f31c5")).SingleOrDefault();
+
+				Assert.True(res);
+			}
+		}
+
+		[Test]
+		public void SelectExpression4([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
+			{
+				Assert.Throws<InvalidOperationException>(() => table.Take(1).Select(_ => Wrap3(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap3(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault());
+			}
+		}
+
+		[Test]
+		public void SelectExpression5([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
+			{
+				var res = table.Take(1).Select(_ => Wrap4(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap4(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
+
+				Assert.True(res);
+			}
+		}
+
+
+		[Table("test_mapping_column_2_prop")]
+		public partial class TestMappingColumn1PropInfo
+		{
+			[Column("id"),          PrimaryKey] public long Id         { get; set; } // bigint
+			[Column("test_number"), NotNull   ] public long TestNumber { get; set; } // bigint
+		}
+
+		[Table("test_mapping_column_2_prop")]
+		public partial class TestMappingColumn2PropInfo
+		{
+			[Column("test_number"), NotNull   ] public long TestNumber { get; set; } // bigint
+
+			[Column("test_number"), NotNull] public long TestNumber2 { get; set; } // bigint
+			[Column("test_number"), NotNull] public long TestNumber3 { get; set; } // bigint
+			[Column("id"),          PrimaryKey] public long Id         { get; set; } // bigint
+		}
+
+		[Test]
+		public void MaterializeTwoMapped([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var data = new[] { new TestMappingColumn1PropInfo  { Id = 1, TestNumber = 3 } };
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var value = db.GetTable<TestMappingColumn2PropInfo>().First();
+				Assert.That(value.TestNumber, Is.EqualTo(value.TestNumber2));
+				Assert.That(value.TestNumber, Is.EqualTo(value.TestNumber3));
+			}
+		}
+
+		[Table]
+		sealed class Table860_1
+		{
+			[Column] public int Id  { get; set; }
+			[Column] public int bId { get; set; }
+
+			[Association(ThisKey = nameof(bId), OtherKey = nameof(Table860_2.Id))]
+			public IList<Table860_2> Table2 { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class Table860_2
+		{
+			[Column] public int Id  { get; set; }
+			[Column] public int cId { get; set; }
+
+			[Association(ThisKey = nameof(cId), OtherKey = nameof(Table860_3.Id))]
+			public Table860_3? Table3 { get; set; }
+		}
+
+		[Table]
+		sealed class Table860_3
+		{
+			[Column] public int     Id   { get; set; }
+			[Column] public string? Prop { get; set; }
+		}
+
+		[Test]
+		public void Issue860Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Table860_1>())
+			using (db.CreateLocalTable<Table860_2>())
+			using (db.CreateLocalTable<Table860_3>())
+			{
+				var q = db.GetTable<Table860_1>()
+					.Where(it => (
+						(it.Table2 == null)
+							? null
+							: ((bool?)it.Table2.Any(d =>
+								 (
+									 ((d == null ? null : d.Table3) == null)
+										 ? null
+										 : d!.Table3!.Prop
+								 ) == "aaa")
+							)
+					) == true
+				);
+
+				q.ToArray();
+			}
+		}
+
+		#region SequentialAccess (#2116)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]
+		public void SequentialAccessTest([DataSources] string context)
+		{
+			// providers that support SequentialAccess:
+			// Access (OleDb)
+			// MySql.Data
+			// npgsql
+			// System.Data.SqlClient
+			// Microsoft.Data.SqlClient
+			// SqlCe
+			using (new OptimizeForSequentialAccess(true))
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
+			{
+				var q = db.Person
+					.Select(p => new
+					{
+						FirstName  = p.FirstName,
+						ID         = p.ID,
+						IDNullable = Sql.ToNullable(p.ID),
+						LastName   = p.LastName,
+						FullName   = $"{p.FirstName} {p.LastName}"
+					});
+
+				foreach (var p in q.ToArray())
+					Assert.AreEqual($"{p.FirstName} {p.LastName}", p.FullName);
+			}
+		}
+
+		[Test]
+		public void SequentialAccessTest_Complex([DataSources] string context)
+		{
+			// fields read out-of-order, multiple times and with different types
+			using (new OptimizeForSequentialAccess(true))
+			// suppressSequentialAccess: true to avoid interceptor added twice
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
+			{
+				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
+				Assert.AreEqual(typeof(InheritanceParent1)   , InheritanceParent[1].GetType());
+				Assert.AreEqual(typeof(InheritanceParent2)   , InheritanceParent[2].GetType());
+
+				AreEqual(InheritanceParent, db.InheritanceParent);
+				AreEqual(InheritanceChild, db.InheritanceChild);
+			}
+		}
+		#endregion
 	}
 }

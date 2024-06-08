@@ -1,10 +1,15 @@
-using LinqToDB.Data;
+﻿using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.SqlProvider;
 using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+
+#if NET45
+// net45 is goner, so it is easier to suppress than fix
+#pragma warning disable MA0076 // Do not use implicit culture-sensitive ToString in interpolated strings
+#endif
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -14,7 +19,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public static class SQLiteExtensions
 	{
-		public static ISQLiteExtensions SQLite(this Sql.ISqlExtension ext) => null;
+		public static ISQLiteExtensions? SQLite(this Sql.ISqlExtension? ext) => null;
 
 		#region FTS
 		/// <summary>
@@ -27,18 +32,18 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		/// <remarks>FTS Support: FTS3/4, FTS5.</remarks>
 		[ExpressionMethod(nameof(MatchImpl1))]
-		public static bool Match(this ISQLiteExtensions ext, object entityOrColumn, string match)
+		public static bool Match(this ISQLiteExtensions? ext, object? entityOrColumn, string match)
 		{
 			throw new LinqException($"'{nameof(Match)}' is server-side method.");
 		}
 
-		static Expression<Func<ISQLiteExtensions, object, string, bool>> MatchImpl1()
+		static Expression<Func<ISQLiteExtensions?, object?, string, bool>> MatchImpl1()
 		{
-			return (ext, entityOrColumn, match) => Sql.Expr<bool>($"{Sql.TableOrColumnAsField<string>(entityOrColumn)} MATCH {match}");
+			return (ext, entityOrColumn, match) => Sql.Expr<bool>($"{Sql.TableOrColumnAsField<string?>(entityOrColumn)} MATCH {match}");
 		}
 
 		/// <summary>
-		/// Performs full-text search query against against speficied table and returns search results.
+		/// Performs full-text search query against specified table and returns search results.
 		/// Example: "table('search query')".
 		/// </summary>
 		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
@@ -48,7 +53,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Returns table, filtered using specified search condition, applied to whole table.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(MatchTableImpl1))]
-		public static IQueryable<TEntity> MatchTable<TEntity>(this ISQLiteExtensions ext, ITable<TEntity> table, string match)
+		public static IQueryable<TEntity> MatchTable<TEntity>(this ISQLiteExtensions? ext, ITable<TEntity> table, string match)
 			where TEntity : class
 		{
 			return table.DataContext.FromSql<TEntity>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}({match})");
@@ -69,7 +74,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="entity">Table record instance.</param>
 		/// <returns>Returns rowid column value.</returns>
 		[ExpressionMethod(nameof(RowIdImpl))]
-		public static int RowId<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+		public static int RowId<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(RowId)}' is server-side method.");
@@ -91,7 +96,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Returns rank column value.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(RankImpl))]
-		public static double? Rank<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+		public static double? Rank<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(Rank)}' is server-side method.");
@@ -114,7 +119,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#offsets">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3OffsetsImpl))]
-		public static string FTS3Offsets<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+		public static string FTS3Offsets<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Offsets)}' is server-side method.");
@@ -136,7 +141,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#matchinfo">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3MatchInfoImpl1))]
-		public static byte[] FTS3MatchInfo<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+		public static byte[] FTS3MatchInfo<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3MatchInfo)}' is server-side method.");
@@ -159,7 +164,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#matchinfo">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3MatchInfoImpl2))]
-		public static byte[] FTS3MatchInfo<TEntity>(this ISQLiteExtensions ext, TEntity entity, string format)
+		public static byte[] FTS3MatchInfo<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string format)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3MatchInfo)}' is server-side method.");
@@ -181,7 +186,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl1))]
-		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
@@ -204,7 +209,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl2))]
-		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string startMatch)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
@@ -228,7 +233,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl3))]
-		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string startMatch, string endMatch)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
@@ -253,7 +258,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl4))]
-		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch, string ellipses)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string startMatch, string endMatch, string ellipses)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
@@ -279,7 +284,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl5))]
-		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
@@ -306,7 +311,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://www.sqlite.org/fts3.html#snippet">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS3/4.</remarks>
 		[ExpressionMethod(nameof(Fts3SnippetImpl6))]
-		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex, int tokensNumber)
+		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex, int tokensNumber)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
@@ -330,7 +335,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://sqlite.org/fts5.html#the_bm25_function">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5bm25Impl1))]
-		public static double FTS5bm25<TEntity>(this ISQLiteExtensions ext, TEntity entity)
+		public static double FTS5bm25<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS5bm25)}' is server-side method.");
@@ -353,7 +358,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://sqlite.org/fts5.html#the_bm25_function">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5bm25Impl2))]
-		public static double FTS5bm25<TEntity>(this ISQLiteExtensions ext, TEntity entity, params double[] weights)
+		public static double FTS5bm25<TEntity>(this ISQLiteExtensions? ext, TEntity entity, params double[] weights)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS5bm25)}' is server-side method.");
@@ -379,7 +384,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://sqlite.org/fts5.html#the_highlight_function">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5HighlightImpl))]
-		public static string FTS5Highlight<TEntity>(this ISQLiteExtensions ext, TEntity entity, int columnIndex, string startMatch, string endMatch)
+		public static string FTS5Highlight<TEntity>(this ISQLiteExtensions? ext, TEntity entity, int columnIndex, string startMatch, string endMatch)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS5Highlight)}' is server-side method.");
@@ -406,7 +411,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <returns>Check <a href="https://sqlite.org/fts5.html#the_snippet_function">documentation of SQLite site</a>.</returns>
 		/// <remarks>FTS Support: FTS5.</remarks>
 		[ExpressionMethod(nameof(Fts5SnippetImpl))]
-		public static string FTS5Snippet<TEntity>(this ISQLiteExtensions ext, TEntity entity, int columnIndex, string startMatch, string endMatch, string ellipses, int tokensNumber)
+		public static string FTS5Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, int columnIndex, string startMatch, string endMatch, string ellipses, int tokensNumber)
 			where TEntity : class
 		{
 			throw new LinqException($"'{nameof(FTS5Snippet)}' is server-side method.");
@@ -530,19 +535,19 @@ namespace LinqToDB.DataProvider.SQLite
 		public static void FTS5Delete<TEntity>(this DataConnection dc, ITable<TEntity> table, int rowid, TEntity record)
 			where TEntity : class
 		{
-			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(TEntity));
+			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(TEntity), dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			var columns = new string[ed.Columns.Count];
 			var parameterTokens = new string[ed.Columns.Count];
 			var parameters = new DataParameter[ed.Columns.Count];
 
-			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema);
+			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
 
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{
-				columns[i] = (string)sqlBuilder.Convert(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
-				parameterTokens[i] = $"@p{i}";
-				parameters[i] = DataParameter.VarChar($"p{i}", (string)ed.Columns[i].GetValue(dc.MappingSchema, record));
+				columns[i]         = sqlBuilder.ConvertInline(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
+				parameterTokens[i] = FormattableString.Invariant($"@p{i}");
+				parameters[i]      = DataParameter.VarChar(FormattableString.Invariant($"@p{i}"), (string)ed.Columns[i].GetProviderValue(record)!);
 			}
 
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rowid, {string.Join(", ", columns)}) VALUES('delete', {rowid.ToString(NumberFormatInfo.InvariantInfo)}, {string.Join(", ", parameterTokens)})", parameters);
@@ -627,7 +632,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static void FTS5Rank<TEntity>(this DataConnection dc, ITable<TEntity> table, string function)
 			where TEntity : class
 		{
-			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("rank", function));
+			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("@rank", function));
 		}
 
 		/// <summary>

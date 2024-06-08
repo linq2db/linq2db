@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	public class SqlDeleteStatement : SqlStatementWithQueryBase
 	{
-		public SqlDeleteStatement(SelectQuery selectQuery) : base(selectQuery)
+		public SqlDeleteStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}
 
@@ -18,63 +17,44 @@ namespace LinqToDB.SqlQuery
 		public override QueryType        QueryType   => QueryType.Delete;
 		public override QueryElementType ElementType => QueryElementType.DeleteStatement;
 
-		public override bool               IsParameterDependent
+		public override bool             IsParameterDependent
 		{
 			get => SelectQuery.IsParameterDependent;
 			set => SelectQuery.IsParameterDependent = value;
 		}
 
-		public SqlTable       Table { get; set; }
-		public ISqlExpression Top   { get; set; }
+		public SqlTable?       Table   { get; set; }
+		public ISqlExpression? Top     { get; set; }
 
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+		public SqlOutputClause? Output { get; set; }
+
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			if (!doClone(this))
-				return this;
+			With?.Walk(options, context, func);
 
-			var clone = new SqlDeleteStatement();
+			Table       = ((ISqlExpressionWalkable?)Table)?.Walk(options, context, func) as SqlTable;
+			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
 
-			if (SelectQuery != null)
-				clone.SelectQuery = (SelectQuery)SelectQuery.Clone(objectTree, doClone);
-
-			if (Table != null)
-				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
-
-			if (With != null)
-				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
-
-			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
-		{
-			With?.Walk(options, func);
-			Table = ((ISqlExpressionWalkable)Table)?.Walk(options, func) as SqlTable;
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
-
-			return null;
+			return base.Walk(options, context, func);
 		}
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
 			sb.Append("DELETE FROM ");
 
-			((IQueryElement)Table)?.ToString(sb, dic);
+			((IQueryElement?)Table)?.ToString(sb, dic);
 
 			sb.AppendLine();
 
 			return sb;
 		}
 
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
 			if (SelectQuery != null)
 			{
-				var newQuery = func(SelectQuery);
+				var newQuery = func(context, SelectQuery);
+
 				if (!ReferenceEquals(newQuery, SelectQuery))
 					SelectQuery = newQuery;
 			}

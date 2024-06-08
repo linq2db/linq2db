@@ -5,9 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-
-using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -16,7 +13,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	public class SqlServerRetryPolicy : RetryPolicyBase
 	{
-		readonly ICollection<int> _additionalErrorNumbers;
+		readonly ICollection<int>? _additionalErrorNumbers;
 
 		/// <summary>
 		///   Creates a new instance of <see cref="SqlServerRetryPolicy" />.
@@ -33,7 +30,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// </summary>
 		/// <param name="maxRetryCount"> The maximum number of retry attempts. </param>
 		public SqlServerRetryPolicy(int maxRetryCount)
-			: this(maxRetryCount, Configuration.RetryPolicy.DefaultMaxDelay, null)
+			: this(maxRetryCount, Configuration.RetryPolicy.DefaultMaxDelay, Configuration.RetryPolicy.DefaultRandomFactor, Configuration.RetryPolicy.DefaultExponentialBase, Configuration.RetryPolicy.DefaultCoefficient, null)
 		{}
 
 		/// <summary>
@@ -41,12 +38,18 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// </summary>
 		/// <param name="maxRetryCount">The maximum number of retry attempts.</param>
 		/// <param name="maxRetryDelay">The maximum delay in milliseconds between retries.</param>
+		/// <param name="randomFactor">The maximum random factor. </param>
+		/// <param name="exponentialBase">The base for the exponential function used to compute the delay between retries. </param>
+		/// <param name="coefficient">The coefficient for the exponential function used to compute the delay between retries. </param>
 		/// <param name="errorNumbersToAdd">Additional SQL error numbers that should be considered transient.</param>
 		public SqlServerRetryPolicy(
-			int maxRetryCount,
-			TimeSpan maxRetryDelay,
-			[CanBeNull] ICollection<int> errorNumbersToAdd)
-			: base(maxRetryCount, maxRetryDelay)
+			int               maxRetryCount,
+			TimeSpan          maxRetryDelay,
+			double            randomFactor,
+			double            exponentialBase,
+			TimeSpan          coefficient,
+			ICollection<int>? errorNumbersToAdd)
+			: base(maxRetryCount, maxRetryDelay, randomFactor, exponentialBase, coefficient)
 		{
 			_additionalErrorNumbers = errorNumbersToAdd;
 		}
@@ -55,11 +58,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (_additionalErrorNumbers != null)
 			{
-				var sqlException = exception as SqlException;
-
-				if (sqlException != null)
-					foreach (SqlError err in sqlException.Errors)
-						if (_additionalErrorNumbers.Contains(err.Number))
+				if (SqlServerTransientExceptionDetector.IsHandled(exception, out var errorNumbers))
+					foreach (var errNumber in errorNumbers)
+						if (_additionalErrorNumbers.Contains(errNumber))
 							return true;
 			}
 
@@ -81,11 +82,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static bool IsMemoryOptimizedError(Exception exception)
 		{
-			var sqlException = exception as SqlException;
-
-			if (sqlException != null)
-				foreach (SqlError err in sqlException.Errors)
-					switch (err.Number)
+			if (SqlServerTransientExceptionDetector.IsHandled(exception, out var errorNumbers))
+				foreach (var errNumber in errorNumbers)
+					switch (errNumber)
 					{
 						case 41301:
 						case 41302:

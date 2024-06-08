@@ -20,20 +20,22 @@ namespace Tests.UserTests
 			{
 			}
 
-			[Column("PersonID"), Identity, PrimaryKey]
+			[Column("PersonID", Configuration = ProviderName.ClickHouse)]
+			[Column("PersonID", IsIdentity = true)]
+			[PrimaryKey]
 			public int ID { get; set; }
 
 			[Column]
 			public Gender Gender { get; set; }
 
 			[Column]
-			public String FirstName { get; private set; }
+			public string FirstName { get; private set; } = null!;
 
 			[Column]
-			public String MiddleName { get; set; }
+			public string MiddleName { get; set; } = null!;
 
 			[Column]
-			public String LastName { get; set; }
+			public string? LastName { get; set; }
 
 			public void SetFirstName(string firstName)
 			{
@@ -49,16 +51,25 @@ namespace Tests.UserTests
 		[Test]
 		public void Issue307Test([DataSources] string context)
 		{
+			ResetPersonIdentity(context);
+
 			using (var db = GetDataContext(context))
-			using (new DeletePerson(db))
+			using (new RestoreBaseTables(db))
 			{
 				var obj = Entity307.Create();
 				obj.SetFirstName("FirstName307");
 				obj.LastName = "LastName307";
 
-				var id1 = Convert.ToInt32(db.InsertWithIdentity(obj));
+				int id;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					obj.ID = id = 100;
+					db.Insert(obj);
+				}
+				else
+					id = db.InsertWithInt32Identity(obj);
 
-				var obj2 = db.GetTable<Entity307>().First(_ => _.ID == id1);
+				var obj2 = db.GetTable<Entity307>().First(_ => _.ID == id);
 
 				Assert.IsNull(obj2.MiddleName);
 				Assert.AreEqual(obj.FirstName, obj2.FirstName);

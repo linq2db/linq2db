@@ -16,10 +16,10 @@ namespace Tests.UserTests
 		[Test]
 		public void TestCount([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var actual   = db.GetTable<Person>()
-					.GroupBy(_ => Sql.Concat("test", _.Patient.Diagnosis))
+					.GroupBy(_ => Sql.Concat("test", _.Patient!.Diagnosis))
 					.Count();
 
 				var expected = Person
@@ -27,35 +27,35 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
 		[Test]
 		public void TestLongCount([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var actual    = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.LongCount();
 
 				var expected = db.GetTable<Person>()
-					.GroupBy(_ => Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => Patient == null ? null : "test" + _.Patient!.Diagnosis)
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
 		[Test]
-		public void TestHavingCount([DataSources(false, ProviderName.Access, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
+		public void TestHavingCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Count();
 
@@ -65,17 +65,17 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
 		[Test]
-		public void TestHavingLongCount([DataSources(false, ProviderName.Access, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
+		public void TestHavingLongCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql57Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.LongCount();
 
@@ -85,17 +85,17 @@ namespace Tests.UserTests
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
 		[Test]
 		public void TestCountWithSelect([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Select(_ => _.Key)
 					.Count();
 
@@ -105,17 +105,17 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
 		[Test]
 		public void TestLongCountWithSelect([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Select(_ => _.Key)
 					.LongCount();
 
@@ -125,17 +125,17 @@ namespace Tests.UserTests
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
 		[Test]
-		public void TestHavingCountWithSelect([DataSources(false, ProviderName.Access, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.MySql57, ProviderName.MySqlConnector)] string context)
+		public void TestHavingCountWithSelect([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql57Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.Count();
@@ -147,20 +147,20 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
 		[Test]
 		public void TestHavingLongCountWithSelect([DataSources(false,
-				ProviderName.Access, TestProvName.AllOracle, TestProvName.AllSybase,
-				TestProvName.MySql57, ProviderName.MySqlConnector)]
+				TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase,
+				TestProvName.AllMySql57Plus)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.LongCount();
@@ -172,7 +172,7 @@ namespace Tests.UserTests
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
+				Assert.True(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 	}

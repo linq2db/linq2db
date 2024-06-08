@@ -1,194 +1,94 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Reflection;
-using System.Linq;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Configuration;
 	using Data;
-	using Extensions;
-
-	public enum AlternativeBulkCopy
-	{
-		InsertAll,
-		InsertInto,
-		InsertDual
-	}
 
 	public static partial class OracleTools
 	{
-		public static string AssemblyName;
+		internal static OracleProviderDetector ProviderDetector = new();
 
-		static readonly OracleDataProvider _oracleNativeDataProvider  = new OracleDataProvider(ProviderName.OracleNative);
-		static readonly OracleDataProvider _oracleManagedDataProvider = new OracleDataProvider(ProviderName.OracleManaged);
-
-		static OracleTools()
+		public static OracleVersion DefaultVersion
 		{
-			AssemblyName = DetectedProviderName == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess";
-
-			DataConnection.AddDataProvider(ProviderName.Oracle, DetectedProvider);
-			DataConnection.AddDataProvider(_oracleNativeDataProvider);
-			DataConnection.AddDataProvider(_oracleManagedDataProvider);
-
-			DataConnection.AddProviderDetector(ProviderDetector);
-
-			foreach (var method in typeof(OracleTools).GetMethodsEx().Where(_ => _.Name == "OracleXmlTable" && _.IsGenericMethod))
-			{
-				var parameters = method.GetParameters();
-
-				if (parameters[1].ParameterType == typeof(string))
-					OracleXmlTableString = method;
-				else if (parameters[1].ParameterType == typeof(Func<string>))
-					OracleXmlTableFuncString = method;
-				else if (parameters[1].ParameterType.IsGenericTypeEx() &&
-				         parameters[1].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-					OracleXmlTableIEnumerableT = method;
-				else
-					throw new InvalidOperationException("Overload method for OracleXmlTable is unknown");
-			}
+			get => ProviderDetector.DefaultVersion;
+			set => ProviderDetector.DefaultVersion = value;
 		}
 
-		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
+		public static bool AutoDetectProvider
 		{
-			//if (css.IsGlobal)
-			//	return null;
-
-			switch (css.ProviderName)
-			{
-				case ""                                :
-				case null                              :
-
-					if (css.Name.Contains("Oracle"))
-						goto case "Oracle";
-					break;
-
-				case "Oracle.Native"                   :
-				case "Oracle.DataAccess.Client"        : return _oracleNativeDataProvider;
-				case "Oracle.Managed"                  :
-				case "Oracle.ManagedDataAccess.Client" : return _oracleManagedDataProvider;
-				case "Oracle"                          :
-
-					if (css.Name.Contains("Managed"))
-						return _oracleManagedDataProvider;
-
-					if (css.Name.Contains("Native"))
-						return _oracleNativeDataProvider;
-
-					return DetectedProvider;
-			}
-
-			return null;
+			get => ProviderDetector.AutoDetectProvider;
+			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		static string _detectedProviderName;
-
-		public static string  DetectedProviderName =>
-			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
-
-		static OracleDataProvider DetectedProvider =>
-			DetectedProviderName == ProviderName.OracleNative ? _oracleNativeDataProvider : _oracleManagedDataProvider;
-
-		static string DetectProviderName()
+		public static IDataProvider GetDataProvider(
+			OracleVersion  version          = OracleVersion.AutoDetect,
+			OracleProvider provider         = OracleProvider.Managed,
+			string?        connectionString = null)
 		{
-			try
-			{
-				var path = typeof(OracleTools).AssemblyEx().GetPath();
-
-				if (!File.Exists(Path.Combine(path, "Oracle.DataAccess.dll")))
-					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))
-						return ProviderName.OracleManaged;
-			}
-			catch
-			{
-			}
-
-			return ProviderName.OracleNative;
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString : connectionString), provider, version);
 		}
-
-		public static IDataProvider GetDataProvider()
-		{
-			return DetectedProvider;
-		}
-
-		public static void ResolveOracle(string path)       => new AssemblyResolver(path, AssemblyName);
-		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, AssemblyName);
-
-		public static bool IsXmlTypeSupported => DetectedProvider.IsXmlTypeSupported;
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString)
+		public static DataConnection CreateDataConnection(
+			string connectionString,
+			OracleVersion version   = OracleVersion.AutoDetect,
+			OracleProvider provider = OracleProvider.Managed)
 		{
-			return new DataConnection(DetectedProvider, connectionString);
+			return new DataConnection(GetDataProvider(version, provider, connectionString), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(
+			DbConnection connection,
+			OracleVersion version   = OracleVersion.AutoDetect,
+			OracleProvider provider = OracleProvider.Managed)
 		{
-			return new DataConnection(DetectedProvider, connection);
+			return new DataConnection(GetDataProvider(version, provider), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(
+			DbTransaction transaction,
+			OracleVersion version   = OracleVersion.AutoDetect,
+			OracleProvider provider = OracleProvider.Managed)
 		{
-			return new DataConnection(DetectedProvider, transaction);
+			return new DataConnection(GetDataProvider(version, provider), transaction);
 		}
 
 		#endregion
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			this DataConnection        dataConnection,
-			IEnumerable<T>             source,
-			int                        maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
-			where T : class
+		[Obsolete("Use OracleOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType  DefaultBulkCopyType
 		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
-		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int?                       maxBatchSize       = null,
-			int?                       bulkCopyTimeout    = null,
-			int                        notifyAfter        = 0,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					BulkCopyTimeout    = bulkCopyTimeout,
-					NotifyAfter        = notifyAfter,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
+			get => OracleOptions.Default.BulkCopyType;
+			set => OracleOptions.Default = OracleOptions.Default with { BulkCopyType = value };
 		}
 
 		#endregion
 
-		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-
-		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
+		/// <summary>
+		/// Specifies type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
+		/// Default value: <see cref="AlternativeBulkCopy.InsertAll"/>.
+		/// </summary>
+		[Obsolete("Use OracleOptions.Default.AlternativeBulkCopy instead.")]
+		public static AlternativeBulkCopy UseAlternativeBulkCopy
+		{
+			get => OracleOptions.Default.AlternativeBulkCopy;
+			set => OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = value };
+		}
 
 		/// <summary>
 		/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.
-		/// Default value: <c>true</c>.
-		/// This flag added for backward compatibility and will be removed later, so it is recommended to
-		/// set it to <c>false</c> and and fix mappings to use uppercase letters for non-quoted identifiers.
+		/// Default value: <c>false</c>.
+		/// This flag is added for backward compatibility and not recommended for use with new applications.
 		/// </summary>
-		public static bool DontEscapeLowercaseIdentifiers { get; set; } = true;
+		[Obsolete("Use OracleOptions.Default.DontEscapeLowercaseIdentifiers instead.")]
+		public static bool DontEscapeLowercaseIdentifiers
+		{
+			get => OracleOptions.Default.DontEscapeLowercaseIdentifiers;
+			set => OracleOptions.Default = OracleOptions.Default with { DontEscapeLowercaseIdentifiers = value };
+		}
 	}
 }

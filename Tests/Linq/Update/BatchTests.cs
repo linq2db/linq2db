@@ -1,6 +1,4 @@
-﻿using System;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -16,7 +14,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Transaction([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var list = new[]
 				{
@@ -30,7 +28,7 @@ namespace Tests.xUpdate
 					db.Parent.Delete(p => p.ParentID == parent.ParentID);
 
 				db.BeginTransaction();
-				db.BulkCopy(list);
+				db.BulkCopy(GetDefaultBulkCopyOptions(context), list);
 				db.CommitTransaction();
 
 				foreach (var parent in list)
@@ -41,7 +39,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void NoTransaction([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var list = new[]
 				{
@@ -54,7 +52,7 @@ namespace Tests.xUpdate
 				foreach (var parent in list)
 					db.Parent.Delete(p => p.ParentID == parent.ParentID);
 
-				db.BulkCopy(list);
+				db.BulkCopy(GetDefaultBulkCopyOptions(context), list);
 
 				foreach (var parent in list)
 					db.Parent.Delete(p => p.ParentID == parent.ParentID);

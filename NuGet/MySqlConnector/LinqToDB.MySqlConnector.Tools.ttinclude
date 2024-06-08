@@ -1,5 +1,0 @@
-<#@ assembly name="$(LinqToDBT4MySqlConnectorToolsDirectory)linq2db.dll"             #>
-<#@ assembly name="$(LinqToDBT4MySqlConnectorToolsDirectory)MySql.Data.dll"          #>
-<#@ assembly name="$(LinqToDBT4MySqlConnectorToolsDirectory)BouncyCastle.Crypto.dll" #>
-<#@ include file="LinqToDB.Tools.ttinclude"                                          #>
-<#@ include file="LinqToDB.MySql.ttinclude"                                          #>

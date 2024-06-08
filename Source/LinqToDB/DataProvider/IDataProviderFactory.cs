@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
-using LinqToDB.Configuration;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider
 {
+	using Configuration;
 
 	public interface IDataProviderFactory
 	{

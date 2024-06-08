@@ -1,0 +1,15 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="..\Shared.ttinclude"                                         once="true"   #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlCe.ttinclude" once="true"   #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\Humanizer.ttinclude"      once="true"   #>
+<#
+	NamespaceName = "SqlCeDataContext";
+
+	GenerateAssociationExtensions   = true;
+	GenerateDataOptionsConstructors = false;
+
+	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	LoadSqlCeMetadata(solutionsPath + @"\Data\", "TestData.sdf");
+	GenerateModel();
+#>

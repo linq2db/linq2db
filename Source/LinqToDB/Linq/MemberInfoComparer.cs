@@ -1,15 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 
 namespace LinqToDB.Linq
 {
 	using Extensions;
 
-	class MemberInfoComparer : IEqualityComparer<MemberInfo>
+	sealed class MemberInfoComparer : IEqualityComparer<MemberInfo>
 	{
-		public bool Equals(MemberInfo x, MemberInfo y)
+		public static MemberInfoComparer Instance = new ();
+
+		public bool Equals(MemberInfo? x, MemberInfo? y)
 		{
+			if (x == null && y == null) return true;
+			if (x == null || y == null) return false;
 			return x.EqualsTo(y);
 		}
 

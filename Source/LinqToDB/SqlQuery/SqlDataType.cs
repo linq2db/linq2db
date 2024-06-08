@@ -2,135 +2,103 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	using Common;
-	using LinqToDB.Extensions;
+	using Common.Internal;
+	using Extensions;
+	using Mapping;
 
-	public class SqlDataType : ISqlExpression
+	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>
 	{
 		#region Init
 
-		public SqlDataType(DataType dataType)
-		{
-			var defaultType = GetDataType(dataType);
-
-			DataType  = dataType;
-			Type      = defaultType.Type;
-			Length    = defaultType.Length;
-			Precision = defaultType.Precision;
-			Scale     = defaultType.Scale;
-		}
-
 		public SqlDataType(DbDataType dataType)
 		{
-			DataType  = dataType.DataType;
-			Type      = dataType.SystemType;
-			DbType    = dataType.DbType;
+			Type = dataType;
+		}
+
+		public SqlDataType(DataType dataType)
+		{
+			Type = GetDataType(dataType).Type.WithDataType(dataType);
 		}
 
 		public SqlDataType(DataType dataType, int? length)
 		{
-			DataType = dataType;
-			Type     = GetDataType(dataType).Type;
-			Length   = length;
+			Type = GetDataType(dataType).Type.WithDataType(dataType).WithLength(length);
 		}
 
-		public SqlDataType(DataType dataType, int? precision, int? scale)
-		{
-			DataType  = dataType;
-			Type      = GetDataType(dataType).Type;
-			Precision = precision;
-			Scale     = scale;
-		}
-
-		public SqlDataType([JetBrains.Annotations.NotNull]Type type)
+		public SqlDataType(DataType dataType, Type type)
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			var defaultType = GetDataType(type);
-
-			DataType  = defaultType.DataType;
-			Type      = type;
-			Length    = defaultType.Length;
-			Precision = defaultType.Precision;
-			Scale     = defaultType.Scale;
+			Type = GetDataType(dataType).Type
+				.WithDataType(dataType)
+				.WithSystemType(type);
 		}
 
-		public SqlDataType([JetBrains.Annotations.NotNull] Type type, int length)
+		public SqlDataType(DataType dataType, Type type, string dbType)
 		{
-			if (type   == null) throw new ArgumentNullException      (nameof(type));
-			if (length <= 0)    throw new ArgumentOutOfRangeException(nameof(length));
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			DataType = GetDataType(type).DataType;
-			Type     = type;
-			Length   = length;
+			Type = GetDataType(dataType).Type
+				.WithDataType(dataType)
+				.WithSystemType(type)
+				.WithDbType(dbType);
 		}
 
-		public SqlDataType([JetBrains.Annotations.NotNull] Type type, int precision, int scale)
+		public SqlDataType(DataType dataType, Type type, int length)
 		{
-			if (type  == null)  throw new ArgumentNullException      (nameof(type));
-			if (precision <= 0) throw new ArgumentOutOfRangeException(nameof(precision));
-			if (scale     <  0) throw new ArgumentOutOfRangeException(nameof(scale));
+			if (type == null) throw new ArgumentNullException(nameof(type));
+			if (length <= 0)  throw new ArgumentOutOfRangeException(nameof(length));
 
-			DataType  = GetDataType(type).DataType;
-			Type      = type;
-			Precision = precision;
-			Scale     = scale;
+			Type = GetDataType(dataType).Type
+				.WithDataType(dataType)
+				.WithSystemType(type)
+				.WithLength(length);
 		}
 
-		public SqlDataType(DataType dataType, [JetBrains.Annotations.NotNull]Type type)
+		public SqlDataType(DataType dataType, Type type, int precision, int scale)
 		{
-			var defaultType = GetDataType(dataType);
+			if (type      == null) throw new ArgumentNullException(nameof(type));
+			if (precision <= 0   ) throw new ArgumentOutOfRangeException(nameof(precision));
+			if (scale     <  0   ) throw new ArgumentOutOfRangeException(nameof(scale));
 
-			DataType  = dataType;
-			Type      = type ?? throw new ArgumentNullException(nameof(type));
-			Length    = defaultType.Length;
-			Precision = defaultType.Precision;
-			Scale     = defaultType.Scale;
+			Type = GetDataType(dataType).Type
+				.WithDataType(dataType)
+				.WithSystemType(type)
+				.WithPrecision(precision)
+				.WithScale(scale);
 		}
 
-		public SqlDataType(DataType dataType, [JetBrains.Annotations.NotNull] Type type, int length)
+		internal SqlDataType(ColumnDescriptor column)
+			: this(column.GetDbDataType(true))
 		{
-			if (length <= 0)    throw new ArgumentOutOfRangeException(nameof(length));
-
-			DataType = dataType;
-			Type     = type ?? throw new ArgumentNullException(nameof(type));
-			Length   = length;
 		}
 
-		public SqlDataType(DataType dataType, [JetBrains.Annotations.NotNull] Type type, int precision, int scale)
+		internal SqlDataType(SqlField field)
+			: this(field.Type)
 		{
-			if (precision <= 0) throw new ArgumentOutOfRangeException(nameof(precision));
-			if (scale     <  0) throw new ArgumentOutOfRangeException(nameof(scale));
-
-			DataType  = dataType;
-			Type      = type ?? throw new ArgumentNullException(nameof(type));
-			Precision = precision;
-			Scale     = scale;
 		}
 
 		#endregion
 
 		#region Public Members
 
-		public DataType DataType  { get; }
-		public string   DbType    { get; }
-		public Type     Type      { get; }
-		public int?     Length    { get; }
-		public int?     Precision { get; }
-		public int?     Scale     { get; }
+		public DbDataType Type { get; internal set; }
 
-		public static readonly SqlDataType Undefined = new SqlDataType(DataType.Undefined, typeof(object), null, null, null);
+		public static readonly SqlDataType Undefined = new (DataType.Undefined, typeof(object), (int?)null, (int?)null, null, null);
 
 		public bool IsCharDataType
 		{
 			get
 			{
-				switch (DataType)
+				switch (Type.DataType)
 				{
 					case DataType.Char     :
 					case DataType.NChar    :
@@ -145,9 +113,9 @@ namespace LinqToDB.SqlQuery
 
 		#region Static Members
 
-		struct TypeInfo
+		readonly struct TypeInfo
 		{
-			public TypeInfo(DataType dbType, int maxLength, int maxPrecision, int maxScale, int maxDisplaySize)
+			public TypeInfo(DataType dbType, int? maxLength, int? maxPrecision, int? maxScale, int? maxDisplaySize)
 			{
 				DataType       = dbType;
 				MaxLength      = maxLength;
@@ -157,10 +125,10 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public readonly DataType DataType;
-			public readonly int      MaxLength;
-			public readonly int      MaxPrecision;
-			public readonly int      MaxScale;
-			public readonly int      MaxDisplaySize;
+			public readonly int?     MaxLength;
+			public readonly int?     MaxPrecision;
+			public readonly int?     MaxScale;
+			public readonly int?     MaxDisplaySize;
 		}
 
 		static TypeInfo[] SortTypeInfo(params TypeInfo[] info)
@@ -175,7 +143,7 @@ namespace LinqToDB.SqlQuery
 
 		static int Len(object obj)
 		{
-			return obj.ToString().Length;
+			return string.Format(CultureInfo.InvariantCulture, "{0}", obj).Length;
 		}
 
 		static readonly TypeInfo[] _typeInfo = SortTypeInfo
@@ -194,157 +162,92 @@ namespace LinqToDB.SqlQuery
 			new TypeInfo(DataType.Double,               8,                    15,                    15,              15 + 2 + 5),
 			new TypeInfo(DataType.Single,               4,                     7,                     7,               7 + 2 + 4),
 
-			new TypeInfo(DataType.DateTime,             8,                    -1,                    -1,                      23),
-			new TypeInfo(DataType.DateTime2,            8,                    -1,                    -1,                      27),
-			new TypeInfo(DataType.SmallDateTime,        4,                    -1,                    -1,                      19),
-			new TypeInfo(DataType.Date,                 3,                    -1,                    -1,                      10),
-			new TypeInfo(DataType.Time,                 5,                    -1,                    -1,                      16),
-			new TypeInfo(DataType.DateTimeOffset,      10,                    -1,                    -1,                      34),
+			new TypeInfo(DataType.DateTime,             8,                  null,                  null,                      23),
+			new TypeInfo(DataType.DateTime2,            8,                  null,                  null,                      27),
+			new TypeInfo(DataType.SmallDateTime,        4,                  null,                  null,                      19),
+			new TypeInfo(DataType.Date,                 3,                  null,                  null,                      10),
+			new TypeInfo(DataType.Time,                 5,                  null,                  null,                      16),
+			new TypeInfo(DataType.DateTimeOffset,      10,                  null,                  null,                      34),
 
-			new TypeInfo(DataType.Char,              8000,                    -1,                    -1,                    8000),
-			new TypeInfo(DataType.VarChar,           8000,                    -1,                    -1,                    8000),
-			new TypeInfo(DataType.Text,      int.MaxValue,                    -1,                    -1,            int.MaxValue),
-			new TypeInfo(DataType.NChar,             4000,                    -1,                    -1,                    4000),
-			new TypeInfo(DataType.NVarChar,          4000,                    -1,                    -1,                    4000),
-			new TypeInfo(DataType.NText,     int.MaxValue,                    -1,                    -1,        int.MaxValue / 2),
-			new TypeInfo(DataType.Json,      int.MaxValue,                    -1,                    -1,        int.MaxValue / 2),
-			new TypeInfo(DataType.BinaryJson,int.MaxValue,                    -1,                    -1,        int.MaxValue / 2),
+			new TypeInfo(DataType.Char,              8000,                  null,                  null,                    8000),
+			new TypeInfo(DataType.VarChar,           8000,                  null,                  null,                    8000),
+			new TypeInfo(DataType.Text,              null,                  null,                  null,            int.MaxValue),
+			new TypeInfo(DataType.NChar,             4000,                  null,                  null,                    4000),
+			new TypeInfo(DataType.NVarChar,          4000,                  null,                  null,                    4000),
+			new TypeInfo(DataType.NText,             null,                  null,                  null,        int.MaxValue / 2),
+			new TypeInfo(DataType.Json,              null,                  null,                  null,        int.MaxValue / 2),
+			new TypeInfo(DataType.BinaryJson,        null,                  null,                  null,        int.MaxValue / 2),
 
-			new TypeInfo(DataType.Binary,            8000,                    -1,                    -1,                      -1),
-			new TypeInfo(DataType.VarBinary,         8000,                    -1,                    -1,                      -1),
-			new TypeInfo(DataType.Image,     int.MaxValue,                    -1,                    -1,                      -1),
+			new TypeInfo(DataType.Binary,            8000,                  null,                  null,                    null),
+			new TypeInfo(DataType.VarBinary,         8000,                  null,                  null,                    null),
+			new TypeInfo(DataType.Image,     int.MaxValue,                  null,                  null,                    null),
 
-			new TypeInfo(DataType.Timestamp,            8,                    -1,                    -1,                      -1),
-			new TypeInfo(DataType.Guid,                16,                    -1,                    -1,                      36),
+			new TypeInfo(DataType.Timestamp,            8,                  null,                  null,                    null),
+			new TypeInfo(DataType.Guid,                16,                  null,                  null,                      36),
 
-			new TypeInfo(DataType.Variant,             -1,                    -1,                    -1,                      -1),
-			new TypeInfo(DataType.Xml,                 -1,                    -1,                    -1,                      -1),
-			new TypeInfo(DataType.Udt,                 -1,                    -1,                    -1,                      -1),
-			new TypeInfo(DataType.BitArray,            -1,                    -1,                    -1,                      -1)
+			new TypeInfo(DataType.Variant,           null,                  null,                  null,                    null),
+			new TypeInfo(DataType.Xml,               null,                  null,                  null,                    null),
+			new TypeInfo(DataType.Udt,               null,                  null,                  null,                    null),
+			new TypeInfo(DataType.BitArray,          null,                  null,                  null,                    null)
 		);
 
-		public static int GetMaxLength     (DataType dbType) { return _typeInfo[(int)dbType].MaxLength;      }
-		public static int GetMaxPrecision  (DataType dbType) { return _typeInfo[(int)dbType].MaxPrecision;   }
-		public static int GetMaxScale      (DataType dbType) { return _typeInfo[(int)dbType].MaxScale;       }
-		public static int GetMaxDisplaySize(DataType dbType) { return _typeInfo[(int)dbType].MaxDisplaySize; }
-
-		public static SqlDataType GetDataType(Type type)
-		{
-			var underlyingType = type;
-
-			if (underlyingType.IsGenericTypeEx() && underlyingType.GetGenericTypeDefinition() == typeof(Nullable<>))
-				underlyingType = underlyingType.GetGenericArgumentsEx()[0];
-
-			if (underlyingType.IsEnumEx())
-				underlyingType = Enum.GetUnderlyingType(underlyingType);
-
-			switch (underlyingType.GetTypeCodeEx())
-			{
-				case TypeCode.Boolean  : return Boolean;
-				case TypeCode.Char     : return DbNChar;
-				case TypeCode.SByte    : return SByte;
-				case TypeCode.Byte     : return Byte;
-				case TypeCode.Int16    : return Int16;
-				case TypeCode.UInt16   : return UInt16;
-				case TypeCode.Int32    : return Int32;
-				case TypeCode.UInt32   : return UInt32;
-				case TypeCode.Int64    : return DbInt64;
-				case TypeCode.UInt64   : return UInt64;
-				case TypeCode.Single   : return Single;
-				case TypeCode.Double   : return Double;
-				case TypeCode.Decimal  : return Decimal;
-				case TypeCode.DateTime : return DateTime;
-				case TypeCode.String   : return String;
-				case TypeCode.Object   :
-					if (underlyingType == typeof(Guid))           return Guid;
-					if (underlyingType == typeof(byte[]))         return ByteArray;
-					if (underlyingType == typeof(System.Data.Linq.Binary)) return LinqBinary;
-					if (underlyingType == typeof(char[]))         return CharArray;
-					if (underlyingType == typeof(DateTimeOffset)) return DateTimeOffset;
-					if (underlyingType == typeof(TimeSpan))       return TimeSpan;
-					break;
-
-#if NETSTANDARD1_6
-				case (TypeCode)2       :
-#else
-				case TypeCode.DBNull   :
-#endif
-
-				case TypeCode.Empty    :
-				default                : break;
-			}
-
-			if (underlyingType == typeof(SqlByte))     return SqlByte;
-			if (underlyingType == typeof(SqlInt16))    return SqlInt16;
-			if (underlyingType == typeof(SqlInt32))    return SqlInt32;
-			if (underlyingType == typeof(SqlInt64))    return SqlInt64;
-			if (underlyingType == typeof(SqlSingle))   return SqlSingle;
-			if (underlyingType == typeof(SqlBoolean))  return SqlBoolean;
-			if (underlyingType == typeof(SqlDouble))   return SqlDouble;
-			if (underlyingType == typeof(SqlDateTime)) return SqlDateTime;
-			if (underlyingType == typeof(SqlDecimal))  return SqlDecimal;
-			if (underlyingType == typeof(SqlMoney))    return SqlMoney;
-			if (underlyingType == typeof(SqlString))   return SqlString;
-			if (underlyingType == typeof(SqlBinary))   return SqlBinary;
-			if (underlyingType == typeof(SqlGuid))     return SqlGuid;
-			if (underlyingType == typeof(SqlBytes))    return SqlBytes;
-			if (underlyingType == typeof(SqlChars))    return SqlChars;
-			if (underlyingType == typeof(SqlXml))      return SqlXml;
-
-			return DbVariant;
-		}
+		public static int? GetMaxLength     (DataType dbType) { return _typeInfo[(int)dbType].MaxLength;      }
+		public static int? GetMaxPrecision  (DataType dbType) { return _typeInfo[(int)dbType].MaxPrecision;   }
+		public static int? GetMaxScale      (DataType dbType) { return _typeInfo[(int)dbType].MaxScale;       }
+		public static int? GetMaxDisplaySize(DataType dbType) { return _typeInfo[(int)dbType].MaxDisplaySize; }
 
 		public static SqlDataType GetDataType(DataType type)
 		{
-			switch (type)
+			return type switch
 			{
-				case DataType.Int64            : return DbInt64;
-				case DataType.Binary           : return DbBinary;
-				case DataType.Boolean          : return DbBoolean;
-				case DataType.Char             : return DbChar;
-				case DataType.DateTime         : return DbDateTime;
-				case DataType.Decimal          : return DbDecimal;
-				case DataType.Double           : return DbDouble;
-				case DataType.Image            : return DbImage;
-				case DataType.Int32            : return DbInt32;
-				case DataType.Money            : return DbMoney;
-				case DataType.NChar            : return DbNChar;
-				case DataType.NText            : return DbNText;
-				case DataType.NVarChar         : return DbNVarChar;
-				case DataType.Single           : return DbSingle;
-				case DataType.Guid             : return DbGuid;
-				case DataType.SmallDateTime    : return DbSmallDateTime;
-				case DataType.Int16            : return DbInt16;
-				case DataType.SmallMoney       : return DbSmallMoney;
-				case DataType.Text             : return DbText;
-				case DataType.Timestamp        : return DbTimestamp;
-				case DataType.Byte             : return DbByte;
-				case DataType.VarBinary        : return DbVarBinary;
-				case DataType.VarChar          : return DbVarChar;
-				case DataType.Variant          : return DbVariant;
-				case DataType.Xml              : return DbXml;
-				case DataType.BitArray         : return DbBitArray;
-				case DataType.Udt              : return DbUdt;
-				case DataType.Date             : return DbDate;
-				case DataType.Time             : return DbTime;
-				case DataType.DateTime2        : return DbDateTime2;
-				case DataType.DateTimeOffset   : return DbDateTimeOffset;
-				case DataType.UInt16           : return DbUInt16;
-				case DataType.UInt32           : return DbUInt32;
-				case DataType.UInt64           : return DbUInt64;
-				case DataType.Dictionary       : return DbDictionary;
-				case DataType.Json             : return DbJson;
-				case DataType.BinaryJson       : return DbBinaryJson;
-				case DataType.SByte            : return DbSByte;
-			}
-
-			throw new InvalidOperationException($"Unexpected type: {type}");
+				DataType.Int64          => DbInt64,
+				DataType.Binary         => DbBinary,
+				DataType.Boolean        => DbBoolean,
+				DataType.Char           => DbChar,
+				DataType.DateTime       => DbDateTime,
+				DataType.Decimal        => DbDecimal,
+				DataType.Double         => DbDouble,
+				DataType.Image          => DbImage,
+				DataType.Int32          => DbInt32,
+				DataType.Money          => DbMoney,
+				DataType.NChar          => DbNChar,
+				DataType.NText          => DbNText,
+				DataType.NVarChar       => DbNVarChar,
+				DataType.Single         => DbSingle,
+				DataType.Guid           => DbGuid,
+				DataType.SmallDateTime  => DbSmallDateTime,
+				DataType.Int16          => DbInt16,
+				DataType.SmallMoney     => DbSmallMoney,
+				DataType.Text           => DbText,
+				DataType.Timestamp      => DbTimestamp,
+				DataType.Byte           => DbByte,
+				DataType.VarBinary      => DbVarBinary,
+				DataType.VarChar        => DbVarChar,
+				DataType.Variant        => DbVariant,
+				DataType.Xml            => DbXml,
+				DataType.BitArray       => DbBitArray,
+				DataType.Udt            => DbUdt,
+				DataType.Date           => DbDate,
+				DataType.Time           => DbTime,
+				DataType.DateTime2      => DbDateTime2,
+				DataType.DateTimeOffset => DbDateTimeOffset,
+				DataType.UInt16         => DbUInt16,
+				DataType.UInt32         => DbUInt32,
+				DataType.UInt64         => DbUInt64,
+				DataType.Dictionary     => DbDictionary,
+				DataType.Json           => DbJson,
+				DataType.BinaryJson     => DbBinaryJson,
+				DataType.SByte          => DbSByte,
+				DataType.Int128         => DbInt128,
+				DataType.DecFloat       => DbDecFloat,
+				DataType.TimeTZ         => DbTimeTZ,
+				_                       => throw new InvalidOperationException($"Unexpected type: {type}"),
+			};
 		}
 
 		public static bool TypeCanBeNull(Type type)
 		{
-			if (type.IsValueTypeEx() == false ||
-				type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) ||
+			if (type.IsNullableType() ||
 				typeof(INullable).IsSameOrParentOf(type))
 				return true;
 
@@ -355,79 +258,75 @@ namespace LinqToDB.SqlQuery
 
 		#region Default Types
 
-		internal SqlDataType(DataType dataType, Type type, int? length, int? precision, int? scale, string dbType = null)
+		internal SqlDataType(DataType dataType, Type type, int? length, int? precision, int? scale, string? dbType)
+			: this(new DbDataType(type, dataType, dbType, length, precision, scale))
 		{
-			DataType  = dataType;
-			Type      = type;
-			Length    = length;
-			Precision = precision;
-			Scale     = scale;
-			DbType    = dbType;
 		}
 
-		SqlDataType(DataType dataType, Type type, Func<DataType,int> length, int precision, int scale, string dbType = null)
+		SqlDataType(DataType dataType, Type type, Func<DataType,int?> length, int? precision, int? scale, string? dbType)
 			: this(dataType, type, length(dataType), precision, scale, dbType)
 		{
 		}
 
-		SqlDataType(DataType dataType, Type type, int length, Func<DataType,int> precision, int scale, string dbType = null)
+		SqlDataType(DataType dataType, Type type, int? length, Func<DataType,int?> precision, int? scale, string? dbType)
 			: this(dataType, type, length, precision(dataType), scale, dbType)
 		{
 		}
 
-		public static readonly SqlDataType DbInt64          = new SqlDataType(DataType.Int64,          typeof(Int64),                  0, 0,                0);
-		public static readonly SqlDataType DbInt32          = new SqlDataType(DataType.Int32,          typeof(Int32),                  0, 0,                0);
-		public static readonly SqlDataType DbInt16          = new SqlDataType(DataType.Int16,          typeof(Int16),                  0, 0,                0);
-		public static readonly SqlDataType DbUInt64         = new SqlDataType(DataType.UInt64,         typeof(UInt64),                 0, 0,                0);
-		public static readonly SqlDataType DbUInt32         = new SqlDataType(DataType.UInt32,         typeof(UInt32),                 0, 0,                0);
-		public static readonly SqlDataType DbUInt16         = new SqlDataType(DataType.UInt16,         typeof(UInt16),                 0, 0,                0);
-		public static readonly SqlDataType DbSByte          = new SqlDataType(DataType.SByte,          typeof(SByte),                  0, 0,                0);
-		public static readonly SqlDataType DbByte           = new SqlDataType(DataType.Byte,           typeof(Byte),                   0, 0,                0);
-		public static readonly SqlDataType DbBoolean        = new SqlDataType(DataType.Boolean,        typeof(Boolean),                0, 0,                0);
+		public static readonly SqlDataType DbInt128         = new (DataType.Int128,         typeof(BigInteger),    (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbInt64          = new (DataType.Int64,          typeof(long),          (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbInt32          = new (DataType.Int32,          typeof(int),           (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbInt16          = new (DataType.Int16,          typeof(short),         (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbUInt64         = new (DataType.UInt64,         typeof(ulong),         (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbUInt32         = new (DataType.UInt32,         typeof(uint),          (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbUInt16         = new (DataType.UInt16,         typeof(ushort),        (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbSByte          = new (DataType.SByte,          typeof(sbyte),         (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbByte           = new (DataType.Byte,           typeof(byte),          (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbBoolean        = new (DataType.Boolean,        typeof(bool),          (int?)null,     (int?)null, null, null);
 
-		public static readonly SqlDataType DbDecimal        = new SqlDataType(DataType.Decimal,        typeof(Decimal),                0, GetMaxPrecision, 10);
-		public static readonly SqlDataType DbMoney          = new SqlDataType(DataType.Money,          typeof(Decimal),                0, GetMaxPrecision,  4);
-		public static readonly SqlDataType DbSmallMoney     = new SqlDataType(DataType.SmallMoney,     typeof(Decimal),                0, GetMaxPrecision,  4);
-		public static readonly SqlDataType DbDouble         = new SqlDataType(DataType.Double,         typeof(Double),                 0,               0,  0);
-		public static readonly SqlDataType DbSingle         = new SqlDataType(DataType.Single,         typeof(Single),                 0,               0,  0);
+		public static readonly SqlDataType DbDecimal        = new (DataType.Decimal,        typeof(decimal),             null, GetMaxPrecision, 10, null);
+		public static readonly SqlDataType DbMoney          = new (DataType.Money,          typeof(decimal),             null, GetMaxPrecision,  4, null);
+		public static readonly SqlDataType DbSmallMoney     = new (DataType.SmallMoney,     typeof(decimal),             null, GetMaxPrecision,  4, null);
+		public static readonly SqlDataType DbDouble         = new (DataType.Double,         typeof(double),        (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbSingle         = new (DataType.Single,         typeof(float),         (int?)null,     (int?)null, null, null);
 
-		public static readonly SqlDataType DbDateTime       = new SqlDataType(DataType.DateTime,       typeof(DateTime),               0,               0,  0);
-		public static readonly SqlDataType DbDateTime2      = new SqlDataType(DataType.DateTime2,      typeof(DateTime),               0,               0,  0);
-		public static readonly SqlDataType DbSmallDateTime  = new SqlDataType(DataType.SmallDateTime,  typeof(DateTime),               0,               0,  0);
-		public static readonly SqlDataType DbDate           = new SqlDataType(DataType.Date,           typeof(DateTime),               0,               0,  0);
-		public static readonly SqlDataType DbTime           = new SqlDataType(DataType.Time,           typeof(TimeSpan),               0,               0,  0);
-		public static readonly SqlDataType DbDateTimeOffset = new SqlDataType(DataType.DateTimeOffset, typeof(DateTimeOffset),         0,               0,  0);
+		public static readonly SqlDataType DbDateTime       = new (DataType.DateTime,       typeof(DateTime),      (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbDateTime2      = new (DataType.DateTime2,      typeof(DateTime),      (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbSmallDateTime  = new (DataType.SmallDateTime,  typeof(DateTime),      (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbDate           = new (DataType.Date,           typeof(DateTime),      (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbTime           = new (DataType.Time,           typeof(TimeSpan),      (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbDateTimeOffset = new (DataType.DateTimeOffset, typeof(DateTimeOffset),(int?)null,     (int?)null, null, null);
 
-		public static readonly SqlDataType DbChar           = new SqlDataType(DataType.Char,           typeof(String),      GetMaxLength,               0,  0);
-		public static readonly SqlDataType DbVarChar        = new SqlDataType(DataType.VarChar,        typeof(String),      GetMaxLength,               0,  0);
-		public static readonly SqlDataType DbText           = new SqlDataType(DataType.Text,           typeof(String),      GetMaxLength,               0,  0);
-		public static readonly SqlDataType DbNChar          = new SqlDataType(DataType.NChar,          typeof(String),      GetMaxLength,               0,  0);
-		public static readonly SqlDataType DbNVarChar       = new SqlDataType(DataType.NVarChar,       typeof(String),      GetMaxLength,               0,  0);
-		public static readonly SqlDataType DbNText          = new SqlDataType(DataType.NText,          typeof(String),      GetMaxLength,               0,  0);
-		public static readonly SqlDataType DbJson           = new SqlDataType(DataType.Json,           typeof(String),      GetMaxLength,               0,  0);
-		public static readonly SqlDataType DbBinaryJson     = new SqlDataType(DataType.BinaryJson,     typeof(String),      GetMaxLength,               0,  0);
+		public static readonly SqlDataType DbChar           = new (DataType.Char,           typeof(string),      GetMaxLength,           null, null, null);
+		public static readonly SqlDataType DbVarChar        = new (DataType.VarChar,        typeof(string),      GetMaxLength,           null, null, null);
+		public static readonly SqlDataType DbText           = new (DataType.Text,           typeof(string),      GetMaxLength,           null, null, null);
+		public static readonly SqlDataType DbNChar          = new (DataType.NChar,          typeof(string),      GetMaxLength,           null, null, null);
+		public static readonly SqlDataType DbNVarChar       = new (DataType.NVarChar,       typeof(string),      GetMaxLength,           null, null, null);
+		public static readonly SqlDataType DbNText          = new (DataType.NText,          typeof(string),      GetMaxLength,           null, null, null);
+		public static readonly SqlDataType DbJson           = new (DataType.Json,           typeof(string),      GetMaxLength,           null, null, null);
+		public static readonly SqlDataType DbBinaryJson     = new (DataType.BinaryJson,     typeof(string),      GetMaxLength,           null, null, null);
 
-		public static readonly SqlDataType DbBinary         = new SqlDataType(DataType.Binary,         typeof(Byte[]),      GetMaxLength,               0,  0);
-		public static readonly SqlDataType DbVarBinary      = new SqlDataType(DataType.VarBinary,      typeof(Byte[]),      GetMaxLength,               0,  0);
-		public static readonly SqlDataType DbImage          = new SqlDataType(DataType.Image,          typeof(Byte[]),      GetMaxLength,               0,  0);
+		public static readonly SqlDataType DbBinary         = new (DataType.Binary,         typeof(byte[]),      GetMaxLength,           null, null, null);
+		public static readonly SqlDataType DbVarBinary      = new (DataType.VarBinary,      typeof(byte[]),      GetMaxLength,           null, null, null);
+		public static readonly SqlDataType DbImage          = new (DataType.Image,          typeof(byte[]),      GetMaxLength,           null, null, null);
 
-		public static readonly SqlDataType DbTimestamp      = new SqlDataType(DataType.Timestamp,      typeof(Byte[]),                 0,               0,  0);
-		public static readonly SqlDataType DbGuid           = new SqlDataType(DataType.Guid,           typeof(Guid),                   0,               0,  0);
+		public static readonly SqlDataType DbTimestamp      = new (DataType.Timestamp,      typeof(byte[]),        (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbGuid           = new (DataType.Guid,           typeof(Guid),          (int?)null,     (int?)null, null, null);
 
-		public static readonly SqlDataType DbVariant        = new SqlDataType(DataType.Variant,        typeof(Object),                 0,               0,  0);
-		public static readonly SqlDataType DbXml            = new SqlDataType(DataType.Xml,            typeof(SqlXml),                 0,               0,  0);
-		public static readonly SqlDataType DbBitArray       = new SqlDataType(DataType.BitArray,       typeof(BitArray),               0,               0,  0);
-		public static readonly SqlDataType DbUdt            = new SqlDataType(DataType.Udt,            typeof(Object),                 0,               0,  0);
+		public static readonly SqlDataType DbVariant        = new (DataType.Variant,        typeof(object),        (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbXml            = new (DataType.Xml,            typeof(SqlXml),        (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbBitArray       = new (DataType.BitArray,       typeof(BitArray),      (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbUdt            = new (DataType.Udt,            typeof(object),        (int?)null,     (int?)null, null, null);
 
 		public static readonly SqlDataType Boolean          = DbBoolean;
-		public static readonly SqlDataType Char             = new SqlDataType(DataType.Char,           typeof(Char),                   1,               0,  0);
+		public static readonly SqlDataType Char             = new (DataType.Char,           typeof(char),                   1,     (int?)null, null, null);
 		public static readonly SqlDataType SByte            = DbSByte;
 		public static readonly SqlDataType Byte             = DbByte;
 		public static readonly SqlDataType Int16            = DbInt16;
-		public static readonly SqlDataType UInt16           = new SqlDataType(DataType.UInt16,         typeof(UInt16),                 0,               0,  0);
+		public static readonly SqlDataType UInt16           = new (DataType.UInt16,         typeof(ushort),        (int?)null,     (int?)null, null, null);
 		public static readonly SqlDataType Int32            = DbInt32;
-		public static readonly SqlDataType UInt32           = new SqlDataType(DataType.UInt32,         typeof(UInt32),                 0,               0,  0);
-		public static readonly SqlDataType UInt64           = new SqlDataType(DataType.UInt64,         typeof(UInt64),                 0, ulong.MaxValue.ToString().Length, 0);
+		public static readonly SqlDataType UInt32           = new (DataType.UInt32,         typeof(uint),          (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType UInt64           = new (DataType.UInt64,         typeof(ulong),         (int?)null, ulong.MaxValue.ToString(NumberFormatInfo.InvariantInfo).Length, null, null);
 		public static readonly SqlDataType Single           = DbSingle;
 		public static readonly SqlDataType Double           = DbDouble;
 		public static readonly SqlDataType Decimal          = DbDecimal;
@@ -436,28 +335,31 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType Guid             = DbGuid;
 		public static readonly SqlDataType ByteArray        = DbVarBinary;
 		public static readonly SqlDataType LinqBinary       = DbVarBinary;
-		public static readonly SqlDataType CharArray        = new SqlDataType(DataType.NVarChar,       typeof(Char[]),      GetMaxLength,               0,  0);
+		public static readonly SqlDataType CharArray        = new (DataType.NVarChar,       typeof(char[]),      GetMaxLength,           null, null, null);
 		public static readonly SqlDataType DateTimeOffset   = DbDateTimeOffset;
 		public static readonly SqlDataType TimeSpan         = DbTime;
-		public static readonly SqlDataType DbDictionary     = new SqlDataType(DataType.Dictionary,     typeof(Dictionary<string, string>), 0,          0,  0);
+		public static readonly SqlDataType DbDictionary     = new (DataType.Dictionary,     typeof(Dictionary<string, string>), (int?)null, (int?)null, null, null);
 
-		public static readonly SqlDataType SqlByte          = new SqlDataType(DataType.Byte,           typeof(SqlByte),                0,               0,  0);
-		public static readonly SqlDataType SqlInt16         = new SqlDataType(DataType.Int16,          typeof(SqlInt16),               0,               0,  0);
-		public static readonly SqlDataType SqlInt32         = new SqlDataType(DataType.Int32,          typeof(SqlInt32),               0,               0,  0);
-		public static readonly SqlDataType SqlInt64         = new SqlDataType(DataType.Int64,          typeof(SqlInt64),               0,               0,  0);
-		public static readonly SqlDataType SqlSingle        = new SqlDataType(DataType.Single,         typeof(SqlSingle),              0,               0,  0);
-		public static readonly SqlDataType SqlBoolean       = new SqlDataType(DataType.Boolean,        typeof(SqlBoolean),             0,               0,  0);
-		public static readonly SqlDataType SqlDouble        = new SqlDataType(DataType.Double,         typeof(SqlDouble),              0,               0,  0);
-		public static readonly SqlDataType SqlDateTime      = new SqlDataType(DataType.DateTime,       typeof(SqlDateTime),            0,               0,  0);
-		public static readonly SqlDataType SqlDecimal       = new SqlDataType(DataType.Decimal,        typeof(SqlDecimal),             0, GetMaxPrecision, 10);
-		public static readonly SqlDataType SqlMoney         = new SqlDataType(DataType.Money,          typeof(SqlMoney),               0, GetMaxPrecision,  4);
-		public static readonly SqlDataType SqlString        = new SqlDataType(DataType.NVarChar,       typeof(SqlString),   GetMaxLength,               0,  0);
-		public static readonly SqlDataType SqlBinary        = new SqlDataType(DataType.Binary,         typeof(SqlBinary),   GetMaxLength,               0,  0);
-		public static readonly SqlDataType SqlGuid          = new SqlDataType(DataType.Guid,           typeof(SqlGuid),                0,               0,  0);
-		public static readonly SqlDataType SqlBytes         = new SqlDataType(DataType.Image,          typeof(SqlBytes),    GetMaxLength,               0,  0);
-		public static readonly SqlDataType SqlChars         = new SqlDataType(DataType.Text,           typeof(SqlChars),    GetMaxLength,               0,  0);
-		public static readonly SqlDataType SqlXml           = new SqlDataType(DataType.Xml,            typeof(SqlXml),                 0,               0,  0);
+		public static readonly SqlDataType SqlByte          = new (DataType.Byte,           typeof(SqlByte),       (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType SqlInt16         = new (DataType.Int16,          typeof(SqlInt16),      (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType SqlInt32         = new (DataType.Int32,          typeof(SqlInt32),      (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType SqlInt64         = new (DataType.Int64,          typeof(SqlInt64),      (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType SqlSingle        = new (DataType.Single,         typeof(SqlSingle),     (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType SqlBoolean       = new (DataType.Boolean,        typeof(SqlBoolean),    (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType SqlDouble        = new (DataType.Double,         typeof(SqlDouble),     (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType SqlDateTime      = new (DataType.DateTime,       typeof(SqlDateTime),   (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType SqlDecimal       = new (DataType.Decimal,        typeof(SqlDecimal),          null, GetMaxPrecision,  10, null);
+		public static readonly SqlDataType SqlMoney         = new (DataType.Money,          typeof(SqlMoney),            null, GetMaxPrecision,   4, null);
+		public static readonly SqlDataType SqlString        = new (DataType.NVarChar,       typeof(SqlString),   GetMaxLength,           null, null, null);
+		public static readonly SqlDataType SqlBinary        = new (DataType.Binary,         typeof(SqlBinary),   GetMaxLength,           null, null, null);
+		public static readonly SqlDataType SqlGuid          = new (DataType.Guid,           typeof(SqlGuid),       (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType SqlBytes         = new (DataType.Image,          typeof(SqlBytes),    GetMaxLength,           null, null, null);
+		public static readonly SqlDataType SqlChars         = new (DataType.Text,           typeof(SqlChars),    GetMaxLength,           null, null, null);
+		public static readonly SqlDataType SqlXml           = new (DataType.Xml,            typeof(SqlXml),        (int?)null,     (int?)null, null, null);
 
+		// types without default .net type mapping
+		public static readonly SqlDataType DbDecFloat       = new (DataType.DecFloat,       typeof(object),        (int?)null,     (int?)null, null, null);
+		public static readonly SqlDataType DbTimeTZ         = new (DataType.TimeTZ,         typeof(object),        (int?)null,     (int?)null, null, null);
 		#endregion
 
 		#region Overrides
@@ -476,28 +378,27 @@ namespace LinqToDB.SqlQuery
 		#region ISqlExpression Members
 
 		public int  Precedence => SqlQuery.Precedence.Primary;
-		public Type SystemType => typeof(Type);
+		public Type SystemType => Type.SystemType;
 
 		#endregion
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
+		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
 			if (this == other)
 				return true;
 
-			var value = (SqlDataType)other;
-			return Type == value.Type && Length == value.Length && Precision == value.Precision && Scale == value.Scale;
+			return other is SqlDataType type && Type.Equals(type.Type);
 		}
 
 		#endregion
@@ -513,38 +414,49 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlDataType(DataType, Type, Length, Precision, Scale, DbType));
-
-			return clone;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public QueryElementType ElementType => QueryElementType.SqlDataType;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			sb.Append(DataType);
+			sb.AppendFormat(CultureInfo.InvariantCulture, $"{Type.DataType}");
 
-			if (!string.IsNullOrEmpty(DbType))
-				sb.Append($":\"{DbType}\"");
+			if (!string.IsNullOrEmpty(Type.DbType))
+				sb.Append(CultureInfo.InvariantCulture, $":\"{Type.DbType}\"");
 
-			if (Length != 0)
-				sb.Append('(').Append(Length).Append(')');
-			else if (Precision != 0)
-				sb.Append('(').Append(Precision).Append(',').Append(Scale).Append(')');
+			if (Type.Length != 0)
+				sb.Append(CultureInfo.InvariantCulture, $"({Type.Length})");
+			else if (Type.Precision != 0)
+				sb.Append(CultureInfo.InvariantCulture, $"({Type.Precision},{Type.Scale})");
 
 			return sb;
+		}
+
+		#endregion
+
+		#region IEquatable<SqlDataType>
+
+		public override int GetHashCode()
+		{
+			return Type.GetHashCode();
+		}
+
+		public bool Equals(SqlDataType? other)
+		{
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
+
+			return Type.Equals(other.Type);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != GetType()) return false;
+
+			return Equals((SqlDataType)obj);
 		}
 
 		#endregion

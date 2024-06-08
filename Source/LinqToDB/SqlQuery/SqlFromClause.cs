@@ -36,7 +36,7 @@ namespace LinqToDB.SqlQuery
 				return new Next(this);
 			}
 
-			internal Join(JoinType joinType, ISqlTableSource table, string alias, bool isWeak, ICollection<Join> joins)
+			internal Join(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak, ICollection<Join>? joins)
 			{
 				JoinedTable = new SqlJoinedTable(joinType, table, alias, isWeak);
 
@@ -54,16 +54,6 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		internal SqlFromClause(
-			SelectQuery selectQuery,
-			SqlFromClause  clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
-		{
-			Tables.AddRange(clone.Tables.Select(ts => (SqlTableSource)ts.Clone(objectTree, doClone)));
-		}
-
 		internal SqlFromClause(IEnumerable<SqlTableSource> tables)
 			: base(null)
 		{
@@ -75,7 +65,7 @@ namespace LinqToDB.SqlQuery
 			return Table(table, null, joins);
 		}
 
-		public SqlFromClause Table(ISqlTableSource table, string alias, params Join[] joins)
+		public SqlFromClause Table(ISqlTableSource table, string? alias, params Join[] joins)
 		{
 			var ts = AddOrGetTable(table, alias);
 
@@ -86,19 +76,19 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		SqlTableSource GetTable(ISqlTableSource table, string alias)
+		SqlTableSource? GetTable(ISqlTableSource table, string? alias)
 		{
 			foreach (var ts in Tables)
 				if (ts.Source == table)
 					if (alias == null || ts.Alias == alias)
 						return ts;
 					else
-						throw new ArgumentException("alias");
+						throw new ArgumentException($"Invalid alias: '{ts.Alias}' != '{alias}'");
 
 			return null;
 		}
 
-		SqlTableSource AddOrGetTable(ISqlTableSource table, string alias)
+		SqlTableSource AddOrGetTable(ISqlTableSource table, string? alias)
 		{
 			var ts = GetTable(table, alias);
 
@@ -112,9 +102,9 @@ namespace LinqToDB.SqlQuery
 			return t;
 		}
 
-		public SqlTableSource this[ISqlTableSource table] => this[table, null];
+		public SqlTableSource? this[ISqlTableSource table] => this[table, null];
 
-		public SqlTableSource this[ISqlTableSource table, string alias]
+		public SqlTableSource? this[ISqlTableSource table, string? alias]
 		{
 			get
 			{
@@ -168,7 +158,7 @@ namespace LinqToDB.SqlQuery
 			return Tables.SelectMany(_ => GetJoinTables(_, QueryElementType.SqlQuery));
 		}
 
-		static SqlTableSource FindTableSource(SqlTableSource source, SqlTable table)
+		static SqlTableSource? FindTableSource(SqlTableSource source, SqlTable table)
 		{
 			if (source.Source == table)
 				return source;
@@ -183,7 +173,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public ISqlTableSource FindTableSource(SqlTable table)
+		public ISqlTableSource? FindTableSource(SqlTable table)
 		{
 			foreach (var source in Tables)
 			{
@@ -210,10 +200,10 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			foreach (var table in Tables)
-				((ISqlExpressionWalkable)table).Walk(options, func);
+				((ISqlExpressionWalkable)table).Walk(options, context, func);
 
 			return null;
 		}

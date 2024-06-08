@@ -2,7 +2,6 @@
 using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
-using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -12,17 +11,14 @@ namespace Tests.UserTests
 	{
 		public class BranchSelectOutput
 		{
-			public int BranchId { get; set; }
-			public string BranchName { get; set; }
-			public string BranchAddress { get; set; }
-			public string BusinessHours { get; set; }
-			public double Distance { get; set; }
-			public string BranchPic { get; set; }
+			public int    BranchId      { get; set; }
+			public string BranchName    { get; set; } = null!;
+			public string BranchAddress { get; set; } = null!;
+			public string BusinessHours { get; set; } = null!;
+			public double Distance      { get; set; }
+			public string BranchPic     { get; set; } = null!;
 
-			[JsonIgnore]
 			public decimal PointX { get; set; }
-
-			[JsonIgnore]
 			public decimal PointY { get; set; }
 		}
 
@@ -32,9 +28,9 @@ namespace Tests.UserTests
 			[PrimaryKey, Identity] public int      Id          { get; set; } // int
 			[Column,     NotNull ] public int      Type        { get; set; } // int
 			[Column,     NotNull ] public int      ItemId      { get; set; } // int
-			[Column,     NotNull ] public string   Name        { get; set; } // nvarchar(128)
-			[Column,     NotNull ] public string   ContentType { get; set; } // nvarchar(64)
-			[Column,     NotNull ] public string   Url         { get; set; } // nvarchar(128)
+			[Column,     NotNull ] public string   Name        { get; set; } = null!; // nvarchar(128)
+			[Column,     NotNull ] public string   ContentType { get; set; } = null!; // nvarchar(64)
+			[Column,     NotNull ] public string   Url         { get; set; } = null!; // nvarchar(128)
 			[Column,     NotNull ] public int      Status      { get; set; } // int
 			[Column,     NotNull ] public DateTime CreateTime  { get; set; } // datetime
 		}
@@ -43,20 +39,20 @@ namespace Tests.UserTests
 		public partial class BranchInfoEntity
 		{
 			[PrimaryKey, Identity] public int      BranchId         { get; set; } // int
-			[Column,     NotNull ] public string   BranchCode       { get; set; } // varchar(50)
-			[Column,     NotNull ] public string   BranchName       { get; set; } // varchar(50)
-			[Column,     NotNull ] public string   BranchParentCode { get; set; } // varchar(50)
-			[Column,     NotNull ] public string   CompanyCode      { get; set; } // varchar(32)
-			[Column,     NotNull ] public string   AreaCode         { get; set; } // varchar(50)
-			[Column,     NotNull ] public string   BranchAddress    { get; set; } // varchar(100)
-			[Column,     NotNull ] public string   BrandContacts    { get; set; } // varchar(20)
-			[Column,     NotNull ] public string   BrandPhone       { get; set; } // varchar(20)
+			[Column,     NotNull ] public string   BranchCode       { get; set; } = null!; // varchar(50)
+			[Column,     NotNull ] public string   BranchName       { get; set; } = null!; // varchar(50)
+			[Column,     NotNull ] public string   BranchParentCode { get; set; } = null!; // varchar(50)
+			[Column,     NotNull ] public string   CompanyCode      { get; set; } = null!; // varchar(32)
+			[Column,     NotNull ] public string   AreaCode         { get; set; } = null!; // varchar(50)
+			[Column,     NotNull ] public string   BranchAddress    { get; set; } = null!; // varchar(100)
+			[Column,     NotNull ] public string   BrandContacts    { get; set; } = null!; // varchar(20)
+			[Column,     NotNull ] public string   BrandPhone       { get; set; } = null!; // varchar(20)
 			[Column,     NotNull ] public int      Status           { get; set; } // int
 			[Column,     NotNull ] public DateTime CreateTime       { get; set; } // datetime
-			[Column,     NotNull ] public string   CreateUser       { get; set; } // varchar(50)
+			[Column,     NotNull ] public string   CreateUser       { get; set; } = null!; // varchar(50)
 			[Column,     NotNull ] public DateTime LastUpdateTime   { get; set; } // datetime
-			[Column,     NotNull ] public string   LastUpdateUser   { get; set; } // varchar(50)
-			[Column,     NotNull ] public string   BusinessHours    { get; set; } // varchar(100)
+			[Column,     NotNull ] public string   LastUpdateUser   { get; set; } = null!; // varchar(50)
+			[Column,     NotNull ] public string   BusinessHours    { get; set; } = null!; // varchar(100)
 			[Column,     NotNull ] public decimal  PointX           { get; set; } // decimal(18, 4)
 			[Column,     NotNull ] public decimal  PointY           { get; set; } // decimal(18, 4)
 			[Column,     NotNull ] public int      BranchIsShow     { get; set; } // int
@@ -69,7 +65,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SelectManyLetJoinTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void SelectManyLetJoinTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<AttachmentEntity>())
@@ -87,7 +83,8 @@ namespace Tests.UserTests
 					where att.Index == 1
 					select att;
 
-				var qry = from branchInfo in NotDeletedBranchInfo(db)
+				var qry = 
+					from branchInfo in NotDeletedBranchInfo(db)
 					from att in attachmentQry.LeftJoin(m => m.ItemId == branchInfo.BranchId)
 					where branchInfo.BranchIsShow == 0
 					select new BranchSelectOutput

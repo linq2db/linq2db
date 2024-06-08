@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 
@@ -48,6 +47,7 @@ namespace Tests.Linq
 					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = p.Value1 }).Distinct());
 		}
 
+		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Distinct5([DataSources] string context)
 		{
@@ -59,8 +59,9 @@ namespace Tests.Linq
 					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = id + 1 }).Distinct());
 		}
 
+		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
-		public void Distinct6([DataSources(ProviderName.Informix)] string context)
+		public void Distinct6([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var id = 2;
 
@@ -130,6 +131,7 @@ namespace Tests.Linq
 					db.Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch));
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DistinctJoin([DataSources] string context)
 		{

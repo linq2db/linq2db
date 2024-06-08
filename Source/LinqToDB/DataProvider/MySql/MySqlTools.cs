@@ -1,86 +1,84 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Reflection;
-
-using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Configuration;
 	using Data;
-	using Extensions;
 
-	public static class MySqlTools
+	public static partial class MySqlTools
 	{
-		public static string AssemblyName;
+		static readonly Lazy<IDataProvider> _mySqlDataProvider          = DataConnection.CreateDataProvider<MySqlDataProviderMySqlOfficial>();
+		static readonly Lazy<IDataProvider> _mySqlConnectorDataProvider = DataConnection.CreateDataProvider<MySqlDataProviderMySqlConnector>();
 
-		static readonly MySqlDataProvider _mySqlDataProvider  	            = new MySqlDataProvider(ProviderName.MySqlOfficial);
-		static readonly MySqlDataProvider _mySqlConnectorDataProvider       = new MySqlDataProvider(ProviderName.MySqlConnector);
-
-		static MySqlTools()
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			AssemblyName = DetectedProviderName == ProviderName.MySqlConnector ? "MySqlConnector" : "MySql.Data";
-
-			DataConnection.AddDataProvider(ProviderName.MySql, DetectedProvider);
-			DataConnection.AddDataProvider(_mySqlDataProvider);
-			DataConnection.AddDataProvider(_mySqlConnectorDataProvider);
-
-			DataConnection.AddProviderDetector(ProviderDetector);
-		}
-
-		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
-		{
-			if (css.IsGlobal)
+			// ensure ClickHouse configuration over mysql protocol is not detected as mysql
+			if (options.ProviderName?.Contains("ClickHouse") == true || options.ConfigurationString?.Contains("ClickHouse") == true)
 				return null;
 
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
-				case ""                                          :
-				case null                                        :
-					if (css.Name.Contains("MySql"))
-						goto case "MySql";
+				case ProviderName.MySqlOfficial                :
+				case MySqlProviderAdapter.MySqlDataAssemblyName: return _mySqlDataProvider.Value;
+				case ProviderName.MariaDB                      :
+				case ProviderName.MySqlConnector               : return _mySqlConnectorDataProvider.Value;
+
+				case ""                         :
+				case null                       :
+					if (options.ConfigurationString?.Contains("MySql") == true)
+						goto case ProviderName.MySql;
 					break;
-				case "MySql.Data"                                : return _mySqlDataProvider;
-				case "MySqlConnector"                            : return _mySqlConnectorDataProvider;
-				case "MySql"                                     :
-				case var provider when provider.Contains("MySql"):
+				case MySqlProviderAdapter.MySqlDataClientNamespace:
+				case ProviderName.MySql                           :
+					if (options.ConfigurationString?.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName) == true)
+						return _mySqlConnectorDataProvider.Value;
 
-					if (css.Name.Contains("MySqlConnector"))
-						return _mySqlConnectorDataProvider;
+					if (options.ConfigurationString?.Contains(MySqlProviderAdapter.MySqlDataAssemblyName) == true)
+						return _mySqlDataProvider.Value;
 
-					if (css.Name.Contains("MySql"))
-						return _mySqlDataProvider;
+					return GetDataProvider();
+				case var providerName when providerName.Contains("MySql"):
+					if (providerName.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName))
+						return _mySqlConnectorDataProvider.Value;
 
-					return DetectedProvider;
+					if (providerName.Contains(MySqlProviderAdapter.MySqlDataAssemblyName))
+						return _mySqlDataProvider.Value;
+
+					goto case ProviderName.MySql;
 			}
 
 			return null;
 		}
 
-		public static IDataProvider GetDataProvider()
+		public static IDataProvider GetDataProvider(string? providerName = null)
 		{
-			return DetectedProvider;
+			return providerName switch
+			{
+				ProviderName.MySqlOfficial  => _mySqlDataProvider.Value,
+				ProviderName.MySqlConnector => _mySqlConnectorDataProvider.Value,
+				_                           =>
+					DetectedProviderName == ProviderName.MySqlOfficial
+					? _mySqlDataProvider.Value
+					: _mySqlConnectorDataProvider.Value,
+			};
 		}
 
-		static string _detectedProviderName;
-
-		public static string  DetectedProviderName =>
-			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
-
-		static MySqlDataProvider DetectedProvider =>
-			DetectedProviderName != ProviderName.MySqlConnector ? _mySqlDataProvider : _mySqlConnectorDataProvider;
+		private static string? _detectedProviderName;
+		public  static string  DetectedProviderName =>
+			_detectedProviderName ??= DetectProviderName();
 
 		static string DetectProviderName()
 		{
 			try
 			{
-				var path = typeof(MySqlTools).AssemblyEx().GetPath();
+				var path = typeof(MySqlTools).Assembly.GetPath();
 
-				if (!File.Exists(Path.Combine(path, "MySql.Data.dll")))
-					if (File.Exists(Path.Combine(path, "MySqlConnector.dll")))
+				if (!File.Exists(Path.Combine(path, $"{MySqlProviderAdapter.MySqlDataAssemblyName}.dll")))
+					if (File.Exists(Path.Combine(path, $"{MySqlProviderAdapter.MySqlConnectorAssemblyName}.dll")))
 						return ProviderName.MySqlConnector;
 			}
 			catch (Exception)
@@ -90,59 +88,49 @@ namespace LinqToDB.DataProvider.MySql
 			return ProviderName.MySqlOfficial;
 		}
 
-		public static void ResolveMySql([NotNull] string path)
+		public static void ResolveMySql(string path, string? assemblyName)
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
-			new AssemblyResolver(path, AssemblyName);
+			new AssemblyResolver(
+				path,
+				assemblyName
+					?? (DetectedProviderName == ProviderName.MySqlOfficial
+						? MySqlProviderAdapter.MySqlDataAssemblyName
+						: MySqlProviderAdapter.MySqlConnectorAssemblyName));
 		}
 
-		public static void ResolveMySql([NotNull] Assembly assembly)
+		public static void ResolveMySql(Assembly assembly)
 		{
 			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-			new AssemblyResolver(assembly, AssemblyName);
+			new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString)
+		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
-			return new DataConnection(DetectedProvider, connectionString);
+			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
-			return new DataConnection(
-				connection.GetType().AssemblyEx().FullName.Contains("MySqlConnector") ? _mySqlConnectorDataProvider : _mySqlDataProvider,
-				connection);
+			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
-			return new DataConnection(
-				transaction.GetType().AssemblyEx().FullName.Contains("MySqlConnector") ? _mySqlConnectorDataProvider : _mySqlDataProvider,
-				transaction);
+			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
 		#endregion
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection             dataConnection,
-			IEnumerable<T>             source,
-			int                        maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
-			where T : class
+		[Obsolete("Use MySqlOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
 		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
+			get => MySqlOptions.Default.BulkCopyType;
+			set => MySqlOptions.Default = MySqlOptions.Default with { BulkCopyType = value };
 		}
 
 		#endregion
