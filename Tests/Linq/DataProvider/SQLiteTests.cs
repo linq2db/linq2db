@@ -434,7 +434,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				var testJson = "{\"name\":\"bob\", \"age\":10}";
+				var testJson = /*lang=json,strict*/ "{\"name\":\"bob\", \"age\":10}";
 
 				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter("p", testJson, DataType.Json)), Is.EqualTo(testJson));
 			}
@@ -598,10 +598,11 @@ namespace Tests.DataProvider
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<DateTimeTable>()
 					.Property(_ => _.DateTime)
-						.HasDbType(columnType);
+						.HasDbType(columnType)
+				.Build();
 
 			return ms;
 		}
@@ -621,41 +622,40 @@ namespace Tests.DataProvider
 			if (context.Contains("Classic") && columnType != "TEXT")
 				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
 
-			using (var db    = new DataConnection(context, ConfigureMapping(columnType)))
-			using (var table = db.CreateLocalTable<DateTimeTable>())
+			using var db    = new DataConnection(context, ConfigureMapping(columnType));
+			using var table = db.CreateLocalTable<DateTimeTable>();
+
+			db.InlineParameters = inline;
+			// use 2040 to test unixtime don't overflow
+			var dt              = new DateTime(2040, 2, 29, 11, 12, 13, 456, kind);
+
+			table
+				.Insert(() => new DateTimeTable()
+				{
+					DateTime = dt
+				});
+
+			var sql = db.LastQuery!;
+
+			var result = table.Single();
+
+			var resultDt = result.DateTime;
+			if (kind == DateTimeKind.Utc)
+
+			Assert.AreEqual(!inline                 , sql.Contains("@"));
+
+			if (kind == DateTimeKind.Utc)
 			{
-				db.InlineParameters = inline;
-				// use 2040 to test unixtime don't overflow
-				var dt              = new DateTime(2040, 2, 29, 11, 12, 13, 456, kind);
-
-				table
-					.Insert(() => new DateTimeTable()
-					{
-						DateTime = dt
-					});
-
-				var sql = db.LastQuery;
-
-				var result = table.Single();
-
-				var resultDt = result.DateTime;
-				if (kind == DateTimeKind.Utc)
-
-				Assert.AreEqual(!inline                 , sql.Contains("@"));
-
-				if (kind == DateTimeKind.Utc)
-				{
-					// utc values returned as local
-					Assert.AreEqual(dt.ToLocalTime()  , result.DateTime);
-					// local/unspecified values returned as unspecified (makes sense)
-					Assert.AreEqual(DateTimeKind.Local, result.DateTime.Kind);
-				}
-				else
-				{
-					Assert.AreEqual(dt                      , result.DateTime);
-					// local/unspecified values returned as unspecified (makes sense)
-					Assert.AreEqual(DateTimeKind.Unspecified, result.DateTime.Kind);
-				}
+				// utc values returned as local
+				Assert.AreEqual(dt.ToLocalTime()  , result.DateTime);
+				// local/unspecified values returned as unspecified (makes sense)
+				Assert.AreEqual(DateTimeKind.Local, result.DateTime.Kind);
+			}
+			else
+			{
+				Assert.AreEqual(dt                      , result.DateTime);
+				// local/unspecified values returned as unspecified (makes sense)
+				Assert.AreEqual(DateTimeKind.Unspecified, result.DateTime.Kind);
 			}
 		}
 
@@ -669,40 +669,40 @@ namespace Tests.DataProvider
 		{
 			if (context.Contains("Classic") && columnType != "TEXT")
 				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
-			
-			using (var db    = new DataConnection(context, ConfigureMapping(columnType)))
-			using (var table = db.CreateLocalTable<DateTimeTable>())
-			{
-				db.InlineParameters = inline;
-				var dt              = new DateTime(2040, 2, 29, 11, 12, 13, 456, kind);
 
-				db.BulkCopy(
-						new BulkCopyOptions { BulkCopyType = copyType },
-						new[]
+			using var db    = new DataConnection(context, ConfigureMapping(columnType));
+			using var table = db.CreateLocalTable<DateTimeTable>();
+
+			db.InlineParameters = inline;
+			var dt              = new DateTime(2040, 2, 29, 11, 12, 13, 456, kind);
+
+			db.BulkCopy(
+					new BulkCopyOptions { BulkCopyType = copyType },
+					new[]
+					{
+						new DateTimeTable()
 						{
-							new DateTimeTable()
-							{
-								DateTime = dt
-							}
-						});
+							DateTime = dt
+						}
+					});
 
-				var result = table.Single();
+			var result = table.Single();
 
-				// don't assert sql, as InlineParameters ignored for some copy types
+			// don't assert sql, as InlineParameters ignored for some copy types
 
-				if (kind == DateTimeKind.Utc)
-				{
-					// utc values returned as local
-					Assert.AreEqual(dt.ToLocalTime()  , result.DateTime);
-					// local/unspecified values returned as unspecified (makes sense)
-					Assert.AreEqual(DateTimeKind.Local, result.DateTime.Kind);
-				}
-				else
-				{
-					Assert.AreEqual(dt                      , result.DateTime);
-					// local/unspecified values returned as unspecified (makes sense)
-					Assert.AreEqual(DateTimeKind.Unspecified, result.DateTime.Kind);
-				}
+			if (kind == DateTimeKind.Utc)
+			{
+				// utc values returned as local
+				Assert.AreEqual(dt.ToLocalTime()  , result.DateTime);
+				// local/unspecified values returned as unspecified (makes sense)
+				Assert.AreEqual(DateTimeKind.Local, result.DateTime.Kind);
+			}
+			else
+			{
+				Assert.AreEqual(dt                      , result.DateTime);
+				// local/unspecified values returned as unspecified (makes sense)
+				Assert.AreEqual(DateTimeKind.Unspecified, result.DateTime.Kind);
+			}
 		}
 
 		// test to make sure our tests work with expected version of sqlite
