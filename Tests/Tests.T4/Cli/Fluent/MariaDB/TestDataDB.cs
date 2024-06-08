@@ -66,10 +66,6 @@ namespace Cli.Fluent.MariaDB
 						.HasAttribute(new ColumnAttribute("timeDataType"))
 					.Member(e => e.YearDataType)
 						.HasAttribute(new ColumnAttribute("yearDataType"))
-					.Member(e => e.Year2DataType)
-						.HasAttribute(new ColumnAttribute("year2DataType"))
-					.Member(e => e.Year4DataType)
-						.HasAttribute(new ColumnAttribute("year4DataType"))
 					.Member(e => e.CharDataType)
 						.HasAttribute(new ColumnAttribute("charDataType"))
 					.Member(e => e.Char20DataType)
@@ -587,10 +583,10 @@ namespace Cli.Fluent.MariaDB
 						.HasAttribute(new ColumnAttribute("`TimeStamp`"))
 					.Member(e => e.Time)
 						.HasAttribute(new ColumnAttribute("`Time`"))
-					.Member(e => e.SkipMySql55BeginSkipMySql55ConnectorBeginJson)
-						.HasAttribute(new ColumnAttribute("-- SKIP MySql55 BEGIN\n-- SKIP MySql55Connector BEGIN\n\t`Json`"))
-					.Member(e => e.SkipMySql55ConnectorEndSkipMySql55EndTinyInt)
-						.HasAttribute(new ColumnAttribute("-- SKIP MySql55Connector END\n-- SKIP MySql55 END\n\t`TinyInt`"))
+					.Member(e => e.Json)
+						.HasAttribute(new ColumnAttribute("`Json`"))
+					.Member(e => e.TinyInt)
+						.HasAttribute(new ColumnAttribute("`TinyInt`"))
 					.Member(e => e.TinyIntUnsigned)
 						.HasAttribute(new ColumnAttribute("`TinyIntUnsigned`"))
 					.Member(e => e.SmallInt)
@@ -1140,56 +1136,56 @@ namespace Cli.Fluent.MariaDB
 
 		public partial class Issue2313ParametersResult
 		{
-			public string?   VarCharDefault                                { get; set; }
-			public char?     VarChar1                                      { get; set; }
-			public string?   Char255                                       { get; set; }
-			public char?     Char1                                         { get; set; }
-			public byte[]?   VarBinary255                                  { get; set; }
-			public byte[]?   Binary255                                     { get; set; }
-			public byte[]?   TinyBlob                                      { get; set; }
-			public byte[]?   Blob                                          { get; set; }
-			public byte[]?   MediumBlob                                    { get; set; }
-			public byte[]?   LongBlob                                      { get; set; }
-			public string?   TinyText                                      { get; set; }
-			public string?   Text                                          { get; set; }
-			public string?   MediumText                                    { get; set; }
-			public string?   LongText                                      { get; set; }
-			public DateTime? Date                                          { get; set; }
-			public DateTime? DateTime                                      { get; set; }
-			public DateTime? TimeStamp                                     { get; set; }
-			public TimeSpan? Time                                          { get; set; }
-			public string?   SkipMySql55BeginSkipMySql55ConnectorBeginJson { get; set; }
-			public sbyte?    SkipMySql55ConnectorEndSkipMySql55EndTinyInt  { get; set; }
-			public byte?     TinyIntUnsigned                               { get; set; }
-			public short?    SmallInt                                      { get; set; }
-			public ushort?   SmallIntUnsigned                              { get; set; }
-			public int?      MediumInt                                     { get; set; }
-			public uint?     MediumIntUnsigned                             { get; set; }
-			public int?      Int                                           { get; set; }
-			public uint?     IntUnsigned                                   { get; set; }
-			public long?     BigInt                                        { get; set; }
-			public ulong?    BigIntUnsigned                                { get; set; }
-			public decimal?  Decimal                                       { get; set; }
-			public float?    Float                                         { get; set; }
-			public double?   Double                                        { get; set; }
-			public bool?     Boolean                                       { get; set; }
-			public bool?     Bit1                                          { get; set; }
-			public bool?     Bit8                                          { get; set; }
-			public bool?     Bit10                                         { get; set; }
-			public bool?     Bit16                                         { get; set; }
-			public bool?     Bit32                                         { get; set; }
-			public bool?     Bit64                                         { get; set; }
-			public string?   Enum                                          { get; set; }
-			public string?   Set                                           { get; set; }
-			public int?      Year                                          { get; set; }
-			public byte[]?   Geometry                                      { get; set; }
-			public byte[]?   Point                                         { get; set; }
-			public byte[]?   LineString                                    { get; set; }
-			public byte[]?   Polygon                                       { get; set; }
-			public byte[]?   MultiPoint                                    { get; set; }
-			public byte[]?   MultiLineString                               { get; set; }
-			public byte[]?   MultiPolygon                                  { get; set; }
-			public byte[]?   GeometryCollection                            { get; set; }
+			public string?   VarCharDefault     { get; set; }
+			public char?     VarChar1           { get; set; }
+			public string?   Char255            { get; set; }
+			public char?     Char1              { get; set; }
+			public byte[]?   VarBinary255       { get; set; }
+			public byte[]?   Binary255          { get; set; }
+			public byte[]?   TinyBlob           { get; set; }
+			public byte[]?   Blob               { get; set; }
+			public byte[]?   MediumBlob         { get; set; }
+			public byte[]?   LongBlob           { get; set; }
+			public string?   TinyText           { get; set; }
+			public string?   Text               { get; set; }
+			public string?   MediumText         { get; set; }
+			public string?   LongText           { get; set; }
+			public DateTime? Date               { get; set; }
+			public DateTime? DateTime           { get; set; }
+			public DateTime? TimeStamp          { get; set; }
+			public TimeSpan? Time               { get; set; }
+			public string?   Json               { get; set; }
+			public sbyte?    TinyInt            { get; set; }
+			public byte?     TinyIntUnsigned    { get; set; }
+			public short?    SmallInt           { get; set; }
+			public ushort?   SmallIntUnsigned   { get; set; }
+			public int?      MediumInt          { get; set; }
+			public uint?     MediumIntUnsigned  { get; set; }
+			public int?      Int                { get; set; }
+			public uint?     IntUnsigned        { get; set; }
+			public long?     BigInt             { get; set; }
+			public ulong?    BigIntUnsigned     { get; set; }
+			public decimal?  Decimal            { get; set; }
+			public float?    Float              { get; set; }
+			public double?   Double             { get; set; }
+			public bool?     Boolean            { get; set; }
+			public bool?     Bit1               { get; set; }
+			public bool?     Bit8               { get; set; }
+			public bool?     Bit10              { get; set; }
+			public bool?     Bit16              { get; set; }
+			public bool?     Bit32              { get; set; }
+			public bool?     Bit64              { get; set; }
+			public string?   Enum               { get; set; }
+			public string?   Set                { get; set; }
+			public int?      Year               { get; set; }
+			public byte[]?   Geometry           { get; set; }
+			public byte[]?   Point              { get; set; }
+			public byte[]?   LineString         { get; set; }
+			public byte[]?   Polygon            { get; set; }
+			public byte[]?   MultiPoint         { get; set; }
+			public byte[]?   MultiLineString    { get; set; }
+			public byte[]?   MultiPolygon       { get; set; }
+			public byte[]?   GeometryCollection { get; set; }
 		}
 		#endregion
 

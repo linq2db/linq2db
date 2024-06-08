@@ -1,7 +1,7 @@
 ﻿namespace LinqToDB.DataProvider.PostgreSQL
 {
 	/// <summary>
-	/// PostgreSQL language dialect. Version defines minimal PostgreSQL version to use this dialect.
+	/// PostgreSQL language dialect. Version specifies minimal PostgreSQL version to use this dialect.
 	/// </summary>
 	public enum PostgreSQLVersion
 	{

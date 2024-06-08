@@ -67,8 +67,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(2, result.Id);
-				Assert.AreEqual(2, result.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Id, Is.EqualTo(2));
+					Assert.That(result.Value, Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -88,8 +91,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(2, result.Id);
-				Assert.AreEqual(2, result.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Id, Is.EqualTo(2));
+					Assert.That(result.Value, Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -109,8 +115,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = (await query(db, 2, CancellationToken.None))!;
-				Assert.AreEqual(2, result.Id);
-				Assert.AreEqual(2, result.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Id, Is.EqualTo(2));
+					Assert.That(result.Value, Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -130,8 +139,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = (await query(db, 2, CancellationToken.None))!;
-				Assert.AreEqual(2, result.Id);
-				Assert.AreEqual(2, result.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Id, Is.EqualTo(2));
+					Assert.That(result.Value, Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -151,8 +163,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(2, result.Id);
-				Assert.AreEqual(2, result.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Id, Is.EqualTo(2));
+					Assert.That(result.Value, Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -180,8 +195,11 @@ namespace Tests.Linq
 					).SingleAsync(c => c.Id == id, token));
 
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(2, result.Id);
-				Assert.AreEqual(2, result.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Id, Is.EqualTo(2));
+					Assert.That(result.Value, Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -201,8 +219,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = (await query(db, 2, CancellationToken.None))!;
-				Assert.AreEqual(2, result.Id);
-				Assert.AreEqual(2, result.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Id, Is.EqualTo(2));
+					Assert.That(result.Value, Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -230,12 +251,14 @@ namespace Tests.Linq
 					).SingleOrDefaultAsync(c => c.Id == id, token));
 
 				var result = (await query(db, 2, CancellationToken.None))!;
-				Assert.AreEqual(2, result.Id);
-				Assert.AreEqual(2, result.Value);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Id, Is.EqualTo(2));
+					Assert.That(result.Value, Is.EqualTo(2));
+				});
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AnyAsync([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -246,11 +269,10 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.IsTrue(result);
+				Assert.That(result, Is.True);
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AnyPredicateAsync([DataSources] string context)
 		{
@@ -261,7 +283,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.IsTrue(result);
+				Assert.That(result, Is.True);
 			}
 		}
 
@@ -275,7 +297,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(1, result);
+				Assert.That(result, Is.EqualTo(1));
 			}
 		}
 
@@ -289,7 +311,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(1, result);
+				Assert.That(result, Is.EqualTo(1));
 			}
 		}
 
@@ -303,7 +325,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(1, result);
+				Assert.That(result, Is.EqualTo(1));
 			}
 		}
 
@@ -317,7 +339,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(1, result);
+				Assert.That(result, Is.EqualTo(1));
 			}
 		}
 
@@ -337,7 +359,7 @@ namespace Tests.Linq
 						bd.GetTable<AsyncDataTable>().Where(c => c.Id > id).Select(c => c.Id).MinAsync(token));
 
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(3, result);
+				Assert.That(result, Is.EqualTo(3));
 			}
 		}
 
@@ -357,7 +379,7 @@ namespace Tests.Linq
 						bd.GetTable<AsyncDataTable>().Where(c => c.Id > id).MinAsync(c => c.Id, token));
 
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(3, result);
+				Assert.That(result, Is.EqualTo(3));
 			}
 		}
 
@@ -371,7 +393,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -385,11 +407,10 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AllAsync([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -400,11 +421,10 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.IsFalse(result);
+				Assert.That(result, Is.False);
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task ContainsAsync([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -415,7 +435,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.IsTrue(result);
+				Assert.That(result, Is.True);
 			}
 		}
 
@@ -431,7 +451,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -445,7 +465,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -459,7 +479,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -473,7 +493,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -487,7 +507,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -501,7 +521,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -515,7 +535,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -529,7 +549,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -543,7 +563,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -557,7 +577,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 		#endregion
@@ -574,7 +594,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -588,7 +608,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -602,7 +622,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -616,7 +636,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -630,7 +650,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -644,7 +664,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -658,7 +678,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -672,7 +692,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -686,7 +706,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -700,7 +720,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(10, result);
+				Assert.That(result, Is.EqualTo(10));
 			}
 		}
 
@@ -718,7 +738,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 5, CancellationToken.None);
-				Assert.AreEqual(2.5d, result);
+				Assert.That(result, Is.EqualTo(2.5d));
 			}
 		}
 

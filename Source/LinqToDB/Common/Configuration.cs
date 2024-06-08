@@ -8,6 +8,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
+	using System.Text;
+
 	using Data;
 	using Data.RetryPolicy;
 	using Linq;
@@ -632,7 +634,28 @@ namespace LinqToDB.Common
 			/// Set this value to <c>null</c> to disable special alias generation queries.
 			/// </remarks>
 			/// </summary>
-			public static string? AssociationAlias { get; set; } = "a_{0}";
+			public static string? AssociationAlias
+			{
+#if SUPPORTS_COMPOSITE_FORMAT
+				get => AssociationAliasFormat?.Format;
+				set
+				{
+					AssociationAliasFormat = string.IsNullOrEmpty(value) ? null : CompositeFormat.Parse(value);
+				}
+#else
+				get => AssociationAliasFormat;
+				set
+				{
+					AssociationAliasFormat = string.IsNullOrEmpty(value) ? null : value;
+				}
+#endif
+			}
+
+#if SUPPORTS_COMPOSITE_FORMAT
+			internal static CompositeFormat? AssociationAliasFormat { get; private set; } = CompositeFormat.Parse("a_{0}");
+#else
+			internal static string? AssociationAliasFormat { get; private set; } = "a_{0}";
+#endif
 
 			/// <summary>
 			/// Indicates whether SQL Builder should generate aliases for final projection.

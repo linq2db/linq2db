@@ -132,8 +132,8 @@ namespace LinqToDB.Expressions
 				var w2oType = typeof(Dictionary<,>).MakeGenericType(wrapperType, originalType);
 				var o2wType = typeof(Dictionary<,>).MakeGenericType(originalType, wrapperType);
 
-				var wrapperToOriginal = w2oType.GetConstructor(Array<Type>.Empty)!.Invoke(Array<object>.Empty);
-				var originalToWrapper = o2wType.GetConstructor(Array<Type>.Empty)!.Invoke(Array<object>.Empty);
+				var wrapperToOriginal = w2oType.GetConstructor([])!.Invoke([]);
+				var originalToWrapper = o2wType.GetConstructor([])!.Invoke([]);
 
 				var w2o = (IDictionary)wrapperToOriginal;
 				var o2w = (IDictionary)originalToWrapper;
@@ -885,16 +885,16 @@ namespace LinqToDB.Expressions
 		public Expression MapExpression<T, TR>(Expression<Func<T, TR>> func, Expression p)
 			=> MapExpressionInternal(func, p);
 
-		public Expression MapExpression<T1, T2, TR>(Expression<Func<T1, T2, TR>> func, Expression p1, Expression p2) 
+		public Expression MapExpression<T1, T2, TR>(Expression<Func<T1, T2, TR>> func, Expression p1, Expression p2)
 			=> MapExpressionInternal(func, p1, p2);
 
-		public Expression MapExpression<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func, Expression p1, Expression p2, Expression p3) 
+		public Expression MapExpression<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func, Expression p1, Expression p2, Expression p3)
 			=> MapExpressionInternal(func, p1, p2, p3);
 
-		public Expression MapExpression<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4) 
+		public Expression MapExpression<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4)
 			=> MapExpressionInternal(func, p1, p2, p3, p4);
 
-		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5) 
+		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
 			=> MapExpressionInternal(func, p1, p2, p3, p4, p5);
 
 		#endregion
@@ -945,22 +945,22 @@ namespace LinqToDB.Expressions
 
 		#region BuildFunc
 
-		public Func<TR> BuildFunc<TR>(LambdaExpression lambda) => 
+		public Func<TR> BuildFunc<TR>(LambdaExpression lambda) =>
 			(Func<TR>)CorrectLambdaParameters(lambda, typeof(TR)).CompileExpression();
 
 		public Func<T, TR> BuildFunc<T, TR>(LambdaExpression lambda) =>
 			(Func<T, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T)).CompileExpression();
 
-		public Func<T1, T2, TR> BuildFunc<T1, T2, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, TR> BuildFunc<T1, T2, TR>(LambdaExpression lambda) =>
 			(Func<T1, T2, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2)).CompileExpression();
 
-		public Func<T1, T2, T3, TR> BuildFunc<T1, T2, T3, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, TR> BuildFunc<T1, T2, T3, TR>(LambdaExpression lambda) =>
 			(Func<T1, T2, T3, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3)).CompileExpression();
 
-		public Func<T1, T2, T3, T4, TR> BuildFunc<T1, T2, T3, T4, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, T4, TR> BuildFunc<T1, T2, T3, T4, TR>(LambdaExpression lambda) =>
 			(Func<T1, T2, T3, T4, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4)).CompileExpression();
 
-		public Func<T1, T2, T3, T4, T5, TR> BuildFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, T4, T5, TR> BuildFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) =>
 			(Func<T1, T2, T3, T4, T5, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).CompileExpression();
 
 		public Func<T1, T2, T3, T4, T5, T6, TR> BuildFunc<T1, T2, T3, T4, T5, T6, TR>(LambdaExpression lambda) =>
@@ -972,22 +972,22 @@ namespace LinqToDB.Expressions
 
 		#region BuildAction
 
-		public Action BuildAction(LambdaExpression lambda) => 
+		public Action BuildAction(LambdaExpression lambda) =>
 			(Action)CorrectLambdaParameters(lambda, null).CompileExpression();
 
 		public Action<T> BuildAction<T>(LambdaExpression lambda) =>
 			(Action<T>)CorrectLambdaParameters(lambda, null, typeof(T)).CompileExpression();
 
-		public Action<T1, T2> BuildAction<T1, T2>(LambdaExpression lambda) => 
+		public Action<T1, T2> BuildAction<T1, T2>(LambdaExpression lambda) =>
 			(Action<T1, T2>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2)).CompileExpression();
 
-		public Action<T1, T2, T3> BuildAction<T1, T2, T3>(LambdaExpression lambda) => 
+		public Action<T1, T2, T3> BuildAction<T1, T2, T3>(LambdaExpression lambda) =>
 			(Action<T1, T2, T3>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3)).CompileExpression();
 
-		public Action<T1, T2, T3, T4> BuildAction<T1, T2, T3, T4>(LambdaExpression lambda) => 
+		public Action<T1, T2, T3, T4> BuildAction<T1, T2, T3, T4>(LambdaExpression lambda) =>
 			(Action<T1, T2, T3, T4>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3), typeof(T4)).CompileExpression();
 
-		public Action<T1, T2, T3, T4, T5> BuildAction<T1, T2, T3, T4, T5>(LambdaExpression lambda) => 
+		public Action<T1, T2, T3, T4, T5> BuildAction<T1, T2, T3, T4, T5>(LambdaExpression lambda) =>
 			(Action<T1, T2, T3, T4, T5>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).CompileExpression();
 
 		#endregion
@@ -1140,27 +1140,43 @@ namespace LinqToDB.Expressions
 		}
 
 		public Func<object> BuildFactory<TR>(Expression<Func<TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<object>)BuildFactoryImpl<TR>(newFunc, false);
 		}
 
 		public Func<T, object> BuildFactory<T, TR>(Expression<Func<T, TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<T, object>)BuildFactoryImpl<TR>(newFunc, false);
 		}
 
 		public Func<T1, T2, object> BuildFactory<T1, T2, TR>(Expression<Func<T1, T2, TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<T1, T2, object>)BuildFactoryImpl<TR>(newFunc, false);
 		}
 
 		public Func<T1, T2, T3, object> BuildFactory<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<T1, T2, T3, object>)BuildFactoryImpl<TR>(newFunc, false);
+		}
+
+		public Func<TRes> BuildTypedFactory<TR, TRes>(Expression<Func<TR>> newFunc)
+		{
+			return (Func<TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
+		}
+
+		public Func<T, TRes> BuildTypedFactory<T, TR, TRes>(Expression<Func<T, TR>> newFunc)
+		{
+			return (Func<T, TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
+		}
+
+		public Func<T1, T2, TRes> BuildTypedFactory<T1, T2, TR, TRes>(Expression<Func<T1, T2, TR>> newFunc)
+		{
+			return (Func<T1, T2, TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
+		}
+
+		public Func<T1, T2, T3, TRes> BuildTypedFactory<T1, T2, T3, TR, TRes>(Expression<Func<T1, T2, T3, TR>> newFunc)
+		{
+			return (Func<T1, T2, T3, TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
 		}
 
 		#endregion
@@ -1179,12 +1195,24 @@ namespace LinqToDB.Expressions
 			return BuildWrapperImpl(lambda, wrapResult, false)!;
 		}
 
+		private Delegate BuildFactoryImpl<T, TRes>(LambdaExpression lambda, bool wrapResult)
+		{
+			// TODO: here are two optimizations that could be done to make generated action a bit faster:
+			// 1. require caller to pass unwrapped instance, so we don't need to generate instance_ property access
+			// 2. generate wrapper constructor call instead of Wrap method call (will need null check of wrapped value)
+			var wrapperType = typeof(T);
+			if (!TryMapType(wrapperType, out var _))
+				throw new LinqToDBException($"Wrapper type {wrapperType} is not registered");
+
+			return BuildWrapperImpl(lambda, wrapResult, false, typeof(TRes))!;
+		}
+
 		private Delegate? BuildWrapper(LambdaExpression lambda, bool optional)
 		{
 			return BuildWrapperImpl(lambda, true, optional);
 		}
 
-		private Delegate? BuildWrapperImpl(LambdaExpression lambda, bool wrapResult, bool optional)
+		private Delegate? BuildWrapperImpl(LambdaExpression lambda, bool wrapResult, bool optional, Type? returnTypeOverride = null)
 		{
 			var mappedLambda = MapLambdaInternal(lambda, true, ignoreMissingMembers: optional);
 			if (optional && mappedLambda == null)
@@ -1234,10 +1262,10 @@ namespace LinqToDB.Expressions
 				}
 				else
 				{
-					expr = expr.Transform(returnType, static (returnType, e) =>
+					expr = expr.Transform((returnTypeOverride, returnType), static (ctx, e) =>
 					{
-						if (e.Type == returnType)
-							return Expression.Convert(e, typeof(object));
+						if (e.Type == ctx.returnType)
+							return Expression.Convert(e, ctx.returnTypeOverride ?? typeof(object));
 
 						return e;
 					});

@@ -91,7 +91,7 @@ namespace LinqToDB.DataModel
 						context.AST.Return(
 							context.AST.New(
 								tupleClassBuilder.Type.Type,
-								Array<ICodeExpression>.Empty,
+								[],
 								initializers)));
 
 				// add conversion expression to mapping schema initializer

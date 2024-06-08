@@ -1,11 +1,11 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"      #>
-<#@ output extension=".generated.cs"                                                              #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\FirebirdSql.Data.FirebirdClient.dll" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude" once="true"     #>
-<#@ include file="..\Shared.ttinclude"                                            once="true"     #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"    #>
+<#@ output extension=".generated.cs"                                                            #>
+<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\FirebirdSql.Data.FirebirdClient.dll" #>
+<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude" once="true"   #>
+<#@ include file="..\Shared.ttinclude"                                            once="true"   #>
 <#
 	NamespaceName   = "Default.Firebird";
 	DataContextName = "TestDataDB";
-	LoadFirebirdMetadata(GetConnectionString("Firebird4"));
+	LoadFirebirdMetadata(GetConnectionString("Firebird.4"));
 	GenerateModel();
 #>

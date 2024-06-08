@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Xml;
 using System.Xml.Linq;
-using System.Collections.Generic;
 
 namespace LinqToDB.Data
 {
@@ -15,6 +15,8 @@ namespace LinqToDB.Data
 	[ScalarType]
 	public class DataParameter
 	{
+		private DbDataType? _dbDataType;
+
 		public DataParameter()
 		{
 		}
@@ -23,6 +25,13 @@ namespace LinqToDB.Data
 		{
 			Name  = name;
 			Value = value;
+		}
+
+		public DataParameter(string? name, object? value, DbDataType dbDataType)
+		{
+			Name        = name;
+			Value       = value;
+			_dbDataType = dbDataType;
 		}
 
 		public DataParameter(string? name, object? value, DataType dataType)
@@ -44,7 +53,6 @@ namespace LinqToDB.Data
 		{
 			Name     = name;
 			Value    = value;
-			DataType = DataType.Undefined;
 			DbType   = dbType;
 		}
 
@@ -54,7 +62,11 @@ namespace LinqToDB.Data
 		/// <returns>
 		/// One of the <see cref="LinqToDB.DataType"/> values. The default is <see cref="DataType.Undefined"/>.
 		/// </returns>
-		public DataType DataType { get; set; }
+		public DataType DataType
+		{
+			get => _dbDataType?.DataType ?? DataType.Undefined;
+			set => _dbDataType = DbDataType.WithDataType(value);
+		}
 
 		/// <summary>
 		/// Gets or sets Database Type name of the parameter.
@@ -62,7 +74,11 @@ namespace LinqToDB.Data
 		/// <returns>
 		/// Name of Database Type or empty string.
 		/// </returns>
-		public string? DbType { get; set; }
+		public string? DbType
+		{
+			get => _dbDataType?.DbType;
+			set => _dbDataType = DbDataType.WithDbType(value);
+		}
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the parameter is input-only, output-only, bidirectional, or a stored procedure return value parameter.
@@ -95,12 +111,20 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets or sets precision for parameter type.
 		/// </summary>
-		public int? Precision { get; set; }
+		public int? Precision
+		{
+			get => _dbDataType?.Precision;
+			set => _dbDataType = DbDataType.WithPrecision(value);
+		}
 
 		/// <summary>
 		/// Gets or sets scale for parameter type.
 		/// </summary>
-		public int? Scale { get; set; }
+		public int? Scale
+		{
+			get => _dbDataType?.Scale;
+			set => _dbDataType = DbDataType.WithScale(value);
+		}
 
 		/// <summary>
 		/// Gets or sets the maximum size, in bytes, of the data within the column.
@@ -109,7 +133,11 @@ namespace LinqToDB.Data
 		/// <returns>
 		/// The maximum size, in bytes, of the data within the column. The default value is inferred from the parameter value.
 		/// </returns>
-		public int? Size { get; set; }
+		public int? Size
+		{
+			get => _dbDataType?.Length;
+			set => _dbDataType = DbDataType.WithLength(value);
+		}
 
 		/// <summary>
 		/// Gets or sets the value of the parameter.
@@ -126,20 +154,15 @@ namespace LinqToDB.Data
 		public DbParameter? Output { get; internal set; }
 
 		/// <summary>
-		/// Shortcut to get/set full-type. Used internally.
+		/// Parameter <see cref="DbDataType"/> type.
 		/// </summary>
-		internal DbDataType DbDataType
+		public DbDataType DbDataType
 		{
-			get => new DbDataType(Value?.GetType() ?? typeof(object), DataType, DbType, Size, Precision, Scale);
-			set
-			{
-				DataType  = value.DataType;
-				DbType    = value.DbType;
-				Size      = value.Length;
-				Precision = value.Precision;
-				Scale     = value.Scale;
-			}
+			get => _dbDataType ??= new DbDataType(Value?.GetType() ?? typeof(object), DataType, DbType, Size, Precision, Scale);
+			set => _dbDataType = value;
 		}
+
+		internal DbDataType GetOrSetDbDataType(DbDataType? columnType) => _dbDataType ?? columnType ?? DbDataType;
 
 		public static DataParameter Char          (string? name, char           value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
 		public static DataParameter Char          (string? name, string?        value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }

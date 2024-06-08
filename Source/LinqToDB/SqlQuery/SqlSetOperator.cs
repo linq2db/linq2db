@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public class SqlSetOperator : IQueryElement
 	{
@@ -11,34 +8,46 @@ namespace LinqToDB.SqlQuery
 			Operation   = operation;
 		}
 
-		public SelectQuery  SelectQuery { get; }
+		public SelectQuery  SelectQuery { get; private set; }
 		public SetOperation Operation   { get; }
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SetOperator;
+
+		public void Modify(SelectQuery selectQuery)
+		{
+			SelectQuery = selectQuery;
+		}
 
 #if OVERRIDETOSTRING
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.Append(" \n");
+			writer.AppendLine(" ");
+
 			switch (Operation)
 			{
-				case SetOperation.Union        : sb.Append("UNION");         break;
-				case SetOperation.UnionAll     : sb.Append("UNION ALL");     break;
-				case SetOperation.Except       : sb.Append("EXCEPT");        break;
-				case SetOperation.ExceptAll    : sb.Append("EXCEPT ALL");    break;
-				case SetOperation.Intersect    : sb.Append("INTERSECT");     break;
-				case SetOperation.IntersectAll : sb.Append("INTERSECT ALL"); break;
+				case SetOperation.Union        : writer.Append("UNION");         break;
+				case SetOperation.UnionAll     : writer.Append("UNION ALL");     break;
+				case SetOperation.Except       : writer.Append("EXCEPT");        break;
+				case SetOperation.ExceptAll    : writer.Append("EXCEPT ALL");    break;
+				case SetOperation.Intersect    : writer.Append("INTERSECT");     break;
+				case SetOperation.IntersectAll : writer.Append("INTERSECT ALL"); break;
 			}
-			sb.Append('\n');
-			return ((IQueryElement)SelectQuery).ToString(sb, dic);
+
+			writer.AppendLine();
+			writer.AppendElement(SelectQuery);
+
+			return writer;
 		}
 	}
 }

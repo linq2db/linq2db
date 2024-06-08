@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -1614,7 +1613,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Into, dataContext, target),
-					Expression.Constant(null, typeof(IDataContext)), query.Expression));
+					SqlQueryRootExpression.Create(dataContext), query.Expression));
 
 			return new ValueInsertable<T>(q);
 		}
@@ -3024,8 +3023,6 @@ namespace LinqToDB
 					currentSource.Expression, Expression.Quote(count)));
 		}
 
-		static readonly MethodInfo _elementAtMethodInfo = MemberHelper.MethodOf(() => ElementAt<int>(null!,null!)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Selects record at specified position from source query.
 		/// If query doesn't return enough records, <see cref="InvalidOperationException"/> will be thrown.
@@ -3048,7 +3045,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<TSource>(
 				Expression.Call(
 					null,
-					_elementAtMethodInfo.MakeGenericMethod(typeof(TSource)),
+					Methods.LinqToDB.ElementAtLambda.MakeGenericMethod(typeof(TSource)),
 					currentSource.Expression, Expression.Quote(index)));
 		}
 
@@ -3076,7 +3073,7 @@ namespace LinqToDB
 			var expr =
 				Expression.Call(
 					null,
-					_elementAtMethodInfo.MakeGenericMethod(typeof(TSource)),
+					Methods.LinqToDB.ElementAtLambda.MakeGenericMethod(typeof(TSource)),
 					currentSource.Expression, Expression.Quote(index));
 
 			if (currentSource is IQueryProviderAsync query)
@@ -3361,7 +3358,6 @@ namespace LinqToDB
 					Expression.Quote(resultSelector)));
 		}
 
-
 		/// <summary>
 		/// Defines inner join between two sub-queries or tables.
 		/// </summary>
@@ -3629,7 +3625,7 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(AsQueryable, source, dataContext),
 					Expression.Constant(source),
-					Expression.Constant(null, typeof(IDataContext))
+					SqlQueryRootExpression.Create(dataContext)
 				));
 
 			return query;
@@ -3982,7 +3978,6 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(SelectDistinct, source), currentSource.Expression));
 		}
-
 
 		#endregion;
 

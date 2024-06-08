@@ -8,7 +8,7 @@
 
 	//GetSchemaOptions.IncludedSchemas = new[] { "TEST" };
 
-	LoadSapHanaMetadata(GetConnectionString("SapHana.Native"), LinqToDB.ProviderName.SapHanaNative);
+	LoadSapHanaMetadata(GetConnectionString("SapHana.Native"));
 
 	GenerateModel();
 #>

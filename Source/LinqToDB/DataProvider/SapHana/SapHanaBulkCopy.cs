@@ -50,7 +50,6 @@ namespace LinqToDB.DataProvider.SapHana
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -67,7 +66,6 @@ namespace LinqToDB.DataProvider.SapHana
 
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
-#endif
 
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
 			where T : notnull
@@ -108,7 +106,6 @@ namespace LinqToDB.DataProvider.SapHana
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 			var rc             = new BulkCopyRowsCopied();
-
 
 			var hanaOptions = SapHanaProviderAdapter.HanaBulkCopyOptions.Default;
 
@@ -186,7 +183,6 @@ namespace LinqToDB.DataProvider.SapHana
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 			var rc             = new BulkCopyRowsCopied();
-
 
 			var hanaOptions = SapHanaProviderAdapter.HanaBulkCopyOptions.Default;
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -62,7 +61,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -79,7 +77,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
-#endif
 
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
 			where T : notnull
@@ -326,7 +323,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return ret;
 		}
 
-#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -362,6 +358,5 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return ret;
 		}
-#endif
 	}
 }

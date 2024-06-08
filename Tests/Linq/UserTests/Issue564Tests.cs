@@ -52,7 +52,7 @@ namespace Tests.UserTests
 				db.Insert(new Child564A() {StringValue = "SomeValue"});
 				db.Insert(new Child564B() {IntValue    = 911});
 
-				Assert.AreEqual(2, db.GetTable<Parent564>().Count());
+				Assert.That(db.GetTable<Parent564>().Count(), Is.EqualTo(2));
 			}
 		}
 	}

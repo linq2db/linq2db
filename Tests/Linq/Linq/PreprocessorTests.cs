@@ -49,7 +49,7 @@ namespace Tests.Linq
 				for (int i = 0; i < 3; i++)
 				{
 					var newId = db.GetTable<Parent>().Where(p => p.ParentID == 1).Select(p => p.ParentID).First();
-					Assert.AreEqual(2, newId);
+					Assert.That(newId, Is.EqualTo(2));
 				}
 			}
 		}

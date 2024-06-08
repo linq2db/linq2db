@@ -1,12 +1,12 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
 <#@ output extension=".generated.cs"                                                         #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\MySql.Data.dll"                 #>
+<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\MySql.Data.dll"                   #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude" once="true"   #>
 <#@ include file="..\Shared.ttinclude"                                         once="true"   #>
 <#
 	NamespaceName   = "Default.MySql";
 	DataContextName = "TestDataDB";
 
-	LoadMySqlMetadata(GetConnectionString("MySqlConnector"));
+	LoadMySqlMetadata(GetConnectionString("MySqlConnector.8.0"));
 	GenerateModel();
 #>

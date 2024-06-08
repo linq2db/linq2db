@@ -5,7 +5,7 @@
 
 [![Master branch build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5/master?label=build%20(master))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary) [![Latest build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5?label=build%20(latest))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary)
 
-LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database.
+LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCOs and your database.
 
 Architecturally it is one step above micro-ORMs like Dapper, Massive, or PetaPoco, in that you work with LINQ expressions, not with magic strings, while maintaining a thin abstraction layer between your code and the database. Your queries are checked by the C# compiler and allow for easy refactoring.
 
@@ -64,6 +64,7 @@ Unmantained projects:
 You can simply pass connection string into `DataConnection` or `DataContext` constructor using [`DataOptions`](https://linq2db.github.io/api/LinqToDB.DataOptions.html) class.
 
 Minimal configuration example:
+
 ```cs
 var db = new DataConnection(
   new DataOptions()
@@ -148,7 +149,7 @@ And later just set on program startup before the first query is done (Startup.cs
 DataConnection.DefaultSettings = new MySettings();
 ```
 
-### Use with ASP.NET Core
+### Use with ASP.NET Core and Dependency Injection
 
 See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
 

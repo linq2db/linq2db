@@ -2,6 +2,7 @@
 
 open LinqToDB
 open LinqToDB.Mapping
+open NUnit.Framework
 open Tests
 open Tests.Tools
 
@@ -31,8 +32,8 @@ let InsertAndSelectObject(db : IDataContext) =
         select row
         exactlyOne
     }
-    NUnitAssert.AreEqual(row.MetadataVersion, selectedRow.MetadataVersion)
-    NUnitAssert.AreEqual(row.DictionaryKey, selectedRow.DictionaryKey)
+    Assert.That(selectedRow.MetadataVersion, Is.EqualTo row.MetadataVersion)
+    Assert.That(selectedRow.DictionaryKey, Is.EqualTo row.DictionaryKey)
 
 let InsertAndSelectRecord(db : IDataContext) =
     use table = db.CreateLocalTable<RowRecord>()
@@ -43,5 +44,5 @@ let InsertAndSelectRecord(db : IDataContext) =
         select row
         exactlyOne
     }
-    NUnitAssert.AreEqual(row.MetadataVersion, selectedRow.MetadataVersion)
-    NUnitAssert.AreEqual(row.DictionaryKey, selectedRow.DictionaryKey)
+    Assert.That(selectedRow.MetadataVersion, Is.EqualTo row.MetadataVersion)
+    Assert.That(selectedRow.DictionaryKey, Is.EqualTo row.DictionaryKey)

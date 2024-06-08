@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace LinqToDB.DataProvider.MySql
+﻿namespace LinqToDB.DataProvider.MySql
 {
-	using Extensions;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-
-	using SqlBinary = SqlQuery.SqlBinaryExpression;
 
 	sealed class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
@@ -15,169 +10,84 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		public override bool CanCompareSearchConditions => true;
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
+		{
+			return new MySqlSqlExpressionConvertVisitor(allowModify);
+		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement),
+				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema),
 				QueryType.Delete => PrepareDelete     ((SqlDeleteStatement)statement),
 				_                => statement,
 			};
 		}
 
-		static SqlStatement PrepareDelete(SqlDeleteStatement statement)
+		SqlStatement PrepareDelete(SqlDeleteStatement statement)
 		{
 			var tables = statement.SelectQuery.From.Tables;
 
-			if (statement.Output != null && tables.Count == 1 && tables[0].Joins.Count == 0)
+			if (tables.Count == 1 && tables[0].Joins.Count == 0
+				&& !statement.SelectQuery.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported))
 				tables[0].Alias = "$";
 
 			return statement;
 		}
 
-		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement)
+		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (statement.SelectQuery.Select.SkipValue != null)
 				throw new LinqToDBException("MySql does not support Skip in update query");
 
-			statement = CorrectUpdateTable(statement);
+			statement = CorrectUpdateTable(statement, leaveUpdateTableInQuery: true, dataOptions, mappingSchema);
 
-			if (!statement.SelectQuery.OrderBy.IsEmpty)
-				statement.SelectQuery.OrderBy.Items.Clear();
+			// Mysql do not allow Update table usage in FROM clause. Moving it to subquery
+			// https://stackoverflow.com/a/14302701/10646316
+			// See UpdateIssue319Regression test
+			var changed = false;
+			statement.SelectQuery.VisitParentFirst(e =>
+			{
+				// Skip root query FROM clause
+				if (ReferenceEquals(e, statement.SelectQuery.From))
+				{
+					return false;
+				}
+
+				if (e is SqlTableSource ts)
+				{
+					if (ts.Source is SqlTable table 
+						&& !ReferenceEquals(table, statement.Update.Table) 
+						&& QueryHelper.IsEqualTables(table, statement.Update.Table))
+					{
+						var subQuery = new SelectQuery
+						{
+							DoNotRemove = true,
+						};
+						subQuery.From.Tables.Add(new SqlTableSource(table, ts.Alias));
+						ts.Source = subQuery;
+						changed = true;
+
+						return false;
+					}
+				}
+
+				return true;
+			});
+
+			//if (!statement.SelectQuery.OrderBy.IsEmpty)
+			//	statement.SelectQuery.OrderBy.Items.Clear();
+
+			CorrectUpdateSetters(statement);
+
+			if (changed)
+			{
+				var corrector = new SqlQueryColumnNestingCorrector();
+				corrector.CorrectColumnNesting(statement);
+			}
 
 			return statement;
-		}
-
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
-		{
-			expression = base.ConvertExpressionImpl(expression, visitor);
-
-			return Convert(expression);
-
-			ISqlExpression Convert(ISqlExpression expr)
-			{
-				switch (expr)
-				{
-					case SqlBinary(var type, var ex1, "+", var ex2) when type == typeof(string) :
-					{
-						return ConvertFunc(new (type, "Concat", ex1, ex2));
-
-						static SqlFunction ConvertFunc(SqlFunction func)
-						{
-							for (var i = 0; i < func.Parameters.Length; i++)
-							{
-								switch (func.Parameters[i])
-								{
-									case SqlBinary(var t, var e1, "+", var e2) when t == typeof(string) :
-									{
-										var ps = new List<ISqlExpression>(func.Parameters);
-
-										ps.RemoveAt(i);
-										ps.Insert(i,     e1);
-										ps.Insert(i + 1, e2);
-
-										return ConvertFunc(new (t, func.Name, ps.ToArray()));
-									}
-
-									case SqlFunction(var t, "Concat") f when t == typeof(string) :
-									{
-										var ps = new List<ISqlExpression>(func.Parameters);
-
-										ps.RemoveAt(i);
-										ps.InsertRange(i, f.Parameters);
-
-										return ConvertFunc(new (t, func.Name, ps.ToArray()));
-									}
-								}
-							}
-
-							return func;
-						}
-					}
-
-					case SqlFunction(var type, "Convert") func:
-					{
-						var ftype = type.ToUnderlying();
-
-						if (ftype == typeof(bool))
-						{
-							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
-							if (ex != null)
-								return ex;
-						}
-
-						if ((ftype == typeof(double) || ftype == typeof(float)) && func.Parameters[1].SystemType!.ToUnderlying() == typeof(decimal))
-							return func.Parameters[1];
-
-						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
-					}
-
-					default : return expr;
-				}
-			}
-		}
-
-		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
-		{
-			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context);
-
-			if (caseSensitive != true)
-			{
-				var searchExpr = predicate.Expr2;
-				var dataExpr   = predicate.Expr1;
-
-				if (caseSensitive == false)
-				{
-					searchExpr = PseudoFunctions.MakeToLower(searchExpr);
-					dataExpr   = PseudoFunctions.MakeToLower(dataExpr);
-				}
-
-				ISqlPredicate? newPredicate = null;
-				switch (predicate.Kind)
-				{
-					case SqlPredicate.SearchString.SearchKind.Contains:
-					{
-						newPredicate = new SqlPredicate.ExprExpr(
-							new SqlFunction(typeof(int), "LOCATE", searchExpr, dataExpr), SqlPredicate.Operator.Greater,
-							new SqlValue(0), null);
-						break;
-					}
-				}
-
-				if (newPredicate != null)
-				{
-					if (predicate.IsNot)
-					{
-						newPredicate = new SqlSearchCondition(new SqlCondition(true, newPredicate));
-					}
-
-					return newPredicate;
-				}
-
-				if (caseSensitive == false)
-				{
-					predicate = new SqlPredicate.SearchString(
-						dataExpr,
-						predicate.IsNot,
-						searchExpr,
-						predicate.Kind,
-						new SqlValue(false));
-				}
-			}
-
-			if (caseSensitive == true)
-			{
-				predicate = new SqlPredicate.SearchString(
-					new SqlExpression(typeof(string), $"{{0}} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
-					predicate.IsNot,
-					predicate.Expr2,
-					predicate.Kind,
-					new SqlValue(false));
-			}
-
-			return ConvertSearchStringPredicateViaLike(predicate, visitor);
 		}
 	}
 }

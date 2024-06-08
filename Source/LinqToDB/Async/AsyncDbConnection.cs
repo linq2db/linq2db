@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using AsyncDisposableWrapper = LinqToDB.Tools.ActivityService.AsyncDisposableWrapper;
+
 namespace LinqToDB.Async
 {
 	using Tools;
@@ -25,24 +27,6 @@ namespace LinqToDB.Async
 		}
 
 		public virtual DbConnection Connection { get; }
-
-		public virtual DbConnection? TryClone()
-		{
-			try
-			{
-				return Connection is ICloneable cloneable
-					? (DbConnection)cloneable.Clone()
-					: null;
-			}
-			catch
-			{
-				// this try-catch added to handle errors like this one from MiniProfiler's ProfiledDbConnection
-				// "NotSupportedException : Underlying SqliteConnection is not cloneable"
-				// because wrapper implements ICloneable but wrapped connection doesn't
-				// exception-less solution will be always return null for wrapped connections which is also meh
-				return null;
-			}
-		}
 
 		[AllowNull]
 		public virtual string ConnectionString
@@ -70,7 +54,7 @@ namespace LinqToDB.Async
 
 			return CallAwaitUsing(a, Connection, cancellationToken);
 
-			static async Task CallAwaitUsing(AsyncConfigured activity, DbConnection connection, CancellationToken token)
+			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DbConnection connection, CancellationToken token)
 			{
 				await using (activity)
 					await connection.OpenAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -85,7 +69,7 @@ namespace LinqToDB.Async
 
 		public virtual Task CloseAsync()
 		{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionCloseAsync);
 
 			if (a is null)
@@ -93,7 +77,7 @@ namespace LinqToDB.Async
 
 			return CallAwaitUsing(a, Connection);
 
-			static async Task CallAwaitUsing(AsyncConfigured activity, DbConnection connection)
+			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DbConnection connection)
 			{
 				await using (activity)
 					await connection.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -102,7 +86,7 @@ namespace LinqToDB.Async
 			using var _ = ActivityService.Start(ActivityID.ConnectionCloseAsync);
 
 			Close();
-			return TaskEx.CompletedTask;
+			return Task.CompletedTask;
 #endif
 		}
 
@@ -118,19 +102,7 @@ namespace LinqToDB.Async
 			return AsyncFactory.Create(Connection.BeginTransaction(isolationLevel));
 		}
 
-#if !NATIVE_ASYNC
-
-		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
-		{
-			return Task.FromResult(BeginTransaction());
-		}
-
-		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
-		{
-			return Task.FromResult(BeginTransaction(isolationLevel));
-		}
-
-#elif !NETSTANDARD2_1PLUS
+#if !NET6_0_OR_GREATER
 
 		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
 		{
@@ -178,15 +150,6 @@ namespace LinqToDB.Async
 		#endregion
 
 		#region IAsyncDisposable
-#if !NATIVE_ASYNC
-		public virtual Task DisposeAsync()
-		{
-			using var _ = ActivityService.Start(ActivityID.ConnectionDisposeAsync);
-
-			Connection.Dispose();
-			return TaskEx.CompletedTask;
-		}
-#else
 		public virtual ValueTask DisposeAsync()
 		{
 			if (Connection is IAsyncDisposable asyncDisposable)
@@ -198,7 +161,7 @@ namespace LinqToDB.Async
 
 				return CallAwaitUsing(a, asyncDisposable);
 
-				static async ValueTask CallAwaitUsing(AsyncConfigured activity, IAsyncDisposable disposable)
+				static async ValueTask CallAwaitUsing(AsyncDisposableWrapper activity, IAsyncDisposable disposable)
 				{
 					await using (activity)
 						await disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -210,7 +173,6 @@ namespace LinqToDB.Async
 			Connection.Dispose();
 			return default;
 		}
-#endif
 		#endregion
 	}
 }

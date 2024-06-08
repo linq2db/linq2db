@@ -1,0 +1,59 @@
+﻿#nullable enable
+abstract LinqToDB.Configuration.ElementCollectionBase<T>.GetElementKey(T! element) -> object!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.AssemblyName = "IBM.Data.DB2" -> string!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.AssemblyNameOld = null -> string?
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.ClientNamespace = "IBM.Data.DB2" -> string!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.ClientNamespaceOld = null -> string?
+const LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.AssemblyName = "Sap.Data.Hana.v4.5" -> string!
+LinqToDB.Configuration.DataProviderElement
+LinqToDB.Configuration.DataProviderElement.DataProviderElement() -> void
+LinqToDB.Configuration.DataProviderElement.Default.get -> bool
+LinqToDB.Configuration.DataProviderElement.Name.get -> string!
+LinqToDB.Configuration.DataProviderElement.TypeName.get -> string!
+LinqToDB.Configuration.DataProviderElementCollection
+LinqToDB.Configuration.DataProviderElementCollection.DataProviderElementCollection() -> void
+LinqToDB.Configuration.ElementBase
+LinqToDB.Configuration.ElementBase.Attributes.get -> System.Collections.Specialized.NameValueCollection!
+LinqToDB.Configuration.ElementBase.ElementBase() -> void
+LinqToDB.Configuration.ElementCollectionBase<T>
+LinqToDB.Configuration.ElementCollectionBase<T>.ElementCollectionBase() -> void
+LinqToDB.Configuration.ElementCollectionBase<T>.this[int index].get -> T!
+LinqToDB.Configuration.ElementCollectionBase<T>.this[string! name].get -> T!
+LinqToDB.Configuration.LinqToDBSection
+LinqToDB.Configuration.LinqToDBSection.DataProviders.get -> LinqToDB.Configuration.DataProviderElementCollection!
+LinqToDB.Configuration.LinqToDBSection.DefaultConfiguration.get -> string!
+LinqToDB.Configuration.LinqToDBSection.DefaultDataProvider.get -> string!
+LinqToDB.Configuration.LinqToDBSection.LinqToDBSection() -> void
+LinqToDB.DataProvider.BulkCopyReader<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+LinqToDB.Metadata.SystemDataLinqAttributeReader
+LinqToDB.Metadata.SystemDataLinqAttributeReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.SystemDataLinqAttributeReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.SystemDataLinqAttributeReader.GetDynamicColumns(System.Type! type) -> System.Reflection.MemberInfo![]!
+LinqToDB.Metadata.SystemDataLinqAttributeReader.GetObjectID() -> string!
+LinqToDB.Metadata.SystemDataLinqAttributeReader.SystemDataLinqAttributeReader() -> void
+LinqToDB.Remote.DataService<T>
+LinqToDB.Remote.DataService<T>.DataService() -> void
+LinqToDB.Remote.DataService<T>.DataService(LinqToDB.DataOptions! options, LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
+LinqToDB.Remote.DataService<T>.GetService(System.Type! serviceType) -> object?
+override LinqToDB.Configuration.DataProviderElementCollection.GetElementKey(LinqToDB.Configuration.DataProviderElement! element) -> object!
+override LinqToDB.Configuration.ElementBase.OnDeserializeUnrecognizedAttribute(string! name, string! value) -> bool
+override LinqToDB.Configuration.ElementBase.Properties.get -> System.Configuration.ConfigurationPropertyCollection!
+override LinqToDB.Configuration.ElementCollectionBase<T>.CreateNewElement() -> System.Configuration.ConfigurationElement!
+override LinqToDB.Configuration.LinqToDBSection.Properties.get -> System.Configuration.ConfigurationPropertyCollection!
+override LinqToDB.DataProvider.Access.AccessOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Access.AccessOptions!>!
+override LinqToDB.DataProvider.ClickHouse.ClickHouseOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!>!
+override LinqToDB.DataProvider.DB2.DB2Options.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.DB2.DB2Options!>!
+override LinqToDB.DataProvider.Firebird.FirebirdOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Firebird.FirebirdOptions!>!
+override LinqToDB.DataProvider.Informix.InformixOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Informix.InformixOptions!>!
+override LinqToDB.DataProvider.MySql.MySqlOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.MySql.MySqlOptions!>!
+override LinqToDB.DataProvider.Oracle.OracleOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Oracle.OracleOptions!>!
+override LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions!>!
+override LinqToDB.DataProvider.SapHana.SapHanaOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SapHana.SapHanaOptions!>!
+override LinqToDB.DataProvider.SqlCe.SqlCeOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SqlCe.SqlCeOptions!>!
+override LinqToDB.DataProvider.SQLite.SQLiteOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SQLite.SQLiteOptions!>!
+override LinqToDB.DataProvider.SqlServer.SqlServerOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SqlServer.SqlServerOptions!>!
+override LinqToDB.DataProvider.Sybase.SybaseOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Sybase.SybaseOptions!>!
+override LinqToDB.Mapping.MappingAttribute.Equals(object? obj) -> bool
+override LinqToDB.Mapping.MappingAttribute.GetHashCode() -> int
+override sealed LinqToDB.Configuration.ElementCollectionBase<T>.GetElementKey(System.Configuration.ConfigurationElement! element) -> object!
+static LinqToDB.Configuration.LinqToDBSection.Instance.get -> LinqToDB.Configuration.LinqToDBSection?

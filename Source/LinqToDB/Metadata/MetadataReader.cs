@@ -27,7 +27,7 @@ namespace LinqToDB.Metadata
 		readonly ConcurrentDictionary<Type, MemberInfo[]> _dynamicColumns = new();
 		readonly object                                   _syncRoot = new();
 
-		readonly IMetadataReader[]             _readers;
+		readonly IMetadataReader[]              _readers;
 		public   IReadOnlyList<IMetadataReader> Readers => _readers;
 
 		public MetadataReader(params IMetadataReader[] readers)
@@ -42,7 +42,7 @@ namespace LinqToDB.Metadata
 				(type, source) =>
 				{
 					if (_readers.Length == 0)
-						return Array<MappingAttribute>.Empty;
+						return [];
 					if (_readers.Length == 1)
 						if (type != null)
 							return _readers[0].GetAttributes(type, (MemberInfo)source);
@@ -79,11 +79,11 @@ namespace LinqToDB.Metadata
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
 			return _dynamicColumns.GetOrAdd(type,
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NET462 || NETSTANDARD2_0
 			type =>
 			{
 				if (_readers.Length == 0)
-					return Array<MemberInfo>.Empty;
+					return [];
 				if (_readers.Length == 1)
 					return _readers[0].GetDynamicColumns(type);
 
@@ -98,7 +98,7 @@ namespace LinqToDB.Metadata
 			static (type, readers) =>
 			{
 				if (readers.Length == 0)
-					return Array<MemberInfo>.Empty;
+					return [];
 				if (readers.Length == 1)
 					return readers[0].GetDynamicColumns(type);
 

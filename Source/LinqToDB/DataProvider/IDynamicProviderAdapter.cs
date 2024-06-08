@@ -34,5 +34,12 @@ namespace LinqToDB.DataProvider
 		/// For providers/databases without transaction support contains <c>null</c>.
 		/// </summary>
 		Type? TransactionType { get; }
+
+		/// <summary>
+		/// Creates instance of database provider connection class using provided connection string.
+		/// </summary>
+		/// <param name="connectionString">Connection string to use with created connection.</param>
+		/// <returns>Connection instance.</returns>
+		DbConnection CreateConnection(string connectionString);
 	}
 }

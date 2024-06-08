@@ -189,7 +189,7 @@ namespace Tests.Extensions
 			// test insert literals roundtrip
 			db.InlineParameters = true;
 			db.Insert(data[0]);
-			Assert.AreEqual(0, interceptor.Parameters.Length);
+			Assert.That(interceptor.Parameters, Is.Empty);
 			result = table.ToArray();
 			AreEqual(data, result, comparer);
 			table.Delete();
@@ -197,7 +197,7 @@ namespace Tests.Extensions
 			// test insert parameters roundtrip
 			db.InlineParameters = false;
 			db.Insert(data[0]);
-			Assert.AreEqual(6, interceptor.Parameters.Length);
+			Assert.That(interceptor.Parameters, Has.Length.EqualTo(6));
 			result = table.ToArray();
 			AreEqual(data, result, comparer);
 			table.Delete();
@@ -214,13 +214,13 @@ namespace Tests.Extensions
 
 			void TestWrite(string FieldName, string expectedType, bool inline)
 			{
-				Assert.AreEqual(inline ? 0 : 1, interceptor.Parameters.Length);
+				Assert.That(interceptor.Parameters, Has.Length.EqualTo(inline ? 0 : 1));
 				var type = db.Execute<string>($"SELECT typeof({FieldName}) FROM GuidMapping");
-				Assert.AreEqual(expectedType, type);
+				Assert.That(type, Is.EqualTo(expectedType));
 
 				// assert literal is uppercased (M.D.SQLite format)
 				if (expectedType == "text")
-					Assert.AreEqual(TestData.Guid1.ToString().ToUpperInvariant(), db.Execute<string>($"SELECT {FieldName} FROM GuidMapping"));
+					Assert.That(db.Execute<string>($"SELECT {FieldName} FROM GuidMapping"), Is.EqualTo(TestData.Guid1.ToString().ToUpperInvariant()));
 
 				table.Delete();
 			}

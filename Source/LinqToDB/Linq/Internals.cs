@@ -58,5 +58,16 @@ namespace LinqToDB.Linq
 			return GetDataContext(((LinqExtensions.SelectInsertable<TSource, TTarget>)insertable).Query);
 		}
 
+		/// <summary>
+		/// This method makes all needed executions to fully expose expression.
+		/// </summary>
+		/// <param name="dataContext"></param>
+		/// <param name="expression"></param>
+		/// <returns>Fully exposed expression which used by LINQ Translator.</returns>
+		public static Expression ExposeQueryExpression(IDataContext dataContext, Expression expression)
+		{
+			return Builder.ExpressionBuilder.ExposeExpression(expression, dataContext, new Builder.ExpressionTreeOptimizationContext(dataContext), null, false, false);
+		}
+
 	}
 }

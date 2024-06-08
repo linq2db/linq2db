@@ -1,0 +1,8 @@
+﻿{
+	"NET60.Azure": {
+		"Providers": [
+			"MySql.5.7",
+			"MySqlConnector.5.7"
+		]
+	}
+}

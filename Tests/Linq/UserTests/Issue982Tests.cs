@@ -30,107 +30,30 @@ namespace Tests.UserTests
 				return statement;
 			}
 
-			private object? GetMaxValue(DataType type)
-			{
-				switch (type)
-				{
-					case DataType.Double:
-						return double.MaxValue;
-					case DataType.Int32:
-						return int.MaxValue;
-					case DataType.Int16:
-					case DataType.Boolean:
-						return short.MaxValue;
-					case DataType.Int64:
-						return long.MaxValue;
-					case DataType.Char:
-					case DataType.NChar:
-					case DataType.VarChar:
-					case DataType.NVarChar:
-					case DataType.Guid:
-						return string.Empty;
-					case DataType.Date:
-						return new DateTime(9999, 09, 09);
-					case DataType.DateTime:
-					case DataType.DateTime2:
-					case DataType.Time:
-						return new DateTime(9999, 09, 09, 09, 09, 09);
-					case DataType.Decimal:
-					case DataType.VarBinary:
-						return null;
-					default:
-						throw new InvalidOperationException($"Unsupported type: {type}");
-				}
-			}
-
-			private void AddConditions(SqlWhereClause where, ISqlTableSource table)
-			{
-				var keys = table.GetKeys(true);
-				if (keys == null)
-					return;
-
-				foreach (var key in keys.OfType<SqlField>())
-				{
-					var maxValue = GetMaxValue(key.Type!.DataType);
-					if (maxValue == null)
-						continue;
-
-					var cond = new SqlSearchCondition();
-
-					cond = cond.Expr(key).IsNull.Or;
-
-					if (maxValue is string)
-						cond.Expr(key).GreaterOrEqual.Expr(new SqlValue(maxValue));
-					else
-						cond.Expr(key).LessOrEqual.Expr(new SqlValue(maxValue));
-
-					where.ConcatSearchCondition(cond);
-
-					// only one field is enough
-					break;
-				}
-			}
-
 			private void AddConditions(SqlStatement statement)
 			{
-				statement.WalkQueries(
-					this,
-					static (context, query) =>
-					{
-						query.Visit(context, static (optimizer, e) =>
-						{
-							if (e.ElementType != QueryElementType.SqlQuery)
-								return;
-
-							var q = (SelectQuery)e;
-
-							foreach (var source in q.From.Tables)
-							{
-								if (source.Joins.Any())
-									optimizer.AddConditions(q.Select.Where, source);
-
-								foreach (var join in source.Joins)
-									optimizer.AddConditions(q.Select.Where, join.Table);
-							}
-						});
-
-						return query;
-					});
+				if (statement.SelectQuery?.Where.IsEmpty == false)
+					statement.SelectQuery.Where.SearchCondition.Add(new SqlPredicate.Expr(new SqlExpression("'one' != 'two'"), 0));
 			}
 		}
 
-		[Test]
+		sealed class Issue982FirebirdDataProvider(string name, FirebirdVersion version, ISqlOptimizer sqlOptimizer) : FirebirdDataProvider(name, version)
+		{
+			public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => sqlOptimizer;
+		}
+
+		[Test(Description = "Ensure we can subclass and replace sql optimizer")]
 		public void Test([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
-			var oldProvider      = DataConnection.GetDataProvider(context);
+			var oldProvider      = (FirebirdDataProvider)DataConnection.GetDataProvider(context);
 
 			try
 			{
 				DataConnection.AddConfiguration(
 					context,
 					connectionString,
-					new FirebirdDataProvider(new Issue982FirebirdSqlOptimizer(oldProvider.SqlProviderFlags)));
+					new Issue982FirebirdDataProvider(oldProvider.Name, oldProvider.Version, new Issue982FirebirdSqlOptimizer(oldProvider.SqlProviderFlags)));
 
 				using (var db = GetDataContext(context))
 				{
@@ -150,7 +73,7 @@ namespace Tests.UserTests
 								};
 
 					var str = query.ToString()!;
-					Assert.True(str.Contains("2147483647"));
+					Assert.That(str, Does.Contain("'one' != 'two'"));
 					var _ = query.ToArray();
 				}
 			}

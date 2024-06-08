@@ -17,9 +17,12 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
-				Assert.AreEqual(typeof(InheritanceParent1),    InheritanceParent[1].GetType());
-				Assert.AreEqual(typeof(InheritanceParent2),    InheritanceParent[2].GetType());
+				Assert.Multiple(() =>
+				{
+					Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
+					Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
+					Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
+				});
 
 				AreEqual(InheritanceParent, db.InheritanceParent);
 				AreEqual(InheritanceChild,  db.InheritanceChild);

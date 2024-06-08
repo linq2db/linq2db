@@ -45,7 +45,7 @@ namespace LinqToDB.Linq
 					Queries = { new QueryInfo { Statement = deleteStatement, } }
 				};
 
-				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
+				var keys = sqlTable.GetKeys(true)!.Cast<SqlField>().ToList();
 
 				if (keys.Count == 0)
 					throw new LinqException($"Table '{sqlTable.NameForLogging}' does not have primary key.");
@@ -56,7 +56,7 @@ namespace LinqToDB.Linq
 
 					ei.Queries[0].AddParameterAccessor(param);
 
-					deleteStatement.SelectQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
+					deleteStatement.SelectQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, false);
 
 					if (field.CanBeNull)
 						deleteStatement.IsParameterDependent = true;

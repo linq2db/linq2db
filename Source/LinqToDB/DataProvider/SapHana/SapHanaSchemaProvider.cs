@@ -512,7 +512,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				commandText += ")";
 				commandType = CommandType.Text;
-				parameters  = Array<DataParameter>.Empty;
+				parameters  = [];
 			}
 			else
 			{

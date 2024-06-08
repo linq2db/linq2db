@@ -11,9 +11,6 @@ namespace Tests.Remote.ServerContainer
 		{
 			var dc = base.CreateDataContext(configuration);
 
-			if (configuration?.IsAnyOf(TestProvName.AllMariaDB) == true)
-				dc.AddMappingSchema(TestBase._mariaDBSchema);
-
 			return dc;
 		}
 	}

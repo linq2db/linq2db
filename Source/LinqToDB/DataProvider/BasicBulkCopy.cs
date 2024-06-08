@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if NETFRAMEWORK || NETCOREAPP3_1 || NETSTANDARD2_0 || NETSTANDARD2_1
+#if NETFRAMEWORK || NETSTANDARD2_0
 using System.Text;
 #endif
 
@@ -52,7 +52,6 @@ namespace LinqToDB.DataProvider
 			};
 		}
 
-#if NATIVE_ASYNC
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			BulkCopyType bulkCopyType, ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			where T: notnull
@@ -64,7 +63,6 @@ namespace LinqToDB.DataProvider
 				_                         => ProviderSpecificCopyAsync(table, options, source, cancellationToken),
 			};
 		}
-#endif
 
 		protected virtual BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
@@ -80,14 +78,12 @@ namespace LinqToDB.DataProvider
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected virtual Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			where T: notnull
 		{
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
-#endif
 
 		protected virtual BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
@@ -103,14 +99,12 @@ namespace LinqToDB.DataProvider
 			return RowByRowCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected virtual Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			where T: notnull
 		{
 			return RowByRowCopyAsync(table, options, source, cancellationToken);
 		}
-#endif
 
 		protected virtual BulkCopyRowsCopied RowByRowCopy<T>(ITable<T> table, DataOptions dataOptions, IEnumerable<T> source)
 			where T : notnull
@@ -188,7 +182,6 @@ namespace LinqToDB.DataProvider
 			return rowsCopied;
 		}
 
-#if NATIVE_ASYNC
 		protected virtual async Task<BulkCopyRowsCopied> RowByRowCopyAsync<T>(
 			ITable<T> table, DataOptions dataOptions, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			where T: notnull
@@ -220,7 +213,6 @@ namespace LinqToDB.DataProvider
 
 			return rowsCopied;
 		}
-#endif
 
 		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table, bool escaped = true)
 			where T : notnull
@@ -476,7 +468,6 @@ namespace LinqToDB.DataProvider
 			return helper.RowsCopied;
 		}
 
-#if NATIVE_ASYNC
 		protected static async Task<BulkCopyRowsCopied> MultipleRowsCopyHelperAsync<T>(
 			MultipleRowsHelper                          helper,
 			IAsyncEnumerable<T>                         source,
@@ -537,7 +528,6 @@ namespace LinqToDB.DataProvider
 
 			return helper.RowsCopied;
 		}
-#endif
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(ITable<T> table, DataOptions options, IEnumerable<T> source)
 			where T : notnull
@@ -553,7 +543,6 @@ namespace LinqToDB.DataProvider
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish, cancellationToken, MaxParameters, MaxSqlLength);
 
-#if NATIVE_ASYNC
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		where T: notnull
 			=> MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
@@ -561,7 +550,6 @@ namespace LinqToDB.DataProvider
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		where T: notnull
 			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish, cancellationToken, MaxParameters, MaxSqlLength);
-#endif
 
 		private void MultipleRowsCopy1Prep(MultipleRowsHelper helper)
 		{
@@ -621,7 +609,6 @@ namespace LinqToDB.DataProvider
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async(MultipleRowsHelper helper, IEnumerable source, string from, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, cancellationToken, MaxParameters, MaxSqlLength);
 
-#if NATIVE_ASYNC
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
 		where T: notnull
 			=> MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
@@ -629,7 +616,6 @@ namespace LinqToDB.DataProvider
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
 		where T: notnull
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, cancellationToken, MaxParameters, MaxSqlLength);
-#endif
 
 		private void MultipleRowsCopy2Prep(MultipleRowsHelper helper)
 		{
@@ -678,11 +664,9 @@ namespace LinqToDB.DataProvider
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy3Async(MultipleRowsHelper helper, BulkCopyOptions options, IEnumerable source, string from, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish, cancellationToken, MaxParameters, MaxSqlLength);
 
-#if NATIVE_ASYNC
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy3Async<T>(MultipleRowsHelper helper, BulkCopyOptions options, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
 		where T: notnull
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish, cancellationToken, MaxParameters, MaxSqlLength);
-#endif
 
 		private void MultipleRowsCopy3Prep(MultipleRowsHelper helper)
 		{

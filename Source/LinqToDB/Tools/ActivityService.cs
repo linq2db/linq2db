@@ -34,7 +34,6 @@ namespace LinqToDB.Tools
 			return new MultiActivity(activities);
 		}
 
-#if NATIVE_ASYNC
 		internal sealed class AsyncDisposableWrapper(IActivity activity)
 		{
 			public ConfiguredValueTaskAwaitable DisposeAsync()
@@ -52,12 +51,6 @@ namespace LinqToDB.Tools
 
 			return new AsyncDisposableWrapper(activity);
 		}
-#else
-		internal static IAsyncDisposableEx? StartAndConfigureAwait(ActivityID activityID)
-		{
-			return Start(activityID);
-		}
-#endif
 
 		static Func<ActivityID,IActivity?>? _factory;
 
@@ -87,7 +80,6 @@ namespace LinqToDB.Tools
 					activity?.Dispose();
 			}
 
-#if NATIVE_ASYNC
 #pragma warning disable CA2215
 			public override async ValueTask DisposeAsync()
 			{
@@ -96,7 +88,6 @@ namespace LinqToDB.Tools
 						await activity.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 #pragma warning restore CA2215
-#endif
 		}
 	}
 }

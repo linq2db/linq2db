@@ -8,13 +8,11 @@
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -73,12 +71,10 @@ namespace Cli.T4.SapHana
 
 		#region Table Functions
 		#region GetParentById
-		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.GetParentById(default));
-
 		[Sql.TableFunction("GetParentByID", Schema = "TESTDB")]
 		public ITable<GetParentByIdResult> GetParentById(int? id)
 		{
-			return this.GetTable<GetParentByIdResult>(this, _getParentById, id);
+			return this.TableFromExpression<GetParentByIdResult>(() => GetParentById(id));
 		}
 
 		public partial class GetParentByIdResult
@@ -89,12 +85,10 @@ namespace Cli.T4.SapHana
 		#endregion
 
 		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
-
 		[Sql.TableFunction("TEST_TABLE_FUNCTION", Schema = "TESTDB")]
 		public ITable<TestTableFunctionResult> TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction, i);
+			return this.TableFromExpression<TestTableFunctionResult>(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFunctionResult

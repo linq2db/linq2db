@@ -5,12 +5,23 @@ dotnet_diagnostic.ide0001.severity = none # IDE0001: Simplify name
 dotnet_diagnostic.ide0004.severity = none # IDE0004: Remove unnecessary cast
 dotnet_diagnostic.CA1852.severity = none # CA1852: Type can be sealed
 
+dotnet_diagnostic.CA1852.severity = none # CA1852: Seal internal types
+
 # ReSharper properties
 resharper_space_before_new_parentheses = true
 
+# nobody asked for this analyzer to trigger in tests...
+dotnet_public_api_analyzer.require_api_files = false
+dotnet_diagnostic.RS0016.severity = none
+dotnet_diagnostic.RS0026.severity = none
+dotnet_diagnostic.RS0027.severity = none
+dotnet_diagnostic.RS0037.severity = none
+
 dotnet_diagnostic.CA1044.severity = none # CA1044: Properties should not be write only
+dotnet_diagnostic.CA1055.severity = none # CA1045: Url in name - url in type...
 dotnet_diagnostic.CA1058.severity = none # CA1058: Types should not extend certain base types
 dotnet_diagnostic.CA1307.severity = none # CA1307: Specify StringComparison for clarity
+dotnet_diagnostic.CA1515.severity = none # CA1515: Mark type internal
 dotnet_diagnostic.CA1812.severity = none # CA1812: Avoid uninstantiated internal classes
 dotnet_diagnostic.CA1814.severity = none # CA1814: Prefer jagged arrays over multidimensional
 dotnet_diagnostic.CA1849.severity = none # CA1849: Call async methods when in an async method

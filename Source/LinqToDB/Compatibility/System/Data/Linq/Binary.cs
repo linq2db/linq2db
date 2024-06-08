@@ -1,12 +1,10 @@
 ﻿#if !NETFRAMEWORK
-using System;
-using System.Text;
 using System.Runtime.Serialization;
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 
 namespace System.Data.Linq
 {
+	using LinqToDB.Common;
+
 	[DataContract]
 	[Serializable]
 	public sealed class Binary : IEquatable<Binary>
@@ -19,7 +17,7 @@ namespace System.Data.Linq
 		{
 			if(value == null)
 			{
-				_bytes = Array<byte>.Empty;
+				_bytes = [];
 			}
 			else
 			{

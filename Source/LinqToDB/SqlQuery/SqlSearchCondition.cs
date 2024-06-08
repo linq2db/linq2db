@@ -1,153 +1,175 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSearchCondition : ConditionBase<SqlSearchCondition, SqlSearchCondition.Next>, ISqlPredicate, ISqlExpression, IInvertibleElement
+	public class SqlSearchCondition : SqlExpressionBase, ISqlPredicate
 	{
-		public SqlSearchCondition()
+		public SqlSearchCondition(bool isOr = false)
 		{
+			IsOr = isOr;
 		}
 
-		public SqlSearchCondition(SqlCondition condition)
+		public SqlSearchCondition(bool isOr, ISqlPredicate predicate) : this(isOr)
 		{
-			Conditions.Add(condition);
+			Predicates.Add(predicate);
 		}
 
-		public SqlSearchCondition(SqlCondition condition1, SqlCondition condition2)
+		public SqlSearchCondition(bool isOr, ISqlPredicate predicate1, ISqlPredicate predicate2) : this(isOr)
 		{
-			Conditions.Add(condition1);
-			Conditions.Add(condition2);
+			Predicates.Add(predicate1);
+			Predicates.Add(predicate2);
 		}
 
-		public SqlSearchCondition(IEnumerable<SqlCondition> list)
+		public SqlSearchCondition(bool isOr, IEnumerable<ISqlPredicate> predicates) : this(isOr)
 		{
-			Conditions.AddRange(list);
+			Predicates.AddRange(predicates);
 		}
 
-		public class Next
+		public List<ISqlPredicate> Predicates { get; } = new();
+
+		public SqlSearchCondition Add(ISqlPredicate predicate)
 		{
-			internal Next(SqlSearchCondition parent)
-			{
-				_parent = parent;
-			}
-
-			readonly SqlSearchCondition _parent;
-
-			public SqlSearchCondition Or  => _parent.SetOr(true);
-			public SqlSearchCondition And => _parent.SetOr(false);
-
-			public ISqlExpression  ToExpr() { return _parent; }
-		}
-
-		public List<SqlCondition>  Conditions { get; } = new List<SqlCondition>();
-
-		public SqlSearchCondition Add(SqlCondition condition)
-		{
-			Conditions.Add(condition);
+			Predicates.Add(predicate);
 			return this;
 		}
 
-		protected override SqlSearchCondition Search => this;
-
-		protected override Next GetNext()
+		public SqlSearchCondition AddRange(IEnumerable<ISqlPredicate> predicates)
 		{
-			return new Next(this);
+			Predicates.AddRange(predicates);
+			return this;
 		}
+
+		public bool IsOr  { get; set; }
+		public bool IsAnd { get => !IsOr; set => IsOr = !value; }
 
 		#region Overrides
 
-#if OVERRIDETOSTRING
+		public override QueryElementType ElementType => QueryElementType.SearchCondition;
 
-		public override string ToString()
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
+			if (!writer.AddVisited(this))
+				return writer.Append("...");
 
-#endif
+			// writer
+			// 	//.Append("sc=")
+			// 	.DebugAppendUniqueId(this);
+
+			writer.Append('(');
+
+			var isFirst = true;
+			foreach (IQueryElement c in Predicates)
+			{
+				if (!isFirst)
+				{
+					if (IsOr)
+						writer.Append(" OR ");
+					else
+						writer.Append(" AND ");
+				}
+				else
+				{
+					isFirst = false;
+				}
+
+				writer.AppendElement(c);
+			}
+
+			writer.RemoveVisited(this);
+
+			writer.Append(')');
+
+			return writer;
+		}
 
 		#endregion
 
 		#region IPredicate Members
 
-		public int Precedence
+		public override int Precedence
 		{
 			get
 			{
-				if (Conditions.Count == 0) return SqlQuery.Precedence.Unknown;
-				if (Conditions.Count == 1) return Conditions[0].Precedence;
+				if (Predicates.Count == 0) return SqlQuery.Precedence.Unknown;
 
-				return Conditions.Select(_ =>
-					_.IsNot ? SqlQuery.Precedence.LogicalNegation :
-						_.IsOr  ? SqlQuery.Precedence.LogicalDisjunction :
-							SqlQuery.Precedence.LogicalConjunction).Min();
+				return IsOr ? SqlQuery.Precedence.LogicalDisjunction : SqlQuery.Precedence.LogicalConjunction;
 			}
 		}
 
-		public Type SystemType => typeof(bool);
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			foreach (var condition in Conditions)
-				condition.Predicate.Walk(options, context, func);
-
-			return func(context, this);
-		}
+		public override Type SystemType => typeof(bool);
 
 		#endregion
 
 		#region IInvertibleElement Members
 
-		public bool CanInvert()
+		public bool CanInvert(NullabilityContext nullability)
 		{
-			return Conditions.Count > 0 && Conditions.Count(c => c.IsNot) > Conditions.Count / 2;
+			var maxCount = Math.Max(Predicates.Count / 2, 2);
+			if (Predicates.Count > maxCount)
+				return false;
+
+			if (Predicates.Count > 1 && IsAnd)
+				return false;
+
+			return Predicates.All(p =>
+			{
+				if (p is not SqlSearchCondition)
+					return false;
+
+				if (p is SqlPredicate.ExprExpr exprExpr && (exprExpr.WithNull != null || exprExpr.WithNull == true))
+				{
+					return false;
+				}
+
+				return p.CanInvert(nullability);
+			});
 		}
 
-		public IQueryElement Invert()
+		public ISqlPredicate Invert(NullabilityContext nullability)
 		{
-			if (Conditions.Count == 0)
+			if (Predicates.Count == 0)
 			{
-				return new SqlSearchCondition(new SqlCondition(false,
-					new SqlPredicate.ExprExpr(new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(0), null)));
+				return new SqlSearchCondition(!IsOr);
 			}
 
-			var newConditions = Conditions.Select(c =>
-			{
-				var condition = new SqlCondition(!c.IsNot, c.Predicate, !c.IsOr);
-				return condition;
-			});
+			var newPredicates = Predicates.Select(p => new SqlPredicate.Not(p));
 
-			return new SqlSearchCondition(newConditions);
+			return new SqlSearchCondition(!IsOr, newPredicates);
 		}
 
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
+		public bool IsTrue()
 		{
-			return this == other;
+			if (Predicates.Count == 0)
+				return true;
+
+			if (Predicates is [{ ElementType: QueryElementType.TruePredicate }])
+				return true;
+
+			return false;
+		}
+
+		public bool IsFalse()
+		{
+			if (Predicates.Count == 0)
+				return false;
+
+			if (Predicates is [{ ElementType: QueryElementType.FalsePredicate }])
+				return true;
+
+			return false;
 		}
 
 		#endregion
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull
-		{
-			get
-			{
-				foreach (var c in Conditions)
-					if (c.CanBeNull)
-						return true;
+		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
 
-				return false;
-			}
-		}
+		public bool CanBeNull => false;
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return other is ISqlPredicate otherPredicate
 				&& Equals(otherPredicate, comparer);
@@ -156,11 +178,13 @@ namespace LinqToDB.SqlQuery
 		public bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (other is not SqlSearchCondition otherCondition
-				|| Conditions.Count != otherCondition.Conditions.Count)
+				|| Predicates.Count != otherCondition.Predicates.Count || IsOr != otherCondition.IsOr)
+			{
 				return false;
+			}
 
-			for (var i = 0; i < Conditions.Count; i++)
-				if (!Conditions[i].Equals(otherCondition.Conditions[i], comparer))
+			for (var i = 0; i < Predicates.Count; i++)
+				if (!Predicates[i].Equals(otherCondition.Predicates[i], comparer))
 					return false;
 
 			return true;
@@ -168,33 +192,9 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region IQueryElement Members
-
-		public QueryElementType ElementType => QueryElementType.SearchCondition;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public void Deconstruct(out List<ISqlPredicate> predicates)
 		{
-			if (dic.ContainsKey(this))
-				return sb.Append("...");
-
-			dic.Add(this, this);
-
-			foreach (IQueryElement c in Conditions)
-				c.ToString(sb, dic);
-
-			if (Conditions.Count > 0)
-				sb.Length -= 4;
-
-			dic.Remove(this);
-
-			return sb;
-		}
-
-		#endregion
-
-		public void Deconstruct(out List<SqlCondition> conditions)
-		{
-			conditions = Conditions;
+			predicates = Predicates;
 		}
 	}
 }

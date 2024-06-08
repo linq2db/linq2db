@@ -88,7 +88,6 @@ namespace LinqToDB.DataProvider.Informix
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -128,7 +127,6 @@ namespace LinqToDB.DataProvider.Informix
 			return await MultipleRowsCopyAsync(table, options, source, cancellationToken)
 				.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
-#endif
 
 		private BulkCopyRowsCopied IDSProviderSpecificCopy<T>(
 			ITable<T>                               table,
@@ -206,17 +204,12 @@ namespace LinqToDB.DataProvider.Informix
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-#if NATIVE_ASYNC
 #pragma warning disable CA2000 // Dispose objects before losing scope
 			await using (new InvariantCultureRegion(null).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			using ((IDisposable)new InvariantCultureRegion(null))
-#endif
 				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 #pragma warning restore CA2000 // Dispose objects before losing scope
 		}
 
-#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -225,6 +218,5 @@ namespace LinqToDB.DataProvider.Informix
 				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 #pragma warning restore CA2000 // Dispose objects before losing scope
 		}
-#endif
 	}
 }

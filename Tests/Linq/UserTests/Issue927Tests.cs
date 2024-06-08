@@ -15,16 +15,19 @@ namespace Tests.UserTests
 #pragma warning disable CA2000 // Dispose objects before losing scope
 			var connection = new TestNoopConnection("");
 #pragma warning restore CA2000 // Dispose objects before losing scope
-			Assert.AreEqual(ConnectionState.Closed, connection.State);
+			Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
 
 			using (var db = new DataConnection(new TestNoopProvider(), connection, dispose))
 			{
 				var c = db.Connection;
-				Assert.AreEqual(ConnectionState.Open, c.State);
+				Assert.That(c.State, Is.EqualTo(ConnectionState.Open));
 			}
 
-			Assert.AreEqual(ConnectionState.Closed, connection.State);
-			Assert.AreEqual(dispose,                connection.IsDisposed);
+			Assert.Multiple(() =>
+			{
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
+				Assert.That(connection.IsDisposed, Is.EqualTo(dispose));
+			});
 		}
 
 		[Test]
@@ -35,12 +38,15 @@ namespace Tests.UserTests
 			using (var db = new DataConnection(new TestNoopProvider(), ""))
 			{
 				connection = db.Connection as TestNoopConnection;
-				Assert.NotNull (connection);
-				Assert.AreEqual(ConnectionState.Open, connection!.State);
+				Assert.That(connection, Is.Not.Null);
+				Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
 			}
 
-			Assert.AreEqual(ConnectionState.Closed, connection.State);
-			Assert.True    (connection.IsDisposed);
+			Assert.Multiple(() =>
+			{
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
+				Assert.That(connection.IsDisposed, Is.True);
+			});
 		}
 
 		[Test]
@@ -51,51 +57,19 @@ namespace Tests.UserTests
 #pragma warning restore CA2000 // Dispose objects before losing scope
 			connection.Open();
 
-			Assert.AreEqual(ConnectionState.Open, connection.State);
+			Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 
 			using (var db = new DataConnection(new TestNoopProvider(), connection, false))
 			{
 				var c = db.Connection;
-				Assert.AreEqual(ConnectionState.Open, c.State);
+				Assert.That(c.State, Is.EqualTo(ConnectionState.Open));
 			}
 
-			Assert.AreEqual(ConnectionState.Open, connection.State);
-			Assert.AreEqual(false,                connection.IsDisposed);
-		}
-
-		[Test]
-		public void CloneConnectionDisposed()
-		{
-#pragma warning disable CA2000 // Dispose objects before losing scope
-			var connection = new TestNoopConnection("");
-#pragma warning restore CA2000 // Dispose objects before losing scope
-			connection.Open();
-
-			Assert.AreEqual(ConnectionState.Open, connection.State);
-
-			TestNoopConnection? cloneConnection;
-
-			using (var db = new DataConnection(new TestNoopProvider(), connection, false))
+			Assert.Multiple(() =>
 			{
-				var c = db.Connection;
-				Assert.AreEqual(ConnectionState.Open, c.State);
-
-				using (var db2 = (DataConnection)db.Clone())
-				{
-					cloneConnection = db2.Connection as TestNoopConnection;
-					Assert.NotNull    (cloneConnection);
-					Assert.AreNotEqual(cloneConnection,      connection);
-					Assert.AreEqual   (ConnectionState.Open, cloneConnection!.State);
-				}
-			}
-
-			Assert.AreEqual(ConnectionState.Open, connection.State);
-			Assert.AreEqual(false,                connection.IsDisposed);
-
-			Assert.IsNotNull(cloneConnection);
-			Assert.AreEqual (ConnectionState.Closed, cloneConnection.State);
-			Assert.AreEqual (true,                   cloneConnection.IsDisposed);
-
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.That(connection.IsDisposed, Is.EqualTo(false));
+			});
 		}
 	}
 }
