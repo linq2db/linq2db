@@ -24,14 +24,11 @@ using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 
-using Tests.Remote.ServerContainer;
-
 namespace Tests
 {
 	using Model;
-	using Tools;
 	using Remote.ServerContainer;
-	using StackExchange.Profiling.Internal;
+	using Tools;
 
 	public partial class TestBase
 	{
@@ -77,7 +74,7 @@ namespace Tests
 		public static string? BaselinesPath;
 		public static bool?   StoreMetrics;
 
-		protected static string? LastQuery;
+		protected static string? LastQuery { get; set; }
 
 		static TestBase()
 		{
@@ -301,8 +298,8 @@ namespace Tests
 			return "CORE31";
 #elif NET6_0
 			return "NET60";
-#elif NET7_0
-			return "NET70";
+#elif NET8_0
+			return "NET80";
 #elif NET472
 			return "NET472";
 #else
@@ -1261,6 +1258,7 @@ namespace Tests
 			bool allowEmpty = false)
 		{
 			var resultList   = result.  Select(fixSelector).ToList();
+			var lastQuery    = LastQuery;
 			var expectedList = expected.Select(fixSelector).ToList();
 
 			if (sort != null)
@@ -1296,6 +1294,8 @@ namespace Tests
 
 			Assert.AreEqual(0, exceptExpected, $"Expected Was{Environment.NewLine}{message}");
 			Assert.AreEqual(0, exceptResult  , $"Expect Result{Environment.NewLine}{message}");
+
+			LastQuery = lastQuery;
 		}
 
 		protected void AreEqual<T>(IEnumerable<IEnumerable<T>> expected, IEnumerable<IEnumerable<T>> result)
@@ -1335,9 +1335,14 @@ namespace Tests
 
 		public T[] AssertQuery<T>(IQueryable<T> query)
 		{
-			var expr    = query.Expression.Replace(ExpressionConstants.DataContextParam, Expression.Constant(Internals.GetDataContext(query), typeof(IDataContext)));
-			var loaded  = new Dictionary<Type, Expression>();
+			var loaded  = new Dictionary<Type,Expression>();
 			var actual  = query.ToArray();
+			var expr    = query.Expression.Transform(
+				query,
+				static (ctx, e) => e is ConstantExpression { Value : null } ce && ce.Type == typeof(IDataContext)
+					? Expression.Constant(Internals.GetDataContext(ctx), typeof(IDataContext))
+					: e);
+			var lastQuery = LastQuery;
 
 			var newExpr = expr.Transform(loaded, static (loaded, e) =>
 			{
@@ -1383,6 +1388,8 @@ namespace Tests
 
 			if (actual.Length > 0 || expected.Length > 0)
 				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
+
+			LastQuery = lastQuery;
 
 			return actual;
 		}

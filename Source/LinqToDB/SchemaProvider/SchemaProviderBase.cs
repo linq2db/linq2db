@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -318,7 +319,7 @@ namespace LinqToDB.SchemaProvider
 									IsOut                = pr.IsOut,
 									IsResult             = pr.IsResult,
 									Size                 = pr.Length,
-									ParameterName        = ToValidName(pr.ParameterName ?? "par" + ++n),
+									ParameterName        = ToValidName(pr.ParameterName ?? FormattableString.Invariant($"par{++n}")),
 									ParameterType        = ToTypeName(systemType, true),
 									SystemType           = systemType,
 									DataType             = GetDataType(pr.DataType, pr.DataTypeExact, pr.Length, pr.Precision, pr.Scale),
@@ -627,14 +628,14 @@ namespace LinqToDB.SchemaProvider
 						{
 							case "size"       :
 							case "length"     : paramValues[i] = length; break;
-							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length?.ToString(); break;
+							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length?.ToString(NumberFormatInfo.InvariantInfo); break;
 							case "precision"  : paramValues[i] = precision;   break;
 							case "scale"      : paramValues[i] = scale.HasValue || paramNames.Length == 2 ? scale : precision; break;
 						}
 					}
 
 					if (paramValues.All(v => v != null))
-						dbType = string.Format(format, paramValues);
+						dbType = string.Format(CultureInfo.InvariantCulture, format, paramValues);
 				}
 			}
 
@@ -649,7 +650,7 @@ namespace LinqToDB.SchemaProvider
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
 				var ss = name.Split(_nameSeparators, StringSplitOptions.RemoveEmptyEntries)
-					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
+					.Select(s => char.ToUpperInvariant(s[0]) + s.Substring(1));
 
 				name = string.Concat(ss);
 			}

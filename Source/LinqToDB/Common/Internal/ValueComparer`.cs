@@ -152,7 +152,7 @@ namespace LinqToDB.Common.Internal
 			if (type != unwrappedType || !type.IsValueType)
 			{
 				expression = Expression.Condition(Expression.NotEqual(param, Expression.Constant(null, param.Type)),
-					expression, Expression.Constant(0, typeof(int)));
+					expression, Expressions.ExpressionInstances.Constant0);
 			}
 
 			return Expression.Lambda<Func<T, int>>(expression, param);

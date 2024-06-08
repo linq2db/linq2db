@@ -5,8 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB.Remote
 {
 	using Common;
@@ -16,17 +14,15 @@ namespace LinqToDB.Remote
 	using Linq;
 	using Mapping;
 	using SqlQuery;
+	using Tools;
+
 
 	public class LinqService : ILinqService
 	{
 		private MappingSchema? _serializationMappingSchema;
 		private MappingSchema? _mappingSchema;
 
-		public bool AllowUpdates
-		{
-			get;
-			set;
-		}
+		public bool AllowUpdates { get; set; }
 
 		public MappingSchema? MappingSchema
 		{
@@ -126,10 +122,7 @@ namespace LinqToDB.Remote
 
 				return await DataConnection.QueryRunner.ExecuteNonQueryAsync(
 					db,
-					new QueryContext
-					{
-						Statement = query.Statement
-					},
+					new QueryContext(query.Statement, query.DataOptions),
 					new SqlParameterValues(),
 					cancellationToken
 					).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -156,10 +149,7 @@ namespace LinqToDB.Remote
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
-				return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
-				{
-					Statement = query.Statement
-				}, new SqlParameterValues());
+				return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext(query.Statement, query.DataOptions), new SqlParameterValues());
 			}
 			catch (Exception exception)
 			{
@@ -192,10 +182,7 @@ namespace LinqToDB.Remote
 
 				var scalar = await DataConnection.QueryRunner.ExecuteScalarAsync(
 					db,
-					new QueryContext
-					{
-						Statement  = query.Statement
-					},
+					new QueryContext(query.Statement, query.DataOptions),
 					null,
 					cancellationToken
 					).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -226,10 +213,7 @@ namespace LinqToDB.Remote
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
-				var scalar =  DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext
-				{
-					Statement  = query.Statement
-				}, null);
+				var scalar =  DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext(query.Statement, query.DataOptions), null);
 
 				var result = ProcessScalar(scalar);
 
@@ -245,24 +229,24 @@ namespace LinqToDB.Remote
 		private string? ProcessScalar(object? scalar)
 		{
 			string? result = null;
+
 			if (scalar != null)
 			{
 				var lsr = new LinqServiceResult
 				{
 					QueryID    = Guid.NewGuid(),
 					FieldCount = 1,
-					RowCount = 1,
-					FieldNames = new string[] { "scalar" },
-					FieldTypes = new Type[] { scalar.GetType() },
-					Data       = new List<string[]>
-						{
-							new string[]
-							{
-								scalar == DBNull.Value
-									? string.Empty
-									: SerializationConverter.Serialize(SerializationMappingSchema, scalar)
-							}
-						},
+					RowCount   = 1,
+					FieldNames = ["scalar"],
+					FieldTypes = [scalar.GetType()],
+					Data       =
+					[
+						[
+							scalar == DBNull.Value
+								? string.Empty
+								: SerializationConverter.Serialize(SerializationMappingSchema, scalar)
+						]
+					],
 				};
 
 				result = LinqServiceSerializer.Serialize(SerializationMappingSchema, lsr);
@@ -295,10 +279,7 @@ namespace LinqToDB.Remote
 
 				using var rd = await DataConnection.QueryRunner.ExecuteReaderAsync(
 					db,
-					new QueryContext
-					{
-						Statement  = query.Statement
-					},
+					new QueryContext(query.Statement, query.DataOptions),
 					SqlParameterValues.Empty,
 					cancellationToken
 					).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -329,10 +310,7 @@ namespace LinqToDB.Remote
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
-				using var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
-				{
-					Statement = query.Statement
-				}, SqlParameterValues.Empty);
+				using var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext(query.Statement, query.DataOptions), SqlParameterValues.Empty);
 
 				var ret = ProcessDataReaderWrapper(query, db, rd);
 
@@ -386,7 +364,7 @@ namespace LinqToDB.Remote
 
 				if (names.Contains(name))
 				{
-					while (names.Contains(name = "c" + ++idx))
+					while (names.Contains(name = FormattableString.Invariant($"c{++idx}")))
 					{
 					}
 				}
@@ -413,7 +391,7 @@ namespace LinqToDB.Remote
 
 				if (fieldType.IsEnum || fieldType.IsNullable() && fieldType.ToNullableUnderlying().IsEnum)
 				{
-					var stringConverter = db.MappingSchema.GetConverter(new DbDataType(typeof(string)), new DbDataType(fieldType), false);
+					var stringConverter = db.MappingSchema.GetConverter(new DbDataType(typeof(string)), new DbDataType(fieldType), false, ConversionType.Common);
 					if (stringConverter != null)
 						fieldType = typeof(string);
 					else
@@ -481,10 +459,7 @@ namespace LinqToDB.Remote
 				{
 					if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
-					DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
-					{
-						Statement  = query.Statement
-					}, null);
+					DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext(query.Statement, query.DataOptions), null);
 				}
 
 				db.CommitTransaction();
@@ -519,10 +494,7 @@ namespace LinqToDB.Remote
 				{
 					if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
-					await DataConnection.QueryRunner.ExecuteNonQueryAsync(db, new QueryContext
-					{
-						Statement = query.Statement
-					}, null, cancellationToken)
+					await DataConnection.QueryRunner.ExecuteNonQueryAsync(db, new QueryContext(query.Statement, query.DataOptions), null, cancellationToken)
 						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 
@@ -542,12 +514,13 @@ namespace LinqToDB.Remote
 
 		#region private classes
 
-		private sealed class QueryContext : IQueryContext
+		sealed class QueryContext(SqlStatement statement, DataOptions dataOptions) : IQueryContext
 		{
-			public SqlStatement    Statement  { get; set; } = null!;
-			public object?         Context    { get; set; }
-			public SqlParameter[]? Parameters { get; set; }
-			public AliasesContext? Aliases    { get; set; }
+			public SqlStatement    Statement   { get; } = statement;
+			public object?         Context     { get; set; }
+			public SqlParameter[]? Parameters  { get; set; }
+			public AliasesContext? Aliases     { get; set; }
+			public DataOptions     DataOptions { get; } = dataOptions;
 		}
 
 		#endregion

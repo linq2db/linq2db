@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.Serialization;
 
 namespace LinqToDB.Common
@@ -60,20 +60,6 @@ namespace LinqToDB.Common
 		/// <seealso cref="Exception.InnerException"/>
 		public LinqToDBConvertException(Exception innerException)
 			: base(innerException.Message, innerException)
-		{
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqToDBConvertException"/> class
-		/// with serialized data.
-		/// </summary>
-		/// <param name="info">The object that holds the serialized object data.</param>
-		/// <param name="context">The contextual information about the source or
-		/// destination.</param>
-		/// <remarks>This constructor is called during deserialization to
-		/// reconstitute the exception object transmitted over a stream.</remarks>
-		protected LinqToDBConvertException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
 		{
 		}
 

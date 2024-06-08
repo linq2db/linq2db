@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
 					if (type.Type.Length > 0)
-						StringBuilder.Append('(').Append(type.Type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
 					break;
 				case DataType.Json           : StringBuilder.Append("json");           break;
 				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
@@ -101,14 +101,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (type.Type.Length == 1)
 						StringBuilder.Append("bit");
 					if (type.Type.Length > 1)
-						StringBuilder.Append("bit(").Append(type.Type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"bit({type.Type.Length})");
 					else
 						StringBuilder.Append("bit varying");
 					break;
 				case DataType.NChar          :
 					StringBuilder.Append("character");
 					if (type.Type.Length > 1) // this is correct condition
-						StringBuilder.Append('(').Append(type.Type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
 					break;
 					case DataType.Interval   : StringBuilder.Append("interval");       break;
 				case DataType.Udt            :
@@ -436,7 +436,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
+			return FormattableString.Invariant($"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count})");
 		}
 
 		protected override void BuildSubQueryExtensions(SqlStatement statement)

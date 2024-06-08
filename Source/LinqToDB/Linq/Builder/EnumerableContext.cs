@@ -141,7 +141,7 @@ namespace LinqToDB.Linq.Builder
 				var (member, column) = columnsInfo[index];
 				var field            = column != null
 					? new SqlField(column)
-					: new SqlField(member.GetMemberType(), "item" + (index + 1), true);
+					: new SqlField(member.GetMemberType(), FormattableString.Invariant($"item{index + 1}"), true);
 				fields[index]        = field;
 			}
 

@@ -26,6 +26,8 @@ namespace LinqToDB.DataProvider.Firebird
 		BulkCopyType                BulkCopyType               = BulkCopyType.MultipleRows,
 		FirebirdIdentifierQuoteMode IdentifierQuoteMode        = FirebirdIdentifierQuoteMode.Auto,
 		bool                        IsLiteralEncodingSupported = true
+		// If you add another parameter here, don't forget to update
+		// FirebirdOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<FirebirdOptions>(BulkCopyType)
 	{
