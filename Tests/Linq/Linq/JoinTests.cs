@@ -1020,7 +1020,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context)
+		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllMySql, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

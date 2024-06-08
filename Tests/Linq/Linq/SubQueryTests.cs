@@ -300,10 +300,8 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			ProviderName.DB2,
 			TestProvName.AllOracle,
-			TestProvName.AllMySql,
 			TestProvName.AllSybase,
-			TestProvName.AllInformix,
-			TestProvName.AllSapHana)]
+			TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
