@@ -8,6 +8,7 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\DataProvider\OracleTests.cs" Link="OracleTests.cs" />
+		<Compile Include="..\Linq\DataProvider\SQLiteTests.cs" Link="SQLiteTests.cs" />
 		<Compile Include="..\Linq\DataProvider\SqlServerTests.cs" Link="SqlServerTests.cs" />
 		<Compile Include="..\Linq\Linq\DateTimeFunctionsTests.cs" Link="DateTimeFunctionsTests.cs" />
 		<Compile Include="..\Linq\Linq\JoinTests.cs" Link="JoinTests.cs" />
